@@ -60,7 +60,13 @@
           {% endif %}
       </ul>
       {% endif %}
-
+      {% if user_is_member_of_Committee or user_is_member_of_Superuser or user_is_member_of_Tech_User %}
+       <ul>
+         <li class='top'>
+           <a href='/shipping_overview'>Shipping Overview</a>
+         </li>
+       </ul>
+      {% endif %}
 {% endblock %}
 	</div>
 

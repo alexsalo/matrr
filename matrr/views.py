@@ -631,6 +631,8 @@ def tissue_list(request, tissue_model, cohort_id = None):
       context_instance=c)
 
 
+@login_required()
+@user_passes_test(lambda u: u.groups.filter(name='Superuser').count() != 0, login_url='/denied/')
 def request_review_accept(request, req_request_id):
   # get the tissue request
   req_request = Request.objects.get(req_request_id=req_request_id)
@@ -648,6 +650,10 @@ def request_review_accept(request, req_request_id):
   return redirect('/review_overviews/')
 
 
+@login_required()
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() != 0 or \
+                            u.groups.filter(name='Committee').count() != 0 or \
+                            u.groups.filter(name='Superuser').count() != 0 , login_url='/denied/')
 def shipping_overview(request):
   # get the tissue requests that have been accepted
   accepted_requests = Request.objects.filter(request_status = RequestStatus.objects.get(rqs_status_name='Accepted'))
@@ -677,7 +683,12 @@ def search(request):
   terms = request.GET['terms']
 
   results = dict()
-  results['monkeys'] = search_index(terms, 'monkey', Monkey)
+  if request.user.groups.filter(name='Tech User').count() != 0 or \
+    request.user.groups.filter(name='Committee').count() != 0 or \
+    request.user.groups.filter(name='Superuser').count() != 0:
+    results['monkeys'] = search_index(terms, 'monkey_auth', Monkey)
+  else:
+    results['monkeys'] = search_index(terms, 'monkey', Monkey)
   results['cohorts'] = search_index(terms, 'cohort', Cohort)
 
   num_results = len(results['monkeys'])
