@@ -1,0 +1,22 @@
+{% extends 'matrr/tissue_shopping.html' %}
+
+{% block cart %}
+{% endblock %}
+
+{% block content %}
+{% if cart_exists %}
+<div id='headline'>
+Delete Cart?
+</div>
+<form action='/cart/delete' method='post'>
+{% csrf_token %}
+<button type='submit' name='submit' value='yes'>Yes</button>
+<button type='submit' name='submit' value='no'>No</button>
+</form>
+{% else %}
+<div id='headline'>
+  You have do not have a cart to delete.
+</div>
+{% endif %}
+</div>
+{% endblock %}

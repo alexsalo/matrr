@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}
+MATRR Account
+{% endblock %}
+
+
+{% block content %}
+<div class='large-headline'>My Account</div>
+
+<div class='headline'>Account Information</div>
+  <table class="common">
+    <tr><td class="text-right-common-td">Username:</td><td>{{ user.username }}</td>
+        <td class="text-right-common-td">Password:</td><td><a href="/accounts/password/change/">Change
+        Password</a></td></tr>
+    <tr><td class="text-right-common-td">Last Logged In:</td><td>{{ user.last_login }}</td>
+        <td class="text-right-common-td">Member Since:</td><td>{{ user.date_joined }}</td></tr>
+    <tr><td class="text-right-common-td">Email:</td><td>{{ user.email }}</td></tr>
+  </table>
+
+<div id='headline'>Shipping Information</div>
+  <table class="common">
+    <tr><td class="text-right-common-td">Shipping Name:</td><td>{{ user.account.act_shipping_name }}</td>
+        <td class="text-right-common-td">&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td class="text-right-common-td">Street Address:</td><td>{{ user.account.act_address1 }}</td>
+        <td class="text-right-common-td">City:</td><td>{{ user.account.act_city }}, {{ user.account.act_state }}</td></tr>
+    <tr><td class="text-right-common-td">&nbsp;</td><td>{{ user.account.act_address2 }}</td>
+        <td class="text-right-common-td">&nbsp;</td><td>{{ user.account.act_zip }}, {{ user.account.act_country }}</td></tr>
+    <tr><td class="text-right-common-td"><img src="{{ STATIC_URL }}images/fedex-logo-470.jpg" border=0 height=12 width=36></td>
+        <td>{{ user.account.act_fedex }}</td></tr>
+  </table>
+
+<div id="text-right"><a href="/account/shipping"><img src="{{ STATIC_URL }}images/update-button.png" border=0 height=20 width=45></a></div>
+
+<!--
+This section is for the material transfer agreement
+-->
+
+<div class='headline'>Material Transfer Aggrements</div>
+{% if mta_info %}
+  <table class="common">
+    <tr><th>MTA ID</th><th>Date Uploaded</th><th>Title</th><th>&nbsp;</th>
+    {% for mta in mta_info.all %}
+        <tr>
+            <td class='text-center-common-td'>{{ mta.mta_id }}</td>
+            <td class='text-center-common-td'>{{ mta.mta_date }}</td>
+            <td class='text-center-common-td'>{{ mta.mta_title }}</td>
+            <td class='text-center-common-td'><a href="/media/{{mta.mta_file }}">View MTA File</a></td>
+        </tr>
+    {% endfor %}
+  </table>
+{% else %}
+      <div class="messages"><div class="info">
+       You do not have any MTA's uploaded.
+     </div></div>
+{% endif %}
+
+<div id="text-right"><a href="/mta/upload"><img src="{{ STATIC_URL }}images/update-button.png" border=0 height=20 width=45></a></div>
+
+
+<!--
+This section displays the status of requests
+-->
+<div class='headline'>Requests Status</div>
+{% if order_list %}
+  <table class="common">
+    <tr><th>Cohort</th><th>Date Placed</th><th>Status</th><th>&nbsp;</th><th>&nbsp;</th>
+    {% for order in order_list.all %}
+        <tr>
+            <td class='text-center-common-td'>{{ order.cohort }}</td>
+            <td class='text-center-common-td'>{{ order.req_request_date }}</td>
+            <td class='text-center-common-td'>{{ order.request_status }}</td>
+            <td class='text-center-common-td'><a href='/orders/{{ order.req_request_id }}'>Details</a></td>
+            <td class='text-center-common-td'><a href="/media/{{ order.req_experimental_plan }}">View Protocol</a></td>
+        </tr>
+    {% endfor %}
+  </table>
+{% else %}
+      <div class="messages"><div class="info">
+       You do not have any pending requests.
+     </div></div>
+{% endif %}
+
+
+
+<div class='headline'>Research Updates</div>
+      <div class="messages"><div class="info">
+       You do not have any pending research updates required.
+     </div></div>
+
+{% endblock %}

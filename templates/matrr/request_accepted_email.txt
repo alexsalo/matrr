@@ -1,0 +1,5 @@
+{% load i18n %}
+{% trans "Your tissue request has been accepted.  You will be contacted in order to fill out a material transfer agreement.  After the agreement is signed and returned, and when the tissues are prepared, your order will be shipped.  You will be expected to provide updates on your research 6 moths after you receive your order." %}
+
+{% trans "You can view your request at: " %}http://gleek.ecs.baylor.edu:8000{{ request_url }}
+

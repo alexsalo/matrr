@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class='headline'>
+  {% block title %}My Orders{% endblock %}
+</div>
+
+{% if order_list %}
+<table>
+  <tr>
+    <th>Cohort</th>
+    <th>Date Placed</th>
+    <th>Status</th>
+  </tr>
+
+  {% for order in order_list %}
+    <tr>
+      <td>{{ order.cohort }}</td>
+      <td>{{ order.req_request_date }}</td>
+      <td>{{ order.request_status }}</td>
+      <td><a href='{{ order.req_request_id }}'>Details</a></td>
+    </tr>
+  {% endfor %}
+</table>
+{% else %}
+      <div class="messages"><div class="info">
+       You do not have any pending requests.
+     </div></div>
+{% endif %}
+{% endblock %}

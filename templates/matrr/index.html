@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}
+MATRR Home
+{% endblock %}
+
+{% block content %}
+<!-- Welcome div -->
+<div class='center-content'>
+<div class='large-headline'>The Monkey Alcohol Tissue Research Resource (MATRR)</div>
+<p>
+The primary goal of this site is to build the resources of a tissue bank and associated bioinformatics to analyze and distribute appropriate tissue samples to the alcohol research community. This resource provides novel data for hypothesis testing relating the risk for and consequences of alcohol consumption and serve to bi-directionally bridge the gap between rodent and human studies. The basis of the MATRR is that non human primates, specifically monkeys, show a range of drinking excessive amounts of alcohol. <a href='/about'>more...</a>
+</p>
+</div>
+
+<div class='left-content'>
+<!-- Buttons div -->
+<div class='content-block-lower'>
+<div class='headline'>Request Tissues</div>
+<div class='buttons'>
+<a class="blueLinkButton linkButton" href='upcoming'>Upcoming Cohorts</a>
+<a class="redLinkButton linkButton" href='available'>Available Cohorts</a>
+</div>
+</div>
+
+<!-- Search div -->
+<div class='content-block-lower'>
+<div class='headline'>Search</div>
+<form action='/search' method='get'>
+  <input type='text' id='terms' name='terms'/>
+  <button type='submit'>Search</button>
+</form>
+</div>
+<!-- Links to other resources div -->
+<div class='content-block-lower'>
+<div class='headline'>Links to Other Resources</div>
+</div>
+
+</div>
+<div class='right-content'>
+<!-- News/Upcoming Events div -->
+<div class='content-block-lower' style='padding-bottom: 20px;'>
+<div class='headline'>Upcoming Events</div>
+  {% for event in event_list %}
+    <div class='content-item'>
+    <div class='mini-headline'>{{ event.name }}  ({{ event.date }})</div>
+    {{ event.description }}
+    </div>
+  {% endfor %}
+  <div>
+    <div style='float:left;'><a href='/events/'>more</a></div>
+    <div style='float:right;'><a href='/archived-events/'>archived</a></div>
+  </div>
+</div>
+</div>
+{% endblock %}
+

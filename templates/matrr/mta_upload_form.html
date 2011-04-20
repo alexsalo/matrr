@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+
+<div class="content-item">
+<div id="headline">Uploade Material Transfer Agreement (MTA)</div>
+<br>
+
+{% if form.errors %}
+<div class="messages"><div class="error">
+{% for key, value in form.errors.items %}
+  {% for error in value %}
+    {{ error }}<br>
+  {% endfor %}
+{% endfor %}
+</div></div>
+{% endif %}
+
+
+<form method="post" action="." enctype="multipart/form-data">{% csrf_token %}
+
+<div id="table-wrap">
+	<div id="table-left"><div id="text-right">
+	  <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ form.mta_title.help_text }}</span></a>
+	  MTA Title:
+	</div></div>
+	<div id="table-right">{{ form.mta_title }}</div>
+	<div id="table-left"><div id="text-right">Selected File:</div></div>
+	<div id="table-right">{{ form.mta_file }}</div>
+<div id="table-right">
+
+
+  <input type="submit" value="{% trans 'Upload' %}" />
+</form>
+
+</div>
+
+</form>
+
+</div>
+
+
+{% endblock %}

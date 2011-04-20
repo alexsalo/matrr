@@ -1,0 +1,15 @@
+{% if cart_exists %}
+<div id='sidebar-block'>
+<div id='headline'>
+<a href='/cart'>Cart ({{ cart_num_items }})</a>
+</div>
+{% if cart_num_items > 0 %}
+<ul style='list-style:none; list-style-position: outside; padding: 0px'>
+{% for item in cart_items %}
+  <li style='margin: 1px 0px'>{{ item }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+</div>
+{% endif %}

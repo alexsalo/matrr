@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Reviews
+{% endblock %}
+
+{% block content %}
+<div style='margin-bottom:30px;'>
+  <div class='headline'>
+    Unfinished Reviews
+  </div>
+  {% if num_unfinished > 0 %}
+  <table class='review-table'>
+    <tr>
+      <th>Cohort</th>
+      <th>User</th> 
+      <th>Date Submitted</th>
+    </tr>
+  {% for review in unfinished_reviews %}
+    <tr>
+      <td>{{ review.req_request.cohort.coh_cohort_name }}</td>
+      <td>{{ review.req_request.user }}</td> 
+      <td>{{ review.req_request.req_request_date}}</td>
+      <td><a href='/reviews/{{ review.rvs_review_id }}/'><button>Review</button></a></td>
+    </tr>
+  {% endfor %}
+  </table>
+  {% endif %}
+</div>
+
+<div>
+  <div class='headline'>
+    Finished Reviews
+  </div>
+  {% if num_finished > 0 %}
+  <table class='review-table'>
+    <tr>
+      <th>Cohort</th>
+      <th>User</th> 
+      <th>Date Submitted</th>
+    </tr>
+  {% for review in finished_reviews %}
+    <tr>
+      <td>{{ review.req_request.cohort.coh_cohort_name }}</td>
+      <td>{{ review.req_request.user }}</td> 
+      <td>{{ review.req_request.req_request_date}}</td>
+      <td><a href='/reviews/{{ review.rvs_review_id }}/'><button>Edit</button></a></td>
+    </tr>
+  {% endfor %}
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

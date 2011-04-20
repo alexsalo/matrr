@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{%  block title %}
+Shipping Overview
+{% endblock %}
+
+{% block content %}
+
+<div class='mini-headline'>
+Pending Shipments
+</div>
+
+<div>
+<table>
+<tr><th>User</th><th>Cohort</th><th>Request Date</th></tr>
+  {% for request in accepted_requests %}
+    <tr><td>{{ request.user.name }}</td><td>{{ request.cohort.coh_cohort_name }}</td>
+      <td>{{ request.req_request_date }}</td>
+    <td><a href='/orders/{{ request.req_request_id }}/'>Details</a></td></tr>
+  {% endfor %}
+</table>
+</div>
+
+
+<div class='mini-headline'>
+Shipped Requests
+</div>
+
+<div>
+<table>
+<tr><th>User</th><th>Cohort</th><th>Request Date</th><th>Shipped Date</th></tr>
+  {% for request in shipped_requests %}
+    <tr><td>{{ request.user.name }}</td><td>{{ request.cohort.coh_cohort_name }}</td>
+      <td>{{ request.req_request_date }}</td>
+      <td></td>
+    <td><a href='/orders/{{ request.req_request_id }}/'>Details</a></td></tr>
+  {% endfor %}
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block cart %}
+{% include 'matrr/cart/cart.html' %}
+{% endblock %}
+
+{% block login %}
+{% endblock %}
+
+{% block content %}
+  
+<div id="large-headline">Tissue Request</div>
+  <img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_2.png" width='700' height='25'
+       alt='order timeline'/>
+<div id="headline">{% block content_title %}Select Tissue Type{% endblock %}</div>
+  <br/>
+
+  <div class='clearfix'>
+    <div class='mini-headline'>
+      Brain Blocks
+    </div>
+    <div class='table-left'>These are generally 4mm slabs cut from the front to the back of the brain.</div>
+    
+    <div class='table-right, text-right'><a href='blocks/' class='blockLinkButton'>Request Brain Blocks</a></div>
+    
+    
+  </div>
+
+  <div class='clearfix'>
+    <div class='mini-headline'>
+      Brain Regions
+    </div>
+    <div class='table-left'>These are regions of the brain that are collected in tubes.</div>
+    <div class='table-right text-right'><a href='regions/' class='blockLinkButton'>Request Brain Regions</a></div>
+  </div>
+  
+  <div class='clearfix'>
+    <div class='mini-headline'>
+      Microdissected Brain Regions
+    </div>
+    <div class='table-left'>These are specific brain regions.</div>
+    <div class='table-right text-right'><a href='microdissected/' class='blockLinkButton'>Request Microdissected Brain
+      Regions</a></div>
+  </div>
+  
+  <div class='clearfix'>
+    <div class='mini-headline'>
+      Peripheral Tissues
+    </div>
+    <div class='table-left'>These are tissues and organs other than the brain.</div>
+    <div class='table-right text-right'><a href='peripherals/' class='blockLinkButton'>Request Peripheral Tissues</a></div>
+  </div>
+  
+  <div class='clearfix'>
+    <div class='mini-headline'>
+      Genetic and Blood Samples
+    </div>
+    <div class='table-left'>These are blood samples and collections of other genetic material stored in tubes.</div>
+    <div class='table-right text-right'><a href='samples/' class='blockLinkButton'>Request Genetic and Blood Samples</a></div>
+  </div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'matrr/tissue_shopping.html' %}
+
+{% block cart %}
+{% endblock %}
+
+{% block title %}
+Finalize Tissue Request
+{% endblock %}
+
+{% block content %}
+{% if not cart_exists or cart_num_items == 0 %}
+  You cannot submit a tissue request with no requested tissues.
+{% else %}
+<div id='headline'>
+Finalize Tissue Request
+</div>
+<form action='/cart/checkout/' enctype="multipart/form-data" method='POST'>
+{% csrf_token %}
+{{form.as_p}}
+{% include 'matrr/cart/cart_items_table.html' %}
+<button type='submit' name='submit' value='checkout'>Checkout</button>
+
+</form>
+
+{% endif %}
+{% endblock %}

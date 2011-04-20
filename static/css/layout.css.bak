@@ -1,0 +1,133 @@
+html,
+body,
+#page,
+.page{
+  height: 100%;
+  min-width: 192px;
+}
+/*#page-wrapper {
+  min-height: 100%;
+  max-width: 960px;
+}*/
+#header,
+#footer,
+.header,
+.footer,{
+  min-height: 30px;
+}
+
+#header-content,
+#navigation-content,
+#footer-content,
+#page-content,
+.header-content,
+.navigation-content,
+.footer-content,
+.page-content{
+  max-width: 960px;
+  min-width: 192px;
+  width:100%;
+  margin-left: auto;
+  margin-right: auto;
+  clear:both;
+}
+
+.clearfix:after {
+  content: ".";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+
+
+#header,
+.header{
+  padding-bottom: 2px;
+}
+
+#header div.section,
+.header div.section{
+  position: relative;
+}
+div{
+  display: block;
+}
+
+#navigation,
+.navigation{
+  min-height: 20px;
+}
+
+#sidebar,
+.sidebar{
+  float: left;
+  width: 18%;
+  max-width: 180px;
+  min-width: 36px;
+  min-height:200px;
+}
+
+#sidebar-block,
+.sidebar-block{
+  margin: 5px 2px;
+}
+
+#content,
+.content{
+  float: right;
+  max-width: 760px;
+  min-width: 152px;
+  width: 80%;
+  min-height:700px;
+}
+
+#footer,
+.footer{
+  clear: both;
+}
+
+#left,
+.left{
+  float: left;
+}
+
+#right,
+.right{
+  float: right;
+}
+
+.content-block{
+  margin: 2%;
+  width: 46%;
+  min-height:10px;
+}
+
+.content-block-lower{
+  margin: 3% 0% 1% 0%;
+  width: 99%;
+  min-height:10px;
+}
+
+.content-item{
+  margin: 1%;
+  width: 98%;
+  min-height:5px;
+}
+
+.right-content{
+  float:right;
+  width: 49%;
+  min-height:10px;
+}
+
+.left-content{
+  float:left;
+  width: 49%;
+  min-height:10px;
+}
+
+#buttons,
+.buttons{
+  text-align: center;
+}

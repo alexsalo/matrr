@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block login%}{% endblock %}
+
+{% block content %}
+
+
+
+<div id='headline'>Create an Account</div>
+
+<form method="post" action=".">{% csrf_token %}
+	<div id="table-wrap">
+		<div id="table-left"><div id="text-right"><font color=red size=-2>Required</font>
+			Username:</div></div>
+			<div id="table-right">{{ form.username }}</div>
+			{% if form.username.errors %}
+                        <div id="table-left"></div>
+			<div class="field-error"> {{ form.username.errors }}</div>
+			{% endif %}
+		<div id="table-left"><div id="text-right"><font color=red size=-2>Required</font>
+			email:</div></div>
+			<div id="table-right">{{ form.email }}</div>
+			{% if form.email.errors %}
+                        <div id="table-left"></div>
+			<div class="field-error"> {{ form.email.errors }}</div>
+			{% endif %}
+		<div id="table-left"><div id="text-right"><font color=red size=-2>Required</font>
+			Password:</div></div>
+			<div id="table-right">{{ form.password1 }}</div>
+			{% if form.password1.errors %}
+                        <div id="table-left"></div>
+			<div class="field-error"> {{ form.password1.errors }}</div>
+			{% endif %}
+		<div id="table-left"><div id="text-right"><font color=red size=-2>Required</font>
+			Password (again):</div></div>
+			<div id="table-right">{{ form.password2 }}</div>
+			{% if form.password2.errors %}
+                        <div id="table-left"></div>
+			<div class="field-error"> {{ form.password2.errors }}</div>
+			{% endif %}
+
+		<div id="table-right">
+  		<input type="submit" value="{% trans 'Submit' %}" />
+		</div>
+
+	</div>
+</form>
+
+
+
+
+</div>
+{% endblock %}

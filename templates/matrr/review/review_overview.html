@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class='large-headline'> 
+{% block title %}Overview: {{ req_request.user.username }}'s request for {{req_request.cohort.coh_cohort_name}}{% endblock %}
+</div>
+<div style='margin-top: 10px;'>
+
+Experimental Plan: <a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a>
+<table class='reviews_table'>
+  <tr><th>Reviewer:</th>
+  {% for review in reviews %}
+    <td class='spacing'></td>
+    <td>{{ review.user }}</td>
+  {% endfor %}
+  </tr>
+  {% for tissue_request in block_requests %}
+    {% include 'matrr/review/review_overview_item.html' %}
+  {% endfor %}
+  {% for tissue_request in region_requests %}
+    {% include 'matrr/review/review_overview_item.html' %}
+  {% endfor %}
+  {% for tissue_request in microdissected_requests %}
+    {% include 'matrr/review/review_overview_item.html' %}
+  {% endfor %}
+  {% for tissue_request in tissue_requests %}
+    {% include 'matrr/review/review_overview_item.html' %}
+  {% endfor %}
+  {% for tissue_request in sample_requests %}
+    {% include 'matrr/review/review_overview_item.html' %}
+  {% endfor %}
+  {% if req_request.req_notes != None and req_request.req_notes != '' %}
+    <tr><th class='tissue_info'>Request Notes:</th><td class='tissue_info' colspan='9'>{{ req_request.req_notes }}</td></tr>
+  {% endif %}
+  <tr><th>Reviewer</th><th colspan='10'>Reviewer's Notes</th></tr>
+  {% for review in reviews %}
+    {% if review.rvs_notes != None and review.rvs_notes != '' %}
+    <th>{{ review.user }}</th>
+    <td colspan='9'>{{ review.rvs_notes }}</td>
+    {% endif %}
+  {% endfor %}
+  </tr>
+</table>
+<div>
+{% if req_request.request_status.rqs_status_name == 'Submitted' %}
+  <a href='accept' class='greenLinkButton linkButton'>Accept</a>
+  <a href='reject' class='redLinkButton linkButton'>Reject</a>
+{% endif %}
+<a href='/reviews_overviews/'><button>Back</button></a>
+</div>
+</div>
+{% endblock %}

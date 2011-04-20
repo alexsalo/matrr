@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class='large-headline'> 
+{% block title %}Pending Requests{% endblock %}
+</div>
+
+<table class='review-table'>
+  <tr>
+    <th>Cohort</th>
+    <th>User</th> 
+    <th>Date Submitted</th>
+    <th>Committee Review Progress</th>
+  </tr>
+{% for req_request in req_requests %}
+  <tr>
+    <td>{{ req_request.cohort.coh_cohort_name }}</td>
+    <td>{{ req_request.user }}</td> 
+    <td>{{ req_request.req_request_date}}</td>
+    <td align='right'>{{ req_request.progress}}%</td>
+    <td><a href='/reviews_overviews/{{ req_request.req_request_id }}/'><button>Overview</button></a></td>
+  </tr>
+{% endfor %}
+</table>
+
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if monkey.cohort.coh_upcoming %}
+Upcoming 
+{% else %}
+Available 
+{% endif %}
+Cohort: {{ cohort.coh_cohort_name }}
+Monkey: {{ monkey.mky_real_id }}
+{% endblock %}
+
+
+{% block content %}
+<div id='large-headline'>{% if monkey.cohort.coh_upcoming %}
+Upcoming 
+{% else %}
+Available 
+{% endif %}
+Cohort: {{ cohort.coh_cohort_name }}
+Monkey: {{ monkey.mky_real_id }}
+</div>
+<div>
+Gender: {{ monkey.mky_gender }}
+</div>
+<div>
+Birthdate: {{ monkey.mky_birthdate }}
+</div>
+<div>
+Weight: {{ monkey.mky_weight }}
+</div>
+{% endblock %}

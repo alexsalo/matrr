@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Results for: {{ terms }}
+{% endblock %}
+
+{% block content %}
+
+  <div class='headline'>
+    {{ num_results }} results for: {{ terms }}
+  </div>
+{% if results.monkeys %}
+  <div>
+  Monkeys
+  <ul>
+    {% for result in results.monkeys %}
+      <li>{{ result }}</li>
+    {% endfor %}
+  </ul>
+  </div>
+{% endif %}
+{% if results.cohorts %}
+  <div>
+  Cohorts
+  <ul>
+    {% for result in results.cohorts %}
+      <li>{{ result }}</li>
+    {% endfor %}
+  </ul>
+  </div>
+{% endif %}
+
+
+{% endblock %}
