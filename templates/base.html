@@ -34,30 +34,34 @@
 <!-- Menu div -->
 <div class='navigation clearfix'>
 <div class='navigation-content'>
-	<div class="nav">
-		<ul>
+	<div class="nav clearfix">
 {% block nav-list %}
-			<li><a href="/">Home</a></li>
+    <ul>
+			<li class='top'><a href="/">Home</a></li>
+    </ul>
 	  {% if user.is_authenticated %}
-			<li><a href="/account/">My Account</a></li>
-			<li><a href="/orders/">My Orders</a></li>
+      <ul>
+			  <li class='top'><a href="/account/">My Account</a></li>
+			  <li class='drop-down'><a href="/orders/">My Orders</a></li>
+      </ul>
       {% endif %}
       {% if user.is_staff %}
-      <li><a href="/admin/">Admin</a></li>
+      <ul>
+        <li class='top'><a href="/admin/">Admin</a></li>
+      </ul>
       {% endif %}
       {% if user_is_member_of_Committee or user_is_member_of_Superuser %}
-      <li>
-        <a href="/reviews/">Reviews</a>
-        <ul>
+      <ul>
+        <li class='top'>
+          <a href="/reviews/">Reviews</a>
+        </li>
           {% if user_is_member_of_Superuser %}
-            <li><a href="/reviews_overviews/">Reviews Overview</a></li>
+            <li class='drop-down'><a href="/reviews_overviews/">Reviews Overview</a></li>
           {% endif %}
-        </ul>
-      </li>
+      </ul>
       {% endif %}
 
 {% endblock %}
-		</ul>
 	</div>
 
 </div>

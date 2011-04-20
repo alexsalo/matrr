@@ -43,21 +43,17 @@ body {
   margin:0;
   padding:0;
   list-style-type:none;
-}
-
-#nav li,
-.nav li{
-  list-style-type:none;
-  display:inline;
-  margin:0;
-  padding:0;
+  float: left;
+  background-color: #4E4E4E;
+  border-width: 1px;
+  border-color: #4E4E4E;
+  border-style: solid;
 }
 
 #nav a,
 .nav a{
   display: block;
   color: #FAF9ED;
-  background-color: #4E4E4E;
   padding: .2em .8em;
   text-decoration: none;
   float:left;
@@ -69,25 +65,23 @@ body {
   color: #4E4E4E;
 }
 
-.nav ul li{
-  display: inline-block;
+.nav{
+  display: block;
+  position: absolute;
 }
 
-.nav ul li ul{
+.nav ul li{
+  display: block;
+}
+
+.nav ul li.drop-down{
   display:none;
 }
 
-.nav ul li:hover ul{
+.nav ul:hover .drop-down{
   display: block;
-  position: absolute;
-  padding: 0px;
-  margin: 0px;
-  color: #000000;
-  border-style: solid;
-  border-width: 1px;
-  border-color: #000000;
-  background-color: #FAF9ED;
-  font: 10px Verdana, sans-serif; text-align: center;
+  min-width: 100%;
+  /*position: absolute;*/
 }
 
 .nav ul li ul a,
@@ -602,7 +596,8 @@ a.tool-tip span{
 a.tool-tip:hover span{
   display: block;
   position: absolute;
-  width: 125px;
+  min-width: 100px;
+  max-width: 200px;
   padding: 5px; 
   margin: 10px;
   z-index: 10;
