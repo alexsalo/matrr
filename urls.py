@@ -129,11 +129,17 @@ urlpatterns += patterns('matrr.views',
       cart_item_delete),
   url(r'^shipping_overview/$',
     shipping_overview),
-  url(r'^search/?$',
-    search),
+#  url(r'^search/?$',
+#    search),
 )
 
-if settings.DEBUG:
+if settings.DEVELOPMENT:
+  urlpatterns += patterns('matrr.views',
+    url(r'^search/?$',
+      search),
+  )
+
+if settings.DEVELOPMENT:
   from django.views.static import serve
   _media_url = settings.MEDIA_URL
   if _media_url.startswith('/'):

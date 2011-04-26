@@ -1,6 +1,24 @@
 # Django settings for MATRR project.
 
-DEBUG = True
+import os
+
+# get the location of this settings file
+# this will let us have different settings based on where the file is
+path = os.path.dirname( os.path.realpath( __file__ ) )
+
+DEVELOPMENT = TEST = PRODUCTION = False
+if path == '/web/django_test':
+  DEVELOPMENT = True
+elif path == '/web/www/dev':
+  TEST = True
+elif path == '/web/www/wsgi-scripts':
+  PRODUCTION = True
+
+
+if DEVELOPMENT or TEST:
+  DEBUG = True
+else:
+  DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -33,7 +51,10 @@ TIME_ZONE = 'America/Chicago'
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 
-SITE_ID = 1
+if TEST:
+  SITE_ID = 2
+else:
+  SITE_ID = 1
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -126,23 +147,39 @@ TEMPLATE_DIRS = (
 # Sphinx 0.9.9
 SPHINX_API_VERSION = 0x116
 
-INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
-    'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    'django.contrib.admindocs',
-    'matrr',
-    # django-registration installed by EJB - 3.16.11
-    'registration',
-    'djangosphinx',
-)
-
+if DEVELOPMENT:
+  INSTALLED_APPS = (
+      'django.contrib.auth',
+      'django.contrib.contenttypes',
+      'django.contrib.sessions',
+      'django.contrib.sites',
+      'django.contrib.messages',
+      'django.contrib.staticfiles',
+      # Uncomment the next line to enable the admin:
+      'django.contrib.admin',
+      # Uncomment the next line to enable admin documentation:
+      'django.contrib.admindocs',
+      'matrr',
+      # django-registration installed by EJB - 3.16.11
+      'registration',
+      'djangosphinx',
+  )
+else:
+  INSTALLED_APPS = (
+      'django.contrib.auth',
+      'django.contrib.contenttypes',
+      'django.contrib.sessions',
+      'django.contrib.sites',
+      'django.contrib.messages',
+      'django.contrib.staticfiles',
+      # Uncomment the next line to enable the admin:
+      'django.contrib.admin',
+      # Uncomment the next line to enable admin documentation:
+      'django.contrib.admindocs',
+      'matrr',
+      # django-registration installed by EJB - 3.16.11
+      'registration',
+  )
 
 # The following are settings for django-registration
 # added EJB 3.16.11
@@ -153,16 +190,17 @@ INSTALLED_APPS = (
 ACCOUNT_ACTIVATION_DAYS = 2
 EMAIL_HOST = 'localhost'
 DEFAULT_FROM_EMAIL = 'matrr_admin@localhost'
+
 LOGIN_REDIRECT_URL = '/accounts/login'
 
-
-import logging
-logging.basicConfig(
-    level = logging.DEBUG,
-    format = '%(asctime)s %(levelname)s %(message)s',
-    filename='/web/mattr.log',
-    filemode='a'
-)
+if DEVELOPMENT:
+  import logging
+  logging.basicConfig(
+      level = logging.DEBUG,
+      format = '%(asctime)s %(levelname)s %(message)s',
+      filename='/web/mattr.log',
+      filemode='a'
+  )
 
 
 # A sample logging configuration. The only tangible logging

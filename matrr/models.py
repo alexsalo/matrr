@@ -32,12 +32,43 @@ class DiffingMixin(object):
     return result
 
 
+class Institution(models.Model):
+  ins_institution_id = models.AutoField('ID', primary_key=True)
+  ins_institution_name = models.CharField('Institution', max_length=100, unique=True, null=False,
+                                     help_text='Please enter the name of the institution.')
+
+  def __unicode__(self):
+    return self.ins_institution_name
+
+  class Meta:
+    db_table = 'ins_institution'
+
+
+
+class EventType(models.Model):
+  evt_id = models.AutoField('ID', primary_key=True)
+  evt_name = models.CharField('Name', max_length=100, unique=True, null=False,
+                              help_text='The name of the event.')
+  evt_description = models.TextField('Description', null=True, blank=True,
+                                     help_text='A description of the event.')
+
+  def __unicode__(self):
+    return self.evt_name
+
+  class Meta:
+    db_table = 'evt_event_types'
+
+
 class Cohort(models.Model):
   coh_cohort_id = models.AutoField('ID', primary_key=True)
   coh_cohort_name = models.CharField('Name', max_length=100, unique=True, null=False,
                                      help_text='Please enter the cohort\'s name')
   coh_upcoming = models.BooleanField('Upcoming', null=False, default=True,
                                      help_text='Check this if the tissues from this cohort have not been harvested yet.')
+  institution = models.ForeignKey(Institution, related_name='cohort_set', db_column='ins_institution_id',
+                                  verbose_name='Institution',
+                                  help_text='Please select the institution where this cohort was raised.')
+  events = models.ManyToManyField(EventType, through='CohortEvent', related_name='cohort_set')
   
   def __unicode__(self):
     return self.coh_cohort_name
@@ -56,22 +87,22 @@ class Cohort(models.Model):
 
 
 class CohortEvent(models.Model):
-  evt_id = models.AutoField('ID', primary_key=True)
+  cev_id = models.AutoField(primary_key=True)
   cohort = models.ForeignKey(Cohort, related_name='cohort_event_set', db_column='coh_cohort_id',
                              verbose_name='Cohort',
                              help_text='The cohort this event is for.')
-  evt_name = models.CharField('Name', max_length=100, unique=True, null=False,
-                              help_text='The name of the event.')
-  evt_description = models.TextField('Description', null=True, blank=True,
-                                     help_text='A description of the event.')
-  evt_date = models.DateField('Date',
+  event = models.ForeignKey(EventType, related_name='cohort_event_set', db_column='evt_id',
+                            verbose_name='Event Type',
+                            help_text='The type of event.')
+  cev_date = models.DateField('Date',
                               help_text='The date of this event.')
-  
+
   def __unicode__(self):
-    return self.evt_name
-  
+    return str(self.cohort) + ' ' + str(self.event)
+
   class Meta:
-    db_table = 'evt_cohort_events'
+    db_table = 'cev_cohort_events'
+
 
 
 class Monkey(models.Model):
@@ -118,7 +149,6 @@ class Mta(models.Model):
   class Meta:
     db_table = 'mta_material_transfer'
     
-
 
 class Account(models.Model):
   user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id', editable=False, blank=True, primary_key=True)
@@ -280,10 +310,11 @@ class Request(models.Model, DiffingMixin):
   request_status = models.ForeignKey(RequestStatus, null=False, db_column='rqs_status_id',)
   cohort = models.ForeignKey(Cohort, null=False, db_column='coh_cohort_id', editable=False,)
   user = models.ForeignKey(User, null=False, db_column='usr_user_id', editable=False,)
-  req_modified_date = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
+  req_modified_date = models.DateTimeField( auto_now_add=True, editable=False, auto_now=True)
   req_request_date = models.DateTimeField( editable=False, auto_now_add=True)
-  req_experimental_plan = models.FileField(upload_to='experimental_plans/', default='', null=False, blank=False)
-  req_notes = models.TextField(null=True, blank=True)
+  req_experimental_plan = models.FileField('Experimental Plan', upload_to='experimental_plans/',
+                                           default='', null=False, blank=False)
+  req_notes = models.TextField('Notes', null=True, blank=True)
   
   def __unicode__(self):
     return 'User: ' + self.user.username + ' Cohort: ' + self.cohort.coh_cohort_name + ' Date: ' + self.req_request_date.strftime("%I:%M%p  %m/%d/%y")

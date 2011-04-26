@@ -1,6 +1,6 @@
 {% load i18n %}
 {% trans "Activate account at" %} matrr.com:
 
-http://gleek.ecs.baylor.edu:8000{% url registration_activate activation_key %}
+http://gleek.ecs.baylor.edu{% url registration_activate activation_key %}
 
 {% blocktrans %}Link is valid for {{ expiration_days }} days.{% endblocktrans %}
