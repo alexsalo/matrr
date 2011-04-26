@@ -30,26 +30,20 @@
 </table>
 
 <div style='display: none'>
-{{ form.blocks_formset.management_form }}
 {{ form.regions_formset.management_form }}
-{{ form.microdissected_formset.management_form }}
+{# {{ form.microdissected_formset.management_form }} #}
 {{ form.peripherals_formset.management_form }}
 {{ form.samples_formset.management_form }}
-  {% for tform in form.blocks_formset %}
-    {% for field in tform.hidden_fields %}
-      {{ field }}
-    {% endfor %}
-  {% endfor %}
   {% for tform in form.regions_formset %}
     {% for field in tform.hidden_fields %}
       {{ field }}
     {% endfor %}
   {% endfor %}
-  {% for tform in form.microdissected_formset %}
-    {% for field in tform.hidden_fields %}
-      {{ field }}
-    {% endfor %}
-  {% endfor %}
+{#  {% for tform in form.microdissected_formset %}#}
+{#    {% for field in tform.hidden_fields %}#}
+{#      {{ field }}#}
+{#    {% endfor %}#}
+{#  {% endfor %}#}
   {% for tform in form.peripherals_formset %}
     {% for field in tform.hidden_fields %}
       {{ field }}
@@ -63,15 +57,12 @@
 </div>
 
 <table class='review_table'>
-  {% for tform in form.blocks_formset %}
-    {% include 'matrr/review/review_form_item.html' %}
-  {% endfor %}
   {% for tform in form.regions_formset %}
     {% include 'matrr/review/review_form_item.html' %}
   {% endfor %}
-  {% for tform in form.microdissected_formset %}
-    {% include 'matrr/review/review_form_item.html' %}
-  {% endfor %}
+{#  {% for tform in form.microdissected_formset %}#}
+{#    {% include 'matrr/review/review_form_item.html' %}#}
+{#  {% endfor %}#}
   {% for tform in form.peripherals_formset %}
     {% include 'matrr/review/review_form_item.html' %}
   {% endfor %}

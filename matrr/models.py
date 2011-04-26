@@ -41,7 +41,7 @@ class Institution(models.Model):
     return self.ins_institution_name
 
   class Meta:
-    db_table = 'ins_institution'
+    db_table = 'ins_institutions'
 
 
 
@@ -318,6 +318,11 @@ class Request(models.Model, DiffingMixin):
   
   def __unicode__(self):
     return 'User: ' + self.user.username + ' Cohort: ' + self.cohort.coh_cohort_name + ' Date: ' + self.req_request_date.strftime("%I:%M%p  %m/%d/%y")
+
+  def get_requested_tissue_count(self):
+    return self.tissue_request_set.count() + \
+           self.brain_region_request_set.count() + \
+           self.blood_and_genetic_request_set.count()
   
   class Meta:
     db_table = 'req_requests'
@@ -435,62 +440,6 @@ class BrainBlock(models.Model):
     db_table = 'bbl_brain_blocks'
 
 
-class BrainBlockRequest(models.Model):
-  rbb_block_request_id = models.AutoField(primary_key=True)
-  req_request = models.ForeignKey(Request, null=False, related_name='brain_block_request_set', db_column='req_request_id')
-  brain_block = models.ForeignKey(BrainBlock, null=False, related_name='brain_block_request_set', db_column='bbl_block_id')
-  rbb_notes = models.TextField('Notes', null=True, blank=True,
-                               help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
-  monkeys = models.ManyToManyField(Monkey, db_table='mbb_monkeys_to_brain_block_requests',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this block is requested from.')
-  
-  def __unicode__(self):
-    return str(self.brain_block)
-
-  def get_tissue(self):
-    return self.brain_block
-
-  def get_id(self):
-    return self.rbb_block_request_id
-
-  def has_notes(self):
-    return self.rbb_notes != None and self.rbb_notes != ''
-
-  def get_notes(self):
-    return self.rbb_notes
-
-  def get_data(self):
-    return [['Brain Block', self.brain_block],]
-
-  def get_type_url(self):
-    return 'blocks'
-
-  def get_reviews(self):
-    return self.brain_block_request_review_set.all()
-  
-  class Meta:
-    db_table = 'rbb_requests_to_brain_blocks'
-    unique_together = ('req_request', 'brain_block')
-
-
-class BrainBlockRequestRevision(models.Model):
-  brv_revision_id = models.AutoField(primary_key=True)
-  request_revision = models.ForeignKey(RequestRevision, null=False, related_name='brain_block_request_revision_set', db_column='rqv_request_revision_id', editable=False)
-  brain_block = models.ForeignKey(BrainBlock, null=False, related_name='brain_block_request_revision_set', db_column='bbl_block_id', editable=False)
-  brv_notes = models.TextField(null=True, blank=True, editable=False)
-  monkeys = models.ManyToManyField(Monkey, db_table='mbv_monkeys_to_brain_block_request_revisionss',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this block is requested from.')
-  
-  def __unicode__(self):
-    return self.request_revision + ': ' + self.brain_block
-  
-  class Meta:
-    db_table = 'brv_requests_to_brain_blocks_revisions'
-    unique_together = ('request_revision', 'brain_block')
-
-
 class BrainRegion(models.Model):
   bre_region_id = models.AutoField(primary_key=True)
   bre_region_name = models.CharField('Name', max_length=100, unique=True, null=False,
@@ -567,83 +516,89 @@ class BrainRegionRequestRevision(models.Model):
     unique_together = ('request_revision', 'brain_region')
 
 
-class MicrodissectedRegion(models.Model):
-  bmr_microdissected_id = models.AutoField(primary_key=True)
-  bmr_microdissected_name = models.CharField('Name', max_length=100, unique=True, null=False,
-                                     help_text='The name of the microdissected brain region.')
-  bmr_description = models.TextField('Notes', null=True, blank=True,
-                               help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
-  
-  def __unicode__(self):
-    return self.bmr_microdissected_name
-
-  def get_id(self):
-    return self.bmr_microdissected_id
-
-  def get_name(self):
-    return self.bmr_microdissected_name
-
-  class Meta:
-    db_table = 'bmr_brain_microdissected_regions'
-
-
-class MicrodissectedRegionRequest(models.Model):
-  rmr_microdissected_request_id = models.AutoField(primary_key=True)
-  req_request = models.ForeignKey(Request, null=False, related_name='microdissected_region_request_set', db_column='req_request_id')
-  microdissected_region = models.ForeignKey(MicrodissectedRegion, null=False, related_name='microdissected_region_request_set', db_column='bmr_microdissected_id')
-  rmr_notes = models.TextField('Notes', null=True, blank=True,
-                               help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
-  monkeys = models.ManyToManyField(Monkey, db_table='mmr_monkeys_to_microdissected_region_requests',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this region is requested from.')
-  
-  def __unicode__(self):
-    return str(self.microdissected_region)
-
-  def get_tissue(self):
-    return self.microdissected_region
-
-  def get_id(self):
-    return self.rmr_microdissected_request_id
-
-  def get_id(self):
-    return rmr_microdissected_request_id
-
-  def has_notes(self):
-    return self.rmr_notes != None and self.rmr_notes != ''
-
-  def get_notes(self):
-    return self.rmr_notes
-
-  def get_data(self):
-    return [['Microdissected Region', self.microdissected_region],]
-
-  def get_type_url(self):
-    return 'microdissected'
-
-  def get_reviews(self):
-    return self.microdissected_region_request_review_set.all()
-  
-  class Meta:
-    db_table = 'rmr_requests_to_microdissected_regions'
-    unique_together = ('req_request', 'microdissected_region')
-
-
-class MicrodissectedRegionRequestRevision(models.Model):
-  mrv_id = models.AutoField(primary_key=True)
-  request_revision = models.ForeignKey(RequestRevision, null=False, related_name='microdissected_region_request_revision_set', db_column='rqv_request_revision_id', editable=False)
-  microdissected_region = models.ForeignKey(MicrodissectedRegion, null=False, related_name='microdissected_region_request_revision_set', db_column='bmr_microdissected_id', editable=False)
-  mrv_notes = models.TextField(null=True, blank=True, editable=False)
-  monkeys = models.ManyToManyField(Monkey, db_table='mmv_monkeys_to_microdissected_region_request_revisions',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this region is requested from.')
-  
-  def __unicode__(self):
-    return self.request_revision + ': ' + self.microdissected_region
-  
-  class Meta:
-    db_table = 'mrv_requests_to_microdissected_regions_revisions'
-    unique_together = ('request_revision', 'microdissected_region')
+############################################################################
+# The microdissected region code is commented out because (at least for
+# upcoming requests) it is no longer needed.
+# There may be a use for this when we implement archived tissues, so
+# commenting the code out is better than deleting it for now.
+############################################################################
+#class MicrodissectedRegion(models.Model):
+#  bmr_microdissected_id = models.AutoField(primary_key=True)
+#  bmr_microdissected_name = models.CharField('Name', max_length=100, unique=True, null=False,
+#                                     help_text='The name of the microdissected brain region.')
+#  bmr_description = models.TextField('Notes', null=True, blank=True,
+#                               help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
+#
+#  def __unicode__(self):
+#    return self.bmr_microdissected_name
+#
+#  def get_id(self):
+#    return self.bmr_microdissected_id
+#
+#  def get_name(self):
+#    return self.bmr_microdissected_name
+#
+#  class Meta:
+#    db_table = 'bmr_brain_microdissected_regions'
+#
+#
+#class MicrodissectedRegionRequest(models.Model):
+#  rmr_microdissected_request_id = models.AutoField(primary_key=True)
+#  req_request = models.ForeignKey(Request, null=False, related_name='microdissected_region_request_set', db_column='req_request_id')
+#  microdissected_region = models.ForeignKey(MicrodissectedRegion, null=False, related_name='microdissected_region_request_set', db_column='bmr_microdissected_id')
+#  rmr_notes = models.TextField('Notes', null=True, blank=True,
+#                               help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
+#  monkeys = models.ManyToManyField(Monkey, db_table='mmr_monkeys_to_microdissected_region_requests',
+#                                 verbose_name='Requested Monkeys',
+#                                 help_text='The monkeys this region is requested from.')
+#
+#  def __unicode__(self):
+#    return str(self.microdissected_region)
+#
+#  def get_tissue(self):
+#    return self.microdissected_region
+#
+#  def get_id(self):
+#    return self.rmr_microdissected_request_id
+#
+#  def get_id(self):
+#    return rmr_microdissected_request_id
+#
+#  def has_notes(self):
+#    return self.rmr_notes != None and self.rmr_notes != ''
+#
+#  def get_notes(self):
+#    return self.rmr_notes
+#
+#  def get_data(self):
+#    return [['Microdissected Region', self.microdissected_region],]
+#
+#  def get_type_url(self):
+#    return 'microdissected'
+#
+#  def get_reviews(self):
+#    return self.microdissected_region_request_review_set.all()
+#
+#  class Meta:
+#    db_table = 'rmr_requests_to_microdissected_regions'
+#    unique_together = ('req_request', 'microdissected_region')
+#
+#
+#class MicrodissectedRegionRequestRevision(models.Model):
+#  mrv_id = models.AutoField(primary_key=True)
+#  request_revision = models.ForeignKey(RequestRevision, null=False, related_name='microdissected_region_request_revision_set', db_column='rqv_request_revision_id', editable=False)
+#  microdissected_region = models.ForeignKey(MicrodissectedRegion, null=False, related_name='microdissected_region_request_revision_set', db_column='bmr_microdissected_id', editable=False)
+#  mrv_notes = models.TextField(null=True, blank=True, editable=False)
+#  monkeys = models.ManyToManyField(Monkey, db_table='mmv_monkeys_to_microdissected_region_request_revisions',
+#                                 verbose_name='Requested Monkeys',
+#                                 help_text='The monkeys this region is requested from.')
+#
+#  def __unicode__(self):
+#    return self.request_revision + ': ' + self.microdissected_region
+#
+#  class Meta:
+#    db_table = 'mrv_requests_to_microdissected_regions_revisions'
+#    unique_together = ('request_revision', 'microdissected_region')
 
 
 class BloodAndGenetic(models.Model):
@@ -833,70 +788,6 @@ class TissueRequestReviewRevision(models.Model):
     unique_together = ('review_revision', 'tissue_request_revision')
 
 
-# add the new class's review models here
-class BrainBlockRequestReview(models.Model):
-  vbb_block_request_review_id = models.AutoField(primary_key=True)
-  review = models.ForeignKey(Review, null=False, related_name='brain_block_request_review_set', db_column='rvs_review_id', editable=False)
-  brain_block_request = models.ForeignKey(BrainBlockRequest, null=False, related_name='brain_block_request_review_set', db_column='rbb_block_request_id', editable=False)
-  vbb_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False, 
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vbb_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False, 
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vbb_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vbb_notes = models.TextField('Notes', null=True, blank=True,)
-  
-  def __unicode__(self):
-    return 'Review: ' + str(self.review) + ' BrainBlockRequest: ' + str(self.brain_block_request)
-  
-  def is_finished(self):
-    return self.vbb_scientific_merit is not None and \
-        self.vbb_quantity is not None and \
-        self.vbb_priority is not None
-
-  def get_request(self):
-    return self.brain_block_request
-
-  def get_merit(self):
-    return self.vbb_scientific_merit
-
-  def get_quantity(self):
-    return self.vbb_quantity
-
-  def get_priority(self):
-    return self.vbb_priority
-
-  def has_notes(self):
-    return self.vbb_notes != None and self.vbb_notes != ''
-
-  def get_notes(self):
-    return self.vbb_notes
-
-  class Meta:
-    db_table = 'vbb_reviews_to_brain_block_requests'
-    unique_together = ('review', 'brain_block_request')
-
-
-class BrainBlockRequestReviewRevision(models.Model):
-  vbv_review_revision_id = models.AutoField(primary_key=True)
-  review_revision = models.ForeignKey(ReviewRevision, null=False, related_name='brain_block_request_review_revision_set', db_column='rvr_revision_id', editable=False)
-  brain_block_request_revision = models.ForeignKey(BrainBlockRequestRevision, null=False, related_name='brain_block_request_review_revision_set', db_column='brv_revision_id', editable=False)
-  vbv_scientific_merit = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Scientific Merit', 
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vbv_quantity = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Quantity', 
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vbv_priority = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Priority',
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vbv_notes = models.TextField(null=True, blank=True, verbose_name='Notes')
-  
-  def __unicode__(self):
-    return 'ReviewRevision: ' + self.review_revision + ' BrainBlockRequestRevision: ' + self.brain_block_request_revision
-    
-  class Meta:
-    db_table = 'vbv_reviews_to_brain_block_request_revisions'
-    unique_together = ('review_revision', 'brain_block_request_revision')
-
-
 class BrainRegionRequestReview(models.Model):
   vbr_region_request_review_id = models.AutoField(primary_key=True)
   review = models.ForeignKey(Review, null=False, related_name='brain_region_request_review_set', db_column='rvs_review_id', editable=False)
@@ -960,70 +851,76 @@ class BrainRegionRequestReviewRevision(models.Model):
     unique_together = ('review_revision', 'brain_region_request_revision')
 
 
-class MicrodissectedRegionRequestReview(models.Model):
-  vmr_microdissected_request_review_id = models.AutoField(primary_key=True)
-  review = models.ForeignKey(Review, null=False, related_name='microdissected_region_request_review_set', db_column='rvs_review_id', editable=False)
-  microdissected_region_request = models.ForeignKey(MicrodissectedRegionRequest, null=False,
-                                                    related_name='microdissected_region_request_review_set',
-                                                    db_column='rmr_block_request_id',
-                                                    editable=False)
-  vmr_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False, 
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vmr_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False, 
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vmr_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vmr_notes = models.TextField('Notes', null=True, blank=True,)
-  
-  def __unicode__(self):
-    return 'Review: ' + str(self.review) + ' MicrodissectedRegionRequest: ' + str(self.microdissected_region_request)
-  
-  def is_finished(self):
-    return self.vmr_scientific_merit is not None and \
-        self.vmr_quantity is not None and \
-        self.vmr_priority is not None
-
-  def get_request(self):
-    return self.microdissected_region_request
-
-  def get_merit(self):
-    return self.vmr_scientific_merit
-
-  def get_quantity(self):
-    return self.vmr_quantity
-
-  def get_priority(self):
-    return self.vmr_priority
-
-  def has_notes(self):
-    return self.vmr_notes != None and self.vmr_notes != ''
-
-  def get_notes(self):
-    return self.vmr_notes
-  
-  class Meta:
-    db_table = 'vmr_reviews_to_microdissected_region_requests'
-    unique_together = ('review', 'microdissected_region_request')
-
-
-class MicrodissectedRegionRequestReviewRevision(models.Model):
-  vmv_review_revision_id = models.AutoField(primary_key=True)
-  review_revision = models.ForeignKey(ReviewRevision, null=False, related_name='microdissected_region_request_review_revision_set', db_column='rvr_revision_id', editable=False)
-  microdissected_region_request_revision = models.ForeignKey(MicrodissectedRegionRequestRevision, null=False, related_name='microdissected_region_request_review_revision_set', db_column='mrv_id', editable=False)
-  vmv_scientific_merit = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Scientific Merit', 
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vmv_quantity = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Quantity', 
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vmv_priority = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Priority',
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vmv_notes = models.TextField(null=True, blank=True, verbose_name='Notes')
-  
-  def __unicode__(self):
-    return 'ReviewRevision: ' + self.review_revision + ' MicrodissectedRegionRequestRevision: ' + self.microdissected_region_request_revision
-    
-  class Meta:
-    db_table = 'vmv_reviews_to_microdissected_region_request_revisions'
-    unique_together = ('review_revision', 'microdissected_region_request_revision')
+############################################################################
+# The microdissected region code is commented out because (at least for
+# upcoming requests) it is no longer needed.
+# There may be a use for this when we implement archived tissues, so
+# commenting the code out is better than deleting it for now.
+############################################################################
+#class MicrodissectedRegionRequestReview(models.Model):
+#  vmr_microdissected_request_review_id = models.AutoField(primary_key=True)
+#  review = models.ForeignKey(Review, null=False, related_name='microdissected_region_request_review_set', db_column='rvs_review_id', editable=False)
+#  microdissected_region_request = models.ForeignKey(MicrodissectedRegionRequest, null=False,
+#                                                    related_name='microdissected_region_request_review_set',
+#                                                    db_column='rmr_block_request_id',
+#                                                    editable=False)
+#  vmr_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
+#      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
+#  vmr_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
+#      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
+#  vmr_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
+#      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
+#  vmr_notes = models.TextField('Notes', null=True, blank=True,)
+#
+#  def __unicode__(self):
+#    return 'Review: ' + str(self.review) + ' MicrodissectedRegionRequest: ' + str(self.microdissected_region_request)
+#
+#  def is_finished(self):
+#    return self.vmr_scientific_merit is not None and \
+#        self.vmr_quantity is not None and \
+#        self.vmr_priority is not None
+#
+#  def get_request(self):
+#    return self.microdissected_region_request
+#
+#  def get_merit(self):
+#    return self.vmr_scientific_merit
+#
+#  def get_quantity(self):
+#    return self.vmr_quantity
+#
+#  def get_priority(self):
+#    return self.vmr_priority
+#
+#  def has_notes(self):
+#    return self.vmr_notes != None and self.vmr_notes != ''
+#
+#  def get_notes(self):
+#    return self.vmr_notes
+#
+#  class Meta:
+#    db_table = 'vmr_reviews_to_microdissected_region_requests'
+#    unique_together = ('review', 'microdissected_region_request')
+#
+#
+#class MicrodissectedRegionRequestReviewRevision(models.Model):
+#  vmv_review_revision_id = models.AutoField(primary_key=True)
+#  review_revision = models.ForeignKey(ReviewRevision, null=False, related_name='microdissected_region_request_review_revision_set', db_column='rvr_revision_id', editable=False)
+#  microdissected_region_request_revision = models.ForeignKey(MicrodissectedRegionRequestRevision, null=False, related_name='microdissected_region_request_review_revision_set', db_column='mrv_id', editable=False)
+#  vmv_scientific_merit = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Scientific Merit',
+#      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
+#  vmv_quantity = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Quantity',
+#      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
+#  vmv_priority = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Priority',
+#      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
+#  vmv_notes = models.TextField(null=True, blank=True, verbose_name='Notes')
+#
+#  def __unicode__(self):
+#    return 'ReviewRevision: ' + self.review_revision + ' MicrodissectedRegionRequestRevision: ' + self.microdissected_region_request_revision
+#
+#  class Meta:
+#    db_table = 'vmv_reviews_to_microdissected_region_request_revisions'
+#    unique_together = ('review_revision', 'microdissected_region_request_revision')
 
 
 class BloodAndGeneticRequestReview(models.Model):
@@ -1072,7 +969,7 @@ class BloodAndGeneticRequestReview(models.Model):
 class BloodAndGeneticRequestReviewRevision(models.Model):
   vgv_review_revision_id = models.AutoField(primary_key=True)
   review_revision = models.ForeignKey(ReviewRevision, null=False, related_name='blood_genetic_request_review_revision_set', db_column='rvr_revision_id', editable=False)
-  blood_and_genetic_request_revision = models.ForeignKey(MicrodissectedRegionRequestRevision, null=False, related_name='blood_genetic_request_review_revision_set', db_column='mrv_id', editable=False)
+  blood_and_genetic_request_revision = models.ForeignKey(BloodAndGeneticRequestRevision, null=False, related_name='blood_genetic_request_review_revision_set', db_column='mrv_id', editable=False)
   vgv_scientific_merit = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Scientific Merit', 
       help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
   vgv_quantity = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Quantity', 
@@ -1144,7 +1041,6 @@ def request_post_save(**kwargs):
   req_request._previous_status_id = None
 
 
-#
 # This is a method to check to see if a user_id exists that does not have
 # an account attached to it.
 @receiver(post_save, sender=User)

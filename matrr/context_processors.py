@@ -10,9 +10,8 @@ def cart(request):
     try:
       cart = Request.objects.get(user=request.user.id, request_status=cart_status.rqs_status_id)
       cart_items = list(TissueRequest.objects.filter(req_request=cart))
-      cart_items.extend(BrainBlockRequest.objects.filter(req_request=cart))
       cart_items.extend(BrainRegionRequest.objects.filter(req_request=cart))
-      cart_items.extend(MicrodissectedRegionRequest.objects.filter(req_request=cart))
+      #cart_items.extend(MicrodissectedRegionRequest.objects.filter(req_request=cart))
       cart_items.extend(BloodAndGeneticRequest.objects.filter(req_request=cart))
       cart_num_items = len(cart_items)
       context['cart_exists'] = True

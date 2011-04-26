@@ -3,7 +3,7 @@ from django.contrib import admin
 
 admin.site.register(TissueType)
 admin.site.register(BrainBlock)
-admin.site.register(MicrodissectedRegion)
+#admin.site.register(MicrodissectedRegion)
 admin.site.register(BrainRegion)
 admin.site.register(BloodAndGenetic)
 admin.site.register(Cohort)

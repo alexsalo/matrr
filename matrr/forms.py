@@ -80,13 +80,6 @@ class ReviewForm(ModelForm):
     
     self.peripherals_formset = TissueRequestReviewFormSet(prefix='peripherals', *args, **kwargs)
 
-    BrainBlockRequestReviewFormSet = inlineformset_factory(Review,
-      BrainBlockRequestReview,
-      extra=0,
-      can_delete=False,)
-
-    self.blocks_formset = BrainBlockRequestReviewFormSet(prefix='blocks', *args, **kwargs)
-
     BrainRegionRequestReviewFormSet = inlineformset_factory(Review,
       BrainRegionRequestReview,
       extra=0,
@@ -94,12 +87,12 @@ class ReviewForm(ModelForm):
 
     self.regions_formset = BrainRegionRequestReviewFormSet(prefix='regions', *args, **kwargs)
 
-    MicrodissectedRegionRequestReviewFormSet = inlineformset_factory(Review,
-      MicrodissectedRegionRequestReview,
-      extra=0,
-      can_delete=False,)
-
-    self.microdissected_formset = MicrodissectedRegionRequestReviewFormSet(prefix='microdissected', *args, **kwargs)
+#    MicrodissectedRegionRequestReviewFormSet = inlineformset_factory(Review,
+#      MicrodissectedRegionRequestReview,
+#      extra=0,
+#      can_delete=False,)
+#
+#    self.microdissected_formset = MicrodissectedRegionRequestReviewFormSet(prefix='microdissected', *args, **kwargs)
 
     BloodAndGeneticRequestReviewFormSet = inlineformset_factory(Review,
       BloodAndGeneticRequestReview,
@@ -112,18 +105,16 @@ class ReviewForm(ModelForm):
   
   def is_valid(self):
     return self.peripherals_formset.is_valid() \
-      and self.blocks_formset.is_valid() \
       and self.regions_formset.is_valid() \
-      and self.microdissected_formset.is_valid() \
       and self.samples_formset.is_valid() \
       and super(ReviewForm, self).is_valid()
+      #and self.microdissected_formset.is_valid()
     
   def save(self, commit=True):
     super(ReviewForm, self).save(commit)
     self.peripherals_formset.save(commit)
-    self.blocks_formset.save(commit)
     self.regions_formset.save(commit)
-    self.microdissected_formset.save(commit)
+    #self.microdissected_formset.save(commit)
     self.samples_formset.save(commit)
   
   class Meta:
@@ -137,27 +128,6 @@ class AccountForm(ModelForm):
 class MtaForm(ModelForm):
   class Meta:
     model = Mta
-
-
-class BrainBlockRequestForm(TissueRequestBaseForm):
-  def clean(self):
-    super(BrainBlockRequestForm, self).clean()
-    cleaned_data = self.cleaned_data
-
-    if self.req_request and \
-       self.tissue and \
-       BrainBlockRequest.objects.filter( \
-        req_request=self.req_request, \
-        brain_block=self.tissue).count() > 0:
-      raise forms.ValidationError("You already have this brain block in your cart.")
-
-    # Always return the full collection of cleaned data.
-    return cleaned_data
-
-  class Meta:
-    model = BrainBlockRequest
-    exclude = ('req_request', 'brain_block')
-    widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/') }
 
 
 class BrainRegionRequestForm(TissueRequestBaseForm):
@@ -181,25 +151,25 @@ class BrainRegionRequestForm(TissueRequestBaseForm):
     widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/') }
 
 
-class MicrodissectedRegionRequestForm(TissueRequestBaseForm):
-  def clean(self):
-    super(MicrodissectedRegionRequestForm, self).clean()
-    cleaned_data = self.cleaned_data
-
-    if self.req_request and \
-       self.tissue and \
-       MicrodissectedRegionRequest.objects.filter( \
-        req_request=self.req_request, \
-        microdissected_region=self.tissue).count() > 0:
-      raise forms.ValidationError("You already have this microdissected region in your cart.")
-
-    # Always return the full collection of cleaned data.
-    return cleaned_data
-
-  class Meta:
-    model = MicrodissectedRegionRequest
-    exclude = ('req_request', 'microdissected_region')
-    widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/') }
+#class MicrodissectedRegionRequestForm(TissueRequestBaseForm):
+#  def clean(self):
+#    super(MicrodissectedRegionRequestForm, self).clean()
+#    cleaned_data = self.cleaned_data
+#
+#    if self.req_request and \
+#       self.tissue and \
+#       MicrodissectedRegionRequest.objects.filter( \
+#        req_request=self.req_request, \
+#        microdissected_region=self.tissue).count() > 0:
+#      raise forms.ValidationError("You already have this microdissected region in your cart.")
+#
+#    # Always return the full collection of cleaned data.
+#    return cleaned_data
+#
+#  class Meta:
+#    model = MicrodissectedRegionRequest
+#    exclude = ('req_request', 'microdissected_region')
+#    widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/') }
 
 
 class BloodAndGeneticRequestForm(TissueRequestBaseForm):

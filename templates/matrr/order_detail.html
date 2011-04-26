@@ -33,15 +33,12 @@
         <tr><th colspan="6">Requested Tissues</th></tr>
       </thead>
       <!--<tr><th>Tissue</th><th>Fix</th><th>Amount</th></tr>-->
-      {% for item in order.brain_block_request_set.all %}
-        {% include 'matrr/order_item_detail.html' %}
-      {% endfor %}
       {% for item in order.brain_region_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}
       {% endfor %}
-      {% for item in order.microdissected_region_request_set.all %}
-        {% include 'matrr/order_item_detail.html' %}
-      {% endfor %}
+{#      {% for item in order.microdissected_region_request_set.all %}#}
+{#        {% include 'matrr/order_item_detail.html' %}#}
+{#      {% endfor %}#}
       {% for item in order.tissue_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}
       {% endfor %}

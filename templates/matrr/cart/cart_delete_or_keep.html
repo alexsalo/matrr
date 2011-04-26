@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class='headline'>
+    {% block title %}
+      Error: You have a cart open with another cohort
+    {% endblock %}
+  </div>
+
+  <div>
+    You currently have a cart open for Cohort {{ cart.cohort }}.<br/>
+    You cannot start a new request for Cohort {{ cohort }} until your previous request is closed.<br/>
+    To close your request, you can either delete your existing cart or checkout.
+    <br/>
+    <br/>
+    <div class='table-left'>
+      <a href='/cart' class='blockLinkButton'>View cart</a>
+      <a href='/cart/delete' class='blockLinkButton'>Delete Cart</a>
+    </div>
+    <div class='table-right'>
+      <a class='blockLinkButton' onClick='javascript:history.go(-1);'>Back</a>
+    </div>
+  </div>
+
+
+{% endblock %}

@@ -14,15 +14,12 @@ Experimental Plan: <a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan 
     <td>{{ review.user }}</td>
   {% endfor %}
   </tr>
-  {% for tissue_request in block_requests %}
-    {% include 'matrr/review/review_overview_item.html' %}
-  {% endfor %}
   {% for tissue_request in region_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
   {% endfor %}
-  {% for tissue_request in microdissected_requests %}
-    {% include 'matrr/review/review_overview_item.html' %}
-  {% endfor %}
+{#  {% for tissue_request in microdissected_requests %}#}
+{#    {% include 'matrr/review/review_overview_item.html' %}#}
+{#  {% endfor %}#}
   {% for tissue_request in tissue_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
   {% endfor %}

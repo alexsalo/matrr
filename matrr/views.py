@@ -77,20 +77,39 @@ def monkey_detail_view(request, monkey_id):
 
 @login_required()
 def get_or_create_cart(request, cohort):
+  '''
+  This function will get the cart for the cohort if it exists.
+  If it does not exist, it will create a new cart for the cohort.
+  In the case that the user has a cart open for a different cohort,
+  this function will return None.  (unless the cart was empty, in which
+  case it will be deleted.
+  '''
   cart_status = RequestStatus.objects.get(rqs_status_name='Cart')
 
   # get the user's cart if it already exists
-  try:
+  if Request.objects.filter(user=request.user.id, request_status=cart_status.rqs_status_id).count() != 0:
     cart_request = Request.objects.get(user=request.user.id, request_status=cart_status.rqs_status_id)
     # check that the cart is for this cohort
     if cart_request.cohort != cohort:
       # take corrective action (display a page that asks the user if they want to abandon their cart and start with this cohort)
-      # TODO: implement this
-      raise Http404("You already have a cart open with a different cohort.  Please close your other request before " +
-      "starting a new one.  You can close a request by submitting it or by deleting your cart.")
-  except:
+      # if the cart is empty, just delete it
+      if cart_request.get_requested_tissue_count() == 0:
+        cart_request.delete()
+        #create a new cart
+        cart_request = Request(user=request.user, request_status=cart_status, 
+                               cohort=cohort, req_request_date=datetime.now())
+        cart_request.save()
+      else:
+        #the cart was not empty, so give the user the option to delete the cart and continue
+        return None
+        # it would probably be better to implement this as a custom exception handled with middleware,
+        # but for now I will just have this function return None in this case and let the
+        # calling function handle the error
+#        raise Http404("You already have a cart open with a different cohort.  Please close your other request before " + "starting a new one.  You can close a request by submitting it or by deleting your cart.")
+  else:
     #create a new cart
-    cart_request = Request(user=request.user, request_status=cart_status, cohort=cohort, req_request_date=datetime.now())
+    cart_request = Request(user=request.user, request_status=cart_status,
+                           cohort=cohort, req_request_date=datetime.now())
     cart_request.save()
 
   return cart_request
@@ -100,23 +119,21 @@ def get_or_create_cart(request, cohort):
 def tissue_shop_detail_view(request, cohort_id, tissue_model, tissue_id):
   current_cohort = Cohort.objects.get(coh_cohort_id = cohort_id)
   cart_request = get_or_create_cart(request, current_cohort)
+  if cart_request is None:
+    # The user has a cart open with a different cohort
+    # display a page that gives the user the option to delete
+    # the existing cart and proceed or to go to the existing cart.
+    return render_to_response('matrr/cart/cart_delete_or_keep.html',
+                              {'cohort': current_cohort},
+                              context_instance=RequestContext(request))
+
   # if we got here, then a request is made with this user and cohort and the status is 'cart'
   
   # get the current tissue
   current_tissue = None
   instance = None
   form_class = None
-  if tissue_model == 'blocks':
-    current_tissue = BrainBlock.objects.get(bbl_block_id = tissue_id)
-    instance = BrainBlockRequest(brain_block=current_tissue,
-      req_request=cart_request)
-    form_class = BrainBlockRequestForm
-  elif tissue_model == 'microdissected':
-    current_tissue = MicrodissectedRegion.objects.get(bmr_microdissected_id = tissue_id)
-    instance = MicrodissectedRegionRequest(microdissected_region=current_tissue,
-      req_request=cart_request)
-    form_class = MicrodissectedRegionRequestForm
-  elif tissue_model == 'regions':
+  if tissue_model == 'regions':
     current_tissue = BrainRegion.objects.get(bre_region_id = tissue_id)
     instance = BrainRegionRequest(brain_region=current_tissue,
       req_request=cart_request)
@@ -255,13 +272,7 @@ def cart_item_view(request, tissue_model, tissue_request_id):
   # get the cart item
   cart_item = None
   form = None
-  if tissue_model == 'blocks':
-    form = BrainBlockRequestForm
-    cart_item = BrainBlockRequest.objects.get(rbb_block_request_id=tissue_request_id)
-  elif tissue_model == 'microdissected':
-    form = MicrodissectedRegionRequestForm
-    cart_item = MicrodissectedRegionRequest.objects.get(rmr_microdissected_request_id=tissue_request_id)
-  elif tissue_model == 'regions':
+  if tissue_model == 'regions':
     form = BrainRegionRequestForm
     cart_item = BrainRegionRequest.objects.get(rbr_region_request_id=tissue_request_id)
   elif tissue_model == 'samples':
@@ -314,11 +325,7 @@ def cart_item_delete(request, tissue_model, tissue_request_id):
   context = RequestContext(request)
   # get the cart item
   cart_item = None
-  if tissue_model == 'blocks':
-    cart_item = BrainBlockRequest.objects.get(rbb_block_request_id=tissue_request_id)
-  elif tissue_model == 'microdissected':
-    cart_item = MicrodissectedRegionRequest.objects.get(rmr_microdissected_request_id=tissue_request_id)
-  elif tissue_model == 'regions':
+  if tissue_model == 'regions':
     cart_item = BrainRegionRequest.objects.get(rbr_region_request_id=tissue_request_id)
   elif tissue_model == 'samples':
     cart_item = BloodAndGeneticRequest.objects.get(rbg_id=tissue_request_id)
