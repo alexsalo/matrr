@@ -32,8 +32,9 @@
     <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ field.help_text }}</span></a>
   {% endif %}
   </th><td colspan='3'>{{ field }}</td>
+  </tr>
   {% if field.errors %}
-    <tr><td align=right>Error:</td><td class='field-error' colspan='3'>{{ field.errors }}</td>
+    <tr><td align=right>Error:</td><td class='field-error' colspan='3'>{{ field.errors }}</td></tr>
   {% endif %}
 {% endfor %}
 </table>

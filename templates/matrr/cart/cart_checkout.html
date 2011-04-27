@@ -16,10 +16,31 @@ Finalize Tissue Request
 </div>
 <form action='/cart/checkout/' enctype="multipart/form-data" method='POST'>
 {% csrf_token %}
-{{form.as_p}}
+  {% for field in form.hidden_fields %}
+    {{ field }}
+  {% endfor %}
+<div>
+  {% for field in form.visible_fields %}
+    <div class='clearfix'>
+    <div style='margin:0px; padding:2px;' class='table-left'>
+      <label for='{{ field.html_name }}'>{{ field.label}}</label>
+    {% if field.help_text %}
+      <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ field.help_text }}</span></a>
+    {% endif %}
+    </div><div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
+    </div>
+    {% if field.errors %}
+      <div class='error clearfix'>{{ field.errors }}</div>
+    {% endif %}
+  {% endfor %}
+</div>
 {% include 'matrr/cart/cart_items_table.html' %}
-<button type='submit' name='submit' value='checkout'>Checkout</button>
-
+<div>
+  Upon acceptance of tissue request, a Material Transfer Agreement will be required before tissue is released.
+</div>
+<div style='padding:3px;'>
+  <button type='submit' name='submit' value='checkout'>Checkout</button>
+</div>
 </form>
 
 {% endif %}

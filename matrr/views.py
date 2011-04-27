@@ -82,7 +82,7 @@ def get_or_create_cart(request, cohort):
   If it does not exist, it will create a new cart for the cohort.
   In the case that the user has a cart open for a different cohort,
   this function will return None.  (unless the cart was empty, in which
-  case it will be deleted.
+  case it will be deleted.)
   '''
   cart_status = RequestStatus.objects.get(rqs_status_name='Cart')
 
@@ -105,7 +105,6 @@ def get_or_create_cart(request, cohort):
         # it would probably be better to implement this as a custom exception handled with middleware,
         # but for now I will just have this function return None in this case and let the
         # calling function handle the error
-#        raise Http404("You already have a cart open with a different cohort.  Please close your other request before " + "starting a new one.  You can close a request by submitting it or by deleting your cart.")
   else:
     #create a new cart
     cart_request = Request(user=request.user, request_status=cart_status,
@@ -515,27 +514,24 @@ def review_overview(request, req_request_id):
   # get the request being reviewed
   req_request = Request.objects.get(req_request_id=req_request_id)
   # get the tissue requests
-  block_requests = req_request.brain_block_request_set.all()
   region_requests = req_request.brain_region_request_set.all()
-  microdissected_requests = req_request.microdissected_region_request_set.all()
+  #microdissected_requests = req_request.microdissected_region_request_set.all()
   tissue_requests = req_request.tissue_request_set.all()
   sample_requests = req_request.blood_and_genetic_request_set.all()
   # get the reviews for the request
   reviews = list(req_request.review_set.all())
   reviews.sort(key=lambda x: x.user.username, reverse=False)
 
-  sort_tissues_and_add_quantity_css_value(block_requests)
   sort_tissues_and_add_quantity_css_value(region_requests)
-  sort_tissues_and_add_quantity_css_value(microdissected_requests)
+  #sort_tissues_and_add_quantity_css_value(microdissected_requests)
   sort_tissues_and_add_quantity_css_value(tissue_requests)
   sort_tissues_and_add_quantity_css_value(sample_requests)
 
   return render_to_response('matrr/review/review_overview.html', \
         {'reviews': reviews,
          'req_request': req_request,
-         'block_requests': block_requests,
          'region_requests': region_requests,
-         'microdissected_requests': microdissected_requests,
+#         'microdissected_requests': microdissected_requests,
          'tissue_requests': tissue_requests,
          'sample_requests': sample_requests,
          },
@@ -591,15 +587,11 @@ def tissue_list(request, tissue_model, cohort_id = None):
   model = None
   order = None
   title = None
-  if tissue_model == 'blocks':
-    model = BrainBlock
-    order = 'bbl_block_name'
-    title = 'Brain Blocks'
-  elif tissue_model == 'microdissected':
-    model = MicrodissectedRegion
-    order = 'bmr_microdissected_name'
-    title = 'Microdissected Regions'
-  elif tissue_model == 'regions':
+#  if tissue_model == 'microdissected':
+#    model = MicrodissectedRegion
+#    order = 'bmr_microdissected_name'
+#    title = 'Microdissected Regions'
+  if tissue_model == 'regions':
     model = BrainRegion
     order = 'bre_region_name'
     title = 'Brain Regions'

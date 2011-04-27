@@ -104,7 +104,6 @@ class CohortEvent(models.Model):
     db_table = 'cev_cohort_events'
 
 
-
 class Monkey(models.Model):
   GENDER_CHOICES = (
     ('M', 'Male'),
@@ -129,6 +128,7 @@ class Monkey(models.Model):
   
   class Meta:
     db_table = 'mky_monkeys'
+
 
 class Mta(models.Model):
   mta_id = models.AutoField(primary_key=True)
@@ -306,6 +306,14 @@ class Unit(models.Model):
 
 
 class Request(models.Model, DiffingMixin):
+  REFERRAL_CHOICES = (
+    ('Internet Search','Internet Search'),
+    ('Publication', 'Publication'),
+    ('Professional Meeting', 'Professional Meeting'),
+    ('MATRR Staff/Investigator', 'MATRR Staff/Investigator'),
+    ('Colleague', 'Colleague'),
+    ('other', 'other'),
+  )
   req_request_id = models.AutoField('ID', primary_key=True)
   request_status = models.ForeignKey(RequestStatus, null=False, db_column='rqs_status_id',)
   cohort = models.ForeignKey(Cohort, null=False, db_column='coh_cohort_id', editable=False,)
@@ -313,11 +321,25 @@ class Request(models.Model, DiffingMixin):
   req_modified_date = models.DateTimeField( auto_now_add=True, editable=False, auto_now=True)
   req_request_date = models.DateTimeField( editable=False, auto_now_add=True)
   req_experimental_plan = models.FileField('Experimental Plan', upload_to='experimental_plans/',
-                                           default='', null=False, blank=False)
+                                           default='', null=False, blank=False,
+                                           help_text='Please upload a detailed description of your research plans for the tissues you are requesting.')
+  req_project_title = models.CharField('Project Title', null=False, blank=False,
+                                       max_length=200,
+                                       help_text='The name of the project or proposal these tissues will be used in.')
+  req_reason = models.TextField('Reason for Tissue Request', null=False, blank=False,
+                                help_text='Please provide a short paragraph describing the hypothesis and methods proposed.')
+  req_progress_agreement = models.BooleanField('Would you be willing to supply us with a progress report on the results obtained from our tissue? (We will request an update 90 after the tissues are shipped.)',
+                                               null=False,)
+  req_referred_by = models.CharField('How did you hear about the tissue bank?',
+                                     choices=REFERRAL_CHOICES,
+                                     null=False,
+                                     max_length=100)
   req_notes = models.TextField('Notes', null=True, blank=True)
   
   def __unicode__(self):
-    return 'User: ' + self.user.username + ' Cohort: ' + self.cohort.coh_cohort_name + ' Date: ' + self.req_request_date.strftime("%I:%M%p  %m/%d/%y")
+    return 'User: ' + self.user.username + \
+           ' Cohort: ' + self.cohort.coh_cohort_name + \
+           ' Date: ' + self.req_request_date.strftime("%I:%M%p  %m/%d/%y")
 
   def get_requested_tissue_count(self):
     return self.tissue_request_set.count() + \
@@ -701,9 +723,7 @@ class Review(models.Model):
   
   def is_finished(self):
     return all( tissue_request.is_finished() for tissue_request in TissueRequestReview.objects.filter(review=self.rvs_review_id)) \
-    and all( block_request.is_finished() for block_request in BrainBlockRequestReview.objects.filter(review=self.rvs_review_id) ) \
     and all( region_request.is_finished() for region_request in BrainRegionRequestReview.objects.filter(review=self.rvs_review_id) ) \
-    and all( microdissected_request.is_finished() for microdissected_request in MicrodissectedRegionRequestReview.objects.filter(review=self.rvs_review_id) ) \
     and all( sample_request.is_finished() for sample_request in BloodAndGeneticRequestReview.objects.filter(review=self.rvs_review_id) )
   
   class Meta:
@@ -844,7 +864,7 @@ class BrainRegionRequestReviewRevision(models.Model):
   vrv_notes = models.TextField(null=True, blank=True, verbose_name='Notes')
   
   def __unicode__(self):
-    return 'ReviewRevision: ' + self.review_revision + ' BrainBlockRequestRevision: ' + self.brain_region_request_revision
+    return 'ReviewRevision: ' + self.review_revision + ' BrainRegionRequestRevision: ' + self.brain_region_request_revision
     
   class Meta:
     db_table = 'vrv_reviews_to_brain_region_request_revisions'
@@ -1016,9 +1036,8 @@ def request_post_save(**kwargs):
     committee_group = Group.objects.get(name='Committee')
     committee_members = committee_group.user_set.all()
     # get all the tissue requests for the request
-    brain_block_requests = BrainBlockRequest.objects.filter(req_request=req_request.req_request_id)
     brain_region_requests = BrainRegionRequest.objects.filter(req_request=req_request.req_request_id)
-    microdissected_requests = MicrodissectedRegionRequest.objects.filter(req_request=req_request.req_request_id)
+    #microdissected_requests = MicrodissectedRegionRequest.objects.filter(req_request=req_request.req_request_id)
     peripheral_tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
     sample_requests = BloodAndGeneticRequest.objects.filter(req_request=req_request.req_request_id)
 
@@ -1027,12 +1046,10 @@ def request_post_save(**kwargs):
       review = Review(req_request=req_request, user=user)
       review.save()
       # create a new TissueRequestReview for each TissueRequest
-      for tissue_request in brain_block_requests:
-        BrainBlockRequestReview(review=review, brain_block_request=tissue_request).save()
       for tissue_request in brain_region_requests:
         BrainRegionRequestReview(review=review, brain_region_request=tissue_request).save()
-      for tissue_request in microdissected_requests:
-        MicrodissectedRegionRequestReview(review=review, microdissected_region_request=tissue_request).save()
+#      for tissue_request in microdissected_requests:
+#        MicrodissectedRegionRequestReview(review=review, microdissected_region_request=tissue_request).save()
       for tissue_request in peripheral_tissue_requests:
         TissueRequestReview(review=review, tissue_request=tissue_request).save()
       for tissue_request in sample_requests:
