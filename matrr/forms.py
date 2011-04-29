@@ -1,6 +1,7 @@
 from django import forms
 from django.forms import ModelForm
 from django.forms.models import inlineformset_factory
+from django.db import transaction
 
 import re
 
@@ -102,21 +103,31 @@ class ReviewForm(ModelForm):
 
     self.samples_formset = BloodAndGeneticRequestReviewFormSet(prefix='samples', *args, **kwargs)
 
+    CustomTissueRequestReviewFormSet = inlineformset_factory(Review,
+                                                             BloodAndGeneticRequestReview,
+                                                             extra=0,
+                                                             can_delete=False,)
+
+    self.custom_formset = CustomTissueRequestReviewFormSet(prefix='custom', *args, **kwargs)
+
     super(ReviewForm, self).__init__(*args, **kwargs)
   
   def is_valid(self):
     return self.peripherals_formset.is_valid() \
       and self.regions_formset.is_valid() \
       and self.samples_formset.is_valid() \
+      and self.custom_formset.is_valid() \
       and super(ReviewForm, self).is_valid()
       #and self.microdissected_formset.is_valid()
-    
+
+  @transaction.commit_on_success
   def save(self, commit=True):
     super(ReviewForm, self).save(commit)
     self.peripherals_formset.save(commit)
     self.regions_formset.save(commit)
     #self.microdissected_formset.save(commit)
     self.samples_formset.save(commit)
+    self.custom_formset.save(commit)
   
   class Meta:
     model = Review

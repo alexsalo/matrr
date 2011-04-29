@@ -69,6 +69,8 @@ class Cohort(models.Model):
                                   verbose_name='Institution',
                                   help_text='Please select the institution where this cohort was raised.')
   events = models.ManyToManyField(EventType, through='CohortEvent', related_name='cohort_set')
+  coh_species = models.CharField('Species', max_length=30,
+                                 help_text='Please enter the species of the monkeys in this cohort.')
   
   def __unicode__(self):
     return self.coh_cohort_name
@@ -96,6 +98,9 @@ class CohortEvent(models.Model):
                             help_text='The type of event.')
   cev_date = models.DateField('Date',
                               help_text='The date of this event.')
+  cev_info = models.CharField('Additional Info', max_length=200,
+                              blank=True, null=True,
+                              help_text='This is for entering some additional info for the event. There is a 200 character limit.')
 
   def __unicode__(self):
     return str(self.cohort) + ' ' + str(self.event)
@@ -118,11 +123,22 @@ class Monkey(models.Model):
                               help_text='The monkey\'s name.')
   mky_gender = models.CharField('Gender', max_length=1, choices=GENDER_CHOICES, blank=True, null=True,
                                help_text='The sex of the monkey.')
-  mky_birthdate = models.DateField('Date of Birth', blank=True, null=True,
-                                   help_text='Please select the date the monkey was born on.')
+  mky_birthdate = models.CharField('Date of Birth', blank=True, null=True,
+                                   max_length=20,
+                                   help_text='Please enter the date the monkey was born on.')
   mky_weight = models.IntegerField('Weight', blank=True, null=True,
                                    help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
-  
+  mky_drinking = models.BooleanField('Drinking', null=False,
+                                     help_text='Was this monkey given alcohol?')
+  mky_necropsy_date = models.DateField('Necropsy Date', null=True, blank=True,
+                                       help_text='Please enter the date the necropsy was performed on.')
+  mky_study_complete = models.BooleanField('Complete Study Performed', null=False,
+                                           default=False,
+                                           help_text='Did this monkey complete all stages of the experiment?')
+  mky_stress_model = models.CharField('Stress Model', null=True, blank=True,
+                                      max_length=30,
+                                      help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
+    
   def __unicode__(self):
     return str(self.mky_real_id)
   
@@ -321,8 +337,8 @@ class Request(models.Model, DiffingMixin):
   req_modified_date = models.DateTimeField( auto_now_add=True, editable=False, auto_now=True)
   req_request_date = models.DateTimeField( editable=False, auto_now_add=True)
   req_experimental_plan = models.FileField('Experimental Plan', upload_to='experimental_plans/',
-                                           default='', null=False, blank=False,
-                                           help_text='Please upload a detailed description of your research plans for the tissues you are requesting.')
+                                           default='', null=True, blank=True,
+                                           help_text='You may upload a detailed description of your research plans for the tissues you are requesting.')
   req_project_title = models.CharField('Project Title', null=False, blank=False,
                                        max_length=200,
                                        help_text='The name of the project or proposal these tissues will be used in.')
@@ -699,6 +715,54 @@ class BloodAndGeneticRequestRevision(models.Model):
     unique_together = ('request_revision', 'blood_genetic_item')
 
 
+class CustomTissueRequest(models.Model):
+  '''
+  This class is for custom tissue requests.
+  It differs from the other request classes by
+  not having a reference to a tissue class.
+  '''
+  ctr_id = models.AutoField(primary_key=True)
+  req_request = models.ForeignKey(Request, null=False, related_name='custom_tissue_request_set', db_column='req_request_id')
+  ctr_description = models.TextField('Detailed Description',
+                                     null=False,
+                                     blank=False,
+                                     help_text='Please enter a detailed description of the tissue you need.  List any special requirements here.')
+  ctr_amount = models.CharField('Amount', null=False, blank=False,
+                                max_length=100,
+                                help_text='Please enter the amount of tissue that you need.')
+  monkeys = models.ManyToManyField(Monkey, db_table='mcr_monkeys_to_custom_tissue_requests',
+                                 verbose_name='Requested Monkeys',
+                                 help_text='The monkeys this tissue is requested from.')
+
+  def __unicode__(self):
+    return str('Custom Tissue Request')
+
+  def get_tissue(self):
+    raise NotImplementedError()
+
+  def get_id(self):
+    return self.ctr_id
+
+  def has_notes(self):
+    return False
+
+  def get_notes(self):
+    return None
+
+  def get_data(self):
+    return [['Custom Tissue Request', self.ctr_description],
+            ['Amount', self.ctr_amount]]
+
+  def get_type_url(self):
+    raise NotImplementedError()
+
+  def get_reviews(self):
+    return self.custom_tissue_request_review_set.all()
+
+  class Meta:
+    db_table = 'ctr_custom_tissue_requests'
+
+
 class Event(models.Model):
   id = models.AutoField('ID', primary_key=True)
   name = models.CharField('Name', max_length=100, unique=True, null=False,
@@ -1004,6 +1068,53 @@ class BloodAndGeneticRequestReviewRevision(models.Model):
   class Meta:
     db_table = 'vgv_reviews_to_blood_and_genetic_request_revisions'
     unique_together = ('review_revision', 'blood_and_genetic_request_revision')
+
+
+class CustomTissueRequestReview(models.Model):
+  vct_review_id = models.AutoField(primary_key=True)
+  review = models.ForeignKey(Review, null=False, related_name='custom_tissue_request_review_set', db_column='rvs_review_id', editable=False)
+  custom_tissue_request = models.ForeignKey(CustomTissueRequest,
+                                            null=False,
+                                            related_name='custom_tissue_request_review_set',
+                                            db_column='rbg_id',
+                                            editable=False)
+  vct_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
+      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
+  vct_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
+      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
+  vct_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
+      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
+  vct_notes = models.TextField('Notes', null=True, blank=True,)
+
+  def __unicode__(self):
+    return 'Review: ' + str(self.review) + ' BloodAndGeneticRequest: ' + str(self.blood_and_genetic_request)
+
+  def is_finished(self):
+    return self.vct_scientific_merit is not None and \
+        self.vct_quantity is not None and \
+        self.vct_priority is not None
+
+  def get_request(self):
+    return self.custom_tissue_request
+
+  def get_merit(self):
+    return self.vct_scientific_merit
+
+  def get_quantity(self):
+    return self.vct_quantity
+
+  def get_priority(self):
+    return self.vct_priority
+
+  def has_notes(self):
+    return self.vct_notes != None and self.vct_notes != ''
+
+  def get_notes(self):
+    return self.vct_notes
+
+  class Meta:
+    db_table = 'vct_reviews_to_custom_tissue_requests'
+    unique_together = ('review', 'custom_tissue_request')
 
 
 # put any signal callbacks down here after the model declarations

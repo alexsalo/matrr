@@ -61,14 +61,14 @@ urlpatterns += patterns('matrr.views',
         queryset=Cohort.objects.filter(coh_upcoming=True).order_by('coh_cohort_name'),
         context_object_name='cohort_list',
         template_name='matrr/upcoming_cohorts.html',
-        paginate_by=10,
+        paginate_by=5
       ) ),
   url( r'^available/$', 
       ListView.as_view(
         queryset=Cohort.objects.filter(coh_upcoming=False).order_by('coh_cohort_name'),
         context_object_name='cohort_list',
         template_name='matrr/available_cohorts.html',
-        paginate_by=10,
+        paginate_by=5,
       ) ),
   url( r'^upcoming/(?P<pk>\d+)/$', 
       DetailView.as_view(

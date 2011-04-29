@@ -120,6 +120,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.transaction.TransactionMiddleware',
 )
 
 ROOT_URLCONF = 'urls'
@@ -163,6 +164,7 @@ if DEVELOPMENT:
       # django-registration installed by EJB - 3.16.11
       'registration',
       'djangosphinx',
+      'utils',
   )
 else:
   INSTALLED_APPS = (
@@ -179,6 +181,7 @@ else:
       'matrr',
       # django-registration installed by EJB - 3.16.11
       'registration',
+      'utils',
   )
 
 # The following are settings for django-registration

@@ -34,6 +34,7 @@
 {# {{ form.microdissected_formset.management_form }} #}
 {{ form.peripherals_formset.management_form }}
 {{ form.samples_formset.management_form }}
+{{ form.custom_formset.management_form }}
   {% for tform in form.regions_formset %}
     {% for field in tform.hidden_fields %}
       {{ field }}
@@ -54,6 +55,11 @@
       {{ field }}
     {% endfor %}
   {% endfor %}
+{% for tform in form.custom_formset %}
+    {% for field in tform.hidden_fields %}
+      {{ field }}
+    {% endfor %}
+  {% endfor %}
 </div>
 
 <table class='review_table'>
@@ -67,6 +73,9 @@
     {% include 'matrr/review/review_form_item.html' %}
   {% endfor %}
   {% for tform in form.samples_formset %}
+    {% include 'matrr/review/review_form_item.html' %}
+  {% endfor %}
+  {% for tform in form.custom_formset %}
     {% include 'matrr/review/review_form_item.html' %}
   {% endfor %}
 </table>
