@@ -31,16 +31,29 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'django_test',                      # Or path to database file if using sqlite3.
-        'USER': 'django_test',                      # Not used with sqlite3.
-        'PASSWORD': 'matrr_django',                  # Not used with sqlite3.
-        'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-        #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-    }
-}
+if TEST:
+  DATABASES = {
+      'default': {
+          'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+          'NAME': 'matrr_test',                      # Or path to database file if using sqlite3.
+          'USER': 'django_test',                      # Not used with sqlite3.
+          'PASSWORD': 'matrr_django',                  # Not used with sqlite3.
+          'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
+          #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+      }
+  }
+else:
+  DATABASES = {
+      'default': {
+          'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+          'NAME': 'django_test',                      # Or path to database file if using sqlite3.
+          'USER': 'django_test',                      # Not used with sqlite3.
+          'PASSWORD': 'matrr_django',                  # Not used with sqlite3.
+          'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
+          #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+      }
+  }
+
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -142,27 +155,12 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'matrr.context_processors.site_root',
 )
 
-if DEVELOPMENT:
-  TEMPLATE_DIRS = (
-      # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-      # Always use forward slashes, even on Windows.
-      # Don't forget to use absolute paths, not relative paths.
-      "/web/django_test/templates",
-  )
-elif TEST:
-  TEMPLATE_DIRS = (
-      # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-      # Always use forward slashes, even on Windows.
-      # Don't forget to use absolute paths, not relative paths.
-      "/web/www/dev/templates",
-  )
-elif PRODUCTION:
-  TEMPLATE_DIRS = (
-      # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-      # Always use forward slashes, even on Windows.
-      # Don't forget to use absolute paths, not relative paths.
-      "/web/www/wsgi-scripts/templates",
-  )
+TEMPLATE_DIRS = (
+    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
+    path + "/templates",
+)
 
 # Sphinx 0.9.9
 SPHINX_API_VERSION = 0x116
