@@ -21,6 +21,10 @@ else:
   DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
+SITE_ROOT = ''
+if TEST:
+  SITE_ROOT = '/dev'
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
@@ -134,7 +138,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.request",
     'matrr.context_processors.cart',
     'matrr.context_processors.login_form',
-    'matrr.context_processors.group_membership'
+    'matrr.context_processors.group_membership',
+    'matrr.context_processors.site_root',
 )
 
 TEMPLATE_DIRS = (
@@ -165,6 +170,7 @@ if DEVELOPMENT:
       'registration',
       'djangosphinx',
       'utils',
+      'south',
   )
 else:
   INSTALLED_APPS = (
@@ -182,6 +188,7 @@ else:
       # django-registration installed by EJB - 3.16.11
       'registration',
       'utils',
+      'south',
   )
 
 # The following are settings for django-registration

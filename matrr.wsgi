@@ -1,7 +1,8 @@
 import os
 import sys
 
-path = '/web/django_test'
+#path = '/web/django_test'
+path = os.path.dirname( os.path.realpath( __file__ ) )
 if path not in sys.path:
     sys.path.append(path)
 

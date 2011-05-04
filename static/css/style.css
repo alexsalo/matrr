@@ -74,7 +74,7 @@ body {
   display: block;
 }
 
-.nav ul li.drop-down{
+.nav ul .drop-down{
   display:none;
 }
 

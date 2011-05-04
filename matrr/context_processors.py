@@ -1,6 +1,7 @@
 from matrr.models import *
 from django.contrib.auth.views import AuthenticationForm
 from django.contrib.auth.models import Group
+from settings import SITE_ROOT
 
 def cart(request):
   # get the cart for the user in the request
@@ -40,3 +41,6 @@ def group_membership(request):
       key = 'user_is_member_of_' + group.name
       context[key] = True
   return context
+
+def site_root(request):
+  return {'SITE_ROOT': SITE_ROOT}
