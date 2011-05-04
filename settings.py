@@ -142,13 +142,27 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'matrr.context_processors.site_root',
 )
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    "/web/django_test/templates",
-)
-
+if DEVELOPMENT:
+  TEMPLATE_DIRS = (
+      # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+      # Always use forward slashes, even on Windows.
+      # Don't forget to use absolute paths, not relative paths.
+      "/web/django_test/templates",
+  )
+elif TEST:
+  TEMPLATE_DIRS = (
+      # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+      # Always use forward slashes, even on Windows.
+      # Don't forget to use absolute paths, not relative paths.
+      "/web/www/dev/templates",
+  )
+elif PRODUCTION:
+  TEMPLATE_DIRS = (
+      # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+      # Always use forward slashes, even on Windows.
+      # Don't forget to use absolute paths, not relative paths.
+      "/web/www/wsgi-scripts/templates",
+  )
 
 # Sphinx 0.9.9
 SPHINX_API_VERSION = 0x116
