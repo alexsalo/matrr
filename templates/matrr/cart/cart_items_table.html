@@ -1,16 +1,20 @@
-<table class='cart_table'>
+<table class='cart_table' width='80%'>
   <!--<tr><th>Tissue</th><th>Fix</th><th>Amount</th></tr>-->
   {% for item in cart_items %}
     <tbody>
     <tr>
       {% for datum in item.get_data %}
-        <th>{{ datum.0 }}:</th><td>{{ datum.1 }}</td>
+        <th>{{ datum.0 }}:</th><td width=60%>{{ datum.1 }}</td>
       {% endfor %}
-      <td valign='center'>
-        <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/'><button>Edit</button></a>
+      <td valign='middle'>
+        <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/'><img src="{{ STATIC_URL }}/images/cart_edit.png" width='16' height='16'></a>
       </td>
-      <td>
-        <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/delete/'><button>Delete</button></a>
+      <td valign='middle'>
+        <a href='/{% if cart.cohort.coh_upcoming %}upcoming{% else %}available{% endif %}/{{ cart.cohort.coh_cohort_id }}/tissues'>
+          <img src="{{ STATIC_URL }}/images/cart_add.png" width='16' height='16'></a>
+      </td>
+      <td valign='middle'>
+        <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/delete/'><img src="{{ STATIC_URL }}/css/images/badge-circle-cross-24.png" width='16' height='16'></a>
       </td>
     </tr>
     {% if item.has_notes %}

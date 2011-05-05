@@ -1,7 +1,8 @@
 {% if cart_exists %}
 <div id='sidebar-block'>
 <div id='headline'>
-<a href='/cart'>Cart ({{ cart_num_items }})</a>
+<a href='/cart'> Cart({{ cart_num_items }})</a>
+
 </div>
 {% if cart_num_items > 0 %}
 <ul style='list-style:none; list-style-position: outside; padding: 0px'>
@@ -10,6 +11,8 @@
 {% endfor %}
 </ul>
 {% endif %}
+
+<a href='/cart'><img src="{{ STATIC_URL }}/images/cart_go.png" width='24' height='24'> Checkout</a>
 
 </div>
 {% endif %}

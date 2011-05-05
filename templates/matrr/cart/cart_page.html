@@ -4,25 +4,30 @@
 {% endblock %}
 
 {% block content %}
-<div id='headline'>
+<div id='large-headline'>
 Tissue Request Cart
 </div>
+<br/>
 {% if cart_exists %}
   {% if cart_num_items != 0 %}
     {% include 'matrr/cart/cart_items_table.html' %}
 
     <div><a href='/{% if cart.cohort.coh_upcoming %}upcoming{% else %}available{% endif %}/{{ cart.cohort.coh_cohort_id }}/tissues'>Add more tissues</a></div>
     <div style='float: left;'>
-      <a href='/cart/checkout/'><button>Checkout</button></a>
+      <a href='/cart/checkout/'><div class="blockLinkCheckoutButton">Checkout</div></a>
     </div>
   {% else %}
     There are no items in your cart.
   {% endif %}
   <div style='float: right;'>
-    <a href='/cart/delete/'><button>Delete Cart</button></a>
+    <a href='/cart/delete/'><div class="blockLinkDeleteButton">Delete Cart</div></a>
   </div>
 {% else %}
+  <div class="messages">
+    <div class="info">
   You have not started a cart yet.
+    </div>
+  </div>
 {% endif %}
 </div>
 {% endblock %}

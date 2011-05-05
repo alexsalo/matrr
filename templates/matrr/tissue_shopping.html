@@ -22,10 +22,18 @@
 {% for hidden in form.hidden_fields %}
   {{ hidden }}
 {% endfor %}
-<table>
+
+{% if form.non_field_errors %}
+<div class="messages">
+  <div class="error">
 {% for error in form.non_field_errors %}
-  <tr><td colspan='4'>{{ error }}</td></tr>
+  {{ error }}
 {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<table>
 {% for field in form.visible_fields %}
   <tr><th><label for='{{ field.html_name }}'>{{ field.label }}</label>
   {% if field.help_text %}
