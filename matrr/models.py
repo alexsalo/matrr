@@ -4,8 +4,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import datetime
 
-from djangosphinx.models import SphinxSearch
-
 # this is a snippet from http://djangosnippets.org/snippets/1683/
 # it will allow me to monitor some classes to see when they change state
 class DiffingMixin(object):
@@ -42,7 +40,6 @@ class Institution(models.Model):
 
   class Meta:
     db_table = 'ins_institutions'
-
 
 
 class EventType(models.Model):
@@ -323,7 +320,7 @@ class TissueType(models.Model):
       # get the number of tissues that have been harvested
       harvested = PeripheralTissueSample.objects.filter(monkey=monkey,
                                                          tissue_type=self,).count()
-      if harvested != 0:
+      if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
 
@@ -331,7 +328,7 @@ class TissueType(models.Model):
         freezer_stock = FreezerPeripheralTissue.objects.filter(monkey=monkey,
                                                                tissue_type=self,).count()
         # check if the amount of stock exceeds the number of approved requests
-        if requested < stock:
+        if requested < freezer_stock:
           # if it does, the tissue is available (and in stock)
           availability = Availability.In_Stock
       elif self.tst_count_per_monkey and (requested < self.tst_count_per_monkey):
@@ -576,7 +573,7 @@ class BrainRegion(models.Model):
       # get the number of tissues that have been harvested
       harvested = BrainRegionSample.objects.filter(monkey=monkey,
                                                          brain_region=self,).count()
-      if harvested != 0:
+      if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
 
@@ -584,7 +581,7 @@ class BrainRegion(models.Model):
         freezer_stock = FreezerBrainRegion.objects.filter(monkey=monkey,
                                                      brain_region=self,).count()
         # check if the amount of stock exceeds the number of approved requests
-        if requested < stock:
+        if requested < freezer_stock:
           # if it does, the tissue is available (and in stock)
           availability = Availability.In_Stock
       elif self.bre_count_per_monkey and (requested < self.bre_count_per_monkey):
@@ -618,7 +615,7 @@ class BrainRegionRequest(models.Model):
     return self.rbr_region_request_id
 
   def has_notes(self):
-    return self.rbr_notes != None and self.rbr_notes != ''
+    return self.rbr_notes is not None and self.rbr_notes != ''
 
   def get_notes(self):
     return self.rbr_notes
@@ -710,7 +707,7 @@ class BloodAndGenetic(models.Model):
       # get the number of tissues that have been harvested
       harvested = BloodAndGenecticsSample.objects.filter(monkey=monkey,
                                                          blood_genetic_item=self,).count()
-      if harvested != 0:
+      if harvested :
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
 
@@ -718,7 +715,7 @@ class BloodAndGenetic(models.Model):
         freezer_stock = FreezerBloodAndGenetics.objects.filter(monkey=monkey,
                                                      blood_genetic_item=self,).count()
         # check if the amount of stock exceeds the number of approved requests
-        if requested < stock:
+        if requested < freezer_stock:
           # if it does, the tissue is available (and in stock)
           availability = Availability.In_Stock
       elif self.bag_count_per_monkey and (requested < self.bag_count_per_monkey):
@@ -755,7 +752,7 @@ class BloodAndGeneticRequest(models.Model):
     return self.rbg_id
 
   def has_notes(self):
-    return self.rbg_notes != None and self.rbrg_notes != ''
+    return self.rbg_notes is not None and self.rbg_notes != ''
 
   def get_notes(self):
     return self.rbg_notes
@@ -775,10 +772,10 @@ class BloodAndGeneticRequest(models.Model):
 
 
 class BloodAndGeneticRequestRevision(models.Model):
-  brr_id = models.AutoField(primary_key=True)
+  grr_id = models.AutoField(primary_key=True)
   request_revision = models.ForeignKey(RequestRevision, null=False, related_name='blood_and_genetic_request_revision_set', db_column='rqv_request_revision_id', editable=False)
   blood_genetic_item = models.ForeignKey(BloodAndGenetic, null=False, related_name='blood_and_genetic_request_revision_set', db_column='bag_id', editable=False)
-  brr_notes = models.TextField(null=True, blank=True, editable=False)
+  grr_notes = models.TextField(null=True, blank=True, editable=False)
   monkeys = models.ManyToManyField(Monkey, db_table='mgv_monkeys_to_blood_genetic_request_revisions',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this region is requested from.')
@@ -918,7 +915,7 @@ class TissueRequestReview(models.Model):
     return self.vtr_priority
 
   def has_notes(self):
-    return self.vtr_notes != None and self.vtr_notes != ''
+    return self.vtr_notes is not None and self.vtr_notes != ''
 
   def get_notes(self):
     return self.vtr_notes
@@ -981,7 +978,7 @@ class BrainRegionRequestReview(models.Model):
     return self.vbr_priority
 
   def has_notes(self):
-    return self.vbr_notes != None and self.vbr_notes != ''
+    return self.vbr_notes is not None and self.vbr_notes != ''
 
   def get_notes(self):
     return self.vbr_notes
@@ -1116,7 +1113,7 @@ class BloodAndGeneticRequestReview(models.Model):
     return self.vbg_priority
 
   def has_notes(self):
-    return self.vbg_notes != None and self.vbg_notes != ''
+    return self.vbg_notes is not None and self.vbg_notes != ''
 
   def get_notes(self):
     return self.vbg_notes
@@ -1163,7 +1160,7 @@ class CustomTissueRequestReview(models.Model):
   vct_notes = models.TextField('Notes', null=True, blank=True,)
 
   def __unicode__(self):
-    return 'Review: ' + str(self.review) + ' BloodAndGeneticRequest: ' + str(self.blood_and_genetic_request)
+    return 'Review: ' + str(self.review) + ' Custom Tissue Request'
 
   def is_finished(self):
     return self.vct_scientific_merit is not None and \
@@ -1183,7 +1180,7 @@ class CustomTissueRequestReview(models.Model):
     return self.vct_priority
 
   def has_notes(self):
-    return self.vct_notes != None and self.vct_notes != ''
+    return self.vct_notes is not None and self.vct_notes != ''
 
   def get_notes(self):
     return self.vct_notes
