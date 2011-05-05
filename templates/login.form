@@ -4,7 +4,7 @@
 <p>Your username and password didn't match. Please try again.</p>
 {% endif %}
 
-<form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+<form method="post" action="{{ SITE_ROOT }}{% url 'django.contrib.auth.views.login' %}">
 {% csrf_token %}
 <div class='login-text'>
   {{ login_form.username.label }}
@@ -14,7 +14,7 @@
 </div>
 
 <div class='text-right'>
-	<a href="/accounts/password/reset">Forgot Password</a>
+	<a href="{{ SITE_ROOT }}/accounts/password/reset">Forgot Password</a>
 </div>
 
 <div class='login-text'>
