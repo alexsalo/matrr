@@ -106,16 +106,6 @@ def load_monkeys(file):
            mky_necropsy_date=necropsy,
            mky_study_complete=complete_study).save()
 
-    #test first
-#    print "-----------------------------------"
-#    print "ID: " + str(id)
-#    print "date of birth: " + str(birthdate)
-#    print "stress model: " + str(stress_model)
-#    print "Gender: " + str(gender)
-#    print "Drinking: " + str(drinking)
-#    print "necropsy date: " + str(necropsy)
-#    print "Complete: " + str(complete_study)
-
 
 @transaction.commit_on_success
 def load_timelines(file):
@@ -161,34 +151,33 @@ def load_timelines(file):
                     cev_date=date,
                     cev_info=info).save()
 
-#        print "Cohort: " + str( cohort ) + \
-#              " Event: " + str(EventType.objects.get(evt_name=columns[i])) + \
-#              " Date: " + str(date) + \
-#              " Info: " + str(info)
-
         info = None
 
+
+@transaction.commit_on_success
 def load_cohorts(file):
   """
-  This function will load monkeys from a csv file.
-  It assumes that the cohorts have already been created.
-  It also assumes the columns are in the following order:
-    0 - Monkey ID
-    1 - Date of Birth
-    2 - Cohort Name
-    3 - Stress Model
-    4 - Gender (either 'male' or 'female')
-    5 - Drinking (marked if non-drinking)
-    6 - Necropsy Date
-    7 - Complete Study (marked if incomplete)
+  This function will load cohorts from a csv file.
+  It assumes the first column of every row (except the first row),
+  contains the cohort name and that the second column contains the species of monkey.
   """
   input = csv.reader(open( file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
   # get the column headers
   columns = input.next()
 
-  for row in input:
-    # clean up the input
+  placeholder_name = 'Placeholder Institution'
+  # check if a placeholder institution exists
+  if Institution.objects.filter(ins_institution_name=placeholder_name).count() == 0:
+    # add a dummy institution
+    placeholder = Institution(ins_institution_name=placeholder_name)
+    placeholder.save()
+  else:
+    # get the dummy institution
+    placeholder = Institution.objects.get(ins_institution_name=placeholder_name)
 
-    # Create the monkey and save it
+  for row in input:
+    # Create the cohort and save it
     Cohort(coh_cohort_name=row[0],
-           coh_upcoming=False,).save()
+           coh_upcoming=False,
+           institution=placeholder,
+           coh_species=row[1]).save()
