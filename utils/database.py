@@ -168,3 +168,27 @@ def load_timelines(file):
 
         info = None
 
+def load_cohorts(file):
+  """
+  This function will load monkeys from a csv file.
+  It assumes that the cohorts have already been created.
+  It also assumes the columns are in the following order:
+    0 - Monkey ID
+    1 - Date of Birth
+    2 - Cohort Name
+    3 - Stress Model
+    4 - Gender (either 'male' or 'female')
+    5 - Drinking (marked if non-drinking)
+    6 - Necropsy Date
+    7 - Complete Study (marked if incomplete)
+  """
+  input = csv.reader(open( file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+  # get the column headers
+  columns = input.next()
+
+  for row in input:
+    # clean up the input
+
+    # Create the monkey and save it
+    Cohort(coh_cohort_name=row[0],
+           coh_upcoming=False,).save()
