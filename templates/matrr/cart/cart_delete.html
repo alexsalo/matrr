@@ -5,16 +5,22 @@
 
 {% block content %}
 {% if cart_exists %}
-<div id='headline'>
+<div id='large-headline'>
 Delete Cart?
 </div>
+<div class="messages">
+	<div class="info">
+This will delete your entire cart and all items in it.
+	</div>
+</div>
+
 <form action='/cart/delete' method='post'>
 {% csrf_token %}
-<button type='submit' name='submit' value='yes'>Yes</button>
-<button type='submit' name='submit' value='no'>No</button>
+<button type='submit' name='submit' value='no'><div class="blockLinkCheckoutButton">Cancel</div></button>
+<button type='submit' name='submit' value='yes'><div class="blockLinkDeleteButton">Delete</button>
 </form>
 {% else %}
-<div id='headline'>
+<div id='large-headline'>
   You have do not have a cart to delete.
 </div>
 {% endif %}

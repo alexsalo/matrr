@@ -9,11 +9,14 @@ Finalize Tissue Request
 
 {% block content %}
 {% if not cart_exists or cart_num_items == 0 %}
-  You cannot submit a tissue request with no requested tissues.
+  <div class="messages"><div class="error">You cannot submit a tissue request with no requested tissues.</div></div>
 {% else %}
-<div id='headline'>
+<div id='large-headline'>
 Finalize Tissue Request
 </div>
+<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_5.png" width='700' height='25'
+       alt='order timeline'/>
+<br/>
 <form action='/cart/checkout/' enctype="multipart/form-data" method='POST'>
 {% csrf_token %}
   {% for field in form.hidden_fields %}
@@ -34,10 +37,11 @@ Finalize Tissue Request
     {% endif %}
   {% endfor %}
 </div>
+<br/>
 {% include 'matrr/cart/cart_items_table.html' %}
-<div>
+<div class="messages"><div class="info">
   Upon acceptance of tissue request, a Material Transfer Agreement will be required before tissue is released.
-</div>
+</div></div>
 <div style='padding:3px;'>
   <button type='submit' name='submit' value='checkout'>Checkout</button>
 </div>
