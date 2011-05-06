@@ -605,6 +605,12 @@ table.reviews_table .tissue_info{
   background-image: url('images/badge-circle-cross-24.png');
 }
 
+.forms{
+    color: #4E4E4E;
+    border-color: #7B7E82;
+    background-color: #FAF9ED;
+}
+
 a.tool-tip span{
   display: none;
 }

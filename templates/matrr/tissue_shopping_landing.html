@@ -38,4 +38,13 @@
     <div class='table-left'>These are blood samples and collections of other genetic material stored in tubes.</div>
     <div class='table-right text-right'><a href='samples/' class='blockLinkButton'>Request Genetic and Blood Samples</a></div>
   </div>
+  
+  <br><br>
+  
+  {% if cart_exists %}
+  <div style='float: right;'>
+      <a href='/cart/checkout/'><div class="blockLinkCheckoutButton">Proceed to Checkout</div></a>
+    </div>
+  {% endif %}
+  
 {% endblock %}
