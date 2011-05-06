@@ -180,3 +180,20 @@ class BloodAndGeneticRequestForm(TissueRequestBaseForm):
     exclude = ('req_request', 'blood_genetic_item')
     widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/') }
 
+
+class CustomTissueRequestForm(ModelForm):
+  def __init__(self, req_request, *args, **kwargs):
+    self.instance = None
+    self.req_request = req_request
+    super(CustomTissueRequestForm, self).__init__(*args, **kwargs)
+    self.fields['monkeys'].queryset = \
+      self.req_request.cohort.monkey_set.all()
+
+    # change the help text to match the checkboxes
+    self.fields['monkeys'].help_text = \
+      trim_help_text( unicode(self.fields['monkeys'].help_text) )
+
+  class Meta:
+    model = CustomTissueRequest
+    exclude = ('req_request',)
+    widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/') }

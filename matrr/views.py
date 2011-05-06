@@ -180,6 +180,49 @@ def tissue_shop_detail_view(request, cohort_id, tissue_model, tissue_id):
 
 
 @login_required()
+def tissue_shop_custom_detail_view(request, cohort_id):
+  current_cohort = Cohort.objects.get(coh_cohort_id = cohort_id)
+  cart_request = get_or_create_cart(request, current_cohort)
+  if cart_request is None:
+    # The user has a cart open with a different cohort
+    # display a page that gives the user the option to delete
+    # the existing cart and proceed or to go to the existing cart.
+    return render_to_response('matrr/cart/cart_delete_or_keep.html',
+                              {'cohort': current_cohort},
+                              context_instance=RequestContext(request))
+
+  # if we got here, then a request is made with this user and cohort and the status is 'cart'
+
+  tissue_request = CustomTissueRequest(req_request = cart_request)
+  if request.method != 'POST':
+    # now we need to create the form for the tissue type
+    tissue_request_form = CustomTissueRequestForm(instance=tissue_request, req_request=cart_request,
+                                                  initial={'monkeys': current_cohort.monkey_set.all()})
+    # create the response
+    return render_to_response('matrr/tissue_shopping.html', {'form': tissue_request_form,
+        'cohort': current_cohort,
+        'page_title': 'Custom Tissue Request',},
+          context_instance=RequestContext(request))
+  else:
+    data = request.POST.copy()
+    tissue_request_form = CustomTissueRequestForm(instance=tissue_request, req_request=cart_request, data=data)
+    if tissue_request_form.is_valid():
+      try:
+        tissue_request_form.save()
+      except:
+        messages.error(request, 'Error adding tissue to cart.')
+
+      url = cart_request.cohort.get_url() + 'tissues/'
+      messages.success(request, 'Item added to cart')
+      return redirect(url)
+    else:
+      return render_to_response('matrr/tissue_shopping.html', {'form': tissue_request_form,
+        'cohort': current_cohort,
+        'page_title': 'Custom Tissue Request',},
+          context_instance=RequestContext(request))
+
+
+@login_required()
 def cart_view(request):
   # get the context (because it loads the cart as well)
   context = RequestContext(request)
@@ -280,14 +323,21 @@ def cart_item_view(request, tissue_model, tissue_request_id):
   elif tissue_model == 'peripherals':
     form = TissueRequestForm
     cart_item = TissueRequest.objects.get(rtt_tissue_request_id=tissue_request_id)
+  elif tissue_model == 'custom':
+    form = CustomTissueRequestForm
+    cart_item = CustomTissueRequest.objects.get(ctr_id=tissue_request_id)
 
   if cart_item not in context['cart_items']:
     raise Http404('This page does not exist.')
   if request.method != 'POST' or request.POST['submit'] == 'edit':
     # create a form so the item can be edited
-    tissue_request_form = form(instance=cart_item,
-      req_request = cart_item.req_request,
-      tissue=cart_item.get_tissue())
+    if tissue_model == 'custom':
+      tissue_request_form = form(instance=cart_item,
+      req_request = cart_item.req_request,)
+    else:
+      tissue_request_form = form(instance=cart_item,
+        req_request = cart_item.req_request,
+        tissue = cart_item.get_tissue())
     return render_to_response('matrr/cart/cart_item.html', {'form': tissue_request_form,
         'cohort': cart_item.req_request.cohort,
         'tissue': cart_item.get_tissue(),
@@ -301,10 +351,15 @@ def cart_item_view(request, tissue_model, tissue_request_id):
       return delete_cart_item(request, cart_item)
     else:
       # validate the form and update the cart_item
-      tissue_request_form = form(instance=cart_item,
+      if tissue_model == 'custom':
+        tissue_request_form = form(instance=cart_item,
         data=request.POST,
-        req_request = cart_item.req_request,
-        tissue=cart_item.get_tissue())
+        req_request = cart_item.req_request,)
+      else:
+        tissue_request_form = form(instance=cart_item,
+          data=request.POST,
+          req_request = cart_item.req_request,
+          tissue = cart_item.get_tissue())
       if tissue_request_form.is_valid():
         # the form is valid, so update the tissue request
         tissue_request_form.save()

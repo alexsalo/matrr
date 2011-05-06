@@ -811,7 +811,7 @@ class CustomTissueRequest(models.Model):
     return str('Custom Tissue Request')
 
   def get_tissue(self):
-    raise NotImplementedError()
+    return None
 
   def get_id(self):
     return self.ctr_id
@@ -827,7 +827,7 @@ class CustomTissueRequest(models.Model):
             ['Amount', self.ctr_amount]]
 
   def get_type_url(self):
-    raise NotImplementedError()
+    return 'custom'
 
   def get_reviews(self):
     return self.custom_tissue_request_review_set.all()

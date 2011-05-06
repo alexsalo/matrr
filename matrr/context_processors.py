@@ -14,6 +14,7 @@ def cart(request):
       cart_items.extend(BrainRegionRequest.objects.filter(req_request=cart))
       #cart_items.extend(MicrodissectedRegionRequest.objects.filter(req_request=cart))
       cart_items.extend(BloodAndGeneticRequest.objects.filter(req_request=cart))
+      cart_items.extend(CustomTissueRequest.objects.filter(req_request=cart))
       cart_num_items = len(cart_items)
       context['cart_exists'] = True
       context['cart'] = cart
