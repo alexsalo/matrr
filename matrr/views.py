@@ -313,7 +313,7 @@ def cart_item_view(request, tissue_model, tissue_request_id):
       else:
         return render_to_response('matrr/cart/cart_item.html', {'form': tissue_request_form,
           'cohort': cart_item.req_request.cohort,
-          'tissue_type': cart_item.tissue_type,
+          'tissue_type': cart_item.get_tissue(),
           'cart_item': cart_item,},
             context_instance=context)
 
