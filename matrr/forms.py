@@ -89,13 +89,6 @@ class ReviewForm(ModelForm):
 
     self.regions_formset = BrainRegionRequestReviewFormSet(prefix='regions', *args, **kwargs)
 
-#    MicrodissectedRegionRequestReviewFormSet = inlineformset_factory(Review,
-#      MicrodissectedRegionRequestReview,
-#      extra=0,
-#      can_delete=False,)
-#
-#    self.microdissected_formset = MicrodissectedRegionRequestReviewFormSet(prefix='microdissected', *args, **kwargs)
-
     BloodAndGeneticRequestReviewFormSet = inlineformset_factory(Review,
       BloodAndGeneticRequestReview,
       extra=0,
@@ -104,7 +97,7 @@ class ReviewForm(ModelForm):
     self.samples_formset = BloodAndGeneticRequestReviewFormSet(prefix='samples', *args, **kwargs)
 
     CustomTissueRequestReviewFormSet = inlineformset_factory(Review,
-                                                             BloodAndGeneticRequestReview,
+                                                             CustomTissueRequestReview,
                                                              extra=0,
                                                              can_delete=False,)
 
@@ -118,14 +111,12 @@ class ReviewForm(ModelForm):
       and self.samples_formset.is_valid() \
       and self.custom_formset.is_valid() \
       and super(ReviewForm, self).is_valid()
-      #and self.microdissected_formset.is_valid()
 
   @transaction.commit_on_success
   def save(self, commit=True):
     super(ReviewForm, self).save(commit)
     self.peripherals_formset.save(commit)
     self.regions_formset.save(commit)
-    #self.microdissected_formset.save(commit)
     self.samples_formset.save(commit)
     self.custom_formset.save(commit)
   
@@ -149,9 +140,12 @@ class BrainRegionRequestForm(TissueRequestBaseForm):
 
     if self.req_request and \
        self.tissue and \
-       BrainRegionRequest.objects.filter( \
+       (self.instance is not None and \
+        self.instance.get_id() is not None) \
+       or \
+       (BrainRegionRequest.objects.filter( \
         req_request=self.req_request, \
-        brain_region=self.tissue).count() > 0:
+        brain_region=self.tissue).count() > 0):
       raise forms.ValidationError("You already have this brain region in your cart.")
 
     # Always return the full collection of cleaned data.
@@ -163,27 +157,6 @@ class BrainRegionRequestForm(TissueRequestBaseForm):
     widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/') }
 
 
-#class MicrodissectedRegionRequestForm(TissueRequestBaseForm):
-#  def clean(self):
-#    super(MicrodissectedRegionRequestForm, self).clean()
-#    cleaned_data = self.cleaned_data
-#
-#    if self.req_request and \
-#       self.tissue and \
-#       MicrodissectedRegionRequest.objects.filter( \
-#        req_request=self.req_request, \
-#        microdissected_region=self.tissue).count() > 0:
-#      raise forms.ValidationError("You already have this microdissected region in your cart.")
-#
-#    # Always return the full collection of cleaned data.
-#    return cleaned_data
-#
-#  class Meta:
-#    model = MicrodissectedRegionRequest
-#    exclude = ('req_request', 'microdissected_region')
-#    widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/') }
-
-
 class BloodAndGeneticRequestForm(TissueRequestBaseForm):
   def clean(self):
     super(BloodAndGeneticRequestForm, self).clean()
@@ -191,9 +164,12 @@ class BloodAndGeneticRequestForm(TissueRequestBaseForm):
 
     if self.req_request and \
        self.tissue and \
-       BloodAndGeneticRequest.objects.filter( \
+      (self.instance is not None and \
+        self.instance.get_id() is not None) \
+      or \
+       (BloodAndGeneticRequest.objects.filter( \
         req_request=self.req_request, \
-        blood_genetic_item=self.tissue).count() > 0:
+        blood_genetic_item=self.tissue).count() > 0):
       raise forms.ValidationError("You already have this blood/genetic sample in your cart.")
 
     # Always return the full collection of cleaned data.
