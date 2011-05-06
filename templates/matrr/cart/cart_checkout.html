@@ -18,6 +18,10 @@ Finalize Tissue Request
        alt='order timeline'/>
 <br/>
 
+<div id="headline">Current Items in Cart</div>
+<br/>
+{% include 'matrr/cart/cart_items_table.html' %}
+
 <div id="headline">Checkout Form</div>
 <br/>
 
@@ -32,11 +36,16 @@ Finalize Tissue Request
     {% if field.html_name != "req_progress_agreement" %}
     <div class='clearfix'>
     <div style='margin:0px; padding:2px;' class='table-left'>
-      <label for='{{ field.html_name }}'>{{ field.label}}</label>
-    {% if field.help_text %}
-      <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ field.help_text }}</span></a>
-    {% endif %}
-    </div><div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
+      <label for='{{ field.html_name }}' style='float: right'>
+        {% if field.help_text %}
+          <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ field.help_text }}</span></a>
+        {% endif %}
+          {{ field.label}}
+        {% if field.field.required %}<span style='color: #FF0000; font-size: 75%'>Required</span>{% endif %}
+      </label>
+    </div>
+    
+    <div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
     </div>
     {% if field.errors %}
       <div class="messages"><div class="error">
@@ -55,15 +64,17 @@ Finalize Tissue Request
   Upon acceptance of tissue request, a Material Transfer Agreement will be required before tissue is released.
 </div></div>
 
-<div id="headline">Current Items in Cart</div>
-<br/>
-{% include 'matrr/cart/cart_items_table.html' %}
 
-<div style='padding:3px;'>
-  <button type='submit' name='submit' value='checkout'>Checkout</button>
+
+<br>
+<div style='padding:3px; float: left;'>
+  <button type='submit' name='submit' value='checkout' class="blockLinkCheckoutButton">Submit Request</button>
+</div>
+<div style='padding:3px; float: right;'>
+  <a href='/cart/'><div class="blockLinkDeleteButton">Cancel Request</div></a>
 </div>
 </form>
-<br><br>
+<br><br><br>
 
 {% endif %}
 {% endblock %}
