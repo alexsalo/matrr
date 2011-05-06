@@ -140,9 +140,9 @@ class BrainRegionRequestForm(TissueRequestBaseForm):
 
     if self.req_request and \
        self.tissue and \
-       (self.instance is not None and \
-        self.instance.get_id() is not None) \
-       or \
+       (self.instance is None or \
+        self.instance.get_id() is None) \
+       and \
        (BrainRegionRequest.objects.filter( \
         req_request=self.req_request, \
         brain_region=self.tissue).count() > 0):
@@ -164,9 +164,9 @@ class BloodAndGeneticRequestForm(TissueRequestBaseForm):
 
     if self.req_request and \
        self.tissue and \
-      (self.instance is not None and \
-        self.instance.get_id() is not None) \
-      or \
+      (self.instance is None or \
+        self.instance.get_id() is None) \
+      and \
        (BloodAndGeneticRequest.objects.filter( \
         req_request=self.req_request, \
         blood_genetic_item=self.tissue).count() > 0):
