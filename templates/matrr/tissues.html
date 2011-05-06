@@ -1,5 +1,7 @@
 {% extends 'matrr/tissue_shopping.html' %}
 
+{% load tissue_filters %}
+
 {% block content %}
   <div id="large-headline">Tissue Request</div>
   <img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_3.png" width=700 height=25>
@@ -15,7 +17,13 @@
 
 <table>
   {% for tissue in tissues.object_list %}
-    <tr><td><a href='{{ tissue.get_id }}'>{{ tissue.get_name }}</a></td></tr>
+    <tr>
+      {% if tissue|cohort_availability:cohort %}
+        <td><a href='{{ tissue.get_id }}'>{{ tissue.get_name }}</a></td>
+      {% else %}
+        <td>{{ tissue.get_name }}</td><td>Unavailable</td>
+      {% endif %}
+    </tr>
   {% endfor %}
 </table>
 <div class="pagination">

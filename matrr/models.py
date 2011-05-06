@@ -299,14 +299,35 @@ class TissueType(models.Model):
   def get_name(self):
     return self.tst_tissue_name
 
+  def get_cohort_availability(self, cohort):
+    for monkey in cohort.monkey_set.all():
+      status = self.get_availability(monkey)
+      # if the tissue is available for any monkey,
+      # then it is available for the cohort
+      if status == Availability.Available or \
+         status == Availability.In_Stock:
+         return True
+    return False
+
   def get_availability(self, monkey):
     availability = Availability.Unavailable
+    if monkey in self.unavailable_list.all():
+      return availability
+
     # get the number of accepted, but not shipped, requests
-    requested = TissueRequest.objects.filter(tissue_type=self,
-                                             monkey=monkey,
+    requests = TissueRequest.objects.filter(tissue_type=self,
+                                             req_request__cohort=monkey.cohort,
                                              req_request__request_status=
                                              RequestStatus.objects.get(
-                                               rqs_status_name='Accepted')).count()
+                                               rqs_status_name='Accepted'))
+    monkey_requests = list()
+    for request in requests.all():
+      # keep requests that are for this monkey
+      if monkey in request.monkeys:
+        monkey_requests.append(request)
+
+    requested = len(monkey_requests)
+    
     if monkey.cohort.coh_upcoming:
       # if there is a limit to the number of samples,
       # check if that limit has been reached
@@ -552,14 +573,36 @@ class BrainRegion(models.Model):
   def get_name(self):
     return self.bre_region_name
 
+  def get_cohort_availability(self, cohort):
+    for monkey in cohort.monkey_set.all():
+      status = self.get_availability(monkey)
+      # if the tissue is available for any monkey,
+      # then it is available for the cohort
+      if status == Availability.Available or \
+         status == Availability.In_Stock:
+         return True
+    return False
+
   def get_availability(self, monkey):
     availability = Availability.Unavailable
+    if monkey in self.unavailable_list.all():
+      return availability
+    
     # get the number of accepted, but not shipped, requests
-    requested = BrainRegionRequest.objects.filter(brain_region=self,
-                                                      monkey=monkey,
+    requests = BrainRegionRequest.objects.filter(brain_region=self,
+                                                      req_request__cohort=monkey.cohort,
                                                       req_request__request_status=
                                                       RequestStatus.objects.get(
-                                                        rqs_status_name='Accepted')).count()
+                                                        rqs_status_name='Accepted'))
+
+    monkey_requests = list()
+    for request in requests.all():
+      # keep requests that are for this monkey
+      if monkey in request.monkeys:
+        monkey_requests.append(request)
+
+    requested = len(monkey_requests)
+    
     if monkey.cohort.coh_upcoming:
       # if there is a limit to the number of samples,
       # check if that limit has been reached
@@ -676,7 +719,7 @@ class BloodAndGenetic(models.Model):
     return self.bag_name
 
   def get_cohort_availability(self, cohort):
-    for monkey in cohort.monkey_set:
+    for monkey in cohort.monkey_set.all():
       status = self.get_availability(monkey)
       # if the tissue is available for any monkey,
       # then it is available for the cohort
@@ -688,12 +731,24 @@ class BloodAndGenetic(models.Model):
 
   def get_availability(self, monkey):
     availability = Availability.Unavailable
+    if monkey in self.unavailable_list.all():
+      return availability
+
     # get the number of accepted, but not shipped, requests
-    requested = BloodAndGeneticRequest.objects.filter(blood_genetic_item=self,
-                                                      monkey=monkey,
+    requests = BloodAndGeneticRequest.objects.filter(blood_genetic_item=self,
+                                                      req_request__cohort=monkey.cohort,
                                                       req_request__request_status=
                                                       RequestStatus.objects.get(
-                                                        rqs_status_name='Accepted')).count()
+                                                        rqs_status_name='Accepted'))
+
+    monkey_requests = list()
+    for request in requests.all():
+      # keep requests that are for this monkey
+      if monkey in request.monkeys:
+        monkey_requests.append(request)
+
+    requested = len(monkey_requests)
+
     if monkey.cohort.coh_upcoming:
       # if there is a limit to the number of samples,
       # check if that limit has been reached
@@ -1380,4 +1435,5 @@ def user_post_save(**kwargs):
   if not Account.objects.filter(user=user).count():
     account = Account(user=user)
     account.save()
+
   

@@ -87,13 +87,13 @@ def get_or_create_cart(request, cohort):
   cart_status = RequestStatus.objects.get(rqs_status_name='Cart')
 
   # get the user's cart if it already exists
-  if Request.objects.filter(user=request.user.id, request_status=cart_status.rqs_status_id).count() != 0:
+  if Request.objects.filter(user=request.user.id, request_status=cart_status.rqs_status_id).count():
     cart_request = Request.objects.get(user=request.user.id, request_status=cart_status.rqs_status_id)
     # check that the cart is for this cohort
     if cart_request.cohort != cohort:
       # take corrective action (display a page that asks the user if they want to abandon their cart and start with this cohort)
       # if the cart is empty, just delete it
-      if cart_request.get_requested_tissue_count() == 0:
+      if not cart_request.get_requested_tissue_count():
         cart_request.delete()
         #create a new cart
         cart_request = Request(user=request.user, request_status=cart_status, 
@@ -642,10 +642,6 @@ def tissue_list(request, tissue_model, cohort_id = None):
   model = None
   order = None
   title = None
-#  if tissue_model == 'microdissected':
-#    model = MicrodissectedRegion
-#    order = 'bmr_microdissected_name'
-#    title = 'Microdissected Regions'
   if tissue_model == 'regions':
     model = BrainRegion
     order = 'bre_region_name'
@@ -695,8 +691,7 @@ def request_review_accept(request, req_request_id):
   subject = render_to_string('matrr/request_accepted_email_subject.txt')
   # Email subject *must not* contain newlines
   subject = ''.join(subject.splitlines())
-  site = Site.objects.get_current()
-  request_url = '/orders/' + str(req_request.req_request_id) + '/'
+  request_url = settings.SITE_ROOT + '/orders/' + str(req_request.req_request_id) + '/'
   message = render_to_string('matrr/request_accepted_email.txt',
                     {'request_url': request_url})
   messages.success(request, "The tissue request has been accepted.")
@@ -753,3 +748,4 @@ def search(request):
        'results': results,
        'num_results': num_results},
       context_instance=RequestContext(request))
+
