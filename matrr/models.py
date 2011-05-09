@@ -339,7 +339,7 @@ class TissueType(models.Model):
       # the tissues have been harvested, so check the inventory
 
       # get the number of tissues that have been harvested
-      harvested = PeripheralTissueSample.objects.filter(monkey=monkey,
+      harvested = FreezerPeripheralTissue.objects.filter(monkey=monkey,
                                                          tissue_type=self,).count()
       if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
@@ -614,8 +614,8 @@ class BrainRegion(models.Model):
       # the tissues have been harvested, so check the inventory
 
       # get the number of tissues that have been harvested
-      harvested = BrainRegionSample.objects.filter(monkey=monkey,
-                                                         brain_region=self,).count()
+      harvested = FreezerBrainRegion.objects.filter(monkey=monkey,
+                                                    brain_region=self,).count()
       if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
@@ -760,7 +760,7 @@ class BloodAndGenetic(models.Model):
       # the tissues have been harvested, so check the inventory
 
       # get the number of tissues that have been harvested
-      harvested = BloodAndGenecticsSample.objects.filter(monkey=monkey,
+      harvested = FreezerBloodAndGenetics.objects.filter(monkey=monkey,
                                                          blood_genetic_item=self,).count()
       if harvested :
         # tissues have been harvested, so we should use the inventories to determine if
@@ -1073,78 +1073,6 @@ class BrainRegionRequestReviewRevision(models.Model):
   class Meta:
     db_table = 'vrv_reviews_to_brain_region_request_revisions'
     unique_together = ('review_revision', 'brain_region_request_revision')
-
-
-############################################################################
-# The microdissected region code is commented out because (at least for
-# upcoming requests) it is no longer needed.
-# There may be a use for this when we implement archived tissues, so
-# commenting the code out is better than deleting it for now.
-############################################################################
-#class MicrodissectedRegionRequestReview(models.Model):
-#  vmr_microdissected_request_review_id = models.AutoField(primary_key=True)
-#  review = models.ForeignKey(Review, null=False, related_name='microdissected_region_request_review_set', db_column='rvs_review_id', editable=False)
-#  microdissected_region_request = models.ForeignKey(MicrodissectedRegionRequest, null=False,
-#                                                    related_name='microdissected_region_request_review_set',
-#                                                    db_column='rmr_block_request_id',
-#                                                    editable=False)
-#  vmr_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
-#      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-#  vmr_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
-#      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-#  vmr_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
-#      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-#  vmr_notes = models.TextField('Notes', null=True, blank=True,)
-#
-#  def __unicode__(self):
-#    return 'Review: ' + str(self.review) + ' MicrodissectedRegionRequest: ' + str(self.microdissected_region_request)
-#
-#  def is_finished(self):
-#    return self.vmr_scientific_merit is not None and \
-#        self.vmr_quantity is not None and \
-#        self.vmr_priority is not None
-#
-#  def get_request(self):
-#    return self.microdissected_region_request
-#
-#  def get_merit(self):
-#    return self.vmr_scientific_merit
-#
-#  def get_quantity(self):
-#    return self.vmr_quantity
-#
-#  def get_priority(self):
-#    return self.vmr_priority
-#
-#  def has_notes(self):
-#    return self.vmr_notes != None and self.vmr_notes != ''
-#
-#  def get_notes(self):
-#    return self.vmr_notes
-#
-#  class Meta:
-#    db_table = 'vmr_reviews_to_microdissected_region_requests'
-#    unique_together = ('review', 'microdissected_region_request')
-#
-#
-#class MicrodissectedRegionRequestReviewRevision(models.Model):
-#  vmv_review_revision_id = models.AutoField(primary_key=True)
-#  review_revision = models.ForeignKey(ReviewRevision, null=False, related_name='microdissected_region_request_review_revision_set', db_column='rvr_revision_id', editable=False)
-#  microdissected_region_request_revision = models.ForeignKey(MicrodissectedRegionRequestRevision, null=False, related_name='microdissected_region_request_review_revision_set', db_column='mrv_id', editable=False)
-#  vmv_scientific_merit = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Scientific Merit',
-#      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-#  vmv_quantity = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Quantity',
-#      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-#  vmv_priority = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Priority',
-#      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-#  vmv_notes = models.TextField(null=True, blank=True, verbose_name='Notes')
-#
-#  def __unicode__(self):
-#    return 'ReviewRevision: ' + self.review_revision + ' MicrodissectedRegionRequestRevision: ' + self.microdissected_region_request_revision
-#
-#  class Meta:
-#    db_table = 'vmv_reviews_to_microdissected_region_request_revisions'
-#    unique_together = ('review_revision', 'microdissected_region_request_revision')
 
 
 class BloodAndGeneticRequestReview(models.Model):
