@@ -1,3 +1,5 @@
+{% load tissue_filters %}
+
 <tbody><!-- style='border-style:solid;border-width:2px;' -->
   {% with tissue_request=tform.instance.get_request  %}
     {% for datum in tissue_request.get_data %}
@@ -7,6 +9,34 @@
     {% if tissue_request.has_notes %}
       <tr><th>Notes:</th><td>{{ tissue_request.get_notes }}</td></tr>
     {% endif %}
+    <tr><th colspan='5'>Availability</th></tr>
+    <tr class='bordered-cell-row'><th>Monkey</th><th>Status</th><th>Accepted
+      Requests</th><th>Pending
+      Requests</th></tr>
+    {% for monkey in tissue_request.monkeys.all %}
+      <tr>
+        <td>{{ monkey.mky_real_id }}</td>
+        {% if tissue_request.get_tissue %}
+          {% with availability=tissue_request.get_tissue|monkey_availability:monkey %}
+            <td>
+              {% if availability == Availability.Available %}
+                Available
+              {% else %}{% if availability == Availability.Unavailable %}
+                Unavailable
+              {% else %}{% if availability == Availability.In_Stock %}
+                In Stock
+              {% endif %}{% endif %}{% endif %}
+            </td>
+          {% endwith %}
+          <td>
+            {{ tissue_request.get_tissue|accepted_requests:monkey }}
+          </td>
+          <td>
+            {{ tissue_request.get_tissue|pending_requests:monkey }}
+          </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
   {% endwith %}
 
   {% for error in tform.non_field_errors %}
@@ -18,9 +48,9 @@
       <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png' alt='help icon'/>
         <span>{{ field.help_text }}</span></a>
     {% endif %}
-    </th><td colspan='3'>{{ field }}</td></tr>
+    </th><td colspan='5'>{{ field }}</td></tr>
     {% if field.errors %}
-      <tr><td align=right>Error:</td><td class='field-error' colspan='3'>{{ field.errors }}</td>
+      <tr><td align=right>Error:</td><td class='field-error' colspan='5'>{{ field.errors }}</td>
     {% endif %}
   {% endfor %}
 </tbody>

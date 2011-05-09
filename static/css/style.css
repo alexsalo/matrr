@@ -631,3 +631,12 @@ a.tool-tip:hover span{
   background-color: #FAF9ED;
   font: 10px Verdana, sans-serif; text-align: center;
 }
+
+.bordered-cell-row td,
+.bordered-cell-row th{
+  border-style: solid;
+  border-width: 1px;
+  border-color: #000000;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+}

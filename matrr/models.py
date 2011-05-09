@@ -323,7 +323,7 @@ class TissueType(models.Model):
     monkey_requests = list()
     for request in requests.all():
       # keep requests that are for this monkey
-      if monkey in request.monkeys:
+      if monkey in request.monkeys.all():
         monkey_requests.append(request)
 
     requested = len(monkey_requests)
@@ -359,6 +359,14 @@ class TissueType(models.Model):
         availability = Availability.Available
 
     return availability
+
+  def get_pending_request_count(self, monkey):
+    return self.tissue_request_set.filter(\
+      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Submitted')).count()
+
+  def get_accepted_request_count(self, monkey):
+    return self.tissue_request_set.filter(\
+      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Accepted')).count()
   
   class Meta:
     db_table = 'tst_tissue_types'
@@ -598,7 +606,7 @@ class BrainRegion(models.Model):
     monkey_requests = list()
     for request in requests.all():
       # keep requests that are for this monkey
-      if monkey in request.monkeys:
+      if monkey in request.monkeys.all():
         monkey_requests.append(request)
 
     requested = len(monkey_requests)
@@ -633,6 +641,14 @@ class BrainRegion(models.Model):
       elif self.bre_count_per_monkey is None:
         availability = Availability.Available
     return availability
+
+  def get_pending_request_count(self, monkey):
+    return self.brain_region_request_set.filter(\
+      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Submitted')).count()
+
+  def get_accepted_request_count(self, monkey):
+    return self.brain_region_request_set.filter(\
+      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Accepted')).count()
   
   class Meta:
     db_table = 'bre_brain_regions'
@@ -744,7 +760,7 @@ class BloodAndGenetic(models.Model):
     monkey_requests = list()
     for request in requests.all():
       # keep requests that are for this monkey
-      if monkey in request.monkeys:
+      if monkey in request.monkeys.all():
         monkey_requests.append(request)
 
     requested = len(monkey_requests)
@@ -781,6 +797,13 @@ class BloodAndGenetic(models.Model):
 
     return availability
 
+  def get_pending_request_count(self, monkey):
+    return self.blood_and_genetic_request_set.filter(\
+      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Submitted')).count()
+
+  def get_accepted_request_count(self, monkey):
+    return self.blood_and_genetic_request_set.filter(\
+      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Accepted')).count()
 
 
   class Meta:

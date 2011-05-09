@@ -1,7 +1,6 @@
 __author__ = 'soltau'
 
 from django import template
-#from matrr.models import
 
 register = template.Library()
 
@@ -12,3 +11,11 @@ def monkey_availability(tissue, monkey):
 @register.filter()
 def cohort_availability(tissue, cohort):
   return tissue.get_cohort_availability(cohort)
+
+@register.filter()
+def accepted_requests(tissue, monkey):
+  return tissue.get_accepted_request_count(monkey)
+
+@register.filter()
+def pending_requests(tissue, monkey):
+  return tissue.get_pending_request_count(monkey)

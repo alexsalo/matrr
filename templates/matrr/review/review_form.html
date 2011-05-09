@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+
 {% block extra_js %}
 {{ block.super }}
 <script type="text/javascript" src="{{ STATIC_URL }}widgets/"></script>
@@ -29,7 +30,7 @@
   <tr><th>Referred By:</th><td>{{ req_request.req_referred_by }}</td></tr>
   <tr><th>Progress Agreement:</th><td>{{ req_request.req_progress_agreement }}</td></tr>
   {% if req_request.req_notes %}
-    <tr><th>Extra Notes:</th><td>{{ req_request.req_notes }}</td></tr>
+    <tr><th>Extra Notes:</th><td colspan='4'>{{ req_request.req_notes }}</td></tr>
   {% endif %}
 {{ form }}
 </table>

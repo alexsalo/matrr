@@ -527,6 +527,7 @@ def review_detail(request, review_id):
       {'review': review,
        'req_request': req_request,
        'form': form,
+       'Availability': Availability,
        },
           context_instance=RequestContext(request))
 

@@ -40,3 +40,5 @@ and 3) other.
 
 -Change progress report text to make less of a question.
   -Make this field required.
+
+-Make the monkey inventory status hide-able on the review pages.
