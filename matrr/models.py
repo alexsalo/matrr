@@ -941,11 +941,17 @@ class TissueRequestReview(models.Model):
   vtr_request_review_id = models.AutoField(primary_key=True)
   review = models.ForeignKey(Review, null=False, related_name='tissue_request_review_set', db_column='rvs_review_id', editable=False)
   tissue_request = models.ForeignKey(TissueRequest, null=False, related_name='tissue_request_review_set', db_column='rtt_tissue_request_id', editable=False)
-  vtr_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False, 
+  vtr_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
+                                                          choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vtr_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False, 
+  vtr_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
+                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
   vtr_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
+                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
   vtr_notes = models.TextField(null=True, blank=True, verbose_name='Notes')
   
@@ -1004,11 +1010,17 @@ class BrainRegionRequestReview(models.Model):
   vbr_region_request_review_id = models.AutoField(primary_key=True)
   review = models.ForeignKey(Review, null=False, related_name='brain_region_request_review_set', db_column='rvs_review_id', editable=False)
   brain_region_request = models.ForeignKey(BrainRegionRequest, null=False, related_name='brain_region_request_review_set', db_column='rbr_region_request_id', editable=False)
-  vbr_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False, 
+  vbr_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
+                                                          choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5),
+                                                                   (6,6), (7,7), (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vbr_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False, 
+  vbr_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
+                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
   vbr_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
+                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
   vbr_notes = models.TextField('Notes', null=True, blank=True,)
   
@@ -1139,11 +1151,17 @@ class BloodAndGeneticRequestReview(models.Model):
   vbg_blood_genetic_request_review_id = models.AutoField(primary_key=True)
   review = models.ForeignKey(Review, null=False, related_name='blood_and_genetic_request_review_set', db_column='rvs_review_id', editable=False)
   blood_and_genetic_request = models.ForeignKey(BloodAndGeneticRequest, null=False, related_name='blood_and_genetic_request_review_set', db_column='rbg_id', editable=False)
-  vbg_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False, 
+  vbg_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
+                                                          choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vbg_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False, 
+  vbg_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
+                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
   vbg_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
+                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
   vbg_notes = models.TextField('Notes', null=True, blank=True,)
   
@@ -1207,10 +1225,16 @@ class CustomTissueRequestReview(models.Model):
                                             db_column='rbg_id',
                                             editable=False)
   vct_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
+                                                          choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
   vct_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
+                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
   vct_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
+                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+                                                  (8,8), (9,9), (10, 10),),
       help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
   vct_notes = models.TextField('Notes', null=True, blank=True,)
 

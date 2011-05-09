@@ -10,7 +10,7 @@
 {% block title %}Review{% endblock %}
 </div>
 
-<form action='../' method='post'>
+<form action='./' method='post'>
 {% csrf_token %}
 <table>
   <tr>
@@ -31,7 +31,6 @@
 
 <div style='display: none'>
 {{ form.regions_formset.management_form }}
-{# {{ form.microdissected_formset.management_form }} #}
 {{ form.peripherals_formset.management_form }}
 {{ form.samples_formset.management_form }}
 {{ form.custom_formset.management_form }}
@@ -40,11 +39,6 @@
       {{ field }}
     {% endfor %}
   {% endfor %}
-{#  {% for tform in form.microdissected_formset %}#}
-{#    {% for field in tform.hidden_fields %}#}
-{#      {{ field }}#}
-{#    {% endfor %}#}
-{#  {% endfor %}#}
   {% for tform in form.peripherals_formset %}
     {% for field in tform.hidden_fields %}
       {{ field }}
@@ -66,9 +60,6 @@
   {% for tform in form.regions_formset %}
     {% include 'matrr/review/review_form_item.html' %}
   {% endfor %}
-{#  {% for tform in form.microdissected_formset %}#}
-{#    {% include 'matrr/review/review_form_item.html' %}#}
-{#  {% endfor %}#}
   {% for tform in form.peripherals_formset %}
     {% include 'matrr/review/review_form_item.html' %}
   {% endfor %}
