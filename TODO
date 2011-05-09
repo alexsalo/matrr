@@ -1,5 +1,37 @@
-Update the my orders page with the various types of tissues
+These items are in no particular order.
 
-update the review overview page with the various types of tissues
+-Add unit tests.
 
-merge changes and update DB as much as possible before call.
+-add sphinx indices
+
+-Add to wiki documentation.
+
+-Add additional request details to orders page.
+
+-Add inventory to review pages.
+
+-Add a notification for when a request is rejected.
+  -The person who rejects a request should be able to write a message to the user who made the request and explain
+  why the request was rejected.
+
+-Add option to mark tissues as unavailable when a request is approved.
+  -Should be per tissue (and per monkey?).
+
+
+-Check available tissue requests.
+  - seems to be working, but probably need to add some checks to the controller code (matrr/views.py).
+
+-Add progress reports for 90 days from the shipped date.
+
+-Add shipping.
+
+-Change fixtype to tissue type mappings to be 1) flash frozen (liquid nitrogen or dry ice), 2) 4% Paraformaldehyde,
+and 3) other.
+  the "other" option should give a textfield to the user so he can describe the type of fixation he needs.
+
+-BUG: Requesting a tissue when that tissue is already in your cart causes an internal server error.
+
+-Add previous requests to site.  Include request document on site.
+  -this is probably the biggest priority
+
+-Figure out a way to show brain blocks and let users determine if a brain region is available.
