@@ -35,3 +35,8 @@ and 3) other.
   -this is probably the biggest priority
 
 -Figure out a way to show brain blocks and let users determine if a brain region is available.
+
+-Add a note on the Cohorts page to say that you can only request tissue from one cohort at a time.
+
+-Change progress report text to make less of a question.
+  -Make this field required.

@@ -80,7 +80,12 @@ USE_L10N = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = '/web/django_test/media/'
+if DEVELOPMENT:
+  MEDIA_ROOT = '/web/django_test/media/'
+elif TEST:
+  MEDIA_ROOT = '/web/www/dev/media/'
+elif PRODUCTION:
+  MEDIA_ROOT = '/web/www/MATRR/media/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -102,13 +107,30 @@ STATIC_URL = SITE_ROOT + '/static/'
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
-# Additional locations of static files
-STATICFILES_DIRS = (
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    '/web/django_test/static/',
-)
+if DEVELOPMENT:
+  # Additional locations of static files
+  STATICFILES_DIRS = (
+      # Put strings here, like "/home/html/static" or "C:/www/django/static".
+      # Always use forward slashes, even on Windows.
+      # Don't forget to use absolute paths, not relative paths.
+      '/web/django_test/static/',
+  )
+elif TEST:
+  # Additional locations of static files
+  STATICFILES_DIRS = (
+      # Put strings here, like "/home/html/static" or "C:/www/django/static".
+      # Always use forward slashes, even on Windows.
+      # Don't forget to use absolute paths, not relative paths.
+      '/web/www/dev/static/',
+  )
+elif PRODUCTION:
+  # Additional locations of static files
+  STATICFILES_DIRS = (
+      # Put strings here, like "/home/html/static" or "C:/www/django/static".
+      # Always use forward slashes, even on Windows.
+      # Don't forget to use absolute paths, not relative paths.
+      '/web/MATRR/static/',
+  )
 
 # List of finder classes that know how to find static files in
 # various locations.
