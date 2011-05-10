@@ -4,9 +4,13 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import datetime
 
-# this is a snippet from http://djangosnippets.org/snippets/1683/
-# it will allow me to monitor some classes to see when they change state
+
 class DiffingMixin(object):
+  '''
+  this is a snippet from http://djangosnippets.org/snippets/1683/
+
+  This class provides functions that add state monitoring to subclasses.
+  '''
   def __init__(self):
     super(DiffingMixin, self).__init__()
     self._original_state = dict(self.__dict__)
@@ -341,6 +345,8 @@ class TissueType(models.Model):
       # get the number of tissues that have been harvested
       harvested = FreezerPeripheralTissue.objects.filter(monkey=monkey,
                                                          tissue_type=self,).count()
+      harvested += ShippedPeripheralTissue.objects.filter(monkey=monkey,
+                                                         tissue_type=self,).count()
       if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
@@ -624,6 +630,8 @@ class BrainRegion(models.Model):
       # get the number of tissues that have been harvested
       harvested = FreezerBrainRegion.objects.filter(monkey=monkey,
                                                     brain_region=self,).count()
+      harvested += ShippedBrainRegion.objects.filter(monkey=monkey,
+                                                         brain_region=self,).count()
       if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
@@ -777,6 +785,8 @@ class BloodAndGenetic(models.Model):
 
       # get the number of tissues that have been harvested
       harvested = FreezerBloodAndGenetics.objects.filter(monkey=monkey,
+                                                         blood_genetic_item=self,).count()
+      harvested += ShippedBloodAndGenetics.objects.filter(monkey=monkey,
                                                          blood_genetic_item=self,).count()
       if harvested :
         # tissues have been harvested, so we should use the inventories to determine if

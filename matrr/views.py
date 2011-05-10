@@ -587,9 +587,10 @@ def review_overview(request, req_request_id):
         {'reviews': reviews,
          'req_request': req_request,
          'region_requests': region_requests,
-#         'microdissected_requests': microdissected_requests,
          'tissue_requests': tissue_requests,
          'sample_requests': sample_requests,
+         'spacing': True,
+         'Availability': Availability,
          },
          context_instance=RequestContext(request))
 

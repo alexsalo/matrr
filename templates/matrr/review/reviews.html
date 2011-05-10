@@ -21,7 +21,7 @@ Reviews
       <td>{{ review.req_request.cohort.coh_cohort_name }}</td>
       <td>{{ review.req_request.user }}</td> 
       <td>{{ review.req_request.req_request_date}}</td>
-      <td><a href='/reviews/{{ review.rvs_review_id }}/'><button>Review</button></a></td>
+      <td><a class='blockLinkButton' href='/reviews/{{ review.rvs_review_id }}/'>Review</a></td>
     </tr>
   {% endfor %}
   </table>
@@ -44,7 +44,7 @@ Reviews
       <td>{{ review.req_request.cohort.coh_cohort_name }}</td>
       <td>{{ review.req_request.user }}</td> 
       <td>{{ review.req_request.req_request_date}}</td>
-      <td><a href='/reviews/{{ review.rvs_review_id }}/'><button>Edit</button></a></td>
+      <td><a class='blockLinkButton' href='/reviews/{{ review.rvs_review_id }}/'>Edit</a></td>
     </tr>
   {% endfor %}
   </table>

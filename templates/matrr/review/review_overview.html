@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 
+{% block extra_js %}
+{{ block.super }}
+<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class='large-headline'> 
 {% block title %}Overview: {{ req_request.user.username }}'s request for {{req_request.cohort.coh_cohort_name}}{% endblock %}

@@ -640,3 +640,7 @@ a.tool-tip:hover span{
   padding-left: 0.3em;
   padding-right: 0.3em;
 }
+
+.hidden{
+  display: none;
+}

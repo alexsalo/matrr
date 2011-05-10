@@ -14,6 +14,7 @@
     <tr><th class='tissue_info'>Notes:</th>
       <td class='tissue_info' colspan='9'>{{ tissue_request.get_notes }}</td></tr>
   {% endif %}
+  {% include 'matrr/review/item_availability.html' %}
   {# display the review info for each tissue request #}
   <tr>
     <th>Scientific Merit:</th>
