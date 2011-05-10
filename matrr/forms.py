@@ -62,6 +62,14 @@ class TissueRequestForm(TissueRequestBaseForm):
 
 
 class CartCheckoutForm(ModelForm):
+
+  def clean(self):
+    super(CartCheckoutForm, self).clean()
+    if not self.cleaned_data.get('req_progress_agreement'):
+      raise forms.ValidationError('You must agree to submit a progress report.')
+
+    return self.cleaned_data
+
   class Meta:
     model = Request
     exclude = ('request_status')

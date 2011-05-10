@@ -429,6 +429,7 @@ class Request(models.Model, DiffingMixin):
   req_reason = models.TextField('Reason for Tissue Request', null=False, blank=False,
                                 help_text='Please provide a short paragraph describing the hypothesis and methods proposed.')
   req_progress_agreement = models.BooleanField('Would you be willing to supply us with a progress report on the results obtained from our tissue? (We will request an update 90 after the tissues are shipped.)',
+                                               blank=False,
                                                null=False,)
   req_referred_by = models.CharField('How did you hear about the tissue bank?',
                                      choices=REFERRAL_CHOICES,

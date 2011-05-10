@@ -14,6 +14,7 @@ from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from matrr.forms import *
 import math
+from datetime import datetime
 from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
 
@@ -419,6 +420,7 @@ def cart_checkout(request):
       cart_request.req_experimental_plan = checkout_form.cleaned_data['req_experimental_plan']
       cart_request.req_notes = checkout_form.cleaned_data['req_notes']
       cart_request.request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
+      cart_request.req_request_date = datetime.now
       cart_request.save()
       messages.success(request, 'Tissue Request Submitted.')
       return redirect('/')
