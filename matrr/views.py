@@ -540,20 +540,38 @@ def review_overview_list(request):
   # get a list of all tissue requests that are submitted, but not accepted or rejected
   request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
   req_requests = Request.objects.filter(request_status = request_status)
+  # get a list of all reviewers
+  group = Group.objects.get(name='Committee')
+  reviewers = group.user_set.all().order_by('-username')
   for req_request in req_requests:
-    review_count = 0.0
-    review_completed = 0.0
-    for review in req_request.review_set.all():
-      review_count += 1
-      if review.is_finished():
-        review_completed += 1
-
-    if review_count == 0.0:
-      review_count = 1.0
-    req_request.progress = review_completed/review_count * 100
-  
+    req_request.complete = list()
+    for reviewer in reviewers:
+      if reviewer == req_request.user:
+        for review in req_request.review_set.all():
+          if review.is_finished():
+            req_request.complete.append("complete")
+          else: req_request.complete.append("pending")
+    ############################################################
+    ## I'm keeping some of the logic for calculaing %
+    ## progress, but not sure if it is needed. In cases where
+    ## the number of reviewers is out of sync, this won't make
+    ## much sense
+    ############################################################
+    #
+    #review_count = 0.0
+    #review_completed = 0.0
+    #for review in req_request.review_set.all():
+    #    review_count += 1
+    #  if review.is_finished():
+    #    review_completed += 1
+    #if review_count == 0.0:
+    #  review_count = 1.0
+    #req_request.progress = review_completed/review_count * 100
+    #
+    ##############################################################  
   return render_to_response('matrr/review/reviews_overviews.html', \
         {'req_requests': req_requests,
+         'reviewers': reviewers,
          },
          context_instance=RequestContext(request))
 
@@ -680,6 +698,7 @@ def tissue_list(request, tissue_model, cohort_id = None):
   except (EmptyPage, InvalidPage):
     tissues = paginator.page(paginator.num_pages)
   # just return the list of tissues
+  
   return render_to_response('matrr/tissues.html', {'tissues': tissues,
                                                    'title': title},
       context_instance=c)

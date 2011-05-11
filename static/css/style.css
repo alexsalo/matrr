@@ -472,8 +472,13 @@ table.common th{
 }
 
 
-.cart_table, .review_table{
+.cart_table {
   border-collapse:collapse;
+}
+
+.review_table{
+    margin: 10px;
+    border-spacing: 30px;
 }
 
 table.cart_table tbody,
@@ -485,8 +490,12 @@ table.review_table tbody{
 
 table.cart_table td,
 table.review_table td{
-  padding-right: 4px;
-  padding-left: 4px;
+  padding-right: 8px;
+  padding-left: 8px;
+}
+
+table.review_table td{
+    text-align: center;
 }
 
 .reviews_table{

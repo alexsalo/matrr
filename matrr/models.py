@@ -428,7 +428,7 @@ class Request(models.Model, DiffingMixin):
                                        help_text='The name of the project or proposal these tissues will be used in.')
   req_reason = models.TextField('Reason for Tissue Request', null=False, blank=False,
                                 help_text='Please provide a short paragraph describing the hypothesis and methods proposed.')
-  req_progress_agreement = models.BooleanField('Would you be willing to supply us with a progress report on the results obtained from our tissue? (We will request an update 90 after the tissues are shipped.)',
+  req_progress_agreement = models.BooleanField('I acknowledge that I will be required to submit a 90 day progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.',
                                                blank=False,
                                                null=False,)
   req_referred_by = models.CharField('How did you hear about the tissue bank?',
