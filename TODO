@@ -4,10 +4,6 @@ These items are in no particular order.
 ***CATEGORY: Model Changes ****************************************
 *******************************************************************
 
--Change fixtype to tissue type mappings to be 1) flash frozen (liquid nitrogen or dry ice), 2) 4% Paraformaldehyde,
-and 3) other.
-  the "other" option should give a textfield to the user so he can describe the type of fixation he needs.
-
 -Change any weight fields to be floats
 
 *******************************************************************
@@ -21,11 +17,15 @@ and 3) other.
 *******************************************************************
 
 -Add a notification for when a request is rejected.
-  -The person who rejects a request should be able to write a message to the user who made the request and explain
-  why the request was rejected.
+  -The reject button should lead to a second page, where the superuser can
+  enter a message about why the request was rejected.
 
 -Add option to mark tissues as unavailable when a request is approved.
-  -Should be per tissue (and per monkey?).
+  -Should be per tissue (and per monkey).
+
+  - The accept button should lead to a second page, where the superuser can
+  look over the request one more time and select any of the requested
+  tissues to be declared unavailable.
 
 *******************************************************************
 ***CATEGORY: UI Changes *******************************************

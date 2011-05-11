@@ -4,12 +4,13 @@
       {% endif %}
       {% if forloop.counter == 1 %}
         <div class="headline">{{ datum.0 }}: {{ datum.1 }}</div>
+        <div style="float:left; color: #4E4E4E">{% include 'matrr/review/item_availability.html'%}</div>
       {% else %}
         <div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
-        &nbsp;<div style="color: #4E4E4E">{% include 'matrr/review/item_availability.html' %}</div>
+        <br>
       {% endif %}
     {% endfor %}
-
+<div class='clearfix'></div>
 
 
 <table class='reviews_table'>

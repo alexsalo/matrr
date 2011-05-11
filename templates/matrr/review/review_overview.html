@@ -81,13 +81,13 @@
   {% for tissue_request in region_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
   {% endfor %}
-{#  {% for tissue_request in microdissected_requests %}#}
-{#    {% include 'matrr/review/review_overview_item.html' %}#}
-{#  {% endfor %}#}
   {% for tissue_request in tissue_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
   {% endfor %}
   {% for tissue_request in sample_requests %}
+    {% include 'matrr/review/review_overview_item.html' %}
+  {% endfor %}
+  {% for tissue_request in custom_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
   {% endfor %}
   
@@ -98,11 +98,13 @@
   <tr><th>Reviewer</th><th colspan='10'>Reviewer's Notes</th></tr>
   {% for review in reviews %}
     {% if review.rvs_notes != None and review.rvs_notes != '' %}
-    <th>{{ review.user }}</th>
-    <td colspan='9'>{{ review.rvs_notes }}</td>
+      <tr>
+        <th>{{ review.user }}</th>
+        <td colspan='9'>{{ review.rvs_notes }}</td>
+      </tr>
     {% endif %}
   {% endfor %}
-  </tr>
+
 </table>
 <div>
 {% if req_request.request_status.rqs_status_name == 'Submitted' %}
