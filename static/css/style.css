@@ -455,6 +455,25 @@ table.clear tr{
   background-position: 10px center;
 }
 
+table.overview {
+    border-spacing: 3px;
+    padding: 2px;
+    width: 600;
+}
+
+table.overview td{
+    padding: 2px 2px 2px 2px;
+    font-weight: bold;
+    color: #4E4E4E;
+    text-wrap: suppress;
+    width: 25%;
+}
+
+table.overview th{
+    width: 25%;
+    text-align: right;
+}
+
 table.common, table.three_column{
     border-style: none;
     border-spacing: 2px;
@@ -470,6 +489,7 @@ table.common td{
     border-spacing: inherit;
     color: #4E4E4E;
 }
+
 
 table.common th{
     background: #D8D8CB;

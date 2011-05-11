@@ -1,8 +1,9 @@
 {% load tissue_filters %}
 
-<tr><th colspan='9'>
-  <a onclick="javascript:toggle_visibility('availability_{{ tissue_request.get_tissue }}_{{ tissue_request.get_id }}');">Availability</a>
-</th></tr>
+<!-- <tr><th colspan='9'> -->
+  <a onclick="javascript:toggle_visibility('availability_{{ tissue_request.get_tissue }}_{{ tissue_request.get_id }}');">Check Availability</a>
+<!-- </th></tr> -->
+<table>
 <tbody id='availability_{{ tissue_request.get_tissue }}_{{ tissue_request.get_id }}' class='hidden'>
 <tr class='bordered-cell-row'><th>Monkey</th>
   {% if spacing %}<th class='spacing'></th>{% endif %}
@@ -36,3 +37,4 @@
   </tr>
 {% endfor %}
 </tbody>
+</table>
