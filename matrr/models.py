@@ -3,6 +3,7 @@ from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import datetime
+from settings import SITE_ROOT
 
 
 class DiffingMixin(object):
@@ -77,7 +78,7 @@ class Cohort(models.Model):
     return self.coh_cohort_name
   
   def get_url(self):
-    url = '/'
+    url = SITE_ROOT + '/'
     if self.coh_upcoming:
       url += 'upcoming'
     else:
@@ -259,20 +260,6 @@ class RequestStatus(models.Model):
     db_table = 'rqs_request_statuses'
 
 
-class FixType(models.Model):
-  fxt_fix_id = models.AutoField('ID', primary_key=True)
-  fxt_fix_name = models.CharField('Name', max_length=100, unique=True, null=False,
-                                  help_text='The name of the fix type.')
-  fxt_fix_description = models.TextField('Description', null=True,
-                                         help_text='The description of this fix type.')
-  
-  def __unicode__(self):
-    return self.fxt_fix_name
-  
-  class Meta:
-    db_table = 'fxt_fix_types'
-
-
 class Availability:
     Available, In_Stock, Unavailable = range(3)
 
@@ -282,9 +269,6 @@ class TissueType(models.Model):
                                      help_text='The name of the tissue type.')
   tst_description = models.TextField('Description', null=True,
                                      help_text='The description of the tissue type.')
-  fixes = models.ManyToManyField(FixType, through='FixToTissueType',
-                                 verbose_name='Available Fixes',
-                                 help_text='The fix types available for this tissue type.')
   tst_count_per_monkey = models.IntegerField('Units per Monkey',
                                              blank=True,
                                              null=True,
@@ -378,21 +362,6 @@ class TissueType(models.Model):
     db_table = 'tst_tissue_types'
 
 
-class FixToTissueType(models.Model):
-  ftt_fix_to_tissue_type_id = models.AutoField('ID', primary_key=True)
-  FixType = models.ForeignKey(FixType, null=False, related_name='+', db_column='fxt_fix_id',
-                              verbose_name='Fix Type',)
-  TissueType = models.ForeignKey(TissueType, null=False, related_name='+', db_column='tst_type_id',
-                                 verbose_name='Tissue Type')
-
-  def __unicode__(self):
-    return self.TissueType.tst_tissue_name + ' - ' + self.FixType.fxt_fix_name
-
-  class Meta:
-    db_table = 'ftt_fix_to_tissue_types'
-    unique_together=('FixType', 'TissueType')
-
-
 class Unit(models.Model):
   unt_unit_id = models.AutoField('ID', primary_key=True)
   unt_unit_name = models.CharField('Name', max_length=100, unique=True, null=False,
@@ -479,7 +448,8 @@ class TissueRequest(models.Model):
   rtt_tissue_request_id = models.AutoField(primary_key=True)
   req_request = models.ForeignKey(Request, null=False, related_name='tissue_request_set', db_column='req_request_id')
   tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_request_set', db_column='tst_type_id')
-  fix_type = models.ForeignKey(FixType, null=False, related_name='tissue_request_set', db_column='fxt_fix_id', verbose_name='Fix',
+  rtt_fix_type = models.CharField('Fixation', null=False, blank=False,
+                                  max_length=200,
       help_text='Please select the appropriate fix type.')
   rtt_amount = models.FloatField('Amount',
       help_text='Please enter the amount of tissue you need.')
@@ -490,9 +460,9 @@ class TissueRequest(models.Model):
   monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this tissue is requested from.')
-  
+
   def __unicode__(self):
-    return self.tissue_type.tst_tissue_name + ': ' + self.fix_type.fxt_fix_name
+    return self.tissue_type.tst_tissue_name + ': ' + self.rtt_fix_type
 
   def get_tissue(self):
     return self.tissue_type
@@ -508,7 +478,7 @@ class TissueRequest(models.Model):
 
   def get_data(self):
     return [['Tissue Type', self.tissue_type],
-            ['Fix', self.fix_type],
+            ['Fix', self.rtt_fix_type],
             ['Amount', str(self.rtt_amount) + self.unit.unt_unit_name]]
 
   def get_type_url(self):
@@ -519,14 +489,15 @@ class TissueRequest(models.Model):
 
   class Meta:
     db_table = 'rtt_requests_to_tissue_types'
-    unique_together = (('req_request', 'tissue_type', 'fix_type'),)
+    unique_together = (('req_request', 'tissue_type', 'rtt_fix_type'),)
 
 
 class TissueRequestRevision(models.Model):
   rtv_tissue_request_id = models.AutoField(primary_key=True)
   request_revision = models.ForeignKey(RequestRevision, null=False, related_name='tissue_request_revision_set', db_column='rqv_request_revision_id', editable=False)
   tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_request_revision_set', db_column='tst_type_id', editable=False)
-  fix_type = models.ForeignKey(FixType, null=False, related_name='tissue_request_revision_set', db_column='fxt_fix_id', editable=False, verbose_name='Fix',)
+  rtv_fix_type = models.CharField('Fixation', null=False, blank=False,
+                                  max_length=200, editable=False,)
   rtv_amount = models.FloatField('Amount', editable=False)
   unit = models.ForeignKey(Unit, null = False, related_name='+', db_column='unt_unit_id', editable=False, verbose_name='Unit',)
   rtv_notes = models.TextField('Notes', null=True, editable=False,)
@@ -665,8 +636,17 @@ class BrainRegion(models.Model):
 
 class BrainRegionRequest(models.Model):
   rbr_region_request_id = models.AutoField(primary_key=True)
-  req_request = models.ForeignKey(Request, null=False, related_name='brain_region_request_set', db_column='req_request_id')
-  brain_region = models.ForeignKey(BrainRegion, null=False, related_name='brain_region_request_set', db_column='bre_region_id')
+  req_request = models.ForeignKey(Request,
+                                  null=False,
+                                  related_name='brain_region_request_set',
+                                  db_column='req_request_id')
+  brain_region = models.ForeignKey(BrainRegion,
+                                   null=False,
+                                   related_name='brain_region_request_set',
+                                   db_column='bre_region_id')
+  rbr_fix_type = models.CharField('Fixation', null=False, blank=False,
+                                  max_length=200,
+      help_text='Please select the appropriate fix type.')
   rbr_notes = models.TextField('Notes', null=True, blank=True,
                                help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
   monkeys = models.ManyToManyField(Monkey, db_table='mbr_monkeys_to_brain_region_requests',
@@ -689,7 +669,8 @@ class BrainRegionRequest(models.Model):
     return self.rbr_notes
 
   def get_data(self):
-    return [['Brain Region', self.brain_region],]
+    return [['Brain Region', self.brain_region],
+            ['Fix', self.rbr_fix_type],]
 
   def get_type_url(self):
     return 'regions'
@@ -825,6 +806,13 @@ class BloodAndGeneticRequest(models.Model):
   rbg_id = models.AutoField(primary_key=True)
   req_request = models.ForeignKey(Request, null=False, related_name='blood_and_genetic_request_set', db_column='req_request_id')
   blood_genetic_item = models.ForeignKey(BloodAndGenetic, null=False, related_name='blood_and_genetic_request_set', db_column='bag_id')
+  rbg_amount = models.FloatField('Amount',
+      help_text='Please enter the amount of tissue you need.')
+  unit = models.ForeignKey(Unit, null = False, related_name='+', db_column='unt_unit_id',
+      help_text='Please select the unit of measure.')
+  rbg_fix_type = models.CharField('Fixation', null=False, blank=False,
+                                  max_length=200,
+      help_text='Please select the appropriate fix type.')
   rbg_notes = models.TextField('Notes', null=True, blank=True,
                                help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
   monkeys = models.ManyToManyField(Monkey, db_table='mgr_monkeys_to_blood_and_genetic_requests',
@@ -847,7 +835,9 @@ class BloodAndGeneticRequest(models.Model):
     return self.rbg_notes
 
   def get_data(self):
-    return [['Blood/Genetic Sample', self.blood_genetic_item],]
+    return [['Blood/Genetic Sample', self.blood_genetic_item],
+            ['Fix', self.rbg_fix_type],
+            ['Amount', str(self.rbg_amount) + self.unit.unt_unit_name],]
 
   def get_type_url(self):
     return 'samples'
@@ -889,9 +879,14 @@ class CustomTissueRequest(models.Model):
                                      null=False,
                                      blank=False,
                                      help_text='Please enter a detailed description of the tissue you need.  List any special requirements here.')
-  ctr_amount = models.CharField('Amount', null=False, blank=False,
-                                max_length=100,
-                                help_text='Please enter the amount of tissue that you need.')
+  ctr_fix_type = models.CharField('Fixation', null=False, blank=False,
+                                  max_length=200,
+      help_text='Please select the appropriate fix type.')
+  ctr_amount = models.FloatField('Amount',
+      help_text='Please enter the amount of tissue you need.')
+  unit = models.ForeignKey(Unit, null = False, related_name='+', db_column='unt_unit_id',
+      help_text='Please select the unit of measure.')
+
   monkeys = models.ManyToManyField(Monkey, db_table='mcr_monkeys_to_custom_tissue_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this tissue is requested from.')
@@ -913,7 +908,8 @@ class CustomTissueRequest(models.Model):
 
   def get_data(self):
     return [['Custom Tissue Request', self.ctr_description],
-            ['Amount', self.ctr_amount]]
+            ['Fix', self.ctr_fix_type],
+            ['Amount', str(self.ctr_amount) + self.unit.unt_unit_name],]
 
   def get_type_url(self):
     return 'custom'
@@ -1245,8 +1241,8 @@ class Shipment(models.Model):
 class PeripheralTissueSample(models.Model):
   pts_id = models.AutoField(primary_key=True)
   tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id',
-                             related_name='%(class)s_set',
-                             blank=False, null=False)
+                                  related_name='%(class)s_set',
+                                  blank=False, null=False)
   monkey = models.ForeignKey(Monkey, db_column='mky_id',
                              related_name='%(class)s_set',
                              blank=False, null=False)
@@ -1326,7 +1322,7 @@ class ShippedBrainRegion(BrainRegionSample):
     db_table = 'sbr_shipped_blood_and_genetics'
 
 
-class BloodAndGenecticsSample(models.Model):
+class BloodAndGeneticsSample(models.Model):
   bgs_id = models.AutoField(primary_key=True)
   blood_genetic_item = models.ForeignKey(BloodAndGenetic, db_column='bag_id',
                                   related_name='%(class)s_set',
@@ -1340,7 +1336,7 @@ class BloodAndGenecticsSample(models.Model):
     abstract=True
 
 
-class FreezerBloodAndGenetics(BloodAndGenecticsSample):
+class FreezerBloodAndGenetics(BloodAndGeneticsSample):
   fbg_location = models.CharField('Location of Sample',
                                   max_length=100,
                                   help_text='Please enter the location where this sample is stored.')
@@ -1349,7 +1345,7 @@ class FreezerBloodAndGenetics(BloodAndGenecticsSample):
     db_table = 'fbg_freezer_blood_and_genetics'
 
 
-class ShippedBloodAndGenetics(BloodAndGenecticsSample):
+class ShippedBloodAndGenetics(BloodAndGeneticsSample):
   shipment = models.ForeignKey(Shipment,
                                db_column='shp_shipment_id',
                                related_name='shipped_blood_genetic_set',
@@ -1391,7 +1387,6 @@ def request_post_save(**kwargs):
     committee_members = committee_group.user_set.all()
     # get all the tissue requests for the request
     brain_region_requests = BrainRegionRequest.objects.filter(req_request=req_request.req_request_id)
-    #microdissected_requests = MicrodissectedRegionRequest.objects.filter(req_request=req_request.req_request_id)
     peripheral_tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
     sample_requests = BloodAndGeneticRequest.objects.filter(req_request=req_request.req_request_id)
 
@@ -1402,8 +1397,6 @@ def request_post_save(**kwargs):
       # create a new TissueRequestReview for each TissueRequest
       for tissue_request in brain_region_requests:
         BrainRegionRequestReview(review=review, brain_region_request=tissue_request).save()
-#      for tissue_request in microdissected_requests:
-#        MicrodissectedRegionRequestReview(review=review, microdissected_region_request=tissue_request).save()
       for tissue_request in peripheral_tissue_requests:
         TissueRequestReview(review=review, tissue_request=tissue_request).save()
       for tissue_request in sample_requests:

@@ -19,6 +19,12 @@
     Status: {{ order.request_status }}
   </div>
   <div>
+    Project Title: {{ order.req_project_title }}
+  </div>
+  <div>
+    Reason for Project: {{ order.req_reason }}
+  </div>
+  <div>
     Experimental Plan: <a href='/{{ order.req_experimental_plan }}'>{{ order.req_experimental_plan }}</a>
   </div>
   {% if order.req_notes %}
@@ -32,17 +38,16 @@
       <thead>
         <tr><th colspan="6">Requested Tissues</th></tr>
       </thead>
-      <!--<tr><th>Tissue</th><th>Fix</th><th>Amount</th></tr>-->
       {% for item in order.brain_region_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}
       {% endfor %}
-{#      {% for item in order.microdissected_region_request_set.all %}#}
-{#        {% include 'matrr/order_item_detail.html' %}#}
-{#      {% endfor %}#}
       {% for item in order.tissue_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}
       {% endfor %}
       {% for item in order.blood_and_genetic_request_set.all %}
+        {% include 'matrr/order_item_detail.html' %}
+      {% endfor %}
+      {% for item in order.custom_tissue_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}
       {% endfor %}
     </table>

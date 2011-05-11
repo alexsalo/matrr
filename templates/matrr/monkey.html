@@ -24,9 +24,24 @@ Monkey: {{ monkey.mky_real_id }}
 Gender: {{ monkey.mky_gender }}
 </div>
 <div>
+  Assignment: {% if monkey.mky_drinking %}Ethanol{% else %}Control{% endif %}
+</div>
+<div>
 Birthdate: {{ monkey.mky_birthdate }}
+</div>
+<div>
+  {% if monkey.mky_necropsy_date %}
+    Necropsy Date: {{ monkey.mky_necropsy_date }}
+  {% else %}
+    No Necropsy Yet
+  {% endif %}
 </div>
 <div>
 Weight: {{ monkey.mky_weight }}
 </div>
+{% if monkey.mky_stress_model %}
+  <div>
+    Stress Model: {{ monkey.mky_stress_model }}
+  </div>
+{% endif %}
 {% endblock %}

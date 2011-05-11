@@ -1,14 +1,24 @@
 These items are in no particular order.
 
--Add unit tests.
+*******************************************************************
+***CATEGORY: Model Changes ****************************************
+*******************************************************************
 
--add sphinx indices
+-Change fixtype to tissue type mappings to be 1) flash frozen (liquid nitrogen or dry ice), 2) 4% Paraformaldehyde,
+and 3) other.
+  the "other" option should give a textfield to the user so he can describe the type of fixation he needs.
 
--Add to wiki documentation.
+-Change any weight fields to be floats
 
--Add additional request details to orders page.
+*******************************************************************
+***CATEGORY: Tissue Shop Changes **********************************
+*******************************************************************
 
--Add inventory to review pages.
+-Figure out a way to show brain blocks and let users determine if a brain region is available.
+
+*******************************************************************
+***CATEGORY: Review Process Changes *******************************
+*******************************************************************
 
 -Add a notification for when a request is rejected.
   -The person who rejects a request should be able to write a message to the user who made the request and explain
@@ -17,25 +27,53 @@ These items are in no particular order.
 -Add option to mark tissues as unavailable when a request is approved.
   -Should be per tissue (and per monkey?).
 
-
--Check available tissue requests.
-  - seems to be working, but probably need to add some checks to the controller code (matrr/views.py).
-
--Add progress reports for 90 days from the shipped date.
-
--Add shipping.
-
--Change fixtype to tissue type mappings to be 1) flash frozen (liquid nitrogen or dry ice), 2) 4% Paraformaldehyde,
-and 3) other.
-  the "other" option should give a textfield to the user so he can describe the type of fixation he needs.
-
--BUG: Requesting a tissue when that tissue is already in your cart causes an internal server error.
-
--Add previous requests to site.  Include request document on site.
-  -this is probably the biggest priority
-
--Figure out a way to show brain blocks and let users determine if a brain region is available.
+*******************************************************************
+***CATEGORY: UI Changes *******************************************
+*******************************************************************
 
 -Add a note on the Cohorts page to say that you can only request tissue from one cohort at a time.
 
 -Change progress report text to make less of a question.
+
+
+*******************************************************************
+***CATEGORY: Data Entry *******************************************
+*******************************************************************
+
+-Add previous requests to site.  Include request document on site.
+  -this is probably the biggest priority
+
+*******************************************************************
+***CATEGORY: Shipping  ********************************************
+*******************************************************************
+
+-Add shipping.
+
+-Add progress reports for 90 days from the shipped date.
+
+*******************************************************************
+***CATEGORY: Testing and documentation ****************************
+*******************************************************************
+
+-Fix the mailer issue on the wiki
+
+-Add unit tests.
+
+-Add to wiki documentation.
+
+-Check available tissue requests.
+  - seems to be working, but probably need to add some checks to the controller code (matrr/views.py).
+
+*******************************************************************
+***CATEGORY: Bugs *************************************************
+*******************************************************************
+
+-BUG: Requesting a tissue when that tissue is already in your cart causes an internal server error.
+
+*******************************************************************
+***CATEGORY: Uncategorized Changes ********************************
+*******************************************************************
+
+-add sphinx indices
+
+-Force SVN to use the correct permissions.

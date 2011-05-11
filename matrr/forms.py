@@ -8,6 +8,11 @@ import re
 from matrr.models import *
 from matrr.widgets import *
 
+
+FIX_CHOICES = (('', '---------'), ('Flash Frozen','Flash Frozen'),
+                 ('4% Paraformaldehyde','4% Paraformaldehyde'),
+                ('other','other'))
+
 def trim_help_text(text):
   return re.sub(r' Hold down .*$', '', text)
 
@@ -31,26 +36,24 @@ class TissueRequestBaseForm(ModelForm):
 class TissueRequestForm(TissueRequestBaseForm):
   def __init__(self, req_request, tissue, *args, **kwargs):
     super(TissueRequestForm, self).__init__(req_request, tissue, *args, **kwargs)
-    self.fields['fix_type'].queryset = \
-      self.tissue.fixes.all()
 
   def clean(self):
     super(TissueRequestForm, self).clean()
     cleaned_data = self.cleaned_data
 
-    fix_type = cleaned_data.get('fix_type')
+    fix_type = cleaned_data.get('rtt_fix_type')
     if self.req_request and \
        self.tissue and \
        fix_type and \
       (self.instance is None or \
        (self.instance.get_id() is not None and\
-      self.instance.fix_type != fix_type )
+      self.instance.rtt_fix_type != fix_type )
       ) \
       and \
        TissueRequest.objects.filter( \
         req_request=self.req_request, \
         tissue_type=self.tissue, \
-        fix_type=fix_type).count() > 0:
+        rtt_fix_type=fix_type).count() > 0:
       raise forms.ValidationError("You already have this tissue and fix in your cart.")
 
     # Always return the full collection of cleaned data.
@@ -59,6 +62,7 @@ class TissueRequestForm(TissueRequestBaseForm):
   class Meta:
     model = TissueRequest
     exclude = ('req_request', 'tissue_type')
+    widgets = {'rtt_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
 
 
 class CartCheckoutForm(ModelForm):
@@ -158,6 +162,7 @@ class BrainRegionRequestForm(TissueRequestBaseForm):
   class Meta:
     model = BrainRegionRequest
     exclude = ('req_request', 'brain_region')
+    widgets = {'rbr_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
 
 
 class BloodAndGeneticRequestForm(TissueRequestBaseForm):
@@ -181,6 +186,7 @@ class BloodAndGeneticRequestForm(TissueRequestBaseForm):
   class Meta:
     model = BloodAndGeneticRequest
     exclude = ('req_request', 'blood_genetic_item')
+    widgets = {'rbg_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
 
 
 class CustomTissueRequestForm(ModelForm):
@@ -198,4 +204,5 @@ class CustomTissueRequestForm(ModelForm):
   class Meta:
     model = CustomTissueRequest
     exclude = ('req_request',)
-    widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/', tissue=None) }
+    widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/', tissue=None),
+                'ctr_fix_type': FixTypeSelection(choices=FIX_CHOICES),}

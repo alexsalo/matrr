@@ -12,4 +12,10 @@
       <td align='center' colspan='6'>{{ item.get_notes }}</td>
     </tr>
   {% endif %}
+  <tr>
+    <th colspan='3'>Monkeys</th>
+  </tr>
+  {% for monkey in item.monkeys.all %}
+    <tr><td><a href='{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}'>{{ monkey.mky_real_id }}</a></td></tr>
+  {% endfor %}
 </tbody>

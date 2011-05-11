@@ -6,10 +6,11 @@
       <td valign='middle' width='30'>
         <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/'><img src="{{ STATIC_URL }}/images/cart_edit.png" width='16' height='16'></a>
       </td>
-      <td valign='middle' width='30'>
+    {#  removed the cart add button because it does not change per item and it is already on the page #}
+      <!--<td valign='middle' width='30'>
         <a href='/{% if cart.cohort.coh_upcoming %}upcoming{% else %}available{% endif %}/{{ cart.cohort.coh_cohort_id }}/tissues'>
           <img src="{{ STATIC_URL }}/images/cart_add.png" width='16' height='16'></a>
-      </td>
+      </td>-->
       <td valign='middle' width='30'>
         <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/delete/'><img src="{{ STATIC_URL }}/css/images/badge-circle-cross-24.png" width='16' height='16'></a>
       </td>
