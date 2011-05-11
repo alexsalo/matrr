@@ -15,17 +15,27 @@
 {% endif %}
 
 
-<table>
+
+<table class="three_column">
   {% for tissue in tissues.object_list %}
-    <tr>
+    {% if forloop.counter|divisibleby:"3" %}
+      {% if tissue|cohort_availability:cohort %}
+        <td><a href='{{ tissue.get_id }}'>{{ tissue.get_name }}</a></td></tr><tr>
+      {% else %}
+        <td>{{ tissue.get_name }}</td><td>Unavailable</td></tr><tr>
+      {% endif %}
+    {% else %}
       {% if tissue|cohort_availability:cohort %}
         <td><a href='{{ tissue.get_id }}'>{{ tissue.get_name }}</a></td>
       {% else %}
         <td>{{ tissue.get_name }}</td><td>Unavailable</td>
       {% endif %}
-    </tr>
+    {% endif %}
   {% endfor %}
 </table>
+
+
+
 <div class="pagination">
     <span class="step-links">
         {% if tissues.has_previous %}

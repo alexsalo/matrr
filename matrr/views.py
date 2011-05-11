@@ -683,23 +683,10 @@ def tissue_list(request, tissue_model, cohort_id = None):
   c = RequestContext(request, {
     'cohort': cohort,
     })
-  #
-  # This is a work in progress
-  q = model.objects.count()
-  first_third = q/3
-  second_third = 2*(q/3)
-  
-  tissue_list_first_third = model.objects.order_by(order)[0:first_third]
-  tissue_list_second_third = model.objects.order_by(order)[(first_third+1):second_third]
-  tissue_list_last_third = model.objects.order_by(order)[(second_third+1):q]
-  #
-  ######
   
   tissue_list = model.objects.order_by(order)
   
-  
-  
-  paginator = Paginator(tissue_list, 20) # Show 20 tissues per page
+  paginator = Paginator(tissue_list, 60) # Show 20 tissues per page
 
   # Make sure page request is an int. If not, deliver first page.
   try:

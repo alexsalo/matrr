@@ -455,10 +455,14 @@ table.clear tr{
   background-position: 10px center;
 }
 
-table.common{
+table.common, table.three_column{
     border-style: none;
     border-spacing: 2px;
     padding: 10px;
+}
+
+table.three_column td{
+    width: 25%;
 }
 
 table.common th,
