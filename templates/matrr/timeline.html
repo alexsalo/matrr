@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if cohort.coh_upcoming %}
+Upcoming 
+{% else %}
+Available 
+{% endif %}
+Cohort: {{ cohort.coh_cohort_name }}
+{% endblock %}
+
+
+{% block content %}
+<div id='large-headline'>{% if cohort.coh_upcoming %}
+Upcoming 
+{% else %}
+Available 
+{% endif %}
+Cohort: {{ cohort.coh_cohort_name }}</div>
+
+<div class='clearfix'><div style='float: right;'>
+<a class='blockLinkButton' href='tissues'>Request Tissues from this Cohort</a>
+</div></div>
+
+<div>
+<table class='common_center'>
+  <tr>
+    {% if user.is_superuser %}<th>Real Name</th>{% endif %}
+    <th>Monkey ID</th><th>Gender</th><th>Birthdate</th><th>Weight</th><th>Test Group</th>
+    <th>Necropsy Date</th><th>Stress Model</th><th>Study Complete</th></tr>
+  {% for monkey in cohort.monkey_set.all %}
+    <tr>
+      {% if user.is_superuser %}<td>{{ monkey.mky_id }}</td>{% endif %}
+      <td><a href='monkey/{{monkey.mky_id}}'>{{ monkey.mky_real_id }}</a></td>
+      <td>{{ monkey.mky_gender }}</td>
+      <td>{{ monkey.mky_birthdate }}</td>
+      <td>{{ monkey.mky_weight }}</td>
+      <td>{% if monkey.mky_drinking %}Ethanol{% else %}Control{% endif %}</td>
+      <td>{{ monkey.mky_necropsy_date}}</td>
+      <td>{{ monkey.mky_stress_model }}</td>
+      <td>{% if monkey.mky_study_complete %}<font color=blue>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
+    </tr>
+  {% endfor %}
+</table>
+</div>
+
+<div>
+<table>
+  <tr><th>Event</th><th>Date</th></tr>
+  {% for event in cohort.cohort_event_set.all|dictsort:'cev_date' %}
+    <tr>
+      <td>{{ event.event }}</td>
+      <td>{{ event.cev_date }}</td>
+      {% if event.cev_info %}
+        <td>{{ event.cev_info }}</td>
+      {% endif %}
+    </tr>
+  {% endfor %}
+</table>
+</div>
+{% endblock %}
