@@ -31,7 +31,9 @@ Cohort: {{ cohort.coh_cohort_name }}</div>
   {% for monkey in cohort.monkey_set.all %}
     <tr>
       {% if user.is_superuser %}<td>{{ monkey.mky_id }}</td>{% endif %}
-      <td><a href='monkey/{{monkey.mky_id}}'>{{ monkey.mky_real_id }}</a></td>
+      <td><a href="monkey/{{monkey.mky_id}}" onClick='javascript:window.open("monkey/{{ monkey.mky_id}}");return false;'>
+          {{ monkey.mky_real_id }}
+          <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
       <td>{{ monkey.mky_gender }}</td>
       <td>{{ monkey.mky_birthdate }}</td>
       <td>{{ monkey.mky_weight }}</td>

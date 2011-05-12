@@ -46,12 +46,12 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
           availability_str = 'Unavailable'
 
         if availability == Availability.Unavailable:
-          output.append(u'<li><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'>%s</a> Status: %s</li>' % ( self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id, availability_str))
+          output.append(u'<li><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a> Status: %s</li>' % ( self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id, availability_str))
         else:
-          output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'>%s</a></label>  Status: %s</li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id, availability_str))
+          output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label>  Status: %s</li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id, availability_str))
       else:
         # this is for custom tissue requests
-        output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'>%s</a></label></li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id))
+        output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label></li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id))
 
     return mark_safe(u'\n'.join(output))
 

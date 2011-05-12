@@ -20,28 +20,27 @@ Available
 Cohort: {{ cohort.coh_cohort_name }}
 Monkey: {{ monkey.mky_real_id }}
 </div>
-<div>
-Gender: {{ monkey.mky_gender }}
-</div>
-<div>
-  Assignment: {% if monkey.mky_drinking %}Ethanol{% else %}Control{% endif %}
-</div>
-<div>
-Birthdate: {{ monkey.mky_birthdate }}
-</div>
-<div>
-  {% if monkey.mky_necropsy_date %}
-    Necropsy Date: {{ monkey.mky_necropsy_date }}
-  {% else %}
-    No Necropsy Yet
-  {% endif %}
-</div>
-<div>
-Weight: {{ monkey.mky_weight }}
-</div>
-{% if monkey.mky_stress_model %}
-  <div>
-    Stress Model: {{ monkey.mky_stress_model }}
-  </div>
-{% endif %}
+<br>
+    
+<table class="overview">
+    <tr>
+        <th>Assignment:</th><td>{% if monkey.mky_drinking %}Ethanol{% else %}Control{% endif %}</td>
+    </tr>
+    <tr>
+        <th>Gender:</th><td>{{ monkey.mky_gender }}</td>
+    </tr>
+    <tr>
+        <th>Birthday:</th><td>{{ monkey.mky_birthdate }}</td>
+    </tr>
+    <tr>
+        <th>Necropsy Date:</th><td>{% if monkey.mky_necropsy_date %}{{ monkey.mky_necropsy_date }}{% else %}No Necropsy Yet{% endif %}</td>
+    </tr>
+    <tr>
+        <th>Weight:</th><td>{{ monkey.mky_weight }}</td>
+    </tr>
+    <tr>
+        <th>Stree Model:</th><td>{{ monkey.mky_stress_model }}</td>
+    </tr>
+</table>
+
 {% endblock %}
