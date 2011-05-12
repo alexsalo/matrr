@@ -107,6 +107,8 @@ urlpatterns += patterns('matrr.views',
       cart_item_delete),
   url(r'^shipping_overview/$',
     shipping_overview),
+  url(r'^account/(?P<user_id>\d+)/$',
+    account_reviewer_view)
 #  url(r'^search/?$',
 #    search),
 )

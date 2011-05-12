@@ -263,6 +263,7 @@ class RequestStatus(models.Model):
 class Availability:
     Available, In_Stock, Unavailable = range(3)
 
+
 class TissueType(models.Model):
   tst_type_id = models.AutoField('ID', primary_key=True)
   tst_tissue_name = models.CharField('Name', max_length=100, unique=True, null=False,

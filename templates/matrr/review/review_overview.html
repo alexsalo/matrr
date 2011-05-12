@@ -14,7 +14,8 @@
 <table class="overview">
     <tr>
       <th>Cohort:</th><td><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></td>
-      <th>Requesting User:</th><td>{{ req_request.user }}</td>
+      <th>Requesting User:</th>
+      <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></td>
     </tr>
     <tr>
       <th>Requested On:</th><td>{{ req_request.req_request_date }}</td>

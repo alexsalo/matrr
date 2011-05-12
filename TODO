@@ -10,7 +10,8 @@ These items are in no particular order.
 ***CATEGORY: Tissue Shop Changes **********************************
 *******************************************************************
 
--Figure out a way to show brain blocks and let users determine if a brain region is available.
+-Figure out a way to show brain blocks and let users determine if a
+brain region is available.
 
 *******************************************************************
 ***CATEGORY: Review Process Changes *******************************
@@ -27,11 +28,14 @@ These items are in no particular order.
   look over the request one more time and select any of the requested
   tissues to be declared unavailable.
 
+-Add link to requesting user's account.
+
 *******************************************************************
 ***CATEGORY: UI Changes *******************************************
 *******************************************************************
 
--Add a note on the Cohorts page to say that you can only request tissue from one cohort at a time.
+-Add a note on the Cohorts page to say that you can only request tissue
+from one cohort at a time.
 
 -Change progress report text to make less of a question.
 

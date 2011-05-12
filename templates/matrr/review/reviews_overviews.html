@@ -18,7 +18,7 @@
 {% for req_request in req_requests %}
   <tr>
     <td>{{ req_request.cohort.coh_cohort_name }}</td>
-    <td>{{ req_request.user }}</td> 
+    <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></td>
     <td>{{ req_request.req_request_date}}</td>
 
 {% for item in req_request.complete %}

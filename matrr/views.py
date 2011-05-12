@@ -486,19 +486,33 @@ def account_shipping(request):
 
 @login_required()
 def account_view(request):
+  return account_detail_view(request, request.user.id)
+
+@login_required()
+def account_detail_view(request, user_id):
+  if request.user.id == user_id:
+    edit = True
+  else:
+    edit = False
   # get information from the act_account relation
-  account_info = Account.objects.filter(user = request.user)
-  mta_info = Mta.objects.filter(user = request.user)
-  order_list = Request.objects.filter(user = request.user).exclude(request_status= RequestStatus.objects.get(rqs_status_name='Cart'))
+  account_info = Account.objects.get(user__id = user_id)
+  mta_info = Mta.objects.filter(user__id = user_id)
+  order_list = Request.objects.filter(user__id = user_id).exclude(request_status= RequestStatus.objects.get(rqs_status_name='Cart'))
 
   return render_to_response('matrr/account.html', \
     {'account_info': account_info,
      'mta_info': mta_info,
      'order_list': order_list,
+     'edit': edit,
     },
     context_instance=RequestContext(request))
-  
-  
+
+@login_required()
+@user_passes_test(lambda u: u.groups.filter(name='Committee').count()
+                  or u.groups.filter(name='Superuser').count(), login_url='/denied/')
+def account_reviewer_view(request, user_id):
+  return account_detail_view(request, user_id)
+
 
 @login_required()
 @user_passes_test(lambda u: u.groups.filter(name='Committee').count() != 0, login_url='/denied/')
