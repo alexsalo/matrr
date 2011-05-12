@@ -17,16 +17,8 @@ brain region is available.
 ***CATEGORY: Review Process Changes *******************************
 *******************************************************************
 
--Add a notification for when a request is rejected.
-  -The reject button should lead to a second page, where the superuser can
-  enter a message about why the request was rejected.
-
 -Add option to mark tissues as unavailable when a request is approved.
   -Should be per tissue (and per monkey).
-
-  - The accept button should lead to a second page, where the superuser can
-  look over the request one more time and select any of the requested
-  tissues to be declared unavailable.
 
 
 *******************************************************************
