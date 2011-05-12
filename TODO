@@ -28,7 +28,6 @@ brain region is available.
   look over the request one more time and select any of the requested
   tissues to be declared unavailable.
 
--Add link to requesting user's account.
 
 *******************************************************************
 ***CATEGORY: UI Changes *******************************************
@@ -81,3 +80,5 @@ from one cohort at a time.
 -add sphinx indices
 
 -Force SVN to use the correct permissions.
+
+-Add a contact us page.

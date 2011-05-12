@@ -721,27 +721,97 @@ def tissue_list(request, tissue_model, cohort_id = None):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Superuser').count() != 0, login_url='/denied/')
+@user_passes_test(lambda u: u.groups.filter(name='Superuser').count(),
+                  login_url='/denied/')
 def request_review_accept(request, req_request_id):
   # get the tissue request
   req_request = Request.objects.get(req_request_id=req_request_id)
-  req_request.request_status = RequestStatus.objects.get(rqs_status_name='Accepted')
-  req_request.save()
-  subject = render_to_string('matrr/request_accepted_email_subject.txt')
-  # Email subject *must not* contain newlines
-  subject = ''.join(subject.splitlines())
-  request_url = settings.SITE_ROOT + '/orders/' + str(req_request.req_request_id) + '/'
-  message = render_to_string('matrr/request_accepted_email.txt',
-                    {'request_url': request_url})
-  messages.success(request, "The tissue request has been accepted.")
-  send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [req_request.user.email] )
-  return redirect('/review_overviews/')
+  if request.POST:
+    if request.POST['submit'] == 'Accept and Send Email':
+      # get the submitted form
+      form = ReviewResponseForm(data=request.POST)
+      if form.is_valid():
+        req_request.request_status = RequestStatus.objects.get(rqs_status_name='Accepted')
+        req_request.save()
+        messages.success(request, "The tissue request has been accepted.")
+        # Email subject *must not* contain newlines
+        subject = ''.join(form.cleaned_data['subject'].splitlines())
+        send_mail(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email] )
+        messages.success(request, str(req_request.user.username) + " was sent an email informing him/her that the request was accepted.")
+        return redirect('/reviews_overviews/')
+      else:
+        return render_to_response('matrr/review/accept.html',
+                                  {'form': form,
+                                   'req_request': req_request,},
+                                  context_instance=RequestContext(request))
+    else:
+      messages.info(request, "The tissue request has not been accepted.  No email was sent")
+      return redirect('/reviews_overviews/')
+  else:
+    # get the subject
+    subject = render_to_string('matrr/review/request_accepted_email_subject.txt')
+    # Email subject *must not* contain newlines
+    subject = ''.join(subject.splitlines())
+    request_url = settings.SITE_ROOT + '/orders/' + str(req_request.req_request_id) + '/'
+    body = render_to_string('matrr/review/request_accepted_email.txt',
+                      {'request_url': request_url})
+    data = {'subject': subject,
+            'body': body}
+    form = ReviewResponseForm(data=data)
+    return render_to_response('matrr/review/accept.html',
+                              {'form': form,
+                               'req_request': req_request,},
+                              context_instance=RequestContext(request))
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() != 0 or \
-                            u.groups.filter(name='Committee').count() != 0 or \
-                            u.groups.filter(name='Superuser').count() != 0 , login_url='/denied/')
+@user_passes_test(lambda u: u.groups.filter(name='Superuser').count(),
+                  login_url='/denied/')
+def request_review_reject(request, req_request_id):
+  # get the tissue request
+  req_request = Request.objects.get(req_request_id=req_request_id)
+  if request.POST:
+    if request.POST['submit'] == 'Reject and Send Email':
+      # get the submitted form
+      form = ReviewResponseForm(data=request.POST)
+      if form.is_valid():
+        req_request.request_status = RequestStatus.objects.get(rqs_status_name='Rejected')
+        req_request.save()
+        messages.success(request, "The tissue request has been rejected.")
+        # Email subject *must not* contain newlines
+        subject = ''.join(form.cleaned_data['subject'].splitlines())
+        send_mail(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email] )
+        messages.success(request, str(req_request.user.username) + " was sent an email informing him/her that the request was rejected.")
+        return redirect('/reviews_overviews/')
+      else:
+        return render_to_response('matrr/review/reject.html',
+                                  {'form': form,
+                                   'req_request': req_request,},
+                                  context_instance=RequestContext(request))
+    else:
+      messages.info(request, "The tissue request has not been rejected.  No email was sent")
+      return redirect('/reviews_overviews/')
+  else:
+    # get the subject
+    subject = render_to_string('matrr/review/request_rejected_email_subject.txt')
+    # Email subject *must not* contain newlines
+    subject = ''.join(subject.splitlines())
+    request_url = settings.SITE_ROOT + '/orders/' + str(req_request.req_request_id) + '/'
+    body = render_to_string('matrr/review/request_rejected_email.txt',
+                      {'request_url': request_url})
+    data = {'subject': subject,
+            'body': body}
+    form = ReviewResponseForm(data=data)
+    return render_to_response('matrr/review/reject.html',
+                              {'form': form,
+                               'req_request': req_request,},
+                              context_instance=RequestContext(request))
+
+@login_required()
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or \
+                            u.groups.filter(name='Committee').count() or \
+                            u.groups.filter(name='Superuser').count(),
+                  login_url='/denied/')
 def shipping_overview(request):
   # get the tissue requests that have been accepted
   accepted_requests = Request.objects.filter(request_status = RequestStatus.objects.get(rqs_status_name='Accepted'))

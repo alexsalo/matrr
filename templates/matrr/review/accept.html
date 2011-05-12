@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class='headline'>
+  {% block title %}Accepting {{ req_request.user.username }}'s request{% endblock %}
+  </div>
+<div>
+<form action='./' method='post'>
+  {% csrf_token %}
+<table>
+{{ form.as_table }}
+</table>
+  <input type='submit' name='submit' class='blockLinkCheckoutButton' value='Accept and Send Email'/>
+  <input type='submit' name='submit' class='blockLinkDeleteButton' value='cancel'/>
+</form>
+</div>
+{% endblock %}

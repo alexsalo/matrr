@@ -109,10 +109,10 @@
 </table>
 <div>
 {% if req_request.request_status.rqs_status_name == 'Submitted' %}
-  <a href='accept' class='greenLinkButton linkButton'>Accept</a>
-  <a href='reject' class='redLinkButton linkButton'>Reject</a>
+  <a href='accept/' class='greenLinkButton linkButton'>Accept</a>
+  <a href='reject/' class='redLinkButton linkButton'>Reject</a>
 {% endif %}
-<a href='/reviews_overviews/'><button>Back</button></a>
+<a href='/reviews_overviews/' class='blockLinkButton'>Back</a>
 </div>
 </div>
 {% endblock %}

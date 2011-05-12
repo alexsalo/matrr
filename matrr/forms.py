@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import ModelForm
+from django.forms import Form, ModelForm, CharField, widgets
 from django.forms.models import inlineformset_factory
 from django.db import transaction
 
@@ -206,3 +206,9 @@ class CustomTissueRequestForm(ModelForm):
     exclude = ('req_request',)
     widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/', tissue=None),
                 'ctr_fix_type': FixTypeSelection(choices=FIX_CHOICES),}
+
+
+class ReviewResponseForm(Form):
+  subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 120}))
+  body = CharField(widget=widgets.Textarea(attrs={'cols': 86,
+                                                  'rows': 30}))
