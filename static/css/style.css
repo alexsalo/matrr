@@ -474,7 +474,8 @@ table.overview th{
     text-align: right;
 }
 
-table.common, table.three_column{
+table.common, table.three_column,
+table.common_center {
     border-style: none;
     border-spacing: 2px;
     padding: 10px;
@@ -495,6 +496,16 @@ table.common th{
     background: #D8D8CB;
 }
 
+table.common_center td{
+    text-align: center;
+    color: #4E4E4E;
+    font-size: small;
+}
+
+table.common_center th{
+    padding: 2px 4px 2px 4px;
+    font-size: small;
+}
 
 .cart_table {
   border-collapse:collapse;
