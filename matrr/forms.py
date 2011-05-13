@@ -212,3 +212,7 @@ class ReviewResponseForm(Form):
   subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 120}))
   body = CharField(widget=widgets.Textarea(attrs={'cols': 86,
                                                   'rows': 30}))
+  
+class ContactUsForm(Form):
+  subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 40}))
+  body = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 15}))

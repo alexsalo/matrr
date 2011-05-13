@@ -122,7 +122,9 @@ urlpatterns += patterns('matrr.views',
   url(r'^shipping_overview/$',
     shipping_overview),
   url(r'^account/(?P<user_id>\d+)/$',
-    account_reviewer_view)
+    account_reviewer_view),
+  url(r'^contact_us/$',
+    contact_us)
 #  url(r'^search/?$',
 #    search),
 )

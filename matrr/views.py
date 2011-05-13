@@ -763,6 +763,33 @@ def request_review_accept(request, req_request_id):
                                'req_request': req_request,},
                               context_instance=RequestContext(request))
 
+def contact_us(request):
+  if request.POST:
+    if request.POST['submit'] == 'Send Message':
+      # get the submitted form
+      form = ReviewResponseForm(data=request.POST)
+      if form.is_valid():
+        if request.user.email:
+          requestEmail = request.user.email
+        subject = ''.join(form.cleaned_data['subject'].splitlines())
+        subject += '//'
+        subject += requestEmail
+        fromEmail = 'contact_us@matrr.com'
+        send_mail(subject, form.cleaned_data['body'], fromEmail, ["Erich_Baker@Baylor.edu"])
+        messages.success(request, "Your message was sent to the MATRR team. You may expect a response shortly.")
+        return redirect('/')
+      else:
+        return render_to_response('matrr/contact_us.html',
+                                  {'form': form },
+                                  context_instance=RequestContext(request))
+    else:
+      messages.info(request, "No message has been sent.")
+      return redirect('/')
+  else:
+    form = ContactUsForm()
+    return render_to_response('matrr/contact_us.html',
+                              {'form': form},
+                              context_instance=RequestContext(request))
 
 @login_required()
 @user_passes_test(lambda u: u.groups.filter(name='Superuser').count(),
