@@ -45,40 +45,6 @@
 </table>
 
 <br>
-
-<!--
-<table>
-  <tr>
-    <th>Cohort:</th>
-    <td>
-      <a href='{{ req_request.cohort.get_url }}'>
-        {{ req_request.cohort }}
-      </a>
-    </td>
-  </tr>
-  <tr><th>User:</th><td>{{ req_request.user }}</td></tr>
-  <tr><th>Requested On:</th><td>{{ req_request.req_request_date }}</td></tr>
-  <tr><th>Experimental Plan:</th><td><a href='/{{ MEDIA_URL }}/{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a></td></tr>
-  <tr><th>Project Title:</th><td>{{ req_request.req_project_title }}</td></tr>
-  <tr><th>Reason:</th><td colspan='5'>{{ req_request.req_reason }}</td></tr>
-  <tr><th>Referred By:</th><td>{{ req_request.req_referred_by }}</td></tr>
-  <tr><th>Progress Agreement:</th><td>{{ req_request.req_progress_agreement }}</td></tr>
-  {% if req_request.req_notes %}
-    <tr><th>Extra Notes:</th><td>{{ req_request.req_notes }}</td></tr>
-  {% endif %}
-</table>
--->
-
-<!--
-<table class='reviews_table'>
-  <tr><th>Reviewer:</th>
-  {% for review in reviews %}
-    <td class='spacing'></td>
-    <td>{{ review.user }}</td>
-  {% endfor %}
-  </tr>
--->
-  
   {% for tissue_request in region_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
   {% endfor %}

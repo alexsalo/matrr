@@ -415,7 +415,16 @@ class Request(models.Model, DiffingMixin):
   def get_requested_tissue_count(self):
     return self.tissue_request_set.count() + \
            self.brain_region_request_set.count() + \
-           self.blood_and_genetic_request_set.count()
+           self.blood_and_genetic_request_set.count() + \
+           self.custom_tissue_request_set.count()
+
+  def get_requested_tissues(self):
+    requests = list()
+    requests.extend(self.tissue_request_set.all())
+    requests.extend(self.brain_region_request_set.all())
+    requests.extend(self.blood_and_genetic_request_set.all())
+    requests.extend(self.custom_tissue_request_set.all())
+    return requests
   
   class Meta:
     db_table = 'req_requests'
@@ -1390,6 +1399,7 @@ def request_post_save(**kwargs):
     brain_region_requests = BrainRegionRequest.objects.filter(req_request=req_request.req_request_id)
     peripheral_tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
     sample_requests = BloodAndGeneticRequest.objects.filter(req_request=req_request.req_request_id)
+    custom_requests = CustomTissueRequest.objects.filter(req_request=req_request.req_request_id)
 
     # for each committee member, create a new review for the request
     for user in committee_members:
@@ -1402,6 +1412,8 @@ def request_post_save(**kwargs):
         TissueRequestReview(review=review, tissue_request=tissue_request).save()
       for tissue_request in sample_requests:
         BloodAndGeneticRequestReview(review=review, blood_and_genetic_request=tissue_request).save()
+      for tissue_request in custom_requests:
+        CustomTissueRequestReview(review=review, custom_tissue_request=tissue_request).save()
   
   req_request._previous_status_id = None
 

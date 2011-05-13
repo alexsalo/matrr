@@ -28,8 +28,6 @@ brain region is available.
 -Add a note on the Cohorts page to say that you can only request tissue
 from one cohort at a time.
 
--Change reason on checkout to always be displayed and add a
- css class that displays the box in a similar way to the tool-tip.
 
 *******************************************************************
 ***CATEGORY: Data Entry *******************************************

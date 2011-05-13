@@ -605,17 +605,17 @@ def review_overview(request, req_request_id):
   req_request = Request.objects.get(req_request_id=req_request_id)
   # get the tissue requests
   region_requests = req_request.brain_region_request_set.all()
-  #microdissected_requests = req_request.microdissected_region_request_set.all()
   tissue_requests = req_request.tissue_request_set.all()
   sample_requests = req_request.blood_and_genetic_request_set.all()
+  custom_requests = req_request.custom_tissue_request_set.all()
   # get the reviews for the request
   reviews = list(req_request.review_set.all())
   reviews.sort(key=lambda x: x.user.username, reverse=False)
 
   sort_tissues_and_add_quantity_css_value(region_requests)
-  #sort_tissues_and_add_quantity_css_value(microdissected_requests)
   sort_tissues_and_add_quantity_css_value(tissue_requests)
   sort_tissues_and_add_quantity_css_value(sample_requests)
+  sort_tissues_and_add_quantity_css_value(custom_requests)
 
   return render_to_response('matrr/review/review_overview.html', \
         {'reviews': reviews,
@@ -623,6 +623,7 @@ def review_overview(request, req_request_id):
          'region_requests': region_requests,
          'tissue_requests': tissue_requests,
          'sample_requests': sample_requests,
+         'custom_requests': custom_requests,
          'spacing': True,
          'Availability': Availability,
          },
