@@ -487,7 +487,7 @@ class TissueRequest(models.Model):
     return self.rtt_notes
 
   def get_data(self):
-    return [['Tissue Type', self.tissue_type],
+    return [['Peripheral Tissue', self.tissue_type],
             ['Fix', self.rtt_fix_type],
             ['Amount', str(self.rtt_amount) + self.unit.unt_unit_name]]
 

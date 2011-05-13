@@ -20,14 +20,12 @@ brain region is available.
 -Add option to mark tissues as unavailable when a request is approved.
   -Should be per tissue (and per monkey).
 
-
 *******************************************************************
 ***CATEGORY: UI Changes *******************************************
 *******************************************************************
 
 -Add a note on the Cohorts page to say that you can only request tissue
 from one cohort at a time.
-
 
 *******************************************************************
 ***CATEGORY: Data Entry *******************************************

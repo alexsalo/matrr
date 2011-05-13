@@ -2,6 +2,7 @@ from django import forms
 from django.forms import Form, ModelForm, CharField, widgets
 from django.forms.models import inlineformset_factory
 from django.db import transaction
+from django.contrib.admin.widgets import FilteredSelectMultiple
 
 import re
 
@@ -211,8 +212,69 @@ class CustomTissueRequestForm(ModelForm):
 class ReviewResponseForm(Form):
   subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 120}))
   body = CharField(widget=widgets.Textarea(attrs={'cols': 86,
-                                                  'rows': 30}))
-  
+                                                  'rows': 10}))
+
+
 class ContactUsForm(Form):
   subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 40}))
   body = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 15}))
+
+
+def remove_values_from_list(the_list, other_list):
+   return [value for value in the_list if value not in other_list]
+
+######################################################
+# The commented code below here is to serve as a starting point
+# for letting a superuser mark tissues as unavailable for
+# monkeys when accepting a request.
+#
+# The original method I was going to use would be to create
+# forms for each of the tissues and only show the unavailable_list field.
+# I would have also restricted the queryset to only show monkeys involved
+# in the request.
+#
+# This seems to be far more difficult than I originally anticipated,
+# so I will instead implement a system where the user gets a
+# single checkbox per request to indicate that the monkeys involved
+# should be added to the unavailable_list.
+# This will push most of the logic into the view and out of the form.
+#####################################################
+#class TissueTypeUnavailableFormSet(BaseModelFormSet):
+#  def __init__(self, tissue_request, *args, **kwargs):
+#    self.tissue_request = tissue_request
+#    super(TissueTypeUnavailableForm, self).__init__(args, kwargs)
+#    self.fields['unavailable_for'].queryset = \
+#      self.tissue_request.monkeys.all()
+#
+#  def save(self):
+#    unavailable_list = self.instance.unavailable_list.all()
+#    monkey_list = self.tissue_request.monkeys.all()
+#    # remove any monkeys in the request from the list
+#    unavailable_list = remove_values_from_list(unavailable_list, monkey_list)
+#    # add any selected monkeys to the list
+#    unavailable_list.extend(Monkey.objects.filter(mky_id__in=self.cleaned_data['']))
+#    self.instance.unavailable_list = unavailable_list
+#    self.instance.save()
+#
+#  class Meta:
+#    model = TissueRequest
+#    exclude = ('tst_type_id','tst_type_name','tst_description','tst_count_per_monkey',)
+#    widgets = {
+#      'unavailable_for': FilteredSelectMultiple("Monkeys", is_stacked=False)
+#    }
+#
+#class BrainRegionUnavailableForm(ModelForm):
+#  class Meta:
+#    model = BrainRegion
+#    exclude = ('tst_type_id','tst_type_name','tst_description','tst_count_per_monkey',)
+#    widgets = {
+#      'unavailable_for': FilteredSelectMultiple("Monkeys", is_stacked=False)
+#    }
+#
+#class BloodAndGeneticUnavailableForm(ModelForm):
+#  class Meta:
+#    model = BloodAndGenetic
+#    exclude = ('tst_type_id','tst_type_name','tst_description','tst_count_per_monkey',)
+#    widgets = {
+#      'unavailable_for': FilteredSelectMultiple("Monkeys", is_stacked=False)
+#    }

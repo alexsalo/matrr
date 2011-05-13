@@ -761,7 +761,8 @@ def request_review_accept(request, req_request_id):
     form = ReviewResponseForm(data=data)
     return render_to_response('matrr/review/accept.html',
                               {'form': form,
-                               'req_request': req_request,},
+                               'req_request': req_request,
+                               'Availability': Availability,},
                               context_instance=RequestContext(request))
 
 def contact_us(request):
