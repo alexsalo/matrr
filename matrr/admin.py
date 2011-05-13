@@ -3,7 +3,7 @@ from django.contrib import admin
 
 class TissueAdminForm(admin.ModelAdmin):
   formfield_overrides = {
-    models.ManyToManyField: {'widget': FilteredSelectMultiple("Monkeys", is_stacked=False)},
+    models.ManyToManyField: {'widget': admin.widgets.FilteredSelectMultiple("Monkeys", is_stacked=False)},
   }
 
 admin.site.register(TissueType, TissueAdminForm)
