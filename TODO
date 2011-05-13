@@ -28,8 +28,8 @@ brain region is available.
 -Add a note on the Cohorts page to say that you can only request tissue
 from one cohort at a time.
 
--Change progress report text to make less of a question.
-
+-Change reason on checkout to always be displayed and add a
+ css class that displays the box in a similar way to the tool-tip.
 
 *******************************************************************
 ***CATEGORY: Data Entry *******************************************
@@ -72,5 +72,3 @@ from one cohort at a time.
 -add sphinx indices
 
 -Force SVN to use the correct permissions.
-
--Add a contact us page.

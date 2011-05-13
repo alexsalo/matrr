@@ -676,6 +676,21 @@ a.tool-tip:hover span{
   font: 10px Verdana, sans-serif; text-align: center;
 }
 
+.tool-tip-box{
+  display: block;
+  min-width: 100px;
+  max-width: 250px;
+  padding: 5px;
+  margin: 10px;
+  z-index: 10;
+  color: #000000;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #000000;
+  background-color: #FAF9ED;
+  font: 10px Verdana, sans-serif; text-align: center;
+}
+
 .bordered-cell-row td,
 .bordered-cell-row th{
   border-style: solid;

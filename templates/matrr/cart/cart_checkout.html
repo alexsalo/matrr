@@ -39,9 +39,10 @@ Finalize Tissue Request
 
   {% for field in form.visible_fields %}
     {% if field.html_name != "req_progress_agreement" %}
+      {% if field.html_name != 'req_reason' %}
     <div class='clearfix'>
     <div style='margin:0px; padding:2px;' class='table-left'>
-      <label for='{{ field.html_name }}' style='float: right'>
+      <label for='{{ field.auto_id }}' style='float: right'>
         {% if field.help_text %}
           <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ field.help_text }}</span></a>
         {% endif %}
@@ -57,12 +58,32 @@ Finalize Tissue Request
       {{ field.errors }}
       </div></div>
     {% endif %}
+      {% else %}
+      <div class='clearfix'>
+    <div style='margin:0px; padding:2px;' class='table-left'>
+      <label for='{{ field.auto_id }}' style='float: right'>
+          {{ field.label}}
+        {% if field.help_text %}
+          <div class='tool-tip-box' style='float:right;'>{{ field.help_text }}</div>
+        {% endif %}
+        {% if field.field.required %}<span style='color: #FF0000; font-size: 75%'>Required</span>{% endif %}
+      </label>
+    </div>
+
+    <div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
+    </div>
+    {% if field.errors %}
+      <div class="messages"><div class="error">
+      {{ field.errors }}
+      </div></div>
+      {% endif %}
+    {% endif %}
     {% endif %}
   {% endfor %}
 </div>
 
 <div class="messages"><div class="forms">
-  {{ form.req_progress_agreement.label }}{{ form.req_progress_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
+  {{ form.req_progress_agreement.label_tag }}{{ form.req_progress_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
 </div></div>
 
 <div class="messages"><div class="warning">
