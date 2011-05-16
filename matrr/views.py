@@ -721,6 +721,10 @@ def tissue_list(request, tissue_model, cohort_id = None):
       context_instance=c)
 
 
+def remove_values_from_list(the_list, other_list):
+   return [value for value in the_list if value not in other_list]
+
+
 @login_required()
 @user_passes_test(lambda u: u.groups.filter(name='Superuser').count(),
                   login_url='/denied/')
@@ -730,8 +734,20 @@ def request_review_accept(request, req_request_id):
   if request.POST:
     if request.POST['submit'] == 'Accept and Send Email':
       # get the submitted form
-      form = ReviewResponseForm(data=request.POST)
+      form = ReviewResponseForm(data=request.POST, tissue_requests=req_request.get_requested_tissues())
       if form.is_valid():
+        # update the unavailable_lists
+        for tissue_request in req_request.get_requested_tissues():
+          if tissue_request.get_tissue():
+            tissue = tissue_request.get_tissue()
+            unavailable_list = tissue.unavailable_list.all()
+            monkey_list = tissue_request.monkeys.all()
+            # remove any monkeys in the request from the list
+            unavailable_list = remove_values_from_list(unavailable_list, monkey_list)
+            unavailable_list.extend(Monkey.objects.filter(mky_id__in=form.cleaned_data[str(tissue_request)]))
+            tissue.unavailable_list = unavailable_list
+            tissue.save()
+
         req_request.request_status = RequestStatus.objects.get(rqs_status_name='Accepted')
         req_request.save()
         messages.success(request, "The tissue request has been accepted.")
@@ -756,9 +772,8 @@ def request_review_accept(request, req_request_id):
     request_url = settings.SITE_ROOT + '/orders/' + str(req_request.req_request_id) + '/'
     body = render_to_string('matrr/review/request_accepted_email.txt',
                       {'request_url': request_url})
-    data = {'subject': subject,
-            'body': body}
-    form = ReviewResponseForm(data=data)
+    form = ReviewResponseForm( tissue_requests=req_request.get_requested_tissues(),
+                              initial={'subject': subject, 'body': body})
     return render_to_response('matrr/review/accept.html',
                               {'form': form,
                                'req_request': req_request,

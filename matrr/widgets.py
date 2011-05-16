@@ -7,6 +7,8 @@ from django.forms.util import flatatt
 
 from django.forms import *
 from django.forms.widgets import Input
+from settings import SITE_ROOT
+import re
 
 class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
   def __init__(self, link_base, tissue, attrs=None, choices=()):
@@ -52,7 +54,7 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
       else:
         # this is for custom tissue requests
         output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label></li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id))
-
+    output.append(u'</ul>')
     return mark_safe(u'\n'.join(output))
 
 
@@ -112,4 +114,44 @@ class FixTypeSelection(Input):
       # Only add the 'value' attribute if a value is non-empty.
       final_attrs['value'] = force_unicode(self._format_value(value))
     output.append(u'<input class=\'hidden\' %s />' % flatatt(final_attrs))
+    return mark_safe(u'\n'.join(output))
+
+
+class GroupedCheckboxSelectMultipleMonkeys(CheckboxSelectMultiple):
+  def __init__(self, tissue_request, attrs=None, choices=()):
+    self.tissue_request = tissue_request
+    super(GroupedCheckboxSelectMultipleMonkeys, self).__init__(attrs, choices)
+
+  def render(self, name, value, attrs=None, choices=()):
+    if value is None: value = []
+    has_id = attrs and 'id' in attrs
+    final_attrs = self.build_attrs(attrs, name=name)
+    output = [u'<fieldset><legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (attrs['id'], name, attrs['id'])]
+    # Normalize to strings
+    str_values = set([force_unicode(v) for v in value])
+    for i, (mky_id, mky_real_id) in enumerate(chain(self.choices, choices)):
+      # If an ID attribute was given, add a numeric index as a suffix,
+      # so that the checkboxes don't all have the same ID attribute.
+      if has_id:
+        final_attrs = dict(final_attrs,
+                           id='%s_%s' % (attrs['id'], i),
+                           onclick="check_toggler(document.getElementById('%s'), '%s')" % \
+                                    (attrs['id'], name))
+        label_for = u' for="%s"' % final_attrs['id']
+      else:
+        label_for = ''
+
+      cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
+      mky_id = force_unicode(mky_id)
+      rendered_cb = cb.render(name, mky_id)
+      rendered_cb = re.sub('&#39;', '\'', rendered_cb)
+      mky_real_id = conditional_escape(force_unicode(mky_real_id))
+      link = SITE_ROOT + '/monkeys/' + str(mky_real_id)
+      output.append(u'<label%s>%s <a href=\'%s\' onClick=\'javascript:window.open("%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label>' % \
+                      (label_for,
+                       rendered_cb,
+                       link,
+                       link,
+                       mky_real_id))
+    output.append(u'</fieldset>')
     return mark_safe(u'\n'.join(output))

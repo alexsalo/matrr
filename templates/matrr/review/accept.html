@@ -13,40 +13,44 @@
 <div>
 <form action='./' method='post'>
   {% csrf_token %}
+{% if form.non_field_errors %}
+  <div class="error">{{ form.non_field_errors }}</div>
+{% endif %}
+{% for hidden_field in form.hidden_fields %}
+  {{ hidden_field }}
+{% endfor %}
 <table>
-{{ form.as_table }}
+  {% for field in form.visible_fields %}
+    {% if field.name == 'body' or field.name == "subject" %}
+      <tr><th>{{ field.label }}</th><td>{{ field }}</td></tr>
+      {% endif %}
+  {% endfor %}
 </table>
 <div class='headline'> Set tissues as unavailable</div>
-  {% for tissue_request in req_request.get_requested_tissues %}
-    {% for datum in tissue_request.get_data %}
-      {% if not forloop.first %}
-      {% endif %}
-      {% if forloop.counter == 1 %}
-        <div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
-        <div style="float:left; color: #4E4E4E">{% include 'matrr/review/item_availability.html'%}</div>
-      {% else %}
-        <div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
-        <br>
-      {% endif %}
-    {% endfor %}
-    <div class='clearfix'></div>
-      <fieldset>
-        <legend>
-          <input type='checkbox' id='id_{{ tissue_request }}'
-                 onclick='toggle_checked(this, "name_{{ tissue_request }}")'>
-          <label for='id_{{ tissue_request }}'>Select All Monkeys</label>
-        </legend>
-        {% for monkey in tissue_request.monkeys.all %}
-          <input type='checkbox' id='id_{{ tissue_request }}_{{ monkey }}' name='name_{{ tissue_request }}'
-            onclick='check_toggler(document.getElementById("id_{{ tissue_request }}"), "name_{{ tissue_request }}")'/>
-          <label for='id_{{ tissue_request }}_{{ monkey }}'>
-            <a href='{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}'
-               onClick='javascript:window.open("{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}");return false;'>
-              {{ monkey.mky_real_id }}
-            </a>
-          </label>
+  {% for field in form.visible_fields %}
+    {% if field.name != 'body' and field.name != "subject" %}
+      {% for tissue_request in req_request.get_requested_tissues %}
+      {% ifequal tissue_request|stringformat:"s" field.name %}
+        {% for datum in tissue_request.get_data %}
+          {% if not forloop.first %}
+          {% endif %}
+          {% if forloop.counter == 1 %}
+            <div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
+            <div style="float:left; color: #4E4E4E">{% include 'matrr/review/item_availability.html'%}</div>
+          {% else %}
+            <div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
+            <br>
+          {% endif %}
         {% endfor %}
-      </fieldset>
+        <div class='clearfix'></div>
+        <div>{{ field }}</div>
+      {% endifequal %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+
+  {% for tissue_request in req_request.get_requested_tissues %}
+
     
   {% endfor %}
 
