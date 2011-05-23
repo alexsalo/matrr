@@ -560,8 +560,8 @@ def review_overview_list(request):
   for req_request in req_requests:
     req_request.complete = list()
     for reviewer in reviewers:
-      if reviewer == req_request.user:
-        for review in req_request.review_set.all():
+      for review in req_request.review_set.all():
+        if reviewer == review.user:
           if review.is_finished():
             req_request.complete.append("complete")
           else: req_request.complete.append("pending")
