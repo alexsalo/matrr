@@ -98,7 +98,7 @@ class ReviewForm(ModelForm):
       can_delete=False,)
 
     self.regions_formset = BrainRegionRequestReviewFormSet(prefix='regions', *args, **kwargs)
-
+    
     BloodAndGeneticRequestReviewFormSet = inlineformset_factory(Review,
       BloodAndGeneticRequestReview,
       extra=0,

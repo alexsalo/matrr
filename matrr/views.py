@@ -624,7 +624,6 @@ def review_overview(request, req_request_id):
          'tissue_requests': tissue_requests,
          'sample_requests': sample_requests,
          'custom_requests': custom_requests,
-         'spacing': True,
          'Availability': Availability,
          },
          context_instance=RequestContext(request))
@@ -902,3 +901,26 @@ def search(request):
        'num_results': num_results},
       context_instance=RequestContext(request))
 
+@login_required()
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or \
+                            u.groups.filter(name='Committee').count() or \
+                            u.groups.filter(name='Superuser').count(),
+                  login_url='/denied/')
+def build_shipment(request, req_request_id):
+  # get the request
+  req_request = Request.objects.get(req_request_id = req_request_id)
+  # do a sanity check
+  if req_request.request_status.rqs_status_name != 'Accepted':
+    raise Exception('You cannot create a shipment for a request that has not been accepted (or has already been shipped.')
+
+  if Shipment.objects.filter(req_request=req_request).count():
+    shipment = req_request.shipment
+  else:
+    # create the shipment
+    shipment = Shipment(user=req_request.user, req_request=req_request)
+    shipment.save()
+
+    return render_to_response('matrr/shipping/build_shipment.html',
+                              {'req_request': req_request,
+                              'shipment': shipment,},
+                              context_instance=RequestContext(request))

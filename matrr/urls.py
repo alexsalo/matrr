@@ -124,7 +124,9 @@ urlpatterns += patterns('matrr.views',
   url(r'^account/(?P<user_id>\d+)/$',
     account_reviewer_view),
   url(r'^contact_us/$',
-    contact_us)
+    contact_us),
+  url(r'shipping/build/(?P<req_request_id>\d+)/$',
+    build_shipment),
 #  url(r'^search/?$',
 #    search),
 )
