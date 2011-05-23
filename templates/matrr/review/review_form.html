@@ -63,20 +63,18 @@
   {% endfor %}
 </div>
 
-<table class='review_table'>
-  {% for tform in form.regions_formset %}
-    {% include 'matrr/review/review_form_item.html' %}
-  {% endfor %}
-  {% for tform in form.peripherals_formset %}
-    {% include 'matrr/review/review_form_item.html' %}
-  {% endfor %}
-  {% for tform in form.samples_formset %}
-    {% include 'matrr/review/review_form_item.html' %}
-  {% endfor %}
-  {% for tform in form.custom_formset %}
-    {% include 'matrr/review/review_form_item.html' %}
-  {% endfor %}
-</table>
+{% for tform in form.regions_formset %}
+  {% include 'matrr/review/review_form_item.html' %}
+{% endfor %}
+{% for tform in form.peripherals_formset %}
+  {% include 'matrr/review/review_form_item.html' %}
+{% endfor %}
+{% for tform in form.samples_formset %}
+  {% include 'matrr/review/review_form_item.html' %}
+{% endfor %}
+{% for tform in form.custom_formset %}
+  {% include 'matrr/review/review_form_item.html' %}
+{% endfor %}
 <div>
 {% if review.is_finished %}
 <button type='submit' name='submit' value='update'>Update</button>
