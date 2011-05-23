@@ -330,8 +330,6 @@ class TissueType(models.Model):
       # get the number of tissues that have been harvested
       harvested = FreezerPeripheralTissue.objects.filter(monkey=monkey,
                                                          tissue_type=self,).count()
-      harvested += ShippedPeripheralTissue.objects.filter(monkey=monkey,
-                                                         tissue_type=self,).count()
       if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
@@ -612,8 +610,6 @@ class BrainRegion(models.Model):
       # get the number of tissues that have been harvested
       harvested = FreezerBrainRegion.objects.filter(monkey=monkey,
                                                     brain_region=self,).count()
-      harvested += ShippedBrainRegion.objects.filter(monkey=monkey,
-                                                         brain_region=self,).count()
       if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
@@ -777,8 +773,6 @@ class BloodAndGenetic(models.Model):
 
       # get the number of tissues that have been harvested
       harvested = FreezerBloodAndGenetics.objects.filter(monkey=monkey,
-                                                         blood_genetic_item=self,).count()
-      harvested += ShippedBloodAndGenetics.objects.filter(monkey=monkey,
                                                          blood_genetic_item=self,).count()
       if harvested :
         # tissues have been harvested, so we should use the inventories to determine if
@@ -956,7 +950,8 @@ class Review(models.Model):
   def is_finished(self):
     return all( tissue_request.is_finished() for tissue_request in TissueRequestReview.objects.filter(review=self.rvs_review_id)) \
     and all( region_request.is_finished() for region_request in BrainRegionRequestReview.objects.filter(review=self.rvs_review_id) ) \
-    and all( sample_request.is_finished() for sample_request in BloodAndGeneticRequestReview.objects.filter(review=self.rvs_review_id) )
+    and all( sample_request.is_finished() for sample_request in BloodAndGeneticRequestReview.objects.filter(review=self.rvs_review_id) ) \
+   and all( custom_request.is_finished() for custom_request in CustomTissueRequestReview.objects.filter(review=self.rvs_review_id) )
   
   class Meta:
     db_table = 'rvs_reviews'
@@ -1241,9 +1236,15 @@ class Shipment(models.Model):
   shp_shipment_id = models.AutoField(primary_key=True)
   user = models.ForeignKey(User, null=False,
                            related_name='shipment_set')
+  req_request = models.OneToOneField(Request, null=False,
+                                  related_name='shipment')
   shp_tracking = models.CharField('Tracking Number', null=True, blank=True,
                                   max_length=100,
                                   help_text='Please enter the tracking number for this shipment.')
+  shp_shipment_date = models.DateField('Shipped Date',
+                                       blank=True,
+                                       null=True,
+                                       help_text='Please enter the date these tissues were shipped.')
 
   class Meta:
     db_table = 'shp_shipments'
@@ -1269,17 +1270,6 @@ class FreezerPeripheralTissue(PeripheralTissueSample):
 
   class Meta:
     db_table = 'fpt_freezer_peripheral_tissues'
-
-
-class ShippedPeripheralTissue(PeripheralTissueSample):
-  shipment = models.ForeignKey(Shipment,
-                               db_column='shp_shipment_id',
-                               related_name='shipped_peripheral_tissue_set',
-                               null=False,
-                               verbose_name='Shipment')
-
-  class Meta:
-    db_table = 'spt_shipped_peripheral_tissues'
 
 
 class FreezerBrainBlocks(models.Model):
@@ -1321,17 +1311,6 @@ class FreezerBrainRegion(BrainRegionSample):
     db_table = 'fbr_freezer_brain_regions'
 
 
-class ShippedBrainRegion(BrainRegionSample):
-  shipment = models.ForeignKey(Shipment,
-                               db_column='shp_shipment_id',
-                               related_name='shipped_brain_region_set',
-                               null=False,
-                               verbose_name='Shipment')
-
-  class Meta:
-    db_table = 'sbr_shipped_blood_and_genetics'
-
-
 class BloodAndGeneticsSample(models.Model):
   bgs_id = models.AutoField(primary_key=True)
   blood_genetic_item = models.ForeignKey(BloodAndGenetic, db_column='bag_id',
@@ -1355,15 +1334,16 @@ class FreezerBloodAndGenetics(BloodAndGeneticsSample):
     db_table = 'fbg_freezer_blood_and_genetics'
 
 
-class ShippedBloodAndGenetics(BloodAndGeneticsSample):
-  shipment = models.ForeignKey(Shipment,
-                               db_column='shp_shipment_id',
-                               related_name='shipped_blood_genetic_set',
-                               null=False,
-                               verbose_name='Shipment')
+class OtherTissueSample(models.Model):
+  ots_description = models.TextField('Description',
+                                     help_text='Please enter a detailed description of the tissue being shipped.')
+  monkey = models.ForeignKey(Monkey, db_column='mky_id',
+                             related_name='%(class)s_set',
+                             blank=False, null=False)
 
   class Meta:
-    db_table = 'sbg_shipped_blood_and_genetics'
+    db_table = 'ots_other_tissue_samples'
+    abstract = True
 
 
 # put any signal callbacks down here after the model declarations
