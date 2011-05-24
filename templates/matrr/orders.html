@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class='headline'>
+<div class='large-headline'>
   {% block title %}My Orders{% endblock %}
 </div>
 
+<br>
 {% if order_list %}
-<table>
+<table class="common_center" cellpadding=4 cellspacing=2>
   <tr>
     <th>Cohort</th>
     <th>Date Placed</th>
@@ -17,7 +18,11 @@
     <tr>
       <td>{{ order.cohort }}</td>
       <td>{{ order.req_request_date }}</td>
-      <td>{{ order.request_status }}</td>
+      {% if order.request_status|lower == "submitted" %}
+        <td>{{ order.request_status }}</td>
+        {% else %}
+        <td><font color='green'>{{ order.request_status }}</font></td>        
+      {% endif %}
       <td><a href='{{ order.req_request_id }}'>Details</a></td>
     </tr>
   {% endfor %}

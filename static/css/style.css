@@ -475,7 +475,7 @@ table.overview th{
 }
 
 table.common, table.three_column,
-table.common_center {
+table.common_center, table.common_right {
     border-style: none;
     border-spacing: 2px;
     padding: 10px;
@@ -489,6 +489,7 @@ table.common th,
 table.common td{
     border-spacing: inherit;
     color: #4E4E4E;
+    padding: 2px 4px 2px 4px;
 }
 
 
@@ -505,6 +506,18 @@ table.common_center td{
 table.common_center th{
     padding: 2px 4px 2px 4px;
     font-size: small;
+}
+
+table.common_right td{
+    color: #4E4E4E;
+    font-size: small;
+}
+
+table.common_right th{
+    padding: 2px 4px 2px 4px;
+    text-align: right;
+    font-size: small;
+    text-wrap: none;
 }
 
 .cart_table {

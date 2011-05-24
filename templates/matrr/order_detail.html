@@ -1,43 +1,42 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div id='headline'>
+  <div id='large-headline'>
     {% block title %}Order Detail{% endblock %}
   </div>
-  {% if user != order.user %}
-    <div>
-      User: {{ order.user }}
-    </div>
-  {%  endif %}
-  <div>
-    Cohort: {{ order.cohort }}
-  </div>
-  <div>
-    Date Placed: {{ order.req_request_date }}
-  </div>
-  <div>
-    Status: {{ order.request_status }}
-  </div>
-  <div>
-    Project Title: {{ order.req_project_title }}
-  </div>
-  <div>
-    Reason for Project: {{ order.req_reason }}
-  </div>
-  <div>
-    Experimental Plan: <a href='/{{ order.req_experimental_plan }}'>{{ order.req_experimental_plan }}</a>
-  </div>
+  
+  <br>
+  
+  <table class="common_right">
+  <tr>
+      <th>User:</th><td><a href='{{ SITE_ROOT }}/account/{{ order.user.id }}'>{{ order.user }}</a></td>
+      <th>Cohort:</th><td><a href='{{ order.cohort.get_url }}'>{{ order.cohort }}</a></td>
+  </tr>
+  <tr>
+      <th>Requested On:</th><td>{{ order.req_request_date }}</td>
+      <th>Status:</th><td>
+    {% if order.request_status|lower != 'submitted'%}<font color='green'>{{ order.request_status }}</font>
+    {% else %}{{ order.request_status }}
+    {% endif %}</td>
+  </tr>
+  <tr>
+      <th>Referred By:</th><td>{{ order.req_referred_by }}</td>
+      <th>Progress Agreement:</th><td>{{ order.req_progress_agreement }}</td>
+  </tr>
+  <tr><th>Project Title:</th><td colspan='3'>{{ order.req_project_title }}</td></tr>
+  <tr><th>Experimental Plan:</th><td colspan='3'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>{{ order.req_experimental_plan }}</a></td></tr>
+  <tr><th>Reason:</th><td colspan='3'>{{ order.req_reason }}</td></tr>
   {% if order.req_notes %}
-  <div>
-    Notes: {{ order.req_notes }}
-  </div>
+    <tr><th>Extra Notes:</th><td colspan='3'>{{ order.req_notes }}</td></tr>
   {% endif %}
+</table>
+    
+
   
   <div style='margin-top: 20px;'>
-    <table class='cart_table'>
-      <thead>
-        <tr><th colspan="6">Requested Tissues</th></tr>
-      </thead>
+    <div id='headline'>Requested Tissues</div>
+    <table class='common_center'>
+
       {% for item in order.brain_region_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}
       {% endfor %}

@@ -15,7 +15,7 @@
         <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/delete/'><img src="{{ STATIC_URL }}/css/images/badge-circle-cross-24.png" width='16' height='16'></a>
       </td>
       {% for datum in item.get_data %}
-        <th align='right' width='20%'>{{ datum.0 }}:</th><td align='left'>{{ datum.1 }}</td>
+        <th align='right' width='20%'>{{ datum.0 }}:</th><td align='left' nowrap>{{ datum.1 }}</td>
       {% endfor %}
      </tr>
     {% if item.has_notes %}
