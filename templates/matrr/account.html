@@ -45,7 +45,7 @@ This section is for the material transfer agreement
             <td class='text-center-common-td'>{{ mta.mta_id }}</td>
             <td class='text-center-common-td'>{{ mta.mta_date }}</td>
             <td class='text-center-common-td'>{{ mta.mta_title }}</td>
-            <td class='text-center-common-td'><a href="/media/{{mta.mta_file }}">View MTA File</a></td>
+            <td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{mta.mta_file }}'>View MTA File</a></td>
         </tr>
     {% endfor %}
   </table>
@@ -71,7 +71,7 @@ This section displays the status of requests
             <td class='text-center-common-td'>{{ order.req_request_date }}</td>
             <td class='text-center-common-td'>{{ order.request_status }}</td>
             <td class='text-center-common-td'><a href='/orders/{{ order.req_request_id }}'>Details</a></td>
-            <td class='text-center-common-td'><a href="/media/{{ order.req_experimental_plan }}">View Protocol</a></td>
+            <td class='text-center-common-td'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>View Protocol</a></td>
         </tr>
     {% endfor %}
   </table>

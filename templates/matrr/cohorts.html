@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block warning %}
+  {% include 'matrr/cart/cohort_warning.html' %}
+{% endblock %}
+
 {% block content %}
   <div id="large-headline">Tissue Request</div>
   <img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_1.png" width='700' height='25'
