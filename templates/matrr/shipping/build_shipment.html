@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block extra_js %}
+{{ block.super }}
+<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
+{% endblock %}
+
+{% block content %}
+  <div class="headline">{% block title %}Building Shipment for {{ req_request }}{% endblock %}</div>
+
+  {# show the request details here #}
+  <div>
+    <table class="overview">
+      <tr>
+        <th>Cohort:</th><td><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></td>
+        <th>Requesting User:</th>
+        <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></td>
+      </tr>
+      <tr>
+        <th>Requested On:</th><td>{{ req_request.req_request_date }}</td>
+        <th>Referred By:</th><td>{{ req_request.req_referred_by }}</td>
+      </tr>
+      <tr>
+        <th>Progress Agreement:</th><td>{{ req_request.req_progress_agreement }}</td>
+        <th>Experimental Plan:</th>
+        <td>
+          {% if req_request.req_experimental_plan %}
+            <a href='/{{ MEDIA_URL }}/{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a>
+          {% else %}
+            None
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Project Title:</th><td colspan=3>{{ req_request.req_project_title }}</td>
+      </tr>
+      <tr>
+        <th>Motivation:</th><td colspan=3>{{ req_request.req_reason }}</td>
+      </tr>
+      <tr>
+        <th>Additional Notes:</th>
+        <td colspan=3>{% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}</td>
+      </tr>
+    </table>
+  </div>
+  {# show the requested tissues here and link to pages where the tissue shipments can be set up #}
+  <div class='headline'>Requested Tissues</div>
+  {% for tissue_request in req_request.get_requested_tissues %}
+    {% for datum in tissue_request.get_data %}
+      {% if not forloop.first %}
+      {% endif %}
+      {% if forloop.counter == 1 %}
+        <div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
+        {# <div style="float:left; color: #4E4E4E">{% include 'matrr/review/item_availability.html'%}</div> #}
+      {% else %}
+        <div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
+        <br>
+      {% endif %}
+    {% endfor %}
+    <div class='clearfix'></div>
+  {% endfor %}
+  {# have a button at the print the shipping manifest #}
+  <div>
+    <a href='manifest/' class='blockLinkButton'>Get Shipping Manifest</a>
+  </div>
+{% endblock %}

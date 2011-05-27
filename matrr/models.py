@@ -288,6 +288,9 @@ class TissueType(models.Model):
   def get_name(self):
     return self.tst_tissue_name
 
+  def get_stock(self, monkey):
+    return self.peripheral_sample_set.filter(monkey=monkey)
+
   def get_cohort_availability(self, cohort):
     for monkey in cohort.monkey_set.all():
       status = self.get_availability(monkey)
@@ -484,6 +487,12 @@ class TissueRequest(models.Model):
   def get_notes(self):
     return self.rtt_notes
 
+  def get_fix(self):
+    return self.rtt_fix_type
+
+  def get_amount(self):
+    return str(self.rtt_amount) + self.unit.unt_unit_name
+
   def get_data(self):
     return [['Peripheral Tissue', self.tissue_type],
             ['Fix', self.rtt_fix_type],
@@ -566,6 +575,9 @@ class BrainRegion(models.Model):
 
   def get_name(self):
     return self.bre_region_name
+
+  def get_stock(self, monkey):
+    return self.region_sample_set.filter(monkey=monkey)
 
   def get_cohort_availability(self, cohort):
     for monkey in cohort.monkey_set.all():
@@ -674,6 +686,12 @@ class BrainRegionRequest(models.Model):
   def get_notes(self):
     return self.rbr_notes
 
+  def get_amount(self):
+    return 'region'
+
+  def get_fix(self):
+    return self.rbr_fix_type
+
   def get_data(self):
     return [['Brain Region', self.brain_region],
             ['Fix', self.rbr_fix_type],]
@@ -729,6 +747,9 @@ class BloodAndGenetic(models.Model):
 
   def get_name(self):
     return self.bag_name
+
+  def get_stock(self, monkey):
+    return self.blood_genetic_sample_set.filter(monkey=monkey)
 
   def get_cohort_availability(self, cohort):
     for monkey in cohort.monkey_set.all():
@@ -838,6 +859,12 @@ class BloodAndGeneticRequest(models.Model):
   def get_notes(self):
     return self.rbg_notes
 
+  def get_amount(self):
+    return str(self.rbg_amount) + self.unit.unt_unit_name
+
+  def get_fix(self):
+    return self.rbg_fix_type
+
   def get_data(self):
     return [['Blood/Genetic Sample', self.blood_genetic_item],
             ['Fix', self.rbg_fix_type],
@@ -909,6 +936,12 @@ class CustomTissueRequest(models.Model):
 
   def get_notes(self):
     return None
+
+  def get_amount(self):
+    return str(self.ctr_amount) + self.unit.unt_unit_name
+
+  def get_fix(self):
+    return self.ctr_fix_type
 
   def get_data(self):
     return [['Custom Tissue Request', self.ctr_description],
@@ -1252,98 +1285,119 @@ class Shipment(models.Model):
 class PeripheralTissueSample(models.Model):
   pts_id = models.AutoField(primary_key=True)
   tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id',
-                                  related_name='%(class)s_set',
+                                  related_name='peripheral_sample_set',
                                   blank=False, null=False)
   monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='%(class)s_set',
+                             related_name='peripheral_sample_set',
                              blank=False, null=False)
+  pts_location = models.CharField('Location of Sample',
+                                  max_length=100,
+                                  help_text='Please enter the location where this sample is stored.')
+  pts_deleted = models.BooleanField('Removed from Inventory', default=False)
+
+  def __unicode__(self):
+    return str(self.monkey) + ' ' + str(self.tissue_type) + ' '  + self.pts_location
+
+  def get_location(self):
+    return self.pts_location
 
   class Meta:
     db_table = 'pts_peripheral_tissue_samples'
-    abstract = True
+    ordering = ['pts_deleted', '-monkey__mky_real_id', '-tissue_type__tst_tissue_name']
 
 
-class FreezerPeripheralTissue(PeripheralTissueSample):
-  fpt_location = models.CharField('Location of Sample',
-                                  max_length=100,
-                                  help_text='Please enter the location where this sample is stored.')
-
-  class Meta:
-    db_table = 'fpt_freezer_peripheral_tissues'
-
-
-class FreezerBrainBlocks(models.Model):
-  fbb_id =models.AutoField(primary_key=True)
+class BrainBlockSample(models.Model):
+  bbs_id =models.AutoField(primary_key=True)
   brain_block = models.ForeignKey(BrainBlock, db_column='bbl_block_id',
-                                  related_name='freezer_block_set',
+                                  related_name='block_sample_set',
                                   blank=False, null=False,)
   monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='freezer_block_set',
+                             related_name='block_sample_set',
                              blank=False, null=False)
-  fbb_location = models.CharField('Location of Brain Block',
+  bbs_location = models.CharField('Location of Brain Block',
                                   max_length=100,
                                   help_text='Please enter the location where this block is stored.')
+  bbs_deleted = models.BooleanField('Removed from Inventory', default=False)
+
+  def __unicode__(self):
+    return str(self.monkey) + ' ' + str(self.brain_block) + ' '  + self.bbs_location
+
+  def get_location(self):
+    return self.bbs_location
 
   class Meta:
-    db_table = 'fbb_freezer_brain_blocks'
+    db_table = 'bbs_brain_block_samples'
+    ordering = ['bbs_deleted', '-monkey__mky_real_id', '-brain_block__bbl_block_name']
 
 
 class BrainRegionSample(models.Model):
   brs_id = models.AutoField(primary_key=True)
   brain_region = models.ForeignKey(BrainRegion, db_column='bre_region_id',
-                                  related_name='%(class)s_set',
+                                  related_name='region_sample_set',
                                   blank=False, null=False,)
   monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='%(class)s_set',
+                             related_name='region_sample_set',
                              blank=False, null=False)
+  brs_location = models.CharField('Location of Sample',
+                                  max_length=100,
+                                  help_text='Please enter the location where this sample is stored.')
+  brs_deleted = models.BooleanField('Removed from Inventory', default=False)
+
+  def __unicode__(self):
+    return str(self.monkey) + ' ' + str(self.brain_region) + ' '  + self.brs_location
+
+  def get_location(self):
+    return self.brs_location
 
   class Meta:
     db_table = 'brs_brain_region_samples'
-    abstract=True
-
-
-class FreezerBrainRegion(BrainRegionSample):
-  fbr_location = models.CharField('Location of Sample',
-                                  max_length=100,
-                                  help_text='Please enter the location where this sample is stored.')
-  
-  class Meta:
-    db_table = 'fbr_freezer_brain_regions'
+    ordering = ['brs_deleted', '-monkey__mky_real_id', '-brain_region__bre_region_name']
 
 
 class BloodAndGeneticsSample(models.Model):
   bgs_id = models.AutoField(primary_key=True)
   blood_genetic_item = models.ForeignKey(BloodAndGenetic, db_column='bag_id',
-                                  related_name='%(class)s_set',
+                                  related_name='blood_genetic_sample_set',
                                   blank=False, null=False,)
   monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='%(class)s_set',
+                             related_name='blood_genetic_sample_set',
                              blank=False, null=False)
+  bgs_location = models.CharField('Location of Sample',
+                                  max_length=100,
+                                  help_text='Please enter the location where this sample is stored.')
+  bgs_deleted = models.BooleanField('Removed from Inventory', default=False)
+
+  def __unicode__(self):
+    return str(self.monkey) + ' ' + str(self.blood_genetic_item) + ' '  + self.bgs_location
+
+  def get_location(self):
+    return self.bgs_location
 
   class Meta:
     db_table = 'bgs_blood_and_genetics_samples'
-    abstract=True
-
-
-class FreezerBloodAndGenetics(BloodAndGeneticsSample):
-  fbg_location = models.CharField('Location of Sample',
-                                  max_length=100,
-                                  help_text='Please enter the location where this sample is stored.')
-
-  class Meta:
-    db_table = 'fbg_freezer_blood_and_genetics'
+    ordering = ['bgs_deleted', '-monkey__mky_real_id', '-blood_genetic_item__bag_name']
 
 
 class OtherTissueSample(models.Model):
   ots_description = models.TextField('Description',
                                      help_text='Please enter a detailed description of the tissue being shipped.')
   monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='%(class)s_set',
+                             related_name='other_sample_set',
                              blank=False, null=False)
+  ots_location = models.CharField('Location of Sample',
+                                  max_length=100,
+                                  help_text='Please enter the location where this sample is stored.')
+  ots_deleted = models.BooleanField('Removed from Inventory', default=False)
+
+  def __unicode__(self):
+    return str(self.monkey) + ' ' + str(self.ots_description) + ' '  + self.ots_location
+
+  def get_location(self):
+    return self.ots_location
 
   class Meta:
     db_table = 'ots_other_tissue_samples'
-    abstract = True
+    ordering = ['ots_deleted', '-monkey__mky_real_id', '-ots_description']
 
 
 # put any signal callbacks down here after the model declarations

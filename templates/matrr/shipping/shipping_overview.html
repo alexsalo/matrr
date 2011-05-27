@@ -16,8 +16,8 @@ Pending Shipments
   {% for request in accepted_requests %}
     <tr><td>{{ request.user.name }}</td><td>{{ request.cohort.coh_cohort_name }}</td>
       <td>{{ request.req_request_date }}</td>
-      <td><a href='{{ SITE_ROOT }}/orders/{{ request.req_request_id }}/'>Details</a></td>
-      <td><a href='{{ SITE_ROOT }}/shipping/build/{{ request.req_request_id }}/'>Build Shipment</a></td>
+      <td><a class='blockLinkButton' href='{{ SITE_ROOT }}/orders/{{ request.req_request_id }}/'>Details</a></td>
+      <td><a class='blockLinkButton' href='{{ SITE_ROOT }}/shipping/build/{{ request.req_request_id }}/'>Build Shipment</a></td>
     </tr>
   {% endfor %}
 </table>

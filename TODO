@@ -1,6 +1,11 @@
 These items are in no particular order.
 
 *******************************************************************
+***CATEGORY: Urgent Changes! **************************************
+*******************************************************************
+
+
+*******************************************************************
 ***CATEGORY: Model Changes ****************************************
 *******************************************************************
 
@@ -17,6 +22,8 @@ brain region is available.
 ***CATEGORY: Review Process Changes *******************************
 *******************************************************************
 
+-Add date when inventory was last updated
+
 *******************************************************************
 ***CATEGORY: UI Changes *******************************************
 *******************************************************************
@@ -24,12 +31,15 @@ brain region is available.
 -Add a note on the Cohorts page to say that you can only request tissue
 from one cohort at a time.
 
+-On the cohort details page, add link to publications.
+
 *******************************************************************
 ***CATEGORY: Data Entry *******************************************
 *******************************************************************
 
 -Add previous requests to site.  Include request document on site.
   -this is probably the biggest priority
+  -finished 2 out of three
 
 *******************************************************************
 ***CATEGORY: Shipping  ********************************************
@@ -48,9 +58,6 @@ from one cohort at a time.
 -Add unit tests.
 
 -Add to wiki documentation.
-
--Check available tissue requests.
-  - seems to be working, but probably need to add some checks to the controller code (matrr/views.py).
 
 *******************************************************************
 ***CATEGORY: Bugs *************************************************

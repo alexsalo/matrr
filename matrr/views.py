@@ -3,7 +3,7 @@ from django.conf import settings
 from django.template import RequestContext
 from django.http import HttpResponse
 from django.views.generic import TemplateView
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import  render_to_response, redirect
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
@@ -17,6 +17,7 @@ import math
 from datetime import datetime
 from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
+from pdfgen import *
 
 MEDIA_DIRECTORY = '/web/django_test/media/'
 
@@ -564,25 +565,9 @@ def review_overview_list(request):
         if reviewer == review.user:
           if review.is_finished():
             req_request.complete.append("complete")
-          else: req_request.complete.append("pending")
-    ############################################################
-    ## I'm keeping some of the logic for calculaing %
-    ## progress, but not sure if it is needed. In cases where
-    ## the number of reviewers is out of sync, this won't make
-    ## much sense
-    ############################################################
-    #
-    #review_count = 0.0
-    #review_completed = 0.0
-    #for review in req_request.review_set.all():
-    #    review_count += 1
-    #  if review.is_finished():
-    #    review_completed += 1
-    #if review_count == 0.0:
-    #  review_count = 1.0
-    #req_request.progress = review_completed/review_count * 100
-    #
-    ##############################################################  
+          else:
+            req_request.complete.append("pending")
+          
   return render_to_response('matrr/review/reviews_overviews.html', \
         {'req_requests': req_requests,
          'reviewers': reviewers,
@@ -920,7 +905,90 @@ def build_shipment(request, req_request_id):
     shipment = Shipment(user=req_request.user, req_request=req_request)
     shipment.save()
 
-    return render_to_response('matrr/shipping/build_shipment.html',
-                              {'req_request': req_request,
-                              'shipment': shipment,},
-                              context_instance=RequestContext(request))
+  return render_to_response('matrr/shipping/build_shipment.html',
+                            {'req_request': req_request,
+                            'shipment': shipment,},
+                            context_instance=RequestContext(request))
+
+
+def add_tissue_request(maker, tissue_request):
+  maker.startKeepTogether()
+  # display the basic info about the tissue request
+  if tissue_request.get_tissue():
+    text = tissue_request.get_tissue().get_name()
+    data = []
+    style = []
+  else:
+    text = 'Custom Request'
+    data = [['Description:', tissue_request.ctr_description]]
+    style = [('SPAN', (1, 0), (-1, 0))]
+  maker.addText(text, 'Heading3', spacing=0)
+  data.append(['Fix Type:', tissue_request.get_fix(), 'Amount:', tissue_request.get_amount()])
+  if tissue_request.has_notes():
+    data.append(['Notes:', tissue_request.get_notes()])
+    style.append(('SPAN', (1, -1), (-1, -1)))
+
+  style.append(('ALIGN', (0,0), (0, -1), 'RIGHT'))
+  style.append(('ALIGN', (2,0), (2, -1), 'RIGHT'))
+
+  maker.addTable(data=data, style=style, align="LEFT", spacing=0.05)
+  # display the monkeys requested and the available tissues for each monkey
+  maker.addText('Requested Monkeys', 'Heading4', 0)
+  for monkey in tissue_request.monkeys.all():
+    data = [['ID:', monkey.mky_real_id, 'Name:', monkey.mky_name]]
+    style = [('ALIGN', (0,0), (0, 0), 'RIGHT'),
+             ('ALIGN', (2,0), (2, 0), 'RIGHT'),
+             ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+             ('BOX', (0,0), (-1,-1), 0.25, colors.black)]
+
+    if tissue_request.get_tissue():
+      # get the available tissues
+      tissue = tissue_request.get_tissue()
+      stock = tissue.get_stock(monkey)
+      if stock.count():
+        i = 1
+        for stock_item in stock.all():
+          data.append([stock_item.get_location()])
+          style.append(('SPAN', (0, i), (-1, i)))
+          i = i + 1
+      else:
+        data.append(['The tissue is either not harvested yet or it needs to be extracted' \
+                     + ' from another item' ])
+        style.append(('SPAN', (0, -1), (-1, -1)))
+
+    else:
+      # this is a custom request, so the inventory cannot be checked
+      data.append(['No inventory data available for custom requests'])
+      style.append(('SPAN', (0, -1), (-1, -1)))
+
+    maker.addTable(data=data, style=style, align="LEFT", spacing=0)
+  maker.endKeepTogether()
+  maker.addSpace(0.1)
+
+
+def make_shipping_manifest(request, req_request_id):
+
+  req_request = Request.objects.get(req_request_id=req_request_id)
+
+  #Create the HttpResponse object with the appropriate PDF headers.
+  response = HttpResponse(mimetype='application/pdf')
+  response['Content-Disposition'] = 'attachment; filename=manifest-' + \
+                                    str(req_request.user) + '-' + \
+                                    str(req_request.cohort) + '.pdf'
+
+  maker = PdfMaker(title="Shipping Manifest", subtitle=str(req_request.user) + ' ' + str(req_request.cohort))
+  request_info = [['Requesting User:', str(req_request.user), 'Requested On:',
+                        str(req_request.req_request_date) ],
+                       ['Cohort:', str(req_request.cohort)],
+                       ['Project Title:', req_request.req_project_title],
+                       ['Motivation:', req_request.req_reason],
+                       ['Notes:', req_request.req_notes]]
+  style = [('ALIGN', (0,0), (0, -1), 'RIGHT'),
+           ('SPAN', (2, 3), (-1, 3)),
+           ('SPAN', (2, 4), (-1, 4)),
+           ('SPAN', (2, 5), (-1, 5))]
+  maker.addTable(data=request_info, style=style)
+  maker.addText('<u><b>Requested Tissues</b></u>', style='Heading1', spacing=0.1)
+  for tissue_request in req_request.get_requested_tissues():
+    add_tissue_request(maker, tissue_request)
+  return maker.createPdf(file=response)
