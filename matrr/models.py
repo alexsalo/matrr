@@ -1294,6 +1294,10 @@ class PeripheralTissueSample(models.Model):
                                   max_length=100,
                                   help_text='Please enter the location where this sample is stored.')
   pts_deleted = models.BooleanField('Removed from Inventory', default=False)
+  pts_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
+
+  def get_modified(self):
+    return self.pts_modified
 
   def __unicode__(self):
     return str(self.monkey) + ' ' + str(self.tissue_type) + ' '  + self.pts_location
@@ -1318,9 +1322,13 @@ class BrainBlockSample(models.Model):
                                   max_length=100,
                                   help_text='Please enter the location where this block is stored.')
   bbs_deleted = models.BooleanField('Removed from Inventory', default=False)
+  bbs_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 
   def __unicode__(self):
     return str(self.monkey) + ' ' + str(self.brain_block) + ' '  + self.bbs_location
+
+  def get_modified(self):
+    return self.bbs_modified
 
   def get_location(self):
     return self.bbs_location
@@ -1342,9 +1350,13 @@ class BrainRegionSample(models.Model):
                                   max_length=100,
                                   help_text='Please enter the location where this sample is stored.')
   brs_deleted = models.BooleanField('Removed from Inventory', default=False)
+  brs_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 
   def __unicode__(self):
     return str(self.monkey) + ' ' + str(self.brain_region) + ' '  + self.brs_location
+
+  def get_modified(self):
+    return self.brs_modified
 
   def get_location(self):
     return self.brs_location
@@ -1366,16 +1378,20 @@ class BloodAndGeneticsSample(models.Model):
                                   max_length=100,
                                   help_text='Please enter the location where this sample is stored.')
   bgs_deleted = models.BooleanField('Removed from Inventory', default=False)
+  bgs_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 
   def __unicode__(self):
     return str(self.monkey) + ' ' + str(self.blood_genetic_item) + ' '  + self.bgs_location
+
+  def get_modified(self):
+    return self.bgs_modified
 
   def get_location(self):
     return self.bgs_location
 
   class Meta:
     db_table = 'bgs_blood_and_genetics_samples'
-    ordering = ['bgs_deleted', '-monkey__mky_real_id', '-blood_genetic_item__bag_name']
+    ordering = ['bgs_deleted', 'monkey__mky_real_id', '-blood_genetic_item__bag_name']
 
 
 class OtherTissueSample(models.Model):
@@ -1388,9 +1404,13 @@ class OtherTissueSample(models.Model):
                                   max_length=100,
                                   help_text='Please enter the location where this sample is stored.')
   ots_deleted = models.BooleanField('Removed from Inventory', default=False)
+  ots_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 
   def __unicode__(self):
     return str(self.monkey) + ' ' + str(self.ots_description) + ' '  + self.ots_location
+
+  def get_modified(self):
+    return self.ots_modified
 
   def get_location(self):
     return self.ots_location
