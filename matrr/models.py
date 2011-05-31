@@ -132,6 +132,8 @@ class Monkey(models.Model):
                                    help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
   mky_drinking = models.BooleanField('Drinking', null=False,
                                      help_text='Was this monkey given alcohol?')
+  mky_housing_control = models.BooleanField('Housing Control', null=False, default=False,
+                                            help_text='Was this monkey part of a housing control group?')
   mky_necropsy_date = models.DateField('Necropsy Date', null=True, blank=True,
                                        help_text='Please enter the date the necropsy was performed on.')
   mky_study_complete = models.BooleanField('Complete Study Performed', null=False,

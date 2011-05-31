@@ -56,9 +56,10 @@ def load_monkeys(file):
     2 - Cohort Name
     3 - Stress Model
     4 - Gender (either 'male' or 'female')
-    5 - Drinking (marked if non-drinking)
-    6 - Necropsy Date
-    7 - Complete Study (marked if incomplete)
+    5 - Drinking (marked if non-drinking or housing control)
+    6 - Name
+    7 - Necropsy Date
+    8 - Complete Study (marked if incomplete)
   """
   input = csv.reader(open( file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
   # get the column headers
@@ -80,30 +81,53 @@ def load_monkeys(file):
       gender = 'F'
 
     drinking = True
+    housing_control = False
     if len(row[5]) != 0:
       drinking = False
+      if row[5] == 'housing ctrl':
+        housing_control = True
+
+    name = None
+    if row[6] != 'NULL':
+      name = row[6]
 
     # convert the necropsy date from mm/dd/yy to ISO format
     # this assumes all necropsy were after 2000.
     necropsy = re.sub(r'(\d+)/(\d+)/(\d+)',
                       r'20\3-\1-\2',
-                      row[6])
+                      row[7])
     if len(necropsy) == 0:
       necropsy = None
 
 
     complete_study = True
-    if len(row[7]) != 0 or necropsy is None:
+    if len(row[8]) != 0 or necropsy is None:
       complete_study = False
 
-    # Create the monkey and save it
-    Monkey(cohort=cohort,
+    # check if the monkey already exists
+    if Monkey.objects.filter(mky_real_id=id).count():
+      # Update the monkey
+      monkey = Monkey.objects.get(mky_real_id=id)
+      monkey.mky_birthdate = birthdate
+      monkey.mky_stress_model = stress_model
+      monkey.mky_gender = gender
+      monkey.mky_drinking = drinking
+      monkey.mky_name = name
+      monkey.mky_necropsy_date=necropsy
+      monkey.mky_housing_control=housing_control
+      monkey.mky_study_complete=complete_study
+      monkey.save()
+    else:
+      # Create the monkey and save it
+      Monkey(cohort=cohort,
            mky_real_id=id,
            mky_birthdate=birthdate,
            mky_stress_model=stress_model,
            mky_gender=gender,
            mky_drinking=drinking,
+           mky_name=name,
            mky_necropsy_date=necropsy,
+           mky_housing_control=housing_control,
            mky_study_complete=complete_study).save()
 
 
