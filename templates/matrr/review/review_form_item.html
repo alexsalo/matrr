@@ -6,11 +6,10 @@
     {% for datum in tissue_request.get_data %}
       <tr><th>{{ datum.0 }}:</th><td>{{ datum.1 }}</td></tr>
     {% endfor %}
-    </table>
-
     {% if tissue_request.has_notes %}
       <tr><th>Notes:</th><td>{{ tissue_request.get_notes }}</td></tr>
     {% endif %}
+    </table>
     {% include 'matrr/review/item_availability.html' %}
   {% endwith %}
 
