@@ -33,14 +33,14 @@
         </td>
       </tr>
       <tr>
-        <th>Project Title:</th><td colspan=3>{{ req_request.req_project_title }}</td>
+        <th>Project Title:</th><td colspan='3'>{{ req_request.req_project_title }}</td>
       </tr>
       <tr>
-        <th>Motivation:</th><td colspan=3>{{ req_request.req_reason }}</td>
+        <th>Motivation:</th><td colspan='3'>{{ req_request.req_reason }}</td>
       </tr>
       <tr>
         <th>Additional Notes:</th>
-        <td colspan=3>{% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}</td>
+        <td colspan='3'>{% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}</td>
       </tr>
       {% with account=req_request.user.account %}
       <tr>
@@ -74,44 +74,43 @@
   {# show the requested tissues here and link to pages where the tissue shipments can be set up #}
   <div class='headline'>Requested Tissues</div>
   {% for tissue_request in req_request.get_requested_tissues %}
+    {% with iteration=forloop.counter %}
     {% for datum in tissue_request.get_data %}
-      {% if not forloop.first %}
-      {% endif %}
       {% if forloop.counter == 1 %}
         <div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
-        {# <div style="float:left; color: #4E4E4E">{% include 'matrr/review/item_availability.html'%}</div> #}
         {% if tissue_request.get_tissue %}
-          <div style='float: left'>
-            <a onclick="javascript:toggle_visibility('inventory_{{ tissue_request.get_tissue }}_{{ tissue_request.get_id }}');">
+          <div style='float: left;'>
+            <a onclick="javascript:toggle_visibility('inventory_{{ iteration }}');">
               Check Inventory
             </a>
-          <table id='inventory_{{ tissue_request.get_tissue }}_{{ tissue_request.get_id }}' class='hidden'>
-          {% for monkey in tissue_request.monkeys.all %}
-            <tbody>
-            <tr><th>Monkey:</th><td>{{ monkey.mky_real_id }}</td><td>{{ monkey.mky_name }}</td></tr>
-            {% with samples=tissue_request.get_tissue|get_stock:monkey %}
-              {% if samples.count %}
-                {% for sample in samples.all %}
-                  <tr><th>Sample Location:</th><td colspan="2">{{ sample.get_location }}</td></tr>
-                  <tr><th>Last Updated:</th><td colspan="2">{{ sample.get_modified }}</td></tr>
-                {% endfor %}
-              {% else %}
-                <tr><td colspan="3">There are no samples for this tissue and monkey in the inventory.</td></tr>
-              {% endif %}
-            {% endwith %}
-            </tbody>
-          {% endfor %}
-          </table>
+            <table id='inventory_{{ iteration }}' class='hidden'>
+            {% for monkey in tissue_request.monkeys.all %}
+              <tbody>
+              <tr><th>Monkey:</th><td>{{ monkey.mky_real_id }}</td><td>{{ monkey.mky_name }}</td></tr>
+              {% with samples=tissue_request.get_tissue|get_stock:monkey %}
+                {% if samples.count %}
+                  {% for sample in samples.all %}
+                    <tr><th>Sample Location:</th><td colspan="2">{{ sample.get_location }}</td></tr>
+                    <tr><th>Last Updated:</th><td colspan="2">{{ sample.get_modified }}</td></tr>
+                  {% endfor %}
+                {% else %}
+                  <tr><td colspan="3">There are no samples for this tissue and monkey in the inventory.</td></tr>
+                {% endif %}
+              {% endwith %}
+              </tbody>
+            {% endfor %}
+            </table>
           </div>
         {% else %}
-          <div style='float: left'>No inventory data is available for custom tissue requests.</div>
+          <div style='float: left;'>No inventory data is available for custom tissue requests.</div>
         {% endif %}
       {% else %}
         <div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
-        <br>
+        <br/>
       {% endif %}
     {% endfor %}
     <div class='clearfix'></div>
+    {% endwith %}
   {% endfor %}
   {# have a button at the print the shipping manifest #}
   <div>
