@@ -47,10 +47,27 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
         elif availability == Availability.Unavailable:
           availability_str = 'Unavailable'
 
-        if availability == Availability.Unavailable:
-          output.append(u'<li><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a> Status: %s</li>' % ( self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id, availability_str))
+        if monkey.mky_drinking:
+          assignment = 'Ethanol'
+        elif monkey.mky_housing_control:
+          assignment = 'Housing Control'
         else:
-          output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label>  Status: %s</li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id, availability_str))
+          assignment = 'Control'
+        if availability == Availability.Unavailable:
+          output.append(u'<li><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a> Status: %s Assignment: %s</li>' % ( self.link_base,                                                                                                                                                                mky_real_id,                                                                                                                                                                   self.link_base,                                                                                                                                                                mky_real_id,
+                                                                               mky_real_id,
+                                                                               availability_str,
+                                                                               assignment,))
+        else:
+          output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label>  Status: %s  Assignment: %s</li>' % (label_for,
+                                                                                        rendered_cb,
+                                                                                        self.link_base,
+                                                                                        mky_real_id,
+                                                                                        self.link_base,
+                                                                                        mky_real_id,
+                                                                                        mky_real_id,
+                                                                                        availability_str,
+                                                                                        assignment))
       else:
         # this is for custom tissue requests
         output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label></li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id))

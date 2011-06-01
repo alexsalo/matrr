@@ -1,30 +1,36 @@
 {% extends "base.html" %}
 
-{% block title %}
-{% if monkey.cohort.coh_upcoming %}
-Upcoming 
-{% else %}
-Available 
-{% endif %}
-Cohort: {{ cohort.coh_cohort_name }}
-Monkey: {{ monkey.mky_real_id }}
-{% endblock %}
-
-
 {% block content %}
-<div id='large-headline'>{% if monkey.cohort.coh_upcoming %}
-Upcoming 
-{% else %}
-Available 
-{% endif %}
-Cohort: {{ cohort.coh_cohort_name }}
-Monkey: {{ monkey.mky_real_id }}
+<div id='large-headline'>
+  {% block title %}
+  {% if monkey.cohort.coh_upcoming %}
+    Upcoming
+  {% else %}
+    Available
+  {% endif %}
+  Cohort: {{ monkey.cohort.coh_cohort_name }}
+  Monkey: {{ monkey.mky_real_id }}
+  {% endblock %}
 </div>
 <br>
     
 <table class="overview">
+  {% if user_is_member_of_superuser or user_is_member_if_tech_user or user_is_member_of_committee %}
     <tr>
-        <th>Assignment:</th><td>{% if monkey.mky_drinking %}Ethanol{% else %}Control{% endif %}</td>
+      <th>Name:</th><td>{{ monkey.mky_name }}</td>
+    </tr>
+  {% endif %}
+    <tr>
+        <th>Assignment:</th>
+      <td>
+        {% if monkey.mky_drinking %}
+          Ethanol
+        {% else %}{% if monkey.mky_housing_control %}
+          Housing Control
+          {% else %}
+          Control
+        {% endif %}{% endif %}
+      </td>
     </tr>
     <tr>
         <th>Gender:</th><td>{{ monkey.mky_gender }}</td>
@@ -39,7 +45,7 @@ Monkey: {{ monkey.mky_real_id }}
         <th>Weight:</th><td>{{ monkey.mky_weight }}</td>
     </tr>
     <tr>
-        <th>Stree Model:</th><td>{{ monkey.mky_stress_model }}</td>
+        <th>Stress Model:</th><td>{{ monkey.mky_stress_model }}</td>
     </tr>
 </table>
 

@@ -51,14 +51,26 @@ Cohort: {{ cohort.coh_cohort_name }}</div>
     <th>Necropsy Date</th><th>Stress Model</th><th>Study Complete</th></tr>
   {% for monkey in cohort.monkey_set.all %}
     <tr>
-      {% if user.is_superuser %}<td>{{ monkey.mky_name }}</td>{% endif %}
+      {% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
+        <td>{{ monkey.mky_name }}</td>
+      {% endif %}
       <td><a href="monkey/{{monkey.mky_id}}" onClick='javascript:window.open("monkey/{{ monkey.mky_id}}");return false;'>
-          {{ monkey.mky_real_id }}
-          <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
+            {{ monkey.mky_real_id }}
+            <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
+          </a>
+      </td>
       <td>{{ monkey.mky_gender }}</td>
       <td>{{ monkey.mky_birthdate }}</td>
       <td>{{ monkey.mky_weight }}</td>
-      <td>{% if monkey.mky_drinking %}Ethanol{% else %}Control{% endif %}</td>
+      <td>
+        {% if monkey.mky_drinking %}
+          Ethanol
+        {% else %}{% if monkey.mky_housing_control %}
+          Housing Control
+        {% else %}
+          Control
+        {% endif %}{% endif %}
+      </td>
       <td>{{ monkey.mky_necropsy_date}}</td>
       <td>{{ monkey.mky_stress_model }}</td>
       <td>{% if monkey.mky_study_complete %}<font color=blue>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}

@@ -2,6 +2,7 @@ from matrr.models import *
 from django.contrib.auth.views import AuthenticationForm
 from django.contrib.auth.models import Group
 from settings import SITE_ROOT
+from string import lower, replace
 
 def cart(request):
   # get the cart for the user in the request
@@ -39,7 +40,7 @@ def group_membership(request):
     # if the user is logged in, get the groups the user is a member of
     groups = request.user.groups.all()
     for group in groups:
-      key = 'user_is_member_of_' + group.name
+      key = 'user_is_member_of_' + replace( lower(group.name), ' ', '_')
       context[key] = True
   return context
 

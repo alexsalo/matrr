@@ -6,8 +6,6 @@ These items are in no particular order.
 
 -Add production database.
 
--FIX BUG RELATED TO FREEZER TISSUES
-
 *******************************************************************
 ***CATEGORY: Model Changes ****************************************
 *******************************************************************
@@ -33,10 +31,6 @@ brain region is available.
 *******************************************************************
 
 -On the cohort details page, add link to publications.
-
--Add names of monkeys where appropriate
-  -always check that only privileged users can view monkey names!
-  -pages that need updating: monkey.html, item_availability.html (possibly others)
 
 *******************************************************************
 ***CATEGORY: Data Entry *******************************************

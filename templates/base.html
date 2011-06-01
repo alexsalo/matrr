@@ -51,17 +51,17 @@
         <li class='top'><a href="{{ SITE_ROOT }}/admin/">Admin</a></li>
       </ul>
       {% endif %}
-      {% if user_is_member_of_Committee or user_is_member_of_Superuser %}
+      {% if user_is_member_of_committee or user_is_member_of_superuser %}
       <ul>
         <li class='top'>
           <a href="{{ SITE_ROOT }}/reviews/">Reviews</a>
         </li>
-          {% if user_is_member_of_Superuser %}
+          {% if user_is_member_of_superuser %}
             <li class='drop-down'><a href="{{ SITE_ROOT }}/reviews_overviews/">Reviews Overview</a></li>
           {% endif %}
       </ul>
       {% endif %}
-      {% if user_is_member_of_Committee or user_is_member_of_Superuser or user_is_member_of_Tech_User %}
+      {% if user_is_member_of_committee or user_is_member_of_superuser or user_is_member_of_tech_user %}
        <ul>
          <li class='top'>
            <a href='{{ SITE_ROOT }}/shipping_overview'>Shipping Overview</a>

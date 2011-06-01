@@ -20,6 +20,10 @@
       </a>
     </td>
     {% if spacing %}<td class='spacing'></td>{% endif %}
+    {% if user_is_member_of_superuser or user_is_member_of_tech_user or user_is_member_of_committee %}
+      <td>{{  monkey.mky_name }}</td>
+      {% if spacing %}<td class='spacing'></td>{% endif %}
+    {% endif %}
     {% if tissue_request.get_tissue %}
       {% with availability=tissue_request.get_tissue|monkey_availability:monkey %}
         <td>

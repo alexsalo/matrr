@@ -17,12 +17,27 @@
 <div class='clearfix'>
 <div class="left-content">
     <table class="common">
-      <tr><th>Monkey ID</th><th>Gender</th><th>Assignment</th><th>Birthdate</th></tr>
+      <tr><th>Monkey ID</th>
+        {% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
+          <th>Monkey Name</th>
+        {% endif %}
+        <th>Gender</th><th>Assignment</th><th>Birthdate</th></tr>
       {% for monkey in cohort.monkey_set.all|dictsortreversed:"mky_drinking" %}
         <tr>
           <td class='text-center-common-td'><a href='{{ cohort.coh_cohort_id }}/monkey/{{monkey.mky_id}}'>{{ monkey.mky_real_id }}</a></td>
+          {% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
+            <td class='text-center-common-td'>{{ monkey.mky_name }}</td>
+          {% endif %}
           <td class='text-center-common-td'>{{ monkey.mky_gender }}</td>
-          <td class='text-center-common-td'>{% if monkey.mky_drinking %}Ethanol{% else %}Control{% endif %}</td>
+          <td class='text-center-common-td'>
+            {% if monkey.mky_drinking %}
+              Ethanol
+            {% else %}{% if monkey.mky_housing_control %}
+              Housing Control
+            {% else %}
+              Control
+            {% endif %}{% endif %}
+          </td>
           <td class='text-center-common-td'>{{ monkey.mky_birthdate }}</td>
 
         </tr>
