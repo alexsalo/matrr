@@ -333,17 +333,18 @@ class TissueType(models.Model):
       # the tissues have been harvested, so check the inventory
 
       # get the number of tissues that have been harvested
-      harvested = FreezerPeripheralTissue.objects.filter(monkey=monkey,
+      harvested = PeripheralTissueSample.objects.filter(monkey=monkey,
                                                          tissue_type=self,).count()
       if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
 
         # get the tissues of this type for this monkey
-        freezer_stock = FreezerPeripheralTissue.objects.filter(monkey=monkey,
-                                                               tissue_type=self,).count()
+        stock = PeripheralTissueSample.objects.filter(monkey=monkey,
+                                                      tissue_type=self,
+                                                      pts_deleted=False).count()
         # check if the amount of stock exceeds the number of approved requests
-        if requested < freezer_stock:
+        if requested < stock:
           # if it does, the tissue is available (and in stock)
           availability = Availability.In_Stock
       elif self.tst_count_per_monkey and (requested < self.tst_count_per_monkey):
@@ -622,17 +623,18 @@ class BrainRegion(models.Model):
       # the tissues have been harvested, so check the inventory
 
       # get the number of tissues that have been harvested
-      harvested = FreezerBrainRegion.objects.filter(monkey=monkey,
-                                                    brain_region=self,).count()
+      harvested = BrainRegionSample.objects.filter(monkey=monkey,
+                                                 brain_region=self,).count()
       if harvested:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
 
         # get the tissues of this type for this monkey
-        freezer_stock = FreezerBrainRegion.objects.filter(monkey=monkey,
-                                                     brain_region=self,).count()
+        stock = BrainRegionSample.objects.filter(monkey=monkey,
+                                                 brain_region=self,
+                                                 brs_deleted=False).count()
         # check if the amount of stock exceeds the number of approved requests
-        if requested < freezer_stock:
+        if requested < stock:
           # if it does, the tissue is available (and in stock)
           availability = Availability.In_Stock
       elif self.bre_count_per_monkey and (requested < self.bre_count_per_monkey):
@@ -795,17 +797,18 @@ class BloodAndGenetic(models.Model):
       # the tissues have been harvested, so check the inventory
 
       # get the number of tissues that have been harvested
-      harvested = FreezerBloodAndGenetics.objects.filter(monkey=monkey,
-                                                         blood_genetic_item=self,).count()
+      harvested = BloodAndGeneticsSample.objects.filter(monkey=monkey,
+                                                        blood_genetic_item=self,).count()
       if harvested :
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
 
         # get the tissues of this type for this monkey
-        freezer_stock = FreezerBloodAndGenetics.objects.filter(monkey=monkey,
-                                                     blood_genetic_item=self,).count()
+        stock = BloodAndGeneticsSample.objects.filter(monkey=monkey,
+                                                      blood_genetic_item=self,
+                                                      bgs_deleted=False).count()
         # check if the amount of stock exceeds the number of approved requests
-        if requested < freezer_stock:
+        if requested < stock:
           # if it does, the tissue is available (and in stock)
           availability = Availability.In_Stock
       elif self.bag_count_per_monkey and (requested < self.bag_count_per_monkey):
