@@ -291,7 +291,7 @@ class TissueType(models.Model):
     return self.tst_tissue_name
 
   def get_stock(self, monkey):
-    return self.peripheral_sample_set.filter(monkey=monkey)
+    return self.peripheral_sample_set.filter(monkey=monkey, pts_deleted=False)
 
   def get_cohort_availability(self, cohort):
     for monkey in cohort.monkey_set.all():
@@ -580,7 +580,7 @@ class BrainRegion(models.Model):
     return self.bre_region_name
 
   def get_stock(self, monkey):
-    return self.region_sample_set.filter(monkey=monkey)
+    return self.region_sample_set.filter(monkey=monkey, brs_deleted=False)
 
   def get_cohort_availability(self, cohort):
     for monkey in cohort.monkey_set.all():
@@ -753,7 +753,7 @@ class BloodAndGenetic(models.Model):
     return self.bag_name
 
   def get_stock(self, monkey):
-    return self.blood_genetic_sample_set.filter(monkey=monkey)
+    return self.blood_genetic_sample_set.filter(monkey=monkey, bgs_deleted=False)
 
   def get_cohort_availability(self, cohort):
     for monkey in cohort.monkey_set.all():

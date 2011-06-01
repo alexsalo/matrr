@@ -19,3 +19,7 @@ def accepted_requests(tissue, monkey):
 @register.filter()
 def pending_requests(tissue, monkey):
   return tissue.get_pending_request_count(monkey)
+
+@register.filter()
+def get_stock(tissue, monkey):
+  return tissue.get_stock(monkey)
