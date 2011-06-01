@@ -54,12 +54,12 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
         else:
           assignment = 'Control'
         if availability == Availability.Unavailable:
-          output.append(u'<li><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a> Status: %s Assignment: %s</li>' % ( self.link_base,                                                                                                                                                                mky_real_id,                                                                                                                                                                   self.link_base,                                                                                                                                                                mky_real_id,
+          output.append(u'<li><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> Status: %s Assignment: %s</li>' % ( self.link_base,                                                                                                                                                                mky_real_id,                                                                                                                                                                   self.link_base,                                                                                                                                                                mky_real_id,
                                                                                mky_real_id,
                                                                                availability_str,
                                                                                assignment,))
         else:
-          output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label>  Status: %s  Assignment: %s</li>' % (label_for,
+          output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>  Status: %s  Assignment: %s</li>' % (label_for,
                                                                                         rendered_cb,
                                                                                         self.link_base,
                                                                                         mky_real_id,
@@ -70,7 +70,7 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
                                                                                         assignment))
       else:
         # this is for custom tissue requests
-        output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label></li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id))
+        output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label></li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id))
     output.append(u'</ul>')
     return mark_safe(u'\n'.join(output))
 
@@ -164,7 +164,7 @@ class GroupedCheckboxSelectMultipleMonkeys(CheckboxSelectMultiple):
       rendered_cb = re.sub('&#39;', '\'', rendered_cb)
       mky_real_id = conditional_escape(force_unicode(mky_real_id))
       link = SITE_ROOT + '/monkeys/' + str(mky_real_id)
-      output.append(u'<label%s>%s <a href=\'%s\' onClick=\'javascript:window.open("%s");return false;\'><img src="/static/images/arrow_popup.png" width=8 height=8 style=\'vertical-align: text-top\'>%s</a></label>' % \
+      output.append(u'<label%s>%s <a href=\'%s\' onClick=\'javascript:window.open("%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>' % \
                       (label_for,
                        rendered_cb,
                        link,
