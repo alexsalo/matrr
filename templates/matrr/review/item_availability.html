@@ -4,6 +4,10 @@
 <table>
 <tbody id='availability_{{ tissue_request.get_tissue }}_{{ tissue_request.get_id }}' class='hidden'>
 <tr class='bordered-cell-row'><th>Monkey</th>
+  {% if user_is_member_of_superuser or user_is_member_of_tech_user or user_is_member_of_committee %}
+      <th>Name</th>
+      {% if spacing %}<td class='spacing'></td>{% endif %}
+    {% endif %}
   {% if spacing %}<th class='spacing'></th>{% endif %}
   <th>Status</th>
   {% if spacing %}<th class='spacing'></th>{% endif %}
