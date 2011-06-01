@@ -34,6 +34,7 @@
       </div>
     </div>
 </div>
+
 <div class='div-table'>
     <div>
       <div>Project Title:</div><div>{{ req_request.req_project_title }}</div>
@@ -78,6 +79,7 @@
   {% endfor %}
 
 </table>
+
 <div>
 {% if req_request.request_status.rqs_status_name == 'Submitted' %}
   <a href='accept/' class='greenLinkButton linkButton'>Accept</a>

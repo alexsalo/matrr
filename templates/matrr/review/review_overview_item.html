@@ -10,7 +10,7 @@
       {% endif %}
     {% endfor %}
 <div class='clearfix'></div>
-
+<br>
 
 <table class='reviews_table'>
   <tr><th>Reviewer:</th>
@@ -69,18 +69,17 @@
       {% endif %}
     {% endfor %}
   </tr>
-  <tr>
-    <th>Comments:</th>
-    {% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
-      <td class='spacing'></td>
-      {% if tissue_request_review.is_finished %}
-      <td>{{ tissue_request_review.get_notes }}</td>
-      {% else %}
-      <td class='review-color-incomplete'>
-      </td>
-      {% endif %}
-    {% endfor %}
-  </tr>
 </tbody>
+
+
+<table class="common_right">
+  {% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
+    {% if tissue_request_review.get_notes %}
+        <tr><th>Comments:</th>
+          <td>{{ tissue_request_review.get_notes }}</td></tr>
+    {% endif %}
+  {% endfor %}    
+</table>
+
 </table>
 <br>
