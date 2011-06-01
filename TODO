@@ -26,6 +26,18 @@ brain region is available.
 -Add date when inventory was last updated
   -Added to DB but still need to update the review pages.
 
+-Discuss on conference call:
+ -Should we add a line-item reject to the approval process?
+  -pros:
+    -users would not have to resubmit requests
+    -reviewers would not have to reevaluate the new request
+  -cons:
+    -a partial accept could confuse users
+    -We would need very clear language on the accept notification
+      to make the partial accept different from the full accept
+    -Would need a way for a user to cancel a request after it
+      was partially accepted.
+
 *******************************************************************
 ***CATEGORY: UI Changes *******************************************
 *******************************************************************
@@ -45,6 +57,12 @@ brain region is available.
 *******************************************************************
 
 -Add shipping.
+
+-Add MTA indicator to the build shipment page.
+
+-Add tracking number to form for creating a shipment.
+
+-Add check boxes to shipping manifest.
 
 -Add progress reports for 90 days from the shipped date.
 

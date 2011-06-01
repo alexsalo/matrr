@@ -41,6 +41,33 @@
         <th>Additional Notes:</th>
         <td colspan=3>{% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}</td>
       </tr>
+      {% with account=req_request.user.account %}
+      <tr>
+        <th>Shipped to:</th>
+        <td>{{ account.act_shipping_name }}</td>
+      </tr>
+      <tr>
+        <th>Address:</th>
+        <td>{{ account.act_address1 }}</td>
+      </tr>
+      {% if account.act_address2 %}
+        <tr>
+        <th></th>
+        <td>{{ account.act_address2 }}</td>
+      </tr>
+      {% endif %}
+      <tr>
+        <th></th><td>{{ account.act_city }}, {{ account.act_state }} {{ account.act_zip }}</td>
+      </tr>
+      <tr>
+        <th>Country:</th>
+        <td>{{ account.act_country }}</td>
+      </tr>
+      <tr>
+        <th>FedEx number:</th>
+        <td>{{ account.act_fedex }}</td>
+      </tr>
+      {% endwith %}
     </table>
   </div>
   {# show the requested tissues here and link to pages where the tissue shipments can be set up #}
@@ -61,6 +88,6 @@
   {% endfor %}
   {# have a button at the print the shipping manifest #}
   <div>
-    <a href='manifest/' class='blockLinkButton'>Get Shipping Manifest</a>
+    <a href='manifest/' class='blockLinkButton'>Download Shipping Manifest</a>
   </div>
 {% endblock %}

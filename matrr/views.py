@@ -975,14 +975,20 @@ def make_shipping_manifest(request, req_request_id):
   response['Content-Disposition'] = 'attachment; filename=manifest-' + \
                                     str(req_request.user) + '-' + \
                                     str(req_request.cohort) + '.pdf'
-
+  account = req_request.user.account
   maker = PdfMaker(title="Shipping Manifest", subtitle=str(req_request.user) + ' ' + str(req_request.cohort))
   request_info = [['Requesting User:', str(req_request.user), 'Requested On:',
                         str(req_request.req_request_date) ],
                        ['Cohort:', str(req_request.cohort)],
                        ['Project Title:', req_request.req_project_title],
                        ['Motivation:', req_request.req_reason],
-                       ['Notes:', req_request.req_notes]]
+                       ['Notes:', req_request.req_notes],
+                       ['Shipped To:', account.act_shipping_name],
+                       ['Address:', account.act_address1],
+                       ['', account.act_address2],
+                       ['', u'%s, %s %s' %(account.act_city, account.act_state, account.act_zip)],
+                       ['Country:', account.act_country],
+                       ['FedEx Number:', account.act_fedex],]
   style = [('ALIGN', (0,0), (0, -1), 'RIGHT'),
            ('SPAN', (2, 3), (-1, 3)),
            ('SPAN', (2, 4), (-1, 4)),
