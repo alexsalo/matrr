@@ -10,7 +10,10 @@
       <tr><th>Notes:</th><td>{{ tissue_request.get_notes }}</td></tr>
     {% endif %}
     </table>
+    <div class='clearfix'>
     {% include 'matrr/review/item_availability.html' %}
+    {% include 'matrr/review/item_inventory.html' %}
+    </div>
   {% endwith %}
 
   <table>

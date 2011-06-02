@@ -1,16 +1,16 @@
-    {% for datum in tissue_request.get_data %}
-      {% if not forloop.first %}
-      {% endif %}
-      {% if forloop.counter == 1 %}
-        <div class="headline">{{ datum.0 }}: {{ datum.1 }}</div>
-        <div style="float:left; color: #4E4E4E">{% include 'matrr/review/item_availability.html'%}</div>
-      {% else %}
-        <div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
-        <br>
-      {% endif %}
-    {% endfor %}
+{% for datum in tissue_request.get_data %}
+  {% if forloop.counter == 1 %}
+    <div class="headline">{{ datum.0 }}: {{ datum.1 }}</div>
+    <div style="float:left; color: #4E4E4E;">
+      {% include 'matrr/review/item_availability.html'%}
+      {% include 'matrr/review/item_inventory.html'%}
+    </div>
+  {% else %}
+    <div style="float:right; color: #4E4E4E; clear:right;">{{ datum.0 }}: {{ datum.1 }}</div>
+  {% endif %}
+{% endfor %}
 <div class='clearfix'></div>
-<br>
+<br style='height: 0.1em; margin-bottom: 0em; padding: 0em;'/>
 
 <table class='reviews_table'>
   <tr><th>Reviewer:</th>
