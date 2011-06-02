@@ -15,11 +15,12 @@
   <tr>
     <th colspan='3'>Monkeys</th>
   </tr>
+  <tr>
   {% for monkey in item.monkeys.all %}
-    {% if forloop.counter|divisibleby:"3" %}
-        <td align='center'><a href='{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}'>{{ monkey.mky_real_id }}</a></td></tr><tr>
-    {% else %}
-        <td align='center'><a href='{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}'>{{ monkey.mky_real_id }}</a></td>
+    {% if forloop.counter|divisibleby:"3"%}
+      </tr><tr>
     {% endif %}
+    <td align='center'><a href='{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}'>{{ monkey.mky_real_id }}</a></td>
   {% endfor %}
+  </tr>
 </tbody>

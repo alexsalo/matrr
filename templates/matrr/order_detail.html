@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div id='large-headline'>
+  <div class='large-headline'>
     {% block title %}Order Detail{% endblock %}
   </div>
   
-  <br>
+  <br/>
   
   <table class="common_right">
   <tr>
@@ -14,10 +14,10 @@
   </tr>
   <tr>
       <th>Requested On:</th><td>{{ order.req_request_date }}</td>
-      <th>Status:</th><td>
-    {% if order.request_status|lower != 'submitted'%}<font color='green'>{{ order.request_status }}</font>
-    {% else %}{{ order.request_status }}
-    {% endif %}</td>
+      <th>Status:</th>
+    {% if order.request_status|lower != 'submitted'%}<td style='color:green'>{{ order.request_status }}</td>
+    {% else %}<td>{{ order.request_status }}</td>
+    {% endif %}
   </tr>
   <tr>
       <th>Referred By:</th><td>{{ order.req_referred_by }}</td>
@@ -34,7 +34,7 @@
 
   
   <div style='margin-top: 20px;'>
-    <div id='headline'>Requested Tissues</div>
+    <div class='headline'>Requested Tissues</div>
     <table class='common_center'>
 
       {% for item in order.brain_region_request_set.all %}

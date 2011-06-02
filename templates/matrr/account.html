@@ -18,7 +18,7 @@ MATRR Account
     <tr><td class="text-right-common-td">Email:</td><td>{{ account_info.user.email }}</td></tr>
   </table>
 
-<div id='headline'>Shipping Information</div>
+<div class='headline'>Shipping Information</div>
   <table class="common">
     <tr><td class="text-right-common-td">Shipping Name:</td><td>{{ account_info.act_shipping_name }}</td>
         <td class="text-right-common-td">&nbsp;</td><td>&nbsp;</td></tr>
@@ -26,11 +26,16 @@ MATRR Account
         <td class="text-right-common-td">City:</td><td>{{ account_info.act_city }}, {{ account_info.act_state }}</td></tr>
     <tr><td class="text-right-common-td">&nbsp;</td><td>{{ account_info.act_address2 }}</td>
         <td class="text-right-common-td">&nbsp;</td><td>{{ account_info.act_zip }}, {{ account_info.act_country }}</td></tr>
-    <tr><td class="text-right-common-td"><img src="{{ STATIC_URL }}images/fedex-logo-470.jpg" border=0 height=12 width=36></td>
+    <tr><td class="text-right-common-td">
+      <img src="{{ STATIC_URL }}images/fedex-logo-470.jpg" height='12' width='36' alt='fedex logo'/></td>
         <td>{{ account_info.act_fedex }}</td></tr>
   </table>
 {% if edit %}
-<div id="text-right"><a href="/account/shipping"><img src="{{ STATIC_URL }}images/update-button.png" border=0 height=20 width=45></a></div>
+<div class="text-right"><a href="/account/shipping" class='blockLinkButton'>
+  <!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45' alt='update button'/>-->
+  Update
+  </a>
+</div>
 {% endif %}
 <!--
 This section is for the material transfer agreement
@@ -55,7 +60,11 @@ This section is for the material transfer agreement
      </div></div>
 {% endif %}
 {% if edit %}
-<div id="text-right"><a href="/mta/upload"><img src="{{ STATIC_URL }}images/update-button.png" border=0 height=20 width=45></a></div>
+<div class="text-right"><a href="/mta/upload" class='blockLinkButton'>
+  <!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45'/>-->
+  Update
+  </a>
+</div>
 {% endif %}
 
 <!--
@@ -64,7 +73,7 @@ This section displays the status of requests
 <div class='headline'>Requests Status</div>
 {% if order_list %}
   <table class="common">
-    <tr><th>Cohort</th><th>Date Placed</th><th>Status</th><th>&nbsp;</th><th>&nbsp;</th>
+    <tr><th>Cohort</th><th>Date Placed</th><th>Status</th><th>&nbsp;</th><th>&nbsp;</th></tr>
     {% for order in order_list.all %}
         <tr>
             <td class='text-center-common-td'>{{ order.cohort }}</td>

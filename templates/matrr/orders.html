@@ -5,9 +5,9 @@
   {% block title %}My Orders{% endblock %}
 </div>
 
-<br>
+<br/>
 {% if order_list %}
-<table class="common_center" cellpadding=4 cellspacing=2>
+<table class="common_center" cellpadding='4' cellspacing='2'>
   <tr>
     <th>Cohort</th>
     <th>Date Placed</th>
@@ -21,7 +21,7 @@
       {% if order.request_status|lower == "submitted" %}
         <td>{{ order.request_status }}</td>
         {% else %}
-        <td><font color='green'>{{ order.request_status }}</font></td>        
+        <td style='color: green'>{{ order.request_status }}</td>
       {% endif %}
       <td><a href='{{ order.req_request_id }}'>Details</a></td>
     </tr>
