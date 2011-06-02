@@ -7,25 +7,29 @@
 <div id='large-headline'>
 Tissue Request Cart
 </div>
-    <div><a href='/{% if cart.cohort.coh_upcoming %}upcoming{% else %}available{% endif %}/{{ cart.cohort.coh_cohort_id }}/tissues'>
-	<img src="{{ STATIC_URL }}/images/cart_add.png" width='16' height='16'>&nbsp;Add more tissues</a></div>
+<div>
+  <a href='/{% if cart.cohort.coh_upcoming %}upcoming{% else %}available{% endif %}/{{ cart.cohort.coh_cohort_id }}/tissues'>
+	<img src="{{ STATIC_URL }}/images/cart_add.png" width='16' height='16' alt='add more items to cart'/>
+    &nbsp;Add more tissues
+  </a>
+</div>
 <br/>
 {% if cart_exists %}
   {% if cart_num_items != 0 %}
     {% include 'matrr/cart/cart_items_table.html' %}
 	<br/>
     <div style='float: left;'>
-      <a href='/cart/checkout/'><div class="blockLinkCheckoutButton">Checkout</div></a>
+      <a href='/cart/checkout/' class="blockLinkCheckoutButton">Checkout</a>
     </div>
   {% else %}
   <div class="messages">
     <div class="info">
-    There are no items in your cart.
-	</div>
+      There are no items in your cart.
+	  </div>
 	</div>  
 {% endif %}
   <div style='float: right;'>
-    <a href='/cart/delete/'><div class="blockLinkDeleteButton">Delete Cart</div></a>
+    <a href='/cart/delete/' class="blockLinkDeleteButton">Delete Cart</a>
   </div>
 {% else %}
   <div class="messages">
@@ -34,5 +38,4 @@ Tissue Request Cart
     </div>
   </div>
 {% endif %}
-</div>
 {% endblock %}

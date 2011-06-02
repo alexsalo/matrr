@@ -1,27 +1,26 @@
 <table class='cart_table' width='95%'>
-  <!--<tr><th>Tissue</th><th>Fix</th><th>Amount</th></tr>-->
   {% for item in cart_items %}
     <tbody>
     <tr>
-      <td valign='middle' width='30'>
-        <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/'><img src="{{ STATIC_URL }}/images/cart_edit.png" width='16' height='16'></a>
+      <td valign='middle' style='width:30;'>
+        <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/'>
+          <img src="{{ STATIC_URL }}/images/cart_edit.png" width='16' height='16' alt='edit cart'/>
+        </a>
       </td>
-    {#  removed the cart add button because it does not change per item and it is already on the page #}
-      <!--<td valign='middle' width='30'>
-        <a href='/{% if cart.cohort.coh_upcoming %}upcoming{% else %}available{% endif %}/{{ cart.cohort.coh_cohort_id }}/tissues'>
-          <img src="{{ STATIC_URL }}/images/cart_add.png" width='16' height='16'></a>
-      </td>-->
-      <td valign='middle' width='30'>
-        <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/delete/'><img src="{{ STATIC_URL }}/css/images/badge-circle-cross-24.png" width='16' height='16'></a>
+      <td valign='middle' style='width:30;'>
+        <a href='/cart/{{ item.get_type_url }}/{{item.get_id}}/delete/'>
+          <img src="{{ STATIC_URL }}/css/images/badge-circle-cross-24.png" width='16' height='16' alt='delete item'/>
+        </a>
       </td>
       {% for datum in item.get_data %}
-        <th align='right' width='20%'>{{ datum.0 }}:</th><td align='left' nowrap>{{ datum.1 }}</td>
+        <th align='right' style='width:20%;'>{{ datum.0 }}:</th>
+        <td align='left' style='white-space: nowrap'>{{ datum.1 }}</td>
       {% endfor %}
      </tr>
     {% if item.has_notes %}
     <tr>
      	<td colspan='4'>&nbsp;</td>
-	 <td colspan='5'><font size=-1><b>Notes:</b> </font>{{ item.get_notes }}</td>
+	 <td colspan='5' style='font-size:-1;'><b>Notes:</b>{{ item.get_notes }}</td>
     </tr>
     {% endif %}
     </tbody>
