@@ -438,7 +438,7 @@ def reviews_list_view(request):
   finished_reviews = [review for review in reviews if review.is_finished()]
   unfinished_reviews = [review for review in reviews if not review.is_finished()]
     
-  return render_to_response('matrr/review/reviews.html', \
+  return render_to_response('matrr/review/reviews.html',
       {'finished_reviews': finished_reviews,
        'unfinished_reviews': unfinished_reviews,
        'num_finished': len(finished_reviews),
@@ -460,7 +460,7 @@ def mta_upload(request):
   else:
     # create the form for the MTA upload
     form = MtaForm(instance=mta_object)
-  return render_to_response('matrr/mta_upload_form.html', \
+  return render_to_response('matrr/mta_upload_form.html',
       {'form':form,
        'user':request.user
        },
@@ -479,7 +479,7 @@ def account_shipping(request):
   else:
     #create the form for shipping address
     form = AccountForm(instance=request.user.account)
-  return render_to_response('matrr/account_shipping_form.html', \
+  return render_to_response('matrr/account_shipping_form.html',
       {'form':form,
       'user':request.user
        },
@@ -500,7 +500,7 @@ def account_detail_view(request, user_id):
   mta_info = Mta.objects.filter(user__id = user_id)
   order_list = Request.objects.filter(user__id = user_id).exclude(request_status= RequestStatus.objects.get(rqs_status_name='Cart'))
 
-  return render_to_response('matrr/account.html', \
+  return render_to_response('matrr/account.html',
     {'account_info': account_info,
      'mta_info': mta_info,
      'order_list': order_list,
@@ -540,7 +540,7 @@ def review_detail(request, review_id):
   else:
     # create the forms for the review and the tissue request reviews
     form = ReviewForm(instance=review)
-  return render_to_response('matrr/review/review_form.html', \
+  return render_to_response('matrr/review/review_form.html',
       {'review': review,
        'req_request': req_request,
        'form': form,
@@ -568,7 +568,7 @@ def review_overview_list(request):
           else:
             req_request.complete.append("pending")
           
-  return render_to_response('matrr/review/reviews_overviews.html', \
+  return render_to_response('matrr/review/reviews_overviews.html',
         {'req_requests': req_requests,
          'reviewers': reviewers,
          },
@@ -577,7 +577,7 @@ def review_overview_list(request):
 def sort_tissues_and_add_quantity_css_value(tissue_requests):
   for tissue_request in tissue_requests:
     tissue_request.sorted_tissue_request_reviews = sorted(tissue_request.get_reviews(),
-                                                          key=lambda x: x.review.user.username, reverse=False)
+                                                          key=lambda x: x.review.user.username)
     for tissue_request_review in tissue_request.sorted_tissue_request_reviews:
       if tissue_request_review.is_finished():
         tissue_request_review.quantity_css_value = int(10 - (math.fabs(5-tissue_request_review.get_quantity()) * 2))
@@ -595,14 +595,14 @@ def review_overview(request, req_request_id):
   custom_requests = req_request.custom_tissue_request_set.all()
   # get the reviews for the request
   reviews = list(req_request.review_set.all())
-  reviews.sort(key=lambda x: x.user.username, reverse=False)
+  reviews.sort(key=lambda x: x.user.username)
 
   sort_tissues_and_add_quantity_css_value(region_requests)
   sort_tissues_and_add_quantity_css_value(tissue_requests)
   sort_tissues_and_add_quantity_css_value(sample_requests)
   sort_tissues_and_add_quantity_css_value(custom_requests)
 
-  return render_to_response('matrr/review/review_overview.html', \
+  return render_to_response('matrr/review/review_overview.html',
         {'reviews': reviews,
          'req_request': req_request,
          'region_requests': region_requests,
@@ -618,7 +618,7 @@ def review_overview(request, req_request_id):
 def orders_list(request):
   # get a list of all requests for the user
   order_list = Request.objects.filter(user = request.user).exclude(request_status= RequestStatus.objects.get(rqs_status_name='Cart'))
-  return render_to_response('matrr/orders.html', \
+  return render_to_response('matrr/orders.html',
         {'order_list': order_list,
          },
          context_instance=RequestContext(request))
@@ -632,7 +632,7 @@ def order_detail(request, req_request_id):
   if req_request.user != request.user and Group.objects.get(name='Committee') not in request.user.groups.all():
     # if the request does not belong to the user, return a 404 error (alternately, we could give a permission denied message)
     raise Http404('This page does not exist.')
-  return render_to_response('matrr/order_detail.html', \
+  return render_to_response('matrr/order_detail.html',
         {'order': req_request,
          },
          context_instance=RequestContext(request))
@@ -768,13 +768,12 @@ def contact_us(request):
   if request.POST:
     if request.POST['submit'] == 'Send Message':
       # get the submitted form
-      form = ReviewResponseForm(data=request.POST)
+      form = ContactUsForm(data=request.POST)
       if form.is_valid():
-        if request.user.email:
-          requestEmail = request.user.email
         subject = ''.join(form.cleaned_data['subject'].splitlines())
         subject += '//'
-        subject += requestEmail
+        if request.user.email:
+          subject += request.user.email
         fromEmail = 'contact_us@matrr.com'
         send_mail(subject, form.cleaned_data['body'], fromEmail, ["Erich_Baker@Baylor.edu"])
         messages.success(request, "Your message was sent to the MATRR team. You may expect a response shortly.")
@@ -950,7 +949,7 @@ def add_tissue_request(maker, tissue_request):
         for stock_item in stock.all():
           data.append([stock_item.get_location()])
           style.append(('SPAN', (0, i), (-1, i)))
-          i = i + 1
+          i += 1
       else:
         data.append(['The tissue is either not harvested yet or it needs to be extracted' \
                      + ' from another item' ])
