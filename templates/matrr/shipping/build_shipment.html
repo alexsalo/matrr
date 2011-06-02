@@ -74,16 +74,15 @@
   {# show the requested tissues here and link to pages where the tissue shipments can be set up #}
   <div class='headline'>Requested Tissues</div>
   {% for tissue_request in req_request.get_requested_tissues %}
-    {% with iteration=forloop.counter %}
     {% for datum in tissue_request.get_data %}
       {% if forloop.counter == 1 %}
         <div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
         {% if tissue_request.get_tissue %}
           <div style='float: left;'>
-            <a onclick="javascript:toggle_visibility('inventory_{{ iteration }}');">
+            <a onclick="javascript:toggle_visibility('inventory_{{ tissue_request.get_html_label }}');">
               Check Inventory
             </a>
-            <table id='inventory_{{ iteration }}' class='hidden'>
+            <table id='inventory_{{ tissue_request.get_html_label }}' class='hidden'>
             {% for monkey in tissue_request.monkeys.all %}
               <tbody>
               <tr><th>Monkey:</th><td>{{ monkey.mky_real_id }}</td><td>{{ monkey.mky_name }}</td></tr>
@@ -110,7 +109,6 @@
       {% endif %}
     {% endfor %}
     <div class='clearfix'></div>
-    {% endwith %}
   {% endfor %}
   {# have a button at the print the shipping manifest #}
   <div>

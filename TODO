@@ -10,7 +10,6 @@ These items are in no particular order.
 ***CATEGORY: Model Changes ****************************************
 *******************************************************************
 
--Change any weight fields to be floats
 
 *******************************************************************
 ***CATEGORY: Tissue Shop Changes **********************************
@@ -80,7 +79,6 @@ brain region is available.
 ***CATEGORY: Bugs *************************************************
 *******************************************************************
 
--BUG: Requesting a tissue when that tissue is already in your cart causes an internal server error.
 
 *******************************************************************
 ***CATEGORY: Uncategorized Changes ********************************

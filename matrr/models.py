@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import datetime
 from settings import SITE_ROOT
+from string import lower, replace
 
 
 class DiffingMixin(object):
@@ -507,6 +508,10 @@ class TissueRequest(models.Model):
   def get_reviews(self):
     return self.tissue_request_review_set.all()
 
+  def get_html_label(self):
+    label = self.get_tissue().get_name() + '_' + str(self.get_id())
+    return replace(lower(label), ' ', '-')
+
   class Meta:
     db_table = 'rtt_requests_to_tissue_types'
     unique_together = (('req_request', 'tissue_type', 'rtt_fix_type'),)
@@ -706,6 +711,10 @@ class BrainRegionRequest(models.Model):
   def get_reviews(self):
     return self.brain_region_request_review_set.all()
 
+  def get_html_label(self):
+    label = self.get_tissue().get_name() + '_' + str(self.get_id())
+    return replace(lower(label), ' ', '-')
+
   class Meta:
     db_table = 'rbr_requests_to_brain_regions'
     unique_together = ('req_request', 'brain_region')
@@ -880,6 +889,10 @@ class BloodAndGeneticRequest(models.Model):
 
   def get_reviews(self):
     return self.blood_and_genetic_request_review_set.all()
+
+  def get_html_label(self):
+    label = self.get_tissue().get_name() + '_' + str(self.get_id())
+    return replace(lower(label), ' ', '-')
   
   class Meta:
     db_table = 'rbg_requests_to_blood_and_genetics'
@@ -958,6 +971,10 @@ class CustomTissueRequest(models.Model):
 
   def get_reviews(self):
     return self.custom_tissue_request_review_set.all()
+
+  def get_html_label(self):
+    label = 'custom_' + str(self.get_id())
+    return replace(lower(label), ' ', '-')
 
   class Meta:
     db_table = 'ctr_custom_tissue_requests'

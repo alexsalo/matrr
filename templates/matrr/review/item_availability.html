@@ -1,8 +1,8 @@
 {% load tissue_filters %}
 
-<a onclick="javascript:toggle_visibility('availability_{{ tissue_request.get_tissue }}_{{ tissue_request.get_id }}');">Check Availability</a>
+<a onclick="javascript:toggle_visibility('availability_{{ tissue_request.get_html_label }}');">Check Availability</a>
 <table>
-<tbody id='availability_{{ tissue_request.get_tissue }}_{{ tissue_request.get_id }}' class='hidden'>
+<tbody id='availability_{{ tissue_request.get_html_label }}' class='hidden'>
 <tr class='bordered-cell-row'><th>Monkey</th>
   {% if user_is_member_of_superuser or user_is_member_of_tech_user or user_is_member_of_committee %}
       <th>Name</th>
