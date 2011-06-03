@@ -128,7 +128,7 @@ urlpatterns += patterns('matrr.views',
   url(r'^shipping/build/(?P<req_request_id>\d+)/$',
     build_shipment),
   url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$',
-    make_shipping_manifest),
+    make_shipping_manifest_latex),
 #  url(r'^search/?$',
 #    search),
 )

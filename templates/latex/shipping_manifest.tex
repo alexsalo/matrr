@@ -1,0 +1,76 @@
+{% spaceless %}
+{% load tissue_filters %}
+\documentclass{article}[letterpaper]
+
+\usepackage{fullpage}
+\usepackage{multirow}
+
+\begin{document}
+
+\begin{center}
+\Large{ \textbf{Shipping Manifest for:\\ User: {{ req_request.user }} Cohort: {{ req_request.cohort }}
+ } } \\
+\normalsize{Requested On: {{ req_request.req_request_date }} \\
+Manifest Created On: {{ time }} }
+\end{center}
+
+\section*{Shipping info}
+
+{{ account.act_shipping_name }} \\
+{{ account.act_address1 }} \\{% if account.act_address2 %}{{ account.act_address2 }} \\{% endif %}
+{{ account.act_city }}, {{ account.act_state }} {{ account.act_zip }} \\
+{{ account.act_country }}
+
+\vspace{0.1in}
+\noindent Fedex Number: {{ account.act_fedex }}
+
+\section*{Requested Tissues}
+
+{% for tissue_request in req_request.get_requested_tissues %}
+  {% for datum in tissue_request.get_data %}
+    {% if forloop.counter == 1 %}
+      \subsection*{ {{ datum.0 }}: {{ datum.1 }} }
+    {% else %}
+      \noindent {{ datum.0 }}: {{ datum.1 }}
+    {% endif %}
+  {% endfor %}
+
+  \vspace{0.05in}
+  {% if tissue_request.get_tissue %}
+  \subsubsection*{Requested Monkeys}
+  \nopagebreak[3]
+  \noindent
+  \begin{tabular}{|c|c|c|}
+  \hline
+  {% for monkey in tissue_request.monkeys.all %}
+  Monkey: & {{ monkey.mky_real_id }} & {{ monkey.mky_name }} \\ \hline
+  {% with samples=tissue_request.get_tissue|get_stock:monkey %}
+    {% if samples.count %}
+      {% for sample in samples.all %}
+        Sample Location: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_location }} } \\ \hline
+        Last Updated: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_modified }} } \\ \hline
+      {% endfor %}
+    {% else %}
+      \multicolumn{3}{|p{6in}|}{There are no samples for this tissue and monkey in the inventory.
+      The tissue is either not harvested yet or it needs to be extracted from another item} \\ \hline
+    {% endif %}
+  {% endwith %}
+  {% endfor %}
+  \end{tabular}
+  {% else %}
+  \noindent This is a custom request, so there is no inventory data available.
+  \nopagebreak
+  \subsubsection*{Requested Monkeys}
+  \begin{tabular}{|c|c|c|}
+  \hline
+  {% for monkey in tissue_request.monkeys.all %}
+    Monkey: & {{ monkey.mky_real_id }} & {{ monkey.mky_name }} \\ \hline
+  {% endfor %}
+  \end{tabular}
+  {% endif %}
+  \pagebreak[3]
+{% endfor %}
+
+\end{document}
+
+{% endspaceless %}

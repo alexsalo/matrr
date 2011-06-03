@@ -5,6 +5,11 @@ These items are in no particular order.
 *******************************************************************
 
 -Add production database.
+  -remove fake users
+
+-add checkboxes for line-item rejects
+ -make plan for this, maybe a mockup by conference call
+
 
 *******************************************************************
 ***CATEGORY: Model Changes ****************************************
@@ -62,14 +67,13 @@ brain region is available.
 -Add tracking number to form for creating a shipment.
 
 -Add check boxes to shipping manifest.
+  -Using latex now, should be easier
 
 -Add progress reports for 90 days from the shipped date.
 
 *******************************************************************
 ***CATEGORY: Testing and documentation ****************************
 *******************************************************************
-
--Fix the mailer issue on the wiki
 
 -Add unit tests.
 
@@ -83,6 +87,8 @@ brain region is available.
 *******************************************************************
 ***CATEGORY: Uncategorized Changes ********************************
 *******************************************************************
+
+-Figure out a way to inform users about scheduled maintenance (for database changes and stuff).
 
 -add sphinx indices
 

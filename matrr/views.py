@@ -997,3 +997,23 @@ def make_shipping_manifest(request, req_request_id):
   for tissue_request in req_request.get_requested_tissues():
     add_tissue_request(maker, tissue_request)
   return maker.createPdf(file=response)
+
+
+from process_latex import process_latex
+
+def make_shipping_manifest_latex(request, req_request_id):
+  req_request = Request.objects.get(req_request_id=req_request_id)
+
+  #Create the HttpResponse object with the appropriate PDF headers.
+  response = HttpResponse(mimetype='application/pdf')
+  response['Content-Disposition'] = 'attachment; filename=manifest-' + \
+                                    str(req_request.user) + '-' + \
+                                    str(req_request.cohort) + '.pdf'
+  account = req_request.user.account
+
+  return process_latex('latex/shipping_manifest.tex',
+                        {'req_request': req_request,
+                         'account': req_request.user.account,
+                         'time': datetime.today(),
+                         },
+                       outfile=response)
