@@ -31,27 +31,39 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-if TEST:
+
+if PRODUCTION:
   DATABASES = {
-      'default': {
-          'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-          'NAME': 'matrr_test',                      # Or path to database file if using sqlite3.
-          'USER': 'django_test',                      # Not used with sqlite3.
-          'PASSWORD': 'matrr_django',                  # Not used with sqlite3.
-          'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-          #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-      }
+    'default': {
+      'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+      'NAME': 'matrr_production',                      # Or path to database file if using sqlite3.
+      'USER': 'matrr_prod',                      # Not used with sqlite3.
+      'PASSWORD': 'm0nk3y_1s_drUnK',                  # Not used with sqlite3.
+      'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
+      #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    }
+  }
+elif TEST:
+  DATABASES = {
+    'default': {
+      'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+      'NAME': 'matrr_test',                      # Or path to database file if using sqlite3.
+      'USER': 'django_test',                      # Not used with sqlite3.
+      'PASSWORD': 'matrr_django',                  # Not used with sqlite3.
+      'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
+      #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    }
   }
 else:
   DATABASES = {
-      'default': {
-          'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-          'NAME': 'django_test',                      # Or path to database file if using sqlite3.
-          'USER': 'django_test',                      # Not used with sqlite3.
-          'PASSWORD': 'matrr_django',                  # Not used with sqlite3.
-          'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-          #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-      }
+    'default': {
+      'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+      'NAME': 'django_test',                      # Or path to database file if using sqlite3.
+      'USER': 'django_test',                      # Not used with sqlite3.
+      'PASSWORD': 'matrr_django',                  # Not used with sqlite3.
+      'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
+      #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    }
   }
 
 
