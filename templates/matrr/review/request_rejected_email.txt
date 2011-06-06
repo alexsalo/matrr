@@ -1,5 +1,5 @@
 {% load i18n %}
 {% trans "Your tissue request has been denied.  If you have any questions about why your request has been denied please contact MATRR staff.  Our contact information is provided at http://gleek.ecs.baylor.edu/contact/." %}
 
-{% trans "You can view your request at: " %}http://gleek.ecs.baylor.edu{{ request_url }}
+{% trans "You can view your request at: " %}https://gleek.ecs.baylor.edu{{ request_url }}
 
