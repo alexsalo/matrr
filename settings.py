@@ -31,7 +31,6 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-
 if PRODUCTION:
   DATABASES = {
     'default': {

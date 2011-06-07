@@ -42,6 +42,8 @@ brain region is available.
     -Would need a way for a user to cancel a request after it
       was partially accepted.
 
+- use line item veto per tissue and per monkey
+
 *******************************************************************
 ***CATEGORY: UI Changes *******************************************
 *******************************************************************
@@ -69,6 +71,9 @@ brain region is available.
 -Add check boxes to shipping manifest.
   -Using latex now, should be easier
 
+-Add text for if tissues is to be used for isolating protein/genomic data
+  -they should send an update upon receiving the tissue as to the
+
 -Add progress reports for 90 days from the shipped date.
 
 *******************************************************************
@@ -83,10 +88,16 @@ brain region is available.
 ***CATEGORY: Bugs *************************************************
 *******************************************************************
 
+-reset password bug
+  -cannot connect to site from url in email.
+
+
 
 *******************************************************************
 ***CATEGORY: Uncategorized Changes ********************************
 *******************************************************************
+
+-can we handle 5-6 GB per animal of data?
 
 -Figure out a way to inform users about scheduled maintenance (for database changes and stuff).
 
