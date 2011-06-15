@@ -30,17 +30,8 @@ brain region is available.
 -Add date when inventory was last updated
   -Added to DB but still need to update the review pages.
 
--Discuss on conference call:
- -Should we add a line-item reject to the approval process?
-  -pros:
-    -users would not have to resubmit requests
-    -reviewers would not have to reevaluate the new request
-  -cons:
-    -a partial accept could confuse users
-    -We would need very clear language on the accept notification
-      to make the partial accept different from the full accept
-    -Would need a way for a user to cancel a request after it
-      was partially accepted.
+-need a way for a user to cancel a request after it
+  was partially accepted.
 
 - use line item veto per tissue and per monkey
 
@@ -61,8 +52,6 @@ brain region is available.
 *******************************************************************
 ***CATEGORY: Shipping  ********************************************
 *******************************************************************
-
--Add shipping.
 
 -Tweak MTA indicator on the build shipment page.
 

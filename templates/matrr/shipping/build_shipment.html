@@ -12,7 +12,8 @@
   <div>
     <table class="overview">
       <tr>
-        <th>Cohort:</th><td><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></td>
+        <th>Cohort:</th>
+        <td style='min-width: 100px;'><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></td>
         <th>Requesting User:</th>
         <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></td>
       </tr>
@@ -25,7 +26,7 @@
         <th>Experimental Plan:</th>
         <td>
           {% if req_request.req_experimental_plan %}
-            <a href='/{{ MEDIA_URL }}/{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a>
+            <a href='/{{ MEDIA_URL }}/{{ req_request.req_experimental_plan }}'>{{ req_request.get_plan_name }}</a>
           {% else %}
             None
           {% endif %}

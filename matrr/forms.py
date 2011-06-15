@@ -212,9 +212,9 @@ class CustomTissueRequestForm(ModelForm):
 
 
 class ReviewResponseForm(Form):
-  subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 120}))
-  body = CharField(widget=widgets.Textarea(attrs={'cols': 86,
-                                                  'rows': 10}))
+  subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 130}))
+  body = CharField(widget=widgets.Textarea(attrs={'cols': 94,
+                                                  'rows': 20}))
 
   def __init__(self, tissue_requests, *args, **kwargs):
     self.tissue_requests = tissue_requests

@@ -588,30 +588,42 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 def review_overview(request, req_request_id):
   # get the request being reviewed
   req_request = Request.objects.get(req_request_id=req_request_id)
-  # get the tissue requests
-  region_requests = req_request.brain_region_request_set.all()
-  tissue_requests = req_request.tissue_request_set.all()
-  sample_requests = req_request.blood_and_genetic_request_set.all()
-  custom_requests = req_request.custom_tissue_request_set.all()
-  # get the reviews for the request
-  reviews = list(req_request.review_set.all())
-  reviews.sort(key=lambda x: x.user.username)
+  if request.POST:
+    for tissue_request in req_request.get_requested_tissues():
+      key = tissue_request.get_html_label() + '_accept'
+      if (key) in request.POST and request.POST[key] is not None:
+        # if the key exists, then it was set to 'on', meaning the request was accepted
+        tissue_request.set_accepted(True)
+      else:
+        # the request was rejected
+        tissue_request.set_accepted(False)
+      tissue_request.save()
+    return redirect('/reviews_overviews/' + str(req_request_id) + '/process/')
+  else:
+    # get the tissue requests
+    region_requests = req_request.brain_region_request_set.all()
+    tissue_requests = req_request.tissue_request_set.all()
+    sample_requests = req_request.blood_and_genetic_request_set.all()
+    custom_requests = req_request.custom_tissue_request_set.all()
+    # get the reviews for the request
+    reviews = list(req_request.review_set.all())
+    reviews.sort(key=lambda x: x.user.username)
 
-  sort_tissues_and_add_quantity_css_value(region_requests)
-  sort_tissues_and_add_quantity_css_value(tissue_requests)
-  sort_tissues_and_add_quantity_css_value(sample_requests)
-  sort_tissues_and_add_quantity_css_value(custom_requests)
+    sort_tissues_and_add_quantity_css_value(region_requests)
+    sort_tissues_and_add_quantity_css_value(tissue_requests)
+    sort_tissues_and_add_quantity_css_value(sample_requests)
+    sort_tissues_and_add_quantity_css_value(custom_requests)
 
-  return render_to_response('matrr/review/review_overview.html',
-        {'reviews': reviews,
-         'req_request': req_request,
-         'region_requests': region_requests,
-         'tissue_requests': tissue_requests,
-         'sample_requests': sample_requests,
-         'custom_requests': custom_requests,
-         'Availability': Availability,
-         },
-         context_instance=RequestContext(request))
+    return render_to_response('matrr/review/review_overview.html',
+          {'reviews': reviews,
+           'req_request': req_request,
+           'region_requests': region_requests,
+           'tissue_requests': tissue_requests,
+           'sample_requests': sample_requests,
+           'custom_requests': custom_requests,
+           'Availability': Availability,
+           },
+           context_instance=RequestContext(request))
 
 
 @login_required()
@@ -712,11 +724,27 @@ def remove_values_from_list(the_list, other_list):
 @login_required()
 @user_passes_test(lambda u: u.groups.filter(name='Superuser').count(),
                   login_url='/denied/')
-def request_review_accept(request, req_request_id):
+def request_review_process(request, req_request_id):
   # get the tissue request
   req_request = Request.objects.get(req_request_id=req_request_id)
+
+  # check the status
+  accepted_count = 0
+  for tissue_request in req_request.get_requested_tissues():
+    if tissue_request.get_accepted():
+      accepted_count += 1
+  if accepted_count == req_request.get_requested_tissue_count():
+    status = 'Accepted'
+    email_template = 'matrr/review/request_accepted_email.txt'
+  elif accepted_count > 0:
+    status = 'Partially Accepted'
+    email_template = 'matrr/review/request_partially_accepted_email.txt'
+  else:
+    status = 'Rejected'
+    email_template = 'matrr/review/request_rejected_email.txt'
+
   if request.POST:
-    if request.POST['submit'] == 'Accept and Send Email':
+    if request.POST['submit'] == 'Finalize and Send Email':
       # get the submitted form
       form = ReviewResponseForm(data=request.POST, tissue_requests=req_request.get_requested_tissues())
       if form.is_valid():
@@ -731,38 +759,40 @@ def request_review_accept(request, req_request_id):
             unavailable_list.extend(Monkey.objects.filter(mky_id__in=form.cleaned_data[str(tissue_request)]))
             tissue.unavailable_list = unavailable_list
             tissue.save()
-
-        req_request.request_status = RequestStatus.objects.get(rqs_status_name='Accepted')
+        req_request.request_status = RequestStatus.objects.get(rqs_status_name=status)
         req_request.save()
-        messages.success(request, "The tissue request has been accepted.")
+        messages.success(request, "The tissue request has been processed.")
         # Email subject *must not* contain newlines
         subject = ''.join(form.cleaned_data['subject'].splitlines())
         send_mail(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email] )
         messages.success(request, str(req_request.user.username) + " was sent an email informing him/her that the request was accepted.")
         return redirect('/reviews_overviews/')
       else:
-        return render_to_response('matrr/review/accept.html',
+        return render_to_response('matrr/review/process.html',
                                   {'form': form,
                                    'req_request': req_request,},
                                   context_instance=RequestContext(request))
     else:
-      messages.info(request, "The tissue request has not been accepted.  No email was sent")
+      messages.info(request, "The tissue request has not been processed.  No email was sent.")
       return redirect('/reviews_overviews/')
   else:
     # get the subject
-    subject = render_to_string('matrr/review/request_accepted_email_subject.txt')
+    subject = render_to_string('matrr/review/request_email_subject.txt',
+                                {'status': status})
     # Email subject *must not* contain newlines
     subject = ''.join(subject.splitlines())
     request_url = settings.SITE_ROOT + '/orders/' + str(req_request.req_request_id) + '/'
-    body = render_to_string('matrr/review/request_accepted_email.txt',
-                      {'request_url': request_url})
+    body = render_to_string(email_template,
+                      {'request_url': request_url,
+                       'req_request': req_request})
     form = ReviewResponseForm( tissue_requests=req_request.get_requested_tissues(),
                               initial={'subject': subject, 'body': body})
-    return render_to_response('matrr/review/accept.html',
+    return render_to_response('matrr/review/process.html',
                               {'form': form,
                                'req_request': req_request,
                                'Availability': Availability,},
                               context_instance=RequestContext(request))
+
 
 def contact_us(request):
   if request.POST:
@@ -791,48 +821,6 @@ def contact_us(request):
                               {'form': form},
                               context_instance=RequestContext(request))
 
-@login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Superuser').count(),
-                  login_url='/denied/')
-def request_review_reject(request, req_request_id):
-  # get the tissue request
-  req_request = Request.objects.get(req_request_id=req_request_id)
-  if request.POST:
-    if request.POST['submit'] == 'Reject and Send Email':
-      # get the submitted form
-      form = ReviewResponseForm(data=request.POST)
-      if form.is_valid():
-        req_request.request_status = RequestStatus.objects.get(rqs_status_name='Rejected')
-        req_request.save()
-        messages.success(request, "The tissue request has been rejected.")
-        # Email subject *must not* contain newlines
-        subject = ''.join(form.cleaned_data['subject'].splitlines())
-        send_mail(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email] )
-        messages.success(request, str(req_request.user.username) + " was sent an email informing him/her that the request was rejected.")
-        return redirect('/reviews_overviews/')
-      else:
-        return render_to_response('matrr/review/reject.html',
-                                  {'form': form,
-                                   'req_request': req_request,},
-                                  context_instance=RequestContext(request))
-    else:
-      messages.info(request, "The tissue request has not been rejected.  No email was sent")
-      return redirect('/reviews_overviews/')
-  else:
-    # get the subject
-    subject = render_to_string('matrr/review/request_rejected_email_subject.txt')
-    # Email subject *must not* contain newlines
-    subject = ''.join(subject.splitlines())
-    request_url = settings.SITE_ROOT + '/orders/' + str(req_request.req_request_id) + '/'
-    body = render_to_string('matrr/review/request_rejected_email.txt',
-                      {'request_url': request_url})
-    data = {'subject': subject,
-            'body': body}
-    form = ReviewResponseForm(data=data)
-    return render_to_response('matrr/review/reject.html',
-                              {'form': form,
-                               'req_request': req_request,},
-                              context_instance=RequestContext(request))
 
 @login_required()
 @user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or \
@@ -841,7 +829,8 @@ def request_review_reject(request, req_request_id):
                   login_url='/denied/')
 def shipping_overview(request):
   # get the tissue requests that have been accepted
-  accepted_requests = Request.objects.filter(request_status = RequestStatus.objects.get(rqs_status_name='Accepted'))
+  accepted_requests = Request.objects.filter(request_status__in =
+        RequestStatus.objects.filter(rqs_status_name__in=('Accepted', 'Partially Accepted')))
   # get the tissue requests that have been shipped
   shipped_requests = Request.objects.filter(request_status = RequestStatus.objects.get(rqs_status_name='Shipped'))
 
@@ -894,7 +883,8 @@ def build_shipment(request, req_request_id):
   # get the request
   req_request = Request.objects.get(req_request_id = req_request_id)
   # do a sanity check
-  if req_request.request_status.rqs_status_name != 'Accepted':
+  if req_request.request_status.rqs_status_name != 'Accepted' and \
+     req_request.request_status.rqs_status_name != 'Partially Accepted':
     raise Exception('You cannot create a shipment for a request that has not been accepted (or has already been shipped.')
 
   if Shipment.objects.filter(req_request=req_request).count():

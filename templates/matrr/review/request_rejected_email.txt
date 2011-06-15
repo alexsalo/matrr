@@ -1,5 +1,16 @@
 {% load i18n %}
-{% trans "Your tissue request has been denied.  If you have any questions about why your request has been denied please contact MATRR staff.  Our contact information is provided at http://gleek.ecs.baylor.edu/contact/." %}
+{% trans "Your tissue request has been denied.  If you have any questions about why your request has been denied please contact MATRR staff.  Our contact information is provided at https://gleek.ecs.baylor.edu/contact/." %}
+
+{% trans "The tissues you requested are from cohort " %}{{ req_request.cohort }}.
+
+{% trans "You requested the following tissues:" %}
+{% for tissue_request in req_request.get_requested_tissues %}{% for datum in tissue_request.get_data %}
+{{ datum.0 }}: {{ datum.1 }}{% endfor %}
+{% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
+{% endif %}
+{% trans "Requested Monkeys:" %}
+{% for monkey in tissue_request.monkeys.all %}{{ monkey.mky_real_id }}  {% endfor %}
+{% endfor %}
 
 {% trans "You can view your request at: " %}https://gleek.ecs.baylor.edu{{ request_url }}
 

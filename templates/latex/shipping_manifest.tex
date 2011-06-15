@@ -4,6 +4,7 @@
 
 \usepackage{fullpage}
 \usepackage{multirow}
+\usepackage{longtable}
 
 \begin{document}
 
@@ -27,6 +28,7 @@ Manifest Created On: {{ time }} }
 \section*{Requested Tissues}
 
 {% for tissue_request in req_request.get_requested_tissues %}
+  {% if tissue_request.get_accepted %}
   {% for datum in tissue_request.get_data %}
     {% if forloop.counter == 1 %}
       \subsection*{ {{ datum.0 }}: {{ datum.1 }} }
@@ -40,15 +42,16 @@ Manifest Created On: {{ time }} }
   \subsubsection*{Requested Monkeys}
   \nopagebreak[3]
   \noindent
-  \begin{tabular}{|c|c|c|}
+  \begin{longtable}{|c|c|c|}
   \hline
   {% for monkey in tissue_request.monkeys.all %}
-  Monkey: & {{ monkey.mky_real_id }} & {{ monkey.mky_name }} \\ \hline
+  Monkey: & {{ monkey.mky_real_id }} & {{ monkey.mky_name }} \\* \nopagebreak \hline
   {% with samples=tissue_request.get_tissue|get_stock:monkey %}
     {% if samples.count %}
       {% for sample in samples.all %}
-        Sample Location: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_location }} } \\ \hline
-        Last Updated: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_modified }} } \\ \hline
+        Sample Location: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_location }} } \\* \hline
+        Last Updated: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_modified }} }
+        {% if forloop.last %}\\{% else %}\\{% endif %} \hline
       {% endfor %}
     {% else %}
       \multicolumn{3}{|p{6in}|}{There are no samples for this tissue and monkey in the inventory.
@@ -56,19 +59,20 @@ Manifest Created On: {{ time }} }
     {% endif %}
   {% endwith %}
   {% endfor %}
-  \end{tabular}
+  \end{longtable}
   {% else %}
   \noindent This is a custom request, so there is no inventory data available.
   \nopagebreak
   \subsubsection*{Requested Monkeys}
-  \begin{tabular}{|c|c|c|}
+  \begin{longtable}{|c|c|c|}
   \hline
   {% for monkey in tissue_request.monkeys.all %}
     Monkey: & {{ monkey.mky_real_id }} & {{ monkey.mky_name }} \\ \hline
   {% endfor %}
-  \end{tabular}
+  \end{longtable}
   {% endif %}
   \pagebreak[3]
+  {% endif %}
 {% endfor %}
 
 \end{document}

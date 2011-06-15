@@ -430,6 +430,11 @@ class Request(models.Model, DiffingMixin):
     requests.extend(self.blood_and_genetic_request_set.all())
     requests.extend(self.custom_tissue_request_set.all())
     return requests
+
+  def get_plan_name(self):
+    plan = str(self.req_experimental_plan)
+    plan = plan.replace('experimental_plans/', '', 1)
+    return plan
   
   class Meta:
     db_table = 'req_requests'
@@ -441,22 +446,6 @@ class Request(models.Model, DiffingMixin):
     self.req_modified_date = datetime.now()
     self._previous_status_id = self._original_state['request_status_id']
     super(Request, self).save(force_insert, force_update, using)
-
-
-class RequestRevision(models.Model):
-  rqv_request_revision_id = models.AutoField(primary_key=True)
-  req_request = models.ForeignKey(Request, null=False, related_name='request_revision_set', db_column='req_request_id', editable=False)
-  rqv_version_number = models.IntegerField(null=False, editable=False)
-  rqv_request_date = models.DateTimeField(null=False, editable=False)
-  rqv_experimental_plan = models.FileField(upload_to='experimental_plans/', editable=False)
-  rqv_notes = models.TextField(null=True, editable=False)
-  
-  def __unicode__(self):
-    return 'Request: ' + self.req_request.req_request_id + ' Revision: ' + self.rqv_version_number
-  
-  class Meta:
-    db_table = 'rqv_request_revisions'
-    unique_together = ('req_request', 'rqv_version_number')
 
 
 class TissueRequest(models.Model):
@@ -475,6 +464,8 @@ class TissueRequest(models.Model):
   monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this tissue is requested from.')
+  rtt_accepted = models.NullBooleanField('Accepted', editable=False, default=None, null=True,
+                                     help_text='Checking this box means that you accept this item in the request.')
 
   def __unicode__(self):
     return self.tissue_type.tst_tissue_name + ': ' + self.rtt_fix_type
@@ -512,31 +503,15 @@ class TissueRequest(models.Model):
     label = self.get_tissue().get_name() + '_' + str(self.get_id())
     return replace(lower(label), ' ', '-')
 
+  def get_accepted(self):
+    return self.rtt_accepted
+
+  def set_accepted(self, boolean):
+    self.rtt_accepted = boolean
+
   class Meta:
     db_table = 'rtt_requests_to_tissue_types'
     unique_together = (('req_request', 'tissue_type', 'rtt_fix_type'),)
-
-
-class TissueRequestRevision(models.Model):
-  rtv_tissue_request_id = models.AutoField(primary_key=True)
-  request_revision = models.ForeignKey(RequestRevision, null=False, related_name='tissue_request_revision_set', db_column='rqv_request_revision_id', editable=False)
-  tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_request_revision_set', db_column='tst_type_id', editable=False)
-  rtv_fix_type = models.CharField('Fixation', null=False, blank=False,
-                                  max_length=200, editable=False,)
-  rtv_amount = models.FloatField('Amount', editable=False)
-  unit = models.ForeignKey(Unit, null = False, related_name='+', db_column='unt_unit_id', editable=False, verbose_name='Unit',)
-  rtv_notes = models.TextField('Notes', null=True, editable=False,)
-  monkeys = models.ManyToManyField(Monkey, db_table='mtv_monkeys_to_tissue_request_revisions',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this tissue is requested from.',
-                                 editable=False)
-  
-  def __unicode__(self):
-    return 'Request Revision: ' + self.request_revision.rqv_request_revision_id + \
-           ' Tissue: ' + self.tissue_type.tst_tissue_name
-  
-  class Meta:
-    db_table = 'rtv_request_to_tissue_type_revisions'
 
 
 class BrainBlock(models.Model):
@@ -679,6 +654,8 @@ class BrainRegionRequest(models.Model):
   monkeys = models.ManyToManyField(Monkey, db_table='mbr_monkeys_to_brain_region_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this region is requested from.')
+  rbr_accepted = models.NullBooleanField('Accepted', editable=False, default=None, null=True,
+                                     help_text='Checking this box means that you accept this item in the request.')
   
   def __unicode__(self):
     return str(self.brain_region)
@@ -715,26 +692,15 @@ class BrainRegionRequest(models.Model):
     label = self.get_tissue().get_name() + '_' + str(self.get_id())
     return replace(lower(label), ' ', '-')
 
+  def get_accepted(self):
+    return self.rbr_accepted
+
+  def set_accepted(self, boolean):
+    self.rbr_accepted = boolean
+
   class Meta:
     db_table = 'rbr_requests_to_brain_regions'
     unique_together = ('req_request', 'brain_region')
-
-
-class BrainRegionRequestRevision(models.Model):
-  rbv_revision_id = models.AutoField(primary_key=True)
-  request_revision = models.ForeignKey(RequestRevision, null=False, related_name='brain_region_request_revision_set', db_column='rqv_request_revision_id', editable=False)
-  brain_region = models.ForeignKey(BrainRegion, null=False, related_name='brain_region_request_revision_set', db_column='bbl_block_id', editable=False)
-  brv_notes = models.TextField(null=True, blank=True, editable=False)
-  monkeys = models.ManyToManyField(Monkey, db_table='mrv_monkeys_to_brain_region_request_revisions',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this block is requested from.')
-  
-  def __unicode__(self):
-    return self.request_revision + ': ' + self.brain_region
-  
-  class Meta:
-    db_table = 'rbv_requests_to_brain_regions_revisions'
-    unique_together = ('request_revision', 'brain_region')
 
 
 class BloodAndGenetic(models.Model):
@@ -857,7 +823,9 @@ class BloodAndGeneticRequest(models.Model):
   monkeys = models.ManyToManyField(Monkey, db_table='mgr_monkeys_to_blood_and_genetic_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this region is requested from.')
-  
+  rbg_accepted = models.NullBooleanField('Accepted', editable=False, default=None, null=True,
+                                     help_text='Checking this box means that you accept this item in the request.')
+
   def __unicode__(self):
     return str(self.blood_genetic_item)
 
@@ -893,27 +861,16 @@ class BloodAndGeneticRequest(models.Model):
   def get_html_label(self):
     label = self.get_tissue().get_name() + '_' + str(self.get_id())
     return replace(lower(label), ' ', '-')
+
+  def get_accepted(self):
+    return self.rbg_accepted
+
+  def set_accepted(self, boolean):
+    self.rbg_accepted = boolean
   
   class Meta:
     db_table = 'rbg_requests_to_blood_and_genetics'
     unique_together = ('req_request', 'blood_genetic_item')
-
-
-class BloodAndGeneticRequestRevision(models.Model):
-  grr_id = models.AutoField(primary_key=True)
-  request_revision = models.ForeignKey(RequestRevision, null=False, related_name='blood_and_genetic_request_revision_set', db_column='rqv_request_revision_id', editable=False)
-  blood_genetic_item = models.ForeignKey(BloodAndGenetic, null=False, related_name='blood_and_genetic_request_revision_set', db_column='bag_id', editable=False)
-  grr_notes = models.TextField(null=True, blank=True, editable=False)
-  monkeys = models.ManyToManyField(Monkey, db_table='mgv_monkeys_to_blood_genetic_request_revisions',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this region is requested from.')
-  
-  def __unicode__(self):
-    return self.request_revision + ': ' + self.blood_genetic_item
-  
-  class Meta:
-    db_table = 'grr_requests_to_blood_and_genetic_revisions'
-    unique_together = ('request_revision', 'blood_genetic_item')
 
 
 class CustomTissueRequest(models.Model):
@@ -939,6 +896,8 @@ class CustomTissueRequest(models.Model):
   monkeys = models.ManyToManyField(Monkey, db_table='mcr_monkeys_to_custom_tissue_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this tissue is requested from.')
+  ctr_accepted = models.NullBooleanField('Accepted', editable=False, default=None, null=True,
+                                     help_text='Checking this box means that you accept this item in the request.')
 
   def __unicode__(self):
     return str('Custom Tissue Request')
@@ -976,6 +935,12 @@ class CustomTissueRequest(models.Model):
     label = 'custom_' + str(self.get_id())
     return replace(lower(label), ' ', '-')
 
+  def get_accepted(self):
+    return self.ctr_accepted
+
+  def set_accepted(self, boolean):
+    self.ctr_accepted = boolean
+
   class Meta:
     db_table = 'ctr_custom_tissue_requests'
 
@@ -1011,20 +976,6 @@ class Review(models.Model):
   class Meta:
     db_table = 'rvs_reviews'
     unique_together = ('user', 'req_request')
-
-
-class ReviewRevision(models.Model):
-  rvr_revision_id = models.AutoField(primary_key=True)
-  review = models.ForeignKey(Review, null=False, related_name='review_revision_set', db_column='rvs_review_id', editable=False)
-  request_revision = models.ForeignKey(RequestRevision, null=False, related_name='review_revision_set', db_column='rqv_request_revision_id', editable=False)
-  rvr_notes = models.TextField(null=True, verbose_name='Notes')
-  
-  def __unicode__(self):
-    return str(self.review) + ' ' + str(self.request_revision)
-  
-  class Meta:
-    db_table = 'rvr_review_revisions'
-    unique_together = ('review', 'request_revision')
 
 
 class TissueRequestReview(models.Model):
@@ -1076,25 +1027,6 @@ class TissueRequestReview(models.Model):
     unique_together = ('review', 'tissue_request')
 
 
-class TissueRequestReviewRevision(models.Model):
-  vtv_review_revision_id = models.AutoField(primary_key=True)
-  review_revision = models.ForeignKey(ReviewRevision, null=False, related_name='tissue_request_review_revision_set', db_column='rvr_revision_id', editable=False)
-  tissue_request_revision = models.ForeignKey(TissueRequestRevision, null=False, related_name='tissue_request_review_revision_set', db_column='rtv_tissue_request_id', editable=False)
-  vtv_scientific_merit = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Scientific Merit', 
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vtv_quantity = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Quantity', 
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vtv_priority = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Priority',
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vtv_notes = models.TextField(null=True, blank=True, verbose_name='Notes')
-  
-  def __unicode__(self):
-    return 'ReviewRevision: ' + self.review_revision + ' TissueRequestRevision: ' + self.tissue_request_revision
-    
-  class Meta:
-    db_table = 'vtv_reviews_to_tissue_request_revisions'
-    unique_together = ('review_revision', 'tissue_request_revision')
-
 
 class BrainRegionRequestReview(models.Model):
   vbr_region_request_review_id = models.AutoField(primary_key=True)
@@ -1145,26 +1077,6 @@ class BrainRegionRequestReview(models.Model):
     unique_together = ('review', 'brain_region_request')
 
 
-class BrainRegionRequestReviewRevision(models.Model):
-  vrv_review_revision_id = models.AutoField(primary_key=True)
-  review_revision = models.ForeignKey(ReviewRevision, null=False, related_name='brain_region_request_review_revision_set', db_column='rvr_revision_id', editable=False)
-  brain_region_request_revision = models.ForeignKey(BrainRegionRequestRevision, null=False, related_name='brain_region_request_review_revision_set', db_column='rbv_revision_id', editable=False)
-  vrv_scientific_merit = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Scientific Merit', 
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vrv_quantity = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Quantity', 
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vrv_priority = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Priority',
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vrv_notes = models.TextField(null=True, blank=True, verbose_name='Notes')
-  
-  def __unicode__(self):
-    return 'ReviewRevision: ' + self.review_revision + ' BrainRegionRequestRevision: ' + self.brain_region_request_revision
-    
-  class Meta:
-    db_table = 'vrv_reviews_to_brain_region_request_revisions'
-    unique_together = ('review_revision', 'brain_region_request_revision')
-
-
 class BloodAndGeneticRequestReview(models.Model):
   vbg_blood_genetic_request_review_id = models.AutoField(primary_key=True)
   review = models.ForeignKey(Review, null=False, related_name='blood_and_genetic_request_review_set', db_column='rvs_review_id', editable=False)
@@ -1212,26 +1124,6 @@ class BloodAndGeneticRequestReview(models.Model):
   class Meta:
     db_table = 'vbg_reviews_to_blood_and_genetic_requests'
     unique_together = ('review', 'blood_and_genetic_request')
-
-
-class BloodAndGeneticRequestReviewRevision(models.Model):
-  vgv_review_revision_id = models.AutoField(primary_key=True)
-  review_revision = models.ForeignKey(ReviewRevision, null=False, related_name='blood_genetic_request_review_revision_set', db_column='rvr_revision_id', editable=False)
-  blood_and_genetic_request_revision = models.ForeignKey(BloodAndGeneticRequestRevision, null=False, related_name='blood_genetic_request_review_revision_set', db_column='mrv_id', editable=False)
-  vgv_scientific_merit = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Scientific Merit', 
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vgv_quantity = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Quantity', 
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vgv_priority = models.PositiveSmallIntegerField(null=True, blank=False, verbose_name='Priority',
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vgv_notes = models.TextField(null=True, blank=True, verbose_name='Notes')
-  
-  def __unicode__(self):
-    return 'ReviewRevision: ' + self.review_revision + ' BloodAndGeneticRequestRevision: ' + self.blood_and_genetic_request_revision
-    
-  class Meta:
-    db_table = 'vgv_reviews_to_blood_and_genetic_request_revisions'
-    unique_together = ('review_revision', 'blood_and_genetic_request_revision')
 
 
 class CustomTissueRequestReview(models.Model):
