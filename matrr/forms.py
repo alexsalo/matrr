@@ -63,7 +63,7 @@ class TissueRequestForm(TissueRequestBaseForm):
 
   class Meta:
     model = TissueRequest
-    exclude = ('req_request', 'tissue_type')
+    exclude = ('req_request', 'tissue_type','accepted_monkeys')
     widgets = {'rtt_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
 
 
@@ -164,7 +164,7 @@ class BrainRegionRequestForm(TissueRequestBaseForm):
 
   class Meta:
     model = BrainRegionRequest
-    exclude = ('req_request', 'brain_region')
+    exclude = ('req_request', 'brain_region','accepted_monkeys')
     widgets = {'rbr_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
 
 
@@ -188,7 +188,7 @@ class BloodAndGeneticRequestForm(TissueRequestBaseForm):
 
   class Meta:
     model = BloodAndGeneticRequest
-    exclude = ('req_request', 'blood_genetic_item')
+    exclude = ('req_request', 'blood_genetic_item','accepted_monkeys')
     widgets = {'rbg_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
 
 
@@ -206,7 +206,7 @@ class CustomTissueRequestForm(ModelForm):
 
   class Meta:
     model = CustomTissueRequest
-    exclude = ('req_request',)
+    exclude = ('req_request','accepted_monkeys')
     widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/', tissue=None),
                 'ctr_fix_type': FixTypeSelection(choices=FIX_CHOICES),}
 
@@ -230,3 +230,38 @@ class ReviewResponseForm(Form):
 class ContactUsForm(Form):
   subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 40}))
   body = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 15}))
+
+
+class TissueRequestProcessBaseForm(ModelForm):
+  def __init__(self, *args, **kwargs):
+    super(ModelForm, self).__init__( *args, **kwargs)
+    self.fields['accepted_monkeys'].widget = CheckboxSelectMultipleLink(link_base='/monkeys/',
+                                                                        tissue=self.instance.get_tissue())
+    self.fields['accepted_monkeys'].required = False
+    self.fields['accepted_monkeys'].queryset = self.instance.monkeys.all()
+    # change the help text to match the checkboxes
+    self.fields['accepted_monkeys'].help_text = \
+      trim_help_text( unicode(self.fields['accepted_monkeys'].help_text) )
+
+
+class PeripherialTissueRequestProcessForm(TissueRequestProcessBaseForm):
+  class Meta:
+    model = TissueRequest
+    fields = ('accepted_monkeys',)
+
+
+class BrainRegionRequestProcessForm(TissueRequestProcessBaseForm):
+  class Meta:
+    model = TissueRequest
+    fields = ('accepted_monkeys',)
+
+class BloodGeneticRequestProcessForm(TissueRequestProcessBaseForm):
+  class Meta:
+    model = BloodAndGeneticRequest
+    fields = ('accepted_monkeys',)
+
+class CustomTissueRequestProcessForm(TissueRequestProcessBaseForm):
+  class Meta:
+    model = CustomTissueRequest
+    fields = ('accepted_monkeys',)
+    

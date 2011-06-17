@@ -21,24 +21,38 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
     if value is None: value = []
     has_id = attrs and 'id' in attrs
     final_attrs = self.build_attrs(attrs, name=name)
-    output = [u'<ul style="list-style-type:none;">']
+    output = [u'<fieldset><legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (attrs['id'], name, attrs['id'])]
+    output.append(u'<ul style="list-style-type:none;">')
     # Normalize to strings
     str_values = set([force_unicode(v) for v in value])
     for i, (mky_id, mky_real_id) in enumerate(chain(self.choices, choices)):
       # If an ID attribute was given, add a numeric index as a suffix,
       # so that the checkboxes don't all have the same ID attribute.
       if has_id:
-        final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
+        final_attrs = dict(final_attrs,
+                           id='%s_%s' % (attrs['id'], i),
+                           onclick="check_toggler(document.getElementById('%s'), '%s')" % \
+                                    (attrs['id'], name))
         label_for = u' for="%s"' % final_attrs['id']
       else:
         label_for = ''
 
-      cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
+      cb = CheckboxInput(final_attrs,
+                         check_test=lambda value: value in str_values,)
       mky_id = force_unicode(mky_id)
       rendered_cb = cb.render(name, mky_id)
       mky_real_id = conditional_escape(force_unicode(mky_real_id))
+
+      monkey = Monkey.objects.get(mky_id=mky_id)
+
+      if monkey.mky_drinking:
+        assignment = 'Ethanol'
+      elif monkey.mky_housing_control:
+        assignment = 'Housing Control'
+      else:
+        assignment = 'Control'
+
       if self.tissue:
-        monkey = Monkey.objects.get(mky_id=mky_id)
         availability = self.tissue.get_availability(monkey)
         if availability == Availability.Available:
           availability_str = 'Available'
@@ -47,31 +61,37 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
         elif availability == Availability.Unavailable:
           availability_str = 'Unavailable'
 
-        if monkey.mky_drinking:
-          assignment = 'Ethanol'
-        elif monkey.mky_housing_control:
-          assignment = 'Housing Control'
-        else:
-          assignment = 'Control'
         if availability == Availability.Unavailable:
-          output.append(u'<li><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> Status: %s Assignment: %s</li>' % ( self.link_base,                                                                                                                                                                mky_real_id,                                                                                                                                                                   self.link_base,                                                                                                                                                                mky_real_id,
-                                                                               mky_real_id,
-                                                                               availability_str,
-                                                                               assignment,))
+          output.append(u'<li><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> Status: %s Assignment: %s</li>' % ( self.link_base,
+                                     mky_real_id,
+                                     self.link_base,
+                                     mky_real_id,
+                                     mky_real_id,
+                                     availability_str,
+                                     assignment,))
         else:
           output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>  Status: %s  Assignment: %s</li>' % (label_for,
-                                                                                        rendered_cb,
-                                                                                        self.link_base,
-                                                                                        mky_real_id,
-                                                                                        self.link_base,
-                                                                                        mky_real_id,
-                                                                                        mky_real_id,
-                                                                                        availability_str,
-                                                                                        assignment))
+                                                            rendered_cb,
+                                                            self.link_base,
+                                                            mky_real_id,
+                                                            self.link_base,
+                                                            mky_real_id,
+                                                            mky_real_id,
+                                                            availability_str,
+                                                            assignment))
       else:
         # this is for custom tissue requests
-        output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label></li>' % (label_for, rendered_cb, self.link_base, mky_real_id, self.link_base, mky_real_id, mky_real_id))
-    output.append(u'</ul>')
+        output.append(u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>  Assignment: %s</li>' % (label_for,
+                                                rendered_cb,
+                                                self.link_base,
+                                                mky_real_id,
+                                                self.link_base,
+                                                mky_real_id,
+                                                mky_real_id,
+                                                assignment))
+    output.append(u'</ul></fieldset>')
+    output.append(u"<script type='text/javascript'>check_toggler(document.getElementById('%s'), '%s');</script>" % \
+                                    (attrs['id'], name))
     return mark_safe(u'\n'.join(output))
 
 

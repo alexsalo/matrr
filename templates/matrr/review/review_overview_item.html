@@ -1,3 +1,4 @@
+{% with tissue_request=form.instance %}
 {% for datum in tissue_request.get_data %}
   {% if forloop.counter == 1 %}
     <div class="headline">{{ datum.0 }}: {{ datum.1 }}</div>
@@ -12,20 +13,20 @@
 <div class='clearfix'></div>
 <br style='height: 0.1em; margin-bottom: 0em; padding: 0em;'/>
 
-<div>
-  {% if req_request.request_status.rqs_status_name == 'Submitted' %}
-  <label for='{{ tissue_request.get_html_label }}_accept'>
-    Accept this part of the request?
-  </label>
-  <input type='checkbox' name='{{ tissue_request.get_html_label }}_accept' value={{ tissue_request.get_accepted }}/>
-  {% else %}
-    {% if tissue_request.get_accepted %}
-      This request has been accepted.
-    {% else %}
-      This request has been rejected.
-    {% endif %}
-  {% endif %}
-</div>
+{#<div>#}
+{#  {% if req_request.request_status.rqs_status_name == 'Submitted' %}#}
+{#  <label for='{{ tissue_request.get_html_label }}_accept'>#}
+{#    Accept this part of the request?#}
+{#  </label>#}
+{#  {<input type='checkbox' name='{{ tissue_request.get_html_label }}_accept' value={{ tissue_request.get_accepted }}/>#}
+{#  {% else %}#}
+{#    {% if tissue_request.get_accepted %}#}
+{#      This request has been accepted.#}
+{#    {% else %}#}
+{#      This request has been rejected.#}
+{#    {% endif %}#}
+{#  {% endif %}#}
+{#</div>#}
 <table class='reviews_table'>
   <tr><th>Reviewer:</th>
   {% for review in reviews %}
@@ -97,3 +98,4 @@
 
 </table>
 <br>
+{% endwith %}

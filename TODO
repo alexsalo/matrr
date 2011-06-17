@@ -4,12 +4,9 @@ These items are in no particular order.
 ***CATEGORY: Urgent Changes! **************************************
 *******************************************************************
 
--Add production database.
-  -remove fake users
+-ER diagram
 
--add checkboxes for line-item rejects
- -make plan for this, maybe a mockup by conference call
-
+-Finish 
 
 *******************************************************************
 ***CATEGORY: Model Changes ****************************************

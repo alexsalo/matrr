@@ -15,7 +15,13 @@
   <tr>
       <th>Requested On:</th><td>{{ order.req_request_date }}</td>
       <th>Status:</th>
-    {% if order.request_status|lower != 'submitted'%}<td style='color:green'>{{ order.request_status }}</td>
+    {% if order.request_status|lower != 'submitted' %}
+      {% if order.request_status|lower != 'rejected' %}
+        <td style='color:green'>
+      {% else %}
+        <td style='color:red'>
+      {% endif %}
+      {{ order.request_status }}</td>
     {% else %}<td>{{ order.request_status }}</td>
     {% endif %}
   </tr>
@@ -35,7 +41,6 @@
   
   <div style='margin-top: 20px;'>
     <div class='headline'>Requested Tissues</div>
-    <table class='common_center'>
 
       {% for item in order.brain_region_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}

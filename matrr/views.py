@@ -12,12 +12,13 @@ from django.utils.encoding import smart_str
 from django.contrib import messages
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
+from django.forms.models import modelformset_factory
 from matrr.forms import *
 import math
 from datetime import datetime
 from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
-from pdfgen import *
+from process_latex import process_latex
 
 MEDIA_DIRECTORY = '/web/django_test/media/'
 
@@ -575,12 +576,14 @@ def review_overview_list(request):
          context_instance=RequestContext(request))
 
 def sort_tissues_and_add_quantity_css_value(tissue_requests):
-  for tissue_request in tissue_requests:
+  for tissue_request_form in tissue_requests:
+    tissue_request = tissue_request_form.instance
     tissue_request.sorted_tissue_request_reviews = sorted(tissue_request.get_reviews(),
                                                           key=lambda x: x.review.user.username)
     for tissue_request_review in tissue_request.sorted_tissue_request_reviews:
       if tissue_request_review.is_finished():
         tissue_request_review.quantity_css_value = int(10 - (math.fabs(5-tissue_request_review.get_quantity()) * 2))
+#    tissue_request_form = tissue_request.instance
 
 
 @login_required()
@@ -588,39 +591,75 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 def review_overview(request, req_request_id):
   # get the request being reviewed
   req_request = Request.objects.get(req_request_id=req_request_id)
+  
+  TissueRequestFormSet = modelformset_factory(TissueRequest, form=PeripherialTissueRequestProcessForm, extra=0)
+  RegionRequestFormSet = modelformset_factory(BrainRegionRequest, form=BrainRegionRequestProcessForm, extra=0)
+  SampleRequestFormSet = modelformset_factory(BloodAndGeneticRequest, form=BloodGeneticRequestProcessForm, extra=0)
+  CustomRequestFormSet = modelformset_factory(CustomTissueRequest, form=CustomTissueRequestProcessForm, extra=0)
+
   if request.POST:
-    for tissue_request in req_request.get_requested_tissues():
-      key = tissue_request.get_html_label() + '_accept'
-      if (key) in request.POST and request.POST[key] is not None:
-        # if the key exists, then it was set to 'on', meaning the request was accepted
-        tissue_request.set_accepted(True)
-      else:
-        # the request was rejected
-        tissue_request.set_accepted(False)
-      tissue_request.save()
-    return redirect('/reviews_overviews/' + str(req_request_id) + '/process/')
+    tissue_request_forms = TissueRequestFormSet(request.POST, prefix='peripherial')
+    region_request_forms = RegionRequestFormSet(request.POST, prefix='regions')
+    sample_request_forms = SampleRequestFormSet(request.POST, prefix='samples')
+    custom_request_forms = CustomRequestFormSet(request.POST, prefix='custom')
+
+    if tissue_request_forms.is_valid() and \
+       region_request_forms.is_valid() and \
+       sample_request_forms.is_valid() and \
+       custom_request_forms.is_valid():
+      tissue_request_forms.save()
+      region_request_forms.save()
+      sample_request_forms.save()
+      custom_request_forms.save()
+      return redirect('/reviews_overviews/' + str(req_request_id) + '/process/')
+    else:
+      # get the reviews for the request
+      reviews = list(req_request.review_set.all())
+      reviews.sort(key=lambda x: x.user.username)
+
+      sort_tissues_and_add_quantity_css_value(region_request_forms)
+      sort_tissues_and_add_quantity_css_value(tissue_request_forms)
+      sort_tissues_and_add_quantity_css_value(sample_request_forms)
+      sort_tissues_and_add_quantity_css_value(custom_request_forms)
+
+      return render_to_response('matrr/review/review_overview.html',
+          {'reviews': reviews,
+           'req_request': req_request,
+           'region_requests': region_request_forms,
+           'tissue_requests': tissue_request_forms,
+           'sample_requests': sample_request_forms,
+           'custom_requests': custom_request_forms,
+           'Availability': Availability,
+           },
+           context_instance=RequestContext(request))
+    
   else:
     # get the tissue requests
-    region_requests = req_request.brain_region_request_set.all()
-    tissue_requests = req_request.tissue_request_set.all()
-    sample_requests = req_request.blood_and_genetic_request_set.all()
-    custom_requests = req_request.custom_tissue_request_set.all()
+    tissue_request_forms = TissueRequestFormSet(queryset = req_request.tissue_request_set.all(),
+                                                  prefix='peripherial')
+    region_request_forms = RegionRequestFormSet(queryset = req_request.brain_region_request_set.all(),
+                                                  prefix = 'regions')
+    sample_request_forms = SampleRequestFormSet(queryset = req_request.blood_and_genetic_request_set.all(),
+                                                  prefix = 'samples')
+    custom_request_forms = CustomRequestFormSet(queryset = req_request.custom_tissue_request_set.all(),
+                                                  prefix = 'custom')
+
     # get the reviews for the request
     reviews = list(req_request.review_set.all())
     reviews.sort(key=lambda x: x.user.username)
 
-    sort_tissues_and_add_quantity_css_value(region_requests)
-    sort_tissues_and_add_quantity_css_value(tissue_requests)
-    sort_tissues_and_add_quantity_css_value(sample_requests)
-    sort_tissues_and_add_quantity_css_value(custom_requests)
+    sort_tissues_and_add_quantity_css_value(region_request_forms)
+    sort_tissues_and_add_quantity_css_value(tissue_request_forms)
+    sort_tissues_and_add_quantity_css_value(sample_request_forms)
+    sort_tissues_and_add_quantity_css_value(custom_request_forms)
 
     return render_to_response('matrr/review/review_overview.html',
           {'reviews': reviews,
            'req_request': req_request,
-           'region_requests': region_requests,
-           'tissue_requests': tissue_requests,
-           'sample_requests': sample_requests,
-           'custom_requests': custom_requests,
+           'region_requests': region_request_forms,
+           'tissue_requests': tissue_request_forms,
+           'sample_requests': sample_request_forms,
+           'custom_requests': custom_request_forms,
            'Availability': Availability,
            },
            context_instance=RequestContext(request))
@@ -646,6 +685,7 @@ def order_detail(request, req_request_id):
     raise Http404('This page does not exist.')
   return render_to_response('matrr/order_detail.html',
         {'order': req_request,
+         'Acceptance': Acceptance,
          },
          context_instance=RequestContext(request))
   
@@ -729,14 +769,17 @@ def request_review_process(request, req_request_id):
   req_request = Request.objects.get(req_request_id=req_request_id)
 
   # check the status
-  accepted_count = 0
+  accepted = False
+  partial = False
   for tissue_request in req_request.get_requested_tissues():
-    if tissue_request.get_accepted():
-      accepted_count += 1
-  if accepted_count == req_request.get_requested_tissue_count():
+    if tissue_request.get_accepted() != Acceptance.Rejected:
+      accepted = True
+    if tissue_request.get_accepted() != Acceptance.Accepted:
+      partial = True
+  if accepted and not partial:
     status = 'Accepted'
     email_template = 'matrr/review/request_accepted_email.txt'
-  elif accepted_count > 0:
+  elif accepted and partial:
     status = 'Partially Accepted'
     email_template = 'matrr/review/request_partially_accepted_email.txt'
   else:
@@ -770,7 +813,9 @@ def request_review_process(request, req_request_id):
       else:
         return render_to_response('matrr/review/process.html',
                                   {'form': form,
-                                   'req_request': req_request,},
+                                   'req_request': req_request,
+                                   'Availability': Availability,
+                                   'Acceptance': Acceptance},
                                   context_instance=RequestContext(request))
     else:
       messages.info(request, "The tissue request has not been processed.  No email was sent.")
@@ -784,13 +829,16 @@ def request_review_process(request, req_request_id):
     request_url = settings.SITE_ROOT + '/orders/' + str(req_request.req_request_id) + '/'
     body = render_to_string(email_template,
                       {'request_url': request_url,
-                       'req_request': req_request})
+                       'req_request': req_request,
+                       'Acceptance': Acceptance})
+    body = re.sub('(\r?\n){2,}', '\n\n', body)
     form = ReviewResponseForm( tissue_requests=req_request.get_requested_tissues(),
                               initial={'subject': subject, 'body': body})
     return render_to_response('matrr/review/process.html',
                               {'form': form,
                                'req_request': req_request,
-                               'Availability': Availability,},
+                               'Availability': Availability,
+                               'Acceptance': Acceptance},
                               context_instance=RequestContext(request))
 
 
@@ -899,97 +947,6 @@ def build_shipment(request, req_request_id):
                             'shipment': shipment,},
                             context_instance=RequestContext(request))
 
-
-def add_tissue_request(maker, tissue_request):
-  maker.startKeepTogether()
-  # display the basic info about the tissue request
-  if tissue_request.get_tissue():
-    text = tissue_request.get_tissue().get_name()
-    data = []
-    style = []
-  else:
-    text = 'Custom Request'
-    data = [['Description:', tissue_request.ctr_description]]
-    style = [('SPAN', (1, 0), (-1, 0))]
-  maker.addText(text, 'Heading3', spacing=0)
-  data.append(['Fix Type:', tissue_request.get_fix(), 'Amount:', tissue_request.get_amount()])
-  if tissue_request.has_notes():
-    data.append(['Notes:', tissue_request.get_notes()])
-    style.append(('SPAN', (1, -1), (-1, -1)))
-
-  style.append(('ALIGN', (0,0), (0, -1), 'RIGHT'))
-  style.append(('ALIGN', (2,0), (2, -1), 'RIGHT'))
-
-  maker.addTable(data=data, style=style, align="LEFT", spacing=0.05)
-  # display the monkeys requested and the available tissues for each monkey
-  maker.addText('Requested Monkeys', 'Heading4', 0)
-  for monkey in tissue_request.monkeys.all():
-    data = [['ID:', monkey.mky_real_id, 'Name:', monkey.mky_name]]
-    style = [('ALIGN', (0,0), (0, 0), 'RIGHT'),
-             ('ALIGN', (2,0), (2, 0), 'RIGHT'),
-             ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-             ('BOX', (0,0), (-1,-1), 0.25, colors.black)]
-
-    if tissue_request.get_tissue():
-      # get the available tissues
-      tissue = tissue_request.get_tissue()
-      stock = tissue.get_stock(monkey)
-      if stock.count():
-        i = 1
-        for stock_item in stock.all():
-          data.append([stock_item.get_location()])
-          style.append(('SPAN', (0, i), (-1, i)))
-          i += 1
-      else:
-        data.append(['The tissue is either not harvested yet or it needs to be extracted' \
-                     + ' from another item' ])
-        style.append(('SPAN', (0, -1), (-1, -1)))
-
-    else:
-      # this is a custom request, so the inventory cannot be checked
-      data.append(['No inventory data available for custom requests'])
-      style.append(('SPAN', (0, -1), (-1, -1)))
-
-    maker.addTable(data=data, style=style, align="LEFT", spacing=0)
-  maker.endKeepTogether()
-  maker.addSpace(0.1)
-
-
-def make_shipping_manifest(request, req_request_id):
-
-  req_request = Request.objects.get(req_request_id=req_request_id)
-
-  #Create the HttpResponse object with the appropriate PDF headers.
-  response = HttpResponse(mimetype='application/pdf')
-  response['Content-Disposition'] = 'attachment; filename=manifest-' + \
-                                    str(req_request.user) + '-' + \
-                                    str(req_request.cohort) + '.pdf'
-  account = req_request.user.account
-  maker = PdfMaker(title="Shipping Manifest", subtitle=str(req_request.user) + ' ' + str(req_request.cohort))
-  request_info = [['Requesting User:', str(req_request.user), 'Requested On:',
-                        str(req_request.req_request_date) ],
-                       ['Cohort:', str(req_request.cohort)],
-                       ['Project Title:', req_request.req_project_title],
-                       ['Motivation:', req_request.req_reason],
-                       ['Notes:', req_request.req_notes],
-                       ['Shipped To:', account.act_shipping_name],
-                       ['Address:', account.act_address1],
-                       ['', account.act_address2],
-                       ['', u'%s, %s %s' %(account.act_city, account.act_state, account.act_zip)],
-                       ['Country:', account.act_country],
-                       ['FedEx Number:', account.act_fedex],]
-  style = [('ALIGN', (0,0), (0, -1), 'RIGHT'),
-           ('SPAN', (2, 3), (-1, 3)),
-           ('SPAN', (2, 4), (-1, 4)),
-           ('SPAN', (2, 5), (-1, 5))]
-  maker.addTable(data=request_info, style=style)
-  maker.addText('<u><b>Requested Tissues</b></u>', style='Heading1', spacing=0.1)
-  for tissue_request in req_request.get_requested_tissues():
-    add_tissue_request(maker, tissue_request)
-  return maker.createPdf(file=response)
-
-
-from process_latex import process_latex
 
 def make_shipping_manifest_latex(request, req_request_id):
   req_request = Request.objects.get(req_request_id=req_request_id)

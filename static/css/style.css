@@ -481,6 +481,10 @@ table.common_center, table.common_right {
     padding: 10px;
 }
 
+table.monkey_table td {
+  min-width: 50px;
+}
+
 table.three_column td{
     width: 25%;
 }

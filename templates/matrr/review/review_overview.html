@@ -3,6 +3,7 @@
 {% block extra_js %}
 {{ block.super }}
 <script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -52,11 +53,17 @@
 </div>
 
 <br>
+{{ tissue_requests.management_form }}
+{{ region_requests.management_form }}
+{{ sample_requests.management_form }}
+{{ custom_requests.management_form }}
   {% for tissue_request in region_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
+    {{ form }}
   {% endfor %}
-  {% for tissue_request in tissue_requests %}
+  {% for form in tissue_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
+    {{ form }}
   {% endfor %}
   {% for tissue_request in sample_requests %}
     {% include 'matrr/review/review_overview_item.html' %}

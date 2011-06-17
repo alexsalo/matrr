@@ -6,6 +6,17 @@ from datetime import datetime
 from settings import SITE_ROOT
 from string import lower, replace
 
+class Availability:
+  '''
+  This class is an enumeration for the availability statuses.
+  '''
+  Available, In_Stock, Unavailable = range(3)
+
+class Acceptance:
+  '''
+  This class is an enumeration for the acceptance statuses.
+  '''
+  Rejected, Partially_Accepted, Accepted = range(3)
 
 class DiffingMixin(object):
   '''
@@ -263,10 +274,6 @@ class RequestStatus(models.Model):
     db_table = 'rqs_request_statuses'
 
 
-class Availability:
-    Available, In_Stock, Unavailable = range(3)
-
-
 class TissueType(models.Model):
   tst_type_id = models.AutoField('ID', primary_key=True)
   tst_tissue_name = models.CharField('Name', max_length=100, unique=True, null=False,
@@ -464,8 +471,10 @@ class TissueRequest(models.Model):
   monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this tissue is requested from.')
-  rtt_accepted = models.NullBooleanField('Accepted', editable=False, default=None, null=True,
-                                     help_text='Checking this box means that you accept this item in the request.')
+  accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_accepted_monkeys_to_tissue_requests',
+                                 verbose_name='Accepted Monkeys',
+                                 related_name='accepted_tissue_request_set',
+                                 help_text='The accepted monkeys for this request.')
 
   def __unicode__(self):
     return self.tissue_type.tst_tissue_name + ': ' + self.rtt_fix_type
@@ -504,10 +513,17 @@ class TissueRequest(models.Model):
     return replace(lower(label), ' ', '-')
 
   def get_accepted(self):
-    return self.rtt_accepted
+    count = self.accepted_monkeys.count()
+    if count > 0:
+      if count == self.monkeys.count():
+        return Acceptance.Accepted
+      else:
+        return Acceptance.Partially_Accepted
+    else:
+      return Acceptance.Rejected
 
-  def set_accepted(self, boolean):
-    self.rtt_accepted = boolean
+  def get_rejected_monkeys(self):
+    return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
 
   class Meta:
     db_table = 'rtt_requests_to_tissue_types'
@@ -654,8 +670,10 @@ class BrainRegionRequest(models.Model):
   monkeys = models.ManyToManyField(Monkey, db_table='mbr_monkeys_to_brain_region_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this region is requested from.')
-  rbr_accepted = models.NullBooleanField('Accepted', editable=False, default=None, null=True,
-                                     help_text='Checking this box means that you accept this item in the request.')
+  accepted_monkeys = models.ManyToManyField(Monkey, db_table='abr_accepted_monkeys_to_brain_region_requests',
+                                 verbose_name='Accepted Monkeys',
+                                 related_name='accepted_brain_region_request_set',
+                                 help_text='The accepted monkeys for this request.')
   
   def __unicode__(self):
     return str(self.brain_region)
@@ -693,10 +711,17 @@ class BrainRegionRequest(models.Model):
     return replace(lower(label), ' ', '-')
 
   def get_accepted(self):
-    return self.rbr_accepted
+    count = self.accepted_monkeys.count()
+    if count > 0:
+      if count == self.monkeys.count():
+        return Acceptance.Accepted
+      else:
+        return Acceptance.Partially_Accepted
+    else:
+      return Acceptance.Rejected
 
-  def set_accepted(self, boolean):
-    self.rbr_accepted = boolean
+  def get_rejected_monkeys(self):
+    return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
 
   class Meta:
     db_table = 'rbr_requests_to_brain_regions'
@@ -823,8 +848,10 @@ class BloodAndGeneticRequest(models.Model):
   monkeys = models.ManyToManyField(Monkey, db_table='mgr_monkeys_to_blood_and_genetic_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this region is requested from.')
-  rbg_accepted = models.NullBooleanField('Accepted', editable=False, default=None, null=True,
-                                     help_text='Checking this box means that you accept this item in the request.')
+  accepted_monkeys = models.ManyToManyField(Monkey, db_table='agr_accepted_monkeys_to_blood_and_genetic_requests',
+                                 verbose_name='Accepted Monkeys',
+                                 related_name='accepted_blood_genetic_request_set',
+                                 help_text='The accepted monkeys for this request.')
 
   def __unicode__(self):
     return str(self.blood_genetic_item)
@@ -863,10 +890,17 @@ class BloodAndGeneticRequest(models.Model):
     return replace(lower(label), ' ', '-')
 
   def get_accepted(self):
-    return self.rbg_accepted
+    count = self.accepted_monkeys.count()
+    if count > 0:
+      if count == self.monkeys.count():
+        return Acceptance.Accepted
+      else:
+        return Acceptance.Partially_Accepted
+    else:
+      return Acceptance.Rejected
 
-  def set_accepted(self, boolean):
-    self.rbg_accepted = boolean
+  def get_rejected_monkeys(self):
+    return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
   
   class Meta:
     db_table = 'rbg_requests_to_blood_and_genetics'
@@ -896,8 +930,10 @@ class CustomTissueRequest(models.Model):
   monkeys = models.ManyToManyField(Monkey, db_table='mcr_monkeys_to_custom_tissue_requests',
                                  verbose_name='Requested Monkeys',
                                  help_text='The monkeys this tissue is requested from.')
-  ctr_accepted = models.NullBooleanField('Accepted', editable=False, default=None, null=True,
-                                     help_text='Checking this box means that you accept this item in the request.')
+  accepted_monkeys = models.ManyToManyField(Monkey, db_table='acr_accepted_monkeys_to_custom_tissue_requests',
+                                 verbose_name='Accepted Monkeys',
+                                 related_name='accepted_custom_request_set',
+                                 help_text='The accepted monkeys for this request.')
 
   def __unicode__(self):
     return str('Custom Tissue Request')
@@ -936,10 +972,17 @@ class CustomTissueRequest(models.Model):
     return replace(lower(label), ' ', '-')
 
   def get_accepted(self):
-    return self.ctr_accepted
+    count = self.accepted_monkeys.count()
+    if count > 0:
+      if count == self.monkeys.count():
+        return Acceptance.Accepted
+      else:
+        return Acceptance.Partially_Accepted
+    else:
+      return Acceptance.Rejected
 
-  def set_accepted(self, boolean):
-    self.ctr_accepted = boolean
+  def get_rejected_monkeys(self):
+    return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
 
   class Meta:
     db_table = 'ctr_custom_tissue_requests'
