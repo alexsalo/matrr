@@ -948,6 +948,11 @@ def build_shipment(request, req_request_id):
                             context_instance=RequestContext(request))
 
 
+@login_required()
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or \
+                            u.groups.filter(name='Committee').count() or \
+                            u.groups.filter(name='Superuser').count(),
+                  login_url='/denied/')
 def make_shipping_manifest_latex(request, req_request_id):
   req_request = Request.objects.get(req_request_id=req_request_id)
 
@@ -964,3 +969,23 @@ def make_shipping_manifest_latex(request, req_request_id):
                          'time': datetime.today(),
                          },
                        outfile=response)
+
+@login_required()
+def order_delete(request, req_request_id):
+  req_request = Request.objects.get(req_request_id=req_request_id)
+  if req_request.user != request.user:
+    # tissue requests can only be deleted by the
+    # user who made the tissue request.
+    raise Http404('This page does not exist.')
+  if request.POST:
+    if request.POST['submit'] == 'yes':
+      req_request.delete()
+      messages.success(request, 'The order was deleted.')
+    else:
+      messages.info(request, 'The order was not deleted.')
+    return redirect('/orders/')
+  else:
+    return render_to_response('matrr/order_delete.html',
+                              {'order': req_request,
+                               'Acceptance': Acceptance,},
+                              context_instance=RequestContext(request))
