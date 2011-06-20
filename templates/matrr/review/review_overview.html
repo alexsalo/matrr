@@ -57,7 +57,7 @@
 {{ region_requests.management_form }}
 {{ sample_requests.management_form }}
 {{ custom_requests.management_form }}
-  {% for tissue_request in region_requests %}
+  {% for form in region_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
     {{ form }}
   {% endfor %}
@@ -65,10 +65,10 @@
     {% include 'matrr/review/review_overview_item.html' %}
     {{ form }}
   {% endfor %}
-  {% for tissue_request in sample_requests %}
+  {% for form in sample_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
   {% endfor %}
-  {% for tissue_request in custom_requests %}
+  {% for form in custom_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
   {% endfor %}
   
