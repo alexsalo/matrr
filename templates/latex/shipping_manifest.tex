@@ -44,7 +44,7 @@ Manifest Created On: {{ time }} }
   \noindent
   \begin{longtable}{|c|c|c|}
   \hline
-  {% for monkey in tissue_request.monkeys.all %}
+  {% for monkey in tissue_request.accepted_monkeys.all %}
   Monkey: & {{ monkey.mky_real_id }} & {{ monkey.mky_name }} \\* \nopagebreak \hline
   {% with samples=tissue_request.get_tissue|get_stock:monkey %}
     {% if samples.count %}
@@ -66,7 +66,7 @@ Manifest Created On: {{ time }} }
   \subsubsection*{Requested Monkeys}
   \begin{longtable}{|c|c|c|}
   \hline
-  {% for monkey in tissue_request.monkeys.all %}
+  {% for monkey in tissue_request.accepted_monkeys.all %}
     Monkey: & {{ monkey.mky_real_id }} & {{ monkey.mky_name }} \\ \hline
   {% endfor %}
   \end{longtable}

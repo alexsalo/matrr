@@ -6,7 +6,6 @@ These items are in no particular order.
 
 -ER diagram
 
--Finish 
 
 *******************************************************************
 ***CATEGORY: Model Changes ****************************************
@@ -29,8 +28,6 @@ brain region is available.
 
 -need a way for a user to cancel a request after it
   was partially accepted.
-
-- use line item veto per tissue and per monkey
 
 *******************************************************************
 ***CATEGORY: UI Changes *******************************************
