@@ -1377,6 +1377,42 @@ class OtherTissueSample(models.Model):
     ordering = ['ots_deleted', '-monkey__mky_real_id', '-ots_description']
 
 
+class Publication(models.Model):
+  id = models.AutoField(primary_key=True)
+  authors = models.TextField('Authors', null=True)
+  title = models.CharField('Title', max_length=200, null=True)
+  journal = models.CharField('Journal', max_length=200, null=True)
+  cohorts = models.ManyToManyField(Cohort, db_table='ptc_publications_to_cohorts',
+                                 verbose_name='Cohorts',
+                                 related_name='publication_set',
+                                 help_text='The cohorts involved in this publication.',
+                                 null=True)
+  published_year = models.CharField('Year Published', max_length=10, null=True)
+  published_month = models.CharField('Month Published', max_length=10, null=True)
+  issue = models.CharField('Issue Number', max_length=20, null=True)
+  volume = models.CharField('Volume', max_length=20, null=True)
+  pmid = models.IntegerField('PubMed ID', unique=True, null=True)
+  pmcid = models.CharField('PubMed Central ID', max_length=20, null=True)
+  isbn = models.IntegerField('ISBN', null=True)
+  abstract = models.TextField('Abstract', null=True)
+  keywords = models.TextField('Keywords', null=True)
+
+  class Meta:
+    db_table = 'pub_publications'
+
+
+class GenBankSequence(models.Model):
+  id = models.AutoField(primary_key=True)
+  accession = models.CharField('Accession Number', max_length=20)
+  cohort = models.ManyToManyField(Cohort, db_table='gtc_genbank_to_cohorts',
+                                 verbose_name='Cohorts',
+                                 related_name='genbank_set',
+                                 help_text='The cohorts involved with this genbank sequence.')
+
+  class Meta:
+    db_table = 'gen_genbank_sequences'
+
+
 # put any signal callbacks down here after the model declarations
 
 # this is a method that should be called after a request is saved.

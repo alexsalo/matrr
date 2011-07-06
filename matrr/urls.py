@@ -46,6 +46,19 @@ urlpatterns += patterns('matrr.views',
         template_name='matrr/available_cohorts.html',
         paginate_by=5,
       ) ),
+  url( r'^cohort/$',
+      ListView.as_view(
+        queryset=Cohort.objects.order_by('coh_cohort_name'),
+        context_object_name='cohort_list',
+        template_name='matrr/upcoming_cohorts.html',
+        paginate_by=5
+      ) ),
+  url( r'^cohort/(?P<pk>\d+)/$',
+      DetailView.as_view(
+        queryset=Cohort.objects,
+        context_object_name='cohort',
+        template_name='matrr/cohort.html',
+      ) ),
   url( r'^upcoming/(?P<pk>\d+)/$',
       DetailView.as_view(
         queryset=Cohort.objects.filter(coh_upcoming=True),
