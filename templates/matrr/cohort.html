@@ -79,5 +79,14 @@ Cohort: {{ cohort.coh_cohort_name }}</div>
 </table>
 </div>
 
+<div>
+  <div class='mini-headline'>
+    Publications
+  </div>
+  {% with publications=cohort.publication_set.all %}
+    {% include 'matrr/publication_table.html' %}
+  {% endwith %}
+</div>
+
 
 {% endblock %}

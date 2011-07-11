@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class='headline'>
+    Publications for cohort: <a href="{{ cohort.get_url }}">{{ cohort.coh_cohort_name }}</a>
+  </div>
+  {% with publications=cohort.publication_set.all %}
+    {% include 'matrr/publication_table.html' %}
+  {% endwith %}
+{% endblock %}

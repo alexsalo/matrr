@@ -1,0 +1,41 @@
+<table>
+  <tr>
+    <th>Title</th>
+    <th>Authors</th>
+    <th>Journal</th>
+    <th>Date</th>
+  </tr>
+  {% for pub in publications|dictsortreversed:"published_year" %}
+  <tr>
+    <td>
+      {% if pub.pmid %}
+        <a href="http://www.ncbi.nlm.nih.gov/pubmed?term={{ pub.pmid }}">
+          {{ pub.title }}
+        </a>
+      {% else %}
+        {{ pub.title }}
+      {% endif %}
+    </td>
+    <td>
+      {{ pub.authors }}
+    </td>
+    <td>
+      {{ pub.journal }}
+      {% if pub.volume %}
+        Volume: {{ pub.volume }}
+      {% endif %}
+      {% if pub.issue %}
+        Issue: {{ pub.issue }}
+      {% endif %}
+    </td>
+    <td>
+      {% if pub.published_month %}
+        {{ pub.published_month }}
+      {% endif %}
+      {% if pub.published_year %}
+        {{ pub.published_year }}
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
