@@ -24,6 +24,7 @@ def add_publications(file):
   for row in input:
     pmid = row[0]
     result = client.service.run_eFetch(id=int(pmid), retmax=1, email='nicholas.soltau@gmail.com')
+    result.cohorts = row[1]
     results.append(result)
 
   for result in results:
@@ -73,7 +74,11 @@ def add_publications(file):
             keywords += qualifier.value
             first2 = False
           keywords += ")"
-    pub = Publication()
+    pub = None
+    if Publication.objects.filter(pmid=medline.PMID.value).count() != 0:
+      pub = Publication.objects.get(pmid=medline.PMID.value)
+    else:
+      pub = Publication()
     if authors is not None:
       pub.authors = authors.encode('utf8')
     if "ArticleTitle" in article.__dict__:
@@ -98,10 +103,13 @@ def add_publications(file):
     pub.save()
     # add the cohorts
     cohorts = []
-    cohort_names = row[1].split(", ")
-    for cohort_name in cohort_names:
-      if cohort_name != "CNSA":
-        cohorts.append(Cohort.objects.get(coh_cohort_name=cohort_name))
+    if result.cohorts and result.cohorts != "":
+      cohort_names = result.cohorts.split(", ")
+      print cohort_names
+      for cohort_name in cohort_names:
+        print cohort_name
+        if cohort_name != "CNSA":
+          cohorts.append(Cohort.objects.get(coh_cohort_name=cohort_name))
     
     pub.cohorts = cohorts
     pub.save()
