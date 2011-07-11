@@ -7,9 +7,8 @@ from suds.sax.text import Text
 import csv
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger('suds.client').setLevel(logging.DEBUG)
-
+logging.basicConfig(level=logging.CRITICAL)
+logging.getLogger('suds.client').setLevel(logging.CRITICAL)
 
 @transaction.commit_on_success
 def add_publications(file):
