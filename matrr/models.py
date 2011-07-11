@@ -1397,6 +1397,9 @@ class Publication(models.Model):
   abstract = models.TextField('Abstract', null=True)
   keywords = models.TextField('Keywords', null=True)
 
+  def __unicode__(self):
+    return str(self.title)
+
   class Meta:
     db_table = 'pub_publications'
 
