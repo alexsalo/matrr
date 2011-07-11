@@ -104,9 +104,7 @@ def add_publications(file):
     cohorts = []
     if result.cohorts and result.cohorts != "":
       cohort_names = result.cohorts.split(", ")
-      print cohort_names
       for cohort_name in cohort_names:
-        print cohort_name
         if cohort_name != "CNSA":
           cohorts.append(Cohort.objects.get(coh_cohort_name=cohort_name))
     
