@@ -250,7 +250,7 @@ if DEVELOPMENT:
   logging.basicConfig(
       level = logging.DEBUG,
       format = '%(asctime)s %(levelname)s %(message)s',
-      filename='/web/mattr.log',
+      filename='/web/matrr.log',
       filemode='a'
   )
 
