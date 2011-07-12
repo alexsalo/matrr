@@ -7,7 +7,7 @@ import os
 path = os.path.dirname( os.path.realpath( __file__ ) )
 
 DEVELOPMENT = TEST = PRODUCTION = False
-if path == '/web/django_test':
+if path == '/web/alpha':
   DEVELOPMENT = True
 elif path == '/web/www/dev':
   TEST = True
@@ -92,7 +92,7 @@ USE_L10N = True
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 if DEVELOPMENT:
-  MEDIA_ROOT = '/web/django_test/media/'
+  MEDIA_ROOT = '/web/alpha/media/'
 elif TEST:
   MEDIA_ROOT = '/web/www/dev/media/'
 elif PRODUCTION:
@@ -124,7 +124,7 @@ if DEVELOPMENT:
       # Put strings here, like "/home/html/static" or "C:/www/django/static".
       # Always use forward slashes, even on Windows.
       # Don't forget to use absolute paths, not relative paths.
-      '/web/django_test/static/',
+      '/web/alpha/static/',
   )
 elif TEST:
   # Additional locations of static files
@@ -140,7 +140,7 @@ elif PRODUCTION:
       # Put strings here, like "/home/html/static" or "C:/www/django/static".
       # Always use forward slashes, even on Windows.
       # Don't forget to use absolute paths, not relative paths.
-      '/web/MATRR/static/',
+      '/web/www/MATRR/static/',
   )
 
 # List of finder classes that know how to find static files in
