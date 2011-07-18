@@ -55,7 +55,6 @@
 <br>
 {{ tissue_requests.management_form }}
 {{ region_requests.management_form }}
-{{ sample_requests.management_form }}
 {{ custom_requests.management_form }}
   {% for form in region_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
@@ -64,9 +63,6 @@
   {% for form in tissue_requests %}
     {% include 'matrr/review/review_overview_item.html' %}
     {{ form }}
-  {% endfor %}
-  {% for form in sample_requests %}
-    {% include 'matrr/review/review_overview_item.html' %}
   {% endfor %}
   {% for form in custom_requests %}
     {% include 'matrr/review/review_overview_item.html' %}

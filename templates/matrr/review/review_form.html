@@ -11,7 +11,7 @@
 {% block title %}Review{% endblock %}
 </div>
 
-<form action='./' method='post'>
+<form action='' method='post'>
 {% csrf_token %}
 <table class='common_right'>
   <tr>
@@ -51,11 +51,6 @@
       {{ field }}
     {% endfor %}
   {% endfor %}
-  {% for tform in form.samples_formset %}
-    {% for field in tform.hidden_fields %}
-      {{ field }}
-    {% endfor %}
-  {% endfor %}
 {% for tform in form.custom_formset %}
     {% for field in tform.hidden_fields %}
       {{ field }}
@@ -67,9 +62,6 @@
   {% include 'matrr/review/review_form_item.html' %}
 {% endfor %}
 {% for tform in form.peripherals_formset %}
-  {% include 'matrr/review/review_form_item.html' %}
-{% endfor %}
-{% for tform in form.samples_formset %}
   {% include 'matrr/review/review_form_item.html' %}
 {% endfor %}
 {% for tform in form.custom_formset %}

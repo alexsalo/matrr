@@ -427,14 +427,12 @@ class Request(models.Model, DiffingMixin):
   def get_requested_tissue_count(self):
     return self.tissue_request_set.count() + \
            self.brain_region_request_set.count() + \
-           self.blood_and_genetic_request_set.count() + \
            self.custom_tissue_request_set.count()
 
   def get_requested_tissues(self):
     requests = list()
     requests.extend(self.tissue_request_set.all())
     requests.extend(self.brain_region_request_set.all())
-    requests.extend(self.blood_and_genetic_request_set.all())
     requests.extend(self.custom_tissue_request_set.all())
     return requests
 
@@ -564,10 +562,14 @@ class BrainRegion(models.Model):
                                           verbose_name='Unavailable For',
                                           related_name='unavailable_brain_region_set',
                                           help_text='The monkeys this brain region is not available for.')
+  bre_in_tube = models.BooleanField("In Tube?", help_text='Is this brain region in a test tube?', null=False)
 
   
   def __unicode__(self):
-    return self.bre_region_name
+    s = self.bre_region_name
+    if self.bre_in_tube:
+      s += " (in tubes)"
+    return s
 
   def get_id(self):
     return self.bre_region_id
@@ -650,6 +652,7 @@ class BrainRegion(models.Model):
   
   class Meta:
     db_table = 'bre_brain_regions'
+    unique_together = (('bre_region_name', 'bre_in_tube'),)
 
 
 class BrainRegionRequest(models.Model):
@@ -726,185 +729,6 @@ class BrainRegionRequest(models.Model):
   class Meta:
     db_table = 'rbr_requests_to_brain_regions'
     unique_together = ('req_request', 'brain_region')
-
-
-class BloodAndGenetic(models.Model):
-  bag_id = models.AutoField(primary_key=True)
-  bag_name = models.CharField('Name', max_length=100, unique=True, null=False,
-                                     help_text='The name of the blood or genetics sample.')
-  bag_description = models.TextField('Notes', null=True, blank=True,
-                               help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
-  bag_count_per_monkey = models.IntegerField('Units per Monkey',
-                                             blank=True,
-                                             null=True,
-                                             help_text='The maximum number of samples that can be harvested from a typical monkey.  Leave this blank if there is no limit.')
-  unavailable_list = models.ManyToManyField(Monkey, db_table='bgu_blood_and_genetics_unavailable',
-                                          verbose_name='Unavailable For',
-                                          related_name='unavailable_blood_and_genetics_set',
-                                          help_text='The monkeys this brain region is not available for.')
-  
-  def __unicode__(self):
-    return self.bag_name
-
-  def get_id(self):
-    return self.bag_id
-
-  def get_name(self):
-    return self.bag_name
-
-  def get_stock(self, monkey):
-    return self.blood_genetic_sample_set.filter(monkey=monkey, bgs_deleted=False)
-
-  def get_cohort_availability(self, cohort):
-    for monkey in cohort.monkey_set.all():
-      status = self.get_availability(monkey)
-      # if the tissue is available for any monkey,
-      # then it is available for the cohort
-      if status == Availability.Available or \
-         status == Availability.In_Stock:
-         return True
-    return False
-
-
-  def get_availability(self, monkey):
-    availability = Availability.Unavailable
-    if monkey in self.unavailable_list.all():
-      return availability
-
-    # get the number of accepted, but not shipped, requests
-    requests = BloodAndGeneticRequest.objects.filter(blood_genetic_item=self,
-                                                      req_request__cohort=monkey.cohort,
-                                                      req_request__request_status=
-                                                      RequestStatus.objects.get(
-                                                        rqs_status_name='Accepted'))
-
-    monkey_requests = list()
-    for request in requests.all():
-      # keep requests that are for this monkey
-      if monkey in request.monkeys.all():
-        monkey_requests.append(request)
-
-    requested = len(monkey_requests)
-
-    if monkey.cohort.coh_upcoming:
-      # if there is a limit to the number of samples,
-      # check if that limit has been reached
-      if self.bag_count_per_monkey and (requested < self.bag_count_per_monkey):
-        availability = Availability.Available
-      elif self.bag_count_per_monkey is None:
-        availability = Availability.Available
-    else:
-      # the tissues have been harvested, so check the inventory
-
-      # get the number of tissues that have been harvested
-      harvested = BloodAndGeneticsSample.objects.filter(monkey=monkey,
-                                                        blood_genetic_item=self,).count()
-      if harvested :
-        # tissues have been harvested, so we should use the inventories to determine if
-        # the tissue is available.
-
-        # get the tissues of this type for this monkey
-        stock = BloodAndGeneticsSample.objects.filter(monkey=monkey,
-                                                      blood_genetic_item=self,
-                                                      bgs_deleted=False).count()
-        # check if the amount of stock exceeds the number of approved requests
-        if requested < stock:
-          # if it does, the tissue is available (and in stock)
-          availability = Availability.In_Stock
-      elif self.bag_count_per_monkey and (requested < self.bag_count_per_monkey):
-        # otherwise check if the limit has been reached
-        availability = Availability.Available
-      elif self.bag_count_per_monkey is None:
-        availability = Availability.Available
-
-    return availability
-
-  def get_pending_request_count(self, monkey):
-    return self.blood_and_genetic_request_set.filter(\
-      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Submitted')).count()
-
-  def get_accepted_request_count(self, monkey):
-    return self.blood_and_genetic_request_set.filter(\
-      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Accepted')).count()
-
-
-  class Meta:
-    db_table = 'bag_blood_and_genetics'
-
-
-class BloodAndGeneticRequest(models.Model):
-  rbg_id = models.AutoField(primary_key=True)
-  req_request = models.ForeignKey(Request, null=False, related_name='blood_and_genetic_request_set', db_column='req_request_id')
-  blood_genetic_item = models.ForeignKey(BloodAndGenetic, null=False, related_name='blood_and_genetic_request_set', db_column='bag_id')
-  rbg_amount = models.FloatField('Amount',
-      help_text='Please enter the amount of tissue you need.')
-  unit = models.ForeignKey(Unit, null = False, related_name='+', db_column='unt_unit_id',
-      help_text='Please select the unit of measure.')
-  rbg_fix_type = models.CharField('Fixation', null=False, blank=False,
-                                  max_length=200,
-      help_text='Please select the appropriate fix type.')
-  rbg_notes = models.TextField('Notes', null=True, blank=True,
-                               help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
-  monkeys = models.ManyToManyField(Monkey, db_table='mgr_monkeys_to_blood_and_genetic_requests',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this region is requested from.')
-  accepted_monkeys = models.ManyToManyField(Monkey, db_table='agr_accepted_monkeys_to_blood_and_genetic_requests',
-                                 verbose_name='Accepted Monkeys',
-                                 related_name='accepted_blood_genetic_request_set',
-                                 help_text='The accepted monkeys for this request.')
-
-  def __unicode__(self):
-    return str(self.blood_genetic_item)
-
-  def get_tissue(self):
-    return self.blood_genetic_item
-
-  def get_id(self):
-    return self.rbg_id
-
-  def has_notes(self):
-    return self.rbg_notes is not None and self.rbg_notes != ''
-
-  def get_notes(self):
-    return self.rbg_notes
-
-  def get_amount(self):
-    return str(self.rbg_amount) + self.unit.unt_unit_name
-
-  def get_fix(self):
-    return self.rbg_fix_type
-
-  def get_data(self):
-    return [['Blood/Genetic Sample', self.blood_genetic_item],
-            ['Fix', self.rbg_fix_type],
-            ['Amount', str(self.rbg_amount) + self.unit.unt_unit_name],]
-
-  def get_type_url(self):
-    return 'samples'
-
-  def get_reviews(self):
-    return self.blood_and_genetic_request_review_set.all()
-
-  def get_html_label(self):
-    label = self.get_tissue().get_name() + '_' + str(self.get_id())
-    return replace(lower(label), ' ', '-')
-
-  def get_accepted(self):
-    count = self.accepted_monkeys.count()
-    if count > 0:
-      if count == self.monkeys.count():
-        return Acceptance.Accepted
-      else:
-        return Acceptance.Partially_Accepted
-    else:
-      return Acceptance.Rejected
-
-  def get_rejected_monkeys(self):
-    return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
-  
-  class Meta:
-    db_table = 'rbg_requests_to_blood_and_genetics'
-    unique_together = ('req_request', 'blood_genetic_item')
 
 
 class CustomTissueRequest(models.Model):
@@ -1013,7 +837,6 @@ class Review(models.Model):
   def is_finished(self):
     return all( tissue_request.is_finished() for tissue_request in TissueRequestReview.objects.filter(review=self.rvs_review_id)) \
     and all( region_request.is_finished() for region_request in BrainRegionRequestReview.objects.filter(review=self.rvs_review_id) ) \
-    and all( sample_request.is_finished() for sample_request in BloodAndGeneticRequestReview.objects.filter(review=self.rvs_review_id) ) \
    and all( custom_request.is_finished() for custom_request in CustomTissueRequestReview.objects.filter(review=self.rvs_review_id) )
   
   class Meta:
@@ -1118,55 +941,6 @@ class BrainRegionRequestReview(models.Model):
   class Meta:
     db_table = 'vbr_reviews_to_brain_region_requests'
     unique_together = ('review', 'brain_region_request')
-
-
-class BloodAndGeneticRequestReview(models.Model):
-  vbg_blood_genetic_request_review_id = models.AutoField(primary_key=True)
-  review = models.ForeignKey(Review, null=False, related_name='blood_and_genetic_request_review_set', db_column='rvs_review_id', editable=False)
-  blood_and_genetic_request = models.ForeignKey(BloodAndGeneticRequest, null=False, related_name='blood_and_genetic_request_review_set', db_column='rbg_id', editable=False)
-  vbg_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
-                                                          choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
-                                                  (8,8), (9,9), (10, 10),),
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vbg_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
-                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
-                                                  (8,8), (9,9), (10, 10),),
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vbg_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
-                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
-                                                  (8,8), (9,9), (10, 10),),
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vbg_notes = models.TextField('Notes', null=True, blank=True,)
-  
-  def __unicode__(self):
-    return 'Review: ' + str(self.review) + ' BloodAndGeneticRequest: ' + str(self.blood_and_genetic_request)
-  
-  def is_finished(self):
-    return self.vbg_scientific_merit is not None and \
-        self.vbg_quantity is not None and \
-        self.vbg_priority is not None
-
-  def get_request(self):
-    return self.blood_and_genetic_request
-
-  def get_merit(self):
-    return self.vbg_scientific_merit
-
-  def get_quantity(self):
-    return self.vbg_quantity
-
-  def get_priority(self):
-    return self.vbg_priority
-
-  def has_notes(self):
-    return self.vbg_notes is not None and self.vbg_notes != ''
-
-  def get_notes(self):
-    return self.vbg_notes
-  
-  class Meta:
-    db_table = 'vbg_reviews_to_blood_and_genetic_requests'
-    unique_together = ('review', 'blood_and_genetic_request')
 
 
 class CustomTissueRequestReview(models.Model):
@@ -1323,34 +1097,6 @@ class BrainRegionSample(models.Model):
     ordering = ['brs_deleted', '-monkey__mky_real_id', '-brain_region__bre_region_name']
 
 
-class BloodAndGeneticsSample(models.Model):
-  bgs_id = models.AutoField(primary_key=True)
-  blood_genetic_item = models.ForeignKey(BloodAndGenetic, db_column='bag_id',
-                                  related_name='blood_genetic_sample_set',
-                                  blank=False, null=False,)
-  monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='blood_genetic_sample_set',
-                             blank=False, null=False)
-  bgs_location = models.CharField('Location of Sample',
-                                  max_length=100,
-                                  help_text='Please enter the location where this sample is stored.')
-  bgs_deleted = models.BooleanField('Removed from Inventory', default=False)
-  bgs_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
-
-  def __unicode__(self):
-    return str(self.monkey) + ' ' + str(self.blood_genetic_item) + ' '  + self.bgs_location
-
-  def get_modified(self):
-    return self.bgs_modified
-
-  def get_location(self):
-    return self.bgs_location
-
-  class Meta:
-    db_table = 'bgs_blood_and_genetics_samples'
-    ordering = ['bgs_deleted', 'monkey__mky_real_id', '-blood_genetic_item__bag_name']
-
-
 class OtherTissueSample(models.Model):
   ots_description = models.TextField('Description',
                                      help_text='Please enter a detailed description of the tissue being shipped.')
@@ -1448,7 +1194,6 @@ def request_post_save(**kwargs):
     # get all the tissue requests for the request
     brain_region_requests = BrainRegionRequest.objects.filter(req_request=req_request.req_request_id)
     peripheral_tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
-    sample_requests = BloodAndGeneticRequest.objects.filter(req_request=req_request.req_request_id)
     custom_requests = CustomTissueRequest.objects.filter(req_request=req_request.req_request_id)
 
     # for each committee member, create a new review for the request
@@ -1460,8 +1205,6 @@ def request_post_save(**kwargs):
         BrainRegionRequestReview(review=review, brain_region_request=tissue_request).save()
       for tissue_request in peripheral_tissue_requests:
         TissueRequestReview(review=review, tissue_request=tissue_request).save()
-      for tissue_request in sample_requests:
-        BloodAndGeneticRequestReview(review=review, blood_and_genetic_request=tissue_request).save()
       for tissue_request in custom_requests:
         CustomTissueRequestReview(review=review, custom_tissue_request=tissue_request).save()
   

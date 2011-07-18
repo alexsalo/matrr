@@ -7,6 +7,7 @@ class TissueAdmin(admin.ModelAdmin):
     models.ManyToManyField: {'widget': admin.widgets.FilteredSelectMultiple("Monkeys", is_stacked=False)},
   }
 
+
 class SampleAdmin(admin.ModelAdmin):
   actions = ['remove_samples_from_inventory',
              'update_inventory_dates']
@@ -50,11 +51,6 @@ class BrainRegionSampleAdmin(SampleAdmin):
   def remove_samples_from_inventory(self, request, queryset):
     queryset.update(brs_deleted=True)
 
-class BloodGeneticsSampleAdmin(SampleAdmin):
-  readonly_fields = ('bgs_modified',)
-
-  def remove_samples_from_inventory(self, request, queryset):
-    queryset.update(bgs_deleted=True)
 
 class OtherTissueSampleAdmin(SampleAdmin):
   readonly_fields = ('ots_modified',)
@@ -62,10 +58,10 @@ class OtherTissueSampleAdmin(SampleAdmin):
   def remove_samples_from_inventory(self, request, queryset):
     queryset.update(ots_deleted=True)
 
+
 admin.site.register(TissueType, TissueAdmin)
 admin.site.register(BrainBlock)
 admin.site.register(BrainRegion, TissueAdmin)
-admin.site.register(BloodAndGenetic, TissueAdmin)
 admin.site.register(Cohort)
 admin.site.register(CohortEvent)
 admin.site.register(EventType)
@@ -79,6 +75,5 @@ admin.site.register(Event)
 admin.site.register(PeripheralTissueSample, PeripheralTissueSampleAdmin)
 admin.site.register(BrainBlockSample, BrainBlockSampleAdmin)
 admin.site.register(BrainRegionSample, BrainRegionSampleAdmin)
-admin.site.register(BloodAndGeneticsSample, BloodGeneticsSampleAdmin)
 admin.site.register(OtherTissueSample, OtherTissueSampleAdmin)
 admin.site.register(Publication)

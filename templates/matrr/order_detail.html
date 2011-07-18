@@ -48,9 +48,6 @@
       {% for item in order.tissue_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}
       {% endfor %}
-      {% for item in order.blood_and_genetic_request_set.all %}
-        {% include 'matrr/order_item_detail.html' %}
-      {% endfor %}
       {% for item in order.custom_tissue_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}
       {% endfor %}

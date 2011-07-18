@@ -168,30 +168,6 @@ class BrainRegionRequestForm(TissueRequestBaseForm):
     widgets = {'rbr_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
 
 
-class BloodAndGeneticRequestForm(TissueRequestBaseForm):
-  def clean(self):
-    super(BloodAndGeneticRequestForm, self).clean()
-    cleaned_data = self.cleaned_data
-
-    if self.req_request and \
-       self.tissue and \
-      (self.instance is None or \
-        self.instance.get_id() is None) \
-      and \
-       (BloodAndGeneticRequest.objects.filter( \
-        req_request=self.req_request, \
-        blood_genetic_item=self.tissue).count() > 0):
-      raise forms.ValidationError("You already have this blood/genetic sample in your cart.")
-
-    # Always return the full collection of cleaned data.
-    return cleaned_data
-
-  class Meta:
-    model = BloodAndGeneticRequest
-    exclude = ('req_request', 'blood_genetic_item','accepted_monkeys')
-    widgets = {'rbg_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
-
-
 class CustomTissueRequestForm(ModelForm):
   def __init__(self, req_request, *args, **kwargs):
     self.instance = None
@@ -255,10 +231,6 @@ class BrainRegionRequestProcessForm(TissueRequestProcessBaseForm):
     model = TissueRequest
     fields = ('accepted_monkeys',)
 
-class BloodGeneticRequestProcessForm(TissueRequestProcessBaseForm):
-  class Meta:
-    model = BloodAndGeneticRequest
-    fields = ('accepted_monkeys',)
 
 class CustomTissueRequestProcessForm(TissueRequestProcessBaseForm):
   class Meta:

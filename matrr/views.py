@@ -1,18 +1,13 @@
 # Create your views here.
-from django.conf import settings
 from django.template import RequestContext
-from django.http import HttpResponse
 from django.views.generic import TemplateView
 from django.http import Http404, HttpResponse
 from django.shortcuts import  render_to_response, redirect
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.utils.encoding import smart_str
 from django.contrib import messages
-from django.contrib.sites.models import Site
 from django.core.mail import send_mail
-from django.forms.models import modelformset_factory
 from matrr.forms import *
 import math
 from datetime import datetime
@@ -20,7 +15,7 @@ from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
 from process_latex import process_latex
 
-MEDIA_DIRECTORY = '/web/django_test/media/'
+MEDIA_DIRECTORY = '/web/alpha/media/'
 
 class MatrrTemplateView( TemplateView ):
   template_name = 'matrr/index.html'
@@ -140,11 +135,6 @@ def tissue_shop_detail_view(request, cohort_id, tissue_model, tissue_id):
     instance = BrainRegionRequest(brain_region=current_tissue,
       req_request=cart_request)
     form_class = BrainRegionRequestForm
-  elif tissue_model == 'samples':
-    current_tissue = BloodAndGenetic.objects.get(bag_id = tissue_id)
-    instance = BloodAndGeneticRequest(blood_genetic_item=current_tissue,
-      req_request=cart_request)
-    form_class = BloodAndGeneticRequestForm
   elif tissue_model == 'peripherals':
     current_tissue = TissueType.objects.get(tst_type_id = tissue_id)
     instance = TissueRequest(tissue_type=current_tissue,
@@ -320,9 +310,6 @@ def cart_item_view(request, tissue_model, tissue_request_id):
   if tissue_model == 'regions':
     form = BrainRegionRequestForm
     cart_item = BrainRegionRequest.objects.get(rbr_region_request_id=tissue_request_id)
-  elif tissue_model == 'samples':
-    form = BloodAndGeneticRequestForm
-    cart_item = BloodAndGeneticRequest.objects.get(rbg_id=tissue_request_id)
   elif tissue_model == 'peripherals':
     form = TissueRequestForm
     cart_item = TissueRequest.objects.get(rtt_tissue_request_id=tissue_request_id)
@@ -384,8 +371,6 @@ def cart_item_delete(request, tissue_model, tissue_request_id):
   cart_item = None
   if tissue_model == 'regions':
     cart_item = BrainRegionRequest.objects.get(rbr_region_request_id=tissue_request_id)
-  elif tissue_model == 'samples':
-    cart_item = BloodAndGeneticRequest.objects.get(rbg_id=tissue_request_id)
   elif tissue_model == 'peripherals':
     cart_item = TissueRequest.objects.get(rtt_tissue_request_id=tissue_request_id)
   if cart_item not in context['cart_items']:
@@ -594,22 +579,18 @@ def review_overview(request, req_request_id):
   
   TissueRequestFormSet = modelformset_factory(TissueRequest, form=PeripherialTissueRequestProcessForm, extra=0)
   RegionRequestFormSet = modelformset_factory(BrainRegionRequest, form=BrainRegionRequestProcessForm, extra=0)
-  SampleRequestFormSet = modelformset_factory(BloodAndGeneticRequest, form=BloodGeneticRequestProcessForm, extra=0)
   CustomRequestFormSet = modelformset_factory(CustomTissueRequest, form=CustomTissueRequestProcessForm, extra=0)
 
   if request.POST:
     tissue_request_forms = TissueRequestFormSet(request.POST, prefix='peripherial')
     region_request_forms = RegionRequestFormSet(request.POST, prefix='regions')
-    sample_request_forms = SampleRequestFormSet(request.POST, prefix='samples')
     custom_request_forms = CustomRequestFormSet(request.POST, prefix='custom')
 
     if tissue_request_forms.is_valid() and \
        region_request_forms.is_valid() and \
-       sample_request_forms.is_valid() and \
        custom_request_forms.is_valid():
       tissue_request_forms.save()
       region_request_forms.save()
-      sample_request_forms.save()
       custom_request_forms.save()
       return redirect('/reviews_overviews/' + str(req_request_id) + '/process/')
     else:
@@ -619,7 +600,6 @@ def review_overview(request, req_request_id):
 
       sort_tissues_and_add_quantity_css_value(region_request_forms)
       sort_tissues_and_add_quantity_css_value(tissue_request_forms)
-      sort_tissues_and_add_quantity_css_value(sample_request_forms)
       sort_tissues_and_add_quantity_css_value(custom_request_forms)
 
       return render_to_response('matrr/review/review_overview.html',
@@ -627,7 +607,6 @@ def review_overview(request, req_request_id):
            'req_request': req_request,
            'region_requests': region_request_forms,
            'tissue_requests': tissue_request_forms,
-           'sample_requests': sample_request_forms,
            'custom_requests': custom_request_forms,
            'Availability': Availability,
            },
@@ -639,8 +618,6 @@ def review_overview(request, req_request_id):
                                                   prefix='peripherial')
     region_request_forms = RegionRequestFormSet(queryset = req_request.brain_region_request_set.all(),
                                                   prefix = 'regions')
-    sample_request_forms = SampleRequestFormSet(queryset = req_request.blood_and_genetic_request_set.all(),
-                                                  prefix = 'samples')
     custom_request_forms = CustomRequestFormSet(queryset = req_request.custom_tissue_request_set.all(),
                                                   prefix = 'custom')
 
@@ -650,7 +627,6 @@ def review_overview(request, req_request_id):
 
     sort_tissues_and_add_quantity_css_value(region_request_forms)
     sort_tissues_and_add_quantity_css_value(tissue_request_forms)
-    sort_tissues_and_add_quantity_css_value(sample_request_forms)
     sort_tissues_and_add_quantity_css_value(custom_request_forms)
 
     return render_to_response('matrr/review/review_overview.html',
@@ -658,7 +634,6 @@ def review_overview(request, req_request_id):
            'req_request': req_request,
            'region_requests': region_request_forms,
            'tissue_requests': tissue_request_forms,
-           'sample_requests': sample_request_forms,
            'custom_requests': custom_request_forms,
            'Availability': Availability,
            },
@@ -719,10 +694,6 @@ def tissue_list(request, tissue_model, cohort_id = None):
     model = BrainRegion
     order = 'bre_region_name'
     title = 'Brain Regions'
-  elif tissue_model == 'samples':
-    model = BloodAndGenetic
-    order = 'bag_name'
-    title = 'Blood or Genetics Samples'
   elif tissue_model == 'peripherals':
     model = TissueType
     order = 'tst_tissue_name'

@@ -101,8 +101,8 @@
 	Welcome {{ user.username }}
 {% endif %}
 </div>
-
 {% endblock %}
+
 {% block cart %}
 {% if user.is_authenticated %}
   {% if cart_items != None %}
@@ -110,6 +110,7 @@
   {% endif %}
 {% endif %}
 {% endblock %}
+
 <div class='sidebar-block'>
 <div class='headline'>
 Quick Links
