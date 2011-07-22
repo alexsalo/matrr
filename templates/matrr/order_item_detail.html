@@ -20,7 +20,7 @@
     </tr>
     <tr>
     {% for monkey in item.monkeys.all %}
-      {% if forloop.counter0|divisibleby:"6"%}
+      {% if forloop.counter0|divisibleby:"6" %}
         </tr><tr>
       {% endif %}
       <td align='center'><a href='{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}'>{{ monkey.mky_real_id }}</a></td>
