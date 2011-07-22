@@ -36,7 +36,7 @@ def load_experiments(file):
       experiment = DrinkingExperiment.objects.get(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2])
     
     # get the MonkeyToDrinkingExperiment object for this row
-    mtd = MonkeyToDrinkingExperiment.objects.get(monkey=Monkey.objects.get(mky_real_id=row[3]), drinking_experiment=drinking_experiment)
+    mtd = MonkeyToDrinkingExperiment(monkey=Monkey.objects.get(mky_real_id=row[3]), drinking_experiment=drinking_experiment)
     
     # add the data to the MonkeyToExperiment object
     if row[4]:
@@ -211,3 +211,4 @@ def load_cohorts(file):
            coh_upcoming=False,
            institution=placeholder,
            coh_species=row[1]).save()
+
