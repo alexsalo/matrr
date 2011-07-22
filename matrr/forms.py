@@ -98,13 +98,6 @@ class ReviewForm(ModelForm):
       can_delete=False,)
 
     self.regions_formset = BrainRegionRequestReviewFormSet(prefix='regions', *args, **kwargs)
-    
-    BloodAndGeneticRequestReviewFormSet = inlineformset_factory(Review,
-      BloodAndGeneticRequestReview,
-      extra=0,
-      can_delete=False,)
-
-    self.samples_formset = BloodAndGeneticRequestReviewFormSet(prefix='samples', *args, **kwargs)
 
     CustomTissueRequestReviewFormSet = inlineformset_factory(Review,
                                                              CustomTissueRequestReview,
@@ -118,7 +111,6 @@ class ReviewForm(ModelForm):
   def is_valid(self):
     return self.peripherals_formset.is_valid() \
       and self.regions_formset.is_valid() \
-      and self.samples_formset.is_valid() \
       and self.custom_formset.is_valid() \
       and super(ReviewForm, self).is_valid()
 
@@ -127,7 +119,6 @@ class ReviewForm(ModelForm):
     super(ReviewForm, self).save(commit)
     self.peripherals_formset.save(commit)
     self.regions_formset.save(commit)
-    self.samples_formset.save(commit)
     self.custom_formset.save(commit)
   
   class Meta:
