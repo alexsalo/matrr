@@ -23,7 +23,6 @@ def load_experiments(file):
   columns = input.next()
   
   for row in input:
-    print row
     # get the monkey
     monkey = Monkey.objects.get(mky_real_id=row[3])
     # create the drinking_experiment if it does not already exist
@@ -33,7 +32,7 @@ def load_experiments(file):
       # saving the drinking_experiment will also create the MonkeyToExperiment objects
     else:
       # otherwise get the existing experiment
-      experiment = DrinkingExperiment.objects.get(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2])
+      drinking_experiment = DrinkingExperiment.objects.get(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2])
     
     # get the MonkeyToDrinkingExperiment object for this row
     mtd = MonkeyToDrinkingExperiment(monkey=Monkey.objects.get(mky_real_id=row[3]), drinking_experiment=drinking_experiment)
@@ -197,7 +196,7 @@ def load_cohorts(file):
 
   placeholder_name = 'Placeholder Institution'
   # check if a placeholder institution exists
-  if Institution.objects.filter(ins_institution_name=placeholder_name).count() == 0:
+  if not Institution.objects.filter(ins_institution_name=placeholder_name).count():
     # add a dummy institution
     placeholder = Institution(ins_institution_name=placeholder_name)
     placeholder.save()
@@ -212,3 +211,175 @@ def load_cohorts(file):
            institution=placeholder,
            coh_species=row[1]).save()
 
+
+@transaction.commit_on_success
+def load_inventory(file, output_file):
+  """
+  This function will load freezer inventories from a csv file.
+  !!!!! It will only load monkeys that are already in the database !!!!!
+  It assumes that the cohorts and monkeys have already been created.
+  It will create tissue categories if they do not already exist.
+  It also assumes the columns are in the following order:
+    0 - Cohort Name -- ignoring this column for now
+    1 - Monkey ID
+    2 - Monkey Name
+    3 - Species
+    4 - Sex
+    5 - Date of Birth
+    6 - Necropsy Date (or necropsy start date)
+    7 - Date/Date Range Start Comment
+    8 - Date Range End
+    9 - Date Range End Comment
+    10 - Age at Necropsy
+    11 - Weight at Necropsy
+    12 - WFU Treatment Codes -- ignoring this column for now
+    13 - Tissue Category
+    14 - Tissue Detail
+    15 - Comments
+    16 - Additional Info for Specific Tissue
+    17 - Shelf
+    18 - Rack
+    19 - Column
+    20 - Box
+    21 - Distributed
+    22 - Reserved
+    23 - Reserved Quantity
+    24 - Samples in Inventory
+    25 - Available samples
+    26 - Freezer
+    27 - Original Box Status -- ignoring for now
+  """
+  input = csv.reader(open( file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+  output = csv.writer(open( output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+  # get the column headers
+  columns = input.next()
+  output.writerow(columns)
+  unused_monkeys = set()
+  monkeys = []
+  regex = re.compile(r'.*distributed.*', re.IGNORECASE)
+  category_regex = re.compile(r'.*brain block.*', re.IGNORECASE)
+  for row in input:
+    if row[1] is None:
+      continue
+
+    monkey_id = row[1]
+    monkey_name = row[2]
+    monkey_birthdate = row[5]
+    necropsy_start_date = row[6]
+    necropsy_start_date_comments = row[7]
+    necropsy_end_date = row[8]
+    necropsy_end_date_comments = row[9]
+    age_at_necropsy = row[10]
+    necropsy_weight = row[11]
+    tissue_category = row[13]
+    tissue_detail = row[14]
+    comments = row[15]
+    additional_info = row[16]
+    shelf = row[17]
+    rack = row[18]
+    column = row[19]
+    box = row[20]
+    distributed = row[21]
+    reserved = row[22]
+    reserved_quantity = row[23]
+    samples_in_inventory = row[24]
+    available_samples = row[25]
+    freezer = row[26]
+    #original_box_status = row[27]
+
+    if Monkey.objects.filter(mky_real_id=monkey_id).count():
+      # if the monkey exists
+      # update it
+      if monkey_id not in monkeys:
+        monkey = Monkey.objects.get(mky_real_id=monkey_id)
+        if monkey_name:
+          monkey.mky_name = monkey_name
+        if monkey_birthdate:
+          match = re.match(r'(\d{2})/(\d{2})/(\d{2})', monkey_birthdate)
+          if int(match.group(2)) < 20:
+            year_prefix = '20'
+          else:
+            year_prefix = '19'
+          monkey.mky_birthdate = year_prefix + match.group(2) + '-' + match.group(0) +  '-' + match.group(1)
+        if necropsy_start_date:
+          monkey.mky_necropsy_start_date = re.sub(r'(\d{2})/(\d{2})/(\d{2})', r'20\3-\1-\2', necropsy_start_date)
+        if necropsy_start_date_comments:
+          monkey.mky_necropsy_start_date_comments = necropsy_start_date_comments
+        if necropsy_end_date:
+          monkey.mky_necropsy_end_date = re.sub(r'(\d{2})/(\d{2})/(\d{2})', r'20\3-\1-\2', necropsy_end_date)
+        if necropsy_end_date_comments:
+          monkey.mky_necropsy_end_date_comments = necropsy_end_date_comments
+        if age_at_necropsy:
+          monkey.mky_age_at_necropsy = age_at_necropsy
+        if necropsy_weight:
+          monkey.mky_weight = necropsy_weight
+        monkey.save()
+        monkeys.append(monkey_id)
+
+      # add the tissue category, type, and sample
+
+      # if the tissue detail includes "distributed", then the tissue is distributed and should not be added
+      if regex.match(tissue_detail):
+        # skip the rest of the loop because the sample has been distributed
+        continue
+
+      # first, get the category
+      if TissueCategory.objects.filter(cat_name=tissue_category).count():
+        # don't bother updating the description, it shouldn't be changing
+        category = TissueCategory.objects.get(cat_name=tissue_category)
+      else:
+        # if the category doesn't exist, create it
+        category = TissueCategory(cat_name=tissue_category, cat_description=comments)
+        if category_regex.match(tissue_category):
+          category.cat_internal = True
+        else:
+          category.cat_internal = False
+        category.save()
+      # get the tissue type
+      if TissueType.objects.filter(tst_tissue_name=tissue_detail, category=category).count():
+        tissue_type = TissueType.objects.get(tst_tissue_name=tissue_detail, category=category)
+      else:
+        # if the tissue type doesn't exist, create it
+        tissue_type = TissueType(tst_tissue_name=tissue_detail, category=category)
+        tissue_type.save()
+
+      # build the location string
+      if shelf and rack and column and box:
+        location = str(int(shelf)) + '-' + str(int(rack)) + '-' + str(int(column)) + '-' + str(int(box))
+      else:
+        location = "None"
+      if TissueSample.objects.filter(tissue_type=tissue_type, monkey=monkey, tss_freezer=freezer, tss_location=location).count():
+        # if the sample already exists, update the counts for it and the location
+        sample = TissueSample.objects.get(tissue_type=tissue_type, monkey=monkey, tss_freezer=freezer, tss_location=location)
+        if location:
+          sample.tss_location = location
+        if freezer:
+          sample.tss_freezer = freezer
+        if reserved_quantity:
+          sample.tss_distributed_count = int(reserved_quantity)
+        if samples_in_inventory:
+          sample.tss_sample_count = int(samples_in_inventory)
+      else:
+        # create the sample
+        sample = TissueSample(tissue_type=tissue_type, monkey=monkey, tss_freezer=freezer, tss_location=location,)
+        if samples_in_inventory:
+          sample.tss_sample_count=samples_in_inventory
+        else:
+          sample.tss_sample_count=1
+        if reserved_quantity:
+          sample.tss_distributed_count=reserved_quantity
+        else:
+          sample.tss_distributed_count=0
+      # save the newly created or updated sample
+      sample.save()
+    else:
+      # if the monkey does not exist,
+      # add the monkey to the list of left out monkeys
+      output.writerow(row)
+      unused_monkeys.add(monkey_id)
+
+  # at the end, we need to print a list of monkey ids that were left out
+  for monkey_id in unused_monkeys:
+    print int(monkey_id)
+  
+  #raise Exception('Just testing') #uncomment for testing purposes

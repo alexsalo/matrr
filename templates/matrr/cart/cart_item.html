@@ -2,11 +2,7 @@
 
 {% block headline %}
   {% block title %}
-{% if cart_item.get_tissue %}
-  {{ cart_item.get_tissue.get_name }}
-{% else %}
-  Custom Tissue Request
-{% endif %}
+    {{ cart_item.get_tissue.get_name }}
   {% endblock %}
 {% endblock %}
 

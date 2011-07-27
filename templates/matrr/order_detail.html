@@ -41,14 +41,7 @@
   
   <div style='margin-top: 20px;'>
     <div class='headline'>Requested Tissues</div>
-
-      {% for item in order.brain_region_request_set.all %}
-        {% include 'matrr/order_item_detail.html' %}
-      {% endfor %}
       {% for item in order.tissue_request_set.all %}
-        {% include 'matrr/order_item_detail.html' %}
-      {% endfor %}
-      {% for item in order.custom_tissue_request_set.all %}
         {% include 'matrr/order_item_detail.html' %}
       {% endfor %}
     </table>

@@ -19,33 +19,22 @@
 <div id="headline">{% block content_title %}Select Tissue Type{% endblock %}</div>
   <br/>
 
-  <div class='clearfix'>
-    <div class='mini-headline'>
-      Brain Regions
-    </div>
-    <div class='table-left'>These are regions of the brain that are collected in tubes.</div>
-    <div class='table-right text-right'><a href='regions/' class='blockLinkButton'>Request Brain Regions</a></div>
-  </div>
-  
-  <div class='clearfix'>
-    <div class='mini-headline'>
-      Peripheral Tissues
-    </div>
-    <div class='table-left'>These are tissues and organs other than the brain.</div>
-    <div class='table-right text-right'><a href='peripherals/' class='blockLinkButton'>Request Peripheral Tissues</a></div>
-  </div>
+  {% for category in categories %}
+    {% if not category.cat_internal %}
+      <div class='clearfix'>
+      <div class='mini-headline'>
+        {{ category.cat_name }}
+      </div>
+      <div class='table-left'>{{ category.cat_description }}</div>
+      <div class='table-right text-right'>
+        <a href='{{ category.cat_name }}/' class='blockLinkButton'>
+          Request {{ category.cat_name }}
+        </a>
+      </div>
+      </div>
+    {% endif %}
+  {% endfor %}
 
-  <div class='clearfix'>
-    <div class='mini-headline'>
-      Custom Tissue Request
-    </div>
-    <div class='table-left'>
-      This is for requesting a tissue that is not listed in the above categories.
-      Please check that the tissue is not listed in another category before using this.
-    </div>
-    <div class='table-right text-right'><a href='custom/' class='blockLinkButton'>Make a Custom Tissue Request</a></div>
-  </div> 
-  
   <br><br>
   
   {% if cart_exists %}

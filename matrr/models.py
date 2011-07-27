@@ -12,11 +12,13 @@ class Availability:
   '''
   Available, In_Stock, Unavailable = range(3)
 
+
 class Acceptance:
   '''
   This class is an enumeration for the acceptance statuses.
   '''
   Rejected, Partially_Accepted, Accepted = range(3)
+
 
 class DiffingMixin(object):
   '''
@@ -146,16 +148,20 @@ class Monkey(models.Model):
                                      help_text='Was this monkey given alcohol?')
   mky_housing_control = models.BooleanField('Housing Control', null=False, default=False,
                                             help_text='Was this monkey part of a housing control group?')
-  mky_necropsy_date = models.DateField('Necropsy Date', null=True, blank=True,
-                                       help_text='Please enter the date the necropsy was performed on.')
+  mky_necropsy_start_date = models.DateField('Necropsy Start Date', null=True, blank=True,
+                                       help_text='Please enter the date the necropsy was performed on (or was started on).')
+  mky_necropsy_start_date_comments = models.TextField('Necropsy Start Date Coments', null=True, blank=True)
+  mky_necropsy_end_date = models.DateField('Necropsy End Date', null=True, blank=True,
+                                       help_text='Please enter the end date of the necropsy.')
+  mky_necropsy_end_date_comments = models.TextField('Necropsy End Date Coments', null=True, blank=True)
   mky_study_complete = models.BooleanField('Complete Study Performed', null=False,
                                            default=False,
                                            help_text='Did this monkey complete all stages of the experiment?')
   mky_stress_model = models.CharField('Stress Model', null=True, blank=True,
                                       max_length=30,
                                       help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
+  mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
   
-    
   def __unicode__(self):
     return str(self.mky_real_id)
   
@@ -166,9 +172,12 @@ class Monkey(models.Model):
 class Mta(models.Model):
   mta_id = models.AutoField(primary_key=True)
   user = models.ForeignKey(User, related_name='mta_set', db_column='usr_id', editable=False, blank=True)
-  mta_date = models.DateField('Date Uploaded', editable=False, blank=True, null=True, help_text='This is the Date that the MTA is uploaded.')
-  mta_title = models.CharField('Title', blank=True, null=False, max_length=25, help_text='Give your uploaded MTA a short unique name to make it easier for you to reference')
-  mta_file = models.FileField(upload_to='mta/', default='', null=False, blank=False, help_text='File to Upload')
+  mta_date = models.DateField('Date Uploaded', editable=False, blank=True, null=True,
+                              help_text='This is the Date that the MTA is uploaded.')
+  mta_title = models.CharField('Title', blank=True, null=False, max_length=25,
+                               help_text='Give your uploaded MTA a short unique name to make it easier for you to reference')
+  mta_file = models.FileField(upload_to='mta/', default='', null=False, blank=False,
+                              help_text='File to Upload')
   
   def __unicode__(self):
     return str(self.mta_id)
@@ -184,15 +193,18 @@ class Mta(models.Model):
     
 
 class Account(models.Model):
-  user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id', editable=False, blank=True, primary_key=True)
-  act_shipping_name = models.CharField(max_length=25, null=True, blank=True, help_text="Your shipping name is required because it may be different from your username.")
+  user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
+                              editable=False, blank=True, primary_key=True)
+  act_shipping_name = models.CharField(max_length=25, null=True, blank=True,
+                                       help_text="Your shipping name is required because it may be different from your username.")
   act_address1 = models.CharField(max_length=50, null=True, blank=True)
   act_address2 = models.CharField(max_length=50, null=True, blank=True)
   act_city = models.CharField(max_length=25, null=True, blank=True)
   act_state = models.CharField(max_length=2, null=True, blank=True)
   act_zip = models.CharField(max_length=10, null=True, blank=True)
   act_country = models.CharField(max_length=25, null=True, blank=True)
-  act_fedex = models.CharField('FedEx', max_length=9, null=True, blank=True, help_text="Your 9-digit FedEx Account number is required to ship tissues.")
+  act_fedex = models.CharField('FedEx', max_length=9, null=True, blank=True,
+                               help_text="Your 9-digit FedEx Account number is required to ship tissues.")
 
   def __unicode__(self):
     return str(self.user.id)
@@ -206,8 +218,6 @@ class DrinkingExperiment(models.Model):
   cohort = models.ForeignKey(Cohort, related_name='cohort_drinking_experiment_set', db_column='coh_cohort_id',
                              verbose_name='Cohort',
                              help_text='The cohort this experiment was performed on.')
-  #dex_name = models.CharField(max_length=100, unique=True, null=False)
-  #dex_description = models.TextField(null=True, blank=True)
   dex_date = models.DateField('Date',
                               help_text='The date this experiment was conducted.')
   dex_type = models.CharField('Experiment Type', max_length=100,
@@ -215,22 +225,11 @@ class DrinkingExperiment(models.Model):
   dex_notes = models.TextField('Notes', blank=True, null=True,
                                help_text='Use this space to enter anything about the experiment that does not fit in another field.')
   monkeys = models.ManyToManyField(Monkey, through='MonkeyToDrinkingExperiment')
-  
+
   def __unicode__(self):
     return 'Experiment Type: ' + self.dex_type + ' Date: ' + str(self.dex_date) + ' Cohort: ' + str(self.cohort)
-  
-  def save(self, force_insert=False, force_update=False, using=None):
-    is_new = False
-    if self.dex_id is None:
-      is_new = True
-    super(DrinkingExperiment, self).save(force_insert, force_update, using)
-    
-    if is_new:
-      # on INSERT, create new MonkeyToExperiment instances
-      for monkey in self.cohort.monkey_set.all():
-        # create a new MonkeyToExperiment instance for each monkey in the cohort
-        MonkeyToDrinkingExperiment(monkey=monkey, drinking_experiment=self).save()
-  
+
+
   class Meta:
     db_table = 'dex_drinking_experiments'
 
@@ -274,9 +273,32 @@ class RequestStatus(models.Model):
     db_table = 'rqs_request_statuses'
 
 
+class TissueCategory(models.Model):
+  cat_id = models.AutoField('ID', primary_key=True)
+  cat_name = models.CharField('Name', max_length=100, unique=True, null=False,
+                              help_text='The name of the tissue category.')
+  cat_description = models.TextField('Description', null=True, blank=True,
+                                     help_text='A description of the category.')
+  parent_category = models.ForeignKey('self', verbose_name='Parent Category',
+                                      default=None, null=True, blank=True,
+                                      help_text='The parent category of this category.')
+  cat_internal = models.BooleanField('Internal Use Only', default=True, null=False,
+                             help_text='This value determines if tissues in this category can be ordered by users.')
+
+  def __unicode__(self):
+    return self.cat_name
+
+  class Meta:
+    db_table = 'cat_tissue_categories'
+
+
 class TissueType(models.Model):
   tst_type_id = models.AutoField('ID', primary_key=True)
-  tst_tissue_name = models.CharField('Name', max_length=100, unique=True, null=False,
+  category = models.ForeignKey(TissueCategory, verbose_name='Category',
+                               db_column='cat_id',
+                               null=False,
+                               db_index=True)
+  tst_tissue_name = models.CharField('Name', max_length=100, null=False,
                                      help_text='The name of the tissue type.')
   tst_description = models.TextField('Description', null=True,
                                      help_text='The description of the tissue type.')
@@ -288,18 +310,12 @@ class TissueType(models.Model):
                                           verbose_name='Unavailable For',
                                           related_name='unavailable_tissue_type_set',
                                           help_text='The monkeys this tissue type is not available for.')
-  
+  tst_cost = models.FloatField('Cost', default=0.0, null=False, blank=False)
   def __unicode__(self):
     return self.tst_tissue_name
 
-  def get_id(self):
-    return self.tst_type_id
-
-  def get_name(self):
-    return self.tst_tissue_name
-
   def get_stock(self, monkey):
-    return self.peripheral_sample_set.filter(monkey=monkey, pts_deleted=False)
+    return self.tissue_sample_set.filter(monkey=monkey)
 
   def get_cohort_availability(self, cohort):
     for monkey in cohort.monkey_set.all():
@@ -341,18 +357,18 @@ class TissueType(models.Model):
       # the tissues have been harvested, so check the inventory
 
       # get the number of tissues that have been harvested
-      harvested = PeripheralTissueSample.objects.filter(monkey=monkey,
-                                                         tissue_type=self,).count()
-      if harvested:
+      harvested_samples = TissueSample.objects.filter(monkey=monkey,
+                                              tissue_type=self,).all()
+      if len(harvested_samples) > 0:
         # tissues have been harvested, so we should use the inventories to determine if
         # the tissue is available.
 
         # get the tissues of this type for this monkey
-        stock = PeripheralTissueSample.objects.filter(monkey=monkey,
-                                                      tissue_type=self,
-                                                      pts_deleted=False).count()
+        available_count = 0
+        for sample in harvested_samples:
+          available_count += sample.get_available_count()
         # check if the amount of stock exceeds the number of approved requests
-        if requested < stock:
+        if requested < available_count:
           # if it does, the tissue is available (and in stock)
           availability = Availability.In_Stock
       elif self.tst_count_per_monkey and (requested < self.tst_count_per_monkey):
@@ -373,6 +389,7 @@ class TissueType(models.Model):
   
   class Meta:
     db_table = 'tst_tissue_types'
+    unique_together = (('tst_tissue_name', 'category'),)
 
 
 class Unit(models.Model):
@@ -425,25 +442,16 @@ class Request(models.Model, DiffingMixin):
            ' Date: ' + self.req_request_date.strftime("%I:%M%p  %m/%d/%y")
 
   def get_requested_tissue_count(self):
-    return self.tissue_request_set.count() + \
-           self.brain_region_request_set.count() + \
-           self.custom_tissue_request_set.count()
+    return self.tissue_request_set.count()
 
   def get_requested_tissues(self):
-    requests = list()
-    requests.extend(self.tissue_request_set.all())
-    requests.extend(self.brain_region_request_set.all())
-    requests.extend(self.custom_tissue_request_set.all())
-    return requests
+    return self.tissue_request_set.all()
 
   def get_plan_name(self):
     plan = str(self.req_experimental_plan)
     plan = plan.replace('experimental_plans/', '', 1)
     return plan
-  
-  class Meta:
-    db_table = 'req_requests'
-  
+
   def save(self, force_insert=False, force_update=False, using=None):
     if self.request_status.rqs_status_id != self._original_state['request_status_id']\
         and self._original_state['request_status_id'] == RequestStatus.objects.get(rqs_status_name='Cart').rqs_status_id:
@@ -451,6 +459,9 @@ class Request(models.Model, DiffingMixin):
     self.req_modified_date = datetime.now()
     self._previous_status_id = self._original_state['request_status_id']
     super(Request, self).save(force_insert, force_update, using)
+  
+  class Meta:
+    db_table = 'req_requests'
 
 
 class TissueRequest(models.Model):
@@ -460,6 +471,7 @@ class TissueRequest(models.Model):
   rtt_fix_type = models.CharField('Fixation', null=False, blank=False,
                                   max_length=200,
       help_text='Please select the appropriate fix type.')
+  rtt_custom_increment = models.IntegerField('Custom Increment', default=0, editable=False, null=False)
   rtt_amount = models.FloatField('Amount',
       help_text='Please enter the amount of tissue you need.')
   unit = models.ForeignKey(Unit, null = False, related_name='+', db_column='unt_unit_id', 
@@ -479,9 +491,6 @@ class TissueRequest(models.Model):
 
   def get_tissue(self):
     return self.tissue_type
-
-  def get_id(self):
-    return self.rtt_tissue_request_id
   
   def has_notes(self):
     return self.rtt_notes is not None and self.rtt_notes != ''
@@ -496,18 +505,18 @@ class TissueRequest(models.Model):
     return str(self.rtt_amount) + self.unit.unt_unit_name
 
   def get_data(self):
-    return [['Peripheral Tissue', self.tissue_type],
+    return [['Tissue Type', self.tissue_type],
             ['Fix', self.rtt_fix_type],
             ['Amount', str(self.rtt_amount) + self.unit.unt_unit_name]]
 
   def get_type_url(self):
-    return 'peripherals'
+    return self.tissue_type.category
 
   def get_reviews(self):
     return self.tissue_request_review_set.all()
 
   def get_html_label(self):
-    label = self.get_tissue().get_name() + '_' + str(self.get_id())
+    label = self.tissue_type.tst_tissue_name + '_' + str(self.rtt_tissue_request_id)
     return replace(lower(label), ' ', '-')
 
   def get_accepted(self):
@@ -525,291 +534,7 @@ class TissueRequest(models.Model):
 
   class Meta:
     db_table = 'rtt_requests_to_tissue_types'
-    unique_together = (('req_request', 'tissue_type', 'rtt_fix_type'),)
-
-
-class BrainBlock(models.Model):
-  bbl_block_id = models.AutoField(primary_key=True)
-  bbl_block_name = models.CharField('Name', max_length=100, unique=True, null=False,
-                                     help_text='The name of the brain block.')
-  bbl_description = models.TextField('Description', null=True, blank=True,
-                                     help_text='The description of the brain block.')
-  
-  def __unicode__(self):
-    return self.bbl_block_name
-
-  def get_id(self):
-    return self.bbl_block_id
-
-  def get_name(self):
-    return self.bbl_block_name
-  
-  class Meta:
-    db_table = 'bbl_brain_blocks'
-
-
-class BrainRegion(models.Model):
-  bre_region_id = models.AutoField(primary_key=True)
-  bre_region_name = models.CharField('Name', max_length=100, unique=True, null=False,
-                                     help_text='The name of the brain region.')
-  bre_description = models.TextField('Description', null=True, blank=True,
-                               help_text='Please enter a detailed description of the brain region here.')
-  bre_count_per_monkey = models.IntegerField('Units per Monkey',
-                                             blank=True,
-                                             null=True,
-                                             help_text='The maximum number of samples that can be harvested from a typical monkey.  Leave this blank if there is no limit.')
-  unavailable_list = models.ManyToManyField(Monkey, db_table='bru_brain_regions_unavailable',
-                                          verbose_name='Unavailable For',
-                                          related_name='unavailable_brain_region_set',
-                                          help_text='The monkeys this brain region is not available for.')
-  bre_in_tube = models.BooleanField("In Tube?", help_text='Is this brain region in a test tube?', null=False)
-
-  
-  def __unicode__(self):
-    s = self.bre_region_name
-    if self.bre_in_tube:
-      s += " (in tubes)"
-    return s
-
-  def get_id(self):
-    return self.bre_region_id
-
-  def get_name(self):
-    return self.bre_region_name
-
-  def get_stock(self, monkey):
-    return self.region_sample_set.filter(monkey=monkey, brs_deleted=False)
-
-  def get_cohort_availability(self, cohort):
-    for monkey in cohort.monkey_set.all():
-      status = self.get_availability(monkey)
-      # if the tissue is available for any monkey,
-      # then it is available for the cohort
-      if status == Availability.Available or \
-         status == Availability.In_Stock:
-         return True
-    return False
-
-  def get_availability(self, monkey):
-    availability = Availability.Unavailable
-    if monkey in self.unavailable_list.all():
-      return availability
-    
-    # get the number of accepted, but not shipped, requests
-    requests = BrainRegionRequest.objects.filter(brain_region=self,
-                                                      req_request__cohort=monkey.cohort,
-                                                      req_request__request_status=
-                                                      RequestStatus.objects.get(
-                                                        rqs_status_name='Accepted'))
-
-    monkey_requests = list()
-    for request in requests.all():
-      # keep requests that are for this monkey
-      if monkey in request.monkeys.all():
-        monkey_requests.append(request)
-
-    requested = len(monkey_requests)
-    
-    if monkey.cohort.coh_upcoming:
-      # if there is a limit to the number of samples,
-      # check if that limit has been reached
-      if self.bre_count_per_monkey and (requested < self.bre_count_per_monkey):
-        availability = Availability.Available
-      elif self.bre_count_per_monkey is None:
-        availability = Availability.Available
-    else:
-      # the tissues have been harvested, so check the inventory
-
-      # get the number of tissues that have been harvested
-      harvested = BrainRegionSample.objects.filter(monkey=monkey,
-                                                 brain_region=self,).count()
-      if harvested:
-        # tissues have been harvested, so we should use the inventories to determine if
-        # the tissue is available.
-
-        # get the tissues of this type for this monkey
-        stock = BrainRegionSample.objects.filter(monkey=monkey,
-                                                 brain_region=self,
-                                                 brs_deleted=False).count()
-        # check if the amount of stock exceeds the number of approved requests
-        if requested < stock:
-          # if it does, the tissue is available (and in stock)
-          availability = Availability.In_Stock
-      elif self.bre_count_per_monkey and (requested < self.bre_count_per_monkey):
-        # otherwise check if the limit has been reached
-        availability = Availability.Available
-      elif self.bre_count_per_monkey is None:
-        availability = Availability.Available
-    return availability
-
-  def get_pending_request_count(self, monkey):
-    return self.brain_region_request_set.filter(\
-      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Submitted')).count()
-
-  def get_accepted_request_count(self, monkey):
-    return self.brain_region_request_set.filter(\
-      req_request__request_status=RequestStatus.objects.get(rqs_status_name='Accepted')).count()
-  
-  class Meta:
-    db_table = 'bre_brain_regions'
-    unique_together = (('bre_region_name', 'bre_in_tube'),)
-
-
-class BrainRegionRequest(models.Model):
-  rbr_region_request_id = models.AutoField(primary_key=True)
-  req_request = models.ForeignKey(Request,
-                                  null=False,
-                                  related_name='brain_region_request_set',
-                                  db_column='req_request_id')
-  brain_region = models.ForeignKey(BrainRegion,
-                                   null=False,
-                                   related_name='brain_region_request_set',
-                                   db_column='bre_region_id')
-  rbr_fix_type = models.CharField('Fixation', null=False, blank=False,
-                                  max_length=200,
-      help_text='Please select the appropriate fix type.')
-  rbr_notes = models.TextField('Notes', null=True, blank=True,
-                               help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular request.')
-  monkeys = models.ManyToManyField(Monkey, db_table='mbr_monkeys_to_brain_region_requests',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this region is requested from.')
-  accepted_monkeys = models.ManyToManyField(Monkey, db_table='abr_accepted_monkeys_to_brain_region_requests',
-                                 verbose_name='Accepted Monkeys',
-                                 related_name='accepted_brain_region_request_set',
-                                 help_text='The accepted monkeys for this request.')
-  
-  def __unicode__(self):
-    return str(self.brain_region)
-
-  def get_tissue(self):
-    return self.brain_region
-
-  def get_id(self):
-    return self.rbr_region_request_id
-
-  def has_notes(self):
-    return self.rbr_notes is not None and self.rbr_notes != ''
-
-  def get_notes(self):
-    return self.rbr_notes
-
-  def get_amount(self):
-    return 'region'
-
-  def get_fix(self):
-    return self.rbr_fix_type
-
-  def get_data(self):
-    return [['Brain Region', self.brain_region],
-            ['Fix', self.rbr_fix_type],]
-
-  def get_type_url(self):
-    return 'regions'
-
-  def get_reviews(self):
-    return self.brain_region_request_review_set.all()
-
-  def get_html_label(self):
-    label = self.get_tissue().get_name() + '_' + str(self.get_id())
-    return replace(lower(label), ' ', '-')
-
-  def get_accepted(self):
-    count = self.accepted_monkeys.count()
-    if count > 0:
-      if count == self.monkeys.count():
-        return Acceptance.Accepted
-      else:
-        return Acceptance.Partially_Accepted
-    else:
-      return Acceptance.Rejected
-
-  def get_rejected_monkeys(self):
-    return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
-
-  class Meta:
-    db_table = 'rbr_requests_to_brain_regions'
-    unique_together = ('req_request', 'brain_region')
-
-
-class CustomTissueRequest(models.Model):
-  '''
-  This class is for custom tissue requests.
-  It differs from the other request classes by
-  not having a reference to a tissue class.
-  '''
-  ctr_id = models.AutoField(primary_key=True)
-  req_request = models.ForeignKey(Request, null=False, related_name='custom_tissue_request_set', db_column='req_request_id')
-  ctr_description = models.TextField('Detailed Description',
-                                     null=False,
-                                     blank=False,
-                                     help_text='Please enter a detailed description of the tissue you need.  List any special requirements here.')
-  ctr_fix_type = models.CharField('Fixation', null=False, blank=False,
-                                  max_length=200,
-      help_text='Please select the appropriate fix type.')
-  ctr_amount = models.FloatField('Amount',
-      help_text='Please enter the amount of tissue you need.')
-  unit = models.ForeignKey(Unit, null = False, related_name='+', db_column='unt_unit_id',
-      help_text='Please select the unit of measure.')
-
-  monkeys = models.ManyToManyField(Monkey, db_table='mcr_monkeys_to_custom_tissue_requests',
-                                 verbose_name='Requested Monkeys',
-                                 help_text='The monkeys this tissue is requested from.')
-  accepted_monkeys = models.ManyToManyField(Monkey, db_table='acr_accepted_monkeys_to_custom_tissue_requests',
-                                 verbose_name='Accepted Monkeys',
-                                 related_name='accepted_custom_request_set',
-                                 help_text='The accepted monkeys for this request.')
-
-  def __unicode__(self):
-    return str('Custom Tissue Request')
-
-  def get_tissue(self):
-    return None
-
-  def get_id(self):
-    return self.ctr_id
-
-  def has_notes(self):
-    return False
-
-  def get_notes(self):
-    return None
-
-  def get_amount(self):
-    return str(self.ctr_amount) + self.unit.unt_unit_name
-
-  def get_fix(self):
-    return self.ctr_fix_type
-
-  def get_data(self):
-    return [['Custom Tissue Request', self.ctr_description],
-            ['Fix', self.ctr_fix_type],
-            ['Amount', str(self.ctr_amount) + self.unit.unt_unit_name],]
-
-  def get_type_url(self):
-    return 'custom'
-
-  def get_reviews(self):
-    return self.custom_tissue_request_review_set.all()
-
-  def get_html_label(self):
-    label = 'custom_' + str(self.get_id())
-    return replace(lower(label), ' ', '-')
-
-  def get_accepted(self):
-    count = self.accepted_monkeys.count()
-    if count > 0:
-      if count == self.monkeys.count():
-        return Acceptance.Accepted
-      else:
-        return Acceptance.Partially_Accepted
-    else:
-      return Acceptance.Rejected
-
-  def get_rejected_monkeys(self):
-    return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
-
-  class Meta:
-    db_table = 'ctr_custom_tissue_requests'
+    unique_together = (('req_request', 'tissue_type', 'rtt_fix_type', 'rtt_custom_increment'),)
 
 
 class Event(models.Model):
@@ -835,9 +560,7 @@ class Review(models.Model):
     return 'Review of request: <' + str(self.req_request) + '> by: ' + str(self.user)
   
   def is_finished(self):
-    return all( tissue_request.is_finished() for tissue_request in TissueRequestReview.objects.filter(review=self.rvs_review_id)) \
-    and all( region_request.is_finished() for region_request in BrainRegionRequestReview.objects.filter(review=self.rvs_review_id) ) \
-   and all( custom_request.is_finished() for custom_request in CustomTissueRequestReview.objects.filter(review=self.rvs_review_id) )
+    return all( tissue_request.is_finished() for tissue_request in TissueRequestReview.objects.filter(review=self.rvs_review_id))
   
   class Meta:
     db_table = 'rvs_reviews'
@@ -893,109 +616,6 @@ class TissueRequestReview(models.Model):
     unique_together = ('review', 'tissue_request')
 
 
-
-class BrainRegionRequestReview(models.Model):
-  vbr_region_request_review_id = models.AutoField(primary_key=True)
-  review = models.ForeignKey(Review, null=False, related_name='brain_region_request_review_set', db_column='rvs_review_id', editable=False)
-  brain_region_request = models.ForeignKey(BrainRegionRequest, null=False, related_name='brain_region_request_review_set', db_column='rbr_region_request_id', editable=False)
-  vbr_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
-                                                          choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5),
-                                                                   (6,6), (7,7), (8,8), (9,9), (10, 10),),
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vbr_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
-                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
-                                                  (8,8), (9,9), (10, 10),),
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vbr_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
-                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
-                                                  (8,8), (9,9), (10, 10),),
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vbr_notes = models.TextField('Notes', null=True, blank=True,)
-  
-  def __unicode__(self):
-    return 'Review: ' + str(self.review) + ' BrainRegionRequest: ' + str(self.brain_region_request)
-  
-  def is_finished(self):
-    return self.vbr_scientific_merit is not None and \
-        self.vbr_quantity is not None and \
-        self.vbr_priority is not None
-
-  def get_request(self):
-    return self.brain_region_request
-
-  def get_merit(self):
-    return self.vbr_scientific_merit
-
-  def get_quantity(self):
-    return self.vbr_quantity
-
-  def get_priority(self):
-    return self.vbr_priority
-
-  def has_notes(self):
-    return self.vbr_notes is not None and self.vbr_notes != ''
-
-  def get_notes(self):
-    return self.vbr_notes
-
-  class Meta:
-    db_table = 'vbr_reviews_to_brain_region_requests'
-    unique_together = ('review', 'brain_region_request')
-
-
-class CustomTissueRequestReview(models.Model):
-  vct_review_id = models.AutoField(primary_key=True)
-  review = models.ForeignKey(Review, null=False, related_name='custom_tissue_request_review_set', db_column='rvs_review_id', editable=False)
-  custom_tissue_request = models.ForeignKey(CustomTissueRequest,
-                                            null=False,
-                                            related_name='custom_tissue_request_review_set',
-                                            db_column='rbg_id',
-                                            editable=False)
-  vct_scientific_merit = models.PositiveSmallIntegerField('Scientific Merit', null=True, blank=False,
-                                                          choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
-                                                  (8,8), (9,9), (10, 10),),
-      help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-  vct_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
-                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
-                                                  (8,8), (9,9), (10, 10),),
-      help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
-  vct_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
-                                                  choices=((0,0),(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
-                                                  (8,8), (9,9), (10, 10),),
-      help_text='Enter a number between 0 and 10, with 0 being the lowest priority and 10 being the highest.')
-  vct_notes = models.TextField('Notes', null=True, blank=True,)
-
-  def __unicode__(self):
-    return 'Review: ' + str(self.review) + ' Custom Tissue Request'
-
-  def is_finished(self):
-    return self.vct_scientific_merit is not None and \
-        self.vct_quantity is not None and \
-        self.vct_priority is not None
-
-  def get_request(self):
-    return self.custom_tissue_request
-
-  def get_merit(self):
-    return self.vct_scientific_merit
-
-  def get_quantity(self):
-    return self.vct_quantity
-
-  def get_priority(self):
-    return self.vct_priority
-
-  def has_notes(self):
-    return self.vct_notes is not None and self.vct_notes != ''
-
-  def get_notes(self):
-    return self.vct_notes
-
-  class Meta:
-    db_table = 'vct_reviews_to_custom_tissue_requests'
-    unique_together = ('review', 'custom_tissue_request')
-
-
 class Shipment(models.Model):
   shp_shipment_id = models.AutoField(primary_key=True)
   user = models.ForeignKey(User, null=False,
@@ -1013,114 +633,49 @@ class Shipment(models.Model):
   class Meta:
     db_table = 'shp_shipments'
 
-class PeripheralTissueSample(models.Model):
-  pts_id = models.AutoField(primary_key=True)
+
+class TissueSample(models.Model):
+  tss_id = models.AutoField(primary_key=True)
   tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id',
-                                  related_name='peripheral_sample_set',
+                                  related_name='tissue_sample_set',
                                   blank=False, null=False)
   monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='peripheral_sample_set',
+                             related_name='tissue_sample_set',
                              blank=False, null=False)
-  pts_location = models.CharField('Location of Sample',
+  tss_freezer = models.CharField('Freezer Name',
+                                 max_length=100,
+                                 null=False,
+                                 blank=False,
+                                 help_text='Please enter the name of the freezer this sample is in.')
+  tss_location = models.CharField('Location of Sample',
                                   max_length=100,
-                                  help_text='Please enter the location where this sample is stored.')
-  pts_deleted = models.BooleanField('Removed from Inventory', default=False)
-  pts_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
+                                  null=False,
+                                  blank=False,
+                                  help_text='Please enter the location in the freezer where this sample is stored.')
+  tss_details = models.TextField('Details',
+                                  null=True,
+                                  blank=True,
+                                  help_text='Any extras details about this tissue sample.')
+  tss_sample_count = models.IntegerField('Sample Count', null=False)
+  tss_distributed_count = models.IntegerField('Distributed Count', null=False, default=0)
+  tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 
   def get_modified(self):
-    return self.pts_modified
+    return self.tss_modified
 
   def __unicode__(self):
-    return str(self.monkey) + ' ' + str(self.tissue_type) + ' '  + self.pts_location
+    return str(self.monkey) + ' ' + str(self.tissue_type) + ' '  + self.tss_freezer \
+           + ': ' + self.tss_location + ' (' + str(self.get_available_count()) + ')'
 
   def get_location(self):
-    return self.pts_location
+    return self.tss_freezer + ': ' + self.tss_location
+
+  def get_available_count(self):
+    return self.tss_sample_count - self.tss_distributed_count
 
   class Meta:
-    db_table = 'pts_peripheral_tissue_samples'
-    ordering = ['pts_deleted', '-monkey__mky_real_id', '-tissue_type__tst_tissue_name']
-
-
-class BrainBlockSample(models.Model):
-  bbs_id =models.AutoField(primary_key=True)
-  brain_block = models.ForeignKey(BrainBlock, db_column='bbl_block_id',
-                                  related_name='block_sample_set',
-                                  blank=False, null=False,)
-  monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='block_sample_set',
-                             blank=False, null=False)
-  bbs_location = models.CharField('Location of Brain Block',
-                                  max_length=100,
-                                  help_text='Please enter the location where this block is stored.')
-  bbs_deleted = models.BooleanField('Removed from Inventory', default=False)
-  bbs_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
-
-  def __unicode__(self):
-    return str(self.monkey) + ' ' + str(self.brain_block) + ' '  + self.bbs_location
-
-  def get_modified(self):
-    return self.bbs_modified
-
-  def get_location(self):
-    return self.bbs_location
-
-  class Meta:
-    db_table = 'bbs_brain_block_samples'
-    ordering = ['bbs_deleted', '-monkey__mky_real_id', '-brain_block__bbl_block_name']
-
-
-class BrainRegionSample(models.Model):
-  brs_id = models.AutoField(primary_key=True)
-  brain_region = models.ForeignKey(BrainRegion, db_column='bre_region_id',
-                                  related_name='region_sample_set',
-                                  blank=False, null=False,)
-  monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='region_sample_set',
-                             blank=False, null=False)
-  brs_location = models.CharField('Location of Sample',
-                                  max_length=100,
-                                  help_text='Please enter the location where this sample is stored.')
-  brs_deleted = models.BooleanField('Removed from Inventory', default=False)
-  brs_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
-
-  def __unicode__(self):
-    return str(self.monkey) + ' ' + str(self.brain_region) + ' '  + self.brs_location
-
-  def get_modified(self):
-    return self.brs_modified
-
-  def get_location(self):
-    return self.brs_location
-
-  class Meta:
-    db_table = 'brs_brain_region_samples'
-    ordering = ['brs_deleted', '-monkey__mky_real_id', '-brain_region__bre_region_name']
-
-
-class OtherTissueSample(models.Model):
-  ots_description = models.TextField('Description',
-                                     help_text='Please enter a detailed description of the tissue being shipped.')
-  monkey = models.ForeignKey(Monkey, db_column='mky_id',
-                             related_name='other_sample_set',
-                             blank=False, null=False)
-  ots_location = models.CharField('Location of Sample',
-                                  max_length=100,
-                                  help_text='Please enter the location where this sample is stored.')
-  ots_deleted = models.BooleanField('Removed from Inventory', default=False)
-  ots_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
-
-  def __unicode__(self):
-    return str(self.monkey) + ' ' + str(self.ots_description) + ' '  + self.ots_location
-
-  def get_modified(self):
-    return self.ots_modified
-
-  def get_location(self):
-    return self.ots_location
-
-  class Meta:
-    db_table = 'ots_other_tissue_samples'
-    ordering = ['ots_deleted', '-monkey__mky_real_id', '-ots_description']
+    db_table = 'tss_tissue_samples'
+    ordering = ['-monkey__mky_real_id', '-tissue_type__tst_tissue_name']
 
 
 class Publication(models.Model):
@@ -1192,21 +747,15 @@ def request_post_save(**kwargs):
     committee_group = Group.objects.get(name='Committee')
     committee_members = committee_group.user_set.all()
     # get all the tissue requests for the request
-    brain_region_requests = BrainRegionRequest.objects.filter(req_request=req_request.req_request_id)
-    peripheral_tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
-    custom_requests = CustomTissueRequest.objects.filter(req_request=req_request.req_request_id)
+    tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
 
     # for each committee member, create a new review for the request
     for user in committee_members:
       review = Review(req_request=req_request, user=user)
       review.save()
       # create a new TissueRequestReview for each TissueRequest
-      for tissue_request in brain_region_requests:
-        BrainRegionRequestReview(review=review, brain_region_request=tissue_request).save()
-      for tissue_request in peripheral_tissue_requests:
+      for tissue_request in tissue_requests:
         TissueRequestReview(review=review, tissue_request=tissue_request).save()
-      for tissue_request in custom_requests:
-        CustomTissueRequestReview(review=review, custom_tissue_request=tissue_request).save()
   
   req_request._previous_status_id = None
 
@@ -1221,4 +770,3 @@ def user_post_save(**kwargs):
     account = Account(user=user)
     account.save()
 
-  

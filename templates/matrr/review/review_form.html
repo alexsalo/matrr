@@ -37,33 +37,15 @@
 </table>
 
 <div style='display: none'>
-{{ form.regions_formset.management_form }}
-{{ form.peripherals_formset.management_form }}
-{{ form.custom_formset.management_form }}
-  {% for tform in form.regions_formset %}
-    {% for field in tform.hidden_fields %}
-      {{ field }}
-    {% endfor %}
-  {% endfor %}
-  {% for tform in form.peripherals_formset %}
-    {% for field in tform.hidden_fields %}
-      {{ field }}
-    {% endfor %}
-  {% endfor %}
-{% for tform in form.custom_formset %}
+{{ form.tissue_request_formset.management_form }}
+  {% for tform in form.tissue_request_formset %}
     {% for field in tform.hidden_fields %}
       {{ field }}
     {% endfor %}
   {% endfor %}
 </div>
 
-{% for tform in form.regions_formset %}
-  {% include 'matrr/review/review_form_item.html' %}
-{% endfor %}
-{% for tform in form.peripherals_formset %}
-  {% include 'matrr/review/review_form_item.html' %}
-{% endfor %}
-{% for tform in form.custom_formset %}
+{% for tform in form.tissue_request_formset %}
   {% include 'matrr/review/review_form_item.html' %}
 {% endfor %}
 <div>

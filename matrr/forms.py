@@ -18,12 +18,12 @@ def trim_help_text(text):
   return re.sub(r' Hold down .*$', '', text)
 
 
-class TissueRequestBaseForm(ModelForm):
+class TissueRequestForm(ModelForm):
   def __init__(self, req_request, tissue, *args, **kwargs):
     self.instance = None
     self.req_request = req_request
     self.tissue = tissue
-    super(TissueRequestBaseForm, self).__init__(*args, **kwargs)
+    super(TissueRequestForm, self).__init__(*args, **kwargs)
     self.fields['monkeys'].widget = CheckboxSelectMultipleLink(link_base='/monkeys/', tissue=self.tissue)
     self.fields['monkeys'].queryset = \
       self.req_request.cohort.monkey_set.all()
@@ -32,12 +32,7 @@ class TissueRequestBaseForm(ModelForm):
       trim_help_text( unicode(self.fields['monkeys'].help_text) )
 
   def get_request_id(self):
-    return self.instance.get_id()
-
-
-class TissueRequestForm(TissueRequestBaseForm):
-  def __init__(self, req_request, tissue, *args, **kwargs):
-    super(TissueRequestForm, self).__init__(req_request, tissue, *args, **kwargs)
+    return self.instance.rtt_tissue_request_id
 
   def clean(self):
     super(TissueRequestForm, self).clean()
@@ -48,7 +43,7 @@ class TissueRequestForm(TissueRequestBaseForm):
        self.tissue and \
        fix_type and \
       (self.instance is None or \
-       (self.instance.get_id() is not None and\
+       (self.instance.rtt_tissue_request_id is not None and\
       self.instance.rtt_fix_type != fix_type )
       ) \
       and \
@@ -90,36 +85,18 @@ class ReviewForm(ModelForm):
       extra=0, 
       can_delete=False,)
     
-    self.peripherals_formset = TissueRequestReviewFormSet(prefix='peripherals', *args, **kwargs)
-
-    BrainRegionRequestReviewFormSet = inlineformset_factory(Review,
-      BrainRegionRequestReview,
-      extra=0,
-      can_delete=False,)
-
-    self.regions_formset = BrainRegionRequestReviewFormSet(prefix='regions', *args, **kwargs)
-
-    CustomTissueRequestReviewFormSet = inlineformset_factory(Review,
-                                                             CustomTissueRequestReview,
-                                                             extra=0,
-                                                             can_delete=False,)
-
-    self.custom_formset = CustomTissueRequestReviewFormSet(prefix='custom', *args, **kwargs)
+    self.tissue_request_formset = TissueRequestReviewFormSet(prefix='peripherals', *args, **kwargs)
 
     super(ReviewForm, self).__init__(*args, **kwargs)
   
   def is_valid(self):
-    return self.peripherals_formset.is_valid() \
-      and self.regions_formset.is_valid() \
-      and self.custom_formset.is_valid() \
+    return self.tissue_request_formset.is_valid() \
       and super(ReviewForm, self).is_valid()
 
   @transaction.commit_on_success
   def save(self, commit=True):
     super(ReviewForm, self).save(commit)
-    self.peripherals_formset.save(commit)
-    self.regions_formset.save(commit)
-    self.custom_formset.save(commit)
+    self.tissue_request_formset.save(commit)
   
   class Meta:
     model = Review
@@ -133,49 +110,6 @@ class AccountForm(ModelForm):
 class MtaForm(ModelForm):
   class Meta:
     model = Mta
-
-
-class BrainRegionRequestForm(TissueRequestBaseForm):
-  def clean(self):
-    super(BrainRegionRequestForm, self).clean()
-    cleaned_data = self.cleaned_data
-
-    if self.req_request and \
-       self.tissue and \
-       (self.instance is None or \
-        self.instance.get_id() is None) \
-       and \
-       (BrainRegionRequest.objects.filter( \
-        req_request=self.req_request, \
-        brain_region=self.tissue).count() > 0):
-      raise forms.ValidationError("You already have this brain region in your cart.")
-
-    # Always return the full collection of cleaned data.
-    return cleaned_data
-
-  class Meta:
-    model = BrainRegionRequest
-    exclude = ('req_request', 'brain_region','accepted_monkeys')
-    widgets = {'rbr_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
-
-
-class CustomTissueRequestForm(ModelForm):
-  def __init__(self, req_request, *args, **kwargs):
-    self.instance = None
-    self.req_request = req_request
-    super(CustomTissueRequestForm, self).__init__(*args, **kwargs)
-    self.fields['monkeys'].queryset = \
-      self.req_request.cohort.monkey_set.all()
-
-    # change the help text to match the checkboxes
-    self.fields['monkeys'].help_text = \
-      trim_help_text( unicode(self.fields['monkeys'].help_text) )
-
-  class Meta:
-    model = CustomTissueRequest
-    exclude = ('req_request','accepted_monkeys')
-    widgets = { 'monkeys': CheckboxSelectMultipleLink(link_base='/monkeys/', tissue=None),
-                'ctr_fix_type': FixTypeSelection(choices=FIX_CHOICES),}
 
 
 class ReviewResponseForm(Form):
@@ -199,7 +133,7 @@ class ContactUsForm(Form):
   body = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 15}))
 
 
-class TissueRequestProcessBaseForm(ModelForm):
+class TissueRequestProcessForm(ModelForm):
   def __init__(self, *args, **kwargs):
     super(ModelForm, self).__init__( *args, **kwargs)
     self.fields['accepted_monkeys'].widget = CheckboxSelectMultipleLink(link_base='/monkeys/',
@@ -211,20 +145,6 @@ class TissueRequestProcessBaseForm(ModelForm):
       trim_help_text( unicode(self.fields['accepted_monkeys'].help_text) )
 
 
-class PeripherialTissueRequestProcessForm(TissueRequestProcessBaseForm):
   class Meta:
     model = TissueRequest
     fields = ('accepted_monkeys',)
-
-
-class BrainRegionRequestProcessForm(TissueRequestProcessBaseForm):
-  class Meta:
-    model = TissueRequest
-    fields = ('accepted_monkeys',)
-
-
-class CustomTissueRequestProcessForm(TissueRequestProcessBaseForm):
-  class Meta:
-    model = CustomTissueRequest
-    fields = ('accepted_monkeys',)
-    
