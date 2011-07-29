@@ -6,6 +6,7 @@ import os
 path = os.path.dirname(os.path.realpath(__file__))
 
 GLEEK = DEVELOPMENT = PRODUCTION = False
+
 if path == '/web/www/matrr-prod':
     PRODUCTION = True
 elif path == '/web/www/matrr-dev':
@@ -13,10 +14,12 @@ elif path == '/web/www/matrr-dev':
 else:
     DEVELOPMENT = True
 
+
 if PRODUCTION:
     DEBUG = False
 else:
     DEBUG = True
+
 
 TEMPLATE_DEBUG = DEBUG
 
@@ -227,36 +230,36 @@ DEFAULT_FROM_EMAIL = 'matrr_admin@localhost'
 
 LOGIN_REDIRECT_URL = '/accounts/login'
 
-if DEVELOPMENT:
-    import logging
-
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s %(message)s',
-        filename='/web/www/log/matrr.log',
-        filemode='a'
-    )
-
-
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-            },
-        }
-}
+#if DEVELOPMENT:
+#    import logging
+#
+#    logging.basicConfig(
+#        level=logging.DEBUG,
+#        format='%(asctime)s %(levelname)s %(message)s',
+#        filename='/web/www/log/matrr.log',
+#        filemode='a'
+#    )
+#
+#
+## A sample logging configuration. The only tangible logging
+## performed by this configuration is to send an email to
+## the site admins on every HTTP 500 error.
+## See http://docs.djangoproject.com/en/dev/topics/logging for
+## more details on how to customize your logging configuration.
+#LOGGING = {
+#    'version': 1,
+#    'disable_existing_loggers': False,
+#    'handlers': {
+#        'mail_admins': {
+#            'level': 'ERROR',
+#            'class': 'django.utils.log.AdminEmailHandler'
+#        }
+#    },
+#    'loggers': {
+#        'django.request': {
+#            'handlers': ['mail_admins'],
+#            'level': 'ERROR',
+#            'propagate': True,
+#            },
+#        }
+#}
