@@ -60,7 +60,7 @@ def load_monkeys(file):
     1 - Date of Birth
     2 - Cohort Name
     3 - Stress Model
-    4 - Gender (either 'male' or 'female')
+    4 - Sex (either 'male' or 'female')
     5 - Drinking (marked if non-drinking or housing control)
     6 - Name
     7 - Necropsy Date
@@ -79,11 +79,11 @@ def load_monkeys(file):
     stress_model = row[3]
     if len(stress_model) == 0:
       stress_model = None
-    gender = None
+    sex = None
     if row[4] == 'male':
-      gender = 'M'
+      sex = 'M'
     elif row[4] == 'female':
-      gender = 'F'
+      sex = 'F'
 
     drinking = True
     housing_control = False
@@ -115,7 +115,7 @@ def load_monkeys(file):
       monkey = Monkey.objects.get(mky_real_id=id)
       monkey.mky_birthdate = birthdate
       monkey.mky_stress_model = stress_model
-      monkey.mky_gender = gender
+      monkey.mky_gender = sex
       monkey.mky_drinking = drinking
       monkey.mky_name = name
       monkey.mky_necropsy_date=necropsy
@@ -128,7 +128,7 @@ def load_monkeys(file):
            mky_real_id=id,
            mky_birthdate=birthdate,
            mky_stress_model=stress_model,
-           mky_gender=gender,
+           mky_gender=sex,
            mky_drinking=drinking,
            mky_name=name,
            mky_necropsy_date=necropsy,

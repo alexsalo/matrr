@@ -126,7 +126,7 @@ class CohortEvent(models.Model):
 
 
 class Monkey(models.Model):
-  GENDER_CHOICES = (
+  SEX_CHOICES = (
     ('M', 'Male'),
     ('F', 'Female'),
   )
@@ -137,7 +137,7 @@ class Monkey(models.Model):
                                     help_text='The ID of the monkey.')
   mky_name = models.CharField('Name', max_length=100, blank=True, null=True,
                               help_text='The monkey\'s name.')
-  mky_gender = models.CharField('Gender', max_length=1, choices=GENDER_CHOICES, blank=True, null=True,
+  mky_gender = models.CharField('Sex', max_length=1, choices=SEX_CHOICES, blank=True, null=True,
                                help_text='The sex of the monkey.')
   mky_birthdate = models.CharField('Date of Birth', blank=True, null=True,
                                    max_length=20,
