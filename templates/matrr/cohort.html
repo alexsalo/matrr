@@ -47,7 +47,7 @@ Cohort: {{ cohort.coh_cohort_name }}</div>
 <table class='common_center'>
   <tr>
     {% if user.is_superuser %}<th>Real Name</th>{% endif %}
-    <th>Monkey ID</th><th>Gender</th><th>Birthdate</th><th>Weight</th><th>Test Group</th>
+    <th>Monkey ID</th><th>Sex</th><th>Birthdate</th><th>Weight</th><th>Test Group</th>
     <th>Necropsy Date</th><th>Stress Model</th><th>Study Complete</th></tr>
   {% for monkey in cohort.monkey_set.all %}
     <tr>

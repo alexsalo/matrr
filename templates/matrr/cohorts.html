@@ -21,7 +21,7 @@
         {% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
           <th>Monkey Name</th>
         {% endif %}
-        <th>Gender</th><th>Assignment</th><th>Birthdate</th></tr>
+        <th>Sex</th><th>Assignment</th><th>Birthdate</th></tr>
       {% for monkey in cohort.monkey_set.all|dictsortreversed:"mky_drinking" %}
         <tr>
           <td class='text-center-common-td'><a href='{{ cohort.coh_cohort_id }}/monkey/{{monkey.mky_id}}'>{{ monkey.mky_real_id }}</a></td>
