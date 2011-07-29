@@ -60,7 +60,7 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'django_test', # Or path to database file if using sqlite3.
+            'NAME': 'matrr_test', # Or path to database file if using sqlite3.
             'USER': 'monkey_dev_user', # Not used with sqlite3.
             'PASSWORD': 'm0nk3y_1s_drUnK', # Not used with sqlite3.
             'HOST': 'gleek.ecs.baylor.edu', # Set to empty string for localhost. Not used with sqlite3.
