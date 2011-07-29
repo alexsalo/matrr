@@ -29,7 +29,7 @@
       <div>Experimental Plan:</div>
       <div>
         {% if req_request.req_experimental_plan %}
-          <a href='/{{ MEDIA_URL }}/{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a>
+          <a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a>
         {% else %}
           None
         {% endif %}
