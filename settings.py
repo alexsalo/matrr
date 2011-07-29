@@ -4,66 +4,56 @@ import os
 
 # get the location of this settings file
 # this will let us have different settings based on where the file is
-path = os.path.dirname( os.path.realpath( __file__ ) )
+path = os.path.dirname(os.path.realpath(__file__))
 
-DEVELOPMENT = TEST = PRODUCTION = False
-if path == '/web/alpha':
-  DEVELOPMENT = True
-elif path == '/web/www/dev':
-  TEST = True
-elif path == '/web/www/wsgi-scripts':
-  PRODUCTION = True
-
-
-if DEVELOPMENT or TEST:
-  DEBUG = True
+DEVELOPMENT = PRODUCTION = False
+if path == '/web/www/matrr-prod':
+    PRODUCTION = True
 else:
-  DEBUG = False
+    DEVELOPMENT = True
+
+if DEVELOPMENT:
+    DEBUG = True
+else:
+    DEBUG = False
+
 TEMPLATE_DEBUG = DEBUG
 
-SITE_ROOT = ''
-if TEST:
-  SITE_ROOT = '/dev'
+if DEVELOPMENT:
+    UPLOAD_PATH = '/web/MATRR/upload/dev'
+else:
+    UPLOAD_PATH = '/web/MATRR/upload'
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+# ('Your Name', 'your_email@example.com'),
 )
 
 MANAGERS = ADMINS
 
 if PRODUCTION:
-  DATABASES = {
-    'default': {
-      'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-      'NAME': 'matrr_production',                      # Or path to database file if using sqlite3.
-      'USER': 'matrr_prod',                      # Not used with sqlite3.
-      'PASSWORD': 'm0nk3y_1s_drUnK',                  # Not used with sqlite3.
-      'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-      #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': 'matrr_production', # Or path to database file if using sqlite3.
+            'USER': 'matrr_prod', # Not used with sqlite3.
+            'PASSWORD': 'm0nk3y_1s_drUnK', # Not used with sqlite3.
+            'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
+            #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        }
     }
-  }
-elif TEST:
-  DATABASES = {
-    'default': {
-      'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-      'NAME': 'matrr_test',                      # Or path to database file if using sqlite3.
-      'USER': 'django_test',                      # Not used with sqlite3.
-      'PASSWORD': 'matrr_django',                  # Not used with sqlite3.
-      'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-      #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-    }
-  }
 else:
-  DATABASES = {
-    'default': {
-      'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-      'NAME': 'django_test',                      # Or path to database file if using sqlite3.
-      'USER': 'django_test',                      # Not used with sqlite3.
-      'PASSWORD': 'matrr_django',                  # Not used with sqlite3.
-      'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-      #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': 'django_test', # Or path to database file if using sqlite3.
+            'USER': 'django_test', # Not used with sqlite3.
+            'PASSWORD': 'matrr_django', # Not used with sqlite3.
+            'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
+            #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        }
     }
-  }
 
 
 # Local time zone for this installation. Choices can be found here:
@@ -92,16 +82,14 @@ USE_L10N = True
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 if DEVELOPMENT:
-  MEDIA_ROOT = '/web/alpha/media/'
-elif TEST:
-  MEDIA_ROOT = '/web/www/dev/media/'
+    MEDIA_ROOT = '/web/www/MATRR/dev/media/'
 elif PRODUCTION:
-  MEDIA_ROOT = '/web/www/MATRR/media/'
+    MEDIA_ROOT = '/web/www/MATRR/media/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = SITE_ROOT + '/media/'
+MEDIA_URL = '/media/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -111,37 +99,29 @@ STATIC_ROOT = ''
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = SITE_ROOT + '/static/'
+STATIC_URL = '/static/'
 
 # URL prefix for admin static files -- CSS, JavaScript and images.
 # Make sure to use a trailing slash.
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
-if DEVELOPMENT:
-  # Additional locations of static files
-  STATICFILES_DIRS = (
-      # Put strings here, like "/home/html/static" or "C:/www/django/static".
-      # Always use forward slashes, even on Windows.
-      # Don't forget to use absolute paths, not relative paths.
-      '/web/alpha/static/',
-  )
-elif TEST:
-  # Additional locations of static files
-  STATICFILES_DIRS = (
-      # Put strings here, like "/home/html/static" or "C:/www/django/static".
-      # Always use forward slashes, even on Windows.
-      # Don't forget to use absolute paths, not relative paths.
-      '/web/www/dev/static/',
-  )
-elif PRODUCTION:
-  # Additional locations of static files
-  STATICFILES_DIRS = (
-      # Put strings here, like "/home/html/static" or "C:/www/django/static".
-      # Always use forward slashes, even on Windows.
-      # Don't forget to use absolute paths, not relative paths.
-      '/web/www/MATRR/static/',
-  )
+if PRODUCTION:
+    # Additional locations of static files
+    STATICFILES_DIRS = (
+        # Put strings here, like "/home/html/static" or "C:/www/django/static".
+        # Always use forward slashes, even on Windows.
+        # Don't forget to use absolute paths, not relative paths.
+        '/web/www/MATRR/static/',
+        )
+else:
+    # Additional locations of static files
+    STATICFILES_DIRS = (
+        # Put strings here, like "/home/html/static" or "C:/www/django/static".
+        # Always use forward slashes, even on Windows.
+        # Don't forget to use absolute paths, not relative paths.
+        '/web/www/MATRR/dev/static/',
+        )
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -149,7 +129,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.DefaultStorageFinder',
-)
+    )
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '@+5ijd@xf%17@7euip67u)%(fq4+3g(83+azo3ia7^f=-(w1u2'
@@ -159,7 +139,7 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     'django.template.loaders.eggs.Loader',
-)
+    )
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -168,7 +148,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
-)
+    )
 
 ROOT_URLCONF = 'urls'
 
@@ -183,55 +163,55 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'matrr.context_processors.login_form',
     'matrr.context_processors.group_membership',
     'matrr.context_processors.site_root',
-)
+    )
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     path + "/templates",
-)
+    )
 
 # Sphinx 0.9.9
 SPHINX_API_VERSION = 0x116
 
 if DEVELOPMENT:
-  INSTALLED_APPS = (
-      'django.contrib.auth',
-      'django.contrib.contenttypes',
-      'django.contrib.sessions',
-      'django.contrib.sites',
-      'django.contrib.messages',
-      'django.contrib.staticfiles',
-      # Uncomment the next line to enable the admin:
-      'django.contrib.admin',
-      # Uncomment the next line to enable admin documentation:
-      'django.contrib.admindocs',
-      'matrr',
-      # django-registration installed by EJB - 3.16.11
-      'registration',
-      'djangosphinx',
-      'utils',
-      'south',
-  )
+    INSTALLED_APPS = (
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.sites',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        # Uncomment the next line to enable the admin:
+        'django.contrib.admin',
+        # Uncomment the next line to enable admin documentation:
+        'django.contrib.admindocs',
+        'matrr',
+        # django-registration installed by EJB - 3.16.11
+        'registration',
+        'djangosphinx',
+        'utils',
+        'south',
+        )
 else:
-  INSTALLED_APPS = (
-      'django.contrib.auth',
-      'django.contrib.contenttypes',
-      'django.contrib.sessions',
-      'django.contrib.sites',
-      'django.contrib.messages',
-      'django.contrib.staticfiles',
-      # Uncomment the next line to enable the admin:
-      'django.contrib.admin',
-      # Uncomment the next line to enable admin documentation:
-      'django.contrib.admindocs',
-      'matrr',
-      # django-registration installed by EJB - 3.16.11
-      'registration',
-      'utils',
-      'south',
-  )
+    INSTALLED_APPS = (
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.sites',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        # Uncomment the next line to enable the admin:
+        'django.contrib.admin',
+        # Uncomment the next line to enable admin documentation:
+        'django.contrib.admindocs',
+        'matrr',
+        # django-registration installed by EJB - 3.16.11
+        'registration',
+        'utils',
+        'south',
+        )
 
 # The following are settings for django-registration
 # added EJB 3.16.11
@@ -246,13 +226,14 @@ DEFAULT_FROM_EMAIL = 'matrr_admin@localhost'
 LOGIN_REDIRECT_URL = '/accounts/login'
 
 if DEVELOPMENT:
-  import logging
-  logging.basicConfig(
-      level = logging.DEBUG,
-      format = '%(asctime)s %(levelname)s %(message)s',
-      filename='/web/matrr.log',
-      filemode='a'
-  )
+    import logging
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(levelname)s %(message)s',
+        filename='/web/www/log/matrr.log',
+        filemode='a'
+    )
 
 
 # A sample logging configuration. The only tangible logging
@@ -274,6 +255,6 @@ LOGGING = {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
             'propagate': True,
-        },
-    }
+            },
+        }
 }
