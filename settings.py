@@ -8,7 +8,7 @@ path = os.path.dirname(os.path.realpath(__file__))
 GLEEK = DEVELOPMENT = PRODUCTION = False
 if path == '/web/www/matrr-prod':
     PRODUCTION = True
-elif path == 'web/www/matrr-dev':
+elif path == '/web/www/matrr-dev':
     DEVELOPMENT = GLEEK = True
 else:
     DEVELOPMENT = True
@@ -21,11 +21,6 @@ else:
 TEMPLATE_DEBUG = DEBUG
 
 SITE_ROOT = ''  #  needs to be refactored out of the project
-
-if PRODUCTION:
-    UPLOAD_PATH = '/web/MATRR/upload'
-else:
-    UPLOAD_PATH = path + '/upload'
 
 ADMINS = (
 # ('Your Name', 'your_email@example.com'),
@@ -57,7 +52,7 @@ elif GLEEK:
             #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
         }
     }
-elif GLEEK:
+else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -182,7 +177,7 @@ TEMPLATE_DIRS = (
 # Sphinx 0.9.9
 SPHINX_API_VERSION = 0x116
 
-if DEVELOPMENT:
+if PRODUCTION:
     INSTALLED_APPS = (
         'django.contrib.auth',
         'django.contrib.contenttypes',
@@ -197,7 +192,6 @@ if DEVELOPMENT:
         'matrr',
         # django-registration installed by EJB - 3.16.11
         'registration',
-        'djangosphinx',
         'utils',
         'south',
         )
@@ -216,6 +210,7 @@ else:
         'matrr',
         # django-registration installed by EJB - 3.16.11
         'registration',
+        'djangosphinx',
         'utils',
         'south',
         )
