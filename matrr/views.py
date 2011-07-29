@@ -549,9 +549,14 @@ def experimental_plan_view(request, plan):
 
 def tissue_shop_landing_view(request, cohort_id):
   cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
+  categories = list(TissueCategory.objects.order_by('cat_name').all())
+  if TissueCategory.objects.filter(cat_name='Custom'):
+    custom = TissueCategory.objects.get(cat_name='Custom')
+    categories.remove(custom)
+    categories.append(custom)
   return render_to_response('matrr/tissue_shopping_landing.html',
                             {'cohort': cohort,
-                             'categories': TissueCategory.objects.all()},
+                             'categories': categories},
                             context_instance=RequestContext(request))
 
 
