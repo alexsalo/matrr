@@ -551,7 +551,7 @@ class TissueRequest(models.Model):
       # set the increment to the correct amount
       self.rtt_custom_increment = TissueRequest.objects.filter(req_request=self.req_request,
                                                                tissue_type__category__cat_name='Custom').count()
-    super(models.Model, self).save(force_insert, force_update, using)
+    super(TissueRequest, self).save(force_insert, force_update, using)
 
   class Meta:
     db_table = 'rtt_requests_to_tissue_types'
