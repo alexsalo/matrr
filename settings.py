@@ -1,30 +1,31 @@
 # Django settings for MATRR project.
-
 import os
 
 # get the location of this settings file
 # this will let us have different settings based on where the file is
 path = os.path.dirname(os.path.realpath(__file__))
 
-DEVELOPMENT = PRODUCTION = False
+GLEEK = DEVELOPMENT = PRODUCTION = False
 if path == '/web/www/matrr-prod':
     PRODUCTION = True
+elif path == 'web/www/matrr-dev':
+    DEVELOPMENT = GLEEK = True
 else:
     DEVELOPMENT = True
 
-if DEVELOPMENT:
-    DEBUG = True
-else:
+if PRODUCTION:
     DEBUG = False
+else:
+    DEBUG = True
 
 TEMPLATE_DEBUG = DEBUG
 
-SITE_ROOT = ''
+SITE_ROOT = ''  #  needs to be refactored out of the project
 
-if DEVELOPMENT:
-    UPLOAD_PATH = '/web/MATRR/upload/dev'
-else:
+if PRODUCTION:
     UPLOAD_PATH = '/web/MATRR/upload'
+else:
+    UPLOAD_PATH = path + '/upload'
 
 ADMINS = (
 # ('Your Name', 'your_email@example.com'),
@@ -44,7 +45,7 @@ if PRODUCTION:
             #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
         }
     }
-else:
+elif GLEEK:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -53,6 +54,18 @@ else:
             'USER': 'django_test', # Not used with sqlite3.
             'PASSWORD': 'matrr_django', # Not used with sqlite3.
             'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
+            #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        }
+    }
+elif GLEEK:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': 'django_test', # Or path to database file if using sqlite3.
+            'USER': 'django_test', # Not used with sqlite3.
+            'PASSWORD': 'matrr_django', # Not used with sqlite3.
+            'HOST': 'gleek.ecs.baylor.edu', # Set to empty string for localhost. Not used with sqlite3.
             #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
         }
     }
@@ -83,10 +96,11 @@ USE_L10N = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-if DEVELOPMENT:
-    MEDIA_ROOT = '/web/www/MATRR/dev/media/'
-elif PRODUCTION:
+if PRODUCTION:
     MEDIA_ROOT = '/web/www/MATRR/media/'
+else:
+    MEDIA_ROOT = path + '/media/'
+
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -97,7 +111,10 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = ''
+if PRODUCTION:
+    STATIC_ROOT = '/web/www/MATRR/static/'
+else:
+    STATIC_ROOT = ''
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -108,22 +125,10 @@ STATIC_URL = '/static/'
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
-if PRODUCTION:
-    # Additional locations of static files
-    STATICFILES_DIRS = (
-        # Put strings here, like "/home/html/static" or "C:/www/django/static".
-        # Always use forward slashes, even on Windows.
-        # Don't forget to use absolute paths, not relative paths.
-        '/web/www/MATRR/static/',
-        )
-else:
-    # Additional locations of static files
-    STATICFILES_DIRS = (
-        # Put strings here, like "/home/html/static" or "C:/www/django/static".
-        # Always use forward slashes, even on Windows.
-        # Don't forget to use absolute paths, not relative paths.
-        '/web/www/MATRR/dev/static/',
-        )
+# Additional locations of static files
+STATICFILES_DIRS = (
+    path + '/static',
+)
 
 # List of finder classes that know how to find static files in
 # various locations.
