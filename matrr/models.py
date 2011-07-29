@@ -301,6 +301,7 @@ class TissueType(models.Model):
   tst_tissue_name = models.CharField('Name', max_length=100, null=False,
                                      help_text='The name of the tissue type.')
   tst_description = models.TextField('Description', null=True,
+                                     blank=True,
                                      help_text='The description of the tissue type.')
   tst_count_per_monkey = models.IntegerField('Units per Monkey',
                                              blank=True,
@@ -309,6 +310,7 @@ class TissueType(models.Model):
   unavailable_list = models.ManyToManyField(Monkey, db_table='ttu_tissue_types_unavailable',
                                           verbose_name='Unavailable For',
                                           related_name='unavailable_tissue_type_set',
+                                          blank=True,
                                           help_text='The monkeys this tissue type is not available for.')
   tst_cost = models.FloatField('Cost', default=0.0, null=False, blank=False)
   def __unicode__(self):
@@ -452,6 +454,12 @@ class Request(models.Model, DiffingMixin):
     plan = plan.replace('experimental_plans/', '', 1)
     return plan
 
+  def get_total_estimated_cost(self):
+    total = 0
+    for item in self.tissue_request_set.all():
+      total += item.get_estimated_cost()
+    return total
+
   def save(self, force_insert=False, force_update=False, using=None):
     if self.request_status.rqs_status_id != self._original_state['request_status_id']\
         and self._original_state['request_status_id'] == RequestStatus.objects.get(rqs_status_name='Cart').rqs_status_id:
@@ -471,6 +479,8 @@ class TissueRequest(models.Model):
   rtt_fix_type = models.CharField('Fixation', null=False, blank=False,
                                   max_length=200,
       help_text='Please select the appropriate fix type.')
+  # the custom increment is here to allow us to have a unique constraint that prevents duplicate requests
+  # for a tissue in a single order while allowing multiple custom requests in an order.
   rtt_custom_increment = models.IntegerField('Custom Increment', default=0, editable=False, null=False)
   rtt_amount = models.FloatField('Amount',
       help_text='Please enter the amount of tissue you need.')
@@ -531,6 +541,17 @@ class TissueRequest(models.Model):
 
   def get_rejected_monkeys(self):
     return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
+
+  def get_estimated_cost(self):
+    return self.tissue_type.tst_cost * self.monkeys.count()
+
+  def save(self, force_insert=False, force_update=False, using=None):
+    if self.rtt_tissue_request_id is None and self.tissue_type.category.cat_name == 'Custom':
+      # if this is a custom request and it hasn't been saved yet
+      # set the increment to the correct amount
+      self.rtt_custom_increment = TissueRequest.objects.filter(req_request=self.req_request,
+                                                               tissue_type__category__cat_name='Custom').count()
+    super(models.Model, self).save(force_insert, force_update, using)
 
   class Meta:
     db_table = 'rtt_requests_to_tissue_types'

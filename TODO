@@ -4,10 +4,11 @@ These items are in no particular order.
 ***CATEGORY: Urgent Changes! **************************************
 *******************************************************************
 
--ER diagram
+-updated ER diagram
 
 -Add data to site
-  -Add WFU inventories
+  -Add WFU inventories -DONE
+  -Add OHSU inventories
 
 
 *******************************************************************
@@ -21,6 +22,10 @@ These items are in no particular order.
 
 -Figure out a way to show brain blocks and let users determine if a
 brain region is available.
+  -One way to approach this is to have a class of images associated with a monkey
+  and display those images on a page linked to by the tissue shopping landing page.
+  These images could also be categorized similarly to how tissue types are.
+
 
 *******************************************************************
 ***CATEGORY: Review Process Changes *******************************
@@ -34,6 +39,15 @@ brain region is available.
 *******************************************************************
 ***CATEGORY: Data Entry *******************************************
 *******************************************************************
+
+-Need image data for brain blocks.
+
+-Need reworked OHSU inventory data.
+
+-Need behavioural data for monkeys
+
+-Need drinking data for all cohorts
+
 
 *******************************************************************
 ***CATEGORY: Shipping  ********************************************

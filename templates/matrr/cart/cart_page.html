@@ -9,7 +9,7 @@ Tissue Request Cart
 </div>
 <div>
   <a href='/{% if cart.cohort.coh_upcoming %}upcoming{% else %}available{% endif %}/{{ cart.cohort.coh_cohort_id }}/tissues'>
-	<img src="{{ STATIC_URL }}/images/cart_add.png" width='16' height='16' alt='add more items to cart'/>
+	<img src='{{ STATIC_URL }}/images/cart_add.png' width='16' height='16' alt='add more items to cart'/>
     &nbsp;Add more tissues
   </a>
 </div>
@@ -19,7 +19,7 @@ Tissue Request Cart
     {% include 'matrr/cart/cart_items_table.html' %}
 	<br/>
     <div style='float: left;'>
-      <a href='/cart/checkout/' class="blockLinkCheckoutButton">Checkout</a>
+      <a href='/cart/checkout/' class='blockLinkCheckoutButton'>Checkout</a>
     </div>
   {% else %}
   <div class="messages">
@@ -29,11 +29,11 @@ Tissue Request Cart
 	</div>  
 {% endif %}
   <div style='float: right;'>
-    <a href='/cart/delete/' class="blockLinkDeleteButton">Delete Cart</a>
+    <a href='/cart/delete/' class='blockLinkDeleteButton'>Delete Cart</a>
   </div>
 {% else %}
-  <div class="messages">
-    <div class="info">
+  <div class='messages'>
+    <div class='info'>
   You have not started a cart yet.
     </div>
   </div>

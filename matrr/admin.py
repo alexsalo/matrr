@@ -1,6 +1,5 @@
 from matrr.models import *
 from django.contrib import admin
-from abc import abstractmethod, abstractproperty
 
 class TissueAdmin(admin.ModelAdmin):
   formfield_overrides = {
@@ -9,22 +8,9 @@ class TissueAdmin(admin.ModelAdmin):
   list_filter = ('category', )
 
 
-class SampleAdmin(admin.ModelAdmin):
+class TissueSampleAdmin(admin.ModelAdmin):
   actions = ['remove_samples_from_inventory',
              'update_inventory_dates']
-  @abstractproperty
-  def readonly_fields(self):
-    return None
-
-  def update_inventory_dates(self, request, queryset):
-    for model in queryset.all():
-      model.save()
-
-  class Meta:
-    abstract = True
-
-
-class TissueSampleAdmin(SampleAdmin):
   readonly_fields = ('tss_modified',)
   list_filter = ('monkey__cohort',
                  'monkey',
@@ -35,6 +21,9 @@ class TissueSampleAdmin(SampleAdmin):
   def queryset(self, request):
     return TissueSample.objects
 
+  def update_inventory_dates(self, request, queryset):
+    for model in queryset.all():
+      model.save()
 
 
 admin.site.register(TissueType, TissueAdmin)
