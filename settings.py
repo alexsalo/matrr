@@ -19,6 +19,8 @@ else:
 
 TEMPLATE_DEBUG = DEBUG
 
+SITE_ROOT = ''
+
 if DEVELOPMENT:
     UPLOAD_PATH = '/web/MATRR/upload/dev'
 else:
