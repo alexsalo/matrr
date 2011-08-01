@@ -9,7 +9,7 @@ MATRR Home
 <div class='center-content'>
 <div class='large-headline'>The Monkey Alcohol Tissue Research Resource (MATRR)</div>
 <p>
-The primary goal of this site is to build the resources of a tissue bank and associated bioinformatics to analyze and distribute appropriate tissue samples to the alcohol research community. This resource provides novel data for hypothesis testing relating the risk for and consequences of alcohol consumption and serve to bi-directionally bridge the gap between rodent and human studies. The basis of the MATRR is that non human primates, specifically monkeys, show a range of drinking excessive amounts of alcohol. <a href='{{ SITE_ROOT }}/about'>more...</a>
+The primary goal of this site is to build the resources of a tissue bank and associated bioinformatics to analyze and distribute appropriate tissue samples to the alcohol research community. This resource provides novel data for hypothesis testing relating the risk for and consequences of alcohol consumption and serve to bi-directionally bridge the gap between rodent and human studies. The basis of the MATRR is that non human primates, specifically monkeys, show a range of drinking excessive amounts of alcohol. <a href='/about'>more...</a>
 </p>
 </div>
 
@@ -18,8 +18,8 @@ The primary goal of this site is to build the resources of a tissue bank and ass
 <div class='content-block-lower'>
 <div class='headline'>Request Tissues</div>
 <div class='buttons'>
-<a class="blueLinkButton linkButton" href='{{ SITE_ROOT }}/upcoming'>Upcoming Cohorts</a>
-<a class="redLinkButton linkButton" href='{{ SITE_ROOT }}/available'>Available Cohorts</a>
+<a class="blueLinkButton linkButton" href='/upcoming'>Upcoming Cohorts</a>
+<a class="redLinkButton linkButton" href='/available'>Available Cohorts</a>
 </div>
 </div>
 
@@ -33,12 +33,13 @@ The primary goal of this site is to build the resources of a tissue bank and ass
 <!-- Search div -->
 <div class='content-block-lower'>
 <div class='headline'>Search</div>
-<form action='{{ SITE_ROOT }}/search' method='get'>
+<form action='/search' method='get'>
   <div><input type='text' id='terms' name='terms'/>
   <button type='submit'>Search</button></div>
 </form>
 </div>
 <!-- News/Upcoming Events div -->
+{% if event_list %}
 <div class='content-block-lower' style='padding-bottom: 20px;'>
 <div class='headline'>Upcoming Events</div>
   {% for event in event_list %}
@@ -48,10 +49,11 @@ The primary goal of this site is to build the resources of a tissue bank and ass
     </div>
   {% endfor %}
   <div>
-    <div style='float:left;'><a href='{{ SITE_ROOT }}/events/'>more</a></div>
-    <div style='float:right;'><a href='{{ SITE_ROOT }}/archived-events/'>archived</a></div>
+    <div style='float:left;'><a href='/events/'>more</a></div>
+    <div style='float:right;'><a href='/archived-events/'>archived</a></div>
   </div>
 </div>
+{% endif %}
 </div>
 {% endblock %}
 
