@@ -32,6 +32,7 @@ urlpatterns += patterns('django.views.generic.simple',
             )),
     )
 
+# Pretend views
 urlpatterns += patterns('matrr.views',
     url(r'^upcoming/$',
         ListView.as_view(
@@ -105,10 +106,11 @@ urlpatterns += patterns('matrr.views',
             template_name='matrr/all_publications.html',
             paginate_by=10,
             )),
+)
+# Real views
+urlpatterns += patterns('matrr.views',
     url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/necropsy/$',
-        cohort_necropsy
-        ),
-
+        cohort_necropsy),
     url(r'^(?P<static_page>privacy|data|usage)/$', static_page_view),
     url(r'^cart/$',
         cart_view),
