@@ -52,7 +52,7 @@ def monkey_cohort_detail_view(request, cohort_id, monkey_id):
   if str(monkey.cohort.coh_cohort_id) != cohort_id:
     raise Http404((u"No %(verbose_name)s found matching the query") %
                 {'verbose_name': Monkey._meta.verbose_name})
-  
+
   return render_to_response('matrr/monkey.html', {'monkey': monkey},
         context_instance=RequestContext(request))
 
@@ -63,7 +63,7 @@ def monkey_detail_view(request, monkey_id):
   except:
     raise Http404((u"No %(verbose_name)s found matching the query") %
                 {'verbose_name': Monkey._meta.verbose_name})
-  
+
   return render_to_response('matrr/monkey.html', {'monkey': monkey},
         context_instance=RequestContext(request))
 
@@ -89,7 +89,7 @@ def get_or_create_cart(request, cohort):
       if not cart_request.get_requested_tissue_count():
         cart_request.delete()
         #create a new cart
-        cart_request = Request(user=request.user, request_status=cart_status, 
+        cart_request = Request(user=request.user, request_status=cart_status,
                                cohort=cohort, req_request_date=datetime.now())
         cart_request.save()
       else:
@@ -120,22 +120,22 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
                               context_instance=RequestContext(request))
 
   # if we got here, then a request is made with this user and cohort and the status is 'cart'
-  
+
   # get the current tissue
   current_tissue = TissueType.objects.get(tst_type_id = tissue_id)
   instance = TissueRequest(tissue_type=current_tissue,
       req_request=cart_request)
-  
+
   if request.method != 'POST':
     # now we need to create the form for the tissue type
     tissue_request_form = TissueRequestForm( req_request = cart_request, tissue=current_tissue, instance=instance,
                                       initial={'monkeys': current_cohort.monkey_set.all()})
     # create the response
     return render_to_response('matrr/tissue_shopping.html', {'form': tissue_request_form,
-        'cohort': current_cohort, 
+        'cohort': current_cohort,
         'page_title': current_tissue.tst_tissue_name,},
           context_instance=RequestContext(request))
-  else: 
+  else:
     data = request.POST.copy()
     tissue_request_form = TissueRequestForm(data=data,
         req_request = cart_request,
@@ -153,7 +153,7 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
       return redirect(url)
     else:
       return render_to_response('matrr/tissue_shopping.html', {'form': tissue_request_form,
-        'cohort': current_cohort, 
+        'cohort': current_cohort,
         'page_title': current_tissue.tst_tissue_name},
           context_instance=RequestContext(request))
 
@@ -165,7 +165,7 @@ def cart_view(request):
   if context['cart_exists']:
     cart_request = context['cart']
     cohort = cart_request.cohort
-    
+
     return render_to_response('matrr/cart/cart_page.html', {
           #'form': tissue_request_form,
           'cohort': cohort,},
@@ -279,7 +279,7 @@ def cart_checkout(request):
     data['request_status'] = cart_request.request_status.rqs_status_id
     data['cohort'] = cart_request.cohort.coh_cohort_id
     checkout_form = CartCheckoutForm(request.POST, request.FILES, instance=cart_request)
-    
+
     if checkout_form.is_valid() and request.POST['submit'] == 'checkout':
       cart_request.req_experimental_plan = checkout_form.cleaned_data['req_experimental_plan']
       cart_request.req_notes = checkout_form.cleaned_data['req_notes']
@@ -300,7 +300,7 @@ def reviews_list_view(request):
   reviews = Review.objects.filter(user=request.user.id)
   finished_reviews = [review for review in reviews if review.is_finished()]
   unfinished_reviews = [review for review in reviews if not review.is_finished()]
-    
+
   return render_to_response('matrr/review/reviews.html',
       {'finished_reviews': finished_reviews,
        'unfinished_reviews': unfinished_reviews,
@@ -311,7 +311,7 @@ def reviews_list_view(request):
 
 @login_required()
 def mta_upload(request):
-  # make blank mta instance 
+  # make blank mta instance
   mta_object = Mta(user=request.user)
   # make a MTA upload form if one does not exist
   if request.method == 'POST':
@@ -389,10 +389,10 @@ def review_detail(request, review_id):
   # get the review
   review = Review.objects.get(rvs_review_id=review_id)
   if review.user != request.user:
-    raise Http404('This page does not exist.') 
+    raise Http404('This page does not exist.')
   # get the request being reviewed
   req_request = review.req_request
-  
+
   if request.method == 'POST':
     if request.POST['submit'] == 'cancel':
       messages.info(request, 'Review cancelled.')
@@ -435,7 +435,7 @@ def review_overview_list(request):
             req_request.complete.append("complete")
           else:
             req_request.complete.append("pending")
-          
+
   return render_to_response('matrr/review/reviews_overviews.html',
         {'req_requests': req_requests,
          'reviewers': reviewers,
@@ -458,7 +458,7 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 def review_overview(request, req_request_id):
   # get the request being reviewed
   req_request = Request.objects.get(req_request_id=req_request_id)
-  
+
   TissueRequestFormSet = modelformset_factory(TissueRequest, form=TissueRequestProcessForm, extra=0)
 
   if request.POST:
@@ -481,7 +481,7 @@ def review_overview(request, req_request_id):
            'Availability': Availability,
            },
            context_instance=RequestContext(request))
-    
+
   else:
     # get the tissue requests
     tissue_request_forms = TissueRequestFormSet(queryset = req_request.tissue_request_set.all(),
@@ -525,7 +525,7 @@ def order_detail(request, req_request_id):
          'Acceptance': Acceptance,
          },
          context_instance=RequestContext(request))
-  
+
 
 @login_required()
 def experimental_plan_view(request, plan):
@@ -533,16 +533,16 @@ def experimental_plan_view(request, plan):
   response = HttpResponse(mimetype='application/force-download')
   response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(plan)
   response['X-Sendfile'] = smart_str(settings.MEDIA_ROOT + 'media/experimental_plans/' + plan)
-  
+
   # serve the file if the user is a committee member or superuser
   if request.user.groups.filter(name='Committee').count() != 0 or \
       request.user.groups.filter(name='Superuser').count() != 0:
     return response
-  
+
   # check that the plan belongs to the user
   if Request.objects.filter(user=request.user, req_experimental_plan='experimental_plans/' + plan).count() > 0:
     return response
-  
+
   #otherwise return a 404 error
   raise Http404('This page does not exist.')
 
@@ -572,7 +572,7 @@ def tissue_list(request, tissue_category=None, cohort_id = None):
     tissue_list = TissueType.objects.filter(category__cat_name=tissue_category).order_by('tst_tissue_name')
   else:
     tissue_list = TissueType.objects.order_by('tst_tissue_name')
-  
+
   paginator = Paginator(tissue_list, 60) # Show 20 tissues per page
 
   # Make sure page request is an int. If not, deliver first page.
@@ -587,7 +587,7 @@ def tissue_list(request, tissue_category=None, cohort_id = None):
   except (EmptyPage, InvalidPage):
     tissues = paginator.page(paginator.num_pages)
   # just return the list of tissues
-  
+
   return render_to_response('matrr/tissues.html', {'tissues': tissues,
                                                    'title': tissue_category},
       context_instance=c)
@@ -828,3 +828,8 @@ def order_delete(request, req_request_id):
                               {'order': req_request,
                                'Acceptance': Acceptance,},
                               context_instance=RequestContext(request))
+
+def cohort_necropsy(request, pk):
+    messages.info(request, 'No necropsy data available at this time.')
+    cohort = Cohort.objects.get(pk=pk)
+    return render_to_response('matrr/cohort.html', {'cohort' : cohort}, context_instance=RequestContext(request))

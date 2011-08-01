@@ -48,7 +48,7 @@
 <div class="right-content clearfix">
   <a href="{{ cohort.coh_cohort_id }}/">Cohort Details</a><br/>
   <a href="{{ cohort.coh_cohort_id }}/timeline">Cohort Timeline</a><br/>
-  <a href="/">Expected Necropsy Data</a><br/>
+  <a href="{{ cohort.coh_cohort_id }}/necropsy/">Expected Necropsy Data</a><br/>
   <a href="{{ cohort.coh_cohort_id }}/publications">Publications</a><br/>
   <a href='{{ cohort.coh_cohort_id }}/tissues'>Request Tissue from {{ cohort.coh_cohort_name }}</a>
 </div>
@@ -56,7 +56,7 @@
   {% endfor %}
 
 
-
+<center>
 <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
@@ -72,6 +72,6 @@
         {% endif %}
     </span>
 </div>
-
+</center>
 
 {% endblock %}

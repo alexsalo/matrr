@@ -16,7 +16,7 @@
 </head>
 
 <body>
-<!-- Header div -->
+<!-- Header div --> 
 <div class='header'>
 <div class='header-content clearfix'>
 <div class='left'>
@@ -24,11 +24,11 @@
 </div>
 <div class='right'>
 	{% if not user.is_authenticated %}
-	<a style='color: #FAF9ED' href="{{ SITE_ROOT }}/accounts/login?next={{ request.path }}">Login</a> |
-	<a style='color: #FAF9ED;' href="{{ SITE_ROOT }}{% url registration_register %}?next={{ request.path }}">
+	<a style='color: #FAF9ED' href="/accounts/login?next={{ request.path }}">Login</a> |
+	<a style='color: #FAF9ED;' href="{% url registration_register %}?next={{ request.path }}">
     Create an Account</a>
 	{% else %}
-	Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{{ SITE_ROOT }}/logout/">Logout</a>
+	Welcome {{ user.username }} | <a style='color: #FAF9ED' href="/logout/">Logout</a>
 	{% endif %}
 </div>
 </div>
@@ -39,41 +39,41 @@
 	<div class="nav clearfix">
 {% block nav-list %}
     <ul>
-			<li class='top'><a href="{{ SITE_ROOT }}/">Home</a></li>
+			<li class='top'><a href="/">Home</a></li>
     </ul>
 	  {% if user.is_authenticated %}
       <ul>
-			  <li class='top'><a href="{{ SITE_ROOT }}/account/">My Account</a></li>
-			  <li class='drop-down'><a href="{{ SITE_ROOT }}/orders/">My Orders</a></li>
+			  <li class='top'><a href="/account/">My Account</a></li>
+			  <li class='drop-down'><a href="/orders/">My Orders</a></li>
       </ul>
       {% endif %}
       {% if user.is_staff %}
       <ul>
-        <li class='top'><a href="{{ SITE_ROOT }}/admin/">Admin</a></li>
+        <li class='top'><a href="/admin/">Admin</a></li>
       </ul>
       {% endif %}
       {% if user_is_member_of_committee or user_is_member_of_superuser %}
       <ul>
         <li class='top'>
-          <a href="{{ SITE_ROOT }}/reviews/">Reviews</a>
+          <a href="/reviews/">Reviews</a>
         </li>
           {% if user_is_member_of_superuser %}
-            <li class='drop-down'><a href="{{ SITE_ROOT }}/reviews_overviews/">Reviews Overview</a></li>
+            <li class='drop-down'><a href="/reviews_overviews/">Reviews Overview</a></li>
           {% endif %}
       </ul>
       {% endif %}
       {% if user_is_member_of_committee or user_is_member_of_superuser or user_is_member_of_tech_user %}
        <ul>
          <li class='top'>
-           <a href='{{ SITE_ROOT }}/shipping_overview'>Shipping Overview</a>
+           <a href='/shipping_overview'>Shipping Overview</a>
          </li>
        </ul>
       {% endif %}
 {#      {% if user.is_staff %}#}
 {#      <ul>#}
-{#          <li class='top'><a href="{{ SITE_ROOT }}/qc/">Quality Control</a></li>#}
-{#          <li class='drop-down'><a href="{{ SITE_ROOT }}/upload_rna/">Upload RNA</a></li>#}
-{#          <li class='drop-down'><a href="{{ SITE_ROOT }}/view_rna/">View RNA</a></li>#}
+{#          <li class='top'><a href="/qc/">Quality Control</a></li>#}
+{#          <li class='drop-down'><a href="/upload_rna/">Upload RNA</a></li>#}
+{#          <li class='drop-down'><a href="/view_rna/">View RNA</a></li>#}
 {#      </ul>#}
 {#      {% endif %}#}
 {% endblock %}
@@ -103,7 +103,7 @@
 	Login
 	</div>
 	{% include 'login.form' %}
-	<a href="{{ SITE_ROOT }}{% url registration_register %}">Create an Account</a>
+	<a href="{% url registration_register %}">Create an Account</a>
 {% else %}
 	Welcome {{ user.username }}
 {% endif %}
@@ -122,20 +122,20 @@
 <div class='headline'>
 Quick Links
 </div>
-<a href="{{ SITE_ROOT }}/available">Request Archival Tissue</a><br/>
-<a href="{{ SITE_ROOT }}/upcoming">Request Upcoming Tissue</a><br/>
-<a href="{{ SITE_ROOT }}/cohort">View All Cohorts</a><br/>
-<a href="{{ SITE_ROOT }}/mta/upload">Upload an MTA</a><br/>
-<a href="{{ SITE_ROOT }}/account">Submit Research Updates</a><br/>
-<a href="{{ SITE_ROOT }}/publications">View Publications</a>
+<a href="/available">Request Archival Tissue</a><br/>
+<a href="/upcoming">Request Upcoming Tissue</a><br/>
+<a href="/cohort">View All Cohorts</a><br/>
+<a href="/mta/upload">Upload an MTA</a><br/>
+<a href="/account">Submit Research Updates</a><br/>
+<a href="/publications">View Publications</a>
 </div>
 
 <div class='sidebar-block'>
 <div class='headline'>
 FAQ/Help
 </div>
-<a href="{{ SITE_ROOT }}/benefits">Account Benefits</a><br/>
-<a href="{{ SITE_ROOT }}/contact_us">Contact Us</a>
+<a href="/benefits">Account Benefits</a><br/>
+<a href="/contact_us">Contact Us</a>
 </div>
 
 {% block warning %}{% endblock %}
@@ -159,7 +159,7 @@ FAQ/Help
 
 <div class='footer-line'></div>
 	<div class='footer clearfix'>
-The Monkey Alcohol and Tissue Research Resource (MATRR) is supported by <a href="http://www.niaaa.nih.gov">NIAAA</a> as an R24. This site is maintained by <a href="mailto:erich_baker@baylor.edu">Erich Baker</a>. For applicable policies see our <a href="{{ SITE_ROOT }}/privacy">privacy</a>, <a href="{{ SITE_ROOT }}/data">data sharing</a>, and <a href="{{ SITE_ROOT }}/usage">usage</a> documents.
+The Monkey Alcohol and Tissue Research Resource (MATRR) is supported by <a href="http://www.niaaa.nih.gov">NIAAA</a> as an R24. This site is maintained by <a href="mailto:erich_baker@baylor.edu">Erich Baker</a>. For applicable policies see our <a href="/privacy">privacy</a>, <a href="/data">data sharing</a>, and <a href="/usage">usage</a> documents.
 	</div>
 
 {% endblock %}
