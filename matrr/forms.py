@@ -129,9 +129,9 @@ class ReviewResponseForm(Form):
 
 
 class ContactUsForm(Form):
-  subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 40}))
-  body = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 15}))
-
+    email_subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 40}))
+    email_from = EmailField(widget=widgets.TextInput(attrs={'size': 40}))
+    email_body = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 15}))
 
 class TissueRequestProcessForm(ModelForm):
   def __init__(self, *args, **kwargs):
