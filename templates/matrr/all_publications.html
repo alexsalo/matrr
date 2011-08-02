@@ -1,13 +1,10 @@
 {% extends "base.html" %}
-{% load basic_filters %}
 
 {% block content %}
     <div class='headline'>
         Publications
     </div>
-
     {% include 'matrr/publication_table.html' %}
-
     <div class="pagination">
         <span class="step-links">
             {% if page_obj.has_previous %}

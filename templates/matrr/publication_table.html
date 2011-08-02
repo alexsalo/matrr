@@ -11,11 +11,9 @@
             {% endif %}
             <br>
             {% with author=pub.authors|truncate_by_char:',' %}
-                {{ author }}, <i>et al.</i>
+                {{ author }}, <i>et al.</i>,
             {% endwith %}
-            <br>
-            {{ pub.journal }}
-            <br>
+            {{ pub.journal }},
             {% if pub.volume %}
                 Volume: {{ pub.volume }}
             {% endif %}
@@ -33,6 +31,6 @@
                 <a href="{{ cohort.get_url }}">{{ cohort.coh_cohort_name }}</a>{% if not forloop.last %}, {% else %}<br>{% endif %}
             {% endfor %}
         </tr>
-        <br>
+        {% if not forloop.last %}<br> {% endif %}
     {% endfor %}
 </table>

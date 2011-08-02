@@ -104,7 +104,7 @@ urlpatterns += patterns('matrr.views',
             queryset=Publication.objects.all(),
             context_object_name='publications',
             template_name='matrr/all_publications.html',
-            paginate_by=10,
+            paginate_by=15,
             )),
 )
 # Real views
