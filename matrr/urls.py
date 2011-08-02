@@ -161,8 +161,8 @@ urlpatterns += patterns('matrr.views',
         build_shipment),
     url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$',
         make_shipping_manifest_latex),
-    #  url(r'^search/?$',
-    #    search),
+      url(r'^search/?$',
+        search),
     )
 
 if settings.DEVELOPMENT:
