@@ -9,9 +9,6 @@ admin.autodiscover()
 from django.contrib.auth import views as authviews
 
 urlpatterns = patterns('',
-  # Examples:
-  # url(r'^django_test/', include('django_test.foo.urls')),
-  
   # Uncomment the admin/doc line below to enable admin documentation:
   url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
   # Uncomment the next line to enable the admin:

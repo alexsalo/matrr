@@ -1,7 +1,6 @@
 __author__ = 'soltau'
 
 from django.conf.urls.defaults import patterns, url
-from django.conf import settings
 
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
