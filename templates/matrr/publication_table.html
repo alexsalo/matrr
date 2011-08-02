@@ -1,41 +1,38 @@
+{% load basic_filters %}
 <table>
-  <tr>
-    <th>Title</th>
-    <th>Authors</th>
-    <th>Journal</th>
-    <th>Date</th>
-  </tr>
-  {% for pub in publications|dictsortreversed:"published_year" %}
-  <tr>
-    <td>
-      {% if pub.pmid %}
-        <a href="http://www.ncbi.nlm.nih.gov/pubmed?term={{ pub.pmid }}">
-          {{ pub.title }}
-        </a>
-      {% else %}
-        {{ pub.title }}
-      {% endif %}
-    </td>
-    <td>
-      {{ pub.authors }}
-    </td>
-    <td>
-      {{ pub.journal }}
-      {% if pub.volume %}
-        Volume: {{ pub.volume }}
-      {% endif %}
-      {% if pub.issue %}
-        Issue: {{ pub.issue }}
-      {% endif %}
-    </td>
-    <td>
-      {% if pub.published_month %}
-        {{ pub.published_month }}
-      {% endif %}
-      {% if pub.published_year %}
-        {{ pub.published_year }}
-      {% endif %}
-    </td>
-  </tr>
-  {% endfor %}
+    {% for pub in publications|dictsortreversed:"published_year" %}
+        <tr>
+            {% if pub.pmid %}
+                <a href="http://www.ncbi.nlm.nih.gov/pubmed?term={{ pub.pmid }}">
+                    {{ pub.title }}
+                </a>
+            {% else %}
+                {{ pub.title }}
+            {% endif %}
+            <br>
+            {% with author=pub.authors|truncate_by_char:',' %}
+                {{ author }}, <i>et al.</i>
+            {% endwith %}
+            <br>
+            {{ pub.journal }}
+            <br>
+            {% if pub.volume %}
+                Volume: {{ pub.volume }}
+            {% endif %}
+            {% if pub.issue %}
+                Issue: {{ pub.issue }}
+            {% endif %}
+            {% if pub.published_month %}
+                {{ pub.published_month }}
+            {% endif %}
+            {% if pub.published_year %}
+                {{ pub.published_year }}
+            {% endif %}
+            <br>
+            {% for cohort in pub.cohorts.all %}
+                <a href="{{ cohort.get_url }}">{{ cohort.coh_cohort_name }}</a>{% if not forloop.last %}, {% else %}<br>{% endif %}
+            {% endfor %}
+        </tr>
+        <br>
+    {% endfor %}
 </table>

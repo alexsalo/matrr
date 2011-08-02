@@ -1,71 +1,27 @@
 {% extends "base.html" %}
+{% load basic_filters %}
 
 {% block content %}
-  <div class='headline'>
-    Publications
-  </div>
-  <table>
-  <tr>
-    <th>Title</th>
-    <th>Authors</th>
-    <th>Journal</th>
-    <th>Date</th>
-    <th>Cohorts</th>
-  </tr>
-  {% for pub in publications|dictsortreversed:"published_year" %}
-  <tr>
-    <td>
-      {% if pub.pmid %}
-        <a href="http://www.ncbi.nlm.nih.gov/pubmed?term={{ pub.pmid }}">
-          {{ pub.title }}
-        </a>
-      {% else %}
-        {{ pub.title }}
-      {% endif %}
-    </td>
-    <td>
-      {{ pub.authors }}
-    </td>
-    <td>
-      {{ pub.journal }}
-      {% if pub.volume %}
-        Volume: {{ pub.volume }}
-      {% endif %}
-      {% if pub.issue %}
-        Issue: {{ pub.issue }}
-      {% endif %}
-    </td>
-    <td>
-      {% if pub.published_month %}
-        {{ pub.published_month }}
-      {% endif %}
-      {% if pub.published_year %}
-        {{ pub.published_year }}
-      {% endif %}
-    </td>
-    <td>
-      {% for cohort in pub.cohorts.all %}
-        <a href="{{ cohort.get_url }}">{{ cohort.coh_cohort_name }}</a>{% if not forloop.last %}, {% endif %}
-      {% endfor %}
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+    <div class='headline'>
+        Publications
+    </div>
 
-<div class="pagination">
-  <span class="step-links">
-    {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-    {% endif %}
+    {% include 'matrr/publication_table.html' %}
 
-    <span class="current">
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
       Page {{ page_obj.number }} of {{ paginator.num_pages }}.
     </span>
 
-    {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}">next</a>
-    {% endif %}
-  </span>
-</div>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+            {% endif %}
+        </span>
+    </div>
 
 {% endblock %}
