@@ -26,21 +26,21 @@ def index_view(request):
 
 
 def static_page_view(request, static_page):
-    if static_page == "privacy":
-        f = open('static/privacy.txt', 'r')
-        head = 'Privacy Policy'
-    elif static_page == "data":
-        f = open('static/data.txt', 'r')
-        head = 'Data Sharing Policy'
-    elif static_page == "usage":
-        f = open('static/usage.txt', 'r')
-        head = 'Usage Policy'
-    if f:
-        text = f.read()
-    return render_to_response('matrr/static_page.html',
-            {'text': text, 'head': head},
-                              context_instance=RequestContext(request))
+    # This is terrible Django-fu, all kinds of against DRY principles
+    # The issue I was having with file.open('/path/to/text.txt', r) was the inconsistent directory structure between
+    # the dev and production environments (laptop vs gleek).  I'm certain there is a combination of settings that would
+    # handle that more beautifully, but for the scope of 3 files I've wasted enough time.
 
+    if static_page == "privacy":
+        template = 'matrr/privacy.html'
+    elif static_page == "data":
+        template = 'matrr/data.html'
+    elif static_page == "usage":
+        template = 'matrr/usage.html'
+    try:
+        return render_to_response(template, {}, context_instance=RequestContext(request))
+    except:
+        return redirect('/')
 
 def monkey_cohort_detail_view(request, cohort_id, monkey_id):
     try:
