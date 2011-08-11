@@ -4,39 +4,39 @@
 
 {% block content %}
 
-<div class="content-item">
-<div id="headline">Uploade Material Transfer Agreement (MTA)</div>
-<br>
-
-{% if form.errors %}
-<div class="messages"><div class="error">
-{% for key, value in form.errors.items %}
-  {% for error in value %}
-    {{ error }}<br>
-  {% endfor %}
-{% endfor %}
-</div></div>
-{% endif %}
+	<div class="content-item">
+		<div id="headline">Upload Material Transfer Agreement (MTA)</div>
 
 
-<form method="post" action="" enctype="multipart/form-data">{% csrf_token %}
+		{% if form.errors %}
+			<div class="messages">
+				<div class="error">
+					{% for key, value in form.errors.items %}
+						{% for error in value %}
+							{{ key }}:  {{ error }}
+						{% endfor %}
+					{% endfor %}
+				</div></div>
+		{% endif %}
 
-<div id="table-wrap">
-	<div class="table-left"><div class="text-right">
-	  <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ form.mta_title.help_text }}</span></a>
-	  MTA Title:
-	</div></div>
-	<div class="table-right">{{ form.mta_title }}</div>
-	<div class="table-left"><div class="text-right">Selected File:</div></div>
-	<div class="table-right">{{ form.mta_file }}</div>
-  <div class="table-right">
-    <input type="submit" value="{% trans 'Upload' %}" />
-  </div>
-</div>
+		<form method="post" action="" enctype="multipart/form-data">{% csrf_token %}
 
-</form>
-
-</div>
+			<div id="table-wrap">
+				<div class="table-left text-right">
+					<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ form.mta_title.help_text }}</span></a> MTA Title:
+				</div>
+				<div class="table-right">{{ form.mta_title }}</div>
+				<div class="table-left">
+					<div class="text-right">Selected File:</div>
+				</div>
+				<div class="table-right">{{ form.mta_file }}</div>
+				<div class="table-right">
+					<input type="submit" value="{% trans 'Upload' %}"/>
+				</div>
+			</div>
+		</form>
+	
+	</div>
 
 
 {% endblock %}

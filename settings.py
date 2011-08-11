@@ -95,9 +95,9 @@ USE_L10N = True
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 if PRODUCTION:
-    MEDIA_ROOT = '/web/www/MATRR/media/'
+    MEDIA_ROOT = '/web/www/MATRR/media'
 else:
-    MEDIA_ROOT = path + '/media/'
+    MEDIA_ROOT = path + '/media'
 
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
@@ -110,7 +110,7 @@ MEDIA_URL = '/media/'
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
 if PRODUCTION:
-    STATIC_ROOT = '/web/www/MATRR/static/'
+    STATIC_ROOT = '/web/www/MATRR/static'
 else:
     STATIC_ROOT = ''
 
@@ -168,6 +168,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'matrr.context_processors.login_form',
     'matrr.context_processors.group_membership',
     'matrr.context_processors.site_root',
+	'matrr.context_processors.unsupported_browser'
     )
 
 TEMPLATE_DIRS = (

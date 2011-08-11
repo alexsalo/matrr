@@ -4,40 +4,48 @@ from settings import SITE_ROOT
 from string import lower, replace
 
 def cart(request):
-  # get the cart for the user in the request
-  cart_status = RequestStatus.objects.get(rqs_status_name='Cart')
-  context = {}
-  if request.user.is_authenticated():
-    if Request.objects.filter(user=request.user.id, request_status=cart_status.rqs_status_id).count() == 1:
-      cart = Request.objects.get(user=request.user.id, request_status=cart_status.rqs_status_id)
-      cart_items = TissueRequest.objects.filter(req_request=cart).all()
-      cart_num_items = len(cart_items)
-      context['cart_exists'] = True
-      context['cart'] = cart
-      context['cart_items'] = cart_items
-      context['cart_num_items'] = cart_num_items
-    else:
-      context['cart_exists'] = False
-  else:
-    context['cart_exists'] = False
-  return context
+	# get the cart for the user in the request
+	cart_status = RequestStatus.objects.get(rqs_status_name='Cart')
+	context = {}
+	if request.user.is_authenticated():
+		if Request.objects.filter(user=request.user.id, request_status=cart_status.rqs_status_id).count() == 1:
+			cart = Request.objects.get(user=request.user.id, request_status=cart_status.rqs_status_id)
+			cart_items = TissueRequest.objects.filter(req_request=cart).all()
+			cart_num_items = len(cart_items)
+			context['cart_exists'] = True
+			context['cart'] = cart
+			context['cart_items'] = cart_items
+			context['cart_num_items'] = cart_num_items
+		else:
+			context['cart_exists'] = False
+	else:
+		context['cart_exists'] = False
+	return context
 
 
 def login_form(request):
-  if request.user.is_authenticated():
-    return {}
-  return {'login_form': AuthenticationForm()}
+	if request.user.is_authenticated():
+		return {}
+	return {'login_form': AuthenticationForm()}
 
 
 def group_membership(request):
-  context = {}
-  if request.user.is_authenticated():
-    # if the user is logged in, get the groups the user is a member of
-    groups = request.user.groups.all()
-    for group in groups:
-      key = 'user_is_member_of_' + replace( lower(group.name), ' ', '_')
-      context[key] = True
-  return context
+	context = {}
+	if request.user.is_authenticated():
+		# if the user is logged in, get the groups the user is a member of
+		groups = request.user.groups.all()
+		for group in groups:
+			key = 'user_is_member_of_' + replace(lower(group.name), ' ', '_')
+			context[key] = True
+	return context
+
 
 def site_root(request):
-  return {'SITE_ROOT': SITE_ROOT}
+	return {'SITE_ROOT': SITE_ROOT}
+
+
+def unsupported_browser(request):
+	if 'MSIE' in request.META['HTTP_USER_AGENT']:
+		return {'unsupported_browser' : request.META['HTTP_USER_AGENT']}
+	else:
+		return {}

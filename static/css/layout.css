@@ -144,3 +144,8 @@ div{
   display: table-cell;
   padding: 2px;
 }
+
+#id_username,
+#id_password {
+	max-width: 95%;
+}
