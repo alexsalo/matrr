@@ -145,7 +145,19 @@ div{
   padding: 2px;
 }
 
+/*Jon Added below*/
+
 #id_username,
 #id_password {
 	max-width: 95%;
+}
+
+.image_container {
+	width: 96%;
+	height: 96%;
+	margin: 2% auto;
+}
+.image_container img {
+	width:100%;
+	height:100%;
 }

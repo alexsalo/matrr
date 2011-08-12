@@ -94,7 +94,7 @@ USE_L10N = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-if PRODUCTION:
+if PRODUCTION or GLEEK:
     MEDIA_ROOT = '/web/www/MATRR/media'
 else:
     MEDIA_ROOT = path + '/media'
@@ -109,7 +109,7 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-if PRODUCTION:
+if PRODUCTION or GLEEK:
     STATIC_ROOT = '/web/www/MATRR/static'
 else:
     STATIC_ROOT = ''

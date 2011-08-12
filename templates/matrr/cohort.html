@@ -1,92 +1,106 @@
 {% extends "base.html" %}
 
 {% block title %}
-{% if cohort.coh_upcoming %}
-Upcoming 
-{% else %}
-Available 
-{% endif %}
-Cohort: {{ cohort.coh_cohort_name }}
+	{% if cohort.coh_upcoming %}
+		Upcoming
+	{% else %}
+		Available
+	{% endif %}
+	Cohort: {{ cohort.coh_cohort_name }}
 {% endblock %}
 
 
 {% block content %}
-<div id='large-headline'>{% if cohort.coh_upcoming %}
-Upcoming 
-{% else %}
-Available 
-{% endif %}
-Cohort: {{ cohort.coh_cohort_name }}</div>
+	<div id='large-headline'>{% if cohort.coh_upcoming %}
+		Upcoming
+	{% else %}
+		Available
+	{% endif %}
+		Cohort: {{ cohort.coh_cohort_name }}</div>
 
-<div class='clearfix'>
+	<div class='clearfix'>
 
-  <div style='float: left;'>
-    {% if cohort.coh_upcoming %}
-      <a href="/upcoming/{{ cohort.coh_cohort_id }}/timeline">
-    {% else %}
-      <a href="/available/{{ cohort.coh_cohort_id }}/timeline">
-    {% endif %}
-    <img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
-      &nbsp;View Cohort Timeline</a>
-      <br>
-    {% if cohort.coh_upcoming %}
-      <a href="/upcoming/">
-    {% else %}
-      <a href="/available/">
-    {% endif %}
-    <img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
-      &nbsp;View {% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohorts</a>
-  </div>
+		<div style='float: left;'>
+			{% if cohort.coh_upcoming %}
+				<a href="/upcoming/{{ cohort.coh_cohort_id }}/timeline">
+			{% else %}
+				<a href="/available/{{ cohort.coh_cohort_id }}/timeline">
+			{% endif %}
+			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+			&nbsp;View Cohort Timeline</a>
+			<br>
+			{% if cohort.coh_upcoming %}
+				<a href="/upcoming/">
+			{% else %}
+				<a href="/available/">
+			{% endif %}
+			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+			&nbsp;View {% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohorts</a>
+		</div>
 
-  <div style='float: right;'>
-  <a class='blockLinkButton' href='tissues'>Request Tissues from this Cohort</a></div>
+		<div style='float: right;'>
+			<a class='blockLinkButton' href='tissues'>Request Tissues from this Cohort</a></div>
 
-</div>
+	</div>
 
-<div>
-<table class='common_center'>
-  <tr>
-    {% if user.is_superuser %}<th>Real Name</th>{% endif %}
-    <th>Monkey ID</th><th>Sex</th><th>Birthdate</th><th>Weight</th><th>Test Group</th>
-    <th>Necropsy Date</th><th>Stress Model</th><th>Study Complete</th></tr>
-  {% for monkey in cohort.monkey_set.all %}
-    <tr>
-      {% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
-        <td>{{ monkey.mky_name }}</td>
-      {% endif %}
-      <td><a href="monkey/{{monkey.mky_id}}" onClick='javascript:window.open("monkey/{{ monkey.mky_id}}");return false;'>
-            {{ monkey.mky_real_id }}
-            <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
-          </a>
-      </td>
-      <td>{{ monkey.mky_gender }}</td>
-      <td>{{ monkey.mky_birthdate }}</td>
-      <td>{{ monkey.mky_weight }}</td>
-      <td>
-        {% if monkey.mky_drinking %}
-          Ethanol
-        {% else %}{% if monkey.mky_housing_control %}
-          Housing Control
-        {% else %}
-          Control
-        {% endif %}{% endif %}
-      </td>
-      <td>{{ monkey.mky_necropsy_date}}</td>
-      <td>{{ monkey.mky_stress_model }}</td>
-      <td>{% if monkey.mky_study_complete %}<font color=Green>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
-    </tr>
-  {% endfor %}
-</table>
-</div>
+	<div>
+		<table class='common_center'>
+			<tr>
+				{% if user.is_superuser %}
+					<th>Real Name</th>{% endif %}
+				<th>Monkey ID</th>
+				<th>Sex</th>
+				<th>Birthdate</th>
+				<th>Weight</th>
+				<th>Test Group</th>
+				<th>Necropsy Date</th>
+				<th>Stress Model</th>
+				<th>Study Complete</th></tr>
+			{% for monkey in cohort.monkey_set.all %}
+				<tr>
+					{% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
+						<td>{{ monkey.mky_name }}</td>
+					{% endif %}
+					<td><a href="monkey/{{monkey.mky_id}}" onClick='javascript:window.open("monkey/{{ monkey.mky_id}}");return false;'>
+						{{ monkey.mky_real_id }}
+						<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
+					</a>
+					</td>
+					<td>{{ monkey.mky_gender }}</td>
+					<td>{{ monkey.mky_birthdate }}</td>
+					<td>{{ monkey.mky_weight }}</td>
+					<td>
+						{% if monkey.mky_drinking %}
+							Ethanol
+							{% else %}{% if monkey.mky_housing_control %}
+								Housing Control
+							{% else %}
+								Control
+							{% endif %}{% endif %}
+					</td>
+					<td>{{ monkey.mky_necropsy_date }}</td>
+					<td>{{ monkey.mky_stress_model }}</td>
+					<td>{% if monkey.mky_study_complete %}<font color=Green>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
+				</tr>
+			{% endfor %}
+		</table>
+	</div>
 
-<div>
-  <div class='mini-headline'>
-    Publications
-  </div>
-  {% with publications=cohort.publication_set.all %}
-    {% include 'matrr/publication_table.html' %}
-  {% endwith %}
-</div>
+	<div class='mini-headline'>Cohort Ethanol Intake</div>
+	<div class="image_container"><img src="{{ STATIC_URL }}{{ cohort.coh_cohort_name}}.png"></div>
+
+	<div>
+		<div class='mini-headline'>
+			Publications
+		</div>
+		{% with publications=cohort.publication_set.all %}
+			{% if publications %}
+				{% include 'matrr/publication_table.html' %}
+			{% else %}
+				No Publications for this cohort.
+			{% endif %}
+		{% endwith %}
+	</div>
 
 
 {% endblock %}

@@ -1,7 +1,7 @@
 # Create your views here.
 from django.template import RequestContext
 from django.http import Http404, HttpResponse
-from django.shortcuts import  render_to_response, redirect
+from django.shortcuts import  render_to_response, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -20,9 +20,13 @@ from process_latex import process_latex
 
 
 def index_view(request):
-	return render_to_response('matrr/index.html',
-			{'event_list': Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name')[:5]},
-							  context_instance=RequestContext(request))
+	index_context = {}
+
+	index_context['event_list'] = Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name')[:5]
+	index_context['pub_list'] = Publication.objects.all().exclude(published_year=None).order_by('-published_year', '-published_month')[:4]
+
+
+	return render_to_response('matrr/index.html', index_context, context_instance=RequestContext(request))
 
 
 def static_page_view(request, static_page):
@@ -40,6 +44,8 @@ def static_page_view(request, static_page):
 		template = 'matrr/usage.html'
 	elif static_page == 'browser':
 		template = 'matrr/browser.html'
+	elif static_page == 'faq':
+		template = 'matrr/faq.html'
 	else:
 		messages.debug(request, "Error generating static_page.")
 		return redirect('/')
@@ -851,9 +857,37 @@ def cohort_necropsy(request, pk):
 	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
 
 
-def spiffy_available_cohort(request, pk):
-	cohort = Cohort.objects.get(pk=pk)
+def spiffy_available_cohort(request, **kwargs):
+	cohort = []
+	cohorts = []
+	if kwargs.has_key('pk'):
+		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
+		template_name = 'matrr/cohort.html'
+	elif kwargs['avail_up'] == 'cohort':
+		cohorts = Cohort.objects.order_by('coh_cohort_name')
+		template_name='matrr/upcoming_cohorts.html'
+	elif kwargs['avail_up'] == 'upcoming':
+		cohorts = Cohort.objects.filter(coh_upcoming=True).order_by('coh_cohort_name')
+		template_name='matrr/upcoming_cohorts.html'
+	elif kwargs['avail_up'] == 'available':
+		cohorts = Cohort.objects.filter(coh_upcoming=False).order_by('coh_cohort_name')
+		template_name='matrr/available_cohorts.html'
 
-	if True:
-		print('what?')
-	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
+	if len(cohorts) > 0:
+		paginator = Paginator(cohorts, 5)
+
+		# Make sure page request is an int. If not, deliver first page.
+		try:
+			page = int(request.GET.get('page', '1'))
+		except ValueError:
+			page = 1
+
+		# If page request (9999) is out of range, deliver last page of results.
+		try:
+			cohort_list = paginator.page(page)
+		except (EmptyPage, InvalidPage):
+			cohort_list = paginator.page(paginator.num_pages)
+	else:
+		cohort_list = cohorts
+
+	return render_to_response(template_name, {'cohort': cohort, 'cohort_list': cohort_list}, context_instance=RequestContext(request))

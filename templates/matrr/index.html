@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load basic_filters %}
 
 {% block title %}
 MATRR Home
@@ -29,8 +30,9 @@ The primary goal of this site is to build the resources of a tissue bank and ass
 	<div class='content-item'><a href='http://www.google.com/chromeframe'>Chrome Frame</a></div>
 	<div class='content-item'><a href='http://www.niaaa.nih.gov/Pages/default.aspx'>NIAAA</a></div>
 </div>
-
 </div>
+
+
 <div class='right-content'>
 <!-- Search div -->
 <div class='content-block-lower'>
@@ -39,6 +41,26 @@ The primary goal of this site is to build the resources of a tissue bank and ass
   <div><input type='text' id='terms' name='terms'/>
   <button type='submit'>Search</button></div>
 </form>
+</div>
+
+<!-- Publications div -->
+<div class='content-block-lower'>
+<div class='headline'>Recent Publications</div>
+		<ul>
+		{% for pub in pub_list %}
+			<li>
+				<a href='/publications/'>
+				{{ pub.title|truncatewords:5 }},
+				{% if pub.journal == 'Proceedings of the National Academy of Sciences of the United States of America' %}
+					PNAS,
+				{% else %}
+					{{ pub.journal }},
+				{% endif %}
+				{{ pub.published_year }}.
+				</a>
+			</li>
+		{% endfor %}
+		</ul>
 </div>
 <!-- News/Upcoming Events div -->
 {% if event_list %}
@@ -57,5 +79,7 @@ The primary goal of this site is to build the resources of a tissue bank and ass
 </div>
 {% endif %}
 </div>
+
+
 {% endblock %}
 
