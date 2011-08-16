@@ -1,52 +1,58 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div id='large-headline'>
-  {% block title %}
-  {% if monkey.cohort.coh_upcoming %}
-    Upcoming
-  {% else %}
-    Available
-  {% endif %}
-  Cohort: {{ monkey.cohort.coh_cohort_name }}
-  Monkey: {{ monkey.mky_real_id }}
-  {% endblock %}
-</div>
-<br>
-    
-<table class="overview">
-  {% if user_is_member_of_superuser or user_is_member_if_tech_user or user_is_member_of_committee %}
-    <tr>
-      <th>Name:</th><td>{{ monkey.mky_name }}</td>
-    </tr>
-  {% endif %}
-    <tr>
-        <th>Assignment:</th>
-      <td>
-        {% if monkey.mky_drinking %}
-          Ethanol
-        {% else %}{% if monkey.mky_housing_control %}
-          Housing Control
-          {% else %}
-          Control
-        {% endif %}{% endif %}
-      </td>
-    </tr>
-    <tr>
-        <th>Sex:</th><td>{{ monkey.mky_gender }}</td>
-    </tr>
-    <tr>
-        <th>Birthday:</th><td>{{ monkey.mky_birthdate }}</td>
-    </tr>
-    <tr>
-        <th>Necropsy Date:</th><td>{% if monkey.mky_necropsy_date %}{{ monkey.mky_necropsy_date }}{% else %}No Necropsy Yet{% endif %}</td>
-    </tr>
-    <tr>
-        <th>Weight:</th><td>{{ monkey.mky_weight }}</td>
-    </tr>
-    <tr>
-        <th>Stress Model:</th><td>{{ monkey.mky_stress_model }}</td>
-    </tr>
-</table>
+	<div id='large-headline'>
+		{% block title %}
+			{% if monkey.cohort.coh_upcoming %}
+				Upcoming
+			{% else %}
+				Available
+			{% endif %}
+			Cohort: {{ monkey.cohort.coh_cohort_name }}
+			Monkey: {{ monkey.mky_real_id }}
+		{% endblock %}
+	</div>
+	<br>
+
+	<table class="overview">
+		{% if user_is_member_of_superuser or user_is_member_if_tech_user or user_is_member_of_committee %}
+			<tr>
+				<th>Name:</th>
+				<td>{{ monkey.mky_name }}</td>
+			</tr>
+		{% endif %}
+		<tr>
+			<th>Assignment:</th>
+			<td>
+				{% if monkey.mky_drinking %}
+					Ethanol
+					{% else %}{% if monkey.mky_housing_control %}
+						Housing Control
+					{% else %}
+						Control
+					{% endif %}{% endif %}
+			</td>
+		</tr>
+		<tr>
+			<th>Sex:</th>
+			<td>{{ monkey.mky_gender }}</td>
+		</tr>
+		<tr>
+			<th>Birthday:</th>
+			<td>{{ monkey.mky_birthdate }}</td>
+		</tr>
+		<tr>
+			<th>Necropsy Start Date:</th>
+			<td>{% if monkey.mky_necropsy_start_date %}{{ monkey.mky_necropsy_start_date }}{% else %}No Necropsy Yet{% endif %}</td>
+		</tr>
+		<tr>
+			<th>Weight:</th>
+			<td>{{ monkey.mky_weight }}</td>
+		</tr>
+		<tr>
+			<th>Stress Model:</th>
+			<td>{{ monkey.mky_stress_model }}</td>
+		</tr>
+	</table>
 
 {% endblock %}
