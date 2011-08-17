@@ -17,10 +17,17 @@ def truncate_by_char(value, arg):
 #  In this dictionary, keys are directories within static/images/
 #  Values are bools indicating whether or not an image exists in that key directory for this cohort
 @register.filter()
-def cohort_images(cohort):
-	image_dirs = {'etoh':False}
+def cohort_images(cohort, test_dir):
+	# Directories to check
+	image_dirs = ['etoh']
+	images = []
 
-	for key in image_dirs.keys():
-		image_dirs[key] = os.path.exists(STATIC_ROOT + '/images/' + key + "/" + cohort.coh_cohort_name + ".png")
+	if test_dir == 'all':
+		for dir in image_dirs:
+			if os.path.exists(STATIC_ROOT + '/images/' + dir + "/" + cohort.coh_cohort_name + ".png"):
+				images[len(images):] = [dir]
+	else:
+		if os.path.exists(STATIC_ROOT + '/images/' + test_dir + "/" + cohort.coh_cohort_name + ".png"):
+			images[len(images):] = [test_dir]
 
-	return image_dirs
+	return images

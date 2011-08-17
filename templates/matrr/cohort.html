@@ -86,13 +86,11 @@
 		</table>
 	</div>
 
-	{% with images=cohort|cohort_images %}
+	{% with images=cohort|cohort_images:"all" %}
 		{% if images %}
 			<div class='mini-headline'>Cohort Plots</div>
-			{% for key, value in images.items %}
-				{% if value %}
-					<div class="image_container"><img src="{{ STATIC_URL }}/images/{{ key }}/{{ cohort.coh_cohort_name}}.png"></div>
-				{% endif %}
+			{% for dir in images %}
+				<div class="image_container"><img src="{{ STATIC_URL }}/images/{{ dir }}/{{ cohort.coh_cohort_name}}.png"></div>
 			{% endfor %}
 		{% endif %}
 	{% endwith %}
