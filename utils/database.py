@@ -262,7 +262,7 @@ def load_inventory(file, output_file):
 		if row[1] is '' or row[1] is None:
 			continue
 
-		### had to fix some rows in 20110809 data, details in ### comments
+### 	had to fix some rows in 20110809 data, details in ### comments
 		monkey_id = row[1]
 		monkey_name = row[2]
 		monkey_birthdate = row[5]
@@ -274,19 +274,19 @@ def load_inventory(file, output_file):
 		necropsy_weight = row[11]
 		tissue_category = row[13]
 
-		### had to fix a few dozen cells to read "##" instead of plain ##.
+### 	had to fix a few dozen cells to read "##" instead of plain ##.
 		tissue_detail = row[14]
 		comments = row[15]
 		additional_info = row[16]
 
-		### "SHELF #" to "#" with find/replace in spreadsheet apps
+### 	"SHELF #" to "#" with find/replace in spreadsheet apps
 		shelf = row[17]
 
-		### "Drawer #"  -->  "#"
+### 	"Drawer #"  -->  "#"
 		rack = row[18]
 		column = row[19]
 
-		### "bag" --> "0"
+### 	"bag" --> "0"
 		box = row[20]
 		distributed = row[21]
 		reserved = row[22]
@@ -333,6 +333,7 @@ def load_inventory(file, output_file):
 				continue
 
 			# first, get the category
+###			Renamed "Necropsy Perif
 			if TissueCategory.objects.filter(cat_name=tissue_category).count():
 				# don't bother updating the description, it shouldn't be changing
 				category = TissueCategory.objects.get(cat_name=tissue_category)
@@ -397,3 +398,20 @@ def load_inventory(file, output_file):
 		print int(monkey_id)
 
 		#raise Exception('Just testing') #uncomment for testing purposes
+
+def clean_fuckups():
+	dirtycategory = TissueCategory.objects.filter(cat_name="Necropsy Peripheral tissues")
+
+	for tissue in TissueType.objects.filter(category=dirtycategory):
+		for sample in TissueSample.objects.filter(tissue_type=tissue):
+			sample.delete()
+#			sample.save()
+		tissue.delete()
+#		tissue.save()
+	dirtycategory.delete()
+
+	##  or...
+	TissueSample.objects.filter(tissue_type__category=dirtycategory).delete()
+	TissueType.objects.filter(category=dirtycategory).delete()
+	dirtycategory.delete()
+	return

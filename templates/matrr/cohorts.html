@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load basic_filters %}
 
 {% block warning %}
 	{% include 'matrr/cart/cohort_warning.html' %}
@@ -54,11 +55,15 @@
 				<a href="{{ cohort.coh_cohort_id }}/necropsy/">Expected Necropsy Data</a><br/>
 				<a href="{{ cohort.coh_cohort_id }}/publications">Publications</a><br/>
 				<a href='{{ cohort.coh_cohort_id }}/tissues'>Request Tissue from {{ cohort.coh_cohort_name }}</a>
-				<div class="image_container">
-					<a href="{{ cohort.coh_cohort_id }}/">
-						<img src="{{ STATIC_URL }}/{{ cohort.coh_cohort_name}}.png">
-					</a>
-				</div>
+				{% with images=cohort|cohort_images %}
+					{% if images.etoh %}
+						<div class="image_container">
+							<a href="{{ cohort.coh_cohort_id }}/">
+								<img src="{{ STATIC_URL }}/images/etoh/{{ cohort.coh_cohort_name}}.png"/>
+							</a>
+						</div>
+					{% endif %}
+            	{% endwith %}
 			</div>
 		</div>
 	{% endfor %}

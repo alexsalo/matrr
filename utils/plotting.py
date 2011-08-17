@@ -1,6 +1,6 @@
 from matrr.models import *
 from matplotlib import pyplot, pylab
-from settings import MEDIA_ROOT
+from settings import STATIC_ROOT
 
 def boxplot_m2de_etoh(cohort):
 	# Gather drinking monkeys from the cohort
@@ -33,7 +33,7 @@ def boxplot_m2de_etoh(cohort):
 	#	pyplot.setp(rev_keys, rotation=45)
 		pyplot.xlabel("Date of Experiment")
 		pyplot.ylabel("Ethanol Intake (in mL)")
-		pyplot.savefig(MEDIA_ROOT + "/%s.png" % cohort)
+		pyplot.savefig(STATIC_ROOT +'/images/etoh/' + "%s.png" % cohort)
 
 
 def graphthis():

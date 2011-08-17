@@ -112,7 +112,7 @@ MEDIA_URL = '/media/'
 if PRODUCTION or GLEEK:
     STATIC_ROOT = '/web/www/MATRR/static'
 else:
-    STATIC_ROOT = ''
+    STATIC_ROOT = '/web/dev/static'
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
