@@ -109,7 +109,7 @@ urlpatterns += patterns('matrr.views',
 )
 # Real views
 urlpatterns += patterns('matrr.views',
-	url(r'^(?P<static_page>privacy|data|usage|browser)/$',
+	url(r'^(?P<static_page>privacy|data|usage|browser|faq)/$',
 		static_page_view),
 
 	url(r'(?P<avail_up>^available|upcoming|cohort)/$',
