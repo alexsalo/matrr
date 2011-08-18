@@ -30,7 +30,7 @@ def boxplot_m2de(cohort):
 		fig_size = (10,10)
 		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
 		for data_type, data in all_data.items():
-			filename = 'images/' + data_type + "/" + cohort.coh_cohort_name
+			filename = 'static/images/' + data_type + "/" + cohort.coh_cohort_name
 			print filename
 
 			# *_data.values()/keys() is sorted ascending by date (oldest last) (as much as a dictionary can be at least)
