@@ -161,3 +161,6 @@ div{
 	max-width:100%;
 	max-height:100%;
 }
+.image_thumbnail {
+	max-width: 240px;
+}

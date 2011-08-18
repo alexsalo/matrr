@@ -86,15 +86,23 @@
 		</table>
 	</div>
 
+	<div class="clearfix">
 	{% with images=cohort|cohort_images:"all" %}
 		{% if images %}
 			<div class='mini-headline'>Cohort Plots</div>
-			{% for dir in images %}
-				<div class="image_container"><img src="{{ STATIC_URL }}/images/{{ dir }}/{{ cohort.coh_cohort_name}}.png"></div>
+			{% for dir, title in images.items %}
+				<div class="image_container">
+					<div class="image_thumbnail left">
+						<center>{{ title }}</center>
+						<a href="{{ STATIC_URL }}/images/{{ dir }}/{{ cohort.coh_cohort_name}}.png" target="_blank">
+						<img src="{{ STATIC_URL }}/images/{{ dir }}/{{ cohort.coh_cohort_name}}-thumb.jpg"></a>
+					</div>
+				</div>
 			{% endfor %}
 		{% endif %}
 	{% endwith %}
-
+	</div>
+	
 	<div>
 		<div class='mini-headline'>
 			Publications

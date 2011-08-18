@@ -1,8 +1,9 @@
 from matrr.models import *
-from matplotlib import pyplot, pylab
+from matplotlib import pyplot
+import Image
 from settings import STATIC_ROOT
 
-def boxplot_m2de_etoh(cohort):
+def boxplot_m2de(cohort):
 	# Gather drinking monkeys from the cohort
 	if not isinstance(cohort, Cohort):
 		try:
@@ -15,81 +16,45 @@ def boxplot_m2de_etoh(cohort):
 		dates = monkey_drinking_experiments.dates('drinking_experiment__dex_date', 'day')
 
 		# For each experiment date, gather the drinking data
-		daily_data = {}
+		etoh_data = {}
+		pellet_data = {}
+		veh_data = {}
+		weight_data = {}
 		for date in dates:
-			daily_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).values_list('mtd_etoh_intake')
-
-		# daily_data.values()/keys() is sorted ascending by date (oldest last) (as much as a dictionary can be at least)
-		# this reverses the lists, which will display the oldest dates on the left of the boxplot
-		rev_values = daily_data.values()
-		rev_keys = daily_data.keys()
-		rev_keys.reverse()
-		rev_values.reverse()
-
-		#draw the boxplots
-		pyplot.boxplot(rev_values)
-		# label X axis ticks by date
-		pylab.xticks(range(1, len(rev_keys)+1), rev_keys)
-	#	pyplot.setp(rev_keys, rotation=45)
-		pyplot.xlabel("Date of Experiment")
-		pyplot.ylabel("Ethanol Intake (in mL)")
-		pyplot.savefig(STATIC_ROOT +'/images/etoh/' + "%s.png" % cohort)
+			etoh_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).values_list('mtd_etoh_intake')
+			pellet_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).values_list('mtd_total_pellets')
+			veh_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).values_list('mtd_veh_intake')
+			weight_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).values_list('mtd_weight')
+		all_data = {"etoh" : ("Ethanol Intake (in mL)", etoh_data), "pellet" : ("Total Pellets", pellet_data), "veh" : ("Veh Intake", veh_data), "weight" : ("Weight", weight_data)}
 
 
-def graphthis():
-	###### works better
-	cohort = 2
-	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(mtd_etoh_intake=None)
-	dates = monkey_drinking_experiments.dates('drinking_experiment__dex_date', 'day')
+		fig_size = (10,10)
+		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
+		for data_type, data in all_data.items():
+			filename = STATIC_ROOT +'/images/' + data_type + "/" + cohort.coh_cohort_name
+			print filename
 
-	daily_data = {}
-	for date in dates:
-		daily_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).values_list('mtd_etoh_intake')
+			# *_data.values()/keys() is sorted ascending by date (oldest last) (as much as a dictionary can be at least)
+			# this reverses the lists, which will display the oldest dates on the left of the boxplot
+			rev_values = data[1].values()
+			rev_keys = data[1].keys()
+			rev_keys.reverse()
+			rev_values.reverse()
 
-	rev_values = daily_data.values()
-	rev_keys = daily_data.keys()
-	rev_keys.reverse()
-	rev_values.reverse()
+			fig = pyplot.figure(figsize=fig_size)
+			ax1 = fig.add_subplot(111)
+			ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+			ax1.set_axisbelow(True)
+			ax1.set_title('MATRR Boxplot')
+			ax1.set_xlabel("Date of Experiment")
+			ax1.set_ylabel(data[0])
+			bp = pyplot.boxplot(rev_values)
+			xtickNames = pyplot.setp(ax1, xticklabels=rev_keys)
+			pyplot.setp(xtickNames, rotation=45)
+			fig.savefig(filename + ".png")
 
-	pyplot.boxplot(rev_values)
-	pylab.xticks(range(1, len(rev_keys)+1), rev_keys)
+			img = Image.open(filename + ".png")
+			img.thumbnail(thumb_size, Image.ANTIALIAS)
+			img.save(filename + "-thumb.jpg")
 
-def graphthat():
-###########   works
-	testcohort = Cohort.objects.get(pk=2)
-
-	monkeys = {}
-	drinkingdata = {}	
-	monkeyaverage = {}
-	monkeydrinking = {}
-	sortedmonkeydrinking = {}
-	drinkingmonkeys = testcohort.monkey_set.exclude(mky_drinking=False)
-
-	for monkey in drinkingmonkeys:
-		mde = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).exclude(mtd_etoh_intake=None)
-		for e in mde:
-			try:
-				drinkingdata[e.drinking_experiment.dex_date] += e.mtd_etoh_intake
-				monkeydrinking[e.drinking_experiment.dex_date] = e.mtd_etoh_intake
-				for key in sorted(monkeydrinking.keys()):
-					sortedmonkeydrinking[key] = monkeydrinking[key]
-				monkeys[monkey.mky_real_id] = sortedmonkeydrinking
-			except KeyError:
-				drinkingdata[e.drinking_experiment.dex_date] = e.mtd_etoh_intake
-		monkeydrinking = {}
-		sortedmonkeydrinking = {}
-
-	## sort each date:value for each monkey in monkeys
-	sorted_de = {}
-	for monkey in monkeys:
-		for key in sorted(monkeys[monkey].iterkeys()):
-			sorted_de[key] = monkeys[monkey][key]
-		monkeys[monkey] = sorted_de
-
-	for key in drinkingdata:
-		monkeyaverage[key] = drinkingdata[key]/len(drinkingmonkeys)
-
-	pyplot.plot(monkeyaverage.keys(), monkeyaverage.values())
-	pyplot.plot(monkeydrinking.keys(), monkeydrinking.values())
-	pyplot.savefig('sweet.png')
 

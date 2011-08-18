@@ -19,15 +19,15 @@ def truncate_by_char(value, arg):
 @register.filter()
 def cohort_images(cohort, test_dir):
 	# Directories to check
-	image_dirs = ['etoh']
-	images = []
+	image_dirs = {'etoh' : "Ethanol Intake", 'pellet' : "Total Pellets", 'veh' : 'Veh Intake', 'weight' : 'Weights'}
+	images = {}
 
 	if test_dir == 'all':
 		for dir in image_dirs:
 			if os.path.exists(STATIC_ROOT + '/images/' + dir + "/" + cohort.coh_cohort_name + ".png"):
-				images[len(images):] = [dir]
+				images[dir] = image_dirs[dir]
 	else:
 		if os.path.exists(STATIC_ROOT + '/images/' + test_dir + "/" + cohort.coh_cohort_name + ".png"):
-			images[len(images):] = [test_dir]
+			images[test_dir] = image_dirs[test_dir]
 
 	return images
