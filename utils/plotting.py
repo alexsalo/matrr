@@ -1,7 +1,6 @@
 from matrr.models import *
 from matplotlib import pyplot
 import Image
-from settings import STATIC_ROOT
 
 def boxplot_m2de(cohort):
 	# Gather drinking monkeys from the cohort
@@ -31,7 +30,7 @@ def boxplot_m2de(cohort):
 		fig_size = (10,10)
 		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
 		for data_type, data in all_data.items():
-			filename = STATIC_ROOT +'/images/' + data_type + "/" + cohort.coh_cohort_name
+			filename = 'images/' + data_type + "/" + cohort.coh_cohort_name
 			print filename
 
 			# *_data.values()/keys() is sorted ascending by date (oldest last) (as much as a dictionary can be at least)
