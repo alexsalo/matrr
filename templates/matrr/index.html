@@ -2,83 +2,87 @@
 {% load basic_filters %}
 
 {% block title %}
-MATRR Home
+	MATRR Home
 {% endblock %}
 
 {% block content %}
-<!-- Welcome div -->
-<div class='center-content'>
-<div class='large-headline'>The Monkey Alcohol Tissue Research Resource (MATRR)</div>
-<p>
-The primary goal of this site is to build the resources of a tissue bank and associated bioinformatics to analyze and distribute appropriate tissue samples to the alcohol research community. This resource provides novel data for hypothesis testing relating the risk for and consequences of alcohol consumption and serve to bi-directionally bridge the gap between rodent and human studies. The basis of the MATRR is that non human primates, specifically monkeys, show a range of drinking excessive amounts of alcohol. <a href='/about'>more...</a>
-</p>
-</div>
+	<!-- Welcome div -->
+	<div class='center-content'>
+		<div class='large-headline'>The Monkey Alcohol Tissue Research Resource (MATRR)</div>
+		<p>
+			The primary goal of this site is to build the resources of a tissue bank and associated bioinformatics to analyze and distribute appropriate tissue samples to the alcohol research community. This resource provides novel data for hypothesis testing relating the risk for and consequences of alcohol consumption and serve to bi-directionally bridge the gap between rodent and human studies. The basis of the MATRR is that non human primates, specifically monkeys, show a range of drinking excessive amounts of alcohol.
+			<a href='/about'>more...</a>
+		</p>
+	</div>
 
-<div class='left-content'>
-<!-- Buttons div -->
-<div class='content-block-lower'>
-<div class='headline'>Request Tissues</div>
-<div class='buttons'>
-<a class="blueLinkButton linkButton" href='/upcoming'>Upcoming Cohorts</a>
-<a class="redLinkButton linkButton" href='/available'>Available Cohorts</a>
-</div>
-</div>
+<!-- Left-aligned Content -->
+	<div class='left-content'>
+		<!-- Buttons div -->
+		<div class='content-block-lower'>
+			<div class='headline'>Request Tissues</div>
+			<div class='buttons'>
+				<a class="blueLinkButton linkButton" href='/upcoming'>Upcoming Cohorts</a>
+				<a class="redLinkButton linkButton" href='/available'>Available Cohorts</a>
+			</div>
+		</div>
 
-<!-- Links to other resources div -->
-<div class='content-block-lower'>
-<div class='headline'>Links to Other Resources</div>
-	<div class='content-item'><a href='http://www.google.com/chromeframe'>Chrome Frame</a>: Using MATRR with Microsoft IE.</div>
-	<div class='content-item'><a href='http://www.niaaa.nih.gov/Pages/default.aspx'>NIAAA</a></div>
-</div>
-</div>
+		<!-- Links to other resources div -->
+		<div class='content-block-lower'>
+			<div class='headline'>Links to Other Resources</div>
+			<div class='content-item'><a href='http://www.google.com/chromeframe'>Chrome Frame</a>: Using MATRR with Microsoft IE.</div>
+			<div class='content-item'><a href='http://www.niaaa.nih.gov/Pages/default.aspx'>NIAAA</a></div>
+		</div>
+	</div>
 
 
-<div class='right-content'>
-<!-- Search div -->
-<div class='content-block-lower'>
-<div class='headline'>Search</div>
-<form action='/search' method='get'>
-  <div><input type='text' id='terms' name='terms'/>
-  <button type='submit'>Search</button></div>
-</form>
-</div>
+<!-- Right-aligned Content -->
+	<div class='right-content'>
+		<!-- Search div -->
+		<div class='content-block-lower'>
+			<div class='headline'>Search</div>
+			<form action='/search' method='get'>
+				<div><input type='text' id='terms' name='terms'/>
+					<button type='submit'>Search</button>
+				</div>
+			</form>
+		</div>
 
-<!-- Publications div -->
-<div class='content-block-lower'>
-<div class='headline'>Recent Publications</div>
-		<ul>
-		{% for pub in pub_list %}
-			<li>
-				<a href='/publications/'>
-				{{ pub.title|truncatewords:5 }},
-				{% if pub.journal == 'Proceedings of the National Academy of Sciences of the United States of America' %}
-					PNAS,
-				{% else %}
-					{{ pub.journal }},
-				{% endif %}
-				{{ pub.published_year }}.
-				</a>
-			</li>
-		{% endfor %}
-		</ul>
-</div>
-<!-- News/Upcoming Events div -->
-{% if event_list %}
-<div class='content-block-lower' style='padding-bottom: 20px;'>
-<div class='headline'>Upcoming Events</div>
-  {% for event in event_list %}
-    <div class='content-item'>
-    <div class='mini-headline'>{{ event.name }}  ({{ event.date }})</div>
-    {{ event.description }}
-    </div>
-  {% endfor %}
-  <div>
-    <div style='float:left;'><a href='/events/'>more</a></div>
-    <div style='float:right;'><a href='/archived-events/'>archived</a></div>
-  </div>
-</div>
-{% endif %}
-</div>
+		<!-- Publications div -->
+		<div class='content-block-lower'>
+			<div class='headline'>Recent Publications</div>
+			<ul>
+				{% for pub in pub_list %}
+					<li>
+						<a href='/publications/'>
+							{{ pub.title|truncatewords:5 }},
+							{% if pub.journal == 'Proceedings of the National Academy of Sciences of the United States of America' %}
+								PNAS,
+							{% else %}
+								{{ pub.journal }},
+							{% endif %}
+							{{ pub.published_year }}.
+						</a>
+					</li>
+				{% endfor %}
+			</ul>
+		</div>
+		<!-- News/Upcoming Events div -->
+		{% if event_list %}
+			<div class='content-block-lower' style='padding-bottom: 20px;'>
+				<div class='headline'>Upcoming Events</div>
+				{% for event in event_list %}
+					<div class='content-item'>
+						<div class='mini-headline'>{{ event.name }} ({{ event.date }})</div>
+						{{ event.description }}
+					</div>
+				{% endfor %}
+				<div>
+					<div style='float:left;'><a href='/events/'>more</a></div>
+					<div style='float:right;'><a href='/archived-events/'>archived</a></div>
+				</div>
+			</div>
+		{% endif %}
+	</div>
 
 
 {% endblock %}
