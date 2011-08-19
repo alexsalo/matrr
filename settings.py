@@ -8,17 +8,17 @@ path = os.path.dirname(os.path.realpath(__file__))
 GLEEK = DEVELOPMENT = PRODUCTION = False
 
 if path == '/web/www/matrr-prod':
-    PRODUCTION = True
+	PRODUCTION = True
 elif path == '/web/www/matrr-dev':
-    DEVELOPMENT = GLEEK = True
+	DEVELOPMENT = GLEEK = True
 else:
-    DEVELOPMENT = True
+	DEVELOPMENT = True
 
 
 if PRODUCTION:
-    DEBUG = False
+	DEBUG = False
 else:
-    DEBUG = True
+	DEBUG = True
 
 
 TEMPLATE_DEBUG = DEBUG
@@ -32,41 +32,41 @@ ADMINS = (
 MANAGERS = ADMINS
 
 if PRODUCTION:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'matrr_production', # Or path to database file if using sqlite3.
-            'USER': 'matrr_prod', # Not used with sqlite3.
-            'PASSWORD': 'm0nk3y_1s_drUnK', # Not used with sqlite3.
-            'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
-            #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-        }
-    }
+	DATABASES = {
+		'default': {
+			'ENGINE': 'django.db.backends.postgresql_psycopg2',
+			# Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+			'NAME': 'matrr_production', # Or path to database file if using sqlite3.
+			'USER': 'matrr_prod', # Not used with sqlite3.
+			'PASSWORD': 'm0nk3y_1s_drUnK', # Not used with sqlite3.
+			'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
+			#'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+		}
+	}
 elif GLEEK:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'matrr_test', # Or path to database file if using sqlite3.
-            'USER': 'django_test', # Not used with sqlite3.
-            'PASSWORD': 'matrr_django', # Not used with sqlite3.
-            'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
-            #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-        }
-    }
+	DATABASES = {
+		'default': {
+			'ENGINE': 'django.db.backends.postgresql_psycopg2',
+			# Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+			'NAME': 'matrr_test', # Or path to database file if using sqlite3.
+			'USER': 'django_test', # Not used with sqlite3.
+			'PASSWORD': 'matrr_django', # Not used with sqlite3.
+			'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
+			#'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+		}
+	}
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'matrr_test', # Or path to database file if using sqlite3.
-            'USER': 'django_test', # Not used with sqlite3.
-            'PASSWORD': 'matrr_django', # Not used with sqlite3.
-            'HOST': 'gleek.ecs.baylor.edu', # Set to empty string for localhost. Not used with sqlite3.
-            #'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-        }
-    }
+	DATABASES = {
+		'default': {
+			'ENGINE': 'django.db.backends.postgresql_psycopg2',
+			# Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+			'NAME': 'matrr_test', # Or path to database file if using sqlite3.
+			'USER': 'django_test', # Not used with sqlite3.
+			'PASSWORD': 'matrr_django', # Not used with sqlite3.
+			'HOST': 'gleek.ecs.baylor.edu', # Set to empty string for localhost. Not used with sqlite3.
+			#'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+		}
+	}
 
 
 # Local time zone for this installation. Choices can be found here:
@@ -94,10 +94,12 @@ USE_L10N = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-if PRODUCTION or GLEEK:
-    MEDIA_ROOT = '/web/www/MATRR/media'
+if PRODUCTION:
+	MEDIA_ROOT = '/web/www/MATRR/prod/media'
+elif GLEEK:
+	MEDIA_ROOT = '/web/www/MATRR/dev/media'
 else:
-    MEDIA_ROOT = path + '/media'
+	MEDIA_ROOT = path + '/media'
 
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
@@ -109,10 +111,12 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-if PRODUCTION or GLEEK:
-    STATIC_ROOT = '/web/www/MATRR/static'
+if PRODUCTION:
+	STATIC_ROOT = '/web/www/MATRR/prod/static'
+elif GLEEK:
+	STATIC_ROOT = '/web/www/MATRR/dev/static'
 else:
-    STATIC_ROOT = '/web/dev/static'
+	STATIC_ROOT = path + '/static'
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -124,101 +128,104 @@ STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
-STATICFILES_DIRS = (
-    path + '/static',
-)
+if PRODUCTION or GLEEK:
+	STATICFILES_DIRS = (
+		path + '/static',
+	)
+else:
+	STATICFILES_DIRS = ()
 
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'django.contrib.staticfiles.finders.DefaultStorageFinder',
-    )
+	'django.contrib.staticfiles.finders.FileSystemFinder',
+	'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+	'django.contrib.staticfiles.finders.DefaultStorageFinder',
+	)
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '@+5ijd@xf%17@7euip67u)%(fq4+3g(83+azo3ia7^f=-(w1u2'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    'django.template.loaders.eggs.Loader',
-    )
+	'django.template.loaders.filesystem.Loader',
+	'django.template.loaders.app_directories.Loader',
+	'django.template.loaders.eggs.Loader',
+	)
 
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.transaction.TransactionMiddleware',
-    )
+	'django.middleware.common.CommonMiddleware',
+	'django.contrib.sessions.middleware.SessionMiddleware',
+	'django.middleware.csrf.CsrfViewMiddleware',
+	'django.contrib.auth.middleware.AuthenticationMiddleware',
+	'django.contrib.messages.middleware.MessageMiddleware',
+	'django.middleware.transaction.TransactionMiddleware',
+	)
 
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.contrib.auth.context_processors.auth",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.media",
-    "django.core.context_processors.static",
-    "django.core.context_processors.request",
-    'matrr.context_processors.cart',
-    'matrr.context_processors.login_form',
-    'matrr.context_processors.group_membership',
-    'matrr.context_processors.site_root',
+	"django.contrib.auth.context_processors.auth",
+	"django.core.context_processors.debug",
+	"django.core.context_processors.i18n",
+	"django.core.context_processors.media",
+	"django.core.context_processors.static",
+	"django.core.context_processors.request",
+	'matrr.context_processors.cart',
+	'matrr.context_processors.login_form',
+	'matrr.context_processors.group_membership',
+	'matrr.context_processors.site_root',
 	'matrr.context_processors.unsupported_browser'
-    )
+	)
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    path + "/templates",
-    path + "/templates/matrr",
-    )
+	# Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+	# Always use forward slashes, even on Windows.
+	# Don't forget to use absolute paths, not relative paths.
+	path + "/templates",
+	path + "/templates/matrr",
+	)
 
 # Sphinx 0.9.9
 SPHINX_API_VERSION = 0x116
 
 if PRODUCTION:
-    INSTALLED_APPS = (
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.sites',
-        'django.contrib.messages',
-        'django.contrib.staticfiles',
-        # Uncomment the next line to enable the admin:
-        'django.contrib.admin',
-        # Uncomment the next line to enable admin documentation:
-        'django.contrib.admindocs',
-        'matrr',
-        # django-registration installed by EJB - 3.16.11
-        'registration',
-        'utils',
-        'south',
-        )
+	INSTALLED_APPS = (
+		'django.contrib.auth',
+		'django.contrib.contenttypes',
+		'django.contrib.sessions',
+		'django.contrib.sites',
+		'django.contrib.messages',
+		'django.contrib.staticfiles',
+		# Uncomment the next line to enable the admin:
+		'django.contrib.admin',
+		# Uncomment the next line to enable admin documentation:
+		'django.contrib.admindocs',
+		'matrr',
+		# django-registration installed by EJB - 3.16.11
+		'registration',
+		'utils',
+		'south',
+		)
 else:
-    INSTALLED_APPS = (
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.sites',
-        'django.contrib.messages',
-        'django.contrib.staticfiles',
-        # Uncomment the next line to enable the admin:
-        'django.contrib.admin',
-        # Uncomment the next line to enable admin documentation:
-        'django.contrib.admindocs',
-        'matrr',
-        # django-registration installed by EJB - 3.16.11
-        'registration',
-        'djangosphinx',
-        'utils',
-        'south',
-        )
+	INSTALLED_APPS = (
+		'django.contrib.auth',
+		'django.contrib.contenttypes',
+		'django.contrib.sessions',
+		'django.contrib.sites',
+		'django.contrib.messages',
+		'django.contrib.staticfiles',
+		# Uncomment the next line to enable the admin:
+		'django.contrib.admin',
+		# Uncomment the next line to enable admin documentation:
+		'django.contrib.admindocs',
+		'matrr',
+		# django-registration installed by EJB - 3.16.11
+		'registration',
+		'djangosphinx',
+		'utils',
+		'south',
+		)
 
 # The following are settings for django-registration
 # added EJB 3.16.11
