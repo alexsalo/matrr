@@ -3,7 +3,6 @@ __author__ = 'soltau'
 from django.conf.urls.defaults import patterns, url
 
 from django.views.generic import DetailView, ListView
-from django.views.generic.base import TemplateView
 
 from matrr.views import *
 
@@ -12,9 +11,6 @@ urlpatterns = patterns('matrr.views',
                        )
 
 urlpatterns += patterns('django.views.generic.simple',
-    url(r'^about/?$', TemplateView.as_view(template_name='matrr/about.html')),
-    url(r'^benefits/?$', TemplateView.as_view(template_name='matrr/benefits.html')),
-    url(r'^denied/?$', TemplateView.as_view(template_name='matrr/denied.html')),
     url(r'^events/$',
         ListView.as_view(
             queryset=Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name'),
@@ -72,7 +68,7 @@ urlpatterns += patterns('matrr.views',
 ##            context_object_name='cohort',
 ##            template_name='matrr/cohort.html',
 ##            )),
-#        spiffy_available_cohort),
+#        cohort_view),
 	url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/publications/$',
         DetailView.as_view(
             queryset=Cohort.objects.all(),
@@ -109,13 +105,14 @@ urlpatterns += patterns('matrr.views',
 )
 # Real views
 urlpatterns += patterns('matrr.views',
-	url(r'^(?P<static_page>privacy|data|usage|browser|faq)/$',
-		static_page_view),
+	#  Non-dynamic pages.  These are HTML-only pages. Mostly.
+	url(r'^(?P<static_page>privacy|data|usage|browser|faq|about|benefits|denied)/$',
+		pages_view),
 
 	url(r'(?P<avail_up>^available|upcoming|cohort)/$',
-		spiffy_available_cohort),
+		cohort_view),
 	url(r'(?P<avail_up>^available|upcoming|cohort)/(?P<pk>\d+)/$',
-		spiffy_available_cohort),
+		cohort_view),
 	# change/fix necropsy
     url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/necropsy/$',
         cohort_necropsy),

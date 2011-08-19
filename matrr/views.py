@@ -25,30 +25,57 @@ def index_view(request):
 
 	return render_to_response('matrr/index.html', index_context, context_instance=RequestContext(request))
 
-
-def static_page_view(request, static_page):
-	# This is terrible Django-fu, all kinds of against DRY principles
+#  non-dynamic pages.
+def pages_view(request, static_page):
 	# The issue I was having with file.open('/path/to/text.txt', r) was the inconsistent directory structure between
 	# the dev and production environments (laptop vs gleek).  I'm certain there is a combination of settings that would
 	# handle that more beautifully, but for the scope of 3 files I've wasted enough time.
+	# it didnt stay 3 pages for long....
 
-	additional_context = {}
-	if static_page == "privacy":
-		template = 'matrr/privacy.html'
-	elif static_page == "data":
-		template = 'matrr/data.html'
-	elif static_page == "usage":
-		template = 'matrr/usage.html'
-	elif static_page == 'browser':
-		template = 'matrr/browser.html'
-	elif static_page == 'faq':
-		template = 'matrr/faq.html'
+	template = 'matrr/pages/' + static_page + ".html"
+	return render_to_response(template, {}, context_instance=RequestContext(request))
+
+
+def cohort_view(request, **kwargs):
+	cohort = []
+	cohorts = []
+	if kwargs.has_key('pk'):
+		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
+		template_name = 'matrr/cohort.html'
+	elif kwargs['avail_up'] == 'cohort':
+		cohorts = Cohort.objects.order_by('coh_cohort_name')
+		template_name='matrr/upcoming_cohorts.html'
+	elif kwargs['avail_up'] == 'upcoming':
+		cohorts = Cohort.objects.filter(coh_upcoming=True).order_by('coh_cohort_name')
+		template_name='matrr/upcoming_cohorts.html'
+	elif kwargs['avail_up'] == 'available':
+		cohorts = Cohort.objects.filter(coh_upcoming=False).order_by('coh_cohort_name')
+		template_name='matrr/available_cohorts.html'
+
+	if len(cohorts) > 5:
+		paginator = Paginator(cohorts, 5)
+
+		# Make sure page request is an int. If not, deliver first page.
+		try:
+			page = int(request.GET.get('page', '1'))
+		except ValueError:
+			page = 1
+
+		# If page request (9999) is out of range, deliver last page of results.
+		try:
+			cohort_list = paginator.page(page)
+		except (EmptyPage, InvalidPage):
+			cohort_list = paginator.page(paginator.num_pages)
 	else:
-		messages.debug(request, "Error generating static_page.")
-		return redirect('/')
+		cohort_list = cohorts
 
-	return render_to_response(template, additional_context, context_instance=RequestContext(request))
+	return render_to_response(template_name, {'cohort': cohort, 'cohort_list': cohort_list}, context_instance=RequestContext(request))
 
+
+def cohort_necropsy(request, pk):
+	messages.info(request, 'No necropsy data available at this time.')
+	cohort = Cohort.objects.get(pk=pk)
+	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
 
 def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 	try:
@@ -78,13 +105,13 @@ def monkey_detail_view(request, monkey_id):
 
 @login_required()
 def get_or_create_cart(request, cohort):
-	'''
+	"""
 	This function will get the cart for the cohort if it exists.
 	If it does not exist, it will create a new cart for the cohort.
 	In the case that the user has a cart open for a different cohort,
 	this function will return None.  (unless the cart was empty, in which
 	case it will be deleted.)
-	'''
+	"""
 	cart_status = RequestStatus.objects.get(rqs_status_name='Cart')
 
 	# get the user's cart if it already exists
@@ -848,43 +875,3 @@ def order_delete(request, req_request_id):
 								  context_instance=RequestContext(request))
 
 
-def cohort_necropsy(request, pk):
-	messages.info(request, 'No necropsy data available at this time.')
-	cohort = Cohort.objects.get(pk=pk)
-	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
-
-
-def spiffy_available_cohort(request, **kwargs):
-	cohort = []
-	cohorts = []
-	if kwargs.has_key('pk'):
-		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
-		template_name = 'matrr/cohort.html'
-	elif kwargs['avail_up'] == 'cohort':
-		cohorts = Cohort.objects.order_by('coh_cohort_name')
-		template_name='matrr/upcoming_cohorts.html'
-	elif kwargs['avail_up'] == 'upcoming':
-		cohorts = Cohort.objects.filter(coh_upcoming=True).order_by('coh_cohort_name')
-		template_name='matrr/upcoming_cohorts.html'
-	elif kwargs['avail_up'] == 'available':
-		cohorts = Cohort.objects.filter(coh_upcoming=False).order_by('coh_cohort_name')
-		template_name='matrr/available_cohorts.html'
-
-	if len(cohorts) > 0:
-		paginator = Paginator(cohorts, 5)
-
-		# Make sure page request is an int. If not, deliver first page.
-		try:
-			page = int(request.GET.get('page', '1'))
-		except ValueError:
-			page = 1
-
-		# If page request (9999) is out of range, deliver last page of results.
-		try:
-			cohort_list = paginator.page(page)
-		except (EmptyPage, InvalidPage):
-			cohort_list = paginator.page(paginator.num_pages)
-	else:
-		cohort_list = cohorts
-
-	return render_to_response(template_name, {'cohort': cohort, 'cohort_list': cohort_list}, context_instance=RequestContext(request))
