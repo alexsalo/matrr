@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load basic_filters %}
 
+{% block title %}
+All Cohorts
+{% endblock %}
+
 {% block warning %}
 	{% include 'matrr/cart/cohort_warning.html' %}
 {% endblock %}
@@ -9,82 +13,85 @@
 	<div id="large-headline">Tissue Request</div>
 	<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_1.png" width='700' height='25'
 		 alt='order timeline'/>
-	<div id="headline">{% block content_title %}{% endblock %}</div>
+	<div id="headline">{% block content_title %}All Cohorts{% endblock %}</div>
 
-
-	{% for cohort in cohort_list.object_list %}
-		<br/>
-		<div class="mini-headline">{{ cohort.coh_cohort_name }}</div>
-		<div class='clearfix'>
-			<div class="left-content">
-				<table class="common">
-					<tr>
-						<th>Monkey ID</th>
-						{% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
-							<th>Monkey Name</th>
-						{% endif %}
-						<th>Sex</th>
-						<th>Assignment</th>
-						<th>Birthdate</th></tr>
-					{% for monkey in cohort.monkey_set.all|dictsortreversed:"mky_drinking" %}
+	{% if cohort_list %}
+		{% for cohort in cohort_list.object_list %}
+			<br/>
+			<div class="mini-headline">{{ cohort.coh_cohort_name }}</div>
+			<div class='clearfix'>
+				<div class="left-content">
+					<table class="common">
 						<tr>
-							<td class='text-center-common-td'><a href='{{ cohort.coh_cohort_id }}/monkey/{{monkey.mky_id}}'>{{ monkey.mky_real_id }}</a></td>
+							<th>Monkey ID</th>
 							{% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
-								<td class='text-center-common-td'>{{ monkey.mky_name }}</td>
+								<th>Monkey Name</th>
 							{% endif %}
-							<td class='text-center-common-td'>{{ monkey.mky_gender }}</td>
-							<td class='text-center-common-td'>
-								{% if monkey.mky_drinking %}
-									Ethanol
-									{% else %}{% if monkey.mky_housing_control %}
-										Housing Control
-									{% else %}
-										Control
-									{% endif %}{% endif %}
-							</td>
-							<td class='text-center-common-td'>{{ monkey.mky_birthdate }}</td>
+							<th>Sex</th>
+							<th>Assignment</th>
+							<th>Birthdate</th></tr>
+						{% for monkey in cohort.monkey_set.all|dictsortreversed:"mky_drinking" %}
+							<tr>
+								<td class='text-center-common-td'><a href='{{ cohort.coh_cohort_id }}/monkey/{{monkey.mky_id}}'>{{ monkey.mky_real_id }}</a></td>
+								{% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
+									<td class='text-center-common-td'>{{ monkey.mky_name }}</td>
+								{% endif %}
+								<td class='text-center-common-td'>{{ monkey.mky_gender }}</td>
+								<td class='text-center-common-td'>
+									{% if monkey.mky_drinking %}
+										Ethanol
+										{% else %}{% if monkey.mky_housing_control %}
+											Housing Control
+										{% else %}
+											Control
+										{% endif %}{% endif %}
+								</td>
+								<td class='text-center-common-td'>{{ monkey.mky_birthdate }}</td>
 
-						</tr>
-					{% endfor %}
-				</table>
+							</tr>
+						{% endfor %}
+					</table>
+				</div>
+
+				<div class="right-content clearfix">
+					<a href="{{ cohort.coh_cohort_id }}/">Cohort Details</a><br/>
+					<a href="{{ cohort.coh_cohort_id }}/timeline">Cohort Timeline</a><br/>
+					<a href="{{ cohort.coh_cohort_id }}/necropsy/">Expected Necropsy Data</a><br/>
+					<a href="{{ cohort.coh_cohort_id }}/publications">Publications</a><br/>
+					<a href='{{ cohort.coh_cohort_id }}/tissues'>Request Tissue from {{ cohort.coh_cohort_name }}</a>
+					{% with images=cohort|cohort_images:"etoh" %}
+						{% if images %}
+							<div class="image_container">
+								<a href="{{ cohort.coh_cohort_id }}/">
+									<img src="{{ STATIC_URL }}/images/etoh/{{ cohort.coh_cohort_name}}-thumb.jpg"/>
+								</a>
+							</div>
+						{% endif %}
+					{% endwith %}
+				</div>
 			</div>
+		{% endfor %}
+			<center>
+				<div class="pagination">
+					<span class="step-links">
+						{% if cohort_list.has_previous %}
+							<a href="?page={{ cohort_list.previous_page_number }}">previous</a>
+						{% endif %}
 
-			<div class="right-content clearfix">
-				<a href="{{ cohort.coh_cohort_id }}/">Cohort Details</a><br/>
-				<a href="{{ cohort.coh_cohort_id }}/timeline">Cohort Timeline</a><br/>
-				<a href="{{ cohort.coh_cohort_id }}/necropsy/">Expected Necropsy Data</a><br/>
-				<a href="{{ cohort.coh_cohort_id }}/publications">Publications</a><br/>
-				<a href='{{ cohort.coh_cohort_id }}/tissues'>Request Tissue from {{ cohort.coh_cohort_name }}</a>
-				{% with images=cohort|cohort_images:"etoh" %}
-					{% if images %}
-						<div class="image_container">
-							<a href="{{ cohort.coh_cohort_id }}/">
-								<img src="{{ STATIC_URL }}/images/etoh/{{ cohort.coh_cohort_name}}-thumb.jpg"/>
-							</a>
-						</div>
-					{% endif %}
-            	{% endwith %}
-			</div>
+						<span class="current">
+					Page {{ cohort_list.number }} of {{ cohort_list.paginator.num_pages }}.
+				</span>
+
+						{% if cohort_list.has_next %}
+							<a href="?page={{ cohort_list.next_page_number }}">next</a>
+						{% endif %}
+					</span>
+				</div>
+			</center>
+		{% else %}
+		<div class='messages clearfix'>
+			<div class="info"> No cohorts found.</div>
 		</div>
-	{% endfor %}
-
-
-	<center>
-		<div class="pagination">
-			<span class="step-links">
-				{% if cohort_list.has_previous %}
-					<a href="?page={{ cohort_list.previous_page_number }}">previous</a>
-				{% endif %}
-
-				<span class="current">
-            Page {{ cohort_list.number }} of {{ cohort_list.paginator.num_pages }}.
-        </span>
-
-				{% if cohort_list.has_next %}
-					<a href="?page={{ cohort_list.next_page_number }}">next</a>
-				{% endif %}
-			</span>
-		</div>
-	</center>
+	{% endif %}
 
 {% endblock %}

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load basic_filters %}
+
 {% block title %}
 	{% if cohort.coh_upcoming %}
 		Upcoming
@@ -61,7 +62,7 @@
 					{% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
 						<td>{{ monkey.mky_name }}</td>
 					{% endif %}
-					<td><a href="monkey/{{monkey.mky_id}}" onClick='javascript:window.open("monkey/{{ monkey.mky_id}}");return false;'>
+					<td><a href="monkey/{{monkey.mky_id}}" target="_blank">
 						{{ monkey.mky_real_id }}
 						<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
 					</a>
@@ -72,11 +73,11 @@
 					<td>
 						{% if monkey.mky_drinking %}
 							Ethanol
-							{% else %}{% if monkey.mky_housing_control %}
-								Housing Control
-							{% else %}
-								Control
-							{% endif %}{% endif %}
+						{% else %}{% if monkey.mky_housing_control %}
+							Housing Control
+						{% else %}
+							Control
+						{% endif %}{% endif %}
 					</td>
 					<td>{{ monkey.mky_necropsy_date }}</td>
 					<td>{{ monkey.mky_stress_model }}</td>
@@ -95,7 +96,8 @@
 					<div class="image_thumbnail left">
 						<center>{{ title }}</center>
 						<a href="{{ STATIC_URL }}/images/{{ dir }}/{{ cohort.coh_cohort_name}}.png" target="_blank">
-						<img src="{{ STATIC_URL }}/images/{{ dir }}/{{ cohort.coh_cohort_name}}-thumb.jpg"></a>
+							<img src="{{ STATIC_URL }}/images/{{ dir }}/{{ cohort.coh_cohort_name}}-thumb.jpg">
+						</a>
 					</div>
 				</div>
 			{% endfor %}

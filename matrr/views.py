@@ -44,13 +44,15 @@ def cohort_view(request, **kwargs):
 		template_name = 'matrr/cohort.html'
 	elif kwargs['avail_up'] == 'cohort':
 		cohorts = Cohort.objects.order_by('coh_cohort_name')
-		template_name='matrr/upcoming_cohorts.html'
+		template_name = 'matrr/cohorts.html'
 	elif kwargs['avail_up'] == 'upcoming':
 		cohorts = Cohort.objects.filter(coh_upcoming=True).order_by('coh_cohort_name')
-		template_name='matrr/upcoming_cohorts.html'
+		template_name = 'matrr/upcoming_cohorts.html'
 	elif kwargs['avail_up'] == 'available':
 		cohorts = Cohort.objects.filter(coh_upcoming=False).order_by('coh_cohort_name')
-		template_name='matrr/available_cohorts.html'
+		template_name = 'matrr/available_cohorts.html'
+	else:
+		template_name = ''
 
 	if len(cohorts) > 5:
 		paginator = Paginator(cohorts, 5)
@@ -76,6 +78,7 @@ def cohort_necropsy(request, pk):
 	messages.info(request, 'No necropsy data available at this time.')
 	cohort = Cohort.objects.get(pk=pk)
 	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
+
 
 def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 	try:
