@@ -399,7 +399,7 @@ def load_inventory(file, output_file):
 
 		#raise Exception('Just testing') #uncomment for testing purposes
 
-def clean_fuckups():
+def recursive_category_removal():
 	dirtycategory = TissueCategory.objects.filter(cat_name="Necropsy Peripheral tissues")
 
 	for tissue in TissueType.objects.filter(category=dirtycategory):
