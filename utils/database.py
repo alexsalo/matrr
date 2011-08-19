@@ -408,7 +408,7 @@ def load_birthdates(file):
 		row[3] = mky_real_id
 	"""
 	csv_infile = csv.reader(open(file, 'rU'), delimiter=",")
-	csv_outfile = csv.writer(open( "LostMonkeys - " + file, 'w'), delimiter=',')
+	csv_outfile = csv.writer(open( "LostMonkeys-" + file, 'w'), delimiter=',')
 	columns = csv_infile.next()
 	csv_outfile.writerow(columns)
 	for row in csv_infile:
