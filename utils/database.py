@@ -305,11 +305,11 @@ def load_inventory(file, output_file):
 					monkey.mky_name = monkey_name
 				if monkey_birthdate:
 					match = re.match(r'(\d{2})/(\d{2})/(\d{2})', monkey_birthdate)
-					if int(match.group(2)) < 20:
+					if int(match.group(3)) < 20:
 						year_prefix = '20'
 					else:
 						year_prefix = '19'
-					monkey.mky_birthdate = year_prefix + match.group(2) + '-' + match.group(0) +  '-' + match.group(1)
+					monkey.mky_birthdate = match.group(1) + "/" + match.group(1) + "/" + year_prefix + match.group(3)
 				if necropsy_start_date:
 					monkey.mky_necropsy_start_date = re.sub(r'(\d{2})/(\d{2})/(\d{2})', r'20\3-\1-\2', necropsy_start_date)
 				if necropsy_start_date_comments:
@@ -398,6 +398,37 @@ def load_inventory(file, output_file):
 		print int(monkey_id)
 
 		#raise Exception('Just testing') #uncomment for testing purposes
+
+def load_birthdates(file):
+	"""
+		This function will load a csv file in the format
+		row[0] = Birthdate
+		row[1] = Alt Birthdate format
+		row[2] = Monkey Name
+		row[3] = mky_real_id
+	"""
+	csv_infile = csv.reader(open(file, 'rU'), delimiter=",")
+	csv_outfile = csv.writer(open( "LostMonkeys - " + file, 'w'), delimiter=',')
+	columns = csv_infile.next()
+	csv_outfile.writerow(columns)
+	for row in csv_infile:
+		try:
+			mon = Monkey.objects.get(mky_real_id=row[3])
+		except Monkey.DoesNotExist:
+			csv_outfile.writerow(row)
+			continue
+		if row[0] is not None:
+			match = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2})', row[0])
+			if int(match.group(3)) < 20:
+				year_prefix = '20'
+			else:
+				year_prefix = '19'
+			new_bd = match.group(1).zfill(2) + "/" + match.group(2).zfill(2) + "/" + year_prefix + match.group(3).zfill(2)
+			old_bd = mon.mky_birthdate
+			if new_bd != old_bd:
+				mon.mky_birthdate = new_bd
+				mon.save()
+
 
 def recursive_category_removal():
 	dirtycategory = TissueCategory.objects.filter(cat_name="Necropsy Peripheral tissues")
