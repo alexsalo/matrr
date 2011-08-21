@@ -23,7 +23,11 @@
 		{% if not category.cat_internal %}
 			<div class='clearfix'>
 				<div class='mini-headline'>{{ category.cat_name }}</div>
-				<div class='table-left' style="width:75%">{{ category.cat_description }}</div>
+				<div class='table-left' style="width:75%">{{ category.cat_description }}
+					{% if category.cat_name == 'Custom' %}
+						<div class="small">Custom requests, including non-standard tissues and fix types, must be submitted at least one week prior to necropsy date.</div>
+					{% endif %}
+				</div>
 				<div class='table-right text-right'>
 					<a href='{% url tissue-category cohort.coh_cohort_id category.cat_name %}' class='blockLinkButton'>
 						Request {{ category.cat_name }}

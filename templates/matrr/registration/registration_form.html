@@ -5,18 +5,33 @@
 {% block login %}{% endblock %}
 
 {% block content %}
-	<div id='headline'>Create an Account</div>
-	Please fill out the information below to begin creating an account.  Follow the link in the email you receive to finish creating an account.
-	After an account has been created a MATRR staff will verify your account information within 48 hours.  Access to MATRR will be approved once
-	this information has been verified.
+	<div id='headline'>Create an Account</div><br>
+	<div class="clearfix">
+	<div style="float: right; width: 50%; left: 0">
 
-	<br><font color=red size=-1>All fields expert Address 2 and Country are required.</font>
+	<div style="background-color: #9F6000;background-color: #FEEFB3;padding: 5px; width: 45%">
+		<div class='mini-headline'>1. Create Account</div>
+			Fill out required information to initiate an Account request.<br><br>
+		<div class='mini-headline'>2. Activate Account</div>
+			Follow the link you receive in an email to Activate your Account.<br><br>
+		<div class='mini-headline'>3. Verify Account</div>
+			Once MATRR staff verifies your Account (usually about 48 hrs.) you will be able to use MATRR resources.<br><br>
+	</div>
+
+	</div>
+
+	<div style="float: left">
+
+	<font color=red size=-1>* Indicates Required Field</font>
 	<form method="post" action="">{% csrf_token %}
 		{% for field in form %}
 		<div class=clearfix>
 			<div class="table-left">
 				<div class="text-right">
 					{{ field.label|capfirst }}
+						{% if field.label != "Country" and field.label != "Address 2" %}
+							<font color=red size=-1> *</font>
+						{% endif %}
 				</div>
 			</div>
 			<div class="table-right">{{ field }}</div>
@@ -31,9 +46,13 @@
 		<div class=clearfix>
 
 			<div class="table-right">
-				<input type="submit" value="{% trans 'Submit' %}"/>
+				<button type='submit' name='submit' value='Submit' class="blockLinkCheckoutButton">Request Account</button>
 			</div>
 		</div>
 	</form>
+
+	</div>
+	</div>
+	<br><br><br>
 
 {% endblock %}
