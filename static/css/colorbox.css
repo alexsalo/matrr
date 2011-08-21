@@ -28,7 +28,7 @@
     #cboxBottomRight{width:14px; height:43px; background:url(images/controls.png) no-repeat -36px -32px;}
     #cboxMiddleLeft{width:14px; background:url(images/controls.png) repeat-y -175px 0;}
     #cboxMiddleRight{width:14px; background:url(images/controls.png) repeat-y -211px 0;}
-    #cboxContent{background:#fff;overflow:visible;}
+    #cboxContent{background:#fff;overflow:visible;width:135%}
         #cboxLoadedContent{margin-bottom:5px;}
         #cboxLoadingOverlay{background:url(images/loading_background.png) no-repeat center center;}
         #cboxLoadingGraphic{background:url(images/loading.gif) no-repeat center center;}
