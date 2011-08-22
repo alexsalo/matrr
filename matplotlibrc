@@ -1,4 +1,3 @@
-backend      : TkAgg
 ##  http://matplotlib.sourceforge.net/users/customizing.html
 ##  I copied my local /etc/matplotlibrc, changed the subplot settings to make m2de plots look better
 
