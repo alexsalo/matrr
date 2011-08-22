@@ -116,7 +116,7 @@ if PRODUCTION:
 elif GLEEK:
 	STATIC_ROOT = '/web/www/MATRR/dev/static'
 else:
-	STATIC_ROOT = path + '/static'
+	STATIC_ROOT = '/web/dev/static'
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -133,7 +133,7 @@ if PRODUCTION or GLEEK:
 		path + '/static',
 	)
 else:
-	STATICFILES_DIRS = ()
+	STATICFILES_DIRS = (path + '/static',)
 
 # List of finder classes that know how to find static files in
 # various locations.

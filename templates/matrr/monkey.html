@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load basic_filters %}
 
 {% block content %}
 	<div id='large-headline'>
@@ -54,5 +55,23 @@
 			<td>{{ monkey.mky_stress_model }}</td>
 		</tr>
 	</table>
+	<br>
+	<div class="clearfix">
+	{% with images=monkey|monkey_images:"all" %}
+		{% if images %}
+			<div class='mini-headline'>Monkey Plots</div>
+			{% for dir, title in images.items %}
+				<div class="image_container">
+					<div class="image_thumbnail left">
+						<center>{{ title }}</center>
+						<a href="{{ STATIC_URL }}/images/{{ dir }}/{{ monkey}}.png" target="_blank">
+							<img src="{{ STATIC_URL }}/images/{{ dir }}/{{ monkey}}-thumb.jpg">
+						</a>
+					</div>
+				</div>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+	</div>
 
 {% endblock %}
