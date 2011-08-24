@@ -3,6 +3,8 @@ from django.db import transaction
 import datetime
 import csv, re
 
+## Old, might be useful in the future, but kept for reference
+## Corrected improper birthday formatting.  match.group(0) = full string, not first group.  group.(1) is the first group.
 @transaction.commit_on_success
 def load_experiments(file):
 	"""
@@ -49,7 +51,7 @@ def load_experiments(file):
 		# save the data
 		mtd.save()
 
-
+## Old, might be useful in the future, but kept for reference
 @transaction.commit_on_success
 def load_monkeys(file):
 	"""
@@ -135,6 +137,7 @@ def load_monkeys(file):
 				   mky_study_complete=complete_study).save()
 
 
+## Old, might be useful in the future, but kept for reference
 @transaction.commit_on_success
 def load_timelines(file):
 	"""
@@ -182,6 +185,7 @@ def load_timelines(file):
 				info = None
 
 
+## Old, might be useful in the future, but kept for reference
 @transaction.commit_on_success
 def load_cohorts(file):
 	"""
@@ -211,6 +215,7 @@ def load_cohorts(file):
 			   coh_species=row[1]).save()
 
 
+## Old, might be useful in the future, but kept for reference
 @transaction.commit_on_success
 def load_inventory(file, output_file):
 	"""
@@ -398,7 +403,10 @@ def load_inventory(file, output_file):
 
 	#raise Exception('Just testing') #uncomment for testing purposes
 
-
+## I added this after I added a bunch of ugly data to the database
+## This will remove all tissue samples, tissue types and tissue categories from a 'dirty' category.
+## I haven't used it yet, but I probably will at some point.  We're still working on organizing the data more clearly
+## -jf
 def recursive_category_removal():
 	dirtycategory = TissueCategory.objects.filter(cat_name="Necropsy Peripheral tissues")
 
@@ -416,7 +424,10 @@ def recursive_category_removal():
 	dirtycategory.delete()
 	return
 
-
+## Wrote this to correct birthdate string formats which load_experiments had slaughtered.
+## This still saves birthdays as a string, not a datetime.
+## It is highly unlikely this will be needed again in the future
+## -jf
 def load_birthdates(file):
 	"""
 		This function will load a csv file in the format
@@ -447,7 +458,8 @@ def load_birthdates(file):
 				mon.mky_birthdate = new_bd
 				mon.save()
 
-
+## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
+## -jf
 def dump_all_TissueSample(output_file):
 	"""
 		This function will dump existing tissue samples to CSV
@@ -499,6 +511,8 @@ def dump_all_TissueSample(output_file):
 	print "Success"
 
 
+## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
+## -jf
 def dump_distinct_TissueType(output_file):
 	"""
 		This function will dump existing tissue catagories and tissuetypes to CSV
@@ -518,8 +532,8 @@ def dump_distinct_TissueType(output_file):
 		output.writerow(row)
 	print "Success."
 
-
-@transaction.commit_on_success
+## Wrote this, ended up not using it.  May still need it, necropsy dates in the DB are different than in the spreadsheet I was given.
+## -jf
 def load_necropsy_dates(file):
 	"""
 	  This function will load monkeys from a csv file.
@@ -555,13 +569,6 @@ def load_necropsy_dates(file):
 			necropsy = datetime.date(int(necropsy[0]), int(necropsy[1]), int(necropsy[2]))
 		else:
 			necropsy = None
-		# same for birthdate
-#		if len(birthdate):
-#			birthdate = datetime.strptime(birthdate, "%Y-%m-%d" )
-#		else:
-#			birthdate = None
-
-
 
 		# check if the monkey already exists
 		if Monkey.objects.filter(mky_real_id=real_id).count():
