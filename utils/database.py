@@ -1,6 +1,6 @@
 from matrr.models import *
 from django.db import transaction
-
+import datetime
 import csv, re
 
 @transaction.commit_on_success
@@ -18,7 +18,7 @@ def load_experiments(file):
 		7 - Total Pellets Consumed
 		8 - Weight
 	  """
-	input = csv.reader(open( file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
 	# get the column headers
 	columns = input.next()
 
@@ -29,7 +29,7 @@ def load_experiments(file):
 		if DrinkingExperiment.objects.filter(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2]).count() == 0:
 			drinking_experiment = DrinkingExperiment(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2])
 			drinking_experiment.save()
-			# saving the drinking_experiment will also create the MonkeyToExperiment objects
+		# saving the drinking_experiment will also create the MonkeyToExperiment objects
 		else:
 			# otherwise get the existing experiment
 			drinking_experiment = DrinkingExperiment.objects.get(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2])
@@ -66,7 +66,7 @@ def load_monkeys(file):
 		7 - Necropsy Date
 		8 - Complete Study (marked if incomplete)
 	  """
-	input = csv.reader(open( file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
 	# get the column headers
 	columns = input.next()
 
@@ -104,7 +104,6 @@ def load_monkeys(file):
 		if len(necropsy) == 0:
 			necropsy = None
 
-
 		complete_study = True
 		if len(row[8]) != 0 or necropsy is None:
 			complete_study = False
@@ -118,9 +117,9 @@ def load_monkeys(file):
 			monkey.mky_gender = sex
 			monkey.mky_drinking = drinking
 			monkey.mky_name = name
-			monkey.mky_necropsy_date=necropsy
-			monkey.mky_housing_control=housing_control
-			monkey.mky_study_complete=complete_study
+			monkey.mky_necropsy_date = necropsy
+			monkey.mky_housing_control = housing_control
+			monkey.mky_study_complete = complete_study
 			monkey.save()
 		else:
 			# Create the monkey and save it
@@ -147,7 +146,7 @@ def load_timelines(file):
 	  event and the following column is given the contents of the cell as
 	  the info field.
 	  """
-	input = csv.reader(open( file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
 	# get the column headers
 	columns = input.next()
 	name_columns = list()
@@ -190,7 +189,7 @@ def load_cohorts(file):
 	  It assumes the first column of every row (except the first row),
 	  contains the cohort name and that the second column contains the species of monkey.
 	  """
-	input = csv.reader(open( file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
 	# get the column headers
 	columns = input.next()
 
@@ -249,8 +248,8 @@ def load_inventory(file, output_file):
 		26 - Freezer
 		27 - Original Box Status -- ignoring for now
 	  """
-	input = csv.reader(open( file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	output = csv.writer(open( output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
 	# get the column headers
 	columns = input.next()
 	output.writerow(columns)
@@ -262,7 +261,7 @@ def load_inventory(file, output_file):
 		if row[1] is '' or row[1] is None:
 			continue
 
-### 	had to fix some rows in 20110809 data, details in ### comments
+		### 	had to fix some rows in 20110809 data, details in ### comments
 		monkey_id = row[1]
 		monkey_name = row[2]
 		monkey_birthdate = row[5]
@@ -274,19 +273,19 @@ def load_inventory(file, output_file):
 		necropsy_weight = row[11]
 		tissue_category = row[13]
 
-### 	had to fix a few dozen cells to read "##" instead of plain ##.
+		### 	had to fix a few dozen cells to read "##" instead of plain ##.
 		tissue_detail = row[14]
 		comments = row[15]
 		additional_info = row[16]
 
-### 	"SHELF #" to "#" with find/replace in spreadsheet apps
+		### 	"SHELF #" to "#" with find/replace in spreadsheet apps
 		shelf = row[17]
 
-### 	"Drawer #"  -->  "#"
+		### 	"Drawer #"  -->  "#"
 		rack = row[18]
 		column = row[19]
 
-### 	"bag" --> "0"
+		### 	"bag" --> "0"
 		box = row[20]
 		distributed = row[21]
 		reserved = row[22]
@@ -333,7 +332,7 @@ def load_inventory(file, output_file):
 				continue
 
 			# first, get the category
-###			Renamed "Necropsy Perif
+			###			Renamed "Necropsy Perif
 			if TissueCategory.objects.filter(cat_name=tissue_category).count():
 				# don't bother updating the description, it shouldn't be changing
 				category = TissueCategory.objects.get(cat_name=tissue_category)
@@ -376,15 +375,15 @@ def load_inventory(file, output_file):
 					sample.tss_sample_count = int(samples_in_inventory)
 			else:
 				# create the sample
-				sample = TissueSample(tissue_type=tissue_type, monkey=monkey, tss_freezer=freezer, tss_location=location,)
+				sample = TissueSample(tissue_type=tissue_type, monkey=monkey, tss_freezer=freezer, tss_location=location, )
 				if samples_in_inventory:
-					sample.tss_sample_count=samples_in_inventory
+					sample.tss_sample_count = samples_in_inventory
 				else:
-					sample.tss_sample_count=1
+					sample.tss_sample_count = 1
 				if reserved_quantity:
-					sample.tss_distributed_count=reserved_quantity
+					sample.tss_distributed_count = reserved_quantity
 				else:
-					sample.tss_distributed_count=0
+					sample.tss_distributed_count = 0
 				# save the newly created or updated sample
 			sample.save()
 		else:
@@ -397,7 +396,26 @@ def load_inventory(file, output_file):
 	for monkey_id in unused_monkeys:
 		print int(monkey_id)
 
-		#raise Exception('Just testing') #uncomment for testing purposes
+	#raise Exception('Just testing') #uncomment for testing purposes
+
+
+def recursive_category_removal():
+	dirtycategory = TissueCategory.objects.filter(cat_name="Necropsy Peripheral tissues")
+
+	for tissue in TissueType.objects.filter(category=dirtycategory):
+		for sample in TissueSample.objects.filter(tissue_type=tissue):
+			sample.delete()
+		#			sample.save()
+		tissue.delete()
+	#		tissue.save()
+	dirtycategory.delete()
+
+	##  or...
+	TissueSample.objects.filter(tissue_type__category=dirtycategory).delete()
+	TissueType.objects.filter(category=dirtycategory).delete()
+	dirtycategory.delete()
+	return
+
 
 def load_birthdates(file):
 	"""
@@ -408,7 +426,7 @@ def load_birthdates(file):
 		row[3] = mky_real_id
 	"""
 	csv_infile = csv.reader(open(file, 'rU'), delimiter=",")
-	csv_outfile = csv.writer(open( "LostMonkeys-" + file, 'w'), delimiter=',')
+	csv_outfile = csv.writer(open("LostMonkeys-" + file, 'w'), delimiter=',')
 	columns = csv_infile.next()
 	csv_outfile.writerow(columns)
 	for row in csv_infile:
@@ -430,19 +448,125 @@ def load_birthdates(file):
 				mon.save()
 
 
-def recursive_category_removal():
-	dirtycategory = TissueCategory.objects.filter(cat_name="Necropsy Peripheral tissues")
+def dump_all_TissueSample(output_file):
+	"""
+		This function will dump existing tissue samples to CSV
+		It writes columns in this order
+		0 - Category.cat_internal
+		1 - Category.parent_category
+		2 - Catagory.cat_name
+		3 - Category.cat_description
+		--- Empty
+		4 - TissueType.tst_tissue_name
+		5 - TissueType.tst_description
+		6 - TissueType.tst_count_per_monkey
+		7 - TissueType.tst_cost
+		--- Empty
+		8 - TissueSample.tss.monkey
+		9 - TissueSample.tss_details
+		10- TissueSample.tss_freezer
+		11- TissueSample.tss_location
+		12- TissueSample.tss_sample_count
+		13- TissueSample.tss_distributed_count
 
-	for tissue in TissueType.objects.filter(category=dirtycategory):
-		for sample in TissueSample.objects.filter(tissue_type=tissue):
-			sample.delete()
-#			sample.save()
-		tissue.delete()
-#		tissue.save()
-	dirtycategory.delete()
+	"""
+	output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	columns =\
+	["Internal Category", "Parent Category", "Category:Name", "Category:Description", "Empty Column", "TissueType:Name", "TissueType:Description", "TissueType:count_per_monkey",
+	 "TissueType:cost", "Empty Column", "TissueSample:Monkey", "TissueSample:Details", "TissueSample:Freezer", "TissueSample:Location", "TissueSample:sample_count",
+	 "TissueSample:distributed_count"]
+	output.writerow(columns)
 
-	##  or...
-	TissueSample.objects.filter(tissue_type__category=dirtycategory).delete()
-	TissueType.objects.filter(category=dirtycategory).delete()
-	dirtycategory.delete()
-	return
+	for TS in TissueSample.objects.all():
+		row = []
+		row[len(row):] = [str(TS.tissue_type.category.cat_internal)]
+		row[len(row):] = [str(TS.tissue_type.category.parent_category)]
+		row[len(row):] = [str(TS.tissue_type.category.cat_name)]
+		row[len(row):] = [str(TS.tissue_type.category.cat_description)]
+		row[len(row):] = [" "]
+		row[len(row):] = [str(TS.tissue_type.tst_tissue_name)]
+		row[len(row):] = [str(TS.tissue_type.tst_description)]
+		row[len(row):] = [TS.tissue_type.tst_count_per_monkey]
+		row[len(row):] = [TS.tissue_type.tst_cost]
+		row[len(row):] = [" "]
+		row[len(row):] = [TS.monkey]
+		row[len(row):] = [str(TS.tss_details)]
+		row[len(row):] = [str(TS.tss_freezer)]
+		row[len(row):] = [str(TS.tss_location)]
+		row[len(row):] = [TS.tss_sample_count]
+		row[len(row):] = [TS.tss_distributed_count]
+		output.writerow(row)
+	print "Success"
+
+
+def dump_distinct_TissueType(output_file):
+	"""
+		This function will dump existing tissue catagories and tissuetypes to CSV
+		It writes columns in this order
+		0 - Catagory.cat_name
+		1 - TissueType.tst_tissue_name
+	"""
+	output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	columns =\
+	["Category:Name", "TissueType:Name"]
+	output.writerow(columns)
+
+	for TT in TissueType.objects.distinct().order_by("category"):
+		row = []
+		row[len(row):] = [str(TT.category.cat_name)]
+		row[len(row):] = [str(TT.tst_tissue_name)]
+		output.writerow(row)
+	print "Success."
+
+
+@transaction.commit_on_success
+def load_necropsy_dates(file):
+	"""
+	  This function will load monkeys from a csv file.
+	  It assumes that the cohorts have already been created.
+	  It also assumes the columns are in the following order:
+		0 - Monkey ID
+		1 - Monkey Species
+		2 - Sex
+		3 - Date of Birth
+		4 - birth_estimated ("t" if True)
+		5 - Monkey's Name
+		6 - Necropsy Date
+		7 - Cohort Broad Title ("INIA")
+		8 - Cohort Species
+		9 - Cohort Number
+		10- Role ("control" or "")
+		11- Sub_type  (ignored in this function, 'housing' is stored in Monkey)
+	  """
+	input = csv.reader(open(file, 'rU'), delimiter=',')
+	# get the column headers
+	columns = input.next()
+
+	for row in input:
+		real_id	= row[0].replace(" ", '')
+		necropsy = row[6].replace(" ", '')
+		name = row[5].strip()
+		if name == '':
+			name = None
+
+		# the necropsy date was given in string yyyy/mm/dd format
+		if len(necropsy):
+			necropsy = necropsy.split('-')
+			necropsy = datetime.date(int(necropsy[0]), int(necropsy[1]), int(necropsy[2]))
+		else:
+			necropsy = None
+		# same for birthdate
+#		if len(birthdate):
+#			birthdate = datetime.strptime(birthdate, "%Y-%m-%d" )
+#		else:
+#			birthdate = None
+
+
+
+		# check if the monkey already exists
+		if Monkey.objects.filter(mky_real_id=real_id).count():
+			monkey = Monkey.objects.get(mky_real_id=real_id)
+			# Update the monkey
+			monkey.mky_name = name
+			monkey.mky_necropsy_start_date = necropsy
+			monkey.save()

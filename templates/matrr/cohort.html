@@ -54,7 +54,7 @@
 				<th>Birthdate</th>
 				<th>Weight</th>
 				<th>Test Group</th>
-				<th>Necropsy Date</th>
+				<th>Necropsy Start Date</th>
 				<th>Stress Model</th>
 				<th>Study Complete</th></tr>
 			{% for monkey in cohort.monkey_set.all %}
@@ -79,7 +79,7 @@
 							Control
 						{% endif %}{% endif %}
 					</td>
-					<td>{{ monkey.mky_necropsy_date }}</td>
+					<td>{{ monkey.mky_necropsy_start_date }}</td>
 					<td>{{ monkey.mky_stress_model }}</td>
 					<td>{% if monkey.mky_study_complete %}<font color=Green>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
 				</tr>
