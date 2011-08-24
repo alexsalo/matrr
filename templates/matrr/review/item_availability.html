@@ -4,7 +4,7 @@
 <table>
 <tbody id='availability_{{ tissue_request.get_html_label }}' class='hidden'>
 <tr class='bordered-cell-row'><th>Monkey</th>
-  {% if user_is_member_of_superuser or user_is_member_of_tech_user or user_is_member_of_committee %}
+  {% if user_is_member_of_uberuser or user_is_member_of_tech_user or user_is_member_of_committee %}
       <th>Name</th>
       {% if spacing %}<td class='spacing'></td>{% endif %}
     {% endif %}
@@ -25,7 +25,7 @@
       </a>
     </td>
     {% if spacing %}<td class='spacing'></td>{% endif %}
-    {% if user_is_member_of_superuser or user_is_member_of_tech_user or user_is_member_of_committee %}
+    {% if user_is_member_of_uberuser or user_is_member_of_tech_user or user_is_member_of_committee %}
       <td>{{  monkey.mky_name }}</td>
       {% if spacing %}<td class='spacing'></td>{% endif %}
     {% endif %}

@@ -417,7 +417,7 @@ def account_detail_view(request, user_id):
 
 @login_required()
 @user_passes_test(lambda u: u.groups.filter(name='Committee').count()
-or u.groups.filter(name='Superuser').count(), login_url='/denied/')
+or u.groups.filter(name='Uberuser').count(), login_url='/denied/')
 def account_reviewer_view(request, user_id):
 	return account_detail_view(request, user_id)
 
@@ -457,7 +457,7 @@ def review_detail(request, review_id):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Superuser').count() != 0, login_url='/denied/')
+@user_passes_test(lambda u: u.groups.filter(name='Uberuser').count() != 0, login_url='/denied/')
 def review_overview_list(request):
 	# get a list of all tissue requests that are submitted, but not accepted or rejected
 	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
@@ -494,7 +494,7 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Superuser').count() != 0, login_url='/denied/')
+@user_passes_test(lambda u: u.groups.filter(name='Uberuser').count() != 0, login_url='/denied/')
 def review_overview(request, req_request_id):
 	# get the request being reviewed
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -575,9 +575,9 @@ def experimental_plan_view(request, plan):
 	response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(plan)
 	response['X-Sendfile'] = smart_str(settings.MEDIA_ROOT + 'media/experimental_plans/' + plan)
 
-	# serve the file if the user is a committee member or superuser
+	# serve the file if the user is a committee member or Uberuser
 	if request.user.groups.filter(name='Committee').count() != 0 or\
-	   request.user.groups.filter(name='Superuser').count() != 0:
+	   request.user.groups.filter(name='Uberuser').count() != 0:
 		return response
 
 	# check that the plan belongs to the user
@@ -639,7 +639,7 @@ def remove_values_from_list(the_list, other_list):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Superuser').count(),
+@user_passes_test(lambda u: u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
 def request_review_process(request, req_request_id):
 	# get the tissue request
@@ -757,7 +757,7 @@ def contact_us(request):
 @login_required()
 @user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or\
 							u.groups.filter(name='Committee').count() or\
-							u.groups.filter(name='Superuser').count(),
+							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
 def shipping_overview(request):
 	# get the tissue requests that have been accepted
@@ -791,7 +791,7 @@ def search(request):
 	results = dict()
 	if request.user.groups.filter(name='Tech User').count() != 0 or\
 	   request.user.groups.filter(name='Committee').count() != 0 or\
-	   request.user.groups.filter(name='Superuser').count() != 0:
+	   request.user.groups.filter(name='Uberuser').count() != 0:
 		results['monkeys'] = search_index(terms, 'monkey_auth', Monkey)
 	else:
 		results['monkeys'] = search_index(terms, 'monkey', Monkey)
@@ -810,7 +810,7 @@ def search(request):
 @login_required()
 @user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or\
 							u.groups.filter(name='Committee').count() or\
-							u.groups.filter(name='Superuser').count(),
+							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
 def build_shipment(request, req_request_id):
 	# get the request
@@ -837,7 +837,7 @@ def build_shipment(request, req_request_id):
 @login_required()
 @user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or\
 							u.groups.filter(name='Committee').count() or\
-							u.groups.filter(name='Superuser').count(),
+							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
 def make_shipping_manifest_latex(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)

@@ -53,17 +53,17 @@
 							<li class='top'><a href="/admin/">Admin</a></li>
 						</ul>
 					{% endif %}
-					{% if user_is_member_of_committee or user_is_member_of_superuser %}
+					{% if user_is_member_of_committee or user_is_member_of_uberuser %}
 						<ul>
 							<li class='top'>
 								<a href="/reviews/">Reviews</a>
 							</li>
-							{% if user_is_member_of_superuser %}
+							{% if user_is_member_of_uberuser %}
 								<li class='drop-down'><a href="/reviews_overviews/">Reviews Overview</a></li>
 							{% endif %}
 						</ul>
 					{% endif %}
-					{% if user_is_member_of_committee or user_is_member_of_superuser or user_is_member_of_tech_user %}
+					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
 						<ul>
 							<li class='top'>
 								<a href='/shipping_overview'>Shipping Overview</a>

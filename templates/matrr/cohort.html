@@ -47,7 +47,7 @@
 	<div>
 		<table class='common_center'>
 			<tr>
-				{% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
+				{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
 					<th>Real Name</th>{% endif %}
 				<th>Monkey ID</th>
 				<th>Sex</th>
@@ -59,7 +59,7 @@
 				<th>Study Complete</th></tr>
 			{% for monkey in cohort.monkey_set.all %}
 				<tr>
-					{% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
+					{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
 						<td>{{ monkey.mky_name }}</td>
 					{% endif %}
 					<td><a href="monkey/{{monkey.mky_id}}" target="_blank">
