@@ -47,7 +47,7 @@
 	<div>
 		<table class='common_center'>
 			<tr>
-				{% if user.is_superuser %}
+				{% if user_is_member_of_tech_user or user_is_member_of_superuser or user_is_member_of_committee %}
 					<th>Real Name</th>{% endif %}
 				<th>Monkey ID</th>
 				<th>Sex</th>
