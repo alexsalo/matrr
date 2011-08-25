@@ -1,5 +1,5 @@
 {% load i18n %}
-{% trans "Your tissue request has been partially accepted.  You will be contacted in order to fill out a material transfer agreement.  After the agreement is signed and returned, and when the tissues are prepared, your order will be shipped.  You will be expected to provide updates on your research 6 moths after you receive your order." %}
+{% trans "Your tissue request has been partially accepted.  You will be contacted in order to fill out a material transfer agreement.  After the agreement is signed and returned, and when the tissues are prepared, your order will be shipped.  You will be expected to provide updates on your research 6 months after you receive your order." %}
 
 {% trans "The tissues you requested are from cohort " %}{{ req_request.cohort }}.
 
@@ -7,7 +7,7 @@
 {% trans "Accepted requests:" %}
 {% for tissue_request in req_request.get_requested_tissues %}
 {% if tissue_request.get_accepted != Acceptance.Rejected %}
-{%for datum in tissue_request.get_data %}
+{% for datum in tissue_request.get_data %}
 {{ datum.0 }}: {{ datum.1 }}{% endfor %}
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}

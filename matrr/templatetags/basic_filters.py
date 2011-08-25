@@ -1,4 +1,4 @@
-__author__ = 'JonDev'
+__author__ = 'Jon'
 import os
 from django import template
 from settings import STATIC_ROOT

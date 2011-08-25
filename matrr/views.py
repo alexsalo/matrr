@@ -7,9 +7,6 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.mail import send_mail
-from django.forms.models import modelformset_factory
-from django.utils.encoding import smart_str
-import settings
 from matrr.forms import *
 from matrr.models import *
 import math
@@ -25,7 +22,7 @@ def index_view(request):
 
 	return render_to_response('matrr/index.html', index_context, context_instance=RequestContext(request))
 
-#  non-dynamic pages.
+### Handles all non-dynamic pages.
 def pages_view(request, static_page):
 	# The issue I was having with file.open('/path/to/text.txt', r) was the inconsistent directory structure between
 	# the dev and production environments (laptop vs gleek).  I'm certain there is a combination of settings that would
@@ -35,13 +32,19 @@ def pages_view(request, static_page):
 	template = 'matrr/pages/' + static_page + ".html"
 	return render_to_response(template, {}, context_instance=RequestContext(request))
 
+### Handles the display of each cohort and the lists of cohorts
+def display_cohorts(request, **kwargs):
+	cohort = ''
+	cohorts = ''
+	template_name = ''
 
-def cohort_view(request, **kwargs):
-	cohort = []
-	cohorts = []
+	## If the URL holds a cohort's pk
 	if kwargs.has_key('pk'):
-		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
-		template_name = 'matrr/cohort.html'
+		cohort = get_object_or_404(Cohort, pk=kwargs['pk']) # Get that cohort
+		template_name = 'matrr/cohort.html' # and display that cohort's page
+											# This will display the cohort regardless of its available/upcoming status
+											# Which will be good after cohorts go to necropsy, if the user will ever see/manipulate the URL
+	## otherwise, display a list of cohorts based on the URL
 	elif kwargs['avail_up'] == 'cohort':
 		cohorts = Cohort.objects.order_by('coh_cohort_name')
 		template_name = 'matrr/cohorts.html'
@@ -51,18 +54,15 @@ def cohort_view(request, **kwargs):
 	elif kwargs['avail_up'] == 'available':
 		cohorts = Cohort.objects.filter(coh_upcoming=False).order_by('coh_cohort_name')
 		template_name = 'matrr/available_cohorts.html'
-	else:
-		template_name = ''
 
+	## Paginator stuff
 	if len(cohorts) > 5:
 		paginator = Paginator(cohorts, 5)
-
 		# Make sure page request is an int. If not, deliver first page.
 		try:
 			page = int(request.GET.get('page', '1'))
 		except ValueError:
 			page = 1
-
 		# If page request (9999) is out of range, deliver last page of results.
 		try:
 			cohort_list = paginator.page(page)
@@ -73,9 +73,11 @@ def cohort_view(request, **kwargs):
 
 	return render_to_response(template_name, {'cohort': cohort, 'cohort_list': cohort_list}, context_instance=RequestContext(request))
 
-
+### Currently a very simple hack to tell everyone we don't have any necropsy data.  Placeholder, mostly.
 def cohort_necropsy(request, pk):
+	# Simple message
 	messages.info(request, 'No necropsy data available at this time.')
+	# and display the cohort detail page
 	cohort = Cohort.objects.get(pk=pk)
 	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
 
@@ -416,8 +418,9 @@ def account_detail_view(request, user_id):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Committee').count()
-or u.groups.filter(name='Uberuser').count(), login_url='/denied/')
+@user_passes_test(lambda u: u.groups.filter(name='Committee').count()or
+							u.groups.filter(name='Uberuser').count(),
+				  login_url='/denied/')
 def account_reviewer_view(request, user_id):
 	return account_detail_view(request, user_id)
 
@@ -639,8 +642,7 @@ def remove_values_from_list(the_list, other_list):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.groups.filter(name='Uberuser').count(), login_url='/denied/')
 def request_review_process(request, req_request_id):
 	# get the tissue request
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -755,8 +757,8 @@ def contact_us(request):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or\
-							u.groups.filter(name='Committee').count() or\
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
+							u.groups.filter(name='Committee').count() or
 							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
 def shipping_overview(request):
@@ -808,8 +810,8 @@ def search(request):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or\
-							u.groups.filter(name='Committee').count() or\
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
+							u.groups.filter(name='Committee').count() or
 							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
 def build_shipment(request, req_request_id):
@@ -835,8 +837,8 @@ def build_shipment(request, req_request_id):
 
 
 @login_required()
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or\
-							u.groups.filter(name='Committee').count() or\
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
+							u.groups.filter(name='Committee').count() or
 							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
 def make_shipping_manifest_latex(request, req_request_id):
