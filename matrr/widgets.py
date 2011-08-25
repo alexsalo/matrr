@@ -7,7 +7,6 @@ from django.forms.util import flatatt
 
 from django.forms import *
 from django.forms.widgets import Input
-from settings import SITE_ROOT
 import re
 
 class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
@@ -183,7 +182,7 @@ class GroupedCheckboxSelectMultipleMonkeys(CheckboxSelectMultiple):
       rendered_cb = cb.render(name, mky_id)
       rendered_cb = re.sub('&#39;', '\'', rendered_cb)
       mky_real_id = conditional_escape(force_unicode(mky_real_id))
-      link = SITE_ROOT + '/monkeys/' + str(mky_real_id)
+      link = '/monkeys/' + str(mky_real_id)
       output.append(u'<label%s>%s <a href=\'%s\' onClick=\'javascript:window.open("%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>' % \
                       (label_for,
                        rendered_cb,

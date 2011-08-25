@@ -23,7 +23,6 @@ else:
 
 TEMPLATE_DEBUG = DEBUG
 
-SITE_ROOT = ''  #  needs to be refactored out of the project
 
 ADMINS = (
 # ('Your Name', 'your_email@example.com'),
@@ -161,7 +160,6 @@ MIDDLEWARE_CLASSES = (
 	'django.contrib.messages.middleware.MessageMiddleware',
 	'django.middleware.transaction.TransactionMiddleware',
 	)
-
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -174,7 +172,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 	'matrr.context_processors.cart',
 	'matrr.context_processors.login_form',
 	'matrr.context_processors.group_membership',
-	'matrr.context_processors.site_root',
 	'matrr.context_processors.unsupported_browser'
 	)
 

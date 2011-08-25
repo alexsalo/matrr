@@ -5,6 +5,7 @@ from django.conf.urls.defaults import patterns, url
 from django.views.generic import DetailView, ListView
 
 from matrr.views import *
+import settings
 
 urlpatterns = patterns('matrr.views',
                        url(r'^$', index_view),

@@ -707,7 +707,7 @@ def request_review_process(request, req_request_id):
 				{'status': status})
 		# Email subject *must not* contain newlines
 		subject = ''.join(subject.splitlines())
-		request_url = settings.SITE_ROOT + '/orders/' + str(req_request.req_request_id) + '/'
+		request_url = '/orders/' + str(req_request.req_request_id) + '/'
 		body = render_to_string(email_template,
 				{'request_url': request_url,
 				 'req_request': req_request,

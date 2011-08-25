@@ -1,6 +1,5 @@
 from matrr.models import *
 from django.contrib.auth.views import AuthenticationForm
-from settings import SITE_ROOT
 from string import lower, replace
 
 def cart(request):
@@ -38,10 +37,6 @@ def group_membership(request):
 			key = 'user_is_member_of_' + replace(lower(group.name), ' ', '_')
 			context[key] = True
 	return context
-
-
-def site_root(request):
-	return {'SITE_ROOT': SITE_ROOT}
 
 
 def unsupported_browser(request):
