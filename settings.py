@@ -269,3 +269,8 @@ LOGIN_REDIRECT_URL = '/accounts/login'
 #            },
 #        }
 #}
+try:
+	import local_settings
+	DATABASES = local_settings.DATABASES
+except:
+	pass
