@@ -731,8 +731,12 @@ def contact_us(request):
 			if form.is_valid():
 				subject = ''.join(form.cleaned_data['email_subject'].splitlines())
 				subject += '//'
-				if request.user.email:
-					subject += request.user.email
+				try:
+					if request.user.email:
+						subject += request.user.email
+				except:
+#					Anonymous user does not have email field.
+					pass
 				send_mail(subject, form.cleaned_data['email_body'], form.cleaned_data['email_from'], ["Erich_Baker@Baylor.edu"])
 				messages.success(request, "Your message was sent to the MATRR team. You may expect a response shortly.")
 				return redirect('/')
