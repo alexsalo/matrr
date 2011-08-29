@@ -6,7 +6,7 @@ class TissueAdmin(admin.ModelAdmin):
     models.ManyToManyField: {'widget': admin.widgets.FilteredSelectMultiple("Monkeys", is_stacked=False)},
   }
   list_filter = ('category', )
-
+  search_fields = ['tst_tissue_name']
 
 class TissueSampleAdmin(admin.ModelAdmin):
   actions = ['remove_samples_from_inventory',
