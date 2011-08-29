@@ -82,7 +82,7 @@ urlpatterns += patterns('matrr.views',
             context_object_name='cohort',
             template_name='matrr/timeline.html',
             )),
-    url(r'^available/(?P<pk>\d+)/timeline$',
+    url(r'^(available|cohort)/(?P<pk>\d+)/timeline$',
         DetailView.as_view(
             queryset=Cohort.objects.filter(coh_upcoming=False),
             context_object_name='cohort',
@@ -116,7 +116,7 @@ urlpatterns += patterns('matrr.views',
 		display_cohorts),
 	# change/fix necropsy
     url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/necropsy/$',
-        cohort_necropsy),
+        cohort_necropsy, name="cohortnect"),
 
 	url(r'^cart/$',
 		cart_view),
