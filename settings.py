@@ -187,6 +187,17 @@ TEMPLATE_DIRS = (
 SPHINX_API_VERSION = 0x116
 
 if PRODUCTION:
+	SPHINX_SERVER = 'localhost'
+	SPHINX_PORT = 9312
+elif GLEEK:
+	SPHINX_SERVER = 'localhost'
+	SPHINX_PORT = 9312
+else:
+	SPHINX_SERVER = 'gleek.ecs.baylor.edu'
+	SPHINX_PORT = 9312
+
+
+if PRODUCTION:
 	INSTALLED_APPS = (
 		'django.contrib.auth',
 		'django.contrib.contenttypes',
