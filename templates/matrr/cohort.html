@@ -79,7 +79,7 @@
 							Control
 						{% endif %}{% endif %}
 					</td>
-					<td>{{ monkey.mky_necropsy_start_date }}</td>
+					<td>{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}</td>
 					<td>{{ monkey.mky_stress_model }}</td>
 					<td>{% if monkey.mky_study_complete %}<font color=Green>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
 				</tr>

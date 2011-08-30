@@ -44,7 +44,7 @@
 		</tr>
 		<tr>
 			<th>Necropsy Start Date:</th>
-			<td>{% if monkey.mky_necropsy_start_date %}{{ monkey.mky_necropsy_start_date }}{% else %}No Necropsy Yet{% endif %}</td>
+			<td>{% if monkey.mky_necropsy_start_date %}{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}{% else %}No Necropsy Yet{% endif %}</td>
 		</tr>
 		<tr>
 			<th>Weight:</th>
