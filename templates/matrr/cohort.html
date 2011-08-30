@@ -68,7 +68,7 @@
 					</a>
 					</td>
 					<td>{{ monkey.mky_gender }}</td>
-					<td>{{ monkey.mky_birthdate }}</td>
+					<td>{{ monkey.mky_birthdate|date:"m/d/Y"  }}</td>
 					<td>{{ monkey.mky_weight }}</td>
 					<td>
 						{% if monkey.mky_drinking %}

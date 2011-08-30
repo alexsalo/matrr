@@ -46,7 +46,7 @@ All Cohorts
 											Control
 										{% endif %}{% endif %}
 								</td>
-								<td class='text-center-common-td'>{{ monkey.mky_birthdate }}</td>
+								<td class='text-center-common-td'>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
 
 							</tr>
 						{% endfor %}
