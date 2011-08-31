@@ -3,6 +3,7 @@ from matplotlib import pyplot
 import Image
 
 def cohort_boxplot_m2de(cohort):
+	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
 	# Gather drinking monkeys from the cohort
 	if not isinstance(cohort, Cohort):
 		try:
@@ -48,7 +49,11 @@ def cohort_boxplot_m2de(cohort):
 			ax1.set_title('MATRR Boxplot')
 			ax1.set_xlabel("Date of Experiment")
 			ax1.set_ylabel(data[0])
+			
 			bp = pyplot.boxplot(rev_values)
+			pyplot.setp(bp['boxes'], linewidth=3, color=colors['cohort'])
+			pyplot.setp(bp['whiskers'], linewidth=3, color=colors['cohort'])
+			pyplot.setp(bp['fliers'], color='red', marker='+')
 			xtickNames = pyplot.setp(ax1, xticklabels=rev_keys)
 			pyplot.setp(xtickNames, rotation=45)
 			fig.savefig(filename + ".png")
