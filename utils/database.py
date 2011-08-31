@@ -577,3 +577,21 @@ def load_necropsy_dates(file):
 			monkey.mky_name = name
 			monkey.mky_necropsy_start_date = necropsy
 			monkey.save()
+
+
+## Creates TissueCategories consistent with format agreed on 8/30/2011
+## -jf
+def load_TissueCategories():
+	categories = {"Custom Tissues" : ("Custom Tissues", False),
+				  "Internal Molecular Tissues" : ("Only internal molecular tissues", True),
+				  "Internal Blood Tissues" : ("Only internal blood tissues", True),
+				  "Internal Peripheral Tissues" : ("Only internal peripheral tissues", True),
+				  "Internal Brain Tissues" : ("Only internal brain tissues", True),
+				  "Brain Tissues" : ("Brain tissues", False),
+				  "Peripheral Tissues" : ("Peripheral tissues", False)
+	}
+	for key in categories:
+		tc, is_new = TissueCategory.objects.get_or_create(cat_name=key)
+		tc.cat_description = categories[key][0]
+		tc.cat_internal = categories[key][1]
+		tc.save()
