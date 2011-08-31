@@ -580,15 +580,17 @@ def load_necropsy_dates(file):
 
 
 ## Creates TissueCategories consistent with format agreed on 8/30/2011
+## No parent categories yet.
 ## -jf
 def load_TissueCategories():
-	categories = {"Custom Tissues" : ("Custom Tissues", False),
-				  "Internal Molecular Tissues" : ("Only internal molecular tissues", True),
-				  "Internal Blood Tissues" : ("Only internal blood tissues", True),
-				  "Internal Peripheral Tissues" : ("Only internal peripheral tissues", True),
-				  "Internal Brain Tissues" : ("Only internal brain tissues", True),
-				  "Brain Tissues" : ("Brain tissues", False),
-				  "Peripheral Tissues" : ("Peripheral tissues", False)
+###				   Category Name  (cat_name)		Description (cat_description)			Internal (cat_internal)
+	categories = {"Custom Tissues" : 				("Custom Tissues", 						False),
+				  "Internal Molecular Tissues" : 	("Only internal molecular tissues", 	True),
+				  "Internal Blood Tissues" : 		("Only internal blood tissues",			True),
+				  "Internal Peripheral Tissues" : 	("Only internal peripheral tissues", 	True),
+				  "Internal Brain Tissues" : 		("Only internal brain tissues", 		True),
+				  "Brain Tissues" : 				("Brain tissues", 						False),
+				  "Peripheral Tissues" : 			("Peripheral tissues", 					False)
 	}
 	for key in categories:
 		tc, is_new = TissueCategory.objects.get_or_create(cat_name=key)
