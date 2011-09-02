@@ -182,11 +182,10 @@ urlpatterns += patterns('matrr.views',
 #			search),
 	)
 
-if settings.DEVELOPMENT:
-    urlpatterns += patterns('matrr.views',
-		url(r'^search/?$',
-			search),
-		)
+#if settings.DEVELOPMENT:
+
+urlpatterns += patterns('matrr.views', url(r'^search/?$', search),)
+
 
 if settings.DEVELOPMENT:
     from django.views.static import serve
