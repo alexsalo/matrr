@@ -597,3 +597,17 @@ def load_TissueCategories():
 		tc.cat_description = categories[key][0]
 		tc.cat_internal = categories[key][1]
 		tc.save()
+
+
+## Creates InventoryStatus'
+## -jf
+def load_InventoryStatus():
+###				   Status Name  (cat_name)
+	statuses = {"Unverified" : 		"TissueSample inventory unverified",
+				"Sufficient" : 		"TissueSample inventory verified sufficient for this TissueRequest",
+				"Insufficient" : 	"TissueSample inventory verified insufficient for this TissueRequest.",
+	}
+	for key in statuses:
+		inv, is_new = InventoryStatus.objects.get_or_create(inv_status=key)
+		inv.inv_description = statuses[key]
+		inv.save()
