@@ -3,6 +3,7 @@ from django.db import transaction
 import datetime
 import csv, re
 
+
 ## Old, might be useful in the future, but kept for reference
 ## Corrected improper birthday formatting.  match.group(0) = full string, not first group.  group.(1) is the first group.
 @transaction.commit_on_success
@@ -577,6 +578,43 @@ def load_necropsy_dates(file):
 			monkey.mky_name = name
 			monkey.mky_necropsy_start_date = necropsy
 			monkey.save()
+
+# Creates Tissue Types from following format:
+# each tissue on a separate line
+# first group of tissues are loaded under category brain tissues
+# second group under peripheral tissues
+# last under custom
+# groups separated with empty line
+# if empty group, just empty line
+# no empty line at the end of file!!!
+from matrr.models import TissueCategory
+def load_TissueTypes(file):
+	categories = {'brain' : "Brain Tissues", 'periph':"Peripheral Tissues", 'custom':"Custom Tissues"}
+	categs = []
+	try:
+		categs.append(TissueCategory.objects.get(cat_name=categories['brain']))
+		categs.append(TissueCategory.objects.get(cat_name=categories['periph']))
+		categs.append(TissueCategory.objects.get(cat_name=categories['custom']))
+	except Exception:
+		print "TissueTypes not added, missing TissueCategories. Following categories are necessary: "
+		for cat in categories.itervalues():
+			print cat
+		
+	category_iter = categs.__iter__()
+	current_category = category_iter.next()	
+	with open(file, 'r') as f:
+		read_data = f.readlines()
+		for line in read_data:
+			line = line.rstrip()
+			if line == "":
+				current_category = category_iter.next()
+				continue
+			tt = TissueType()
+			tt.tst_tissue_name = line
+			tt.category = current_category
+			tt.save()
+			
+	
 
 
 ## Creates TissueCategories consistent with format agreed on 8/30/2011
