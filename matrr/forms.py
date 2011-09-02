@@ -126,7 +126,8 @@ class ReviewResponseForm(Form):
                                                                             widget=GroupedCheckboxSelectMultipleMonkeys(
                                                                                 tissue_request=tissue_request)
                 )
-
+class FulltextSearchForm(Form):
+    terms = CharField(label='Search', widget=widgets.TextInput(attrs={'size': 80}))
 
 class ContactUsForm(Form):
     email_subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 40}))

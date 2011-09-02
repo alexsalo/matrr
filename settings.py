@@ -29,7 +29,11 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
-
+if PRODUCTION:
+	SEARCH_INDEXES = {'monkey':"monkey", 'monkey_auth':"monkey_auth", 'cohort':"cohort"}
+else:
+	SEARCH_INDEXES = {'monkey':"t_monkey", 'monkey_auth':"t_monkey_auth", 'cohort':"t_cohort"}
+	
 if PRODUCTION:
 	DATABASES = {
 		'default': {
@@ -42,6 +46,7 @@ if PRODUCTION:
 			#'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
 		}
 	}
+
 elif GLEEK:
 	DATABASES = {
 		'default': {
@@ -281,7 +286,6 @@ LOGIN_REDIRECT_URL = '/accounts/login'
 #        }
 #}
 try:
-	import local_settings
-	DATABASES = local_settings.DATABASES
+	from s_local_settings import *
 except:
 	pass

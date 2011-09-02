@@ -786,30 +786,51 @@ def search_index(terms, index, model):
 
 	results = search.query(terms)
 	final_results = list()
+	
 	for result in results:
 		final_results.append(model.objects.get(pk=result['id']))
+		
 	return final_results
-
+	
 
 def search(request):
-	terms = request.GET['terms']
+	from settings import SEARCH_INDEXES
 
 	results = dict()
-	if request.user.groups.filter(name='Tech User').count() != 0 or\
-	   request.user.groups.filter(name='Committee').count() != 0 or\
-	   request.user.groups.filter(name='Uberuser').count() != 0:
-		results['monkeys'] = search_index(terms, 'monkey_auth', Monkey)
-	else:
-		results['monkeys'] = search_index(terms, 'monkey', Monkey)
-	results['cohorts'] = search_index(terms, 'cohort', Cohort)
+	if request.method == 'POST':
+		form = FulltextSearchForm(request.POST)
+		if form.is_valid():
+	
+			terms = form.cleaned_data['terms']
 
-	num_results = len(results['monkeys'])
-	num_results += len(results['cohorts'])
+
+			if request.user.groups.filter(name='Tech User').count() != 0 or\
+			   request.user.groups.filter(name='Committee').count() != 0 or\
+			   request.user.groups.filter(name='Uberuser').count() != 0:
+				user_auth = True
+				results['monkeys'] = search_index(terms, SEARCH_INDEXES['monkey_auth'], Monkey)
+			else:
+				user_auth = False
+				results['monkeys'] = search_index(terms, SEARCH_INDEXES['monkey'], Monkey)
+			
+			results['cohorts'] = search_index(terms, SEARCH_INDEXES['cohort'], Cohort)
+		
+			num_results = len(results['monkeys'])
+			num_results += len(results['cohorts'])
+	else:
+		form = FulltextSearchForm()
+		results['cohorts'] = None
+		results['monkeys'] = None
+		terms = ''
+		num_results = 0
+		user_auth = False
 
 	return render_to_response('matrr/search.html',
 			{'terms': terms,
 			 'results': results,
-			 'num_results': num_results},
+			 'num_results': num_results,
+			 'user_auth': user_auth,
+			 'form': form},
 							  context_instance=RequestContext(request))
 
 
