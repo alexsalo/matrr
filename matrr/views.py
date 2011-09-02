@@ -795,7 +795,12 @@ def search_index(terms, index, model):
 
 def search(request):
 	from settings import SEARCH_INDEXES
+	results = None
+	form = FulltextSearchForm()
+	num_results = 0
+	user_auth = False
 
+	terms = ''
 	results = dict()
 	if request.method == 'POST':
 		form = FulltextSearchForm(request.POST)
@@ -817,13 +822,7 @@ def search(request):
 		
 			num_results = len(results['monkeys'])
 			num_results += len(results['cohorts'])
-	else:
-		form = FulltextSearchForm()
-		results['cohorts'] = None
-		results['monkeys'] = None
-		terms = ''
-		num_results = 0
-		user_auth = False
+
 
 	return render_to_response('matrr/search.html',
 			{'terms': terms,

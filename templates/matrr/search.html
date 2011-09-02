@@ -15,10 +15,12 @@
 </form>
 
 
-
+{% if results %}
   <div class='headline'>
     {{ num_results }} results for: {{ terms }}
   </div>
+ {% endif %}
+ 
 {% if results.monkeys %}
 			<div class="mini-headline">Monkeys</div>
   <div>
