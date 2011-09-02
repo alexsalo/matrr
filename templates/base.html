@@ -41,6 +41,7 @@
 				{% block nav-list %}
 					<ul>
 						<li class='top'><a href="/">Home</a></li>
+
 					</ul>
 					{% if user.is_authenticated %}
 						<ul>
@@ -63,6 +64,7 @@
 							{% endif %}
 						</ul>
 					{% endif %}
+					
 					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
 						<ul>
 							<li class='top'>
@@ -70,6 +72,20 @@
 							</li>
 						</ul>
 					{% endif %}
+						<ul>
+							<li class='top'>
+								<a href='/search'>Fulltext search</a>
+							</li>
+						</ul>
+					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
+						<ul>
+							<li class='top'>
+								<a href='https://gleek.ecs.baylor.edu/wiki/index.php?title=Issue_Tracker'>Issue Tracker</a>
+							</li>
+						</ul>
+					{% endif %}			
+		
+					
 					{#      {% if user.is_staff %}#}
 					{#      <ul>#}
 					{#          <li class='top'><a href="/qc/">Quality Control</a></li>#}
@@ -95,6 +111,7 @@
 				{% endfor %}
 			{% endif %}
 		</div>
+
 		<!-- Sidebar div -->
 		<div class='sidebar clearfix'>
 			{% block sidebar %}
@@ -108,6 +125,7 @@
 							<a href="{% url registration_register %}">Create an Account</a>
 						{% else %}
 							Welcome {{ user.username }}
+
 						{% endif %}
 					</div>
 				{% endblock %}
