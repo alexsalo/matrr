@@ -1,0 +1,77 @@
+Area 1, 2, 3
+Area 9
+Area 10
+Area 12
+Area 13
+Area 14
+Area 17
+Area 24
+Area 25
+Area 32
+Area 46
+Amydgala nuclei
+Brainstem
+Caudate
+Cerebellum
+Corpus callosum
+Dentate gyrus
+Edinger-Westphal
+Entorhinal cortex
+Frontal white matter
+Globus pallidus
+Habenula
+Hippocampus
+Hypothalamus
+Insula
+Locus coeruleus
+Nucleus accumbens (core)
+Nucleus accumbens (shell)
+Olfactory bulb
+Periaqueductal gray
+Pituitary
+Putamen
+Raphe
+Septum
+Substantia nigra (pars compacta)
+Substantia nigra (pars reticulate)
+Thalamus (pulvinar)
+Thalamus (lateral geniculate)
+Thalamus (mediodorsal)
+Thalamus (midline nuclei)
+White matter 
+
+Adrenal (lt, rt)
+Aorta (descending)
+Aortic arch
+Bile
+Blood
+Cerebrospinal fluid
+Esophagus
+Fat (abdominal)
+Fat (brown)
+Fat (mesenteric)
+Fat (retroperitoneal)
+Fat (subcutaneous)
+Gall bladder
+Gonads (testes, ovaries)
+Heart
+Kidney (lt, rt)
+Large intestine
+Liver
+Lung (lt lobe)
+Lung (rt lobe)
+Lung (upper lobe)
+Muscle (gastrocnemius)
+Muscle (quadriceps)
+Sciatic nerve
+Small intestine
+Spinal cord (cervical)
+Spinal cord (thoracic)
+Spinal cord (lumbar)
+Spleen
+Stomach
+Thymus
+Urine
+
+Custom brain
+Custom peripheral
