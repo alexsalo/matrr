@@ -588,27 +588,51 @@ def load_necropsy_dates(file):
 # if empty group, just empty line
 # no empty line at the end of file!!!
 from matrr.models import TissueCategory
-def load_TissueTypes(file):
-	categories = {'brain' : "Brain Tissues", 'periph':"Peripheral Tissues", 'custom':"Custom Tissues"}
+def load_TissueTypes(file_name, delete_name_duplicates=False):
+	categories = {'brain' : "Brain Tissues", 'periph':"Peripheral Tissues", 'custom':"Custom"}
 	categs = []
 	try:
 		categs.append(TissueCategory.objects.get(cat_name=categories['brain']))
 		categs.append(TissueCategory.objects.get(cat_name=categories['periph']))
 		categs.append(TissueCategory.objects.get(cat_name=categories['custom']))
 	except Exception:
-		print "TissueTypes not added, missing TissueCategories. Following categories are necessary: "
+		print "TissueTypes not added, missing Tissue Categories. Following categories are necessary: "
 		for cat in categories.itervalues():
 			print cat
 		
 	category_iter = categs.__iter__()
 	current_category = category_iter.next()	
-	with open(file, 'r') as f:
+	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line in read_data:
 			line = line.rstrip()
 			if line == "":
 				current_category = category_iter.next()
 				continue
+			duplicates = TissueType.objects.filter(tst_tissue_name=line)
+			existing = list()
+			name_duplicates_ids = list()
+			name_duplicates = list()
+			if len(duplicates) > 0:
+				for duplicate in duplicates:
+					if duplicate.category == current_category:
+						existing.append(duplicate.tst_type_id)
+					else:
+						name_duplicates_ids.append(duplicate.tst_type_id)
+						name_duplicates.append(duplicate)
+			if len(name_duplicates_ids) > 0:
+				if delete_name_duplicates:
+					for name_duplicate in name_duplicates:
+						name_duplicate.delete()
+					print "Deleting name duplicates for tissue type " + line + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
+				else:
+					print "Found name duplicates for tissue type " + line + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
+
+			
+			if len(existing) > 0:
+				print "Tissue type " + line + " already exists with correct category. Duplicate ids = " + `existing`
+				continue
+			
 			tt = TissueType()
 			tt.tst_tissue_name = line
 			tt.category = current_category
@@ -622,7 +646,7 @@ def load_TissueTypes(file):
 ## -jf
 def load_TissueCategories():
 ###				   Category Name  (cat_name)		Description (cat_description)			Internal (cat_internal)
-	categories = {"Custom Tissues" : 				("Custom Tissues", 						False),
+	categories = {"Custom" : 				("Custom Tissues", 						False),
 				  "Internal Molecular Tissues" : 	("Only internal molecular tissues", 	True),
 				  "Internal Blood Tissues" : 		("Only internal blood tissues",			True),
 				  "Internal Peripheral Tissues" : 	("Only internal peripheral tissues", 	True),
