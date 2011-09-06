@@ -1,4 +1,5 @@
 # Create your views here.
+from django.forms.formsets import formset_factory
 from django.template import RequestContext
 from django.http import Http404, HttpResponse
 from django.shortcuts import  render_to_response, redirect, get_object_or_404
@@ -903,4 +904,71 @@ def order_delete(request, req_request_id):
 				 'Acceptance': Acceptance, },
 								  context_instance=RequestContext(request))
 
+@login_required()
+def tissue_verification_list(request):
+	TissueVerificationFormSet = formset_factory(TissueVerificationForm, extra=0)
+	if request.method == "POST":
+		formset = TissueVerificationFormSet(request.POST)
+		if formset.is_valid():
+			for tvform in formset:
+				data = tvform.cleaned_data
+				tvm = TissueVerification.objects.get(pk=data['primarykey'])
+				tss = tvm.tissue_sample
+				tss.tss_location=data['location']
+				tss.tss_freezer=data['freezer']
+				tss.tss_details=data['details']
+				tss.tss_sample_quantity=data['quantity']
+				tss.tss_units=data['units']
+				tss.save()
 
+				tvm.inventory = data['inventory']
+				tvm.save()
+			return redirect('/verification')
+		else:
+			messages.error(request, formset.errors)
+
+	initial = []
+	tvm_list = TissueVerification.objects.all().order_by('inventory')
+	for tvm in tvm_list:
+		tss = tvm.tissue_sample
+		tvm_initial = {'primarykey': tvm.tvm_id,
+					   'freezer': tss.tss_freezer,
+					   'location': tss.tss_location,
+					   'quantity': tss.tss_sample_quantity,
+					   'inventory': tvm.inventory.pk,
+					   'units': tss.units.pk,
+					   'details': tss.tss_details,
+					   'anything': "anything",}
+		initial[len(initial):] = [tvm_initial]
+	formset = TissueVerificationFormSet(initial=initial)
+	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
+
+@login_required()
+def tissue_verification(request, pk):
+	tvm = TissueVerification.objects.get(pk=pk)
+	tss = tvm.tissue_sample
+	if request.POST:
+		tvform = TissueVerificationForm(request.POST)
+		if tvform.is_valid():
+			data = tvform.cleaned_data
+			tss.tss_location=data['location']
+			tss.tss_freezer=data['freezer']
+			tss.tss_details=data['details']
+			tss.tss_sample_quantity=data['quantity']
+			tss.tss_units=data['units']
+			tss.save()
+
+			tvm.inventory = data['inventory']
+			tvm.save()
+			return redirect('/verification')
+		else:
+			messages.error(request, "form not valid")
+	else:
+		tvform = TissueVerificationForm(initial={'freezer': tss.tss_freezer,
+												 'location': tss.tss_location,
+												 'quantity': tss.tss_sample_quantity,
+												 'units': tss.units,
+												 'details': tss.tss_details,
+												 'inventory': tvm.inventory})
+
+	return render_to_response('matrr/verification.html', {"form" : tvform}, context_instance=RequestContext(request))

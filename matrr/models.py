@@ -148,8 +148,9 @@ class Monkey(models.Model):
 	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True,
                                      max_length=20,
                                      help_text='Please enter the date the monkey was born on.')
-	mky_weight = models.FloatField('Weight', blank=True, null=True,
-								   help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
+	mky_weight = models.DecimalField('Weight', blank=True, null=True,
+									 decimal_places=5, max_digits=10,
+									 help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
 	mky_drinking = models.BooleanField('Drinking', null=False,
 									   help_text='Was this monkey given alcohol?')
 	mky_housing_control = models.BooleanField('Housing Control', null=False, default=False,
@@ -245,14 +246,17 @@ class MonkeyToDrinkingExperiment(models.Model):
 	monkey = models.ForeignKey(Monkey, null=False, related_name='+', db_column='mky_id', editable=False)
 	drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
 											editable=False)
-	mtd_etoh_intake = models.FloatField('EtOH Intake', null=True, blank=True,
-										help_text='Please enter the amount in mL of 4% EtOH consumed by the monkey.')
-	mtd_veh_intake = models.FloatField('H2O Intake', null=True, blank=True,
-									   help_text='Please enter the amount in mL of H2O consumed by the monkey.')
+	mtd_etoh_intake = models.DecimalField('EtOH Intake', null=True, blank=True,
+										  decimal_places=5, max_digits=10,
+										  help_text='Please enter the amount in mL of 4% EtOH consumed by the monkey.')
+	mtd_veh_intake = models.DecimalField('H2O Intake', null=True, blank=True,
+										 decimal_places=5, max_digits=10,
+										 help_text='Please enter the amount in mL of H2O consumed by the monkey.')
 	mtd_total_pellets = models.IntegerField('Pellets Consumed', null=True, blank=True,
 											help_text='Please enter the total number of pellets consumed by the monkey.')
-	mtd_weight = models.FloatField('Weight', null=True, blank=True,
-								   help_text='Please enter the weight of the monkey.')
+	mtd_weight = models.DecimalField('Weight', null=True, blank=True,
+									 decimal_places=5, max_digits=10,
+									 help_text='Please enter the weight of the monkey.')
 	mtd_notes = models.TextField('Notes', blank=True, null=True,
 								 help_text='Use this space to enter anything about the experiment that does not fit in another field.')
 
@@ -319,7 +323,7 @@ class TissueType(models.Model):
 											  related_name='unavailable_tissue_type_set',
 											  blank=True,
 											  help_text='The monkeys this tissue type is not available for.')
-	tst_cost = models.FloatField('Cost', default=0.0, null=False, blank=False)
+	tst_cost = models.DecimalField('Cost', default=0.00, null=False, blank=False, decimal_places=2, max_digits=10)
 
 	def __unicode__(self):
 		return self.tst_tissue_name
@@ -337,6 +341,7 @@ class TissueType(models.Model):
 				return True
 		return False
 
+### 90% sure i just broke this.  -jf, 8/29/2011
 	def get_availability(self, monkey):
 		availability = Availability.Unavailable
 		if monkey in self.unavailable_list.all():
@@ -368,7 +373,7 @@ class TissueType(models.Model):
 
 			# get the number of tissues that have been harvested
 			harvested_samples = TissueSample.objects.filter(monkey=monkey,
-															tissue_type=self, ).all()
+															tissue_type=self)
 			if len(harvested_samples) > 0:
 				# tissues have been harvested, so we should use the inventories to determine if
 				# the tissue is available.
@@ -376,7 +381,7 @@ class TissueType(models.Model):
 				# get the tissues of this type for this monkey
 				available_count = 0
 				for sample in harvested_samples:
-					available_count += sample.get_available_count()
+					available_count += sample.get_quantity()
 					# check if the amount of stock exceeds the number of approved requests
 				if requested < available_count:
 					# if it does, the tissue is available (and in stock)
@@ -446,7 +451,7 @@ class Request(models.Model, DiffingMixin):
 									   choices=REFERRAL_CHOICES,
 									   null=False,
 									   max_length=100)
-	req_notes = models.TextField('Notes', null=True, blank=True)
+	req_notes = models.TextField('Request Notes', null=True, blank=True)
 
 	def __unicode__(self):
 		return 'User: ' + self.user.username +\
@@ -493,11 +498,12 @@ class TissueRequest(models.Model):
 	# the custom increment is here to allow us to have a unique constraint that prevents duplicate requests
 	# for a tissue in a single order while allowing multiple custom requests in an order.
 	rtt_custom_increment = models.IntegerField('Custom Increment', default=0, editable=False, null=False)
-	rtt_amount = models.FloatField('Amount',
-								   help_text='Please enter the amount of tissue you need.')
+	rtt_amount = models.DecimalField('Amount',
+									 decimal_places=5, max_digits=10,
+									 help_text='Please enter the amount of tissue you need.')
 	unit = models.ForeignKey(Unit, null=False, related_name='+', db_column='unt_unit_id',
 							 help_text='Please select the unit of measure.')
-	rtt_notes = models.TextField('Notes', null=True, blank=True,
+	rtt_notes = models.TextField('Tissue Notes', null=True, blank=True,
 								 help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular tissue request.')
 	monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
 									 verbose_name='Requested Monkeys',
@@ -556,13 +562,28 @@ class TissueRequest(models.Model):
 	def get_estimated_cost(self):
 		return self.tissue_type.tst_cost * self.monkeys.count()
 
-	def save(self, force_insert=False, force_update=False, using=None):
+	def save(self, *args, **kwargs):
 		if self.rtt_tissue_request_id is None and self.tissue_type.category.cat_name == 'Custom':
 			# if this is a custom request and it hasn't been saved yet
 			# set the increment to the correct amount
 			self.rtt_custom_increment = TissueRequest.objects.filter(req_request=self.req_request,
 																	 tissue_type__category__cat_name='Custom').count()
-		super(TissueRequest, self).save(force_insert, force_update, using)
+		### Tissue Verification stuff
+		## If any TissueVerifications exist for this request, delete them.
+		TissueVerification.objects.filter(tissue_request=self).delete()
+		## Create new TVs.
+		for monkey in self.monkeys.all():
+			## Get or create TV object
+			tv, is_new = TissueVerification.objects.get_or_create(tissue_type=self.tissue_type, monkey=monkey, tissue_request=self)
+
+			## Update timestamps
+			if is_new:
+				tv.tvm_date_created = datetime.now()
+			tv.tvm_date_modified = datetime.now()
+			## Save to database
+			tv.save()
+
+		super(TissueRequest, self).save(*args, **kwargs)
 
 	class Meta:
 		db_table = 'rtt_requests_to_tissue_types'
@@ -683,20 +704,17 @@ class TissueSample(models.Model):
 							   blank=False, null=False)
 	tss_freezer = models.CharField('Freezer Name',
 								   max_length=100,
-								   null=False,
-								   blank=False,
+								   null=False, blank=True,
 								   help_text='Please enter the name of the freezer this sample is in.')
 	tss_location = models.CharField('Location of Sample',
 									max_length=100,
-									null=False,
-									blank=False,
+									null=False, blank=True,
 									help_text='Please enter the location in the freezer where this sample is stored.')
 	tss_details = models.TextField('Details',
-								   null=True,
-								   blank=True,
+								   null=True, blank=True,
 								   help_text='Any extras details about this tissue sample.')
-	tss_sample_count = models.IntegerField('Sample Count', null=False)
-	tss_distributed_count = models.IntegerField('Distributed Count', null=False, default=0)
+	tss_sample_quantity = models.DecimalField('Sample Quantity', null=False, default=-1, decimal_places=5, max_digits=10)
+	units = models.ForeignKey(Unit, null=False)
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 
 	def get_modified(self):
@@ -704,13 +722,13 @@ class TissueSample(models.Model):
 
 	def __unicode__(self):
 		return str(self.monkey) + ' ' + str(self.tissue_type) + ' ' + self.tss_freezer\
-			   + ': ' + self.tss_location + ' (' + str(self.get_available_count()) + ')'
+			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ')'
 
 	def get_location(self):
 		return self.tss_freezer + ': ' + self.tss_location
 
-	def get_available_count(self):
-		return self.tss_sample_count - self.tss_distributed_count
+	def get_quantity(self):
+		return self.tss_sample_quantity
 
 	class Meta:
 		db_table = 'tss_tissue_samples'
@@ -756,73 +774,57 @@ class GenBankSequence(models.Model):
 		db_table = 'gen_genbank_sequences'
 
 
-class TissueVerification(models.Model):
-	tvm_tissue_verification_id = models.AutoField(primary_key=True)
-	tissue_request = models.ForeignKey(TissueRequest, null=False, related_name='tissue_verification_set', db_column='rtt_tissue_request_id')
-	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')
-	tvm_notes = models.TextField('Verification Notes', null=True, blank=True,
-								 help_text='Use this field to add any additional info regarding tissue from this request.')
-	tvm_verified = models.NullBooleanField("Tissue Type Verification", null=True,
-									   help_text="Has tissue from this monkey been verified as either present in or absent from the freezer?")
-	#tvm_remainder = models.
-
+class InventoryStatus(models.Model):
+	inv_id = models.AutoField("ID", primary_key=True)
+	inv_status = models.CharField('Tissue Inventory Status', max_length=30, unique=True, null=False)
+	inv_description = models.CharField('Status description', max_length=100, unique=True, null=False)
 
 	def __unicode__(self):
-		return self.tissue_type.tst_tissue_name + ': ' + self.rtt_fix_type
+		return self.inv_status
 
-	def get_tissue(self):
-		return self.tissue_type
+	class Meta:
+		db_table = 'inv_inventory_status'
 
-	def has_notes(self):
-		return self.rtt_notes is not None and self.rtt_notes != ''
 
-	def get_notes(self):
-		return self.rtt_notes
+class TissueVerification(models.Model):
+	tvm_id = models.AutoField(primary_key=True)
+	
+	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set', db_column='rtt_tissue_request_id')
+	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
+	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_verification_set', db_column='tst_type_id')
+	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')
+	inventory = models.ForeignKey(InventoryStatus, blank=False, null=False, db_column='inv_id')
 
-	def get_fix(self):
-		return self.rtt_fix_type
+	tvm_notes = models.TextField('Verification Notes', blank=True,
+								 help_text='Used to articulate database inconsistencies.')
+	tvm_date_modified = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
+	tvm_date_created = models.DateTimeField(editable=False, auto_now_add=True)
 
-	def get_amount(self):
-		return str(self.rtt_amount) + self.unit.unt_unit_name
+	def __unicode__(self):
+		return str(self.monkey) + "." + self.tissue_type.tst_tissue_name + ': ' + self.inventory.inv_status
 
-	def get_data(self):
-		return [['Tissue Type', self.tissue_type],
-			['Fix', self.rtt_fix_type],
-			['Amount', str(self.rtt_amount) + self.unit.unt_unit_name]]
+	## Get the TissueSample objects that matches this monkey:tissue_type combination
+	def get_sample(self):
+		return TissueSample.objects.filter(monkey=self.monkey, tissue_type=self.tissue_type)
 
-	def get_type_url(self):
-		return self.tissue_type.category
+	def save(self, *args, **kwargs):
+		try:  ## Set the tissue_sample field
+			self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
+																			defaults={'tss_freezer': "No Previous Record",
+																					  'tss_location': "No Previous Record",
+																					  'units': Unit.objects.all()[0]})
+		## Or write to the note field with error.
+		except TissueSample.MultipleObjectsReturned:
+			self.tissue_sample = TissueSample.objects.filter(monkey=self.monkey, tissue_type=self.tissue_type)[0]
+			self.tvm_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
 
-	def get_reviews(self):
-		return self.tissue_request_review_set.all()
+		## Update timestamps
+		if self.tvm_date_created is None:
+			self.tvm_date_created = datetime.now()
+			self.inventory = InventoryStatus.objects.get(inv_status="Unverified")
+		self.tvm_date_modified = datetime.now()
+		super(TissueVerification, self).save(*args, **kwargs)
 
-	def get_html_label(self):
-		label = self.tissue_type.tst_tissue_name + '_' + str(self.rtt_tissue_request_id)
-		return replace(lower(label), ' ', '-')
-
-	def get_accepted(self):
-		count = self.accepted_monkeys.count()
-		if count > 0:
-			if count == self.monkeys.count():
-				return Acceptance.Accepted
-			else:
-				return Acceptance.Partially_Accepted
-		else:
-			return Acceptance.Rejected
-
-	def get_rejected_monkeys(self):
-		return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
-
-	def get_estimated_cost(self):
-		return self.tissue_type.tst_cost * self.monkeys.count()
-
-	def save(self, force_insert=False, force_update=False, using=None):
-		if self.rtt_tissue_request_id is None and self.tissue_type.category.cat_name == 'Custom':
-			# if this is a custom request and it hasn't been saved yet
-			# set the increment to the correct amount
-			self.rtt_custom_increment = TissueRequest.objects.filter(req_request=self.req_request,
-																	 tissue_type__category__cat_name='Custom').count()
-		super(TissueRequest, self).save(force_insert, force_update, using)
 
 	class Meta:
 		db_table = 'tvm_tissue_verification'

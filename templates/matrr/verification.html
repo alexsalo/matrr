@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}sandbox{% endblock %}
+
+
+{% block content %}
+
+	<div class='large-headline'>verification form</div>
+	<br>
+	<div class='clearfix'>
+		{% if formset %}
+			<div style='float: left'>
+				<form method="post" action="">
+				{% csrf_token %}
+				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update'/>
+					{{ formset.management_form }}
+					{% for tvm in formset %}
+						{% if tvm.initial.inventory == 1 %}
+						<table bgcolor="red">
+						{% endif %}
+						{% if tvm.initial.inventory == 2 %}
+						<table bgcolor="green">
+						{% endif %}
+						{% if tvm.initial.inventory == 3 %}
+						<table bgcolor="yellow">
+						{% endif %}
+
+						{{ tvm }}
+						</table><br><br>
+					{% endfor %}
+					<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update'/>
+				</form>
+			</div>
+		{% endif %}
+		{% if form %}
+			<form action='' method='post'>
+			{% csrf_token %}
+			<table class='common'>
+				{{ form.as_p }}
+			</table>
+			<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='float: left;'/>
+			</form>
+		{% endif %}
+	</div>
+
+	<br>
+
+
+{% endblock %}
