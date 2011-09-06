@@ -158,5 +158,5 @@ class TissueVerificationForm(Form):
 	location = CharField(max_length=100, required=False)
 	quantity = DecimalField(required=False)
 	units = ModelChoiceField(queryset=Unit.objects.all(), required=False)
-	details = CharField(widget=widgets.Textarea(attrs={'cols': 70, 'rows': 2}), required=False)
+	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
 	inventory = ModelChoiceField(queryset=InventoryStatus.objects.all(), required=False)

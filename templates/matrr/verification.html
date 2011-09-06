@@ -9,36 +9,59 @@
 	<br>
 	<div class='clearfix'>
 		{% if formset %}
-			<div style='float: left'>
-				<form method="post" action="">
+			<form method="post" action="">
+				{{ formset.management_form }}
 				{% csrf_token %}
-				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update'/>
-					{{ formset.management_form }}
-					{% for tvm in formset %}
-						{% if tvm.initial.inventory == 1 %}
-						<table bgcolor="red">
-						{% endif %}
-						{% if tvm.initial.inventory == 2 %}
-						<table bgcolor="green">
-						{% endif %}
-						{% if tvm.initial.inventory == 3 %}
-						<table bgcolor="yellow">
-						{% endif %}
-
-						{{ tvm }}
-						</table><br><br>
-					{% endfor %}
-					<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update'/>
-				</form>
-			</div>
+				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='float: left'/>
+				<input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='float: right'/><br><br>
+				{% for tvm in formset %}
+					<center>
+					{{ tvm.primarykey }} {# Important! #}
+					{% if tvm.initial.inventory == 1 %}
+						<div class='clearfix' style="border: solid red;width:80%;">
+					{% endif %}
+					{% if tvm.initial.inventory == 2 %}
+						<div class='clearfix' style="border: solid green;width:100%;">
+					{% endif %}
+					{% if tvm.initial.inventory == 3 %}
+						<div class='clearfix' style="border: solid #ff8c00;width:100%;">
+					{% endif %}
+					{{ tvm.non_field_errors }}
+					<center>
+					<table style="width:99%;">
+						<tr>
+							<th>Monkey:  {{ tvm.initial.monkey }}</th>
+							<th>Tissue:  {{ tvm.initial.tissue }}</th>
+						</tr>
+						<tr>
+							<td>
+								<label>Freezer: </label>{{ tvm.freezer }}<br>
+								<label>Location:</label>{{ tvm.location }}<br>
+								<label>Quantity:</label>{{ tvm.quantity }}<br>
+								<label>Units:</label>{{ tvm.units }}<br>
+							</td>
+							<td>
+								<label>Tissue Details:</label><br>{{ tvm.details }}<br>
+								<label>Status:  </label>{{ tvm.inventory }}
+							</td>
+						</tr>
+					</table>
+					</center>
+					</div>
+					<br>
+				{% endfor %}
+				</center>
+				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='float: left'/>
+				<input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='float: right'/>
+			</form>
 		{% endif %}
 		{% if form %}
 			<form action='' method='post'>
-			{% csrf_token %}
-			<table class='common'>
-				{{ form.as_p }}
-			</table>
-			<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='float: left;'/>
+				{% csrf_token %}
+				<table class='common'>
+					{{ form.as_p }}
+				</table>
+				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='float: left;'/>
 			</form>
 		{% endif %}
 	</div>

@@ -355,7 +355,7 @@ class TissueType(models.Model):
 													rqs_status_name='Accepted'))
 		monkey_requests = list()
 		for request in requests.all():
-			# keep requests that are for this monkey
+			# keep requests that include this monkey
 			if monkey in request.monkeys.all():
 				monkey_requests.append(request)
 
@@ -714,7 +714,7 @@ class TissueSample(models.Model):
 								   null=True, blank=True,
 								   help_text='Any extras details about this tissue sample.')
 	tss_sample_quantity = models.DecimalField('Sample Quantity', null=False, default=-1, decimal_places=5, max_digits=10)
-	units = models.ForeignKey(Unit, null=False)
+	units = models.ForeignKey(Unit, null=False, default=4)
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 
 	def get_modified(self):

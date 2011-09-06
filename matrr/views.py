@@ -917,11 +917,14 @@ def tissue_verification_list(request):
 				tss.tss_location=data['location']
 				tss.tss_freezer=data['freezer']
 				tss.tss_details=data['details']
-				tss.tss_sample_quantity=data['quantity']
-				tss.tss_units=data['units']
-				tss.save()
+				if data['quantity']:
+					tss.tss_sample_quantity=data['quantity']
+				if data['units']:
+					tss.tss_units=data['units']
+				if data['inventory']:
+					tvm.inventory = data['inventory']
 
-				tvm.inventory = data['inventory']
+				tss.save()
 				tvm.save()
 			return redirect('/verification')
 		else:
@@ -938,7 +941,8 @@ def tissue_verification_list(request):
 					   'inventory': tvm.inventory.pk,
 					   'units': tss.units.pk,
 					   'details': tss.tss_details,
-					   'anything': "anything",}
+					   'monkey': tvm.monkey,
+					   'tissue': tvm.tissue_type}
 		initial[len(initial):] = [tvm_initial]
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
