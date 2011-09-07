@@ -63,6 +63,17 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.DefaultStorageFinder',
     )
 
+# List of regex URLs which do NOT require user to be logged in.
+# Your Login URL MUST be included. 
+LOGIN_EXEMPT_URLS = (
+	r'^$',
+	r'^login/?$',
+	r'^logout/?$',
+	r'^accounts/', # django.auth url, NOT matrr's "account" url.  -.-
+	r'^(privacy|data|usage|browser|faq|about|benefits|denied)/', # all non-dynamic pages
+	r'^contact_us/$',
+	r'^publications/$',
+	)
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '@+5ijd@xf%17@7euip67u)%(fq4+3g(83+azo3ia7^f=-(w1u2'
 
@@ -80,6 +91,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
+	'matrr.middleware.LoginRequiredMiddleware',
     )
 ROOT_URLCONF = 'urls'
 
