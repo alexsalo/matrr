@@ -1,19 +1,27 @@
 {% extends 'base.html' %}
 
-{% block title %}sandbox{% endblock %}
+{% block title %}Tissue Inventory Verification{% endblock %}
 
 
 {% block content %}
 
-	<div class='large-headline'>verification form</div>
-	<br>
+	<div class='large-headline'>Tissue Inventory Verification</div>
 	<div class='clearfix'>
 		{% if formset %}
 			<form method="post" action="">
 				{{ formset.management_form }}
 				{% csrf_token %}
-				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='float: left'/>
-				<input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='float: right'/><br><br>
+					<table style="width:100%;">
+						<tr></tr>{# hack to remove the color and add a tiny space between this table and the titleblock #}
+						<tr>
+							<td align="center"><input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='width:100px;float: left'/></td>
+							<td align="center" style="border: solid red;">Unverified</td>
+							<td align="center" style="border: solid green">Verified: sufficient</td>
+							<td align="center" style="border: solid #ff8c00">Verified: insufficent</td>
+							<td align="center"><input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='width:100px;float: right'/></td>
+						</tr>
+						<tr></tr>{# hack to add a tiny space between this table and the formset #}
+					</table>
 				{% for tiv in formset %}
 					<center>
 					{{ tiv.primarykey }} {# Important! #}
@@ -21,10 +29,10 @@
 						<div class='clearfix' style="border: solid red;width:80%;">
 					{% endif %}
 					{% if tiv.initial.inventory == 2 %}
-						<div class='clearfix' style="border: solid green;width:100%;">
+						<div class='clearfix' style="border: solid green;width:80%;">
 					{% endif %}
 					{% if tiv.initial.inventory == 3 %}
-						<div class='clearfix' style="border: solid #ff8c00;width:100%;">
+						<div class='clearfix' style="border: solid #ff8c00;width:80%;">
 					{% endif %}
 					{{ tiv.non_field_errors }}
 					{% if tiv.initial.notes %}
@@ -56,8 +64,16 @@
 					<br>
 				{% endfor %}
 				</center>
-				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='float: left'/>
-				<input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='float: right'/>
+				<table style="width:100%;">
+					<tr></tr>{# hack to remove the color and add a tiny space between this table and the formset #}
+					<tr>
+						<td align="center"><input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='width:100px;float: left'/></td>
+						<td align="center" style="border: solid red;">Unverified</td>
+						<td align="center" style="border: solid green">Verified: sufficient</td>
+						<td align="center" style="border: solid #ff8c00">Verified: insufficent</td>
+						<td align="center"><input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='width:100px;float: right'/></td>
+					</tr>
+				</table>
 			</form>
 		{% endif %}
 		{% if form %}
