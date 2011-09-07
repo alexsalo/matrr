@@ -575,12 +575,6 @@ class TissueRequest(models.Model):
 		for monkey in self.monkeys.all():
 			## Get or create TV object
 			tv, is_new = TissueInventoryVerification.objects.get_or_create(tissue_type=self.tissue_type, monkey=monkey, tissue_request=self)
-
-			## Update timestamps
-			if is_new:
-				tv.tvm_date_created = datetime.now()
-			tv.tvm_date_modified = datetime.now()
-			## Save to database
 			tv.save()
 
 		super(TissueRequest, self).save(*args, **kwargs)
@@ -797,8 +791,8 @@ class TissueInventoryVerification(models.Model):
 
 	tiv_notes = models.TextField('Verification Notes', blank=True,
 								 help_text='Used to articulate database inconsistencies.')
-	tvm_date_modified = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
-	tvm_date_created = models.DateTimeField(editable=False, auto_now_add=True)
+	tiv_date_modified = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
+	tiv_date_created = models.DateTimeField(editable=False, auto_now_add=True)
 
 	def __unicode__(self):
 		return str(self.monkey) + "." + self.tissue_type.tst_tissue_name + ': ' + self.inventory.inv_status
@@ -819,15 +813,15 @@ class TissueInventoryVerification(models.Model):
 			self.tiv_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
 
 		## Update timestamps
-		if self.tvm_date_created is None:
-			self.tvm_date_created = datetime.now()
+		if self.tiv_date_created is None:
+			self.tiv_date_created = datetime.now()
 			self.inventory = InventoryStatus.objects.get(inv_status="Unverified")
-		self.tvm_date_modified = datetime.now()
+		self.tiv_date_modified = datetime.now()
 		super(TissueInventoryVerification, self).save(*args, **kwargs)
 
 
 	class Meta:
-		db_table = 'tvm_tissue_verification'
+		db_table = 'tiv_tissue_verification'
 
 # put any signal callbacks down here after the model declarations
 
