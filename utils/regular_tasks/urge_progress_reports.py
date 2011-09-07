@@ -32,7 +32,7 @@ def urge_progress_reports():
                 'This is an automated message.\n'
                
             ret = send_mail(subject, body, email, recipient_list=recipients, fail_silently=False)
-            
+            print "Urge progress report: reqest_id=%d date=%s success=%d" % (req.req_request_id, today, ret)
             req.req_report_asked = True
             req.save()
 
