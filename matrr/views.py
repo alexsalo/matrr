@@ -942,7 +942,8 @@ def tissue_verification_list(request):
 					   'units': tss.units.pk,
 					   'details': tss.tss_details,
 					   'monkey': tvm.monkey,
-					   'tissue': tvm.tissue_type}
+					   'tissue': tvm.tissue_type,
+					   'notes': tvm.tvm_notes,}
 		initial[len(initial):] = [tvm_initial]
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))

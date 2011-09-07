@@ -27,6 +27,11 @@
 						<div class='clearfix' style="border: solid #ff8c00;width:100%;">
 					{% endif %}
 					{{ tvm.non_field_errors }}
+					{% if tvm.initial.notes %}
+						<div style="background-color: yellow">
+						{{ tvm.initial.notes }}
+						</div>
+					{% endif %}
 					<center>
 					<table style="width:99%;">
 						<tr>
