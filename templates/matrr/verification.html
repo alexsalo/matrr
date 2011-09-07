@@ -14,40 +14,40 @@
 				{% csrf_token %}
 				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='float: left'/>
 				<input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='float: right'/><br><br>
-				{% for tvm in formset %}
+				{% for tiv in formset %}
 					<center>
-					{{ tvm.primarykey }} {# Important! #}
-					{% if tvm.initial.inventory == 1 %}
+					{{ tiv.primarykey }} {# Important! #}
+					{% if tiv.initial.inventory == 1 %}
 						<div class='clearfix' style="border: solid red;width:80%;">
 					{% endif %}
-					{% if tvm.initial.inventory == 2 %}
+					{% if tiv.initial.inventory == 2 %}
 						<div class='clearfix' style="border: solid green;width:100%;">
 					{% endif %}
-					{% if tvm.initial.inventory == 3 %}
+					{% if tiv.initial.inventory == 3 %}
 						<div class='clearfix' style="border: solid #ff8c00;width:100%;">
 					{% endif %}
-					{{ tvm.non_field_errors }}
-					{% if tvm.initial.notes %}
+					{{ tiv.non_field_errors }}
+					{% if tiv.initial.notes %}
 						<div style="background-color: yellow">
-						{{ tvm.initial.notes }}
+						{{ tiv.initial.notes }}
 						</div>
 					{% endif %}
 					<center>
 					<table style="width:99%;">
 						<tr>
-							<th>Monkey:  {{ tvm.initial.monkey }}</th>
-							<th>Tissue:  {{ tvm.initial.tissue }}</th>
+							<th>Monkey:  {{ tiv.initial.monkey }}</th>
+							<th>Tissue:  {{ tiv.initial.tissue }}</th>
 						</tr>
 						<tr>
 							<td>
-								<label>Freezer: </label>{{ tvm.freezer }}<br>
-								<label>Location:</label>{{ tvm.location }}<br>
-								<label>Quantity:</label>{{ tvm.quantity }}<br>
-								<label>Units:</label>{{ tvm.units }}<br>
+								<label>Freezer: </label>{{ tiv.freezer }}<br>
+								<label>Location:</label>{{ tiv.location }}<br>
+								<label>Quantity:</label>{{ tiv.quantity }}<br>
+								<label>Units:</label>{{ tiv.units }}<br>
 							</td>
 							<td>
-								<label>Tissue Details:</label><br>{{ tvm.details }}<br>
-								<label>Status:  </label>{{ tvm.inventory }}
+								<label>Tissue Details:</label><br>{{ tiv.details }}<br>
+								<label>Status:  </label>{{ tiv.inventory }}
 							</td>
 						</tr>
 					</table>

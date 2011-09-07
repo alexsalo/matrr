@@ -906,14 +906,14 @@ def order_delete(request, req_request_id):
 
 @login_required()
 def tissue_verification_list(request):
-	TissueVerificationFormSet = formset_factory(TissueVerificationForm, extra=0)
+	TissueVerificationFormSet = formset_factory(TissueInventoryVerificationForm, extra=0)
 	if request.method == "POST":
 		formset = TissueVerificationFormSet(request.POST)
 		if formset.is_valid():
-			for tvform in formset:
-				data = tvform.cleaned_data
-				tvm = TissueVerification.objects.get(pk=data['primarykey'])
-				tss = tvm.tissue_sample
+			for tivform in formset:
+				data = tivform.cleaned_data
+				tiv = TissueInventoryVerification.objects.get(pk=data['primarykey'])
+				tss = tiv.tissue_sample
 				tss.tss_location=data['location']
 				tss.tss_freezer=data['freezer']
 				tss.tss_details=data['details']
@@ -922,40 +922,40 @@ def tissue_verification_list(request):
 				if data['units']:
 					tss.tss_units=data['units']
 				if data['inventory']:
-					tvm.inventory = data['inventory']
+					tiv.inventory = data['inventory']
 
 				tss.save()
-				tvm.save()
+				tiv.save()
 			return redirect('/verification')
 		else:
 			messages.error(request, formset.errors)
 
 	initial = []
-	tvm_list = TissueVerification.objects.all().order_by('inventory')
-	for tvm in tvm_list:
-		tss = tvm.tissue_sample
-		tvm_initial = {'primarykey': tvm.tvm_id,
+	tiv_list = TissueInventoryVerification.objects.all().order_by('inventory')
+	for tiv in tiv_list:
+		tss = tiv.tissue_sample
+		tiv_initial = {'primarykey': tiv.tiv_id,
 					   'freezer': tss.tss_freezer,
 					   'location': tss.tss_location,
 					   'quantity': tss.tss_sample_quantity,
-					   'inventory': tvm.inventory.pk,
+					   'inventory': tiv.inventory.pk,
 					   'units': tss.units.pk,
 					   'details': tss.tss_details,
-					   'monkey': tvm.monkey,
-					   'tissue': tvm.tissue_type,
-					   'notes': tvm.tvm_notes,}
-		initial[len(initial):] = [tvm_initial]
+					   'monkey': tiv.monkey,
+					   'tissue': tiv.tissue_type,
+					   'notes': tiv.tiv_notes,}
+		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
 
 @login_required()
 def tissue_verification(request, pk):
-	tvm = TissueVerification.objects.get(pk=pk)
-	tss = tvm.tissue_sample
+	tiv = TissueInventoryVerification.objects.get(pk=pk)
+	tss = tiv.tissue_sample
 	if request.POST:
-		tvform = TissueVerificationForm(request.POST)
-		if tvform.is_valid():
-			data = tvform.cleaned_data
+		tivform = TissueInventoryVerificationForm(request.POST)
+		if tivform.is_valid():
+			data = tivform.cleaned_data
 			tss.tss_location=data['location']
 			tss.tss_freezer=data['freezer']
 			tss.tss_details=data['details']
@@ -963,17 +963,17 @@ def tissue_verification(request, pk):
 			tss.tss_units=data['units']
 			tss.save()
 
-			tvm.inventory = data['inventory']
-			tvm.save()
+			tiv.inventory = data['inventory']
+			tiv.save()
 			return redirect('/verification')
 		else:
 			messages.error(request, "form not valid")
 	else:
-		tvform = TissueVerificationForm(initial={'freezer': tss.tss_freezer,
+		tivform = TissueInventoryVerificationForm(initial={'freezer': tss.tss_freezer,
 												 'location': tss.tss_location,
 												 'quantity': tss.tss_sample_quantity,
 												 'units': tss.units,
 												 'details': tss.tss_details,
-												 'inventory': tvm.inventory})
+												 'inventory': tiv.inventory})
 
-	return render_to_response('matrr/verification.html', {"form" : tvform}, context_instance=RequestContext(request))
+	return render_to_response('matrr/verification.html', {"form" : tivform}, context_instance=RequestContext(request))

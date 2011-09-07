@@ -152,7 +152,7 @@ class TissueRequestProcessForm(ModelForm):
 		fields = ('accepted_monkeys',)
 
 
-class TissueVerificationForm(Form):
+class TissueInventoryVerificationForm(Form):
 	primarykey = IntegerField(widget=HiddenInput(), required=False)
 	freezer = CharField(max_length=100, required=False)
 	location = CharField(max_length=100, required=False)

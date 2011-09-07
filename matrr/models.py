@@ -570,11 +570,11 @@ class TissueRequest(models.Model):
 																	 tissue_type__category__cat_name='Custom').count()
 		### Tissue Verification stuff
 		## If any TissueVerifications exist for this request, delete them.
-		TissueVerification.objects.filter(tissue_request=self).delete()
+		TissueInventoryVerification.objects.filter(tissue_request=self).delete()
 		## Create new TVs.
 		for monkey in self.monkeys.all():
 			## Get or create TV object
-			tv, is_new = TissueVerification.objects.get_or_create(tissue_type=self.tissue_type, monkey=monkey, tissue_request=self)
+			tv, is_new = TissueInventoryVerification.objects.get_or_create(tissue_type=self.tissue_type, monkey=monkey, tissue_request=self)
 
 			## Update timestamps
 			if is_new:
@@ -786,8 +786,8 @@ class InventoryStatus(models.Model):
 		db_table = 'inv_inventory_status'
 
 
-class TissueVerification(models.Model):
-	tvm_id = models.AutoField(primary_key=True)
+class TissueInventoryVerification(models.Model):
+	tiv_id = models.AutoField(primary_key=True)
 	
 	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set', db_column='rtt_tissue_request_id')
 	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
@@ -795,7 +795,7 @@ class TissueVerification(models.Model):
 	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')
 	inventory = models.ForeignKey(InventoryStatus, blank=False, null=False, db_column='inv_id')
 
-	tvm_notes = models.TextField('Verification Notes', blank=True,
+	tiv_notes = models.TextField('Verification Notes', blank=True,
 								 help_text='Used to articulate database inconsistencies.')
 	tvm_date_modified = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
 	tvm_date_created = models.DateTimeField(editable=False, auto_now_add=True)
@@ -816,14 +816,14 @@ class TissueVerification(models.Model):
 		## Or write to the note field with error.
 		except TissueSample.MultipleObjectsReturned:
 			self.tissue_sample = TissueSample.objects.filter(monkey=self.monkey, tissue_type=self.tissue_type)[0]
-			self.tvm_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
+			self.tiv_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
 
 		## Update timestamps
 		if self.tvm_date_created is None:
 			self.tvm_date_created = datetime.now()
 			self.inventory = InventoryStatus.objects.get(inv_status="Unverified")
 		self.tvm_date_modified = datetime.now()
-		super(TissueVerification, self).save(*args, **kwargs)
+		super(TissueInventoryVerification, self).save(*args, **kwargs)
 
 
 	class Meta:
