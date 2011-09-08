@@ -529,7 +529,7 @@ class TissueRequest(models.Model):
 		return self.rtt_fix_type
 
 	def get_amount(self):
-		return str(self.rtt_amount) + self.unit.unt_unit_name
+		return str(self.rtt_amount.normalize()) + self.unit.unt_unit_name
 
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
@@ -563,6 +563,7 @@ class TissueRequest(models.Model):
 		return self.tissue_type.tst_cost * self.monkeys.count()
 
 	def save(self, *args, **kwargs):
+		super(TissueRequest, self).save(*args, **kwargs)
 		if self.rtt_tissue_request_id is None and self.tissue_type.category.cat_name == 'Custom':
 			# if this is a custom request and it hasn't been saved yet
 			# set the increment to the correct amount
@@ -576,8 +577,6 @@ class TissueRequest(models.Model):
 			## Get or create TV object
 			tv, is_new = TissueInventoryVerification.objects.get_or_create(tissue_type=self.tissue_type, monkey=monkey, tissue_request=self)
 			tv.save()
-
-		super(TissueRequest, self).save(*args, **kwargs)
 
 	class Meta:
 		db_table = 'rtt_requests_to_tissue_types'
@@ -819,7 +818,6 @@ class TissueInventoryVerification(models.Model):
 		self.tiv_date_modified = datetime.now()
 		super(TissueInventoryVerification, self).save(*args, **kwargs)
 
-
 	class Meta:
 		db_table = 'tiv_tissue_verification'
 
@@ -843,6 +841,7 @@ def request_post_save(**kwargs):
 
 	current_status = RequestStatus.objects.get(rqs_status_id=req_request.request_status_id)
 	previous_status = RequestStatus.objects.get(rqs_status_id=req_request._previous_status_id)
+	tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
 
 	# now check to see what the current status is and take the appropriate action
 	if current_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
@@ -852,8 +851,6 @@ def request_post_save(**kwargs):
 		# start by finding all members of the group 'Committee'
 		committee_group = Group.objects.get(name='Committee')
 		committee_members = committee_group.user_set.all()
-		# get all the tissue requests for the request
-		tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
 
 		# for each committee member, create a new review for the request
 		for user in committee_members:
@@ -863,6 +860,13 @@ def request_post_save(**kwargs):
 			for tissue_request in tissue_requests:
 				TissueRequestReview(review=review, tissue_request=tissue_request).save()
 
+	# Delete TissueInventoryVerification objects associated with rejected requests
+	if current_status == RequestStatus.objects.get(rqs_status_name='Rejected'):
+		for tissue_request in tissue_requests:
+			# Get all verification objects in this TissueRequest that HAVE been verified
+			tivs = TissueInventoryVerification.objects.filter(tissue_request=tissue_request)\
+													  .exclude(inventory=InventoryStatus.objects.get(inv_status="Unverified"))
+			tivs.delete() # and delete them
 	req_request._previous_status_id = None
 
 
