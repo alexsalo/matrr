@@ -453,11 +453,16 @@ class Request(models.Model, DiffingMixin):
 									   max_length=100)
 	req_notes = models.TextField('Request Notes', null=True, blank=True)
 
+
 	def __unicode__(self):
 		return 'User: ' + self.user.username +\
 			   ' Cohort: ' + self.cohort.coh_cohort_name +\
 			   ' Date: ' + self.req_request_date.strftime("%I:%M%p  %m/%d/%y")
 
+	def print_setf_in_detail(self):		
+		return "Project title: %s\nRequested: %s\nCohort: %s\nRequest reason: %s\nNotes: %s" % (self.req_project_title,
+							str(self.req_request_date), self.cohort.coh_cohort_name, self.req_reason, self.req_notes or "None")
+		
 	def get_requested_tissue_count(self):
 		return self.tissue_request_set.count()
 
