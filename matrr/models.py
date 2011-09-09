@@ -341,6 +341,23 @@ class TissueType(models.Model):
 				return True
 		return False
 
+	def get_monkey_availability(self, monkey):
+		
+		if monkey.cohort.coh_upcoming:
+#			just idea: is possible a situation when we know that some tissue of this monkey will never be in stock?
+# 			if yes, we should probably track it somehow and reflect here, but not important right now
+			return Availability.Available
+		
+		tissue_samples = TissueSample.objects.filter(monkey=monkey, tissue_type=self)
+		
+		for tissue_sample in tissue_samples:
+			if tissue_sample.tss_sample_quantity > 0:
+#		returns In_stock if any of the samples is present and its amount is positive
+#		does not reflect accepted requests
+				return Availability.In_Stock
+		
+		return Availability.Unavailable
+		
 ### 90% sure i just broke this.  -jf, 8/29/2011
 	def get_availability(self, monkey):
 		availability = Availability.Unavailable
