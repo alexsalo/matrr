@@ -690,7 +690,8 @@ def request_review_process(request, req_request_id):
 				messages.success(request, "The tissue request has been processed.")
 				# Email subject *must not* contain newlines
 				subject = ''.join(form.cleaned_data['subject'].splitlines())
-				send_mail(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email])
+				if not settings.DEVELOPMENT:
+					send_mail(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email])
 				messages.success(request, str(
 					req_request.user.username) + " was sent an email informing him/her that the request was accepted.")
 				return redirect('/reviews_overviews/')

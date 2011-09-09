@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User, Group
+from django.db.models.query import QuerySet
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import datetime
@@ -606,6 +607,14 @@ class TissueRequest(models.Model):
 	def get_estimated_cost(self):
 		return self.tissue_type.tst_cost * self.monkeys.count()
 
+	def get_tiv_collisions(self):
+		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id)
+		other_tivs = other_tivs.exclude(tissue_request=None)
+		tiv_collisions = QuerySet()
+		for monkey in self.monkeys:
+			tiv_collisions |= other_tivs.filter(monkey=monkey, tissue_type=self.tissue_type)
+		return tiv_collisions
+
 	def save(self, *args, **kwargs):
 		super(TissueRequest, self).save(*args, **kwargs)
 		if self.rtt_tissue_request_id is None and self.tissue_type.category.cat_name == 'Custom':
@@ -844,7 +853,14 @@ class TissueInventoryVerification(models.Model):
 	def get_sample(self):
 		return TissueSample.objects.filter(monkey=self.monkey, tissue_type=self.tissue_type)
 
+	def get_tiv_collisions(self):
+		queryset = TissueInventoryVerification.objects.exclude(tiv_id=self.tiv_id)
+		queryset = queryset.filter(tissue_type=self.tissue_type)
+		queryset = queryset.filter(monkey=self.monkey)
+		return queryset
+
 	def save(self, *args, **kwargs):
+		super(TissueInventoryVerification, self).save(*args, **kwargs)
 		try:  ## Set the tissue_sample field
 			self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
 																			defaults={'tss_freezer': "No Previous Record",
@@ -852,7 +868,7 @@ class TissueInventoryVerification(models.Model):
 																					  'units': Unit.objects.all()[0]})
 		## Or write to the note field with error.
 		except TissueSample.MultipleObjectsReturned:
-			self.tissue_sample = TissueSample.objects.filter(monkey=self.monkey, tissue_type=self.tissue_type)[0]
+			self.tissue_sample = self.get_sample()[0]
 			self.tiv_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
 
 		## Update timestamps
@@ -860,7 +876,12 @@ class TissueInventoryVerification(models.Model):
 			self.tiv_date_created = datetime.now()
 			self.inventory = InventoryStatus.objects.get(inv_status="Unverified")
 		self.tiv_date_modified = datetime.now()
-		super(TissueInventoryVerification, self).save(*args, **kwargs)
+
+		## If the tissue has been verified, but has NO tissue_request associated with it
+		if self.inventory != InventoryStatus.objects.filter(inv_status="Unverified")\
+		and self.tissue_request is None:
+			self.delete() # delete it
+
 
 	class Meta:
 		db_table = 'tiv_tissue_verification'
@@ -904,12 +925,17 @@ def request_post_save(**kwargs):
 			for tissue_request in tissue_requests:
 				TissueRequestReview(review=review, tissue_request=tissue_request).save()
 
-	# Delete TissueInventoryVerification objects associated with rejected requests
-	if current_status == RequestStatus.objects.get(rqs_status_name='Rejected'):
+	# Delete TissueInventoryVerification objects associated with Accepted/Rejected requests
+	if current_status == RequestStatus.objects.get(rqs_status_name='Accepted')\
+	or current_status == RequestStatus.objects.get(rqs_status_name="Rejected"):
 		for tissue_request in tissue_requests:
-			# Get all verification objects in this TissueRequest that HAVE been verified
-			tivs = TissueInventoryVerification.objects.filter(tissue_request=tissue_request)\
-													  .exclude(inventory=InventoryStatus.objects.get(inv_status="Unverified"))
+			# First, remove their associated TissueRequest
+			# This will allow the inventory to still be checked, but won't conflict with other operations
+			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
+			for tiv in tivs:
+				tiv.tissue_request=None
+			# Get any verification objects in this TissueRequest that HAVE been verified
+			tivs = tivs.exclude(inventory=InventoryStatus.objects.get(inv_status="Unverified"))
 			tivs.delete() # and delete them
 	req_request._previous_status_id = None
 
