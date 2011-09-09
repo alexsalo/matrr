@@ -333,7 +333,7 @@ class TissueType(models.Model):
 
 	def get_cohort_availability(self, cohort):
 		for monkey in cohort.monkey_set.all():
-			status = self.get_availability(monkey)
+			status = self.get_monkey_availability(monkey)
 			# if the tissue is available for any monkey,
 			# then it is available for the cohort
 			if status == Availability.Available or\

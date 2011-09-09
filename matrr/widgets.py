@@ -52,7 +52,7 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
         assignment = 'Control'
 
       if self.tissue:
-        availability = self.tissue.get_availability(monkey)
+        availability = self.tissue.get_monkey_availability(monkey)
         if availability == Availability.Available:
           availability_str = 'Available'
         elif availability == Availability.In_Stock:

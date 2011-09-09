@@ -6,7 +6,7 @@ register = template.Library()
 
 @register.filter()
 def monkey_availability(tissue, monkey):
-  return tissue.get_availability(monkey)
+  return tissue.get_monkey_availability(monkey)
 
 @register.filter()
 def cohort_availability(tissue, cohort):
