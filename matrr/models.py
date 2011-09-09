@@ -607,11 +607,11 @@ class TissueRequest(models.Model):
 		return self.tissue_type.tst_cost * self.monkeys.count()
 
 	def get_tiv_collisions(self):
-		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id)
-		other_tivs = other_tivs.exclude(tissue_request=None)
+		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id, tissue_request=None)
 		tiv_collisions = QuerySet()
 		for monkey in self.monkeys:
 			tiv_collisions |= other_tivs.filter(monkey=monkey, tissue_type=self.tissue_type)
+		tiv_collisions.distinct()
 		return tiv_collisions
 
 	def save(self, *args, **kwargs):
@@ -845,10 +845,11 @@ class TissueInventoryVerification(models.Model):
 		return TissueSample.objects.filter(monkey=self.monkey, tissue_type=self.tissue_type)
 
 	def get_tiv_collisions(self):
-		queryset = TissueInventoryVerification.objects.exclude(tiv_id=self.tiv_id)
-		queryset = queryset.filter(tissue_type=self.tissue_type)
-		queryset = queryset.filter(monkey=self.monkey)
-		return queryset
+		collisions = TissueInventoryVerification.objects.exclude(tiv_id=self.tiv_id)
+		collisions = collisions.filter(tissue_type=self.tissue_type)
+		collisions = collisions.filter(monkey=self.monkey)
+		collisions = collisions.distinct()
+		return collisions
 
 	def invalidate_collisions(self):
 		collisions = self.get_tiv_collisions()
