@@ -71,17 +71,12 @@ class CartCheckoutForm(ModelForm):
 
 		return self.cleaned_data
 
-<<<<<<< HEAD
+
 	class Meta:
 		model = Request
 		exclude = ('request_status')
 		widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
-=======
-    class Meta:
-        model = Request
-        exclude = ('request_status', 'req_report_asked')
-        widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
->>>>>>> Script to create automated 90 day email requesting users send in a progress report
+
 
 
 class ReviewForm(ModelForm):
