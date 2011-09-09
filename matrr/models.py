@@ -522,8 +522,7 @@ class Request(models.Model, DiffingMixin):
 
 	def save(self, force_insert=False, force_update=False, using=None):
 		if self.request_status.rqs_status_id != self._original_state['request_status_id']\
-		and self._original_state['request_status_id'] == RequestStatus.objects.get(
-			rqs_status_name='Cart').rqs_status_id:
+		and self._original_state['request_status_id'] == RequestStatus.objects.get(rqs_status_name='Cart').rqs_status_id:
 			self.req_request_date = datetime.now()
 		self.req_modified_date = datetime.now()
 		self._previous_status_id = self._original_state['request_status_id']
@@ -622,14 +621,6 @@ class TissueRequest(models.Model):
 			# set the increment to the correct amount
 			self.rtt_custom_increment = TissueRequest.objects.filter(req_request=self.req_request,
 																	 tissue_type__category__cat_name='Custom').count()
-		### Tissue Verification stuff
-		## If any TissueVerifications exist for this request, delete them.
-		TissueInventoryVerification.objects.filter(tissue_request=self).delete()
-		## Create new TVs.
-		for monkey in self.monkeys.all():
-			## Get or create TV object
-			tv, is_new = TissueInventoryVerification.objects.get_or_create(tissue_type=self.tissue_type, monkey=monkey, tissue_request=self)
-			tv.save()
 
 	class Meta:
 		db_table = 'rtt_requests_to_tissue_types'
@@ -859,13 +850,18 @@ class TissueInventoryVerification(models.Model):
 		queryset = queryset.filter(monkey=self.monkey)
 		return queryset
 
+	def invalidate_collisions(self):
+		collisions = self.get_tiv_collisions()
+		for tiv in collisions:
+			tiv.inventory = InventoryStatus.objects.get(inv_status="Unverified")
+			tiv.save()
+
 	def save(self, *args, **kwargs):
-		super(TissueInventoryVerification, self).save(*args, **kwargs)
 		try:  ## Set the tissue_sample field
 			self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
 																			defaults={'tss_freezer': "No Previous Record",
 																					  'tss_location': "No Previous Record",
-																					  'units': Unit.objects.all()[0]})
+																					  'units': Unit.objects.all()[5]})
 		## Or write to the note field with error.
 		except TissueSample.MultipleObjectsReturned:
 			self.tissue_sample = self.get_sample()[0]
@@ -876,6 +872,7 @@ class TissueInventoryVerification(models.Model):
 			self.tiv_date_created = datetime.now()
 			self.inventory = InventoryStatus.objects.get(inv_status="Unverified")
 		self.tiv_date_modified = datetime.now()
+		super(TissueInventoryVerification, self).save(*args, **kwargs)
 
 		## If the tissue has been verified, but has NO tissue_request associated with it
 		if self.inventory != InventoryStatus.objects.filter(inv_status="Unverified")\
@@ -908,10 +905,10 @@ def request_post_save(**kwargs):
 	previous_status = RequestStatus.objects.get(rqs_status_id=req_request._previous_status_id)
 	tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
 
-	# now check to see what the current status is and take the appropriate action
+	# For Submitted Requests
 	if current_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
 	and previous_status == RequestStatus.objects.get(rqs_status_name='Cart'):
-		# the status was changed from Cart to Submitted, so create new reviews
+		# the status was changed from Cart to Submitted, so create new reviews and TissueInventoryVerifications
 
 		# start by finding all members of the group 'Committee'
 		committee_group = Group.objects.get(name='Committee')
@@ -925,18 +922,44 @@ def request_post_save(**kwargs):
 			for tissue_request in tissue_requests:
 				TissueRequestReview(review=review, tissue_request=tissue_request).save()
 
-	# Delete TissueInventoryVerification objects associated with Accepted/Rejected requests
-	if current_status == RequestStatus.objects.get(rqs_status_name='Accepted')\
-	or current_status == RequestStatus.objects.get(rqs_status_name="Rejected"):
+		### TissueInventoryVerification stuff
+		## If any verifications exist for this Request, delete them.  There shouldn't be any.
+		TissueInventoryVerification.objects.filter(tissue_request__req_request=req_request).delete()
+		## Create new TIVs.
 		for tissue_request in tissue_requests:
-			# First, remove their associated TissueRequest
-			# This will allow the inventory to still be checked, but won't conflict with other operations
+			for monkey in tissue_request.monkeys.all():
+				## Get or create TIV object
+				tv = TissueInventoryVerification.objects.create(tissue_type=tissue_request.tissue_type,
+																monkey=monkey,
+																tissue_request=tissue_request)
+				tv.save()
+
+	# For Accepted Requests
+	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
+	and current_status == RequestStatus.objects.get(rqs_status_name='Accepted'):
+		for tissue_request in tissue_requests:
+			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
+			# First, invalidate all colliding TIVs
+			for tiv in tivs:
+				tiv.invalidate_collisions()
+			# Then delete them
+			tivs.delete()
+
+	# For Rejected Requests
+	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
+	and current_status == RequestStatus.objects.get(rqs_status_name='Rejected'):
+		for tissue_request in tissue_requests:
+			# remove the TissueRequests associated with this request's TIVs
+			# This will allow the inventory to still be checked, but won't disrupt other operations
 			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
 			for tiv in tivs:
-				tiv.tissue_request=None
-			# Get any verification objects in this TissueRequest that HAVE been verified
-			tivs = tivs.exclude(inventory=InventoryStatus.objects.get(inv_status="Unverified"))
-			tivs.delete() # and delete them
+				tiv.tissue_request=None ##### for some damn reason, this is deleting the tiv.  i think. only sometimes.  usually.
+				tiv.save()
+			# get any verification objects in this TissueRequest that HAVE been verified
+			unverified = InventoryStatus.objects.get(inv_status="Unverified")
+			verified_tivs = tivs.exclude(inventory=unverified)
+			verified_tivs.delete() # and delete them
+
 	req_request._previous_status_id = None
 
 
