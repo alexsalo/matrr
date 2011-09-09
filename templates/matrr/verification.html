@@ -26,13 +26,13 @@
 					<center>
 					{{ tiv.primarykey }} {# Important! #}
 					{% if tiv.initial.inventory == 1 %}
-						<div class='clearfix' style="border: solid red;width:80%;">
+						<div class='clearfix' style="border: solid red;width:90%;">
 					{% endif %}
 					{% if tiv.initial.inventory == 2 %}
-						<div class='clearfix' style="border: solid green;width:80%;">
+						<div class='clearfix' style="border: solid green;width:90%;">
 					{% endif %}
 					{% if tiv.initial.inventory == 3 %}
-						<div class='clearfix' style="border: solid #ff8c00;width:80%;">
+						<div class='clearfix' style="border: solid #ff8c00;width:90%;">
 					{% endif %}
 					{{ tiv.non_field_errors }}
 					{% if tiv.initial.notes %}
@@ -55,7 +55,8 @@
 							</td>
 							<td>
 								<label>Tissue Details:</label><br>{{ tiv.details }}<br>
-								<label>Status:  </label>{{ tiv.inventory }}
+								Freezer inventory is {{ tiv.inventory }} for request: {{ tiv.initial.amount }}
+
 							</td>
 						</tr>
 					</table>

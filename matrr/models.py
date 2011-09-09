@@ -750,7 +750,7 @@ class TissueSample(models.Model):
 	tss_details = models.TextField('Details',
 								   null=True, blank=True,
 								   help_text='Any extras details about this tissue sample.')
-	tss_sample_quantity = models.DecimalField('Sample Quantity', null=False, default=-1, decimal_places=5, max_digits=10)
+	tss_sample_quantity = models.DecimalField('Sample Quantity', null=True, default=None, decimal_places=5, max_digits=10)
 	units = models.ForeignKey(Unit, null=False, default=4)
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 

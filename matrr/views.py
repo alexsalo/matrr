@@ -1,5 +1,5 @@
 # Create your views here.
-from django.forms.formsets import formset_factory
+from django.forms.models import modelformset_factory
 from django.template import RequestContext
 from django.http import Http404, HttpResponse
 from django.shortcuts import  render_to_response, redirect, get_object_or_404
@@ -8,6 +8,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.mail import send_mail
+import settings
 from matrr.forms import *
 from matrr.models import *
 import math
@@ -943,7 +944,8 @@ def tissue_verification_list(request):
 					   'details': tss.tss_details,
 					   'monkey': tiv.monkey,
 					   'tissue': tiv.tissue_type,
-					   'notes': tiv.tiv_notes,}
+					   'notes': tiv.tiv_notes,
+					   'amount': tiv.tissue_request.get_amount(),}
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))

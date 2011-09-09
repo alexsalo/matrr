@@ -17,7 +17,7 @@
       <th align='right' style='width:20%;'>Fix:</th>
       <td align='left' style='white-space: nowrap'>{{ item.rtt_fix_type }}</td>
       <th align='right' style='width:20%;'>Amount:</th>
-      <td align='left' style='white-space: nowrap'>{{ item.rtt_amount }}{{ item.rtt_unit }}</td>
+      <td align='left' style='white-space: nowrap'>{{ item.get_amount }}</td>
     </tr>
     <tr>
       <th align='right' colspan="3">Estimated Cost:</th>
@@ -25,8 +25,8 @@
     </tr>
     {% if item.has_notes %}
       <tr>
-     	  <td colspan='4'>&nbsp;</td>
-	      <td colspan='5' style='font-size:-1;'><b>Notes:</b>{{ item.rtt_notes }}</td>
+     	  <td colspan='3'><b>Notes:</b></td>
+	      <td colspan='5' style='font-size:-1;'>{{ item.rtt_notes }}</td>
       </tr>
     {% endif %}
     </tbody>
