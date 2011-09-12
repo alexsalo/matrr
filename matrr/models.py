@@ -506,35 +506,28 @@ class Request(models.Model, DiffingMixin):
 				collisions |= tissue_request.get_tiv_collisions()
 		return collisions
 	
-	def get_sub_req_collisions_for_monkey(self, monkey):
-		tissue_requests = self.tissue_request_set.all()
+	def __get_collision_request(self, collisions):
+		collision_requests = list()
+		for collision in collision:
+			if collision != self:
+				collision_requests.append(collision.tissue_request.req_request)
 		
-		collisions = tissue_requests[0].get_tiv_collisions()
-		if len(tissue_requests) > 1:			
-			for tissue_request in tissue_requests[1:]:
-				collisions |= tissue_request.get_tiv_collisions()
+		return collision_requests
+	
+	def get_sub_req_collisions_for_monkey(self, monkey):
+		collisions = self.get_tiv_collisions()
+						
 		collisions.filter(tissue_request__req_request__request_status=2, monkey=monkey)
 		
-		collision_requests = list()
-		for collision in collision:
-			collision_requests.append(collision.tissue_request.req_request)
+		return self.__get_collision_request(collisions)
 		
-		return collision_requests
-		
-		pass
 	
 	def get_sub_req_collisions(self):
-		tissue_requests = self.tissue_request_set.all()
-		collisions = tissue_requests[0].get_tiv_collisions()
-		if len(tissue_requests) > 1:			
-			for tissue_request in tissue_requests[1:]:
-				collisions |= tissue_request.get_tiv_collisions()
-		collisions.filter(tissue_request__req_request__request_status=2)
-		collision_requests = list()
-		for collision in collision:
-			collision_requests.append(collision.tissue_request.req_request)
+		collisions = self.get_tiv_collisions()
 		
-		return collision_requests
+		collisions.filter(tissue_request__req_request__request_status=2)
+		
+		return self.__get_collision_request(collisions)
 
 
 	def save(self, force_insert=False, force_update=False, using=None):
