@@ -189,6 +189,7 @@ table.common {
     border-style: none;
     border-spacing: 2px;
     padding: 10px;
+    width: 100%;
 }
 
 table.common th {
@@ -204,6 +205,7 @@ table.common td {
 .center-content,
 .content-block {
     background-color: #FAF9ED;
+    width: 99.5%;
     padding: 5px;
     border-radius: 11px;
     -moz-border-radius: 11px;

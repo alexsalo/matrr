@@ -117,16 +117,20 @@ div{
 
 .right-content{
   float:right;
-  width: 47%;
+  width: 48%;
   min-height:10px;
 }
 
 .left-content{
   float:left;
-  width: 47%;
+  width: 48%;
   min-height:10px;
 }
-
+.content-padding{
+  width: 47%;
+  padding-left: 10pt;
+  padding-top: 10pt;
+}
 #buttons,
 .buttons{
   text-align: center;

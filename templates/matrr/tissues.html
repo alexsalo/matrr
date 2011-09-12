@@ -14,18 +14,39 @@
 </div>
 {% endif %}
 
-
-
 <table class="three_column">
   <tr>
-  {% for tissue in tissues.object_list %}
-    {% if tissue|cohort_availability:cohort %}
+  {% for tissue in tissues %}
+ 
+
       <td><a href='{{ tissue.tst_type_id }}'>{{ tissue.tst_tissue_name }}</a></td>
-    {% else %}
-      <td>{{ tissue.tst_tissue_name }}</td><td>Unavailable</td>
-    {% endif %}
+
+  
     {% if forloop.counter|divisibleby:"3" and not forloop.last %}
-      </tr><tr>
+      </tr>
+      <tr>
+    {% endif %}
+  {% endfor %}
+  </tr>
+</table>
+
+{% if cohort != None %}
+<div id="headline">
+
+  Unavailable {{ title }} for cohort: {{ cohort.coh_cohort_name }}
+
+</div>
+{% endif %}
+<table class="three_column">
+  <tr>
+  {% for tissue in tissues_unavailable %}
+ 
+ 	
+      <td>{{ tissue.tst_tissue_name }}
+  
+    {% if forloop.counter|divisibleby:"3" and not forloop.last %}
+      </tr>
+      <tr>
     {% endif %}
   {% endfor %}
   </tr>

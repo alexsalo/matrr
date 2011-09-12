@@ -149,8 +149,7 @@ class Monkey(models.Model):
 	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True,
                                      max_length=20,
                                      help_text='Please enter the date the monkey was born on.')
-	mky_weight = models.DecimalField('Weight', blank=True, null=True,
-									 decimal_places=5, max_digits=10,
+	mky_weight = models.FloatField('Weight', blank=True, null=True,
 									 help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
 	mky_drinking = models.BooleanField('Drinking', null=False,
 									   help_text='Was this monkey given alcohol?')
@@ -247,17 +246,14 @@ class MonkeyToDrinkingExperiment(models.Model):
 	monkey = models.ForeignKey(Monkey, null=False, related_name='+', db_column='mky_id', editable=False)
 	drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
 											editable=False)
-	mtd_etoh_intake = models.DecimalField('EtOH Intake', null=True, blank=True,
-										  decimal_places=5, max_digits=10,
-										  help_text='Please enter the amount in mL of 4% EtOH consumed by the monkey.')
-	mtd_veh_intake = models.DecimalField('H2O Intake', null=True, blank=True,
-										 decimal_places=5, max_digits=10,
-										 help_text='Please enter the amount in mL of H2O consumed by the monkey.')
+	mtd_etoh_intake = models.FloatField('EtOH Intake', null=True, blank=True,
+										help_text='Please enter the amount in mL of 4% EtOH consumed by the monkey.')
+	mtd_veh_intake = models.FloatField('H2O Intake', null=True, blank=True,
+									   help_text='Please enter the amount in mL of H2O consumed by the monkey.')
 	mtd_total_pellets = models.IntegerField('Pellets Consumed', null=True, blank=True,
 											help_text='Please enter the total number of pellets consumed by the monkey.')
-	mtd_weight = models.DecimalField('Weight', null=True, blank=True,
-									 decimal_places=5, max_digits=10,
-									 help_text='Please enter the weight of the monkey.')
+	mtd_weight = models.FloatField('Weight', null=True, blank=True,
+								   help_text='Please enter the weight of the monkey.')
 	mtd_notes = models.TextField('Notes', blank=True, null=True,
 								 help_text='Use this space to enter anything about the experiment that does not fit in another field.')
 
@@ -324,7 +320,7 @@ class TissueType(models.Model):
 											  related_name='unavailable_tissue_type_set',
 											  blank=True,
 											  help_text='The monkeys this tissue type is not available for.')
-	tst_cost = models.DecimalField('Cost', default=0.00, null=False, blank=False, decimal_places=2, max_digits=10)
+	tst_cost = models.FloatField('Cost', default=0.00)
 
 	def __unicode__(self):
 		return self.tst_tissue_name
@@ -500,24 +496,34 @@ class Request(models.Model, DiffingMixin):
 	
 	def get_tiv_collisions(self):
 		tissue_requests = self.tissue_request_set.all()
-		collisions = tissue_requests[0].get_tiv_collisions()
-		if len(tissue_requests) > 1:	
-			for tissue_request in tissue_requests[1:]:
-				collisions |= tissue_request.get_tiv_collisions()
+		collisions = TissueInventoryVerification.objects.none()
+
+		for tissue_request in tissue_requests:
+			collisions |= tissue_request.get_tiv_collisions()
 		return collisions
 	
-	def get_sub_req_collisions(self):
-		tissue_requests = self.tissue_request_set.all()
-		collisions = tissue_requests[0].get_tiv_collisions()
-		if len(tissue_requests) > 1:			
-			for tissue_request in tissue_requests[1:]:
-				collisions |= tissue_request.get_tiv_collisions()
-		collisions.filter(tissue_request__req_request__request_status=2)
+	def __get_collision_request(self, collisions):
 		collision_requests = list()
-		for collision in collision:
-			collision_requests.append(collision.tissue_request.req_request)
+		for collision in collisions:
+			if collision != self:
+				collision_requests.append(collision.tissue_request.req_request)
 		
 		return collision_requests
+	
+	def get_sub_req_collisions_for_monkey(self, monkey):
+		collisions = self.get_tiv_collisions()
+						
+		collisions.filter(tissue_request__req_request__request_status=2, monkey=monkey)
+		
+		return self.__get_collision_request(collisions)
+		
+	
+	def get_sub_req_collisions(self):
+		collisions = self.get_tiv_collisions()
+		
+		collisions.filter(tissue_request__req_request__request_status=2)
+		
+		return self.__get_collision_request(collisions)
 
 
 	def save(self, force_insert=False, force_update=False, using=None):
@@ -542,9 +548,7 @@ class TissueRequest(models.Model):
 	# the custom increment is here to allow us to have a unique constraint that prevents duplicate requests
 	# for a tissue in a single order while allowing multiple custom requests in an order.
 	rtt_custom_increment = models.IntegerField('Custom Increment', default=0, editable=False, null=False)
-	rtt_amount = models.DecimalField('Amount',
-									 decimal_places=5, max_digits=10,
-									 help_text='Please enter the amount of tissue you need.')
+	rtt_amount = models.FloatField('Amount', help_text='Please enter the amount of tissue you need.')
 	unit = models.ForeignKey(Unit, null=False, related_name='+', db_column='unt_unit_id',
 							 help_text='Please select the unit of measure.')
 	rtt_notes = models.TextField('Tissue Notes', null=True, blank=True,
@@ -608,8 +612,10 @@ class TissueRequest(models.Model):
 
 	def get_tiv_collisions(self):
 		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id).exclude(tissue_request=None)
-		tiv_collisions = QuerySet()
-		for monkey in self.monkeys:
+
+		tiv_collisions = TissueInventoryVerification.objects.none()
+		for monkey in self.monkeys.all():
+
 			tiv_collisions |= other_tivs.filter(monkey=monkey, tissue_type=self.tissue_type)
 		tiv_collisions.distinct()
 		return tiv_collisions
@@ -750,7 +756,7 @@ class TissueSample(models.Model):
 	tss_details = models.TextField('Details',
 								   null=True, blank=True,
 								   help_text='Any extras details about this tissue sample.')
-	tss_sample_quantity = models.DecimalField('Sample Quantity', null=True, default=None, decimal_places=5, max_digits=10)
+	tss_sample_quantity = models.FloatField('Sample Quantity', null=True, default=None)
 	units = models.ForeignKey(Unit, null=False, default=4)
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 
@@ -826,7 +832,7 @@ class InventoryStatus(models.Model):
 class TissueInventoryVerification(models.Model):
 	tiv_id = models.AutoField(primary_key=True)
 	
-	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set', db_column='rtt_tissue_request_id')
+	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set', db_column='rtt_tissue_request_id',on_delete=models.SET_NULL)
 	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_verification_set', db_column='tst_type_id')
 	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')

@@ -52,9 +52,11 @@ Cohort: {{ cohort.coh_cohort_name }}
     <tr>
       <td>{{ event.event }}</td>
       <td>{{ event.cev_date }}</td>
+      <td>
       {% if event.cev_info %}
-        <td>{{ event.cev_info }}</td>
+        {{ event.cev_info }}
       {% endif %}
+      </td>
     </tr>
   {% endfor %}
 </table>
