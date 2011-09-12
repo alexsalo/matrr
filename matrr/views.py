@@ -619,23 +619,32 @@ def tissue_list(request, tissue_category=None, cohort_id=None):
 		tissue_list = TissueType.objects.filter(category__cat_name=tissue_category).order_by('tst_tissue_name')
 	else:
 		tissue_list = TissueType.objects.order_by('tst_tissue_name')
+	available = list()
+	unavailable = list()
 
-	paginator = Paginator(tissue_list, 60) # Show 20 tissues per page
+	for tissue in tissue_list:
+		if (tissue.get_cohort_availability(cohort)):
+			available.append(tissue)
+		else:
+			unavailable.append(tissue)
+		
 
-	# Make sure page request is an int. If not, deliver first page.
-	try:
-		page = int(request.GET.get('page', '1'))
-	except ValueError:
-		page = 1
+#	paginator = Paginator(tissue_list, 60) # Show 20 tissues per page
 
-	# If page request (9999) is out of range, deliver last page of results.
-	try:
-		tissues = paginator.page(page)
-	except (EmptyPage, InvalidPage):
-		tissues = paginator.page(paginator.num_pages)
+#	# Make sure page request is an int. If not, deliver first page.
+#	try:
+#		page = int(request.GET.get('page', '1'))
+#	except ValueError:
+#		page = 1
+#
+#	# If page request (9999) is out of range, deliver last page of results.
+#	try:
+#		tissues = paginator.page(page)
+#	except (EmptyPage, InvalidPage):
+#		tissues = paginator.page(paginator.num_pages)
 	# just return the list of tissues
 
-	return render_to_response('matrr/tissues.html', {'tissues': tissues,
+	return render_to_response('matrr/tissues.html', {'tissues': available, 'tissues_unavailable': unavailable,
 													 'title': tissue_category},
 							  context_instance=c)
 
