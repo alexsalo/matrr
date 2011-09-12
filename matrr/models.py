@@ -500,15 +500,15 @@ class Request(models.Model, DiffingMixin):
 	
 	def get_tiv_collisions(self):
 		tissue_requests = self.tissue_request_set.all()
-		collisions = tissue_requests[0].get_tiv_collisions()
-		if len(tissue_requests) > 1:	
-			for tissue_request in tissue_requests[1:]:
-				collisions |= tissue_request.get_tiv_collisions()
+		collisions = TissueInventoryVerification.objects.none()
+
+		for tissue_request in tissue_requests:
+			collisions |= tissue_request.get_tiv_collisions()
 		return collisions
 	
 	def __get_collision_request(self, collisions):
 		collision_requests = list()
-		for collision in collision:
+		for collision in collisions:
 			if collision != self:
 				collision_requests.append(collision.tissue_request.req_request)
 		
@@ -618,8 +618,10 @@ class TissueRequest(models.Model):
 
 	def get_tiv_collisions(self):
 		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id).exclude(tissue_request=None)
-		tiv_collisions = QuerySet()
-		for monkey in self.monkeys:
+
+		tiv_collisions = TissueInventoryVerification.objects.none()
+		for monkey in self.monkeys.all():
+
 			tiv_collisions |= other_tivs.filter(monkey=monkey, tissue_type=self.tissue_type)
 		tiv_collisions.distinct()
 		return tiv_collisions
