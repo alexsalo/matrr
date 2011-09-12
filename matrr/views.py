@@ -79,7 +79,7 @@ def display_cohorts(request, **kwargs):
 ### Currently a very simple hack to tell everyone we don't have any necropsy data.  Placeholder, mostly.
 def cohort_necropsy(request, pk):
 	# Simple message
-	messages.info(request, 'No necropsy data available at this time.')
+	messages.info(request, 'No necropsy date available at this time.')
 	# and display the cohort detail page
 	cohort = Cohort.objects.get(pk=pk)
 	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
