@@ -204,6 +204,7 @@ table.common td {
 .center-content,
 .content-block {
     background-color: #FAF9ED;
+    width: 99.5%;
     padding: 5px;
     border-radius: 11px;
     -moz-border-radius: 11px;
