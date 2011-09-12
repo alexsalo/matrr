@@ -544,7 +544,7 @@ class Request(models.Model, DiffingMixin):
 
 class TissueRequest(models.Model):
 	rtt_tissue_request_id = models.AutoField(primary_key=True)
-	req_request = models.ForeignKey(Request, null=True, related_name='tissue_request_set', db_column='req_request_id', on_delete=models.SET_NULL)
+	req_request = models.ForeignKey(Request, null=False, related_name='tissue_request_set', db_column='req_request_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_request_set', db_column='tst_type_id')
 	rtt_fix_type = models.CharField('Fixation', null=False, blank=False,
 									max_length=200,
@@ -838,7 +838,7 @@ class InventoryStatus(models.Model):
 class TissueInventoryVerification(models.Model):
 	tiv_id = models.AutoField(primary_key=True)
 	
-	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set', db_column='rtt_tissue_request_id')
+	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set', db_column='rtt_tissue_request_id',on_delete=models.SET_NULL)
 	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_verification_set', db_column='tst_type_id')
 	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')
