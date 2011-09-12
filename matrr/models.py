@@ -577,7 +577,7 @@ class TissueRequest(models.Model):
 		return self.rtt_fix_type
 
 	def get_amount(self):
-		return str(self.rtt_amount.normalize()) + self.unit.unt_unit_name
+		return str(self.rtt_amount) + ' ' + self.unit.unt_unit_name
 
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
