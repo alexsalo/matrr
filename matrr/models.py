@@ -607,7 +607,7 @@ class TissueRequest(models.Model):
 		return self.tissue_type.tst_cost * self.monkeys.count()
 
 	def get_tiv_collisions(self):
-		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id, tissue_request=None)
+		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id).exclude(tissue_request=None)
 		tiv_collisions = QuerySet()
 		for monkey in self.monkeys:
 			tiv_collisions |= other_tivs.filter(monkey=monkey, tissue_type=self.tissue_type)
