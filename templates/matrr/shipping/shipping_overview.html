@@ -17,7 +17,7 @@ Pending Shipments
   <tr><th>User</th><th>Cohort</th><th>Request Date</th></tr>
     {% for request in accepted_requests %}
       <tr><td>{{ request.user }}</td><td>{{ request.cohort.coh_cohort_name }}</td>
-        <td>{{ request.req_request_date }}</td>
+        <td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
         <td><a class='blockLinkButton' href='{{ SITE_ROOT }}/orders/{{ request.req_request_id }}/'>Details</a></td>
         <td><a class='blockLinkButton' href='{{ SITE_ROOT }}/shipping/build/{{ request.req_request_id }}/'>Build Shipment</a></td>
       </tr>
@@ -43,7 +43,7 @@ Shipped Requests
   <tr><th>User</th><th>Cohort</th><th>Request Date</th><th>Shipped Date</th></tr>
     {% for request in shipped_requests %}
       <tr><td>{{ request.user }}</td><td>{{ request.cohort.coh_cohort_name }}</td>
-        <td>{{ request.req_request_date }}</td>
+        <td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
         <td></td>
       <td><a href='{{ SITE_ROOT }}/orders/{{ request.req_request_id }}/'>Details</a></td></tr>
     {% endfor %}

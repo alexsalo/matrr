@@ -13,7 +13,7 @@
       <th>Cohort:</th><td><a href='{{ order.cohort.get_url }}'>{{ order.cohort }}</a></td>
   </tr>
   <tr>
-      <th>Requested On:</th><td>{{ order.req_request_date }}</td>
+      <th>Requested On:</th><td>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
       <th>Status:</th>
     {% if order.request_status|lower != 'submitted' %}
       {% if order.request_status|lower != 'rejected' %}
