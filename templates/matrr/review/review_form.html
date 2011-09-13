@@ -24,7 +24,7 @@
   </tr>
   <tr><th>User:</th>
     <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></td></tr>
-  <tr><th>Requested On:</th><td>{{ req_request.req_request_date }}</td></tr>
+  <tr><th>Requested On:</th><td>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</td></tr>
   <tr><th>Experimental Plan:</th><td><a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a></td></tr>
   <tr><th>Project Title:</th><td>{{ req_request.req_project_title }}</td></tr>
   <tr><th>Reason:</th><td colspan='5'>{{ req_request.req_reason }}</td></tr>
