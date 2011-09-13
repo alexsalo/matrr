@@ -666,3 +666,9 @@ a.tool-tip:hover span {
 .hidden {
     display: none;
 }
+#eighty {
+  width: 80%;
+}
+#full {
+  width: 100%;
+}

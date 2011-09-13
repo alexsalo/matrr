@@ -1,7 +1,7 @@
 {% load tissue_filters %}
 
 <a onclick="javascript:toggle_visibility('availability_{{ tissue_request.get_html_label }}');">Check availability</a>
-<table>
+<table id=full>
 <tbody id='availability_{{ tissue_request.get_html_label }}' class='hidden'>
 <tr class='bordered-cell-row'><th>Monkey</th>
   {% if user_is_member_of_uberuser or user_is_member_of_tech_user or user_is_member_of_committee %}
