@@ -1,8 +1,8 @@
 {% load tissue_filters %}
 
-<div><!-- style='border-style:solid;border-width:2px;' -->
+<div id=eighty class='margin"  ><!-- style='border-style:solid;border-width:2px;' -->
   {% with tissue_request=tform.instance.get_request  %}
-    <table>
+    <table >
     {% for datum in tissue_request.get_data %}
       <tr><th>{{ datum.0 }}:</th><td>{{ datum.1 }}</td></tr>
     {% endfor %}
@@ -16,7 +16,7 @@
     </div>
   {% endwith %}
 
-  <table>
+  <table id=full >
   {% for error in tform.non_field_errors %}
     <tr><td colspan='4'>{{ error }}</td></tr>
   {% endfor %}
