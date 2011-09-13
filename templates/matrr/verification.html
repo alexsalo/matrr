@@ -15,9 +15,9 @@
 						<tr></tr>{# hack to remove the color and add a tiny space between this table and the titleblock #}
 						<tr>
 							<td align="center"><input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='width:100px;float: left'/></td>
-							<td align="center" class='verification_legend unverified'>Unverified</td>
-							<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
-							<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
+							<td align="center" style="border: solid red;">Unverified</td>
+							<td align="center" style="border: solid green">Verified: sufficient</td>
+							<td align="center" style="border: solid #ff8c00">Verified: insufficent</td>
 							<td align="center"><input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='width:100px;float: right'/></td>
 						</tr>
 						<tr></tr>{# hack to add a tiny space between this table and the formset #}
@@ -26,13 +26,13 @@
 					<center>
 					{{ tiv.primarykey }} {# Important! #}
 					{% if tiv.initial.inventory == 1 %}
-						<div class='verification_border unverified'>
+						<div class='clearfix' style="border: solid red;width:90%;">
 					{% endif %}
 					{% if tiv.initial.inventory == 2 %}
-						<div class="verification_border sufficient">
+						<div class='clearfix' style="border: solid green;width:90%;">
 					{% endif %}
 					{% if tiv.initial.inventory == 3 %}
-						<div class="verification_border insufficient">
+						<div class='clearfix' style="border: solid #ff8c00;width:90%;">
 					{% endif %}
 					{{ tiv.non_field_errors }}
 					{% if tiv.initial.notes %}
@@ -41,7 +41,7 @@
 						</div>
 					{% endif %}
 					<center>
-					<table class='verification_table'>
+					<table style="width:99%;">
 						<tr>
 							<th>Monkey:  {{ tiv.initial.monkey }}</th>
 							<th>Tissue:  {{ tiv.initial.tissue }}</th>
@@ -64,12 +64,14 @@
 					</div>
 					<br>
 				{% endfor %}
+				</center>
 				<table style="width:100%;">
+					<tr></tr>{# hack to remove the color and add a tiny space between this table and the formset #}
 					<tr>
 						<td align="center"><input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='width:100px;float: left'/></td>
-						<td align="center" class='verification_legend unverified'>Unverified</td>
-						<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
-						<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
+						<td align="center" style="border: solid red;">Unverified</td>
+						<td align="center" style="border: solid green">Verified: sufficient</td>
+						<td align="center" style="border: solid #ff8c00">Verified: insufficent</td>
 						<td align="center"><input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='width:100px;float: right'/></td>
 					</tr>
 				</table>

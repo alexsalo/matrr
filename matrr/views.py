@@ -189,7 +189,7 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 			try:
 				tissue_request_form.save()
 			except:
-				messages.error(request, 'Error adding tissue to cart.  Possible duplicate tissue request already in cart.')
+				messages.error(request, 'Error adding tissue to cart.')
 				return redirect(url)
 
 			messages.success(request, 'Item added to cart')
