@@ -666,3 +666,14 @@ a.tool-tip:hover span {
 .hidden {
     display: none;
 }
+
+/* Jon added below */
+.unverified {
+	border: solid red;
+}
+.insufficient {
+	border: solid #ff8c00;
+}
+.sufficient {
+	border: solid green;
+}
