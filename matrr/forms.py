@@ -25,7 +25,7 @@ class TissueRequestForm(ModelForm):
 		self.req_request = req_request
 		self.tissue = tissue
 		super(TissueRequestForm, self).__init__(*args, **kwargs)
-		self.fields['monkeys'].widget = CheckboxSelectMultipleLink(link_base='/monkeys/', tissue=self.tissue)
+		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTable(link_base='/monkeys/', tissue=self.tissue)
 		self.fields['monkeys'].queryset = self.req_request.cohort.monkey_set.all()
 		# change the help text to match the checkboxes
 		self.fields['monkeys'].help_text =\

@@ -131,6 +131,10 @@ div{
   padding-left: 10pt;
   padding-top: 10pt;
 }
+.full-width{
+  width: 100%;
+}
+
 #buttons,
 .buttons{
   text-align: center;

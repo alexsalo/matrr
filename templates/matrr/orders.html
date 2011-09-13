@@ -18,11 +18,15 @@
     <tr>
       <td>{{ order.cohort }}</td>
       <td>{{ order.req_request_date }}</td>
-      {% if order.request_status|lower == "submitted" %}
-        <td>{{ order.request_status }}</td>
-        {% else %}
-        <td style='color: green'>{{ order.request_status }}</td>
+      <td {% if order.request_status|lower == "accepted" %}
+      style='color: green'
       {% endif %}
+      {% if order.request_status|lower == "rejected" %}
+          style='color: red'   
+      {% endif %}>
+      {{ order.request_status }}</td>
+      
+
       <td><a href='{{ order.req_request_id }}'>Details</a></td>
     </tr>
   {% endfor %}
