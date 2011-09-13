@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}
+MATRR Account
+{% endblock %}
+
+{% block content %}
+    
+    <div class='large-headline'>MATRR Tissue Fee Schedule</div>
+    
+    <div class='small'>Last Updated: September, 2011</div>
+    
+    <br>
+    <center>
+        <table class='common'>
+            <tr><th>Tissue Sample</th><th>Unit</th><th>Cost per sample</th></tr>
+            <tr><td>Brain - Frozen</td><td>Per area/per monkey</td><td>$250</td></tr>
+            <tr><td>Brain - Special Process</td><td>Per area/per monkey</td><td>$350</td></tr>            
+            <tr><td>Peripheral - Frozen</td><td>Per area/per monkey</td><td>$100</td></tr>    
+            <tr><td>Peripheral - Special Process</td><td>Per area/per monkey</td><td>$200</td></tr>
+        </table>
+        
+        <br>
+            
+        <table class='common'>
+            <tr><th>Blood Sample</th><th>Unit</th><th>Cost per sample</th></tr>
+            <tr><td>Plasma</td><td>500&mu;</td><td>$25</td></tr>
+            <tr><td>Serum</td><td>500&mu;</td><td>$25</td></tr>
+        </table>
+    </center>
+    
+    <br>
+            
+        <ul>
+            <li>A handling fee of $10 applies to all orders.</li>
+            <li>Costs do not include shipping charges.  Shipping is to be covered by requestor.</li>
+            <li>Tissue provided will require a MTA and an active collaboration with the principal investigators of the MATRR.</li>
+            <li>These costs are only to recover the personnel, supplies, storage and handling costs associated with transferring the tissues for the studies outlined in the tissue request form.</li>
+            <li>The schedule above applies to non-profit institution use only.  Commercial users should contact MATRR for a cost schedule.</li>
+        </ul>
+    
+{% endblock%}
