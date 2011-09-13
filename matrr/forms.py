@@ -139,7 +139,7 @@ class ContactUsForm(Form):
 class TissueRequestProcessForm(ModelForm):
 	def __init__(self, *args, **kwargs):
 		super(ModelForm, self).__init__(*args, **kwargs)
-		self.fields['accepted_monkeys'].widget = CheckboxSelectMultipleLink(link_base='/monkeys/',
+		self.fields['accepted_monkeys'].widget = CheckboxSelectMultipleLinkByTable(link_base='/monkeys/',
 																			tissue=self.instance.get_tissue())
 		self.fields['accepted_monkeys'].required = False
 		self.fields['accepted_monkeys'].queryset = self.instance.monkeys.all()
