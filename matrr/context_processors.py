@@ -40,7 +40,7 @@ def group_membership(request):
 
 
 def unsupported_browser(request):
-	if 'MSIE' in request.META['HTTP_USER_AGENT']:
+	if 'MSIE' in request.META['HTTP_USER_AGENT'] and 'chromeframe' not in request.META['HTTP_USER_AGENT']:
 		return {'unsupported_browser' : request.META['HTTP_USER_AGENT']}
 	else:
 		return {}
