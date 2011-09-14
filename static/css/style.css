@@ -666,9 +666,14 @@ a.tool-tip:hover span {
 .hidden {
     display: none;
 }
-#eighty {
-  width: 80%;
+
+/* Jon added below */
+.unverified {
+	border: solid red;
 }
-#full {
-  width: 100%;
+.insufficient {
+	border: solid #ff8c00;
+}
+.sufficient {
+	border: solid green;
 }
