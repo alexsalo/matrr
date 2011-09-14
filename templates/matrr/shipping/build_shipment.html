@@ -18,7 +18,7 @@
         <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></td>
       </tr>
       <tr>
-        <th>Requested On:</th><td>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+        <th>Requested On:</th><td>{{ req_request.req_request_date }}</td>
         <th>Referred By:</th><td>{{ req_request.req_referred_by }}</td>
       </tr>
       <tr>

@@ -22,7 +22,7 @@
       {% if req_request.user|lower == 'dummy_user_for_past_requests'%}Generic User
       {% else %}{{ req_request.user }}
       {% endif %}</a></td>
-    <td nowrap>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+    <td nowrap>{{ req_request.req_request_date}}</td>
 
 {% for item in req_request.complete %}
 {% if item == "pending" %}

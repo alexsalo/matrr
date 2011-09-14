@@ -672,3 +672,14 @@ a.tool-tip:hover span {
 #full {
   width: 100%;
 }
+
+/* Jon added below */
+.unverified {
+	border: solid red;
+}
+.insufficient {
+	border: solid #ff8c00;
+}
+.sufficient {
+	border: solid green;
+}

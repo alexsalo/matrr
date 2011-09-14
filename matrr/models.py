@@ -577,7 +577,7 @@ class TissueRequest(models.Model):
 		return self.rtt_fix_type
 
 	def get_amount(self):
-		return str(self.rtt_amount) + self.unit.unt_unit_name
+		return str(self.rtt_amount) + ' ' + self.unit.unt_unit_name
 
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
@@ -832,7 +832,8 @@ class InventoryStatus(models.Model):
 class TissueInventoryVerification(models.Model):
 	tiv_id = models.AutoField(primary_key=True)
 	
-	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set', db_column='rtt_tissue_request_id',on_delete=models.SET_NULL)
+	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set',
+									   db_column='rtt_tissue_request_id',on_delete=models.SET_NULL)
 	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_verification_set', db_column='tst_type_id')
 	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')
