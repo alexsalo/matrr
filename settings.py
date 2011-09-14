@@ -143,7 +143,7 @@ ACCOUNT_ACTIVATION_DAYS = 2
 EMAIL_HOST = 'localhost'
 DEFAULT_FROM_EMAIL = 'matrr_admin@localhost'
 
-LOGIN_REDIRECT_URL = '//'
+LOGIN_REDIRECT_URL = '/'
 
 if DEVELOPMENT:
     from develop_settings import *
