@@ -20,7 +20,7 @@ Reviews
     <tr>
       <td>{{ review.req_request.cohort.coh_cohort_name }}</td>
       <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ review.req_request.user }}</a></td>
-      <td>{{ review.req_request.req_request_date}}</td>
+      <td>{{ review.req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
       <td><a class='blockLinkButton' href='/reviews/{{ review.rvs_review_id }}/'>Review</a></td>
     </tr>
   {% endfor %}
@@ -43,7 +43,7 @@ Reviews
     <tr>
       <td>{{ review.req_request.cohort.coh_cohort_name }}</td>
       <td>{{ review.req_request.user }}</td> 
-      <td>{{ review.req_request.req_request_date}}</td>
+      <td>{{ review.req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
       <td><a class='blockLinkButton' href='/reviews/{{ review.rvs_review_id }}/'>Edit</a></td>
     </tr>
   {% endfor %}
