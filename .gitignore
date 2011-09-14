@@ -1,0 +1,11 @@
+
+# /
+/.idea/
+/.DS_Store/
+/.komodotools/
+/TODO
+/*.pyc
+/settings.py
+/*.komodoproject
+/matrr.wsgi
+/local_settings.py
