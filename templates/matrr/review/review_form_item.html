@@ -1,6 +1,6 @@
 {% load tissue_filters %}
 
-<div id=eighty class='margin"  ><!-- style='border-style:solid;border-width:2px;' -->
+<div id=eighty class='margin'  ><!-- style='border-style:solid;border-width:2px;' -->
   {% with tissue_request=tform.instance.get_request  %}
     <table >
     {% for datum in tissue_request.get_data %}
