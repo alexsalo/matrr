@@ -42,12 +42,14 @@
 		<!-- Search div -->
 		<div class='content-block-lower'>
 			<div class='headline'>Search</div>
-			<form action='/search' method='get'>
-				<div><input type='text' id='terms' name='terms'/>
-					<button type='submit'>Search</button>
-				</div>
-			</form>
-		</div>
+			  <form action='/search' method='post'>
+  				{% csrf_token %}
+  			  <div>
+				{{ search_form.terms }}
+				<button type='submit'>Search</button>
+  		      </div>
+			  </form>
+					</div>
 
 		<!-- Publications div -->
 		<div class='content-block-lower'>
