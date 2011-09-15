@@ -103,17 +103,7 @@
 	</div>
 	<!-- Body div -->
 	<div class='page-content clearfix'>
-		<!-- Message div -->
-		<div class='messages clearfix'>
-			{% if unsupported_browser %}
-				<div class="warning">Your browser is not supported by MATRR. <a href="/browser/">Click here for details.</a></div>
-			{% endif %}
-			{% if messages %}
-				{% for message in messages %}
-					<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
-				{% endfor %}
-			{% endif %}
-		</div>
+
 
 		<!-- Sidebar div -->
 		<div class='sidebar clearfix'>
@@ -178,6 +168,17 @@
 		<!-- Content div -->
 		<div class='content clearfix'>
 
+		<!-- Message div -->
+		<div class='messages clearfix'>
+			{% if unsupported_browser %}
+				<div class="warning">Your browser is not supported by MATRR. <a href="/browser/">Click here for details.</a></div>
+			{% endif %}
+			{% if messages %}
+				{% for message in messages %}
+					<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+				{% endfor %}
+			{% endif %}
+		</div>
 			{% block content %}{% endblock %}
 
 			<!-- End of content div -->

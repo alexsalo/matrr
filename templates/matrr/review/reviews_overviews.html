@@ -1,10 +1,16 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class='large-headline'> 
+<div class='large-headline'>
 {% block title %}Pending Requests{% endblock %}
 </div>
-<br>
+{% if req_requests|length == 0 %}
+  <div class="messages">
+	<div class="info">
+            There are no pending requests to approve.
+	</div>
+  </div>
+{% else %}
 
 <table class='common'>
   <tr>
@@ -37,5 +43,7 @@
   </tr>
 {% endfor %}
 </table>
+{% endif %}
+
 
 {% endblock %}
