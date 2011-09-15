@@ -517,17 +517,17 @@ class Request(models.Model, DiffingMixin):
 	
 	def get_sub_req_collisions_for_monkey(self, monkey):
 		collisions = self.get_tiv_collisions()
-						
-		collisions.filter(tissue_request__req_request__request_status=2, monkey=monkey)
+		
+		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'), monkey=monkey)
 		
 		return self.__get_collision_request(collisions)
 		
 	
 	def get_sub_req_collisions(self):
 		collisions = self.get_tiv_collisions()
-		
-		collisions.filter(tissue_request__req_request__request_status=2)
-		
+
+		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'))
+
 		return self.__get_collision_request(collisions)
 
 
