@@ -42,7 +42,11 @@
     <tr><th>Extra Notes:</th><td colspan='3'>{{ order.req_notes }}</td></tr>
   {% endif %}
 </table>
-    
+  {% if order.shipment.shp_shipment_date %}
+<div class='small'>
+  Shipped On: {{ order.shipment.shp_shipment_date }}
+</div>
+{% endif %}
 
   
   <div style='margin-top: 20px;'>
@@ -52,5 +56,7 @@
       {% endfor %}
     </table>
   </div>
+  
+
 
 {% endblock %}
