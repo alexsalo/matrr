@@ -73,14 +73,23 @@ This section displays the status of requests
 <div class='headline'>Requests Status</div>
 {% if order_list %}
   <table class="common">
-    <tr><th>Cohort</th><th>Date Placed</th><th>Status</th><th>&nbsp;</th><th>&nbsp;</th></tr>
+    <tr><th>Cohort</th><th>Date Placed</th><th>Status</th><th>Protocol</th><th>&nbsp;</th></tr>
     {% for order in order_list.all %}
         <tr>
             <td class='text-center-common-td'>{{ order.cohort }}</td>
             <td class='text-center-common-td'>{{ order.req_request_date }}</td>
-            <td class='text-center-common-td'>{{ order.request_status }}</td>
-            <td class='text-center-common-td'><a href='/orders/{{ order.req_request_id }}'>Details</a></td>
+            {% if order.request_status|lower != 'rejected' %}
+              <td class='text-center-common-td'><font color='green'>{{ order.request_status }}</font></td>
+            {% else %}
+              <td class='text-center-common-td'><font color='red'>{{ order.request_status }}</font></td>
+            {% endif %}
+            {% if not order.req_experimental_plan %}
+              <td class='text-center-common-td'>none</td>
+            {% else %}
             <td class='text-center-common-td'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>View Protocol</a></td>
+            {% endif %}
+            <td class='text-center-common-td'><a href='/orders/{{ order.req_request_id }}'>Details</a></td>
+            
         </tr>
     {% endfor %}
   </table>

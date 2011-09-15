@@ -1,18 +1,16 @@
-<table class='common_center'>
+<table class='common_small'>
   <tr>
     {% for datum in item.get_data %}
-      <th>{{ datum.0 }}</th><td>{{ datum.1 }}</td>
+      <th>{{ datum.0 }}:</th><td>{{ datum.1 }}</td>
     {% endfor %}
   </tr>
   {% if item.has_notes %}
     <tr>
-      <td align='center' colspan='6'>Notes</td>
-    </tr>
-    <tr>
-      <td align='center' colspan='6'>{{ item.get_notes }}</td>
+      <td colspan='6'>Notes: {{ item.get_notes }}</td>
     </tr>
   {% endif %}
 </table>
+
 <table class='monkey_table common_center'>
   {% if order.request_status|lower != 'partially accepted' %}
     <tr>
@@ -23,7 +21,7 @@
       {% if forloop.counter0|divisibleby:"6" %}
         </tr><tr>
       {% endif %}
-      <td align='center'><a href='{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}'>{{ monkey.mky_real_id }}</a></td>
+      <td align='center'><a href='/monkeys/{{ monkey.mky_real_id }}'>{{ monkey.mky_real_id }}</a></td>
     {% endfor %}
     </tr>
   {% else %}
@@ -74,3 +72,4 @@
     {% endif %}
   {% endif %}
 </table>
+<hr>

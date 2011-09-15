@@ -43,24 +43,26 @@
 						<li class='top'><a href="/">Home</a></li>
 
 					</ul>
+					<ul>
+						<li class='top'>
+							<a href='/search'>Search</a>
+						</li>
+					</ul>
+					
 					{% if user.is_authenticated %}
 						<ul>
 							<li class='top'><a href="/account/">My Account</a></li>
 							<li class='drop-down'><a href="/orders/">My Orders</a></li>
 						</ul>
 					{% endif %}
-					{% if user.is_staff %}
-						<ul>
-							<li class='top'><a href="/admin/">Admin</a></li>
-						</ul>
-					{% endif %}
+					
 					{% if user_is_member_of_committee or user_is_member_of_uberuser %}
 						<ul>
 							<li class='top'>
-								<a href="/reviews/">Reviews</a>
+								<a href="/reviews/">My Reviews</a>
 							</li>
 							{% if user_is_member_of_uberuser %}
-								<li class='drop-down'><a href="/reviews_overviews/">Reviews Overview</a></li>
+								<li class='drop-down'><a href="/reviews_overviews/">Overview</a></li>
 							{% endif %}
 						</ul>
 					{% endif %}
@@ -68,15 +70,11 @@
 					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
 						<ul>
 							<li class='top'>
-								<a href='/shipping_overview'>Shipping Overview</a>
+								<a href='/shipping_overview'>Shipping</a>
 							</li>
 						</ul>
 					{% endif %}
-						<ul>
-							<li class='top'>
-								<a href='/search'>Search</a>
-							</li>
-						</ul>
+
 					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
 						<ul>
 							<li class='top'>
@@ -84,7 +82,12 @@
 							</li>
 						</ul>
 					{% endif %}			
-		
+					
+					{% if user.is_staff %}
+						<ul>
+							<li class='top'><a href="/admin/">Admin</a></li>
+						</ul>
+					{% endif %}
 					
 					{#      {% if user.is_staff %}#}
 					{#      <ul>#}
@@ -163,6 +166,7 @@
 						Info
 					</div>
 					<a href="/benefits">Account Benefits</a><br/>
+					<a href="/fee">Tissue Fee Schedule</a><br/>
 					<a href="/contact_us">Contact Us</a>
 				</div>
 

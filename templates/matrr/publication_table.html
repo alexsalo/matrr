@@ -3,7 +3,7 @@
     {% for pub in publications|dictsortreversed:"published_year" %}
         <tr>
             {% if pub.pmid %}
-                <a href="http://www.ncbi.nlm.nih.gov/pubmed?term={{ pub.pmid }}">
+                <a href="http://www.ncbi.nlm.nih.gov/pubmed?term={{ pub.pmid }}" target='_blank'>
                     {{ pub.title }}
                 </a>
             {% else %}
