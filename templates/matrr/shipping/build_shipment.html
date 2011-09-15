@@ -7,6 +7,9 @@
 
 {% block content %}
   <div class="headline">{% block title %}Building Shipment for {{ req_request }}{% endblock %}</div>
+  <div class='clearfix'><div class='left'>
+    <a href="/shipping_overview"><img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>&nbsp;Shipping Overview</a>
+  </div></div>
 
   {# show the request details here #}
   <div>
@@ -96,7 +99,16 @@
     <div class='clearfix'></div>
   {% endfor %}
   {# have a button at the print the shipping manifest #}
-  <div>
+  <div class='left'>
     <a href='manifest/' class='blockLinkButton'>Download Shipping Manifest</a>
   </div>
+  <div class='right'>
+    {% if req_request.shipment.shp_shipment_date %}
+      <div class='sufficient'>Shipped on: {{ req_request.shipment.shp_shipment_date }}</div>
+    {% else %}
+    <form action='' method='post'>
+      {% csrf_token %}
+      <button type='submit' name='shipped' class="blockLinkCheckoutButton">Ship Order</button>
+    </form>
+    {% endif %}
 {% endblock %}

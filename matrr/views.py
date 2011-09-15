@@ -13,6 +13,7 @@ import settings
 from matrr.forms import *
 from matrr.models import *
 import math
+import datetime
 from datetime import datetime
 from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
@@ -880,6 +881,12 @@ def build_shipment(request, req_request_id):
 
 	if Shipment.objects.filter(req_request=req_request).count():
 		shipment = req_request.shipment
+		if 'shipped' in request.POST:
+			shipment.shp_shipment_date=datetime.today()
+			shipment.user = request.user
+			shipment.save()
+			req_request.request_status = RequestStatus.objects.get(rqs_status_name='Shipped')
+			req_request.save()
 	else:
 		# create the shipment
 		shipment = Shipment(user=req_request.user, req_request=req_request)
