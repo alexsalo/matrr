@@ -461,6 +461,11 @@ class Request(models.Model, DiffingMixin):
 		,
 		blank=False,
 		null=False, )
+	req_safety_agreement = models.BooleanField(
+		'I acknowledge that I have read and understand the potential biohazards associated with tissue shipment.'
+		,
+		blank=False,
+		null=False, )
 	req_referred_by = models.CharField('How did you hear about the tissue bank?',
 									   choices=REFERRAL_CHOICES,
 									   null=False,
@@ -656,9 +661,8 @@ class Review(models.Model):
 		return 'Review of request: <' + str(self.req_request) + '> by: ' + str(self.user)
 
 	def is_finished(self):
-		submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
 		return all(tissue_request.is_finished() for tissue_request in TissueRequestReview.objects.filter(
-			review=self.rvs_review_id).filter(review__req_request__request_status=submitted))
+			review=self.rvs_review_id))
 
 	class Meta:
 		db_table = 'rvs_reviews'

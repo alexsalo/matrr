@@ -25,14 +25,20 @@ Reviews
     </tr>
   {% endfor %}
   </table>
+  {% else %}
+  <div class="messages">
+	<div class="info">
+            You have no pending requests to review.
+	</div>
+  </div>
   {% endif %}
 </div>
 
 <div>
+  {% if num_finished > 0 %}
   <div class='large-headline'>
     Finished Reviews
   </div>
-  {% if num_finished > 0 %}
   <table class='review-table'>
     <tr>
       <th>Cohort</th>

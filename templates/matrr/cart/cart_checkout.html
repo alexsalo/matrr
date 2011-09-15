@@ -42,7 +42,7 @@
 			<div>
 
 				{% for field in form.visible_fields %}
-					{% if field.html_name != "req_progress_agreement" %}
+					{% if field.html_name != "req_progress_agreement" and field.html_name != "req_safety_agreement" %}
 						{% if field.html_name != 'req_reason' %}
 							<div class='clearfix'>
 								<div style='margin:0px; padding:2px;' class='table-left'>
@@ -93,6 +93,13 @@
 			<div class="messages">
 				<div class="forms">
 					{{ form.req_progress_agreement.label_tag }}{{ form.req_progress_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
+				</div>
+			</div>
+
+			<div class="messages">
+				<div class="forms">
+					{{ form.req_safety_agreement.label_tag }}{{ form.req_safety_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span><br>
+					<a href='/safety/' target="_blank">Read it here.<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a>
 				</div>
 			</div>
 

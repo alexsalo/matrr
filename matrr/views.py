@@ -340,7 +340,9 @@ def cart_checkout(request):
 @user_passes_test(lambda u: u.groups.filter(name='Committee').count() != 0, login_url='/denied/')
 def reviews_list_view(request):
 	# get a list of all reviews for the current user
-	reviews = Review.objects.filter(user=request.user.id)
+	submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
+	reviews = Review.objects.filter(user=request.user.id).filter(req_request__request_status=submitted)
+	
 	finished_reviews = [review for review in reviews if review.is_finished()]
 	unfinished_reviews = [review for review in reviews if not review.is_finished()]
 
