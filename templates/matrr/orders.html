@@ -5,16 +5,17 @@
   {% block title %}My Orders{% endblock %}
 </div>
 
-<br/>
-{% if order_list %}
+
+{% if order_list.object_list|length > 0 %}
 <table class="common_center" cellpadding='4' cellspacing='2'>
   <tr>
     <th>Cohort</th>
     <th>Date Placed</th>
     <th>Status</th>
+    <th>Date Shipped</th>
   </tr>
 
-  {% for order in order_list %}
+  {% for order in order_list.object_list %}
     <tr>
       <td>{{ order.cohort }}</td>
       <td>{{ order.req_request_date }}</td>
@@ -25,15 +26,37 @@
           style='color: red'   
       {% endif %}>
       {{ order.request_status }}</td>
-      
-
+    
+      <td>No Shipping Information</td>
       <td><a href='{{ order.req_request_id }}'>Details</a></td>
     </tr>
   {% endfor %}
 </table>
 {% else %}
       <div class="messages"><div class="info">
-       You do not have any pending requests.
+       You do not have any pending orders.
      </div></div>
 {% endif %}
+
+{% if order_list.object_list|length > 0 %}
+      <center>
+              <div class="pagination">
+                      <span class="step-links">
+                              {% if order_list.has_previous %}
+                                      <a href="?page={{ order_list.previous_page_number }}">previous</a>
+                              {% endif %}
+
+                              <span class="current">
+                      Page {{ order_list.number }} of {{ order_list.paginator.num_pages }}.
+              </span>
+
+                              {% if order_list.has_next %}
+                                      <a href="?page={{ order_list.next_page_number }}">next</a>
+                              {% endif %}
+                      </span>
+              </div>
+      </center>
+{% endif %}
+
+
 {% endblock %}

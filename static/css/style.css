@@ -261,6 +261,12 @@ a img {
     border: none;
 }
 
+.small {
+    color: #E46E3B;
+    font-size: 90%;
+    font-style: italic;
+}
+
 table tr:nth-child(odd) {
     background-color: #FAF9ED;
 }
@@ -453,6 +459,18 @@ table.common_center td {
 
 table.common_center th {
     padding: 2px 4px 2px 4px;
+    font-size: small;
+}
+
+table.common_small td {
+    color: #4E4E4E;
+    font-size: small;
+    padding: 2px 6px 2px 1px;
+}
+
+table.common_small th {
+    text-align: right;
+    padding: 2px 2px 2px 4px;
     font-size: small;
 }
 

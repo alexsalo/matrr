@@ -57,7 +57,7 @@ All Cohorts
 					
 					<a href="{{ cohort.coh_cohort_id }}/">Cohort Details</a><br/>
 					<a href="{{ cohort.coh_cohort_id }}/timeline">Cohort Timeline</a><br/>
-					<a href="{{ cohort.coh_cohort_id }}/necropsy/">Expected Necropsy Date</a><br/>
+					{% if cohort.coh_upcoming %}<a href="{{ cohort.coh_cohort_id }}/necropsy/">Expected Necropsy Date</a><br/>{% endif %}
 					<a href="{{ cohort.coh_cohort_id }}/publications">Publications</a><br/>
 					<a href='{{ cohort.coh_cohort_id }}/tissues'>Request Tissue from {{ cohort.coh_cohort_name }}</a>
 					{% with images=cohort|cohort_images:"etoh" %}

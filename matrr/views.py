@@ -1,5 +1,5 @@
 # Create your views here.
-from django.forms.formsets import formset_factory
+from django.forms.models import modelformset_factory
 from django.forms.models import modelformset_factory
 from django.template import RequestContext
 from django.http import Http404, HttpResponse
@@ -409,7 +409,7 @@ def account_detail_view(request, user_id):
 	account_info = Account.objects.get(user__id=user_id)
 	mta_info = Mta.objects.filter(user__id=user_id)
 	order_list = Request.objects.filter(user__id=user_id).exclude(
-		request_status=RequestStatus.objects.get(rqs_status_name='Cart'))
+		request_status=RequestStatus.objects.get(rqs_status_name='Cart')).order_by("-req_request_date")[:20]
 
 	return render_to_response('matrr/account.html',
 			{'account_info': account_info,
@@ -551,8 +551,22 @@ def review_overview(request, req_request_id):
 @login_required()
 def orders_list(request):
 	# get a list of all requests for the user
-	order_list = Request.objects.filter(user=request.user).exclude(
-		request_status=RequestStatus.objects.get(rqs_status_name='Cart'))
+	order_list = ''
+	orders = Request.objects.filter(user=request.user).exclude(
+		request_status=RequestStatus.objects.get(rqs_status_name='Cart')).order_by('-req_request_date')
+	## Paginator stuff
+	paginator = Paginator(orders,20)
+	# Make sure page request is an int. If not, deliver first page.
+	try:
+		page = int(request.GET.get('page', '1'))
+	except ValueError:
+		page = 1
+	# If page request (9999) is out of range, deliver last page of results.
+	try:
+		order_list = paginator.page(page)
+	except (EmptyPage, InvalidPage):
+		order_list = paginator.page(paginator.num_pages)
+		
 	return render_to_response('matrr/orders.html',
 			{'order_list': order_list,
 			 },

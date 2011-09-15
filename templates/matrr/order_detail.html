@@ -30,8 +30,14 @@
       <th>Progress Agreement:</th><td>{{ order.req_progress_agreement }}</td>
   </tr>
   <tr><th>Project Title:</th><td colspan='3'>{{ order.req_project_title }}</td></tr>
-  <tr><th>Experimental Plan:</th><td colspan='3'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>{{ order.req_experimental_plan }}</a></td></tr>
-  <tr><th>Reason:</th><td colspan='3'>{{ order.req_reason }}</td></tr>
+  <tr><th>Experimental Plan:</th>
+    {% if order.req_experimental_plan %}
+    <td colspan='3'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>{{ order.req_experimental_plan }}</a></td>
+    {% else %}
+    <td colspan='3'>None Uploaded</td>
+    {% endif %}
+  </tr>
+  <tr><th>Purpose:</th><td colspan='3'>{{ order.req_reason }}</td></tr>
   {% if order.req_notes %}
     <tr><th>Extra Notes:</th><td colspan='3'>{{ order.req_notes }}</td></tr>
   {% endif %}
@@ -46,9 +52,5 @@
       {% endfor %}
     </table>
   </div>
-  <div>
-  <a href='delete' class='blockLinkDeleteButton'>
-    Delete
-  </a>
-  </div>
+
 {% endblock %}
