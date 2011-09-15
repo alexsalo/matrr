@@ -10,7 +10,8 @@ from django.forms.widgets import Input
 import re
 
 class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
-  def __init__(self, link_base, tissue, attrs=None, choices=()):
+  def __init__(self, link_base, tissue, tis_request, attrs=None, choices=()):
+    self.tis_request = tis_request
     self.tissue = tissue
     self.link_base = link_base
     super(CheckboxSelectMultipleLink, self).__init__(attrs, choices)
@@ -98,6 +99,8 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 
 
   def render(self, name, value, attrs=None, choices=()):
+    print self.tissue
+    print self.link_base
     if value is None: value = []
     has_id = attrs and 'id' in attrs
     final_attrs = self.build_attrs(attrs, name=name)
@@ -131,17 +134,36 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
         assignment = 'Housing Control'
       else:
         assignment = 'Control'
-
+#      import pdb
+#      pdb.set_trace()
+      verifications = self.tissue.tissue_verification_set.filter(monkey=monkey,tissue_request=self.tis_request)
       if self.tissue:
-        availability = self.tissue.get_monkey_availability(monkey)
-        if availability == Availability.Available:
-          availability_str = 'Available'
-        elif availability == Availability.In_Stock:
-          availability_str = 'In Stock'
-        elif availability == Availability.Unavailable:
-          availability_str = 'Unavailable'
-
-        if availability == Availability.Unavailable:
+        suf = False
+        verif = False
+        if len(verifications) > 0:
+        
+          for ver in verifications:
+            if ver.inventory.inv_status == 'Sufficient':
+                suf = True
+            elif ver.inventory.inv_status == 'Insufficient':
+                verif = True
+        if suf:
+          availability_str = 'Sufficient'
+        elif verif:
+          availability_str = 'Insufficient'
+        else:
+          availability_str = 'Unverified'
+#        availability = self.tissue.get_monkey_availability(monkey)
+#        if availability == Availability.Available:
+#          availability_str = 'Available'
+#        elif availability == Availability.In_Stock:
+#          availability_str = 'In Stock'
+#        elif availability == Availability.Unavailable:
+#          availability_str = 'Unavailable'
+        print self.tis_request.rtt_tissue_request_id 
+        print monkey.mky_id
+        print self.tissue.tst_type_id
+        if availability_str == 'Unverified' or availability_str == 'Insufficient':
           output.append(u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td>%s </td><td>%s</td></tr>' % ( self.link_base,
                                      mky_real_id,
                                      self.link_base,
