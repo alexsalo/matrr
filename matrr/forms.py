@@ -22,11 +22,12 @@ def trim_help_text(text):
 class TissueRequestForm(ModelForm):
 	def __init__(self, req_request, tissue, *args, **kwargs):
 		self.instance = None
+		print "this one"
 		self.req_request = req_request
 		self.tissue = tissue
 		super(TissueRequestForm, self).__init__(*args, **kwargs)
-		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTable(link_base='/monkeys/', tissue=self.tissue,
-																		tis_request=self.instance)
+		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTableNoVerification(link_base='/monkeys/', tissue=self.tissue,
+																		)
 		self.fields['monkeys'].queryset = self.req_request.cohort.monkey_set.all()
 		# change the help text to match the checkboxes
 		self.fields['monkeys'].help_text =\
