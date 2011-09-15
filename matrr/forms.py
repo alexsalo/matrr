@@ -25,7 +25,8 @@ class TissueRequestForm(ModelForm):
 		self.req_request = req_request
 		self.tissue = tissue
 		super(TissueRequestForm, self).__init__(*args, **kwargs)
-		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTable(link_base='/monkeys/', tissue=self.tissue)
+		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTable(link_base='/monkeys/', tissue=self.tissue,
+																		tis_request=self.instance)
 		self.fields['monkeys'].queryset = self.req_request.cohort.monkey_set.all()
 		# change the help text to match the checkboxes
 		self.fields['monkeys'].help_text =\
@@ -74,9 +75,7 @@ class CartCheckoutForm(ModelForm):
 	class Meta:
 		model = Request
 		exclude = ('request_status')
-		widgets = {'req_project_title': forms.TextInput(attrs={'size': 50}),
-			   'req_notes': forms.Textarea(attrs={'rows': 4}),
-			   'req_reason': forms.Textarea(attrs={'rows': 6})}
+		widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
 
 
 
@@ -142,7 +141,8 @@ class TissueRequestProcessForm(ModelForm):
 	def __init__(self, *args, **kwargs):
 		super(ModelForm, self).__init__(*args, **kwargs)
 		self.fields['accepted_monkeys'].widget = CheckboxSelectMultipleLinkByTable(link_base='/monkeys/',
-																			tissue=self.instance.get_tissue())
+																			tissue=self.instance.get_tissue(),
+																			tis_request=self.instance)
 		self.fields['accepted_monkeys'].required = False
 		self.fields['accepted_monkeys'].queryset = self.instance.monkeys.all()
 		# change the help text to match the checkboxes
