@@ -1,9 +1,9 @@
 
 # /
-/.gitignore/
+/.gitignore
 /.idea/
-/.DS_Store/
+/.DS_Store
 /.komodotools/
-/*.pyc/
+/.pyc
 /*.komodoproject
 /local_settings.py
