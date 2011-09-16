@@ -1,87 +1,92 @@
 {% with tissue_request=form.instance %}
-{% for datum in tissue_request.get_data %}
-  {% if forloop.counter == 1 %}
-    <div class="headline">{{ datum.0 }}: {{ datum.1 }}</div>
-    <div style="float:left; color: #4E4E4E;">
-      {% include 'matrr/review/item_availability.html'%}
-     <!-- {% include 'matrr/review/item_inventory.html'%} -->
-    </div>
-  {% else %}
-    <div style="float:right; color: #4E4E4E; clear:right;">{{ datum.0 }}: {{ datum.1 }}</div>
-  {% endif %}
-{% endfor %}
-<div class='clearfix'></div>
-<br style='height: 0.1em; margin-bottom: 0em; padding: 0em;'/>
+	{% for datum in tissue_request.get_data %}
+		{% if forloop.counter == 1 %}
+			<div class="headline">{{ datum.0 }}: {{ datum.1 }}</div>
+			<div style="float:left; color: #4E4E4E;">
+				{% include 'matrr/review/item_availability.html' %}
+				<!-- {% include 'matrr/review/item_inventory.html'%} -->
+			</div>
+		{% else %}
+			<div style="float:right; color: #4E4E4E; clear:right;">{{ datum.0 }}: {{ datum.1 }}</div>
+		{% endif %}
+	{% endfor %}
+	<div class='clearfix'></div>
+	<br style='height: 0.1em; margin-bottom: 0em; padding: 0em;'/>
 
-<table class='reviews_table'>
-  <tr><th>Reviewer:</th>
-  {% for review in reviews %}
-    <td class='spacing'></td>
-    <td>{{ review.user }}</td>
-  {% endfor %}
-  </tr>
-  
-<tbody>
-  {% if tissue_request.has_notes %}
-    <tr><th class='tissue_info'>Notes:</th>
-      <td class='tissue_info' colspan='9'>{{ tissue_request.get_notes }}</td></tr>
-  {% endif %}
+	<table class='reviews_table'>
+		<tr>
+			<th>Reviewer:</th>
+			{% for review in reviews %}
+				<td class='spacing'></td>
+				<td>{{ review.user }}</td>
+			{% endfor %}
+		</tr>
 
-  {# display the review info for each tissue request #}
-  <tr>
-    <th>Scientific Merit:</th>
-    {% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
-      <td class='spacing'></td>
-      {% if tissue_request_review.is_finished %}
-      <td class='review-color-{{ tissue_request_review.get_merit }}'>
-        {{ tissue_request_review.get_merit }}
-      </td>
-      {% else %}
-      <td class='review-color-incomplete'>
-      </td>
-      {% endif %}
-    {% endfor %}
-  </tr>
-  <tr>
-    <th>Quantity:</th>
-    {% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
-      <td class='spacing'></td>
-      {% if tissue_request_review.is_finished %}
-      <td class='review-color-{{ tissue_request_review.quantity_css_value }}'>
-        {{ tissue_request_review.get_quantity }}
-      </td>
-      {% else %}
-      <td class='review-color-incomplete'>
-      </td>
-      {% endif %}
-    {% endfor %}
-  </tr>
-  <tr>
-    <th>Priority:</th>
-    {% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
-      <td class='spacing'></td>
-      {% if tissue_request_review.is_finished %}
-      <td class='review-color-{{ tissue_request_review.get_priority }}'>
-        {{ tissue_request_review.get_priority }}
-      </td>
-      {% else %}
-      <td class='review-color-incomplete'>
-      </td>
-      {% endif %}
-    {% endfor %}
-  </tr>
-</tbody>
+		<tbody>
+		{% if tissue_request.has_notes %}
+			<tr>
+				<th class='tissue_info'>Notes:</th>
+				<td class='tissue_info' colspan='9'>{{ tissue_request.get_notes }}</td>
+			</tr>
+		{% endif %}
+
+		{# display the review info for each tissue request #}
+		<tr>
+			<th>Scientific Merit:</th>
+			{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
+				<td class='spacing'></td>
+				{% if tissue_request_review.is_finished %}
+					<td class='review-color-{{ tissue_request_review.get_merit }}'>
+						{{ tissue_request_review.get_merit }}
+					</td>
+				{% else %}
+					<td class='review-color-incomplete'>
+					</td>
+				{% endif %}
+			{% endfor %}
+		</tr>
+		<tr>
+			<th>Quantity:</th>
+			{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
+				<td class='spacing'></td>
+				{% if tissue_request_review.is_finished %}
+					<td class='review-color-{{ tissue_request_review.quantity_css_value }}'>
+						{{ tissue_request_review.get_quantity }}
+					</td>
+				{% else %}
+					<td class='review-color-incomplete'>
+					</td>
+				{% endif %}
+			{% endfor %}
+		</tr>
+		<tr>
+			<th>Priority:</th>
+			{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
+				<td class='spacing'></td>
+				{% if tissue_request_review.is_finished %}
+					<td class='review-color-{{ tissue_request_review.get_priority }}'>
+						{{ tissue_request_review.get_priority }}
+					</td>
+				{% else %}
+					<td class='review-color-incomplete'>
+					</td>
+				{% endif %}
+			{% endfor %}
+		</tr>
+		</tbody>
 
 
-<table class="common_right">
-  {% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
-    {% if tissue_request_review.get_notes %}
-        <tr><th>Comments:</th>
-          <td>{{ tissue_request_review.get_notes }}</td></tr>
-    {% endif %}
-  {% endfor %}    
-</table>
+		<table class="common_right">
+			{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
+				{% if tissue_request_review.get_notes %}
+					<tr>
+						<th>Comments:</th>
+						<td>{{ tissue_request_review.get_notes }}</td>
+					</tr>
+				{% endif %}
+			{% endfor %}
+		</table>
 
-</table>
-<br>
+	</table>
+	<br>
 {% endwith %}

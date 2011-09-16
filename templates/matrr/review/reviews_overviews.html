@@ -1,49 +1,49 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class='large-headline'>
-{% block title %}Pending Requests{% endblock %}
-</div>
-{% if req_requests|length == 0 %}
-  <div class="messages">
-	<div class="info">
-            There are no pending requests to approve.
+	<div class='large-headline'>
+		{% block title %}Pending Requests{% endblock %}
 	</div>
-  </div>
-{% else %}
+	{% if req_requests|length == 0 %}
+		<div class="messages">
+			<div class="info">
+				There are no pending requests to approve.
+			</div>
+		</div>
+		{% else %}
 
-<table class='common'>
-  <tr>
-    <th>Cohort</th>
-    <th>User</th> 
-    <th>Date Submitted</th>
-    {% for reviewer in reviewers %}
-      <th>{{ reviewer }}</th>
-      {% endfor %}
-  </tr>
-{% for req_request in req_requests %}
-  <tr>
-    <td nowrap>{{ req_request.cohort.coh_cohort_name }}</td>
-    <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>
-      {% if req_request.user|lower == 'dummy_user_for_past_requests'%}Generic User
-      {% else %}{{ req_request.user }}
-      {% endif %}</a></td>
-    <td nowrap>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+		<table class='common'>
+			<tr>
+				<th>Cohort</th>
+				<th>User</th>
+				<th>Date Submitted</th>
+				{% for reviewer in reviewers %}
+					<th>{{ reviewer }}</th>
+				{% endfor %}
+			</tr>
+			{% for req_request in req_requests %}
+				<tr>
+					<td nowrap>{{ req_request.cohort.coh_cohort_name }}</td>
+					<td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>
+						{% if req_request.user|lower == 'dummy_user_for_past_requests' %}Generic User
+							{% else %}{{ req_request.user }}
+						{% endif %}</a></td>
+					<td nowrap>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
 
-{% for item in req_request.complete %}
-{% if item == "pending" %}
-  <td style="color: red" align="center">{{ item }}</td>
-  {% else %}
-  <td style="color: green" align="center">{{ item }}</td>   
-  {% endif %}
+					{% for item in req_request.complete %}
+						{% if item == "pending" %}
+							<td style="color: red" align="center">{{ item }}</td>
+						{% else %}
+							<td style="color: green" align="center">{{ item }}</td>
+						{% endif %}
 
-{% endfor %}
+					{% endfor %}
 
-    <td><a href='/reviews_overviews/{{ req_request.req_request_id }}/' class='blockLinkButton'>Overview</a></td>
-  </tr>
-{% endfor %}
-</table>
-{% endif %}
+					<td><a href='/reviews_overviews/{{ req_request.req_request_id }}/' class='blockLinkButton'>Overview</a></td>
+				</tr>
+			{% endfor %}
+		</table>
+	{% endif %}
 
 
 {% endblock %}
