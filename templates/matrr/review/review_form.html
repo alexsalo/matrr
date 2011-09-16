@@ -16,11 +16,7 @@
 		<table id=eighty class='margin'>
 			<tr>
 				<th>Cohort:</th>
-				<td>
-					<a href='{{ req_request.cohort.get_url }}'>
-						{{ req_request.cohort }}
-					</a>
-				</td>
+				<td><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></td>
 			</tr>
 			<tr>
 				<th>User:</th>
@@ -51,11 +47,15 @@
 				<td>{{ req_request.req_progress_agreement }}</td>
 			</tr>
 			{% if req_request.req_notes %}
-				<tr>
-					<th>Extra Notes:</th>
-					<td colspan='4'>{{ req_request.req_notes }}</td>
-				</tr>
+			<tr>
+				<th>Extra Notes:</th>
+				<td colspan='4'>{{ req_request.req_notes }}</td>
+			</tr>
 			{% endif %}
+			<tr>
+				<th>Total Estimate Cost:</th>
+				<td>${{ req_request.get_total_estimated_cost|floatformat:2 }}</td>
+			</tr>
 			{{ form }}
 		</table>
 

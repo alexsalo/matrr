@@ -587,7 +587,8 @@ class TissueRequest(models.Model):
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
 			['Fix', self.rtt_fix_type],
-			['Amount', str(self.rtt_amount) + self.unit.unt_unit_name]]
+			['Amount', str(self.rtt_amount) + self.unit.unt_unit_name],
+			['Estimated Cost', "$%.2f"%self.get_estimated_cost()]]
 
 	def get_type_url(self):
 		return self.tissue_type.category
@@ -626,7 +627,9 @@ class TissueRequest(models.Model):
 			monkey_cost += peripheral
 		else:
 			monkey_cost += (brain + peripheral)*.5
-		return monkey_cost * self.monkeys.count()
+
+		estimated_cost = monkey_cost * self.monkeys.count()
+		return estimated_cost
 
 	def get_tiv_collisions(self):
 		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id).exclude(tissue_request=None)
