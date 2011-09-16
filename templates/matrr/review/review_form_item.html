@@ -1,35 +1,48 @@
 {% load tissue_filters %}
 
-<div id=eighty class='margin'  ><!-- style='border-style:solid;border-width:2px;' -->
-  {% with tissue_request=tform.instance.get_request  %}
-    <table >
-    {% for datum in tissue_request.get_data %}
-      <tr><th>{{ datum.0 }}:</th><td>{{ datum.1 }}</td></tr>
-    {% endfor %}
-    {% if tissue_request.has_notes %}
-      <tr><th>Notes:</th><td>{{ tissue_request.get_notes }}</td></tr>
-    {% endif %}
-    </table>
-    <div class='clearfix'>
-    {% include 'matrr/review/item_availability.html' %}
-  <!--  {% include 'matrr/review/item_inventory.html' %} -->
-    </div>
-  {% endwith %}
+<div id=eighty class='margin'><!-- style='border-style:solid;border-width:2px;' -->
+	{% with tissue_request=tform.instance.get_request %}
+		<table>
+			{% for datum in tissue_request.get_data %}
+				<tr>
+					<th>{{ datum.0 }}:</th>
+					<td>{{ datum.1 }}</td>
+				</tr>
+			{% endfor %}
+			{% if tissue_request.has_notes %}
+				<tr>
+					<th>Notes:</th>
+					<td>{{ tissue_request.get_notes }}</td>
+				</tr>
+			{% endif %}
+		</table>
+		<div class='clearfix'>
+			{% include 'matrr/review/item_availability.html' %}
+			<!--  {% include 'matrr/review/item_inventory.html' %} -->
+		</div>
+	{% endwith %}
 
-  <table id=full >
-  {% for error in tform.non_field_errors %}
-    <tr><td colspan='4'>{{ error }}</td></tr>
-  {% endfor %}
-  {% for field in tform.visible_fields %}
-    <tr><th><label for='id_{{ field.html_name }}'>{{ field.label }}</label>
-    {% if field.help_text %}
-      <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png' alt='help icon'/>
-        <span>{{ field.help_text }}</span></a>
-    {% endif %}
-    </th><td colspan='5'>{{ field }}</td></tr>
-    {% if field.errors %}
-      <tr><td align=right>Error:</td><td class='field-error' colspan='5'>{{ field.errors }}</td></tr>
-    {% endif %}
-  {% endfor %}
-  </table>
+	<table id=full>
+		{% for error in tform.non_field_errors %}
+			<tr>
+				<td colspan='4'>{{ error }}</td>
+			</tr>
+		{% endfor %}
+		{% for field in tform.visible_fields %}
+			<tr>
+				<th><label for='id_{{ field.html_name }}'>{{ field.label }}</label>
+					{% if field.help_text %}
+						<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png' alt='help icon'/>
+							<span>{{ field.help_text }}</span></a>
+					{% endif %}
+				</th>
+				<td colspan='5'>{{ field }}</td></tr>
+			{% if field.errors %}
+				<tr>
+					<td align=right>Error:</td>
+					<td class='field-error' colspan='5'>{{ field.errors }}</td>
+				</tr>
+			{% endif %}
+		{% endfor %}
+	</table>
 </div>

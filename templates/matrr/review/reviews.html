@@ -1,59 +1,59 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Reviews
+	Reviews
 {% endblock %}
 
 {% block content %}
-<div style='margin-bottom:30px;'>
-  <div class='large-headline'>
-    Pending Reviews
-  </div>
-  {% if num_unfinished > 0 %}
-  <table class='review-table'>
-    <tr>
-      <th>Cohort</th>
-      <th>User</th> 
-      <th>Date Submitted</th>
-    </tr>
-  {% for review in unfinished_reviews %}
-    <tr>
-      <td>{{ review.req_request.cohort.coh_cohort_name }}</td>
-      <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ review.req_request.user }}</a></td>
-      <td>{{ review.req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
-      <td><a class='blockLinkButton' href='/reviews/{{ review.rvs_review_id }}/'>Review</a></td>
-    </tr>
-  {% endfor %}
-  </table>
-  {% else %}
-  <div class="messages">
-	<div class="info">
-            You have no pending requests to review.
+	<div style='margin-bottom:30px;'>
+		<div class='large-headline'>
+			Pending Reviews
+		</div>
+		{% if num_unfinished > 0 %}
+			<table class='review-table'>
+				<tr>
+					<th>Cohort</th>
+					<th>User</th>
+					<th>Date Submitted</th>
+				</tr>
+				{% for review in unfinished_reviews %}
+					<tr>
+						<td>{{ review.req_request.cohort.coh_cohort_name }}</td>
+						<td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ review.req_request.user }}</a></td>
+						<td>{{ review.req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+						<td><a class='blockLinkButton' href='/reviews/{{ review.rvs_review_id }}/'>Review</a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			<div class="messages">
+				<div class="info">
+					You have no pending requests to review.
+				</div>
+			</div>
+		{% endif %}
 	</div>
-  </div>
-  {% endif %}
-</div>
 
-<div>
-  {% if num_finished > 0 %}
-  <div class='large-headline'>
-    Finished Reviews
-  </div>
-  <table class='review-table'>
-    <tr>
-      <th>Cohort</th>
-      <th>User</th> 
-      <th>Date Submitted</th>
-    </tr>
-  {% for review in finished_reviews %}
-    <tr>
-      <td>{{ review.req_request.cohort.coh_cohort_name }}</td>
-      <td>{{ review.req_request.user }}</td> 
-      <td>{{ review.req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
-      <td><a class='blockLinkButton' href='/reviews/{{ review.rvs_review_id }}/'>Edit</a></td>
-    </tr>
-  {% endfor %}
-  </table>
-  {% endif %}
-</div>
+	<div>
+		{% if num_finished > 0 %}
+			<div class='large-headline'>
+				Finished Reviews
+			</div>
+			<table class='review-table'>
+				<tr>
+					<th>Cohort</th>
+					<th>User</th>
+					<th>Date Submitted</th>
+				</tr>
+				{% for review in finished_reviews %}
+					<tr>
+						<td>{{ review.req_request.cohort.coh_cohort_name }}</td>
+						<td>{{ review.req_request.user }}</td>
+						<td>{{ review.req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+						<td><a class='blockLinkButton' href='/reviews/{{ review.rvs_review_id }}/'>Edit</a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% endif %}
+	</div>
 {% endblock %}

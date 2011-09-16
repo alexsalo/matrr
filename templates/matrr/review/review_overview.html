@@ -81,14 +81,17 @@
 						{% if review.rvs_notes != None and review.rvs_notes != '' %}
 							<td colspan='9'>{{ review.rvs_notes }}</td>
 						{% else %}
-							<td colspan='9'><div class='small'>No notes</div></td>
+							<td colspan='9'>
+								<div class='small'>No notes</div>
+							</td>
 							</tr>
 						{% endif %}
 				{% endfor %}
 
 			</table>
-		<br>
-		    <div class="headline"> </div>
+			<br>
+
+			<div class="headline"></div>
 			<div>
 				{% if req_request.request_status.rqs_status_name == 'Submitted' %}
 					<input type='submit' class='blockLinkCheckoutButton' value='Process Request'/>
