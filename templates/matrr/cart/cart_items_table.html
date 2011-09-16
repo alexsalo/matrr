@@ -21,7 +21,7 @@
 		</tr>
 		<tr>
 			<th align='right' colspan="3">Estimated Cost:</th>
-			<td align='left'>${{ item.get_estimated_cost }}</td>
+			<td align='left'>${{ item.get_estimated_cost|floatformat:2 }}</td>
 		</tr>
 		{% if item.has_notes %}
 			<tr>
@@ -34,5 +34,5 @@
 </table>
 
 <div class='right clearfix' style='padding-right:5pt'>
-	Estimated Total: ${{ cart.get_total_estimated_cost }}
+	Estimated Total: ${{ cart.get_total_estimated_cost|floatformat:2 }}
 </div>
