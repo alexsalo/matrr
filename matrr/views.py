@@ -1,19 +1,18 @@
 # Create your views here.
 from django.forms.models import modelformset_factory
-from django.forms.models import modelformset_factory
+from django.forms.models import formset_factory
 from django.template import RequestContext
 from django.http import Http404, HttpResponse
 from django.shortcuts import  render_to_response, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.core.mail import send_mail
 import settings
 from matrr.forms import *
 from matrr.models import *
 import math
-import datetime
 from datetime import datetime
 from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
@@ -942,7 +941,7 @@ def order_delete(request, req_request_id):
 								  context_instance=RequestContext(request))
 
 
-def tissue_verification_list(request):
+def tissue_verification(request):
 	TissueVerificationFormSet = formset_factory(TissueInventoryVerificationForm, extra=0)
 	if request.method == "POST":
 		formset = TissueVerificationFormSet(request.POST)
@@ -985,32 +984,3 @@ def tissue_verification_list(request):
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
-
-def tissue_verification(request, pk):
-	tiv = TissueInventoryVerification.objects.get(pk=pk)
-	tss = tiv.tissue_sample
-	if request.POST:
-		tivform = TissueInventoryVerificationForm(request.POST)
-		if tivform.is_valid():
-			data = tivform.cleaned_data
-			tss.tss_location=data['location']
-			tss.tss_freezer=data['freezer']
-			tss.tss_details=data['details']
-			tss.tss_sample_quantity=data['quantity']
-			tss.tss_units=data['units']
-			tss.save()
-
-			tiv.inventory = data['inventory']
-			tiv.save()
-			return redirect('/verification')
-		else:
-			messages.error(request, "form not valid")
-	else:
-		tivform = TissueInventoryVerificationForm(initial={'freezer': tss.tss_freezer,
-												 'location': tss.tss_location,
-												 'quantity': tss.tss_sample_quantity,
-												 'units': tss.units,
-												 'details': tss.tss_details,
-												 'inventory': tiv.inventory})
-
-	return render_to_response('matrr/verification.html', {"form" : tivform}, context_instance=RequestContext(request))

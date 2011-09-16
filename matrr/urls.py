@@ -105,8 +105,6 @@ urlpatterns += patterns('matrr.views',
 if settings.DEVELOPMENT:
     urlpatterns += patterns('matrr.views',
 		url(r'^verification/?$',
-			tissue_verification_list),
-		url(r'^verification/(?P<pk>\d+)$',
 			tissue_verification),
 	)
 
