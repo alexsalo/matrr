@@ -30,7 +30,11 @@
   </tr>
 </table>
 {% if not tissues %}
-	<span class="content-padding"> None</span>
+	<div class="messages">
+	<div class="info">
+            No tissues available.
+  </div>
+  </div>
 {% endif %}
 {% endif %}
 
@@ -58,7 +62,12 @@
   </tr>
 </table>
 {% if not tissues_unavailable %}
-	<span class="content-padding"> None</span>
+	  <div class="messages">
+	<div class="info">
+            All tissues are available.
+	</div>
+	</div>
+  </div>
 {% endif %}
 {% endif %}
 
