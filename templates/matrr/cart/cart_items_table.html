@@ -1,4 +1,4 @@
-<table class='cart_table' width='95%'>
+<table class='cart_table' width='100%'>
   {% for item in cart_items %}
     <tbody>
     <tr>
@@ -33,6 +33,6 @@
   {% endfor %}
 </table>
 
-<div class='right clearfix'>
+<div class='right clearfix' style='padding-right:5pt'>
   Estimated Total: ${{ cart.get_total_estimated_cost }}
 </div>
