@@ -25,7 +25,7 @@
         <th>Referred By:</th><td>{{ req_request.req_referred_by }}</td>
       </tr>
       <tr>
-        <th>Progress Agreement:</th><td>{{ req_request.req_progress_agreement }}</td>
+		  <th>Progress Agreement:</th><td>{{ req_request.req_progress_agreement }}</td>
         <th>Experimental Plan:</th>
         <td>
           {% if req_request.req_experimental_plan %}
@@ -35,6 +35,9 @@
           {% endif %}
         </td>
       </tr>
+	  <tr>
+		  <th>Safety Agreement:</th><td>{{ req_request.req_safety_agreement }}</td>
+	  </tr>
       <tr>
         <th>Project Title:</th><td colspan='3'>{{ req_request.req_project_title }}</td>
       </tr>
@@ -49,7 +52,7 @@
       <tr>
         <th>Shipped to:</th>
         <td>{{ account.act_shipping_name }}</td>
-        <th>MTA</th>
+        <th>MTA:</th>
         <td>
           {% if req_request.user.mta_set.count %}
             The user has submitted at least one MTA.

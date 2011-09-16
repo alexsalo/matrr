@@ -147,8 +147,7 @@ class TissueRequestProcessForm(ModelForm):
 		self.fields['accepted_monkeys'].required = False
 		self.fields['accepted_monkeys'].queryset = self.instance.monkeys.all()
 		# change the help text to match the checkboxes
-		self.fields['accepted_monkeys'].help_text =\
-		trim_help_text(unicode(self.fields['accepted_monkeys'].help_text))
+		self.fields['accepted_monkeys'].help_text = ''
 
 
 	class Meta:
