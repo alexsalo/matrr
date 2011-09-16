@@ -613,7 +613,20 @@ class TissueRequest(models.Model):
 		return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
 
 	def get_estimated_cost(self):
-		return self.tissue_type.tst_cost * self.monkeys.count()
+		brain=250		#  Base brain tissue cost
+		peripheral=100	#  Base peripheral tissue cost
+		special = 100	#  Cost for special fixation
+
+		monkey_cost = 0
+		if self.rtt_fix_type != "Flash Frozen":
+			monkey_cost += special
+		if "Brain" in self.tissue_type.category.cat_name:
+			monkey_cost += brain
+		elif "Peripheral" in self.tissue_type.category.cat_name:
+			monkey_cost += peripheral
+		else:
+			monkey_cost += (brain + peripheral)*.5
+		return monkey_cost * self.monkeys.count()
 
 	def get_tiv_collisions(self):
 		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id).exclude(tissue_request=None)
