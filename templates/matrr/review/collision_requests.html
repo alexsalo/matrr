@@ -1,8 +1,8 @@
 {% if not collisions %}None{% endif %}
 {% for collision in collisions %}
 	<a href="/reviews_overviews/{{ collision.req_request_id }}/"
-	   onclick='javascript:window.open("{{ SITE_ROOT }}/reviews_overviews/{{ collision.req_request_id }}/");return false;'>
-		{{ collision.req_request_id }}<img src="{{ STATIC_URL }}images/arrow_popup.png" width="8" height="8" style='vertical-align: text-top' alt='external link'/>
+	   onclick='javascript:window.open("/reviews_overviews/{{ collision.req_request_id }}/");return false;'>
+		{{ collision.user }}<img src="{{ STATIC_URL }}images/arrow_popup.png" width="8" height="8" style='vertical-align: text-top' alt='external link'/>
 
 	</a>
 	{% if not forloop.last %}, {% endif %}
