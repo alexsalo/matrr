@@ -14,11 +14,11 @@
 					<table style="width:100%;">
 						<tr></tr>{# hack to remove the color and add a tiny space between this table and the titleblock #}
 						<tr>
-							<td align="center"><input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='width:100px;float: left'/></td>
+							<td align="center"><button type='submit' name='submit' class='blockLinkCheckoutButton' style='width:100px;float: right'>Update</button></td>
 							<td align="center" class='verification_legend unverified'>Unverified</td>
 							<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
 							<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
-							<td align="center"><input type='submit' name='submit' class='blockLinkDeleteButton' value='Export PDF' style='width:100px;float: right'/></td>
+							<td align="center"><button type='submit' name='export' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</button></td>
 						</tr>
 						<tr></tr>{# hack to add a tiny space between this table and the formset #}
 					</table>
@@ -78,10 +78,17 @@
 		{% if form %}
 			<form action='' method='post'>
 				{% csrf_token %}
-				<table class='common'>
-					{{ form.as_p }}
-				</table>
-				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='float: left;'/>
+				<table style="width:100%;">
+						<tr></tr>{# hack to remove the color and add a tiny space between this table and the titleblock #}
+						<tr>
+							<td align="center"><button type='submit' name='submit' class='blockLinkCheckoutButton' style='width:100px;float: right'>Update</button></td>
+							<td align="center" class='verification_legend unverified'>Unverified</td>
+							<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
+							<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
+							<td align="center"><button type='submit' name='export' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</button></td>
+						</tr>
+						<tr></tr>{# hack to add a tiny space between this table and the formset #}
+					</table>
 			</form>
 		{% endif %}
 	</div>
