@@ -27,8 +27,8 @@
 					<div>{{ req_request.req_referred_by }}</div>
 				</div>
 				<div>
-					<div>Progress Agreement:</div>
-					<div>{{ req_request.req_progress_agreement }}</div>
+						<div>Total Estimated Cost:</div>
+						<div>${{ req_request.get_total_estimated_cost|floatformat:2 }}</div>
 					<div>Experimental Plan:</div>
 					<div>
 						{% if req_request.req_experimental_plan %}
@@ -39,7 +39,6 @@
 					</div>
 				</div>
 			</div>
-
 			<div class='div-table'>
 				<div>
 					<div>Project Title:</div>
@@ -56,19 +55,12 @@
 					</div>
 				</div>
 			</div>
-
-			<br>
-			{{ tissue_requests.management_form }}
-			{% for form in tissue_requests %}
-				{% include 'matrr/review/review_overview_item.html' %}
-				{{ form }}
-			{% endfor %}
-
+			<hr>
 			<table>
 				{% if req_request.req_notes != None and req_request.req_notes != '' %}
 					<tr>
-						<th class='tissue_info'>Request Notes:</th>
-						<td class='tissue_info' colspan='9'>{{ req_request.req_notes }}</td>
+						<th>Request Notes:</th>
+						<td colspan='9'>{{ req_request.req_notes }}</td>
 					</tr>
 				{% endif %}
 				<tr>
@@ -87,11 +79,16 @@
 							</tr>
 						{% endif %}
 				{% endfor %}
-
 			</table>
 			<br>
+			{{ tissue_requests.management_form }}
+			{% for form in tissue_requests %}
+				{% include 'matrr/review/review_overview_item.html' %}
+				{{ form }}
+			{% endfor %}
 
-			<div class="headline"></div>
+			<br>
+
 			<div>
 				{% if req_request.request_status.rqs_status_name == 'Submitted' %}
 					<input type='submit' class='blockLinkCheckoutButton' value='Process Request'/>

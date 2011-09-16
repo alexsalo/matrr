@@ -9,6 +9,10 @@
 					<td>{{ datum.1 }}</td>
 				</tr>
 			{% endfor %}
+			<tr>
+				<th>Estimated Cost:</th>
+				<td>${{ tissue_request.get_estimated_cost|floatformat:2 }}</td>
+			</tr>
 			{% if tissue_request.has_notes %}
 				<tr>
 					<th>Notes:</th>
