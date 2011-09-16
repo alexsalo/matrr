@@ -114,7 +114,7 @@ def monkey_detail_view(request, monkey_id):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 def get_or_create_cart(request, cohort):
 	"""
 	This function will get the cart for the cohort if it exists.
@@ -153,7 +153,7 @@ def get_or_create_cart(request, cohort):
 	return cart_request
 
 
-@login_required()
+
 def tissue_shop_detail_view(request, cohort_id, tissue_id):
 	current_cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
 	cart_request = get_or_create_cart(request, current_cohort)
@@ -204,7 +204,7 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 									  context_instance=RequestContext(request))
 
 
-@login_required()
+
 def cart_view(request):
 	# get the context (because it loads the cart as well)
 	context = RequestContext(request)
@@ -221,7 +221,7 @@ def cart_view(request):
 								  context_instance=RequestContext(request))
 
 
-@login_required()
+
 def cart_delete(request):
 	# get the context (because it loads the cart as well)
 	context = RequestContext(request)
@@ -245,7 +245,7 @@ def cart_delete(request):
 	return redirect('/cart')
 
 
-@login_required()
+
 def cart_item_view(request, tissue_request_id):
 	# get the context (because it loads the cart as well)
 	context = RequestContext(request)
@@ -289,7 +289,7 @@ def cart_item_view(request, tissue_request_id):
 										  context_instance=context)
 
 
-@login_required()
+
 def cart_item_delete(request, tissue_request_id):
 	# get the context (because it loads the cart as well)
 	context = RequestContext(request)
@@ -300,14 +300,14 @@ def cart_item_delete(request, tissue_request_id):
 	return delete_cart_item(request, cart_item)
 
 
-@login_required()
+
 def delete_cart_item(request, cart_item):
 	cart_item.delete()
 	messages.success(request, 'Item removed from cart.')
 	return redirect('/cart')
 
 
-@login_required()
+
 def cart_checkout(request):
 	# get the context (because it loads the cart as well)
 	context = RequestContext(request)
@@ -339,7 +339,7 @@ def cart_checkout(request):
 									  context_instance=context)
 
 
-@login_required()
+
 @user_passes_test(lambda u: u.groups.filter(name='Committee').count() != 0, login_url='/denied/')
 def reviews_list_view(request):
 	# get a list of all reviews for the current user
@@ -357,7 +357,7 @@ def reviews_list_view(request):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 def mta_upload(request):
 	# make blank mta instance
 	mta_object = Mta(user=request.user)
@@ -379,7 +379,7 @@ def mta_upload(request):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 def account_shipping(request):
 	# make address form if one does not exist
 	if request.method == 'POST':
@@ -399,12 +399,12 @@ def account_shipping(request):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 def account_view(request):
 	return account_detail_view(request, request.user.id)
 
 
-@login_required()
+
 def account_detail_view(request, user_id):
 	if request.user.id == user_id:
 		edit = True
@@ -425,7 +425,7 @@ def account_detail_view(request, user_id):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 @user_passes_test(lambda u: u.groups.filter(name='Committee').count()or
 							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
@@ -433,7 +433,7 @@ def account_reviewer_view(request, user_id):
 	return account_detail_view(request, user_id)
 
 
-@login_required()
+
 @user_passes_test(lambda u: u.groups.filter(name='Committee').count() != 0, login_url='/denied/')
 def review_detail(request, review_id):
 	# get the review
@@ -467,7 +467,7 @@ def review_detail(request, review_id):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 @user_passes_test(lambda u: u.groups.filter(name='Uberuser').count() != 0, login_url='/denied/')
 def review_overview_list(request):
 	# get a list of all tissue requests that are submitted, but not accepted or rejected
@@ -504,7 +504,7 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 					10 - (math.fabs(5 - tissue_request_review.get_quantity()) * 2))
 
 
-@login_required()
+
 @user_passes_test(lambda u: u.groups.filter(name='Uberuser').count() != 0, login_url='/denied/')
 def review_overview(request, req_request_id):
 	# get the request being reviewed
@@ -553,7 +553,7 @@ def review_overview(request, req_request_id):
 								  context_instance=RequestContext(request))
 
 
-@login_required()
+
 def orders_list(request):
 	# get a list of all requests for the user
 	order_list = ''
@@ -578,7 +578,7 @@ def orders_list(request):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 def order_detail(request, req_request_id):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -593,7 +593,7 @@ def order_detail(request, req_request_id):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 def experimental_plan_view(request, plan):
 	# create the response
 	response = HttpResponse(mimetype='application/force-download')
@@ -672,7 +672,7 @@ def remove_values_from_list(the_list, other_list):
 	return [value for value in the_list if value not in other_list]
 
 
-@login_required()
+
 @user_passes_test(lambda u: u.groups.filter(name='Uberuser').count(), login_url='/denied/')
 def request_review_process(request, req_request_id):
 	# get the tissue request
@@ -792,7 +792,7 @@ def contact_us(request):
 								  context_instance=RequestContext(request))
 
 
-@login_required()
+
 @user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
 							u.groups.filter(name='Committee').count() or
 							u.groups.filter(name='Uberuser').count(),
@@ -865,7 +865,7 @@ def search(request):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 @user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
 							u.groups.filter(name='Committee').count() or
 							u.groups.filter(name='Uberuser').count(),
@@ -898,7 +898,7 @@ def build_shipment(request, req_request_id):
 							  context_instance=RequestContext(request))
 
 
-@login_required()
+
 @user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
 							u.groups.filter(name='Committee').count() or
 							u.groups.filter(name='Uberuser').count(),
@@ -921,7 +921,7 @@ def make_shipping_manifest_latex(request, req_request_id):
 						 outfile=response)
 
 
-@login_required()
+
 def order_delete(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	if req_request.user != request.user:
@@ -941,7 +941,7 @@ def order_delete(request, req_request_id):
 				 'Acceptance': Acceptance, },
 								  context_instance=RequestContext(request))
 
-@login_required()
+
 def tissue_verification_list(request):
 	TissueVerificationFormSet = formset_factory(TissueInventoryVerificationForm, extra=0)
 	if request.method == "POST":
@@ -986,7 +986,6 @@ def tissue_verification_list(request):
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
 
-@login_required()
 def tissue_verification(request, pk):
 	tiv = TissueInventoryVerification.objects.get(pk=pk)
 	tss = tiv.tissue_sample
