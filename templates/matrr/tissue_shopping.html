@@ -44,7 +44,9 @@
 {% endif %}
 <div class='right' style="background-color: #9F6000;background-color: #FEEFB3;padding: 10px;font-size:1.3em;text-align: center">
   <div class='mini-headline'>Estimated Cost (per monkey)</div>
-  ${{ form.tissue.tst_cost }}
+	{% if "Brain" in form.tissue.category.cat_name %}Frozen:  $250<br>Special Process: $350{% endif %}
+	{% if "Peripheral" in form.tissue.category.cat_name %}Frozen:  $100<br>Special Process: $200{% endif %}
+	{% if "Custom" in form.tissue.category.cat_name %}<div class=small>Contact MATRR for price.</div>{% endif %}
 </div>
 <table>
 {% for field in form.visible_fields %}
