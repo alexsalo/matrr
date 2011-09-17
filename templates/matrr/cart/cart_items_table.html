@@ -33,6 +33,9 @@
 	{% endfor %}
 </table>
 
-<div class='right clearfix' style='padding-right:5pt'>
+<div class='right' style='padding-right:5pt;text-align: right'>
 	Estimated Total: ${{ cart.get_total_estimated_cost|floatformat:2 }}
+	<br>
+	<font class='small'> + $10 handling fee.</font>
 </div>
+<div class='clearfix'></div>
