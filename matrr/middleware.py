@@ -1,24 +1,34 @@
 __author__ = 'farro'
 from django.http import HttpResponseRedirect
 from django.conf import settings
-from re import compile
+import re
 
-EXEMPT_URLS = [compile(settings.LOGIN_REDIRECT_URL.lstrip('/'))]
-if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
-    EXEMPT_URLS += [compile(expr) for expr in settings.LOGIN_EXEMPT_URLS]
+class EnforceLoginMiddleware(object):
+	"""
+	http://djangosnippets.org/snippets/1158/
 
-class LoginRequiredMiddleware:
-    """
-    Middleware that requires a user to be authenticated to view any page other
-    than LOGIN_URL. Exemptions to this requirement can optionally be specified
-    in settings via a list of regular expressions in LOGIN_EXEMPT_URLS (which
-    you can copy from your urls.py).
+	Changes made from snippet:
+		Hardcoded URL login.  This shouldn't ever change for matrr
+		Defaults to allowing login page, regardless of PUBLIC_URLS existence.  Stops inf loops.
+		Removed STATIC shenanigans.  I think it was required for older Django, but we don't seem to need it.
+	"""
 
-    Requires authentication middleware and template context processors to be
-    loaded. You'll get an error if they aren't.
-    """
-    def process_request(self, request):
-        if not request.user.is_authenticated():
-            path = request.path_info.lstrip('/')
-            if not any(m.match(path) for m in EXEMPT_URLS):
-                return HttpResponseRedirect(settings.LOGIN_URL)
+	def __init__(self):
+		self.login_url = '/accounts/login/'
+		public_urls = [(re.compile("^%s$" % ( self.login_url[1:] )))]
+		if hasattr(settings,'PUBLIC_URLS'):
+			public_urls += [re.compile(url) for url in settings.PUBLIC_URLS]
+		self.public_urls = tuple(public_urls)
+
+	def process_request(self, request):
+		"""
+		Redirect anonymous users to login_url from non public urls
+		"""
+		try:
+			if request.user.is_anonymous():
+				for url in self.public_urls:
+					if url.match(request.path[1:]):
+						return None
+				return HttpResponseRedirect("%s?next=%s" % (self.login_url, request.path))
+		except AttributeError: #  I have no idea when this could happen.  *shrug*
+			return HttpResponseRedirect("%s?next=%s" % (self.login_url, request.path))

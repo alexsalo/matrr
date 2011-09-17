@@ -65,15 +65,16 @@ STATICFILES_FINDERS = (
 
 # List of regex URLs which do NOT require user to be logged in.
 # Your Login URL MUST be included. 
-LOGIN_EXEMPT_URLS = (
+PUBLIC_URLS = (
 	r'^$',
 	r'^login/?$',
 	r'^logout/?$',
 	r'^accounts/', # django.auth url, NOT matrr's "account" url.  -.-
-	r'^(privacy|data|usage|browser|faq|about|benefits|denied)/', # all non-dynamic pages
+	r'^(privacy|data|usage|browser|faq|about|benefits|denied|fee)/', # all non-dynamic pages.  Should find a way to pull this from matrr.urls
 	r'^contact_us/$',
 	r'^publications/$',
 	)
+
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '@+5ijd@xf%17@7euip67u)%(fq4+3g(83+azo3ia7^f=-(w1u2'
 
@@ -91,8 +92,11 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
-	'matrr.middleware.LoginRequiredMiddleware',
-    )
+
+#	'matrr.middleware.LoginRequiredMiddleware',
+#	'matrr.middleware.RequireLoginMiddleware'
+	'matrr.middleware.EnforceLoginMiddleware',
+	)
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -105,7 +109,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'matrr.context_processors.cart',
     'matrr.context_processors.login_form',
     'matrr.context_processors.group_membership',
-    'matrr.context_processors.unsupported_browser'
+    'matrr.context_processors.unsupported_browser',
+
+	"django.core.context_processors.auth",
     )
 
 TEMPLATE_DIRS = (

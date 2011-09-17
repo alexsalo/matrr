@@ -100,12 +100,14 @@ urlpatterns += patterns('matrr.views',
     url(r'^account/shipping/$', 		account_shipping),
 	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view),
 	url(r'^mta/upload/$', 				mta_upload),
-)
+
+
+	url(r'^verification/?$',
+		tissue_verification),
+	)
 
 if settings.DEVELOPMENT:
     urlpatterns += patterns('matrr.views',
-		url(r'^verification/?$',
-			tissue_verification),
 	)
 
 # I don't know what this does.  if you understand it, please tell me.
