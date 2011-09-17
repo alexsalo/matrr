@@ -11,6 +11,7 @@
     <div style='margin: auto'>
         <form action='' method='post'>
             {% csrf_token %}
+			<center>
             <table class='common'>
                 <tr>
                     <td align='center'>{{ form.terms }}
@@ -23,6 +24,7 @@
                         -dog)|(cat -mouse)</i></font></td>
                 </tr>
             </table>
+			</center>
         </form>
 
         {% if results %}
