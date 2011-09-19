@@ -182,6 +182,7 @@ div{
 
 .verification_border {
 	width: 97%;
+	margin: 5px;
 }
 .verification_legend {
 	width: 20%;
