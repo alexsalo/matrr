@@ -50,4 +50,4 @@ def process_latex(template, context={}, type='pdf', outfile=None):
 def pdflatex(file, type='pdf'):
     call(['pdflatex', '-interaction=nonstopmode',
                       '-output-format', type, file],
-         cwd=dirname(file), stdout=pdflatex.log, stderr=pdflatex.err)
+         cwd=dirname(file), stdout=PIPE, stderr=PIPE)
