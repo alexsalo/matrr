@@ -20,12 +20,16 @@ MATRR Account
 
 <div class='headline'>Shipping Information</div>
   <table class="common">
+  <col style="width:15%"/>
+  <col style="width:35%"/>
+  <col style="width:7%"/>
+  <col style="width:43%"/>
     <tr><td class="text-right-common-td">Shipping Name:</td><td>{{ account_info.act_shipping_name }}</td>
         <td class="text-right-common-td">&nbsp;</td><td>&nbsp;</td></tr>
     <tr><td class="text-right-common-td">Street Address:</td><td>{{ account_info.act_address1 }}</td>
-        <td class="text-right-common-td">City:</td><td>{{ account_info.act_city }}, {{ account_info.act_state }}</td></tr>
+        <td class="text-right-common-td">City:</td><td>{{ account_info.act_city }}{% if account_info.act_city and account_info.act_state %},{% endif %} {{ account_info.act_state }}</td></tr>
     <tr><td class="text-right-common-td">&nbsp;</td><td>{{ account_info.act_address2 }}</td>
-        <td class="text-right-common-td">&nbsp;</td><td>{{ account_info.act_zip }}, {{ account_info.act_country }}</td></tr>
+        <td class="text-right-common-td">&nbsp;</td><td>{{ account_info.act_zip }}{% if account_info.act_zip and account_info.act_country %},{% endif %} {{ account_info.act_country }}</td></tr>
     <tr><td class="text-right-common-td">
       <img src="{{ STATIC_URL }}images/fedex-logo-470.jpg" height='12' width='36' alt='fedex logo'/></td>
         <td>{{ account_info.act_fedex }}</td></tr>
