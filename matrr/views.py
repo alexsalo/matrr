@@ -893,11 +893,11 @@ def make_shipping_manifest_latex(request, req_request_id):
 	account = req_request.user.account
 
 	return process_latex('latex/shipping_manifest.tex',
-			{'req_request': req_request,
-			 'account': req_request.user.account,
-			 'time': datetime.today(),
-			 },
-						 outfile=response)
+														{'req_request': req_request,
+														'account': account,
+														'time': datetime.today(),
+														},
+														outfile=response)
 
 
 def order_delete(request, req_request_id):
