@@ -959,6 +959,10 @@ def tissue_verification(request):
 	tiv_list = TissueInventoryVerification.objects.all().order_by('inventory')
 	for tiv in tiv_list:
 		tss = tiv.tissue_sample
+		try:
+			amount = tiv.tissue_request.get_amount()
+		except AttributeError:
+			amount = "None"
 		tiv_initial = {'primarykey': tiv.tiv_id,
 					   'freezer': tss.tss_freezer,
 					   'location': tss.tss_location,
@@ -969,7 +973,7 @@ def tissue_verification(request):
 					   'monkey': tiv.monkey,
 					   'tissue': tiv.tissue_type,
 					   'notes': tiv.tiv_notes,
-					   'amount': tiv.tissue_request.get_amount(), }
+					   'amount': amount, }
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
