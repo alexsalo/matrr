@@ -38,6 +38,7 @@ def process_latex(template, context={}, type='pdf', outfile=None):
     remove(names['log'])
     remove(names['aux'])
 
+	
     o = file(output).read()
     remove(output)
     if not outfile:
