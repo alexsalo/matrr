@@ -573,6 +573,7 @@ def order_detail(request, req_request_id):
 	return render_to_response('matrr/order_detail.html',
 			{'order': req_request,
 			 'Acceptance': Acceptance,
+			 'shipped': req_request.request_status.rqs_status_name =='Shipped'
 			 },
 							  context_instance=RequestContext(request))
 
