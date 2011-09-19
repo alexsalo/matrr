@@ -27,7 +27,7 @@
       {% endif %}>
       {{ order.request_status }}</td>
     
-      <td>No Shipping Information</td>
+      <td>{% if order.shipment.shp_shipment_date %}{{ order.shipment.shp_shipment_date|date:"m/d/Y" }}{% else %}Order has not shipped.{% endif %}</td>
       <td><a href='{{ order.req_request_id }}'>Details</a></td>
     </tr>
   {% endfor %}

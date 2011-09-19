@@ -348,7 +348,7 @@ class TissueType(models.Model):
 		tissue_samples = TissueSample.objects.filter(monkey=monkey, tissue_type=self)
 		
 		for tissue_sample in tissue_samples:
-			if tissue_sample.tss_sample_quantity > 0:
+			if tissue_sample.tss_sample_quantity > 0 or tissue_sample.tss_sample_quantity is None:
 #		returns In_stock if any of the samples is present and its amount is positive
 #		does not reflect accepted requests
 				return Availability.In_Stock
