@@ -9,6 +9,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.core.mail import send_mail
+from django.utils.encoding import smart_str
 import settings
 from matrr.forms import *
 from matrr.models import *
@@ -570,10 +571,15 @@ def order_detail(request, req_request_id):
 	if req_request.user != request.user and Group.objects.get(name='Committee') not in request.user.groups.all():
 		# if the request does not belong to the user, return a 404 error (alternately, we could give a permission denied message)
 		raise Http404('This page does not exist.')
+	status = req_request.request_status.rqs_status_name
+	processed = False
+	if status == "Accepted" or status == "Rejected" or status == "Partially Accepted":
+		processed = True
 	return render_to_response('matrr/order_detail.html',
 			{'order': req_request,
 			 'Acceptance': Acceptance,
-			 'shipped': req_request.request_status.rqs_status_name =='Shipped'
+			 'shipped': status == 'Shipped',
+			 'processed': processed,
 			 },
 							  context_instance=RequestContext(request))
 
@@ -906,6 +912,12 @@ def order_delete(request, req_request_id):
 		# tissue requests can only be deleted by the
 		# user who made the tissue request.
 		raise Http404('This page does not exist.')
+
+	status = req_request.request_status.rqs_status_name
+	if status == "Accepted" or status == "Rejected" or status == "Partially Accepted":
+		messages.error(request, "You cannot delete an order which has been accepted/rejected.")
+		return redirect('/orders/')
+
 	if request.POST:
 		if request.POST['submit'] == 'yes':
 			req_request.delete()
