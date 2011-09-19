@@ -587,7 +587,7 @@ class TissueRequest(models.Model):
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
 			['Fix', self.rtt_fix_type],
-			['Amount', str(self.rtt_amount) + self.unit.unt_unit_name],
+			['Amount', self.get_amount()],
 			['Estimated Cost', "$%.2f"%self.get_estimated_cost()]]
 
 	def get_type_url(self):
