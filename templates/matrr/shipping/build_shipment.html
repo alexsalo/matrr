@@ -103,7 +103,7 @@
   {% endfor %}
   {# have a button at the print the shipping manifest #}
   <div class='left'>
-    <a href='manifest/' class='blockLinkButton'>Download Shipping Manifest</a>
+    <a href='{% url manifest req_request.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
   </div>
   <div class='right'>
     {% if req_request.shipment.shp_shipment_date %}

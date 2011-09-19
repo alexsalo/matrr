@@ -86,7 +86,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^experimental_plans/(?P<plan>\S+)/?$', experimental_plan_view),
 	url(r'^shipping_overview/$',								shipping_overview),
 	url(r'^shipping/build/(?P<req_request_id>\d+)/$', 			build_shipment),
-	url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$', 	make_shipping_manifest_latex),
+	url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$', 	make_shipping_manifest_latex, name='manifest'),
 
 	#  Order review views
 	url(r'^reviews/$', 						reviews_list_view),
