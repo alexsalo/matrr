@@ -1,66 +1,87 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class='large-headline'>
-    {% block title %}Order Detail{% endblock %}
-  </div>
-  
-  <br/>
-  
-  <table class="common_right">
-  <tr>
-      <th>User:</th><td><a href='{{ SITE_ROOT }}/account/{{ order.user.id }}'>{{ order.user }}</a></td>
-      <th>Cohort:</th><td><a href='{{ order.cohort.get_url }}'>{{ order.cohort }}</a></td>
-  </tr>
-  <tr>
-      <th>Requested On:</th><td>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
-      <th>Status:</th>
-    {% if order.request_status|lower != 'submitted' %}
-      {% if order.request_status|lower != 'rejected' %}
-        <td style='color:green'>
-      {% else %}
-        <td style='color:red'>
-      {% endif %}
-      {{ order.request_status }}</td>
-    {% else %}<td>{{ order.request_status }}</td>
-    {% endif %}
-  </tr>
-  <tr>
-      <th>Referred By:</th><td>{{ order.req_referred_by }}</td>
-      <th>Progress Agreement:</th><td>{{ order.req_progress_agreement }}</td>
-  </tr>
-  <tr><th>Project Title:</th><td colspan='3'>{{ order.req_project_title }}</td></tr>
-  <tr><th>Experimental Plan:</th>
-    {% if order.req_experimental_plan %}
-    <td colspan='3'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>{{ order.req_experimental_plan }}</a></td>
-    {% else %}
-    <td colspan='3'>None Uploaded</td>
-    {% endif %}
-  </tr>
-  <tr><th>Purpose:</th><td colspan='3'>{{ order.req_reason }}</td></tr>
-  {% if order.req_notes %}
-    <tr><th>Extra Notes:</th><td colspan='3'>{{ order.req_notes }}</td></tr>
-  {% endif %}
-</table>
-  {% if order.shipment.shp_shipment_date %}
-<div class='small'>
-  Shipped On: {{ order.shipment.shp_shipment_date|date:"m/d/Y" }}
-</div>
-{% endif %}
+	<div class='large-headline'>
+		{% block title %}Order Detail{% endblock %}
+	</div>
 
-  
-  <div style='margin-top: 20px;'>
-    <div class='headline'>Requested Tissues</div>
-      {% for item in order.tissue_request_set.all %}
-        {% include 'matrr/order_item_detail.html' %}
-      {% endfor %}
-    </table>
-  </div>
-  
-  {% if shipped %}
-   <div class='left'>
-    <a href='{% url manifest order.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
-  </div>
-  {% endif %}
+	<br/>
+
+	<table class="common_right">
+		<tr>
+			<th>User:</th>
+			<td><a href='{{ SITE_ROOT }}/account/{{ order.user.id }}'>{{ order.user }}</a></td>
+			<th>Cohort:</th>
+			<td><a href='{{ order.cohort.get_url }}'>{{ order.cohort }}</a></td>
+		</tr>
+		<tr>
+			<th>Requested On:</th>
+			<td>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
+			<th>Status:</th>
+			{% if order.request_status|lower != 'submitted' %}
+				{% if order.request_status|lower != 'rejected' %}
+					<td style='color:green'>
+						{% else %}
+					<td style='color:red'>
+				{% endif %}
+			{{ order.request_status }}</td>
+			{% else %}
+				<td>{{ order.request_status }}</td>
+			{% endif %}
+		</tr>
+		<tr>
+			<th>Referred By:</th>
+			<td>{{ order.req_referred_by }}</td>
+			<th>Progress Agreement:</th>
+			<td>{{ order.req_progress_agreement }}</td>
+		</tr>
+		<tr>
+			<th>Project Title:</th>
+			<td colspan='3'>{{ order.req_project_title }}</td>
+		</tr>
+		<tr>
+			<th>Experimental Plan:</th>
+			{% if order.req_experimental_plan %}
+				<td colspan='3'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>{{ order.req_experimental_plan }}</a></td>
+			{% else %}
+				<td colspan='3'>None Uploaded</td>
+			{% endif %}
+		</tr>
+		<tr>
+			<th>Purpose:</th>
+			<td colspan='3'>{{ order.req_reason }}</td>
+		</tr>
+		{% if order.req_notes %}
+			<tr>
+				<th>Extra Notes:</th>
+				<td colspan='3'>{{ order.req_notes }}</td>
+			</tr>
+		{% endif %}
+	</table>
+	{% if order.shipment.shp_shipment_date %}
+		<div class='small'>
+			Shipped On: {{ order.shipment.shp_shipment_date|date:"m/d/Y" }}
+		</div>
+	{% endif %}
+
+
+	<div style='margin-top: 20px;'>
+		<div class='headline'>Requested Tissues</div>
+		{% for item in order.tissue_request_set.all %}
+			{% include 'matrr/order_item_detail.html' %}
+		{% endfor %}
+		</table>
+	</div>
+
+	{% if shipped %}
+		<div class='left'>
+			<a href='{% url manifest order.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
+		</div>
+	{% endif %}
+	{% if not processed %}
+		<div>
+			<a href='delete' class='blockLinkDeleteButton'>Delete</a>
+		</div>
+	{% endif %}
 
 {% endblock %}
