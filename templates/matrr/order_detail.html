@@ -57,6 +57,10 @@
     </table>
   </div>
   
-
+  {% if shipped %}
+   <div class='left'>
+    <a href='{% url manifest order.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
+  </div>
+  {% endif %}
 
 {% endblock %}
