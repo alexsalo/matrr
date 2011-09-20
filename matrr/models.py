@@ -887,10 +887,11 @@ class TissueInventoryVerification(models.Model):
 
 	def save(self, *args, **kwargs):
 		try:  ## Set the tissue_sample field
+                        units = Unit.objects.get(unt_unit_name="whole")
 			self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
 																			defaults={'tss_freezer': "No Previous Record",
 																					  'tss_location': "No Previous Record",
-																					  'units': Unit.objects.all()[5]})
+																					  'units': units})
 		## Or write to the note field with error.
 		except TissueSample.MultipleObjectsReturned:
 			self.tissue_sample = self.get_sample()[0]

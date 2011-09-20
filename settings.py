@@ -2,7 +2,8 @@ import os
 
 path = os.path.dirname(os.path.realpath(__file__))
 
-DEBUG = False
+#DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -153,4 +154,3 @@ LOGIN_REDIRECT_URL = '/'
 
 if DEVELOPMENT:
     from develop_settings import *
-
