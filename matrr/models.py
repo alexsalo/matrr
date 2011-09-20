@@ -697,10 +697,9 @@ class TissueRequestReview(models.Model):
 															(7, 7),
 															(8, 8), (9, 9), (10, 10),),
 															help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
-	vtr_quantity = models.PositiveSmallIntegerField('Quantity', null=True, blank=False,
+	vtr_quantity = models.CharField('Quantity', null=True, blank=False, max_length=12,
 													choices=(
-													(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7),
-													(8, 8), (9, 9), (10, 10),),
+													("Too little", "Too little"), ("Appropriate", "Appropriate"), ("Too much", "Too much"),),
 													help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
 	vtr_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
 													choices=(
@@ -723,9 +722,17 @@ class TissueRequestReview(models.Model):
 	def get_merit(self):
 		return self.vtr_scientific_merit
 
-	def get_quantity(self):
-		return self.vtr_quantity
-
+	def get_quantity(self, css=False):
+		if css:
+			if self.vtr_quantity == "Too little":
+				return 0
+			elif self.vtr_quantity == "Too much":
+				return 10
+			else:
+				return 5
+		else:
+			return self.vtr_quantity
+	
 	def get_priority(self):
 		return self.vtr_priority
 
