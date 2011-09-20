@@ -3,6 +3,7 @@ from os import remove
 from os.path import dirname
 from tempfile import NamedTemporaryFile
 from django.template import loader, Context
+from settings import PRODUCTION
 
 '''
 This is a snippet from http://djangosnippets.org/snippets/102/
@@ -49,8 +50,15 @@ def process_latex(template, context={}, type='pdf', outfile=None):
 
 
 def pdflatex(file, type='pdf'):
-	call(['pdflatex', 	'-interaction=nonstopmode',
-		  				'-output-format', type,
-						'-fmt', "/web/www/pdflatex/pdflatex",
-						file],
-	      cwd=dirname(file), stdout=PIPE, stderr=PIPE)
+	if PRODUCTION:
+		call(['pdflatex', 	'-interaction=nonstopmode',
+							'-output-format', type,
+							'-fmt', "/web/www/pdflatex/pdflatex",
+							file],
+			  cwd=dirname(file), stdout=PIPE, stderr=PIPE)
+	else:
+		call(['pdflatex', 	'-interaction=nonstopmode',
+							'-output-format', type,
+							#'-fmt', "/web/www/pdflatex/pdflatex",
+							file],
+			  cwd=dirname(file), stdout=PIPE, stderr=PIPE)
