@@ -541,6 +541,9 @@ def review_overview(request, req_request_id):
 	# get the request being reviewed
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	no_monkeys = False
+	
+	
+	
 	if req_request.request_status.rqs_status_name != 'Submitted' and req_request.request_status.rqs_status_name != 'Cart':
 		no_monkeys = True
 	
@@ -572,6 +575,12 @@ def review_overview(request, req_request_id):
 
 			sort_tissues_and_add_quantity_css_value(tissue_request_forms)
 
+			for form in tissue_request_forms:
+				form.instance.not_accepted_monkeys = list()
+				for monkey in form.instance.monkeys.all():
+					if monkey not in form.instance.accepted_monkeys.all():
+						form.instance.not_accepted_monkeys.append(monkey)
+
 			return render_to_response('matrr/review/review_overview.html',
 					{'reviews': reviews,
 					 'req_request': req_request,
@@ -586,7 +595,12 @@ def review_overview(request, req_request_id):
 		# get the tissue requests
 		tissue_request_forms = TissueRequestFormSet(queryset=req_request.tissue_request_set.all(),
 													prefix='tissue_requests')
-
+		for form in tissue_request_forms:
+			form.instance.not_accepted_monkeys = list()
+			for monkey in form.instance.monkeys.all():
+				if monkey not in form.instance.accepted_monkeys.all():
+					form.instance.not_accepted_monkeys.append(monkey)
+		
 		# get the reviews for the request
 		reviews = list(req_request.review_set.all())
 		reviews.sort(key=lambda x: x.user.username)
