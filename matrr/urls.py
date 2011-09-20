@@ -91,8 +91,9 @@ urlpatterns += patterns('matrr.views',
 
 	#  Order review views
 	url(r'^reviews/$', 						reviews_list_view),
-	url(r'^reviews/(?P<review_id>\d+)/$', 	review_detail),
-	url(r'^reviews_overviews/$', 			review_overview_list),
+	url(r'^reviews/(?P<review_id>\d+)/$', 	review_detail, name='review-detail'),
+	url(r'^reviews_overviews/$', 			review_overview_list, name='review-overview'),
+    url(r'^reviews_history/$',              review_history_list, name='review-history'),
 	url(r'^reviews_overviews/(?P<req_request_id>\d+)/$', 			review_overview),
 	url(r'^reviews_overviews/(?P<req_request_id>\d+)/process/?$', 	request_review_process),
 
