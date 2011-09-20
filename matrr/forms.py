@@ -22,16 +22,15 @@ def trim_help_text(text):
 class TissueRequestForm(ModelForm):
 	def __init__(self, req_request, tissue, *args, **kwargs):
 		self.instance = None
-		print "this one"
 		self.req_request = req_request
 		self.tissue = tissue
 		super(TissueRequestForm, self).__init__(*args, **kwargs)
+		self.fields['rtt_fix_type'].required = False
 		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTableNoVerification(link_base='/monkeys/', tissue=self.tissue,
 																		)
 		self.fields['monkeys'].queryset = self.req_request.cohort.monkey_set.all()
 		# change the help text to match the checkboxes
-		self.fields['monkeys'].help_text =\
-		trim_help_text(unicode(self.fields['monkeys'].help_text))
+		self.fields['monkeys'].help_text = trim_help_text(unicode(self.fields['monkeys'].help_text))
 
 	def get_request_id(self):
 		return self.instance.rtt_tissue_request_id
@@ -40,6 +39,8 @@ class TissueRequestForm(ModelForm):
 		super(TissueRequestForm, self).clean()
 		cleaned_data = self.cleaned_data
 
+		if not self.req_request.cohort.coh_upcoming or cleaned_data['rtt_fix_type'] == "":
+			cleaned_data['rtt_fix_type'] = "Flash Frozen"
 		fix_type = cleaned_data.get('rtt_fix_type')
 		if self.req_request and\
 		   self.tissue and\

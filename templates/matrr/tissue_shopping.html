@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
 {% block extra_js %}
-{{ block.super }}
-  <script type="text/javascript" src="{{ STATIC_URL }}js/widgets/fix_type_selection.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+	{{ block.super }}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/widgets/fix_type_selection.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
 {% endblock %}
 
 {% block cart %}
-{% include 'matrr/cart/cart.html' %}
+	{% include 'matrr/cart/cart.html' %}
 {% endblock %}
 
 {% block warning %}
-  {% include 'matrr/cart/cohort_warning.html' %}
+	{% include 'matrr/cart/cohort_warning.html' %}
 {% endblock %}
 
 {% block login %}
@@ -19,66 +19,100 @@
 
 
 {% block content %}
-  <div id="large-headline">Tissue Request</div>
-  <img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_4.png" width='700' height='25'
-       alt='order timeline'/>
-<div id="headline">{% block title %}{{ page_title }}{% endblock %}</div>
-  <br/>
-  
+	<div id="large-headline">Tissue Request</div>
+	<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_4.png" width='700' height='25'
+		 alt='order timeline'/>
+	<div id="headline">{% block title %}{{ page_title }}{% endblock %}</div>
+	<br/>
 
-<form action='' method='post'>
-{% csrf_token %}
-{# Include the hidden fields in the form #}
-{% for hidden in form.hidden_fields %}
-  {{ hidden }}
-{% endfor %}
 
-{% if form.non_field_errors %}
-<div class="messages">
-  <div class="error">
-{% for error in form.non_field_errors %}
-  {{ error }}
-{% endfor %}
-  </div>
-</div>
-{% endif %}
-<div class='right' style="background-color: #9F6000;background-color: #FEEFB3;padding: 10px;font-size:1.3em;text-align: center">
-  <div class='mini-headline'>Estimated Cost (per monkey)</div>
-	{% if "Brain" in form.tissue.category.cat_name %}Frozen:  $250<br>Special Process: $350{% endif %}
-	{% if "Peripheral" in form.tissue.category.cat_name %}Frozen:  $100<br>Special Process: $200{% endif %}
-	{% if "Custom" in form.tissue.category.cat_name %}<div class=small>Contact MATRR for price.</div>{% endif %}
-</div>
-<table>
-{% for field in form.visible_fields %}
-  <tr>
-    <th>
-      <label for='{{ field.html_name }}'>
-        {% if field.label == 'Notes' and form.tissue.category.cat_name == 'Custom' %}
-          Detailed Description of the Request
-        {% else %}
-          {{ field.label }}
-        {% endif %}
-      </label>
-  {% if field.help_text %}
-    <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/>
-      <span>
-        {% if field.label == 'Notes' and form.tissue.category.cat_name == 'Custom' %}
-          Please provide a detailed description of the tissue you are requesting.
-        {% else %}
-          {{ field.help_text }}
-        {% endif %}
-      </span></a>
-  {% endif %}
-  </th><td colspan='3'>{{ field }}</td>
-  </tr>
-  {% if field.errors %}
-    <tr><td align=right>Error:</td><td class='field-error' colspan='3'>{{ field.errors }}</td></tr>
-  {% endif %}
-{% endfor %}
-</table>
-{% block buttons %}
-<button type='submit' value='Submit'>Add to cart</button>
-{% endblock %}
-</form>
+	<form action='' method='post'>
+		{% csrf_token %}
+		{# Include the hidden fields in the form #}
+		{% for hidden in form.hidden_fields %}
+			{{ hidden }}
+		{% endfor %}
+
+		{% if form.non_field_errors %}
+			<div class="messages">
+				<div class="error">
+					{% for error in form.non_field_errors %}
+						{{ error }}
+					{% endfor %}
+				</div>
+			</div>
+		{% endif %}
+		<div class='right' style="background-color: #9F6000;background-color: #FEEFB3;padding: 10px;font-size:1.3em;text-align: center">
+			<div class='mini-headline'>Estimated Cost (per monkey)</div>
+			{% if "Brain" in form.tissue.category.cat_name %}Frozen:  $250<br>Special Process: $350{% endif %}
+			{% if "Peripheral" in form.tissue.category.cat_name %}Frozen:  $100<br>Special Process: $200{% endif %}
+			{% if "Custom" in form.tissue.category.cat_name %}
+				<div class=small>Contact MATRR for price.</div>{% endif %}
+		</div>
+		<table>
+			{% for field in form.visible_fields %}
+				{% if cohort.coh_upcoming %}
+				<tr>
+					<th>
+						<label for='{{ field.html_name }}'>
+							{% if field.label == 'Tissue Notes' and form.tissue.category.cat_name == 'Custom' %}
+								Detailed Description of the Request
+							{% else %}
+								{{ field.label }}
+							{% endif %}
+						</label>
+						{% if field.help_text %}
+							<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/>
+								<span>
+									{% if field.label == 'Notes' and form.tissue.category.cat_name == 'Custom' %}
+										Please provide a detailed description of the tissue you are requesting.
+									{% else %}
+										{{ field.help_text }}
+									{% endif %}
+								</span></a>
+						{% endif %}
+					</th>
+					<td colspan='3'>{{ field }}</td>
+				</tr>
+				{% else %}
+					{% if field.label != "Fixation" %}
+					<tr>
+						<th>
+							<label for='{{ field.html_name }}'>
+								{% if field.label == 'Tissue Notes' and form.tissue.category.cat_name == 'Custom' %}
+									Detailed Description of the Request
+								{% else %}
+									{{ field.label }}
+								{% endif %}
+							</label>
+							{% if field.help_text %}
+								<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/>
+									<span>
+										{% if field.label == 'Notes' and form.tissue.category.cat_name == 'Custom' %}
+											Please provide a detailed description of the tissue you are requesting.
+										{% else %}
+											{{ field.help_text }}
+										{% endif %}
+									</span></a>
+							{% endif %}
+						</th>
+						<td colspan='3'>{{ field }}</td>
+					</tr>
+					{% endif %}
+				{% endif %}
+
+				{% if field.errors %}
+					<tr>
+						<td align=right>Error:</td>
+						<td class='field-error' colspan='3'>{{ field.errors }}</td>
+					</tr>
+				{% endif %}
+
+			{% endfor %}
+		</table>
+		{% block buttons %}
+			<button type='submit' value='Submit'>Add to cart</button>
+		{% endblock %}
+	</form>
 {% endblock %}
 
