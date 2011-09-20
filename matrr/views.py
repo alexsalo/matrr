@@ -64,7 +64,7 @@ def display_cohorts(request, **kwargs):
 		template_name = 'matrr/available_cohorts.html'
 
 	## Paginator stuff
-	if len(cohorts) > 5:
+	if len(cohorts) > 0:
 		paginator = Paginator(cohorts, 5)
 		# Make sure page request is an int. If not, deliver first page.
 		try:
