@@ -489,7 +489,7 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 		for tissue_request_review in tissue_request.sorted_tissue_request_reviews:
 			if tissue_request_review.is_finished():
 				tissue_request_review.quantity_css_value = int(
-					10 - (math.fabs(5 - tissue_request_review.get_quantity()) * 2))
+					10 - (math.fabs(5 - tissue_request_review.get_quantity(css=True)) * 2))
 
 
 @user_passes_test(lambda u: u.groups.filter(name='Uberuser').count() != 0, login_url='/denied/')
