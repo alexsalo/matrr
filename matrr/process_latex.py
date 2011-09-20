@@ -1,3 +1,4 @@
+from posix import fdopen
 from subprocess import call, PIPE
 from os import remove, rename
 from os.path import dirname
@@ -48,6 +49,11 @@ def process_latex(template, context={}, type='pdf', outfile=None):
 		return outfile
 
 def pdflatex(file, type='pdf'):
-	call(['pdflatex', '-interaction=nonstopmode',
-		  '-output-format', type, file],
-									   cwd=dirname(file), stdout=PIPE, stderr=PIPE)
+	fd = open("/tmp/foo.log", mode="a")
+#	bar = fdopen(fd, "w+" )
+	call(['pdflatex',
+		  '-interaction=nonstopmode',
+		  '-output-format', type,
+		  '-fmt', "/web/www/pdflatex/pdflatex",
+		  file],
+									   cwd=dirname(file), stdout=fd, stderr=fd)
