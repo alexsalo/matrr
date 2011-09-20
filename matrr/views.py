@@ -525,7 +525,7 @@ def review_overview(request, req_request_id):
 	# get the request being reviewed
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	no_monkeys = False
-	if req_request.rqs_status_name != 'Submitted' and req_request.rqs_status_name != 'Cart':
+	if req_request.request_status.rqs_status_name != 'Submitted' and req_request.request_status.rqs_status_name != 'Cart':
 		no_monkeys = True
 	
 	

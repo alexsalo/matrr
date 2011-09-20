@@ -87,8 +87,30 @@
 				{% if not no_monkeys %}
 				{{ form }}
 				{% else %}
+					{% if tissue_request.accepted_monkeys.all %}
 					{% with tissue_request=form.instance %}
-					{{ tissue_request.accepted_monkeys }}
+					Monkey accepted for this tissue request:
+						<table class="full-width" >
+						<thead><td></td><td>Monkey</td><td>Assignment</td></thead>
+					{% for monkey in tissue_request.accepted_monkeys.all %}
+						<tr><td>{{ monkey.mky_real_id }}</td><td>
+						      {% if monkey.mky_drinking %}
+        						Ethanol
+        						{% else %}
+        						{% if monkey.mky_housing_control %}
+        						Housing Control
+        						{% else %}
+        						Control
+        						{% endif %}
+        					  {% endif %}
+						
+						</td></tr>
+					{% endfor %}
+					{% endwith %}
+					</table>
+					{% else %}
+					No monkeys were accepted for this tissue request.
+					{% endif %}
 				{% endif %}
 			{% endfor %}
 
