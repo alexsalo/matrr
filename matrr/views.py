@@ -5,7 +5,7 @@ from django.template import RequestContext
 from django.http import Http404, HttpResponse
 from django.shortcuts import  render_to_response, redirect, get_object_or_404
 from django.template.loader import render_to_string
-from django.core.paginator import Paginator, InvalidPage, EmptyPage
+from django.core.paginator import Paginator, InvalidPage, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -20,7 +20,6 @@ from djangosphinx.models import SphinxQuerySet
 from process_latex import process_latex
 from django.db.models import Q
 from django.core.urlresolvers import reverse
-
 
 def index_view(request):
 	index_context = {'event_list': Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name')[:5],
@@ -476,6 +475,23 @@ def review_history_list(request):
 			if req_request.complete:
 				verified_requests.append(req_request)
 	
+	
+	paginator = Paginator(verified_requests, 20) # Show 25 contacts per page
+
+	if request.GET and 'page' in request.GET:
+		page = request.GET.get('page')
+	else:
+		page = 1
+
+	try:
+		verified_requests = paginator.page(page)
+	except PageNotAnInteger:
+		# If page is not an integer, deliver first page.
+		verified_requests = paginator.page(1)
+	except EmptyPage:
+		# If page is out of range (e.g. 9999), deliver last page of results.
+		verified_requests = paginator.page(paginator.num_pages)
+
 	
 					
 	return render_to_response('matrr/review/reviews_history.html',
