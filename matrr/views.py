@@ -18,6 +18,8 @@ from datetime import datetime
 from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
 from process_latex import process_latex
+from django.db.models import Q
+from django.core.urlresolvers import reverse
 
 
 def index_view(request):
@@ -456,6 +458,32 @@ def review_detail(request, review_id):
 							  context_instance=RequestContext(request))
 
 
+def review_history_list(request):
+	
+	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
+	request_status_cart = RequestStatus.objects.get(rqs_status_name='Cart')
+	req_requests = Request.objects.filter(Q(request_status__gte=0), ~Q(request_status=request_status), ~Q(request_status=request_status_cart)).order_by('-req_modified_date')
+	
+	group = Group.objects.get(name='Committee')
+	reviewers = group.user_set.all().order_by('-username')
+	verified_requests = list()
+	for req_request in req_requests:
+		req_request.complete = list()
+		for reviewer in reviewers:
+			for review in req_request.review_set.all():
+				if reviewer == review.user:
+					req_request.complete.append(req_request.request_status.rqs_status_name)
+			if req_request.complete:
+				verified_requests.append(req_request)
+	
+	
+					
+	return render_to_response('matrr/review/reviews_history.html',
+			{'req_requests': verified_requests,
+			 'reviewers': reviewers,
+			 },
+							  context_instance=RequestContext(request))
+
 @user_passes_test(lambda u: u.groups.filter(name='Uberuser').count() != 0, login_url='/denied/')
 def review_overview_list(request):
 	# get a list of all tissue requests that are submitted, but not accepted or rejected
@@ -496,9 +524,25 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 def review_overview(request, req_request_id):
 	# get the request being reviewed
 	req_request = Request.objects.get(req_request_id=req_request_id)
-
+	no_monkeys = False
+	if req_request.rqs_status_name != 'Submitted' and req_request.rqs_status_name != 'Cart':
+		no_monkeys = True
+	
+	
 	TissueRequestFormSet = modelformset_factory(TissueRequest, form=TissueRequestProcessForm, extra=0)
 
+	if  'HTTP_REFERER' in request.META:
+		back_url = request.META['HTTP_REFERER']
+#		ref = request.META['HTTP_REFERER'].rsplit('/')[-2]
+#		history = reverse('review-history')
+#		if ref == history.strip('/'):
+#			no_monkeys = True
+##			do not display monkeys
+	else:
+		back_url = ""
+
+	
+			
 	if request.POST:
 		tissue_request_forms = TissueRequestFormSet(request.POST, prefix='tissue_requests')
 
@@ -517,6 +561,8 @@ def review_overview(request, req_request_id):
 					 'req_request': req_request,
 					 'tissue_requests': tissue_request_forms,
 					 'Availability': Availability,
+					 'back_url': back_url,
+					 'no_monkeys' : no_monkeys
 					 },
 									  context_instance=RequestContext(request))
 
@@ -536,6 +582,8 @@ def review_overview(request, req_request_id):
 				 'req_request': req_request,
 				 'tissue_requests': tissue_request_forms,
 				 'Availability': Availability,
+				  'back_url': back_url,
+				  'no_monkeys' : no_monkeys
 				 },
 								  context_instance=RequestContext(request))
 
