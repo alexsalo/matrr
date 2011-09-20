@@ -147,8 +147,8 @@ class Monkey(models.Model):
 #									 max_length=20,
 #									 help_text='Please enter the date the monkey was born on.')
 	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True,
-                                     max_length=20,
-                                     help_text='Please enter the date the monkey was born on.')
+									 max_length=20,
+									 help_text='Please enter the date the monkey was born on.')
 	mky_weight = models.FloatField('Weight', blank=True, null=True,
 									 help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
 	mky_drinking = models.BooleanField('Drinking', null=False,
@@ -339,22 +339,22 @@ class TissueType(models.Model):
 		return False
 
 	def get_monkey_availability(self, monkey):
-		
+
 		if monkey.cohort.coh_upcoming:
 #			just idea: is possible a situation when we know that some tissue of this monkey will never be in stock?
 # 			if yes, we should probably track it somehow and reflect here, but not important right now
 			return Availability.Available
-		
+
 		tissue_samples = TissueSample.objects.filter(monkey=monkey, tissue_type=self)
-		
+
 		for tissue_sample in tissue_samples:
 			if tissue_sample.tss_sample_quantity > 0 or tissue_sample.tss_sample_quantity is None:
 #		returns In_stock if any of the samples is present and its amount is positive
 #		does not reflect accepted requests
 				return Availability.In_Stock
-		
+
 		return Availability.Unavailable
-		
+
 ### 90% sure i just broke this.  -jf, 8/29/2011
 	def get_availability(self, monkey):
 		availability = Availability.Unavailable
@@ -481,7 +481,7 @@ class Request(models.Model, DiffingMixin):
 	def print_setf_in_detail(self):		
 		return "Project title: %s\nRequested: %s\nCohort: %s\nRequest reason: %s\nNotes: %s" % (self.req_project_title,
 							str(self.req_request_date), self.cohort.coh_cohort_name, self.req_reason, self.req_notes or "None")
-		
+
 	def get_requested_tissue_count(self):
 		return self.tissue_request_set.count()
 
@@ -498,7 +498,7 @@ class Request(models.Model, DiffingMixin):
 		for item in self.tissue_request_set.all():
 			total += item.get_estimated_cost()
 		return total
-	
+
 	def get_tiv_collisions(self):
 		tissue_requests = self.tissue_request_set.all()
 		collisions = TissueInventoryVerification.objects.none()
@@ -506,23 +506,23 @@ class Request(models.Model, DiffingMixin):
 		for tissue_request in tissue_requests:
 			collisions |= tissue_request.get_tiv_collisions()
 		return collisions
-	
+
 	def __get_collision_request(self, collisions):
 		collision_requests = list()
 		for collision in collisions:
 			if collision != self:
 				collision_requests.append(collision.tissue_request.req_request)
-		
+
 		return collision_requests
-	
+
 	def get_sub_req_collisions_for_monkey(self, monkey):
 		collisions = self.get_tiv_collisions()
-		
+
 		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'), monkey=monkey)
-		
+
 		return self.__get_collision_request(collisions)
-		
-	
+
+
 	def get_sub_req_collisions(self):
 		collisions = self.get_tiv_collisions()
 
@@ -852,7 +852,7 @@ class InventoryStatus(models.Model):
 
 class TissueInventoryVerification(models.Model):
 	tiv_id = models.AutoField(primary_key=True)
-	
+
 	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set',
 									   db_column='rtt_tissue_request_id',on_delete=models.SET_NULL)
 	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
@@ -887,7 +887,7 @@ class TissueInventoryVerification(models.Model):
 
 	def save(self, *args, **kwargs):
 		try:  ## Set the tissue_sample field
-                        units = Unit.objects.get(unt_unit_name="whole")
+			units = Unit.objects.get(unt_unit_name="whole")
 			self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
 																			defaults={'tss_freezer': "No Previous Record",
 																					  'tss_location': "No Previous Record",

@@ -245,7 +245,7 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 #          availability_str = 'Unavailable'
 
         if availability_str == 'Unverified' or availability_str == 'Insufficient':
-          output.append(u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td>%s </td><td>%s</td></tr>' % ( self.link_base,
+          output.append(u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=orange>%s </font></td><td>%s</td></tr>' % ( self.link_base,
                                      mky_real_id,
                                      self.link_base,
                                      mky_real_id,
@@ -253,7 +253,7 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
                                      availability_str,
                                      assignment,))
         else:
-          output.append(u'<tr><td><label%s>%s </label></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td>%s </td><td>%s</td></tr>' % (label_for,
+          output.append(u'<tr><td><label%s>%s </label></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=green>%s </font></td><td>%s</td></tr>' % (label_for,
                                                             rendered_cb,
                                                             self.link_base,
                                                             mky_real_id,
