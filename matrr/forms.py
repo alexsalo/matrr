@@ -42,18 +42,10 @@ class TissueRequestForm(ModelForm):
 		if not self.req_request.cohort.coh_upcoming or cleaned_data['rtt_fix_type'] == "":
 			cleaned_data['rtt_fix_type'] = "Flash Frozen"
 		fix_type = cleaned_data.get('rtt_fix_type')
-		if self.req_request and\
-		   self.tissue and\
-		   fix_type and\
-		   (self.instance is None or\
-			(self.instance.rtt_tissue_request_id is not None and\
-			 self.instance.rtt_fix_type != fix_type )
-			   )\
-		and\
-		   TissueRequest.objects.filter(\
-			   req_request=self.req_request,\
-			   tissue_type=self.tissue,\
-			   rtt_fix_type=fix_type).count() > 0:
+
+		if self.req_request and self.tissue and fix_type \
+		and (self.instance is None		or		(self.instance.rtt_tissue_request_id is not None and self.instance.rtt_fix_type != fix_type )) \
+		and TissueRequest.objects.filter(req_request=self.req_request,tissue_type=self.tissue,rtt_fix_type=fix_type).count() > 0:
 			raise forms.ValidationError("You already have this tissue and fix in your cart.")
 
 		# Always return the full collection of cleaned data.
