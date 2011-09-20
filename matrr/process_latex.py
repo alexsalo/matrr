@@ -1,6 +1,5 @@
-from posix import fdopen
 from subprocess import call, PIPE
-from os import remove, rename
+from os import remove
 from os.path import dirname
 from tempfile import NamedTemporaryFile
 from django.template import loader, Context
@@ -14,7 +13,7 @@ def process_latex(template, context={}, type='pdf', outfile=None):
 		Processes a template as a LaTeX source file.
 		Output is either being returned or stored in outfile (using outfile.write()).
 		At the moment only pdf output is supported.
-		"""
+	"""
 
 	t = loader.get_template(template)
 	c = Context(context)
@@ -48,12 +47,10 @@ def process_latex(template, context={}, type='pdf', outfile=None):
 		#rename(output, outfile)
 		return outfile
 
+
 def pdflatex(file, type='pdf'):
-	fd = open("/tmp/foo.log", mode="a")
-#	bar = fdopen(fd, "w+" )
-	call(['pdflatex',
-		  '-interaction=nonstopmode',
-		  '-output-format', type,
-		  '-fmt', "/web/www/pdflatex/pdflatex",
-		  file],
-									   cwd=dirname(file), stdout=fd, stderr=fd)
+	call(['pdflatex', 	'-interaction=nonstopmode',
+		  				'-output-format', type,
+						'-fmt', "/web/www/pdflatex/pdflatex",
+						file],
+	      cwd=dirname(file), stdout=PIPE, stderr=PIPE)
