@@ -256,6 +256,8 @@ class MonkeyToDrinkingExperiment(models.Model):
 								   help_text='Please enter the weight of the monkey.')
 	mtd_notes = models.TextField('Notes', blank=True, null=True,
 								 help_text='Use this space to enter anything about the experiment that does not fit in another field.')
+	
+	mtd_etoh_bout = models.IntegerField('Etoh Bout', null=True, blank=True, help_text='Total etoh bouts (less than 300 seconds between consumption of etoh).')
 
 	def __unicode__(self):
 		return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey)
