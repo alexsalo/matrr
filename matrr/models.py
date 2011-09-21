@@ -1,3 +1,5 @@
+#encoding=utf-8
+
 from django.db import models
 from django.contrib.auth.models import User, Group
 from django.db.models.query import QuerySet
@@ -7,16 +9,10 @@ from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-
-class PercentageValidator(MaxValueValidator, MinValueValidator):
 	
-	def __init__(self):
-		MaxValueValidator.__init__(self, 100)
-		MinValueValidator.__init__(self, 0)
-	
-	def __call__(self, value):
-		MaxValueValidator.__call__(self, value)
-		MinValueValidator.__call__(self, value)
+def percentage_validator(value):
+	MinValueValidator(0).__call__(value)
+	MaxValueValidator(100).__call__(value)
 
 
 
@@ -270,7 +266,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 								   help_text='Please enter the weight of the monkey.')
 	mtd_notes = models.TextField('Notes', blank=True, null=True,
 								 help_text='Use this space to enter anything about the experiment that does not fit in another field.')
-	mtd_pct_etoh = models.FloatField('EtOH %', blank=True, null=True, validators=[PercentageValidator,],
+	mtd_pct_etoh = models.FloatField('EtOH %', blank=True, null=True, validators=[percentage_validator,],
 									 help_text='EtOH as a percentage of total drinking that day.')
 	mtd_etoh_g_kg = models.FloatField('EtOH g/kg', blank=True, null=True,
 									help_text='EtOH grams per kilogram')
@@ -318,7 +314,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 										help_text='Induction data (blank for 22 hour data): Length of “State 3”')		
 	mtd_vol_1st_bout = models.FloatField('Vol. 1st Bout', blank=True, null=True,
 										help_text='Volume of the first bout')
-	mtd_pct_etoh_in_1st_bout = models.FloatField('% Etoh in First Bout', blank=True, null=True, validators=[PercentageValidator,],
+	mtd_pct_etoh_in_1st_bout = models.FloatField('% Etoh in First Bout', blank=True, null=True, validators=[percentage_validator,],
 												help_text='Percentage of the day’s total etOH consumed in the first bout')
 	mtd_drinks_1st_bout = models.IntegerField('# Drinks 1st Bout', blank=True, null=True,
 											help_text='Number of drinks in the first bout')
@@ -330,7 +326,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 													help_text='Induction data (blank for 22 hour data): Percentage of fixed intervals without drinking in “State 1”')
 	mtd_latency_1st_drink = models.IntegerField('Latency to 1st Drink', blank=True, null=True,
 											help_text='Time from session start to first etOH consumption')
-	mtd_pct_exp_etoh = models.FloatField('Exp. EtOH %', blank=True, null=True, validators=[PercentageValidator,],
+	mtd_pct_exp_etoh = models.FloatField('Exp. EtOH %', blank=True, null=True, validators=[percentage_validator,],
 										help_text='Experimental etOH percentage (left blank)')
 	mtd_st_1_ioc_avg = models.FloatField('St. 1 IOC Avg', blank=True, null=True,
 										help_text='Induction data (blank for 22 hour data):  “State 1” Index of Curvature average')
