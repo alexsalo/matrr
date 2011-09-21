@@ -5,6 +5,20 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import datetime
 from string import lower, replace
+from django.core.validators import MaxValueValidator, MinValueValidator
+
+
+class PercentageValidator(MaxValueValidator, MinValueValidator):
+	
+	def __init__(self):
+		MaxValueValidator.__init__(self, 100)
+		MinValueValidator.__init__(self, 0)
+	
+	def __call__(self, value):
+		MaxValueValidator.__call__(self, value)
+		MinValueValidator.__call__(self, value)
+
+
 
 class Availability:
 	'''
@@ -256,8 +270,82 @@ class MonkeyToDrinkingExperiment(models.Model):
 								   help_text='Please enter the weight of the monkey.')
 	mtd_notes = models.TextField('Notes', blank=True, null=True,
 								 help_text='Use this space to enter anything about the experiment that does not fit in another field.')
-	
-	mtd_etoh_bout = models.IntegerField('Etoh Bout', null=True, blank=True, help_text='Total etoh bouts (less than 300 seconds between consumption of etoh).')
+	mtd_pct_etoh = models.FloatField('EtOH %', blank=True, null=True, validators=[PercentageValidator,],
+									 help_text='EtOH as a percentage of total drinking that day.')
+	mtd_etoh_g_kg = models.FloatField('EtOH g/kg', blank=True, null=True,
+									help_text='EtOH grams per kilogram')
+	mtd_etoh_bout = models.IntegerField('EtOH Bout', null=True, blank=True,
+									 help_text='Total etOH bouts (less than 300 seconds between consumption of etOH).')
+	mtd_etoh_drink_bout = models.FloatField('EtOH Drink/Bout', blank=True, null=True,
+										help_text = 'Average number of drinks (less than 5 seconds between consumption of etOH) per etOH bout')
+	mtd_veh_bout = models.IntegerField('Veh Bout', blank=True, null=True,
+									help_text='Total H20 bouts (less than 300 seconds between consumption of H20)')
+	mtd_veh_drink_bout = models.FloatField('Veh Drink/Bout', null=True, blank=True,
+										help_text='Average number of drinks (less than 5 seconds between consumption of H20) per H20 bout')
+	mtd_etoh_conc = models.FloatField('EtOH Conc.', null=True, blank=True,
+									help_text='Ethanol concentration.')
+	mtd_etoh_mean_drink_length = models.FloatField('EhOH Mean Drink Length', null=True, blank=True,
+												help_text='Mean length for ethanol drinks (less than 5 seconds between consumption of etOH is a continuous drink).')
+	mtd_etoh_median_idi = models.FloatField('EtOH Media IDI', blank=True, null=True,
+										help_text='Median time between drinks (always at least 5 seconds because 5 seconds between consumption defines a new drink).')
+	mtd_etoh_mean_drink_vol = models.FloatField('EtOH Mean Drink Vol', null=True, blank=True,
+											help_text='Mean volume of etOH drinks')
+	mtd_etoh_mean_bout_length = models.FloatField('EtOH Mean Bout Length', null=True, blank=True,
+												help_text='Mean length for ethanol bouts (less than 300 seconds between consumption of etOH is a continuous bout)')
+	mtd_etoh_media_ibi = models.FloatField('EtOH Median IBI', null=True, blank=True,
+										help_text='Median inter-bout interval (always at least 300 seconds, because 300 seconds between consumption defines a new bout)')
+	mtd_etoh_mean_bout_vol = models.FloatField('EtOH Mean Bout Vol', null=True, blank=True,
+										help_text='Mean volume of ethanol bouts')
+	mtd_etoh_st_1 = models.FloatField('EtOH St.1', blank=True, null=True,
+									help_text='Induction data (blank for 22 hour data): ethanol consumed during “State 1”, or the fixed pellet interval portion')
+	mtd_etoh_st_2 = models.FloatField('EtOH St.2', blank=True, null=True,
+									help_text='Induction data (blank for 22 hour data):  ethanol consumed during “State 2”, or the pellet time-out between fixed pellet interval portion and the fixed ratio portion')
+	mtd_etoh_st_3 = models.FloatField('EtOH St.3', blank=True, null=True,
+									help_text='Induction data (blank for 22 hour data):   ethanol consumed during “State 3”, or the fixed ratio portion, after pellet time out completed')
+	mtd_veh_st_2 = models.FloatField('Veh St.2', blank=True, null=True,
+									help_text='Induction data (blank for 22 hour data):   H20 consumed during “State 2”, or the pellet time out portion')
+	mtd_veh_st_3 = models.FloatField('Veh St.3', blank=True, null=True,
+									help_text='Induction data (blank for 22 hour data):   H20 consumed during “State 3”, or the fixed ratio portion')
+	mtd_pellets_st_1 = models.IntegerField('Pellets St.1', blank=True, null=True,
+										help_text='Induction data (blank for 22 hour data): Pellets delivered during “State 1”')
+	mtd_pellets_st_3 = models.IntegerField('Pellets St.3', blank=True, null=True,	
+										help_text='Induction data (blank for 22 hour data): Pellets delivered during “State 3”')
+	mtd_length_st_1 = models.IntegerField('Length St.1', blank=True, null=True,
+										help_text='Induction data (blank for 22 hour data): Length of “State 1”')
+	mtd_length_st_2 = models.IntegerField('Length St.2', blank=True, null=True,
+										help_text='Induction data (blank for 22 hour data): Length of “State 2”')
+	mtd_length_st_3 = models.IntegerField('Length St.3', blank=True, null=True,
+										help_text='Induction data (blank for 22 hour data): Length of “State 3”')		
+	mtd_vol_1st_bout = models.FloatField('Vol. 1st Bout', blank=True, null=True,
+										help_text='Volume of the first bout')
+	mtd_pct_etoh_in_1st_bout = models.FloatField('% Etoh in First Bout', blank=True, null=True, validators=[PercentageValidator,],
+												help_text='Percentage of the day’s total etOH consumed in the first bout')
+	mtd_drinks_1st_bout = models.IntegerField('# Drinks 1st Bout', blank=True, null=True,
+											help_text='Number of drinks in the first bout')
+	mtd_mean_drink_vol_1st_bout = models.FloatField('Mean Drink Vol 1st Bout', blank=True, null=True,
+													help_text='Mean drink volume of the first bout')
+	mtd_fi_wo_drinking_st_1 = models.IntegerField('FI w/o Drinking St.1', blank=True, null=True,
+												help_text='Induction data (blank for 22 hour data): Number of fixed intervals without drinking in “State 1”')
+	mtd_pct_fi_with_drinking_st_1 = models.FloatField('% Of FI with Drinking St.1', blank=True, null=True,
+													help_text='Induction data (blank for 22 hour data): Percentage of fixed intervals without drinking in “State 1”')
+	mtd_latency_1st_drink = models.IntegerField('Latency to 1st Drink', blank=True, null=True,
+											help_text='Time from session start to first etOH consumption')
+	mtd_pct_exp_etoh = models.FloatField('Exp. EtOH %', blank=True, null=True, validators=[PercentageValidator,],
+										help_text='Experimental etOH percentage (left blank)')
+	mtd_st_1_ioc_avg = models.FloatField('St. 1 IOC Avg', blank=True, null=True,
+										help_text='Induction data (blank for 22 hour data):  “State 1” Index of Curvature average')
+	mtd_max_bout = models.IntegerField('Max Bout #', blank=True, null=True,
+										help_text='Number of the bout with maximum ethanol consumption')
+	mtd_max_bout_start = models.IntegerField('Max Bout Start', blank=True, null=True,
+											help_text='Starting time in seconds of maximum bout (bout with largest ethanol consumption)')
+	mtd_max_bout_end = models.IntegerField('Max Bout End', blank=True, null=True,
+										help_text='Ending time in seconds of maximum bout (bout with largest ethanol consumption)')
+	mtd_max_bout_length = models.IntegerField('Max Bout Length', blank=True, null=True,
+											help_text='Length of maximum bout (bout with largest ethanol consumption)')
+	mtd_max_bout_vol = models.FloatField('Max Bout Volume', blank=True, null=True,
+										help_text='Volume of maximum bout')
+	mtd_pct_max_bout_vol_total_etoh = models.FloatField('Max Bout Volume as % of Total Etoh', blank=True, null=True,
+													help_text='Maximum bout volume as a percentage of total ethanol consumed that day')
 
 	def __unicode__(self):
 		return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey)
