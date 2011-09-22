@@ -94,11 +94,17 @@
 
 
 
-						<table class="full-width" >
-						<thead><td>Monkey</td><td>Assignment</td></thead>
+						<table class="common" style="width:30%">
+						<thead><th>Monkey</th><th>Assignment</th></thead>
 					{% for monkey in tissue_request.accepted_monkeys.all %}
 					
-						<tr><td>{{ monkey.mky_real_id }}</td><td>
+						<tr><td>
+						
+						<a href="{% url monkey_detail_coh monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+						{{ monkey.mky_real_id }}
+						<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
+						
+						</td><td>
 						      {% if monkey.mky_drinking %}
         						Ethanol
         						{% else %}
@@ -126,11 +132,15 @@
 					{% if tissue_request.not_accepted_monkeys %}
 					
 					
-						<table class="full-width" >
-						<thead><td>Monkey</td><td>Assignment</td></thead>
+						<table class="common" style="width:30%">
+						<thead><th>Monkey</th><th>Assignment</th></thead>
 					{% for monkey in tissue_request.not_accepted_monkeys %}
 					
-						<tr><td>{{ monkey.mky_real_id }}</td><td>
+						<tr><td>
+												<a href="{% url monkey_detail_coh monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+						{{ monkey.mky_real_id }}
+						<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
+						</td><td>
 						      {% if monkey.mky_drinking %}
         						Ethanol
         						{% else %}
