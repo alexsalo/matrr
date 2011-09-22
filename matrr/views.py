@@ -552,11 +552,7 @@ def review_overview(request, req_request_id):
 
 	if  'HTTP_REFERER' in request.META:
 		back_url = request.META['HTTP_REFERER']
-#		ref = request.META['HTTP_REFERER'].rsplit('/')[-2]
-#		history = reverse('review-history')
-#		if ref == history.strip('/'):
-#			no_monkeys = True
-##			do not display monkeys
+
 	else:
 		back_url = ""
 
