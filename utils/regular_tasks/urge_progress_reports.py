@@ -35,5 +35,7 @@ def urge_progress_reports():
         ret = send_mail(subject, body, email, recipient_list=recipients, fail_silently=False)
         req.req_report_asked = True
         req.save()
+        if ret > 0:
+            print "Report urged for request: %s" % `req`
 
 urge_progress_reports()
