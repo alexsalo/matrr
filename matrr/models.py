@@ -557,7 +557,7 @@ class Request(models.Model, DiffingMixin):
 									   null=False,
 									   max_length=100)
 	req_notes = models.TextField('Request Notes', null=True, blank=True)
-
+	req_report_asked = models.BooleanField('Progress report asked', default=False)
 
 	def __unicode__(self):
 		return 'User: ' + self.user.username +\
