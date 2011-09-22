@@ -112,7 +112,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'matrr.context_processors.group_membership',
     'matrr.context_processors.unsupported_browser',
 
-	"django.core.context_processors.auth",
+#	"django.core.context_processors.auth",
     )
 
 TEMPLATE_DIRS = (
