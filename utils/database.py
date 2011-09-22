@@ -1,4 +1,4 @@
-from matrr.models import *
+\from matrr.models import *
 from django.db import transaction
 from datetime import datetime as dt
 import datetime
@@ -827,3 +827,4 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 				print error_output % (line_number, e , line)
 				continue
 			mtd.save()
+
