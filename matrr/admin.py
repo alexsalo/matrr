@@ -25,6 +25,9 @@ class TissueSampleAdmin(admin.ModelAdmin):
     for model in queryset.all():
       model.save()
 
+class RequestAdmin(admin.ModelAdmin):
+    readonly_fields=('req_report_asked',)
+
 
 admin.site.register(TissueType, TissueAdmin)
 admin.site.register(TissueCategory)
@@ -42,7 +45,7 @@ admin.site.register(TissueSample, TissueSampleAdmin)
 admin.site.register(Publication)
 admin.site.register(Mta)
 admin.site.register(Account)
-admin.site.register(Request)
+admin.site.register(Request, RequestAdmin)
 admin.site.register(TissueInventoryVerification)
 admin.site.register(TissueRequest)
 admin.site.register(TissueRequestReview)
