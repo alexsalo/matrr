@@ -1032,7 +1032,6 @@ class TissueSample(models.Model):
 			self.tss_details = "MATRR does not track assay inventory."
 		super(TissueSample, self).save(*args, **kwargs)
 
-
 	class Meta:
 		db_table = 'tss_tissue_samples'
 		ordering = ['-monkey__mky_real_id', '-tissue_type__tst_tissue_name']

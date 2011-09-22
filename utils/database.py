@@ -759,9 +759,13 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 			mtd.save()
 
 def create_Assay_Development_tree():
-	category = TissueCategory.objects.get_or_create(cat_name="Assay Development", cat_internal=False)
-	tissue_type = TissueType.objects.get_or_create(category=category[0], tst_tissue_name="Assay Tissue")
 	institution = Institution.objects.all()[0]
 	cohort = Cohort.objects.get_or_create(coh_cohort_name="Assay Cohort", coh_upcoming=False, institution=institution)
 	monkey = Monkey.objects.get_or_create(mky_real_id=0, mky_drinking=False, cohort=cohort[0])
-	tissue_sample = TissueSample.objects.get_or_create(tissue_type=tissue_type[0], monkey=monkey[0])
+	for tt in TissueType.objects.exclude(category__cat_name__icontains="Internal"):
+		tissue_sample = TissueSample.objects.get_or_create(tissue_type=tt, monkey=monkey[0])
+		tissue_sample[0].tss_sample_quantity=999 # Force quantity
+		tissue_sample[0].tss_freezer = "Assay Tissue"
+		tissue_sample[0].tss_location = "Assay Tissue"
+		tissue_sample[0].tss_details = "MATRR does not track assay inventory."
+		tissue_sample[0].save()
