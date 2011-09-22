@@ -760,7 +760,7 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 
 def create_Assay_Development_tree():
 	institution = Institution.objects.all()[0]
-	cohort = Cohort.objects.get_or_create(coh_cohort_name="Assay Cohort", coh_upcoming=False, institution=institution)
+	cohort = Cohort.objects.get_or_create(coh_cohort_name="Assay Development", coh_upcoming=False, institution=institution)
 	monkey = Monkey.objects.get_or_create(mky_real_id=0, mky_drinking=False, cohort=cohort[0])
 	for tt in TissueType.objects.exclude(category__cat_name__icontains="Internal"):
 		tissue_sample = TissueSample.objects.get_or_create(tissue_type=tt, monkey=monkey[0])
