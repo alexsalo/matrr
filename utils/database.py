@@ -10,14 +10,19 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 		0 - date
 		1 - monkey_real_id
 		2-37 see fields
-		38 - date - check field (0)
+		38 - date - check field (0) - but current data are unknown - thus unused
 		39 - monkey_real_id - check field (1)
 		40-45 - see fields again
 		46 - free
 		47 - bad data flag
 		48 - comment/notes 
+		
+		
+		All data in comma-separated csv format, no caption line at the beginning of file
+		For data with mutiple cohorts, the will have to be computed from monkey real id instead of using a parameter.
 	"""
 	fields = (
+#	    data 2-37
 		('mtd_etoh_intake'),
 		('mtd_veh_intake'),
 		('mtd_pct_etoh'),			
@@ -54,6 +59,7 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 		('mtd_latency_1st_drink'),
 		('mtd_pct_exp_etoh'),
 		('mtd_st_1_ioc_avg'),
+#		data 40-45
 		('mtd_max_bout'),
 		('mtd_max_bout_start'),
 		('mtd_max_bout_end'),
@@ -79,8 +85,7 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 				print error_output % (line_number, "Wrong date format", line)
 				continue
 #			if dex_date != dex_check_date:
-##				error output
-#				print 'dex_date'
+#				print error_output % (line_number, "Date check failed", line)
 #				continue
 			else:
 				des = DrinkingExperiment.objects.filter(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
