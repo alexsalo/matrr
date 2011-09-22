@@ -4,132 +4,6 @@ from datetime import datetime as dt
 import datetime
 import csv, re
 
-@transaction.commit_on_success
-def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
-	"""
-		0 - date
-		1 - monkey_real_id
-		2-37 see fields
-		38 - date - check field (0) - but current data are unknown - thus unused
-		39 - monkey_real_id - check field (1)
-		40-45 - see fields again
-		46 - free
-		47 - bad data flag
-		48 - comment/notes 
-		
-		
-		All data in comma-separated csv format, no caption line at the beginning of file
-		For data with mutiple cohorts, the will have to be computed from monkey real id instead of using a parameter.
-	"""
-	fields = (
-#	    data 2-37
-		('mtd_etoh_intake'),
-		('mtd_veh_intake'),
-		('mtd_pct_etoh'),			
-		('mtd_etoh_g_kg'),
-		('mtd_total_pellets'),
-		('mtd_etoh_bout'),
-		('mtd_etoh_drink_bout'),
-		('mtd_veh_bout'),
-		('mtd_veh_drink_bout'),
-		('mtd_weight'),
-		('mtd_etoh_conc'),
-		('mtd_etoh_mean_drink_length'),			
-		('mtd_etoh_median_idi'),
-		('mtd_etoh_mean_drink_vol'),
-		('mtd_etoh_mean_bout_length'),
-		('mtd_etoh_media_ibi'),
-		('mtd_etoh_mean_bout_vol'),
-		('mtd_etoh_st_1'),
-		('mtd_etoh_st_2'),
-		('mtd_etoh_st_3'),
-		('mtd_veh_st_2'),
-		('mtd_veh_st_3'),
-		('mtd_pellets_st_1'),
-		('mtd_pellets_st_3'),
-		('mtd_length_st_1'),
-		('mtd_length_st_2'),
-		('mtd_length_st_3'),
-		('mtd_vol_1st_bout'),
-		('mtd_pct_etoh_in_1st_bout'),
-		('mtd_drinks_1st_bout'),
-		('mtd_mean_drink_vol_1st_bout'),
-		('mtd_fi_wo_drinking_st_1'),
-		('mtd_pct_fi_with_drinking_st_1'),
-		('mtd_latency_1st_drink'),
-		('mtd_pct_exp_etoh'),
-		('mtd_st_1_ioc_avg'),
-#		data 40-45
-		('mtd_max_bout'),
-		('mtd_max_bout_start'),
-		('mtd_max_bout_end'),
-		('mtd_max_bout_length'),
-		('mtd_max_bout_vol'),
-		('mtd_pct_max_bout_vol_total_etoh'),
-		)
-	
-	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
-		
-	with open(file_name, 'r') as f:
-		read_data = f.readlines()
-		for line_number, line in enumerate(read_data):
-			data = line.split(',')
-			data_fields = data[2:38]
-			data_fields.extend(data[40:46])
-			error_output = "%d %s # %s"
-#			create or get experiment - date, cohort, dex_type
-			try:
-				dex_date = dt.strptime(data[0], "%m/%d/%y")
-#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
-			except Exception as e:
-				print error_output % (line_number, "Wrong date format", line)
-				continue
-#			if dex_date != dex_check_date:
-#				print error_output % (line_number, "Date check failed", line)
-#				continue
-			else:
-				des = DrinkingExperiment.objects.filter(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
-				if des.count() == 0:
-					de = DrinkingExperiment(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
-					de.save()
-				else:
-					de = des[0]
-			
-			monkey_real_id = data[1]
-			monkey_real_id_check = data[39]
-			if monkey_real_id != monkey_real_id_check:
-				print error_output % (line_number, "Monkey real id check failed", line)
-				continue
-			try:
-				monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
-			except:
-				print error_output % (line_number, "Monkey does not exist", line)
-				continue
-			
-			bad_data = data[47]
-			if bad_data != '':
-				print error_output % (line_number, "Bad data flag", line)
-				continue
-			
-			mtd = MonkeyToDrinkingExperiment()
-			mtd.monkey = monkey
-			mtd.drinking_experiment = de
-			mtd.mtd_notes = data[48]
-			
-			for i, field in enumerate(fields):
-				if data_fields[i] != '':
-					setattr(mtd, field, data_fields[i])
-				
-			try:
-				mtd.clean_fields()
-			except Exception as e:
-				print error_output % (line_number, e , line)
-				continue
-			mtd.save()
-	
-	
-
-
 ## Old, might be useful in the future, but kept for reference
 ## Corrected improper birthday formatting.  match.group(0) = full string, not first group.  group.(1) is the first group.
 @transaction.commit_on_success
@@ -177,6 +51,7 @@ def load_experiments(file):
 
 		# save the data
 		mtd.save()
+
 
 ## Old, might be useful in the future, but kept for reference
 @transaction.commit_on_success
@@ -530,6 +405,7 @@ def load_inventory(file, output_file):
 
 	#raise Exception('Just testing') #uncomment for testing purposes
 
+
 ## I added this after I added a bunch of ugly data to the database
 ## This will remove all tissue samples, tissue types and tissue categories from a 'dirty' category.
 ## I haven't used it yet, but I probably will at some point.  We're still working on organizing the data more clearly
@@ -550,6 +426,7 @@ def recursive_category_removal():
 	TissueType.objects.filter(category=dirtycategory).delete()
 	dirtycategory.delete()
 	return
+
 
 ## Wrote this to correct birthdate string formats which load_experiments had slaughtered.
 ## This still saves birthdays as a string, not a datetime.
@@ -584,6 +461,7 @@ def load_birthdates(file):
 			if new_bd != old_bd:
 				mon.mky_birthdate = new_bd
 				mon.save()
+
 
 ## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
 ## -jf
@@ -659,6 +537,7 @@ def dump_distinct_TissueType(output_file):
 		output.writerow(row)
 	print "Success."
 
+
 ## Wrote this, ended up not using it.  May still need it, necropsy dates in the DB are different than in the spreadsheet I was given.
 ## -jf
 def load_necropsy_dates(file):
@@ -705,6 +584,7 @@ def load_necropsy_dates(file):
 			monkey.mky_necropsy_start_date = necropsy
 			monkey.save()
 
+
 # Creates Tissue Types from following format:
 # each tissue on a separate line
 # first group of tissues are loaded under category brain tissues
@@ -713,8 +593,7 @@ def load_necropsy_dates(file):
 # groups separated with empty line
 # if empty group, just empty line
 # no empty line at the end of file!!!
-from matrr.models import TissueCategory
-def load_TissueTypes(file_name, delete_name_duplicates=False):
+def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samples=False):
 	categories = {'brain' : "Brain Tissues", 'periph':"Peripheral Tissues", 'custom':"Custom"}
 	categs = []
 	try:
@@ -763,16 +642,18 @@ def load_TissueTypes(file_name, delete_name_duplicates=False):
 			tt.tst_tissue_name = line
 			tt.category = current_category
 			tt.save()
-			
-	
+
+	if create_tissue_samples:
+		print "Creating tissue samples"
+		create_TissueSamples()
 
 
-## Creates TissueCategories consistent with format agreed on 8/30/2011
-## No parent categories yet.
-## -jf
+# Creates TissueCategories consistent with format agreed on 8/30/2011
+# No parent categories yet.
+# -jf
 def load_TissueCategories():
 ###				   Category Name  (cat_name)		Description (cat_description)			Internal (cat_internal)
-	categories = {"Custom" : 				("Custom Tissues", 						False),
+	categories = {"Custom" : 						("Custom Tissues", 						False),
 				  "Internal Molecular Tissues" : 	("Only internal molecular tissues", 	True),
 				  "Internal Blood Tissues" : 		("Only internal blood tissues",			True),
 				  "Internal Peripheral Tissues" : 	("Only internal peripheral tissues", 	True),
@@ -787,7 +668,7 @@ def load_TissueCategories():
 		tc.save()
 
 
-## Creates InventoryStatus'
+# Creates InventoryStatus'
 ## -jf
 def load_InventoryStatus():
 ###				   Status Name  (cat_name)
@@ -799,3 +680,150 @@ def load_InventoryStatus():
 		inv, is_new = InventoryStatus.objects.get_or_create(inv_status=key)
 		inv.inv_description = statuses[key]
 		inv.save()
+
+
+def create_TissueSamples():
+	for monkey in Monkey.objects.all():
+		for tt in TissueType.objects.all():
+			sample, is_new = TissueSample.objects.get_or_create(monkey=monkey, tissue_type=tt)
+			if is_new:
+				sample.tss_freezer = "<no data>"
+				sample.tss_location = "<no data>"
+				#print "New tissue sample: " + sample
+
+
+def create_Assay_Development_tree():
+	institution = Institution.objects.all()[0]
+	cohort = Cohort.objects.get_or_create(coh_cohort_name="Assay Development", coh_upcoming=False, institution=institution)
+	monkey = Monkey.objects.get_or_create(mky_real_id=0, mky_drinking=False, cohort=cohort[0])
+	for tt in TissueType.objects.exclude(category__cat_name__icontains="Internal"):
+		tissue_sample = TissueSample.objects.get_or_create(tissue_type=tt, monkey=monkey[0])
+		tissue_sample[0].tss_sample_quantity=999 # Force quantity
+		tissue_sample[0].tss_freezer = "Assay Tissue"
+		tissue_sample[0].tss_location = "Assay Tissue"
+		tissue_sample[0].tss_details = "MATRR does not track assay inventory."
+		tissue_sample[0].save()
+
+
+@transaction.commit_on_success
+def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
+	"""
+		0 - date
+		1 - monkey_real_id
+		2-37 see fields
+		38 - date - check field (0) - but current data are unknown - thus unused
+		39 - monkey_real_id - check field (1)
+		40-45 - see fields again
+		46 - free
+		47 - bad data flag
+		48 - comment/notes
+
+
+		All data in comma-separated csv format, no caption line at the beginning of file
+		For data with mutiple cohorts, the will have to be computed from monkey real id instead of using a parameter.
+	"""
+	fields = (
+#	    data 2-37
+		('mtd_etoh_intake'),
+		('mtd_veh_intake'),
+		('mtd_pct_etoh'),
+		('mtd_etoh_g_kg'),
+		('mtd_total_pellets'),
+		('mtd_etoh_bout'),
+		('mtd_etoh_drink_bout'),
+		('mtd_veh_bout'),
+		('mtd_veh_drink_bout'),
+		('mtd_weight'),
+		('mtd_etoh_conc'),
+		('mtd_etoh_mean_drink_length'),
+		('mtd_etoh_median_idi'),
+		('mtd_etoh_mean_drink_vol'),
+		('mtd_etoh_mean_bout_length'),
+		('mtd_etoh_media_ibi'),
+		('mtd_etoh_mean_bout_vol'),
+		('mtd_etoh_st_1'),
+		('mtd_etoh_st_2'),
+		('mtd_etoh_st_3'),
+		('mtd_veh_st_2'),
+		('mtd_veh_st_3'),
+		('mtd_pellets_st_1'),
+		('mtd_pellets_st_3'),
+		('mtd_length_st_1'),
+		('mtd_length_st_2'),
+		('mtd_length_st_3'),
+		('mtd_vol_1st_bout'),
+		('mtd_pct_etoh_in_1st_bout'),
+		('mtd_drinks_1st_bout'),
+		('mtd_mean_drink_vol_1st_bout'),
+		('mtd_fi_wo_drinking_st_1'),
+		('mtd_pct_fi_with_drinking_st_1'),
+		('mtd_latency_1st_drink'),
+		('mtd_pct_exp_etoh'),
+		('mtd_st_1_ioc_avg'),
+#		data 40-45
+		('mtd_max_bout'),
+		('mtd_max_bout_start'),
+		('mtd_max_bout_end'),
+		('mtd_max_bout_length'),
+		('mtd_max_bout_vol'),
+		('mtd_pct_max_bout_vol_total_etoh'),
+		)
+
+	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
+
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line_number, line in enumerate(read_data):
+			data = line.split(',')
+			data_fields = data[2:38]
+			data_fields.extend(data[40:46])
+			error_output = "%d %s # %s"
+#			create or get experiment - date, cohort, dex_type
+			try:
+				dex_date = dt.strptime(data[0], "%m/%d/%y")
+#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
+			except Exception as e:
+				print error_output % (line_number, "Wrong date format", line)
+				continue
+#			if dex_date != dex_check_date:
+#				print error_output % (line_number, "Date check failed", line)
+#				continue
+			else:
+				des = DrinkingExperiment.objects.filter(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
+				if des.count() == 0:
+					de = DrinkingExperiment(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
+					de.save()
+				else:
+					de = des[0]
+
+			monkey_real_id = data[1]
+			monkey_real_id_check = data[39]
+			if monkey_real_id != monkey_real_id_check:
+				print error_output % (line_number, "Monkey real id check failed", line)
+				continue
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
+			except:
+				print error_output % (line_number, "Monkey does not exist", line)
+				continue
+
+			bad_data = data[47]
+			if bad_data != '':
+				print error_output % (line_number, "Bad data flag", line)
+				continue
+
+			mtd = MonkeyToDrinkingExperiment()
+			mtd.monkey = monkey
+			mtd.drinking_experiment = de
+			mtd.mtd_notes = data[48]
+
+			for i, field in enumerate(fields):
+				if data_fields[i] != '':
+					setattr(mtd, field, data_fields[i])
+
+			try:
+				mtd.clean_fields()
+			except Exception as e:
+				print error_output % (line_number, e , line)
+				continue
+			mtd.save()

@@ -4,7 +4,7 @@ Amygdala (Basolateral)
 Amygdala (Central)
 Amygdala (Dorsal)
 Amygdala (Lateral)
-Amygdala (Median)
+Amygdala (Medial)
 Area 1, 2, 3
 Area 4
 Area 9
@@ -95,9 +95,9 @@ Muscle (Gastrocnemius)
 Muscle (Quadriceps)
 Muscle (Be specific)
 Nerve (Inguinal)
+Nerve (Sciatic)
 Pancreas
 Prostate
-Sciatic nerve
 Septum
 Serum
 Small intestine
