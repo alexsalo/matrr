@@ -1,4 +1,12 @@
+Amygdala (Accessory Basal)
+Amygdala (Basal)
+Amygdala (Basolateral)
+Amygdala (Central)
+Amygdala (Dorsal)
+Amygdala (Lateral)
+Amygdala (Median)
 Area 1, 2, 3
+Area 4
 Area 9
 Area 10
 Area 12
@@ -9,68 +17,92 @@ Area 24
 Area 25
 Area 32
 Area 46
-Amydgala nuclei
 Brainstem
 Caudate
-Cerebellum
+Cerebellum (Anterior lobe)
+Cerebellum (Posterior lobe)
+Cerebellum (Vermis)
+Cerebrospinal fluid
 Corpus callosum
 Dentate gyrus
 Edinger-Westphal
 Entorhinal cortex
-Frontal white matter
 Globus pallidus
 Habenula
 Hippocampus
 Hypothalamus
 Insula
 Locus coeruleus
-Nucleus accumbens (core)
-Nucleus accumbens (shell)
+Medulla
+Nucleus accumbens (Core)
+Nucleus accumbens (Shell)
+Occipital Cortex
 Olfactory bulb
 Periaqueductal gray
 Pituitary
+Pons
+Posterior Cerebellum
 Putamen
 Raphe
-Septum
+Spinal cord (Cervical)
+Spinal cord (Lumbar)
+Spinal cord (Thoracic)
 Substantia nigra (pars compacta)
 Substantia nigra (pars reticulate)
-Thalamus (pulvinar)
-Thalamus (lateral geniculate)
-Thalamus (mediodorsal)
-Thalamus (midline nuclei)
-White matter 
+Thalamus (Lateral geniculate)
+Thalamus (Mediodorsal)
+Thalamus (Midline nuclei)
+Thalamus (Pulvinar)
+Thalamus (Medial geniculate)
+Thymus
+White matter (Frontal)
+White matter
 
 Adrenal (lt, rt)
 Aorta (descending)
 Aortic arch
+artery, coronary
+artery, pulmonary
 Bile
 Blood
-Cerebrospinal fluid
+Bone (Femur)
+Bone (Be specific)
+Bone Marrow (From Femur)
 Esophagus
-Fat (abdominal)
-Fat (brown)
-Fat (mesenteric)
-Fat (retroperitoneal)
-Fat (subcutaneous)
+Fat (Abdominal)
+Fat (Brown)
+Fat (Mesenteric)
+Fat (Retroperitoneal)
+Fat (Subcutaneous)
 Gall bladder
 Gonads (testes, ovaries)
-Heart
+Heart (Lt Atrium)
+Heart (Rt Atrium)
+Heart (Lt ventricle)
+Heart (Rt ventricle)
 Kidney (lt, rt)
 Large intestine
 Liver
-Lung (lt lobe)
-Lung (rt lobe)
-Lung (upper lobe)
-Muscle (gastrocnemius)
-Muscle (quadriceps)
+Lung (Lt lower lobe)
+Lung (Lt upper lobe)
+Lung (Rt lower lobe)
+Lung (Rt middle lobe)
+Lung (Rt upper lobe)
+Lymph node (Axial)
+Lymph node (Inguinal)
+Lymph node (Mesenteric)
+Muscle (Gastrocnemius)
+Muscle (Quadriceps)
+Muscle (Be specific)
+Nerve (Inguinal)
+Pancreas
+Prostate
 Sciatic nerve
+Septum
+Serum
 Small intestine
-Spinal cord (cervical)
-Spinal cord (thoracic)
-Spinal cord (lumbar)
 Spleen
 Stomach
-Thymus
 Urine
 
 Custom brain
