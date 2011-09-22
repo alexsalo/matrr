@@ -80,7 +80,7 @@
 						{% endif %}
 				{% endfor %}
 			</table>
-			<br>
+			<br/>
 			{{ tissue_requests.management_form }}
 			{% for form in tissue_requests %}
 				{% include 'matrr/review/review_overview_item.html' %}
@@ -89,11 +89,11 @@
 				{{ form }}
 				{% else %}
 					{% with tissue_request=form.instance %}
-				    
+					<div class="mini-headline">Monkeys accepted for this tissue request:</div>
 				    {% if tissue_request.accepted_monkeys.all %}
 
 
-					Monkeys accepted for this tissue request:
+
 						<table class="full-width" >
 						<thead><td>Monkey</td><td>Assignment</td></thead>
 					{% for monkey in tissue_request.accepted_monkeys.all %}
@@ -114,12 +114,18 @@
 
 					</table>
 					{% else %}
+					<div class="messages-small">
+					<div class="info">
+
 					No monkeys were accepted for this tissue request.
+
+					</div>
+					</div>
 					{% endif %}
-					
+					<div class="mini-headline">Monkeys rejected for this tissue request:</div>
 					{% if tissue_request.not_accepted_monkeys %}
-					<br/><br/>
-					Monkeys rejected for this tissue request:
+					
+					
 						<table class="full-width" >
 						<thead><td>Monkey</td><td>Assignment</td></thead>
 					{% for monkey in tissue_request.not_accepted_monkeys %}
@@ -140,8 +146,14 @@
 
 					</table>
 					{% else %}
-					</br>
+					
+				<div class="messages-small">
+					<div class="info">
+					
 					No monkeys were rejected for this tissue request.
+
+				</div>
+				</div>
 					{% endif %}
 					
 
