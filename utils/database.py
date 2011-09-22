@@ -1,7 +1,128 @@
 from matrr.models import *
 from django.db import transaction
+from datetime import datetime as dt
 import datetime
 import csv, re
+
+@transaction.commit_on_success
+def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
+	"""
+		0 - date
+		1 - monkey_real_id
+		2-37 see fields
+		38 - date - check field (0)
+		39 - monkey_real_id - check field (1)
+		40-45 - see fields again
+		46 - free
+		47 - bad data flag
+		48 - comment/notes 
+	"""
+	fields = (
+		('mtd_etoh_intake'),
+		('mtd_veh_intake'),
+		('mtd_pct_etoh'),			
+		('mtd_etoh_g_kg'),
+		('mtd_total_pellets'),
+		('mtd_etoh_bout'),
+		('mtd_etoh_drink_bout'),
+		('mtd_veh_bout'),
+		('mtd_veh_drink_bout'),
+		('mtd_weight'),
+		('mtd_etoh_conc'),
+		('mtd_etoh_mean_drink_length'),			
+		('mtd_etoh_median_idi'),
+		('mtd_etoh_mean_drink_vol'),
+		('mtd_etoh_mean_bout_length'),
+		('mtd_etoh_media_ibi'),
+		('mtd_etoh_mean_bout_vol'),
+		('mtd_etoh_st_1'),
+		('mtd_etoh_st_2'),
+		('mtd_etoh_st_3'),
+		('mtd_veh_st_2'),
+		('mtd_veh_st_3'),
+		('mtd_pellets_st_1'),
+		('mtd_pellets_st_3'),
+		('mtd_length_st_1'),
+		('mtd_length_st_2'),
+		('mtd_length_st_3'),
+		('mtd_vol_1st_bout'),
+		('mtd_pct_etoh_in_1st_bout'),
+		('mtd_drinks_1st_bout'),
+		('mtd_mean_drink_vol_1st_bout'),
+		('mtd_fi_wo_drinking_st_1'),
+		('mtd_pct_fi_with_drinking_st_1'),
+		('mtd_latency_1st_drink'),
+		('mtd_pct_exp_etoh'),
+		('mtd_st_1_ioc_avg'),
+		('mtd_max_bout'),
+		('mtd_max_bout_start'),
+		('mtd_max_bout_end'),
+		('mtd_max_bout_length'),
+		('mtd_max_bout_vol'),
+		('mtd_pct_max_bout_vol_total_etoh'),
+		)
+	
+	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
+		
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line_number, line in enumerate(read_data):
+			data = line.split(',')
+			data_fields = data[2:38]
+			data_fields.extend(data[40:46])
+			error_output = "%d %s # %s"
+#			create or get experiment - date, cohort, dex_type
+			try:
+				dex_date = dt.strptime(data[0], "%m/%d/%y")
+#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
+			except Exception as e:
+				print error_output % (line_number, "Wrong date format", line)
+				continue
+#			if dex_date != dex_check_date:
+##				error output
+#				print 'dex_date'
+#				continue
+			else:
+				des = DrinkingExperiment.objects.filter(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
+				if des.count() == 0:
+					de = DrinkingExperiment(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
+					de.save()
+				else:
+					de = des[0]
+			
+			monkey_real_id = data[1]
+			monkey_real_id_check = data[39]
+			if monkey_real_id != monkey_real_id_check:
+				print error_output % (line_number, "Monkey real id check failed", line)
+				continue
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
+			except:
+				print error_output % (line_number, "Monkey does not exist", line)
+				continue
+			
+			bad_data = data[47]
+			if bad_data != '':
+				print error_output % (line_number, "Bad data flag", line)
+				continue
+			
+			mtd = MonkeyToDrinkingExperiment()
+			mtd.monkey = monkey
+			mtd.drinking_experiment = de
+			mtd.mtd_notes = data[48]
+			
+			for i, field in enumerate(fields):
+				if data_fields[i] != '':
+					setattr(mtd, field, data_fields[i])
+				
+			try:
+				mtd.clean_fields()
+			except Exception as e:
+				print error_output % (line_number, e , line)
+				continue
+			mtd.save()
+	
+	
 
 
 ## Old, might be useful in the future, but kept for reference
