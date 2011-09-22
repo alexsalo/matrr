@@ -1,4 +1,4 @@
-\from matrr.models import *
+from matrr.models import *
 from django.db import transaction
 from datetime import datetime as dt
 import datetime
