@@ -31,13 +31,19 @@
 					<td nowrap>{{ req_request.req_modified_date|date:"m/d/Y, g:i a" }}</td>
 
 					{% for item in req_request.complete %}
-						{% if item == "pending" or item == "Rejected" %}
+						{% if item == "Rejected" %}
 							<td style="color: red" align="center">{{ item }}</td>
 						{% else %}
-							{% if item == "complete" or item == "Accepted" %}
+							{% if item == "Accepted" or item == "Partially Accepted" %}
 							<td style="color: green" align="center">{{ item }}</td>
+
 							{% else %}
+								{% if item == "Shipped" %}
+									<td style="color: orange" align="center">{{ item }}</td>
+								{% else %}
+							
 							<td align="center">{{ item }}</td>
+							    {% endif %}
 							{% endif %}
 						{% endif %}
 
