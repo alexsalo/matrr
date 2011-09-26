@@ -256,11 +256,11 @@ class MonkeyToDrinkingExperiment(models.Model):
 	monkey = models.ForeignKey(Monkey, null=False, related_name='+', db_column='mky_id', editable=False)
 	drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
 											editable=False)
-	mtd_etoh_intake = models.FloatField('EtOH Intake', null=True, blank=True,
+	mtd_etoh_intake = models.FloatField('EtOH Intake', null=False, blank=False,
 										help_text='Please enter the amount in mL of 4% EtOH consumed by the monkey.')
-	mtd_veh_intake = models.FloatField('H2O Intake', null=True, blank=True,
+	mtd_veh_intake = models.FloatField('H2O Intake', null=False, blank=False,
 									   help_text='Please enter the amount in mL of H2O consumed by the monkey.')
-	mtd_total_pellets = models.IntegerField('Pellets Consumed', null=True, blank=True,
+	mtd_total_pellets = models.IntegerField('Pellets Consumed', null=False, blank=False,
 											help_text='Please enter the total number of pellets consumed by the monkey.')
 	mtd_weight = models.FloatField('Weight', null=True, blank=True,
 								   help_text='Please enter the weight of the monkey.')
@@ -274,9 +274,9 @@ class MonkeyToDrinkingExperiment(models.Model):
 									 help_text='Total etOH bouts (less than 300 seconds between consumption of etOH).')
 	mtd_etoh_drink_bout = models.FloatField('EtOH Drink/Bout', blank=True, null=True,
 										help_text = 'Average number of drinks (less than 5 seconds between consumption of etOH) per etOH bout')
-	mtd_veh_bout = models.IntegerField('Veh Bout', blank=True, null=True,
+	mtd_veh_bout = models.IntegerField('H2O Bout', blank=True, null=True,
 									help_text='Total H20 bouts (less than 300 seconds between consumption of H20)')
-	mtd_veh_drink_bout = models.FloatField('Veh Drink/Bout', null=True, blank=True,
+	mtd_veh_drink_bout = models.FloatField('H2O Drink/Bout', null=True, blank=True,
 										help_text='Average number of drinks (less than 5 seconds between consumption of H20) per H20 bout')
 	mtd_etoh_conc = models.FloatField('EtOH Conc.', null=True, blank=True,
 									help_text='Ethanol concentration.')
@@ -298,9 +298,9 @@ class MonkeyToDrinkingExperiment(models.Model):
 									help_text='Induction data (blank for 22 hour data):  ethanol consumed during “State 2”, or the pellet time-out between fixed pellet interval portion and the fixed ratio portion')
 	mtd_etoh_st_3 = models.FloatField('EtOH St.3', blank=True, null=True,
 									help_text='Induction data (blank for 22 hour data):   ethanol consumed during “State 3”, or the fixed ratio portion, after pellet time out completed')
-	mtd_veh_st_2 = models.FloatField('Veh St.2', blank=True, null=True,
+	mtd_veh_st_2 = models.FloatField('H2O St.2', blank=True, null=True,
 									help_text='Induction data (blank for 22 hour data):   H20 consumed during “State 2”, or the pellet time out portion')
-	mtd_veh_st_3 = models.FloatField('Veh St.3', blank=True, null=True,
+	mtd_veh_st_3 = models.FloatField('H2O St.3', blank=True, null=True,
 									help_text='Induction data (blank for 22 hour data):   H20 consumed during “State 3”, or the fixed ratio portion')
 	mtd_pellets_st_1 = models.IntegerField('Pellets St.1', blank=True, null=True,
 										help_text='Induction data (blank for 22 hour data): Pellets delivered during “State 1”')
