@@ -51,7 +51,7 @@
 					
 					{% if user.is_authenticated %}
 						<ul>
-							<li class='top'><a href="/account/">My Account</a></li>
+							<li class='top'><a href="{% url account-view %}">My Account</a></li>
 							<li class='drop-down'><a href="/orders/">My Orders</a></li>
 						</ul>
 					{% endif %}
@@ -140,8 +140,8 @@
 					<a href="/upcoming">Request Upcoming Tissue</a><br/>
 					<a href="/available">Request Archival Tissue</a><br/>
 					<a href="/cohort">View All Cohorts</a><br/>
-					<a href="/mta/upload">Upload an MTA</a><br/>
-					<a href="/account">Submit Research Updates</a><br/>
+					<a href="{% url mta-upload %}">Upload an MTA</a><br/>
+					<a href="{% url account-view %}">Submit Research Updates</a><br/>
 					<a href="/publications">View Publications</a>
 				</div>
 

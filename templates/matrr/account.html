@@ -35,7 +35,7 @@ MATRR Account
         <td>{{ account_info.act_fedex }}</td></tr>
   </table>
 {% if edit %}
-<div class="text-right"><a href="/account/shipping" class='blockLinkButton'>
+<div class="text-right"><a href="{% url account-shipping %}" class='blockLinkButton'>
   <!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45' alt='update button'/>-->
   Update
   </a>
@@ -64,7 +64,7 @@ This section is for the material transfer agreement
      </div></div>
 {% endif %}
 {% if edit %}
-<div class="text-right"><a href="/mta/upload" class='blockLinkButton'>
+<div class="text-right"><a href="{% url mta-upload %}" class='blockLinkButton'>
   <!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45'/>-->
   Update
   </a>

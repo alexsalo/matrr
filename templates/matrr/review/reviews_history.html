@@ -24,7 +24,7 @@
 			{% for req_request in req_requests.object_list %}
 				<tr>
 					<td nowrap>{{ req_request.cohort.coh_cohort_name }}</td>
-					<td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>
+					<td><a href='{% url account-reviewer-view req_request.user.id %}'>
 						{% if req_request.user|lower == 'dummy_user_for_past_requests' %}Generic User
 							{% else %}{{ req_request.user }}
 						{% endif %}</a></td>

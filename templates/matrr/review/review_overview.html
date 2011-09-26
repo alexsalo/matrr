@@ -18,7 +18,7 @@
 					<div>Cohort:</div>
 					<div><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></div>
 					<div>Requesting User:</div>
-					<div><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></div>
+				<div><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></div>
 				</div>
 				<div>
 					<div>Requested On:</div>
