@@ -793,8 +793,11 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 				if des.count() == 0:
 					de = DrinkingExperiment(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
 					de.save()
-				else:
+				elif des.count() == 1:
 					de = des[0]
+				else:
+					print error_output % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
+					continue
 
 			monkey_real_id = data[1]
 			monkey_real_id_check = data[39]
@@ -811,7 +814,11 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 			if bad_data != '':
 				print error_output % (line_number, "Bad data flag", line)
 				continue
-
+			
+			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment = de, monkey=monkey)
+			if mtds.count() != 0:
+				print error_output % (line_number, "MTD with monkey and date already exists.", line)
+				continue
 			mtd = MonkeyToDrinkingExperiment()
 			mtd.monkey = monkey
 			mtd.drinking_experiment = de
