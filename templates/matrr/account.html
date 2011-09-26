@@ -82,11 +82,22 @@ This section displays the status of requests
         <tr>
             <td class='text-center-common-td'>{{ order.cohort }}</td>
             <td class='text-center-common-td'>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
-            {% if order.request_status|lower != 'rejected' %}
-              <td class='text-center-common-td'><font color='green'>{{ order.request_status }}</font></td>
-            {% else %}
+            {% if order.request_status|lower == 'rejected' %}
               <td class='text-center-common-td'><font color='red'>{{ order.request_status }}</font></td>
+            {% else %}
+            	{% if order.request_status|lower == 'shipped' %}
+            		<td class='text-center-common-td'><font color='orange'>{{ order.request_status }}</font></td>
+            	{% else %}
+					{% if order.request_status|lower == 'submitted' %}
+            		<td class='text-center-common-td'>{{ order.request_status }}</td>
+            		{% else %}
+            		<td class='text-center-common-td'><font color='green'>{{ order.request_status }}</font></td>
+            		{% endif %}
+            	{% endif %}
+              
+            
             {% endif %}
+            
             {% if not order.req_experimental_plan %}
               <td class='text-center-common-td'>none</td>
             {% else %}
