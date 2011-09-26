@@ -382,7 +382,7 @@ def account_shipping(request):
 			# all the fields in the form are valid, so save the data
 			form.save()
 			messages.success(request, 'Shipping Address Saved')
-			return redirect('/account/')
+			return redirect(reverse('account-view'))
 	else:
 		#create the form for shipping address
 		form = AccountForm(instance=request.user.account)
