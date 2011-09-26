@@ -98,10 +98,10 @@ urlpatterns += patterns('matrr.views',
 	url(r'^reviews_overviews/(?P<req_request_id>\d+)/process/?$', 	request_review_process),
 
 	#  Account stuff
-	url(r'^account/$', 					account_view),
-    url(r'^account/shipping/$', 		account_shipping),
-	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view),
-	url(r'^mta/upload/$', 				mta_upload),
+	url(r'^account/$', 					account_view, name='account-view'),
+    url(r'^account/shipping/$', 		account_shipping, name='account-shipping'),
+	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-review-view'),
+	url(r'^mta/upload/$', 				mta_upload, name='mta-upload'),
 
 
 	url(r'^verification/?$',
