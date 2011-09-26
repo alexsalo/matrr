@@ -62,8 +62,8 @@
 								<a href="/reviews/">My Reviews</a>
 							</li>
 							{% if user_is_member_of_uberuser %}
-								<li class='drop-down'><a href="/reviews_overviews/">Overview</a></li>
-								<li class='drop-down'><a href="/reviews_history/">History</a></li>
+								<li class='drop-down'><a href="{% url review-overview-list %}">Overview</a></li>
+								<li class='drop-down'><a href="{% url review-history-list %}">History</a></li>
 							{% endif %}
 						</ul>
 					{% endif %}

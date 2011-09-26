@@ -92,15 +92,15 @@ urlpatterns += patterns('matrr.views',
 	#  Order review views
 	url(r'^reviews/$', 						reviews_list_view),
 	url(r'^reviews/(?P<review_id>\d+)/$', 	review_detail, name='review-detail'),
-	url(r'^reviews_overviews/$', 			review_overview_list, name='review-overview'),
-    url(r'^reviews_history/$',              review_history_list, name='review-history'),
-	url(r'^reviews_overviews/(?P<req_request_id>\d+)/$', 			review_overview),
-	url(r'^reviews_overviews/(?P<req_request_id>\d+)/process/?$', 	request_review_process),
+	url(r'^reviews_overviews/$', 			review_overview_list, name='review-overview-list'),
+    url(r'^reviews_history/$',              review_history_list, name='review-history-list'),
+	url(r'^reviews_overviews/(?P<req_request_id>\d+)/$', 			review_overview, name='review-overview'),
+	url(r'^reviews_overviews/(?P<req_request_id>\d+)/process/?$', 	request_review_process, name='review-overview-process'),
 
 	#  Account stuff
 	url(r'^account/$', 					account_view, name='account-view'),
     url(r'^account/shipping/$', 		account_shipping, name='account-shipping'),
-	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-review-view'),
+	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-reviewer-view'),
 	url(r'^mta/upload/$', 				mta_upload, name='mta-upload'),
 
 
