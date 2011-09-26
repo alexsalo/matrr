@@ -363,7 +363,7 @@ def mta_upload(request):
 			# all the fields in the form are valid, so save the data
 			form.save()
 			messages.success(request, 'MTA Uploaded Successfully')
-			return redirect('/account/')
+			return redirect(reverse('account-view'))
 	else:
 		# create the form for the MTA upload
 		form = MtaForm(instance=mta_object)
