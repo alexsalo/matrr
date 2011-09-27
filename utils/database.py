@@ -406,27 +406,27 @@ def load_inventory(file, output_file):
 	#raise Exception('Just testing') #uncomment for testing purposes
 
 
-## I added this after I added a bunch of ugly data to the database
-## This will remove all tissue samples, tissue types and tissue categories from a 'dirty' category.
-## I haven't used it yet, but I probably will at some point.  We're still working on organizing the data more clearly
-## -jf
-def recursive_category_removal():
-	dirtycategory = TissueCategory.objects.filter(cat_name="Necropsy Peripheral tissues")
-
-	for tissue in TissueType.objects.filter(category=dirtycategory):
-		for sample in TissueSample.objects.filter(tissue_type=tissue):
-			sample.delete()
-		#			sample.save()
-		tissue.delete()
-	#		tissue.save()
-	dirtycategory.delete()
-
-	##  or...
-	TissueSample.objects.filter(tissue_type__category=dirtycategory).delete()
-	TissueType.objects.filter(category=dirtycategory).delete()
-	dirtycategory.delete()
-	return
-
+### I added this after I added a bunch of ugly data to the database
+### This will remove all tissue samples, tissue types and tissue categories from a 'dirty' category.
+### I haven't used it yet, but I probably will at some point.  We're still working on organizing the data more clearly
+### -jf
+#def recursive_category_removal():
+#	dirtycategory = TissueCategory.objects.filter(cat_name="Necropsy Peripheral tissues")
+#
+#	for tissue in TissueType.objects.filter(category=dirtycategory):
+#		for sample in TissueSample.objects.filter(tissue_type=tissue):
+#			sample.delete()
+#		#			sample.save()
+#		tissue.delete()
+#	#		tissue.save()
+#	dirtycategory.delete()
+#
+#	##  or...
+#	TissueSample.objects.filter(tissue_type__category=dirtycategory).delete()
+#	TissueType.objects.filter(category=dirtycategory).delete()
+#	dirtycategory.delete()
+#	return
+#
 
 ## Wrote this to correct birthdate string formats which load_experiments had slaughtered.
 ## This still saves birthdays as a string, not a datetime.
@@ -684,12 +684,16 @@ def load_InventoryStatus():
 
 def create_TissueSamples():
 	for monkey in Monkey.objects.all():
-		for tt in TissueType.objects.all():
+		tissuetypes = TissueType.objects.all()
+		if not monkey.cohort.coh_upcoming:
+			tissuetypes = tissuetypes.exclude(tst_tissue_name__icontains="Be specific")
+		for tt in tissuetypes:
 			sample, is_new = TissueSample.objects.get_or_create(monkey=monkey, tissue_type=tt)
 			if is_new:
-				sample.tss_freezer = "<no data>"
-				sample.tss_location = "<no data>"
-				#print "New tissue sample: " + sample
+				sample.tss_freezer = "<new record, no data>"
+				sample.tss_location = "<new record, no data>"
+				print "New tissue sample: " + sample
+			sample.save()
 
 
 def create_Assay_Development_tree():
