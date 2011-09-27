@@ -268,14 +268,14 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 						assignment,))
 				elif availability_str == 'Insufficient':
 					output.append(
-					u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=orange>%s </font></td><td>%s</td></tr>' % (
-					self.link_base,
-					mky_real_id,
-					self.link_base,
-					mky_real_id,
-					mky_real_id,
-					availability_str,
-					assignment,))
+						u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=orange>%s </font></td><td>%s</td></tr>' % (
+						self.link_base,
+						mky_real_id,
+						self.link_base,
+						mky_real_id,
+						mky_real_id,
+						availability_str,
+						assignment,))
 				else:
 					output.append(
 						u'<tr><td><label%s>%s </label></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=green>%s </font></td><td>%s</td></tr>' % (
@@ -300,6 +300,7 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 					mky_real_id,
 					mky_real_id,
 					assignment))
+
 		output.append(u'</table></fieldset>')
 		output.append(u"<script type='text/javascript'>check_toggler(document.getElementById('%s'), '%s');</script>" %\
 					  (attrs['id'], name))
