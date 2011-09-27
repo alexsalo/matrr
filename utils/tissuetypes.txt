@@ -2,7 +2,6 @@ Amygdala (Accessory Basal)
 Amygdala (Basal)
 Amygdala (Basolateral)
 Amygdala (Central)
-Amygdala (Dorsal)
 Amygdala (Lateral)
 Amygdala (Medial)
 Area 1, 2, 3
@@ -10,7 +9,6 @@ Area 4
 Area 9
 Area 10
 Area 12
-Area 13
 Area 14
 Area 17
 Area 24
@@ -24,6 +22,10 @@ Cerebellum (Posterior lobe)
 Cerebellum (Vermis)
 Cerebrospinal fluid
 Corpus callosum
+Cortex (Lateral orbital)
+Cortex (Occipita)
+Cortex (Orbital frontal)
+Cortex (Prefrontal)
 Dentate gyrus
 Edinger-Westphal
 Entorhinal cortex
@@ -36,7 +38,6 @@ Locus coeruleus
 Medulla
 Nucleus accumbens (Core)
 Nucleus accumbens (Shell)
-Occipital Cortex
 Olfactory bulb
 Periaqueductal gray
 Pituitary
@@ -55,14 +56,15 @@ Thalamus (Midline nuclei)
 Thalamus (Pulvinar)
 Thalamus (Medial geniculate)
 Thymus
-White matter (Frontal)
 White matter
+White matter (Frontal)
 
 Adrenal (lt, rt)
 Aorta (descending)
 Aortic arch
-artery, coronary
-artery, pulmonary
+Artery (Brain)
+Artery (Coronary)
+Artery (Pulmonary)
 Bile
 Blood
 Bone (Femur)
@@ -84,6 +86,7 @@ Kidney (lt, rt)
 Large intestine
 Liver
 Lung (Lt lower lobe)
+Lung (Lt middle lobe)
 Lung (Lt upper lobe)
 Lung (Rt lower lobe)
 Lung (Rt middle lobe)
