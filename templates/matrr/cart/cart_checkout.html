@@ -27,7 +27,7 @@
 		<div id="headline">Checkout Form</div>
 		<br/>
 
-		<form action='/cart/checkout/' enctype="multipart/form-data" method='POST'>
+		<form action='{% url cart-checkout %}' enctype="multipart/form-data" method='POST'>
 			{% csrf_token %}
 			{% for field in form.hidden_fields %}
 				{{ field }}
@@ -122,7 +122,7 @@
 				<button type='submit' name='submit' value='checkout' class="blockLinkCheckoutButton">Submit Request</button>
 			</div>
 			<div style='padding:3px; float: right;'>
-				<a href='/cart/'>
+				<a href='{% url cart %}'>
 					<div class="blockLinkDeleteButton">Cancel Request</div>
 				</a>
 			</div>

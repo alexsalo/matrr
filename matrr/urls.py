@@ -74,11 +74,11 @@ urlpatterns += patterns('matrr.views',
     url(r'^(available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/[^/]*/?(?P<tissue_id>\d+)/$', 	tissue_shop_detail_view),
 
 	#  Cart Views
-	url(r'^cart/$', 			cart_view),
-	url(r'^cart/delete/?$', 	cart_delete),
-	url(r'^cart/checkout/$', 	cart_checkout),
-	url(r'^cart/(?P<tissue_request_id>\d+)/$', 					cart_item_view),
-	url(r'^cart/(?P<tissue_request_id>\d+)/delete/$', 			cart_item_delete),
+	url(r'^cart/$', 			                            cart_view, name='cart'),
+	url(r'^cart/delete/?$', 	                            cart_delete, name='cart-delete'),
+	url(r'^cart/checkout/$', 	                            cart_checkout, name='cart-checkout'),
+	url(r'^cart/(?P<tissue_request_id>\d+)/$', 				cart_item_view, name='cart-item'),
+	url(r'^cart/(?P<tissue_request_id>\d+)/delete/$', 		cart_item_delete, name='cart-item-delete'),
 
 	#  Ordering process views
     url(r'^orders/$',                                           orders_list, name='order-list'),

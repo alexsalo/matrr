@@ -37,7 +37,7 @@
 
 	{% if cart_exists %}
 		<div style='float: right;'>
-			<a href='/cart/checkout/'><div class="blockLinkCheckoutButton">Proceed to Checkout</div></a>
+			<a href='{% url cart-checkout %}'><div class="blockLinkCheckoutButton">Proceed to Checkout</div></a>
 		</div>
 	{% endif %}
 
