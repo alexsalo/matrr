@@ -20,7 +20,7 @@
 			{% include 'matrr/cart/cart_items_table.html' %}
 			<br/>
 			<div style='float: left;'>
-				<a href='/cart/checkout/' class='blockLinkCheckoutButton'>Checkout</a>
+				<a href='{% url cart-checkout %}' class='blockLinkCheckoutButton'>Checkout</a>
 			</div>
 		{% else %}
 			<div class="messages">
@@ -30,7 +30,7 @@
 			</div>
 		{% endif %}
 		<div style='float: right;'>
-			<a href='/cart/delete/' class='blockLinkDeleteButton'>Delete Cart</a>
+			<a href='{% url cart-delete %}' class='blockLinkDeleteButton'>Delete Cart</a>
 		</div>
 	{% else %}
 		<div class='messages'>
