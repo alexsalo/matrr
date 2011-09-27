@@ -669,9 +669,9 @@ def load_TissueCategories():
 
 
 # Creates InventoryStatus'
-## -jf
-def load_InventoryStatus():
-###				   Status Name  (cat_name)
+# -jf
+def create_InventoryStatus():
+###				 Status Name  		Description
 	statuses = {"Unverified" : 		"TissueSample inventory unverified",
 				"Sufficient" : 		"TissueSample inventory verified sufficient for this TissueRequest",
 				"Insufficient" : 	"TissueSample inventory verified insufficient for this TissueRequest.",
@@ -681,10 +681,12 @@ def load_InventoryStatus():
 		inv.inv_description = statuses[key]
 		inv.save()
 
-
+@transaction.commit_on_success
+# Creates ALL tissue samples in the database, for every monkey:tissuetype combination.
 def create_TissueSamples():
 	for monkey in Monkey.objects.all():
 		tissuetypes = TissueType.objects.all()
+		# Only create the "be specific" tissue samples for upcoming cohorts
 		if not monkey.cohort.coh_upcoming:
 			tissuetypes = tissuetypes.exclude(tst_tissue_name__icontains="Be specific")
 		for tt in tissuetypes:
@@ -692,10 +694,10 @@ def create_TissueSamples():
 			if is_new:
 				sample.tss_freezer = "<new record, no data>"
 				sample.tss_location = "<new record, no data>"
-				print "New tissue sample: " + sample
-			sample.save()
+				# Incredibly spammy
+				print "New tissue sample: " + sample.__unicode__()
 
-
+@transaction.commit_on_success
 def create_Assay_Development_tree():
 	institution = Institution.objects.all()[0]
 	cohort = Cohort.objects.get_or_create(coh_cohort_name="Assay Development", coh_upcoming=False, institution=institution)
@@ -706,7 +708,6 @@ def create_Assay_Development_tree():
 		tissue_sample[0].tss_freezer = "Assay Tissue"
 		tissue_sample[0].tss_location = "Assay Tissue"
 		tissue_sample[0].tss_details = "MATRR does not track assay inventory."
-		tissue_sample[0].save()
 
 
 @transaction.commit_on_success
