@@ -68,15 +68,13 @@ def cohort_boxplot_m2de(cohort, days=10):
 def monkey_boxplot_etoh(monkey):
 	fig_size = (10,10)
 	thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
-	coh_etoh_data = {}
-	mky_etoh_data = {}
 	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
 	filename = 'static/images/' + 'etoh' + "/" + str(monkey)
 
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mki_real_id=monkey)
+			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
 			print("That's not a real monkey.")
 			return
@@ -89,33 +87,25 @@ def monkey_boxplot_etoh(monkey):
 	cohort = monkey.cohort
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
 	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
-	dates = monkey_drinking_experiments.dates('drinking_experiment__dex_date', 'day')
+	dates = monkey_drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('-drinking_experiment__dex_date')
 
 	##  For all dates this monkey drank, collect the ethanol data
-	for date in dates:
+	coh_etoh_data = {}
+	mky_etoh_data = {}
+	for date in dates[:10]:
 		coh_etoh_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
 		mky_etoh_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
 
-	##  Reverse the order of the dates
-	rev_keys = coh_etoh_data.keys()
-	rev_keys.reverse()
+	sorted_keys = [item[0] for item in sorted(coh_etoh_data.items())]
+	sorted_values = [item[1] for item in sorted(mky_etoh_data.items())]
 
-	##  Plot the monkey drinking line.
-	rev_values = []
-	for i in mky_etoh_data.values():  # This sillyness turns a list[ of tuples( holding lists[])] into a list[] of daily ethanol intakes, which pyplot.plot() can use
-		for j in i:
-			rev_values[len(rev_values):] = [j[0]]
-	rev_values.reverse() # Reverses the intakes to match the dates.
-
-	pos = range(1,len(rev_values)+1)  # This is what aligns the boxplot and line graphs
+	pos = range(1,len(sorted_values)+1)  # This is what aligns the boxplot and line graphs
 	fig = pyplot.figure(figsize=fig_size)
 	ax1 = fig.add_subplot(111)
-	plt = pyplot.plot(pos, rev_values, colors['monkey'], linewidth=5)
+	plt = pyplot.plot(pos, sorted_values, colors['monkey'], linewidth=5)
 
-	rev_values = coh_etoh_data.values() # list[tuple(list[])] doesn't seem to bother the pyplot.boxplot()
-	rev_values.reverse() # Important to remember
-	bp = pyplot.boxplot(rev_values, positions=pos)
-
+	sorted_values = [item[1] for item in sorted(coh_etoh_data.items())]
+	bp = pyplot.boxplot(sorted_values, positions=pos)
 
 	## Pretty colors and fancy letters
 	pyplot.setp(bp['boxes'], linewidth=3, color=colors['cohort'])
@@ -126,7 +116,7 @@ def monkey_boxplot_etoh(monkey):
 	ax1.set_title('MATRR Boxplot')
 	ax1.set_xlabel("Date of Experiment")
 	ax1.set_ylabel('Ethanol Intake (in ml)')
-	xtickNames = pyplot.setp(ax1, xticklabels=rev_keys)
+	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 	pyplot.setp(xtickNames, rotation=45)
 
 	## Save image and create thumbnail
@@ -147,7 +137,7 @@ def monkey_boxplot_pellet(monkey):
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mki_real_id=monkey)
+			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
 			print("That's not a real monkey.")
 			return
@@ -164,30 +154,20 @@ def monkey_boxplot_pellet(monkey):
 	dates = monkey_drinking_experiments.dates('drinking_experiment__dex_date', 'day')
 
 	##  For all dates this monkey drank, collect the data
-	for date in dates:
+	for date in dates[:10]:
 		coh_pellet_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
 		mky_pellet_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
 
-	##  Reverse the order of the dates
-	rev_keys = coh_pellet_data.keys()
-	rev_keys.reverse()
+	sorted_keys = [item[0] for item in sorted(coh_pellet_data.items())]
+	sorted_values = [item[1] for item in sorted(mky_pellet_data.items())]
 
-	##  Plot the monkey line.
-	rev_values = []
-	for i in mky_pellet_data.values():  # This sillyness turns a list[ of tuples( holding lists[])] into a list[] of daily pellet (intakes?), which pyplot.plot() can use
-		for j in i:
-			rev_values[len(rev_values):] = [j[0]]
-	rev_values.reverse() # Reverses to match the dates.
-
-	pos = range(1,len(rev_values)+1)  # This is what aligns the boxplot and line graphs
+	pos = range(1,len(sorted_values)+1)  # This is what aligns the boxplot and line graphs
 	fig = pyplot.figure(figsize=fig_size)
 	ax1 = fig.add_subplot(111)
-	plt = pyplot.plot(pos, rev_values, colors['monkey'], linewidth=5)
+	plt = pyplot.plot(pos, sorted_values, colors['monkey'], linewidth=5)
 
-	rev_values = coh_pellet_data.values() # list[tuple(list[])] doesn't seem to bother the pyplot.boxplot()
-	rev_values.reverse() # Important to remember
-	bp = pyplot.boxplot(rev_values, positions=pos)
-
+	sorted_values = [item[1] for item in sorted(coh_pellet_data.items())]
+	bp = pyplot.boxplot(sorted_values, positions=pos)
 	## Pretty colors and fancy letters
 	pyplot.setp(bp['boxes'], linewidth=3, color=colors['cohort'])
 	pyplot.setp(bp['whiskers'], linewidth=3, color=colors['cohort'])
@@ -197,7 +177,7 @@ def monkey_boxplot_pellet(monkey):
 	ax1.set_title('MATRR Boxplot')
 	ax1.set_xlabel("Date of Experiment")
 	ax1.set_ylabel('Total Pellets')
-	xtickNames = pyplot.setp(ax1, xticklabels=rev_keys)
+	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 	pyplot.setp(xtickNames, rotation=45)
 
 	## Save image and create thumbnail
@@ -210,15 +190,13 @@ def monkey_boxplot_pellet(monkey):
 def monkey_boxplot_veh(monkey):
 	fig_size = (10,10)
 	thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
-	coh_veh_data = {}
-	mky_veh_data = {}
 	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
 	filename = 'static/images/' + 'veh' + "/" + str(monkey)
 
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mki_real_id=monkey)
+			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
 			print("That's not a real monkey.")
 			return
@@ -235,30 +213,22 @@ def monkey_boxplot_veh(monkey):
 	dates = monkey_drinking_experiments.dates('drinking_experiment__dex_date', 'day')
 
 	##  For all dates this monkey drank, collect the data
-	for date in dates:
+	coh_veh_data = {}
+	mky_veh_data = {}
+	for date in dates[:10]:
 		coh_veh_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
 		mky_veh_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
 
-	##  Reverse the order of the dates
-	rev_keys = coh_veh_data.keys()
-	rev_keys.reverse()
+	sorted_keys = [item[0] for item in sorted(coh_veh_data.items())]
+	sorted_values = [item[1] for item in sorted(mky_veh_data.items())]
 
-	##  Plot the monkey line.
-	rev_values = []
-	for i in mky_veh_data.values():  # This sillyness turns a list[ of tuples( holding lists[])] into a list[] of daily ethanol intakes, which pyplot.plot() can use
-		for j in i:
-			rev_values[len(rev_values):] = [j[0]]
-	rev_values.reverse() # Reverses the intakes to match the dates.
-
-	pos = range(1,len(rev_values)+1)  # This is what aligns the boxplot and line graphs
+	pos = range(1,len(sorted_values)+1)  # This is what aligns the boxplot and line graphs
 	fig = pyplot.figure(figsize=fig_size)
 	ax1 = fig.add_subplot(111)
-	plt = pyplot.plot(pos, rev_values, colors['monkey'], linewidth=5)
+	plt = pyplot.plot(pos, sorted_values, colors['monkey'], linewidth=5)
 
-	rev_values = coh_veh_data.values() # list[tuple(list[])] doesn't seem to bother the pyplot.boxplot()
-	rev_values.reverse() # Important to remember
-	bp = pyplot.boxplot(rev_values, positions=pos)
-
+	sorted_values = [item[1] for item in sorted(coh_veh_data.items())]
+	bp = pyplot.boxplot(sorted_values, positions=pos)
 
 	## Pretty colors and fancy letters
 	pyplot.setp(bp['boxes'], linewidth=3, color=colors['cohort'])
@@ -269,7 +239,7 @@ def monkey_boxplot_veh(monkey):
 	ax1.set_title('MATRR Boxplot')
 	ax1.set_xlabel("Date of Experiment")
 	ax1.set_ylabel('Veh Intake')
-	xtickNames = pyplot.setp(ax1, xticklabels=rev_keys)
+	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 	pyplot.setp(xtickNames, rotation=45)
 
 	## Save image and create thumbnail
@@ -290,7 +260,7 @@ def monkey_boxplot_weight(monkey):
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mki_real_id=monkey)
+			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
 			print("That's not a real monkey.")
 			return
@@ -307,30 +277,20 @@ def monkey_boxplot_weight(monkey):
 	dates = monkey_drinking_experiments.dates('drinking_experiment__dex_date', 'day')
 
 	##  For all dates this monkey drank, collect the data
-	for date in dates:
+	for date in dates[:10]:
 		coh_weight_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_weight=None).values_list('mtd_weight')
 		mky_weight_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_weight=None).values_list('mtd_weight')
 
-	##  Reverse the order of the dates
-	rev_keys = coh_weight_data.keys()
-	rev_keys.reverse()
+	sorted_keys = [item[0] for item in sorted(coh_weight_data.items())]
+	sorted_values = [item[1] for item in sorted(mky_weight_data.items())]
 
-	##  Plot the monkey line.
-	rev_values = []
-	for i in mky_weight_data.values():  # This sillyness turns a list[ of tuples( holding lists[])] into a list[] of daily ethanol intakes, which pyplot.plot() can use
-		for j in i:
-			rev_values[len(rev_values):] = [j[0]]
-	rev_values.reverse() # Reverses the intakes to match the dates.
-
-	pos = range(1,len(rev_values)+1)  # This is what aligns the boxplot and line graphs
+	pos = range(1,len(sorted_values)+1)  # This is what aligns the boxplot and line graphs
 	fig = pyplot.figure(figsize=fig_size)
 	ax1 = fig.add_subplot(111)
-	plt = pyplot.plot(pos, rev_values, colors['monkey'], linewidth=5)
+	plt = pyplot.plot(pos, sorted_values, colors['monkey'], linewidth=5)
 
-	rev_values = coh_weight_data.values() # list[tuple(list[])] doesn't seem to bother the pyplot.boxplot()
-	rev_values.reverse() # Important to remember
-	bp = pyplot.boxplot(rev_values, positions=pos)
-
+	sorted_values = [item[1] for item in sorted(coh_weight_data.items())]
+	bp = pyplot.boxplot(sorted_values, positions=pos)
 	## Pretty colors and fancy letters
 	pyplot.setp(bp['boxes'], linewidth=3, color=colors['cohort'])
 	pyplot.setp(bp['whiskers'], linewidth=3, color=colors['cohort'])
@@ -340,7 +300,7 @@ def monkey_boxplot_weight(monkey):
 	ax1.set_title('MATRR Boxplot')
 	ax1.set_xlabel("Date of Experiment")
 	ax1.set_ylabel('Weight (in kg)')
-	xtickNames = pyplot.setp(ax1, xticklabels=rev_keys)
+	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 	pyplot.setp(xtickNames, rotation=45)
 
 	## Save image and create thumbnail
