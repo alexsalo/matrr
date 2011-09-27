@@ -334,12 +334,11 @@ def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
 		veh_data = {}
 		weight_data = {}
 		for date in dates:
-			month_key = date.strftime("%b %Y")
 			cde_of_month = cohort_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
-			etoh_data[month_key] = cde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
-			pellet_data[month_key] = cde_of_month.exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
-			veh_data[month_key] = cde_of_month.exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
-			weight_data[month_key] = cde_of_month.exclude(mtd_weight=None).values_list('mtd_weight')
+			etoh_data[date] = cde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
+			pellet_data[date] = cde_of_month.exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
+			veh_data[date] = cde_of_month.exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
+			weight_data[date] = cde_of_month.exclude(mtd_weight=None).values_list('mtd_weight')
 		all_data = {"etoh" : ("Ethanol Intake (in ml)", etoh_data), "pellet" : ("Total Pellets", pellet_data), "veh" : ("Veh Intake", veh_data), "weight" : ("Weight (in kg)", weight_data)}
 
 
@@ -352,7 +351,7 @@ def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
 			filename = dir + cohort.coh_cohort_name
 			print filename
 
-			sorted_keys = [item[0] for item in sorted(data[1].items())]
+			sorted_keys = [item[0].strftime("%b %Y") for item in sorted(data[1].items())]
 			sorted_values = [item[1] for item in sorted(data[1].items())]
 
 			fig = pyplot.figure(figsize=fig_size)
