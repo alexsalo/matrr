@@ -40,7 +40,7 @@
 					{% with verification=tissue_request|get_verification:monkey %}
 						<td>
 							{% if verification == "Sufficient" %}<font color=green>{{ verification }}</font>{% else %}
-							{% if verification == "Insufficient" %}<font color=yellow>{{ verification }}</font>{% else %}
+							{% if verification == "Insufficient" %}<font color=orange>{{ verification }}</font>{% else %}
 							{% if verification == "Unverified" %}<font color=red>{{ verification }}</font>
 							{% endif %}{% endif %}{% endif %}
 						</td>
