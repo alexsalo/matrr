@@ -90,7 +90,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$', 	make_shipping_manifest_latex, name='manifest'),
 
 	#  Order review views
-	url(r'^reviews/$', 						reviews_list_view),
+	url(r'^reviews/$', 						reviews_list_view, name='review-list'),
 	url(r'^reviews/(?P<review_id>\d+)/$', 	review_detail, name='review-detail'),
 	url(r'^reviews_overviews/$', 			review_overview_list, name='review-overview-list'),
     url(r'^reviews_history/$',              review_history_list, name='review-history-list'),

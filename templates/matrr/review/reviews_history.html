@@ -49,7 +49,7 @@
 
 					{% endfor %}
 
-					<td><a href='/reviews_overviews/{{ req_request.req_request_id }}/' class='blockLinkButton'>Overview</a></td>
+					<td><a href='{% url review-overview req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>
 				</tr>
 			{% endfor %}
 		</table>

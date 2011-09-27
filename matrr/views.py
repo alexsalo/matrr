@@ -436,7 +436,7 @@ def review_detail(request, review_id):
 	if request.method == 'POST':
 		if request.POST['submit'] == 'cancel':
 			messages.info(request, 'Review cancelled.')
-			return redirect('/reviews/')
+			return redirect(reverse('review-list'))
 
 		form = ReviewForm(data=request.POST.copy(), instance=review)
 
@@ -444,7 +444,7 @@ def review_detail(request, review_id):
 			# all the forms are valid, so save the data
 			form.save()
 			messages.success(request, 'Review saved.')
-			return redirect('/reviews/')
+			return redirect(reverse('review-list'))
 	else:
 		# create the forms for the review and the tissue request reviews
 		form = ReviewForm(instance=review)
@@ -563,7 +563,7 @@ def review_overview(request, req_request_id):
 
 		if tissue_request_forms.is_valid():
 			tissue_request_forms.save()
-			return redirect('/reviews_overviews/' + str(req_request_id) + '/process/')
+			return redirect(reverse('review-overview-process', args=[req_request_id]))
 		else:
 			# get the reviews for the request
 			reviews = list(req_request.review_set.all())
@@ -785,7 +785,7 @@ def request_review_process(request, req_request_id):
 					send_mail(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email])
 				messages.success(request, str(
 					req_request.user.username) + " was sent an email informing him/her that the request was accepted.")
-				return redirect('/reviews_overviews/')
+				return redirect(reverse('review-overview-list'))
 			else:
 				return render_to_response('matrr/review/process.html',
 						{'form': form,
@@ -795,7 +795,7 @@ def request_review_process(request, req_request_id):
 										  context_instance=RequestContext(request))
 		else:
 			messages.info(request, "The tissue request has not been processed.  No email was sent.")
-			return redirect('/reviews_overviews/')
+			return redirect(reverse('review-overview-list'))
 	else:
 		# get the subject
 		subject = render_to_string('matrr/review/request_email_subject.txt',
