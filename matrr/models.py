@@ -873,6 +873,8 @@ class TissueSample(models.Model):
 	tss_sample_quantity = models.FloatField('Sample Quantity', null=True, default=1)
 	units = models.ForeignKey(Unit, null=False, default=Unit.objects.get(unt_unit_name="whole"))
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
+	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='+', db_column='usr_usr_id', editable=False, null=True)
+
 
 	def get_modified(self):
 		return self.tss_modified
@@ -951,7 +953,7 @@ class TissueInventoryVerification(models.Model):
 	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_verification_set', db_column='tst_type_id')
 	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')
-	inventory = models.ForeignKey(InventoryStatus, blank=False, null=False, db_column='inv_id')
+	inventory = models.ForeignKey(InventoryStatus, blank=False, null=False, db_column='inv_id', default=InventoryStatus.objects.get(inv_status="Unverified").pk)
 
 	tiv_notes = models.TextField('Verification Notes', blank=True,
 								 help_text='Used to articulate database inconsistencies.')
@@ -990,11 +992,7 @@ class TissueInventoryVerification(models.Model):
 			self.tissue_sample = self.get_sample()[0]
 			self.tiv_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
 
-		## Update timestamps
-		if self.tiv_date_created is None:
-			self.tiv_date_created = datetime.now()
-			self.inventory = InventoryStatus.objects.get(inv_status="Unverified")
-		self.tiv_date_modified = datetime.now()
+		# I'm not sure if there's a reason this isn't first, but it shouldn't be after the conditional delete below -jf
 		super(TissueInventoryVerification, self).save(*args, **kwargs)
 
 		## If the tissue has been verified, but has NO tissue_request associated with it

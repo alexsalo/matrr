@@ -1018,6 +1018,7 @@ def tissue_verification(request):
 				tss.tss_location = data['location']
 				tss.tss_freezer = data['freezer']
 				tss.tss_details = data['details']
+				tss.user = request.user
 				if data['quantity']:
 					tss.tss_sample_quantity = data['quantity']
 				if data['units']:
