@@ -996,7 +996,7 @@ class TissueInventoryVerification(models.Model):
 		super(TissueInventoryVerification, self).save(*args, **kwargs)
 
 		## If the tissue has been verified, but has NO tissue_request associated with it
-		if self.inventory != InventoryStatus.objects.filter(inv_status="Unverified")\
+		if self.inventory != InventoryStatus.objects.get(inv_status="Unverified")\
 		and self.tissue_request is None:
 			self.delete() # delete it
 
@@ -1066,6 +1066,20 @@ def request_post_save(**kwargs):
 			# Then delete them
 			tivs.delete()
 
+	# For Partially Accepted Requests
+	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
+	and current_status == RequestStatus.objects.get(rqs_status_name='Partially Accepted'):
+		for tissue_request in tissue_requests:
+			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
+			# First, invalidate all colliding TIVs
+			for tiv in tivs:
+				if tiv.monkey in tissue_request.accepted_monkeys.all():
+					tiv.invalidate_collisions()
+					tiv.delete()
+				else:
+					tiv.tissue_request=None
+					tiv.save()
+
 	# For Rejected Requests
 	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
 	and current_status == RequestStatus.objects.get(rqs_status_name='Rejected'):
@@ -1074,12 +1088,8 @@ def request_post_save(**kwargs):
 			# This will allow the inventory to still be checked, but won't disrupt other operations
 			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
 			for tiv in tivs:
-				tiv.tissue_request=None ##### for some damn reason, this is deleting the tiv.  i think. only sometimes.  usually.
+				tiv.tissue_request=None
 				tiv.save()
-			# get any verification objects in this TissueRequest that HAVE been verified
-			unverified = InventoryStatus.objects.get(inv_status="Unverified")
-			verified_tivs = tivs.exclude(inventory=unverified)
-			verified_tivs.delete() # and delete them
 
 	req_request._previous_status_id = None
 
