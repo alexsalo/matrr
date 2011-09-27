@@ -1,8 +1,9 @@
+import os
 from matrr.models import *
 from matplotlib import pyplot
 import Image
 
-def cohort_boxplot_m2de(cohort):
+def cohort_boxplot_m2de(cohort, days=10):
 	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
 	# Gather drinking monkeys from the cohort
 	if not isinstance(cohort, Cohort):
@@ -14,14 +15,14 @@ def cohort_boxplot_m2de(cohort):
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 	if cohort_drinking_experiments.count() > 0:
-		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'day')
+		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('-drinking_experiment__dex_date')
 
 		# For each experiment date, gather the drinking data
 		etoh_data = {}
 		pellet_data = {}
 		veh_data = {}
 		weight_data = {}
-		for date in dates:
+		for date in dates[:days]:
 			etoh_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
 			pellet_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
 			veh_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
@@ -32,15 +33,14 @@ def cohort_boxplot_m2de(cohort):
 		fig_size = (10,10)
 		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
 		for data_type, data in all_data.items():
-			filename = 'static/images/' + data_type + "/" + cohort.coh_cohort_name
+			dir = 'static/images/' + data_type + "/"
+			if not os.path.exists(dir):
+				os.makedirs(dir)
+			filename = dir + cohort.coh_cohort_name
 			print filename
 
-			# *_data.values()/keys() is sorted ascending by date (oldest last) (as much as a dictionary can be at least)
-			# this reverses the lists, which will display the oldest dates on the left of the boxplot
-			rev_values = data[1].values()
-			rev_keys = data[1].keys()
-			rev_keys.reverse()
-			rev_values.reverse()
+			sorted_keys = [item[0] for item in sorted(data[1].items())]
+			sorted_values = [item[1] for item in sorted(data[1].items())]
 
 			fig = pyplot.figure(figsize=fig_size)
 			ax1 = fig.add_subplot(111)
@@ -50,17 +50,19 @@ def cohort_boxplot_m2de(cohort):
 			ax1.set_xlabel("Date of Experiment")
 			ax1.set_ylabel(data[0])
 			
-			bp = pyplot.boxplot(rev_values)
+			bp = pyplot.boxplot(sorted_values)
 			pyplot.setp(bp['boxes'], linewidth=3, color=colors['cohort'])
 			pyplot.setp(bp['whiskers'], linewidth=3, color=colors['cohort'])
 			pyplot.setp(bp['fliers'], color='red', marker='+')
-			xtickNames = pyplot.setp(ax1, xticklabels=rev_keys)
+			xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 			pyplot.setp(xtickNames, rotation=45)
 			fig.savefig(filename + ".png")
 
 			img = Image.open(filename + ".png")
 			img.thumbnail(thumb_size, Image.ANTIALIAS)
 			img.save(filename + "-thumb.jpg")
+	else:
+		print "No drinking experiments for this cohort."
 
 
 def monkey_boxplot_etoh(monkey):
