@@ -216,8 +216,9 @@ def load_cohorts(file):
 			   institution=placeholder,
 			   coh_species=row[1]).save()
 
-
-## Old, might be useful in the future, but kept for reference
+# This was _not_ built to be used often.  In fact, if it ever needs to be used again, you'll probably have to rewrite it.
+# Like I just did.
+# -jf
 @transaction.commit_on_success
 def load_inventory(file, output_file):
 	"""
@@ -228,205 +229,110 @@ def load_inventory(file, output_file):
 	  It also assumes the columns are in the following order:
 		0 - Cohort Name -- ignoring this column for now
 		1 - Monkey ID
-		2 - Monkey Name
-		3 - Species
-		4 - Sex
-		5 - Date of Birth
-		6 - Necropsy Date (or necropsy start date)
-		7 - Date/Date Range Start Comment
-		8 - Date Range End
-		9 - Date Range End Comment
-		10 - Age at Necropsy
-		11 - Weight at Necropsy
-		12 - WFU Treatment Codes -- ignoring this column for now
-		13 - Tissue Category
-		14 - Tissue Detail
-		15 - Comments
-		16 - Additional Info for Specific Tissue
-		17 - Shelf
-		18 - Rack
-		19 - Column
-		20 - Box
-		21 - Distributed
-		22 - Reserved
-		23 - Reserved Quantity
-		24 - Samples in Inventory
-		25 - Available samples
-		26 - Freezer
-		27 - Original Box Status -- ignoring for now
+		2 - Necropsy Date (or necropsy start date)
+		3 - Date Range End
+		4 - MATRR TissueType Name
+		5 - Shelf
+		6 - Rack
+		7 - Column
+		8 - Box
+		9 - Available samples
+		10 - Freezer
 	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	input = csv.reader(open(file, 'rU'), delimiter=',')
+	output = csv.writer(open(output_file, 'w'), delimiter=',')
+	unknown_monkeys = csv.writer(open('unknown_monkeys.csv', 'w'), delimiter=',')
 	# get the column headers
 	columns = input.next()
+	columns[11:] = ["MATRR parsing error"]
 	output.writerow(columns)
-	unused_monkeys = set()
+	unknown_monkeys.writerow(columns)
 	monkeys = []
-	regex = re.compile(r'.*distributed.*', re.IGNORECASE)
-	category_regex = re.compile(r'.*brain block.*', re.IGNORECASE)
+	units = Unit.objects.get(unt_unit_name="whole")
 	for row in input:
+		# Empty monkey cell
 		if row[1] is '' or row[1] is None:
+			row[len(row):] = "empty monkey"
+			output.writerow(row)
+			continue
+		if "---" in row[4]:
 			continue
 
-		### 	had to fix some rows in 20110809 data, details in ### comments
-		monkey_id = row[1]
-		monkey_name = row[2]
-		monkey_birthdate = row[5]
-		necropsy_start_date = row[6]
-		necropsy_start_date_comments = row[7]
-		necropsy_end_date = row[8]
-		necropsy_end_date_comments = row[9]
-		age_at_necropsy = row[10]
-		necropsy_weight = row[11]
-		tissue_category = row[13]
+		monkey_id 			= row[1].rstrip().lstrip()
+		necropsy_start_date = row[2].rstrip().lstrip()
+		necropsy_end_date 	= row[3].rstrip().lstrip()
+		raw_tissue_types 	= row[4].rstrip().lstrip()
+		shelf 				= row[5].rstrip().lstrip()		### 	"SHELF #" to "#" with find/replace in spreadsheet apps
+		drawer 				= row[6].rstrip().lstrip()		### 	"Drawer #"  -->  "#"
+		tower 				= row[7].rstrip().lstrip()
+		box 				= row[8].rstrip().lstrip()		### 	"bag" --> "0"
+		available_samples 	= row[9].rstrip().lstrip()
+		freezer 			= row[10].rstrip().lstrip()
 
-		### 	had to fix a few dozen cells to read "##" instead of plain ##.
-		tissue_detail = row[14]
-		comments = row[15]
-		additional_info = row[16]
+		if Monkey.objects.filter(mky_real_id=monkey_id).count() == 1:
+			monkey = Monkey.objects.get(mky_real_id=monkey_id)
 
-		### 	"SHELF #" to "#" with find/replace in spreadsheet apps
-		shelf = row[17]
-
-		### 	"Drawer #"  -->  "#"
-		rack = row[18]
-		column = row[19]
-
-		### 	"bag" --> "0"
-		box = row[20]
-		distributed = row[21]
-		reserved = row[22]
-		reserved_quantity = row[23]
-		samples_in_inventory = row[24]
-		available_samples = row[25]
-		freezer = row[26]
-		#original_box_status = row[27]
-
-		if Monkey.objects.filter(mky_real_id=monkey_id).count():
-			# if the monkey exists
-			# update it
+			# Update necropsy dates if there are none.
 			if monkey_id not in monkeys:
-				monkey = Monkey.objects.get(mky_real_id=monkey_id)
-				if monkey_name:
-					monkey.mky_name = monkey_name
-				if monkey_birthdate:
-					match = re.match(r'(\d{2})/(\d{2})/(\d{2})', monkey_birthdate)
-					if int(match.group(3)) < 20:
-						year_prefix = '20'
-					else:
-						year_prefix = '19'
-					monkey.mky_birthdate = match.group(1) + "/" + match.group(1) + "/" + year_prefix + match.group(3)
-				if necropsy_start_date:
+				if necropsy_start_date and not monkey.mky_necropsy_start_date:
 					monkey.mky_necropsy_start_date = re.sub(r'(\d{2})/(\d{2})/(\d{2})', r'20\3-\1-\2', necropsy_start_date)
-				if necropsy_start_date_comments:
-					monkey.mky_necropsy_start_date_comments = necropsy_start_date_comments
-				if necropsy_end_date:
+				if necropsy_end_date and not monkey.mky_necropsy_end_date:
 					monkey.mky_necropsy_end_date = re.sub(r'(\d{2})/(\d{2})/(\d{2})', r'20\3-\1-\2', necropsy_end_date)
-				if necropsy_end_date_comments:
-					monkey.mky_necropsy_end_date_comments = necropsy_end_date_comments
-				if age_at_necropsy:
-					monkey.mky_age_at_necropsy = age_at_necropsy
-				if necropsy_weight:
-					monkey.mky_weight = necropsy_weight
 				monkey.save()
 				monkeys.append(monkey_id)
 
-			# add the tissue category, type, and sample
-
-			# if the tissue detail includes "distributed", then the tissue is distributed and should not be added
-			if regex.match(tissue_detail):
-				# skip the rest of the loop because the sample has been distributed
-				continue
-
-			# first, get the category
-			###			Renamed "Necropsy Perif
-			if TissueCategory.objects.filter(cat_name=tissue_category).count():
-				# don't bother updating the description, it shouldn't be changing
-				category = TissueCategory.objects.get(cat_name=tissue_category)
-			else:
-				# if the category doesn't exist, create it
-				category = TissueCategory(cat_name=tissue_category, cat_description=comments)
-
-				# if the tissue category includes 'brain block' flag the category for internal use only
-				if category_regex.match(tissue_category):
-					category.cat_internal = True
-				else:
-					category.cat_internal = False
-				category.save()
-
+			dump = False
 			# get the tissue type
-			#    could be replaced with get_or_create() maybe
-			if TissueType.objects.filter(tst_tissue_name=tissue_detail, category=category).count():
-				tissue_type = TissueType.objects.get(tst_tissue_name=tissue_detail, category=category)
-			else:
-				# if the tissue type doesn't exist, create it
-				tissue_type = TissueType(tst_tissue_name=tissue_detail, category=category)
-				tissue_type.save()
+			raw_tissue_types = raw_tissue_types.split("|")
+			tissue_types = []
+			for tissue_name in raw_tissue_types:
+				if TissueType.objects.filter(tst_tissue_name=tissue_name).count():
+					tissue_types[len(tissue_types):] = [TissueType.objects.get(tst_tissue_name=tissue_name)]
+				else:
+					if tissue_name:
+						# If it isn't empty and doesn't exist, dump the row to the outfile
+						row[11:] = ["Unmatched tissue type, %s.  Check for typos" % tissue_name]
+						output.writerow(row)
 
-			# build the location string
-			if shelf and rack and column and box:
-				location = str(int(shelf)) + '-' + str(int(rack)) + '-' + str(int(column)) + '-' + str(int(box))
-			else:
-				location = "None"
-
-			if TissueSample.objects.filter(tissue_type=tissue_type, monkey=monkey, tss_freezer=freezer, tss_location=location).count():
-				# if the sample already exists, update the counts for it and the location
-				sample = TissueSample.objects.get(tissue_type=tissue_type, monkey=monkey, tss_freezer=freezer, tss_location=location)
-				if location:
-					sample.tss_location = location
+			for tissue_type in tissue_types:
+				#  Must have created tissue samples before running this function
+				#  Only intended to update records, not create them
+				sample = TissueSample.objects.get(tissue_type=tissue_type, monkey=monkey)
+				# build the location string
+				shelf = str(shelf)
+				drawer = str(drawer)
+				tower = str(tower)
+				box = str(box)
+				if shelf and drawer and tower and box: # evaluates True if shelf=drawer=tower=box=0, but False if any are empty
+					location = shelf + '-' + drawer + '-' + tower + '-' + box
+				else:
+					location = "None"
+				sample.tss_location = location
 				if freezer:
 					sample.tss_freezer = freezer
-				if reserved_quantity:
-					sample.tss_distributed_count = int(reserved_quantity)
-				if samples_in_inventory:
-					sample.tss_sample_count = int(samples_in_inventory)
-			else:
-				# create the sample
-				sample = TissueSample(tissue_type=tissue_type, monkey=monkey, tss_freezer=freezer, tss_location=location, )
-				if samples_in_inventory:
-					sample.tss_sample_count = samples_in_inventory
+				if available_samples or available_samples == 0:
+					sample.tss_sample_quantity = float(available_samples)
+					sample.units=units
 				else:
-					sample.tss_sample_count = 1
-				if reserved_quantity:
-					sample.tss_distributed_count = reserved_quantity
-				else:
-					sample.tss_distributed_count = 0
-				# save the newly created or updated sample
-			sample.save()
+					if "ohsu" in freezer.lower():
+						sample.tss_sample_quantity = 1
+						sample.units=units
+					else:
+						sample.tss_sample_quantity = 0
+						sample.units=units
+						row[4] = tissue_type
+						row[11:] = ["AvailableQuantity is empty and freezer is not OHSU.  Assuming 0 quantity"]
+						dump = True
+				sample.save()
+				if dump:
+					output.writerow(row)
 		else:
-			# if the monkey does not exist,
+			# if the monkey does not exist, or we have more than 1 monkey record,
 			# add the monkey to the list of left out monkeys
-			output.writerow(row)
-			unused_monkeys.add(monkey_id)
-
-	# at the end, we need to print a list of monkey ids that were left out
-	for monkey_id in unused_monkeys:
-		print int(monkey_id)
-
+			row[11:] = ["No MATRR record for this monkey"]
+			unknown_monkeys.writerow(row)
 	#raise Exception('Just testing') #uncomment for testing purposes
 
-
-### I added this after I added a bunch of ugly data to the database
-### This will remove all tissue samples, tissue types and tissue categories from a 'dirty' category.
-### I haven't used it yet, but I probably will at some point.  We're still working on organizing the data more clearly
-### -jf
-#def recursive_category_removal():
-#	dirtycategory = TissueCategory.objects.filter(cat_name="Necropsy Peripheral tissues")
-#
-#	for tissue in TissueType.objects.filter(category=dirtycategory):
-#		for sample in TissueSample.objects.filter(tissue_type=tissue):
-#			sample.delete()
-#		#			sample.save()
-#		tissue.delete()
-#	#		tissue.save()
-#	dirtycategory.delete()
-#
-#	##  or...
-#	TissueSample.objects.filter(tissue_type__category=dirtycategory).delete()
-#	TissueType.objects.filter(category=dirtycategory).delete()
-#	dirtycategory.delete()
-#	return
-#
 
 ## Wrote this to correct birthdate string formats which load_experiments had slaughtered.
 ## This still saves birthdays as a string, not a datetime.
@@ -694,7 +600,7 @@ def create_TissueSamples():
 			if is_new:
 				sample.tss_freezer = "<new record, no data>"
 				sample.tss_location = "<new record, no data>"
-				# Incredibly spammy
+				# Can be incredibly spammy
 				print "New tissue sample: " + sample.__unicode__()
 
 @transaction.commit_on_success
