@@ -1,9 +1,0 @@
-##  http://matplotlib.sourceforge.net/users/customizing.html
-##  I copied my local /etc/matplotlibrc, changed the subplot settings to make m2de plots look better
-
-figure.subplot.left		: 0.1  # the left side of the subplots of the figure
-figure.subplot.right	: 0.98    # the right side of the subplots of the figure
-figure.subplot.bottom	: 0.12    # the bottom of the subplots of the figure
-figure.subplot.top		: 0.96    # the top of the subplots of the figure
-figure.subplot.wspace	: 0.05    # the amount of width reserved for blank space between subplots
-figure.subplot.hspace	: 0.05    # the amount of height reserved for white space between subplots
