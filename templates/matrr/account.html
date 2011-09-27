@@ -103,7 +103,7 @@ This section displays the status of requests
             {% else %}
             <td class='text-center-common-td'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>View Protocol</a></td>
             {% endif %}
-            <td class='text-center-common-td'><a href='/orders/{{ order.req_request_id }}'>Details</a></td>
+            <td class='text-center-common-td'><a href='{% url order-detail order.req_request_id %}'>Details</a></td>
             
         </tr>
     {% endfor %}

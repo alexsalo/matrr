@@ -802,7 +802,7 @@ def request_review_process(request, req_request_id):
 				{'status': status})
 		# Email subject *must not* contain newlines
 		subject = ''.join(subject.splitlines())
-		request_url = '/orders/' + str(req_request.req_request_id) + '/'
+		request_url = reverse('order-detail', args=[req_request.req_request_id])
 		body = render_to_string(email_template,
 				{'request_url': request_url,
 				 'req_request': req_request,
@@ -990,7 +990,7 @@ def order_delete(request, req_request_id):
 	status = req_request.request_status.rqs_status_name
 	if status == "Accepted" or status == "Rejected" or status == "Partially Accepted":
 		messages.error(request, "You cannot delete an order which has been accepted/rejected.")
-		return redirect('/orders/')
+		return redirect(reverse('order-list'))
 
 	if request.POST:
 		if request.POST['submit'] == 'yes':
@@ -998,7 +998,7 @@ def order_delete(request, req_request_id):
 			messages.success(request, 'The order was deleted.')
 		else:
 			messages.info(request, 'The order was not deleted.')
-		return redirect('/orders/')
+		return redirect(reverse('order-list'))
 	else:
 		return render_to_response('matrr/order_delete.html',
 				{'order': req_request,
