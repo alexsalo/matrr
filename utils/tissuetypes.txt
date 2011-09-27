@@ -2,6 +2,7 @@ Amygdala (Accessory Basal)
 Amygdala (Basal)
 Amygdala (Basolateral)
 Amygdala (Central)
+Amygdala (Dorsal)
 Amygdala (Lateral)
 Amygdala (Medial)
 Area 1, 2, 3
@@ -9,6 +10,7 @@ Area 4
 Area 9
 Area 10
 Area 12
+Area 13
 Area 14
 Area 17
 Area 24
@@ -23,7 +25,7 @@ Cerebellum (Vermis)
 Cerebrospinal fluid
 Corpus callosum
 Cortex (Lateral orbital)
-Cortex (Occipita)
+Cortex (Occipital)
 Cortex (Orbital frontal)
 Cortex (Prefrontal)
 Dentate gyrus
@@ -74,6 +76,9 @@ Esophagus
 Fat (Abdominal)
 Fat (Brown)
 Fat (Mesenteric)
+Fat (Pericardial)
+Fat (Perigonadal)
+Fat (Perirenal)
 Fat (Retroperitoneal)
 Fat (Subcutaneous)
 Gall bladder
