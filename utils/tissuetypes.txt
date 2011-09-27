@@ -107,7 +107,6 @@ Nerve (Sciatic)
 Pancreas
 Prostate
 Septum
-Serum
 Small intestine
 Spleen
 Stomach
@@ -115,3 +114,6 @@ Urine
 
 Custom brain
 Custom peripheral
+
+
+Serum

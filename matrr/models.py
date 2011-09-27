@@ -870,7 +870,7 @@ class TissueSample(models.Model):
 	tss_details = models.TextField('Details',
 								   null=True, blank=True,
 								   help_text='Any extras details about this tissue sample.')
-	tss_sample_quantity = models.FloatField('Sample Quantity', default=1)
+	tss_sample_quantity = models.FloatField('Sample Quantity', default=0)
 	units = models.ForeignKey(Unit, null=False, default=Unit.objects.get(unt_unit_name="whole").pk)
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='+', db_column='usr_usr_id', editable=False, null=True)
