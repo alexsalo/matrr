@@ -2,31 +2,34 @@ from matrr.models import *
 from django.contrib import admin
 
 class TissueAdmin(admin.ModelAdmin):
-  formfield_overrides = {
-    models.ManyToManyField: {'widget': admin.widgets.FilteredSelectMultiple("Monkeys", is_stacked=False)},
-  }
-  list_filter = ('category', )
-  search_fields = ['tst_tissue_name']
+	formfield_overrides = {
+		models.ManyToManyField: {'widget': admin.widgets.FilteredSelectMultiple("Monkeys", is_stacked=False)},
+		}
+	list_filter = ('category', )
+	search_fields = ['tst_tissue_name']
+
 
 class TissueSampleAdmin(admin.ModelAdmin):
-  actions = ['remove_samples_from_inventory',
-             'update_inventory_dates']
-  readonly_fields = ('tss_modified',)
-  list_filter = ('monkey__cohort',
-                 'monkey',
-                 'tissue_type__category',
-                 'tissue_type',
-                 'tss_freezer', )
+	actions = ['remove_samples_from_inventory',
+			   'update_inventory_dates']
+	readonly_fields = ('tss_modified', "user")
+	list_filter = ('monkey__cohort',
+				   'monkey',
+				   'tissue_type__category',
+				   'tissue_type',
+				   'tss_freezer',
+					'user',)
 
-  def queryset(self, request):
-    return TissueSample.objects
+	def queryset(self, request):
+		return TissueSample.objects
 
-  def update_inventory_dates(self, request, queryset):
-    for model in queryset.all():
-      model.save()
+	def update_inventory_dates(self, request, queryset):
+		for model in queryset.all():
+			model.save()
+
 
 class RequestAdmin(admin.ModelAdmin):
-    readonly_fields=('req_report_asked',)
+	readonly_fields = ('req_report_asked',)
 
 
 admin.site.register(TissueType, TissueAdmin)
