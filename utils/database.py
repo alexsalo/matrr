@@ -60,83 +60,89 @@ def load_monkeys(file):
 	  This function will load monkeys from a csv file.
 	  It assumes that the cohorts have already been created.
 	  It also assumes the columns are in the following order:
-		0 - Monkey ID
-		1 - Date of Birth
-		2 - Cohort Name
-		3 - Stress Model
-		4 - Sex (either 'male' or 'female')
-		5 - Drinking (marked if non-drinking or housing control)
-		6 - Name
-		7 - Necropsy Date
-		8 - Complete Study (marked if incomplete)
+		0 - DoB
+		1 - Old ID (ignored)
+		2 - Name (ignored)
+		3 - New ID (ignored)
+		4 - Birth Estimate (bool, "x"=true)
+		5 - Animal #
+		6 - Name (all == "INIA")
+		7 - Alt Name (ignored)
+		8 - Cohort (ignored)
+		9 - Sub-Cohort (ignore)
+		10 - Full Cohort ref (renamed to match matrr)
+		11 - Species
+		12 - SEX  (not gender, damnit, sex)
+		13 - non-drinking ("control", "practice", "housing ctrl")
+		14 - Name (None == "NULL")
+		15 - Necropsy date
+		16 - Incomplete study
 	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	input = csv.reader(open(file, 'rU'), delimiter=',')
 	# get the column headers
 	columns = input.next()
 
 	for row in input:
-		# get the cohort
-		cohort = Cohort.objects.get(coh_cohort_name=row[2])
-		# clean up the input
-		id = int(row[0])
-		birthdate = row[1]
-		stress_model = row[3]
-		if len(stress_model) == 0:
-			stress_model = None
-		sex = None
-		if row[4] == 'male':
-			sex = 'M'
-		elif row[4] == 'female':
-			sex = 'F'
-
+		cohort = Cohort.objects.get(coh_cohort_name=row[10])
+		monkey_id = int(row[5])
+		sex = row[12]
 		drinking = True
 		housing_control = False
-		if len(row[5]) != 0:
+		if row[13]:
 			drinking = False
-			if row[5] == 'housing ctrl':
+			if row[13] == 'housing ctrl':
 				housing_control = True
 
 		name = None
-		if row[6] != 'NULL':
-			name = row[6]
+		if row[14] != 'NULL':
+			name = row[14]
 
+		# convert the birthdatedate from mm/dd/yy to ISO format
+		if row[0]:
+			match = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2})', row[0])
+			if int(match.group(3)) < 50:
+				millennium = '20'
+			else:
+				millennium = '19'
+			birthdate = millennium + match.group(3) + "-" + match.group(1) + "-" + match.group(2)
+		else:
+			birthdate = None
 		# convert the necropsy date from mm/dd/yy to ISO format
 		# this assumes all necropsy were after 2000.
-		necropsy = re.sub(r'(\d+)/(\d+)/(\d+)',
-						  r'20\3-\1-\2',
-						  row[7])
-		if len(necropsy) == 0:
+		match = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2})', row[15])
+		necropsy = '20' + match.group(3) + "-" + match.group(1) + "-" + match.group(2)
+		if not len(necropsy):
 			necropsy = None
 
 		complete_study = True
-		if len(row[8]) != 0 or necropsy is None:
+		if len(row[16]) != 0 or necropsy is None:
 			complete_study = False
 
 		# check if the monkey already exists
-		if Monkey.objects.filter(mky_real_id=id).count():
+		if Monkey.objects.filter(mky_real_id=monkey_id).count():
 			# Update the monkey
-			monkey = Monkey.objects.get(mky_real_id=id)
+			monkey = Monkey.objects.get(mky_real_id=monkey_id)
 			monkey.mky_birthdate = birthdate
-			monkey.mky_stress_model = stress_model
 			monkey.mky_gender = sex
 			monkey.mky_drinking = drinking
 			monkey.mky_name = name
-			monkey.mky_necropsy_date = necropsy
+			monkey.mky_necropsy_start_date = necropsy
 			monkey.mky_housing_control = housing_control
 			monkey.mky_study_complete = complete_study
 			monkey.save()
+			print monkey
 		else:
 			# Create the monkey and save it
-			Monkey(cohort=cohort,
-				   mky_real_id=id,
+			monkey = Monkey(cohort=cohort,
+				   mky_real_id=monkey_id,
 				   mky_birthdate=birthdate,
-				   mky_stress_model=stress_model,
 				   mky_gender=sex,
 				   mky_drinking=drinking,
 				   mky_name=name,
-				   mky_necropsy_date=necropsy,
+				   mky_necropsy_start_date=necropsy,
 				   mky_housing_control=housing_control,
 				   mky_study_complete=complete_study).save()
+			print monkey
 
 
 ## Old, might be useful in the future, but kept for reference
@@ -220,7 +226,7 @@ def load_cohorts(file):
 # Like I just did.
 # -jf
 @transaction.commit_on_success
-def load_inventory(file, output_file):
+def load_inventory(file, output_file, load_tissue_types=False,  delete_name_duplicates=False, create_tissue_samples=False):
 	"""
 	  This function will load freezer inventories from a csv file.
 	  !!!!! It will only load monkeys that are already in the database !!!!!
@@ -239,6 +245,8 @@ def load_inventory(file, output_file):
 		9 - Available samples
 		10 - Freezer
 	  """
+	if load_tissue_types:
+		load_TissueTypes('tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
 	input = csv.reader(open(file, 'rU'), delimiter=',')
 	output = csv.writer(open(output_file, 'w'), delimiter=',')
 	unknown_monkeys = csv.writer(open('unknown_monkeys.csv', 'w'), delimiter=',')
@@ -258,16 +266,16 @@ def load_inventory(file, output_file):
 		if "---" in row[4]:
 			continue
 
-		monkey_id 			= row[1].rstrip().lstrip()
+		monkey_id = row[1].rstrip().lstrip()
 		necropsy_start_date = row[2].rstrip().lstrip()
-		necropsy_end_date 	= row[3].rstrip().lstrip()
-		raw_tissue_types 	= row[4].rstrip().lstrip()
-		shelf 				= row[5].rstrip().lstrip()		### 	"SHELF #" to "#" with find/replace in spreadsheet apps
-		drawer 				= row[6].rstrip().lstrip()		### 	"Drawer #"  -->  "#"
-		tower 				= row[7].rstrip().lstrip()
-		box 				= row[8].rstrip().lstrip()		### 	"bag" --> "0"
-		available_samples 	= row[9].rstrip().lstrip()
-		freezer 			= row[10].rstrip().lstrip()
+		necropsy_end_date = row[3].rstrip().lstrip()
+		raw_tissue_types = row[4].rstrip().lstrip()
+		shelf = row[5].rstrip().lstrip()		### 	"SHELF #" to "#" with find/replace in spreadsheet apps
+		drawer = row[6].rstrip().lstrip()		### 	"Drawer #"  -->  "#"
+		tower = row[7].rstrip().lstrip()
+		box = row[8].rstrip().lstrip()		### 	"bag" --> "0"
+		available_samples = row[9].rstrip().lstrip()
+		freezer = row[10].rstrip().lstrip()
 
 		if Monkey.objects.filter(mky_real_id=monkey_id).count() == 1:
 			monkey = Monkey.objects.get(mky_real_id=monkey_id)
@@ -312,14 +320,14 @@ def load_inventory(file, output_file):
 					sample.tss_freezer = freezer
 				if available_samples or available_samples == 0:
 					sample.tss_sample_quantity = float(available_samples)
-					sample.units=units
+					sample.units = units
 				else:
 					if "ohsu" in freezer.lower():
 						sample.tss_sample_quantity = 1
-						sample.units=units
+						sample.units = units
 					else:
 						sample.tss_sample_quantity = 0
-						sample.units=units
+						sample.units = units
 						row[4] = tissue_type
 						row[11:] = ["AvailableQuantity is empty and freezer is not OHSU.  Assuming 0 quantity"]
 						dump = True
@@ -331,7 +339,7 @@ def load_inventory(file, output_file):
 			# add the monkey to the list of left out monkeys
 			row[11:] = ["No MATRR record for this monkey"]
 			unknown_monkeys.writerow(row)
-	#raise Exception('Just testing') #uncomment for testing purposes
+		#raise Exception('Just testing') #uncomment for testing purposes
 
 
 ## Wrote this to correct birthdate string formats which load_experiments had slaughtered.
@@ -469,7 +477,7 @@ def load_necropsy_dates(file):
 	columns = input.next()
 
 	for row in input:
-		real_id	= row[0].replace(" ", '')
+		real_id = row[0].replace(" ", '')
 		necropsy = row[6].replace(" ", '')
 		name = row[5].strip()
 		if name == '':
@@ -500,19 +508,22 @@ def load_necropsy_dates(file):
 # if empty group, just empty line
 # no empty line at the end of file!!!
 def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samples=False):
-	categories = {'brain' : "Brain Tissues", 'periph':"Peripheral Tissues", 'custom':"Custom"}
+	categories = {'brain': "Brain Tissues", 'periph': "Peripheral Tissues", 'custom': "Custom",
+				  'int_brain': "Internal Brain Tissues", 'int_periph': "Internal Peripheral Tissues"}
 	categs = []
 	try:
 		categs.append(TissueCategory.objects.get(cat_name=categories['brain']))
 		categs.append(TissueCategory.objects.get(cat_name=categories['periph']))
 		categs.append(TissueCategory.objects.get(cat_name=categories['custom']))
+		categs.append(TissueCategory.objects.get(cat_name=categories['int_brain']))
+		categs.append(TissueCategory.objects.get(cat_name=categories['int_periph']))
 	except Exception:
 		print "TissueTypes not added, missing Tissue Categories. Following categories are necessary: "
 		for cat in categories.itervalues():
 			print cat
-		
+
 	category_iter = categs.__iter__()
-	current_category = category_iter.next()	
+	current_category = category_iter.next()
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line in read_data:
@@ -539,11 +550,10 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 				else:
 					print "Found name duplicates for tissue type " + line + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
 
-			
 			if len(existing) > 0:
 				print "Tissue type " + line + " already exists with correct category. Duplicate ids = " + `existing`
 				continue
-			
+
 			tt = TissueType()
 			tt.tst_tissue_name = line
 			tt.category = current_category
@@ -559,13 +569,13 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 # -jf
 def load_TissueCategories():
 ###				   Category Name  (cat_name)		Description (cat_description)			Internal (cat_internal)
-	categories = {"Custom" : 						("Custom Tissues", 						False),
-				  "Internal Molecular Tissues" : 	("Only internal molecular tissues", 	True),
-				  "Internal Blood Tissues" : 		("Only internal blood tissues",			True),
-				  "Internal Peripheral Tissues" : 	("Only internal peripheral tissues", 	True),
-				  "Internal Brain Tissues" : 		("Only internal brain tissues", 		True),
-				  "Brain Tissues" : 				("Brain tissues", 						False),
-				  "Peripheral Tissues" : 			("Peripheral tissues", 					False)
+	categories = {"Custom": ("Custom Tissues", False),
+				  "Internal Molecular Tissues": ("Only internal molecular tissues", True),
+				  "Internal Blood Tissues": ("Only internal blood tissues", True),
+				  "Internal Peripheral Tissues": ("Only internal peripheral tissues", True),
+				  "Internal Brain Tissues": ("Only internal brain tissues", True),
+				  "Brain Tissues": ("Brain tissues", False),
+				  "Peripheral Tissues": ("Peripheral tissues", False)
 	}
 	for key in categories:
 		tc, is_new = TissueCategory.objects.get_or_create(cat_name=key)
@@ -578,14 +588,15 @@ def load_TissueCategories():
 # -jf
 def create_InventoryStatus():
 ###				 Status Name  		Description
-	statuses = {"Unverified" : 		"TissueSample inventory unverified",
-				"Sufficient" : 		"TissueSample inventory verified sufficient for this TissueRequest",
-				"Insufficient" : 	"TissueSample inventory verified insufficient for this TissueRequest.",
-	}
+	statuses = {"Unverified": "TissueSample inventory unverified",
+				"Sufficient": "TissueSample inventory verified sufficient for this TissueRequest",
+				"Insufficient": "TissueSample inventory verified insufficient for this TissueRequest.",
+				}
 	for key in statuses:
 		inv, is_new = InventoryStatus.objects.get_or_create(inv_status=key)
 		inv.inv_description = statuses[key]
 		inv.save()
+
 
 @transaction.commit_on_success
 # Creates ALL tissue samples in the database, for every monkey:tissuetype combination.
@@ -603,6 +614,7 @@ def create_TissueSamples():
 				# Can be incredibly spammy
 				print "New tissue sample: " + sample.__unicode__()
 
+
 @transaction.commit_on_success
 def create_Assay_Development_tree():
 	institution = Institution.objects.all()[0]
@@ -610,14 +622,14 @@ def create_Assay_Development_tree():
 	monkey = Monkey.objects.get_or_create(mky_real_id=0, mky_drinking=False, cohort=cohort[0])
 	for tt in TissueType.objects.exclude(category__cat_name__icontains="Internal"):
 		tissue_sample = TissueSample.objects.get_or_create(tissue_type=tt, monkey=monkey[0])
-		tissue_sample[0].tss_sample_quantity=999 # Force quantity
+		tissue_sample[0].tss_sample_quantity = 999 # Force quantity
 		tissue_sample[0].tss_freezer = "Assay Tissue"
 		tissue_sample[0].tss_location = "Assay Tissue"
 		tissue_sample[0].tss_details = "MATRR does not track assay inventory."
 
 
 @transaction.commit_on_success
-def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
+def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 	"""
 		0 - date
 		1 - monkey_real_id
@@ -634,7 +646,7 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 		For data with mutiple cohorts, the will have to be computed from monkey real id instead of using a parameter.
 	"""
 	fields = (
-#	    data 2-37
+		#	    data 2-37
 		('mtd_etoh_intake'),
 		('mtd_veh_intake'),
 		('mtd_pct_etoh'),
@@ -671,14 +683,14 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 		('mtd_latency_1st_drink'),
 		('mtd_pct_exp_etoh'),
 		('mtd_st_1_ioc_avg'),
-#		data 40-45
+		#		data 40-45
 		('mtd_max_bout'),
 		('mtd_max_bout_start'),
 		('mtd_max_bout_end'),
 		('mtd_max_bout_length'),
 		('mtd_max_bout_vol'),
 		('mtd_pct_max_bout_vol_total_etoh'),
-		)
+	)
 
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 
@@ -689,16 +701,16 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 			data_fields = data[2:38]
 			data_fields.extend(data[40:46])
 			error_output = "%d %s # %s"
-#			create or get experiment - date, cohort, dex_type
+			#			create or get experiment - date, cohort, dex_type
 			try:
 				dex_date = dt.strptime(data[0], "%m/%d/%y")
-#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
+			#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
 			except Exception as e:
 				print error_output % (line_number, "Wrong date format", line)
 				continue
-#			if dex_date != dex_check_date:
-#				print error_output % (line_number, "Date check failed", line)
-#				continue
+			#			if dex_date != dex_check_date:
+			#				print error_output % (line_number, "Date check failed", line)
+			#				continue
 			else:
 				des = DrinkingExperiment.objects.filter(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
 				if des.count() == 0:
@@ -725,8 +737,8 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 			if bad_data != '':
 				print error_output % (line_number, "Bad data flag", line)
 				continue
-			
-			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment = de, monkey=monkey)
+
+			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment=de, monkey=monkey)
 			if mtds.count() != 0:
 				print error_output % (line_number, "MTD with monkey and date already exists.", line)
 				continue
@@ -742,7 +754,7 @@ def load_mtd(file_name, dex_type = 'Coh8_initial', cohort_name='INIA Cyno 8'):
 			try:
 				mtd.clean_fields()
 			except Exception as e:
-				print error_output % (line_number, e , line)
+				print error_output % (line_number, e, line)
 				continue
 			mtd.save()
 
