@@ -81,12 +81,12 @@ urlpatterns += patterns('matrr.views',
 	url(r'^cart/(?P<tissue_request_id>\d+)/delete/$', 			cart_item_delete),
 
 	#  Ordering process views
-    url(r'^orders/$', orders_list),
-    url(r'^orders/(?P<req_request_id>\d+)/$', 					order_detail),
+    url(r'^orders/$',                                           orders_list, name='order-list'),
+    url(r'^orders/(?P<req_request_id>\d+)/$', 					order_detail, name='order-detail'),
 	url(r'^orders/(?P<req_request_id>\d+)/delete/?$', 			order_delete),
 	url(r'^experimental_plans/(?P<plan>\S+)/?$', 				experimental_plan_view),
 	url(r'^shipping_overview/$',								shipping_overview),
-	url(r'^shipping/build/(?P<req_request_id>\d+)/$', 			build_shipment),
+	url(r'^shipping/build/(?P<req_request_id>\d+)/$', 			build_shipment, name='build-shippment'),
 	url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$', 	make_shipping_manifest_latex, name='manifest'),
 
 	#  Order review views
