@@ -308,3 +308,71 @@ def monkey_boxplot_weight(monkey):
 	img = Image.open(filename + ".png")
 	img.thumbnail(thumb_size, Image.ANTIALIAS)
 	img.save(filename + "-thumb.jpg")
+	
+def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
+	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
+	# Gather drinking monkeys from the cohort
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print("That's not a valid cohort.")
+			return
+
+	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
+	if from_date:
+		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+	
+	if cohort_drinking_experiments.count() > 0:
+		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
+
+		# For each experiment date, gather the drinking data
+		etoh_data = {}
+		pellet_data = {}
+		veh_data = {}
+		weight_data = {}
+		for date in dates:
+			month_key = date.strftime("%b %Y")
+			cde_of_month = cohort_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+			etoh_data[month_key] = cde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
+			pellet_data[month_key] = cde_of_month.exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
+			veh_data[month_key] = cde_of_month.exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
+			weight_data[month_key] = cde_of_month.exclude(mtd_weight=None).values_list('mtd_weight')
+		all_data = {"etoh" : ("Ethanol Intake (in ml)", etoh_data), "pellet" : ("Total Pellets", pellet_data), "veh" : ("Veh Intake", veh_data), "weight" : ("Weight (in kg)", weight_data)}
+
+
+		fig_size = (10,10)
+		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
+		for data_type, data in all_data.iteritems():
+			dir = 'static/images/' + data_type + "/"
+			if not os.path.exists(dir):
+				os.makedirs(dir)
+			filename = dir + cohort.coh_cohort_name
+			print filename
+
+			sorted_keys = [item[0] for item in sorted(data[1].items())]
+			sorted_values = [item[1] for item in sorted(data[1].items())]
+
+			fig = pyplot.figure(figsize=fig_size)
+			ax1 = fig.add_subplot(111)
+			ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+			ax1.set_axisbelow(True)
+			ax1.set_title('MATRR Boxplot')
+			ax1.set_xlabel("Date of Experiment")
+			ax1.set_ylabel(data[0])
+			
+			bp = pyplot.boxplot(sorted_values)
+			pyplot.setp(bp['boxes'], linewidth=3, color=colors['cohort'])
+			pyplot.setp(bp['whiskers'], linewidth=3, color=colors['cohort'])
+			pyplot.setp(bp['fliers'], color='red', marker='+')
+			xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
+			pyplot.setp(xtickNames, rotation=45)
+			fig.savefig(filename + ".png")
+
+			img = Image.open(filename + ".png")
+			img.thumbnail(thumb_size, Image.ANTIALIAS)
+			img.save(filename + "-thumb.jpg")
+	else:
+		print "No drinking experiments for this cohort."
