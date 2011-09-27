@@ -1,7 +1,17 @@
 import os
 from matrr.models import *
+import matplotlib as mpl
 from matplotlib import pyplot
 import Image
+
+###############  matplotlibrc settings
+mpl.rc_params['figure.subplot.left'] 	= 0.1	# the left side of the subplots of the figure
+mpl.rc_params['figure.subplot.right'] 	= 0.98	# the right side of the subplots of the figure
+mpl.rc_params['figure.subplot.bottom'] 	= 0.12	# the bottom of the subplots of the figure
+mpl.rc_params['figure.subplot.top'] 	= 0.96	# the top of the subplots of the figure
+mpl.rc_params['figure.subplot.wspace'] 	= 0.05	# the amount of width reserved for blank space between subplots
+mpl.rc_params['figure.subplot.hspace'] 	= 0.05	# the amount of height reserved for white space between subplots
+############### end
 
 def cohort_boxplot_m2de(cohort, days=10):
 	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
@@ -97,7 +107,7 @@ def monkey_boxplot_etoh(monkey):
 		mky_etoh_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
 
 	sorted_keys = [item[0] for item in sorted(coh_etoh_data.items())]
-	sorted_values = [item[1] for item in sorted(mky_etoh_data.items())]
+	sorted_values = [item[1][0] for item in sorted(mky_etoh_data.items())]
 
 	pos = range(1,len(sorted_values)+1)  # This is what aligns the boxplot and line graphs
 	fig = pyplot.figure(figsize=fig_size)
@@ -159,7 +169,7 @@ def monkey_boxplot_pellet(monkey):
 		mky_pellet_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
 
 	sorted_keys = [item[0] for item in sorted(coh_pellet_data.items())]
-	sorted_values = [item[1] for item in sorted(mky_pellet_data.items())]
+	sorted_values = [item[1][0] for item in sorted(mky_pellet_data.items())]
 
 	pos = range(1,len(sorted_values)+1)  # This is what aligns the boxplot and line graphs
 	fig = pyplot.figure(figsize=fig_size)
@@ -220,7 +230,7 @@ def monkey_boxplot_veh(monkey):
 		mky_veh_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
 
 	sorted_keys = [item[0] for item in sorted(coh_veh_data.items())]
-	sorted_values = [item[1] for item in sorted(mky_veh_data.items())]
+	sorted_values = [item[1][0] for item in sorted(mky_veh_data.items())]
 
 	pos = range(1,len(sorted_values)+1)  # This is what aligns the boxplot and line graphs
 	fig = pyplot.figure(figsize=fig_size)
@@ -282,7 +292,7 @@ def monkey_boxplot_weight(monkey):
 		mky_weight_data[str(date.date())] = monkey_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_weight=None).values_list('mtd_weight')
 
 	sorted_keys = [item[0] for item in sorted(coh_weight_data.items())]
-	sorted_values = [item[1] for item in sorted(mky_weight_data.items())]
+	sorted_values = [item[1][0] for item in sorted(mky_weight_data.items())]
 
 	pos = range(1,len(sorted_values)+1)  # This is what aligns the boxplot and line graphs
 	fig = pyplot.figure(figsize=fig_size)
