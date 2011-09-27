@@ -542,22 +542,14 @@ def review_overview(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	no_monkeys = False
 	
-	
-	
 	if req_request.request_status.rqs_status_name != 'Submitted' and req_request.request_status.rqs_status_name != 'Cart':
 		no_monkeys = True
-	
-	
-	TissueRequestFormSet = modelformset_factory(TissueRequest, form=TissueRequestProcessForm, extra=0)
-
 	if  'HTTP_REFERER' in request.META:
 		back_url = request.META['HTTP_REFERER']
-
 	else:
 		back_url = ""
 
-	
-			
+	TissueRequestFormSet = modelformset_factory(TissueRequest, form=TissueRequestProcessForm, extra=0)
 	if request.POST:
 		tissue_request_forms = TissueRequestFormSet(request.POST, prefix='tissue_requests')
 
