@@ -961,12 +961,9 @@ class TissueInventoryVerification(models.Model):
 	tiv_date_created = models.DateTimeField(editable=False, auto_now_add=True)
 
 	def __unicode__(self):
-		return str(self.monkey) + "." + self.tissue_type.tst_tissue_name + ': ' + self.inventory.inv_status
+		return str(self.monkey) + ":" + self.tissue_type.tst_tissue_name + ': ' + self.inventory.inv_status
 
-	## Get the TissueSample objects that matches this monkey:tissue_type combination
-	def get_sample(self):
-		return TissueSample.objects.filter(monkey=self.monkey, tissue_type=self.tissue_type)
-
+	# Return a queryset of all TIV objects with the same monkey:tissue_type
 	def get_tiv_collisions(self):
 		collisions = TissueInventoryVerification.objects.exclude(tiv_id=self.tiv_id)
 		collisions = collisions.filter(tissue_type=self.tissue_type)
@@ -974,6 +971,9 @@ class TissueInventoryVerification(models.Model):
 		collisions = collisions.distinct()
 		return collisions
 
+	# Reset any colliding TIVs to unverified.
+	# This is used in request_post_save to invalidate inventory verifications once a tissue has been accepted,
+	# forcing lab techs to re-verify the inventory for requests not yet accepted, accounting for the newly approved request.
 	def invalidate_collisions(self):
 		collisions = self.get_tiv_collisions()
 		for tiv in collisions:
@@ -981,29 +981,39 @@ class TissueInventoryVerification(models.Model):
 			tiv.save()
 
 	def save(self, *args, **kwargs):
-		try:  ## Set the tissue_sample field
-			units = Unit.objects.get(unt_unit_name="whole")
-			self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
-																			defaults={'tss_freezer': "No Previous Record",
-																					  'tss_location': "No Previous Record",
-																					  'units': units})
-		## Or write to the note field with error.
-		except TissueSample.MultipleObjectsReturned:
-			self.tissue_sample = self.get_sample()[0]
-			self.tiv_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
+		# This will set the tissue_sample field with several database consistency checks
+		if self.tissue_sample is None:
+			try:
+				units = Unit.objects.get(unt_unit_name="whole")
+				self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
+																				defaults={'tss_freezer': "No Previous Record",
+																						  'tss_location': "No Previous Record",
+																						  'units': units})
+				# All tissue samples should have been previously created.
+				# Currently, I don't think a TIV can be created (thru the website) without a tissue sample record already existing
+				if is_new:
+					self.tiv_notes = "%s:Database Error:  There was no previous record for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
+			# There should only be 1 tissue sample for each monkey:tissue_type.
+			# Possibly should make them unique-together
+			except TissueSample.MultipleObjectsReturned:
+				self.tiv_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin. Do not edit, changes will not be saved." % str(datetime.now().date())
+		# tissue_sample should ALWAYS == monkey:tissue_type
+		elif self.tissue_sample.monkey != self.monkey\
+		or   self.tissue_sample.tissue_type != self.tissue_type:
+			self.tiv_notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(datetime.now().date())
 
-		# I'm not sure if there's a reason this isn't first, but it shouldn't be after the conditional delete below -jf
-		super(TissueInventoryVerification, self).save(*args, **kwargs)
+		if not 'Do not edit' in self.tiv_notes:
+			super(TissueInventoryVerification, self).save(*args, **kwargs)
 
 		## If the tissue has been verified, but has NO tissue_request associated with it
 		if self.inventory != InventoryStatus.objects.get(inv_status="Unverified")\
 		and self.tissue_request is None:
 			self.delete() # delete it
 
-
 	class Meta:
 		db_table = 'tiv_tissue_verification'
 
+		
 # put any signal callbacks down here after the model declarations
 
 # this is a method that should be called after a request is saved.
@@ -1019,7 +1029,7 @@ def request_post_save(**kwargs):
 	# check if there was a change in the status
 	if req_request._previous_status_id is None or\
 	   req_request.request_status_id == req_request._previous_status_id:
-		# if there was no change, no work needs to be done
+		# if there was no change, don't do anything
 		return
 
 	current_status = RequestStatus.objects.get(rqs_status_id=req_request.request_status_id)
@@ -1027,10 +1037,8 @@ def request_post_save(**kwargs):
 	tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
 
 	# For Submitted Requests
-	if current_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
-	and previous_status == RequestStatus.objects.get(rqs_status_name='Cart'):
-		# the status was changed from Cart to Submitted, so create new reviews and TissueInventoryVerifications
-
+	if previous_status == RequestStatus.objects.get(rqs_status_name='Cart')\
+	and current_status == RequestStatus.objects.get(rqs_status_name='Submitted'):
 		# start by finding all members of the group 'Committee'
 		committee_group = Group.objects.get(name='Committee')
 		committee_members = committee_group.user_set.all()
@@ -1043,53 +1051,52 @@ def request_post_save(**kwargs):
 			for tissue_request in tissue_requests:
 				TissueRequestReview(review=review, tissue_request=tissue_request).save()
 
-		### TissueInventoryVerification stuff
-		## If any verifications exist for this Request, delete them.  There shouldn't be any.
+		# If any verifications exist for this Request, delete them.  There shouldn't be any.
 		TissueInventoryVerification.objects.filter(tissue_request__req_request=req_request).delete()
-		## Create new TIVs.
+		# Create new TIVs.
 		for tissue_request in tissue_requests:
 			for monkey in tissue_request.monkeys.all():
-				## Get or create TIV object
 				tv = TissueInventoryVerification.objects.create(tissue_type=tissue_request.tissue_type,
 																monkey=monkey,
 																tissue_request=tissue_request)
 				tv.save()
 
-	# For Accepted Requests
+	# For Accepted and Partially accepted Requests
 	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
-	and current_status == RequestStatus.objects.get(rqs_status_name='Accepted'):
+	and "Accepted" in current_status.rqs_status_name:
 		for tissue_request in tissue_requests:
 			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
-			# First, invalidate all colliding TIVs
 			for tiv in tivs:
-				tiv.invalidate_collisions()
-			# Then delete them
-			tivs.delete()
-
-	# For Partially Accepted Requests
-	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
-	and current_status == RequestStatus.objects.get(rqs_status_name='Partially Accepted'):
-		for tissue_request in tissue_requests:
-			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
-			# First, invalidate all colliding TIVs
-			for tiv in tivs:
+				# Reset any colliding TIVs of accepted monkeys to 'Unverified'
+				# This makes a lab tech re-verify the freezer for other submitted orders
 				if tiv.monkey in tissue_request.accepted_monkeys.all():
 					tiv.invalidate_collisions()
-					tiv.delete()
-				else:
-					tiv.tissue_request=None
-					tiv.save()
+				# Disassociate the tissue request. This leaves unverified TIVs to have their
+				# inventory checked and deletes verified TIVs
+				tiv.tissue_request=None
+				tiv.save()
 
 	# For Rejected Requests
 	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
 	and current_status == RequestStatus.objects.get(rqs_status_name='Rejected'):
 		for tissue_request in tissue_requests:
-			# remove the TissueRequests associated with this request's TIVs
-			# This will allow the inventory to still be checked, but won't disrupt other operations
+			# Disassociate the tissue request. This leaves unverified TIVs to have their
+			# inventory checked and deletes verified TIVs
 			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
 			for tiv in tivs:
 				tiv.tissue_request=None
 				tiv.save()
+
+	# For Shipped Requests
+	if "Accepted" in previous_status.rqs_status_name \
+	and current_status == RequestStatus.objects.get(rqs_status_name='Shipped'):
+		# Create new TIVs to update MATRR inventory after a tissue has shipped.
+		for tissue_request in tissue_requests:
+			for monkey in tissue_request.accepted_monkeys.all():
+				tv = TissueInventoryVerification.objects.create(tissue_type=tissue_request.tissue_type,
+																monkey=monkey,
+																tissue_request=None)
+				tv.save()
 
 	req_request._previous_status_id = None
 

@@ -1010,15 +1010,16 @@ def tissue_verification(request):
 				tss.tss_location = data['location']
 				tss.tss_freezer = data['freezer']
 				tss.tss_details = data['details']
-				tss.user = request.user
+				tss.user = request.user # who last modified the tissue sample
 				if data['quantity']:
 					tss.tss_sample_quantity = data['quantity']
 				if data['units']:
 					tss.tss_units = data['units']
 				if data['inventory']:
 					tiv.inventory = data['inventory']
-				tss.save()
 				tiv.save()
+				if not 'Do not edit' in tiv.tiv_notes: # see TissueInventoryVerification.save() for details
+					tss.save()
 				if "export" in request.POST:
 					tiv_list = TissueInventoryVerification.objects.all().order_by('inventory').order_by("monkey")
 
