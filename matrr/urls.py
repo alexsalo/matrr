@@ -61,8 +61,8 @@ urlpatterns += patterns('matrr.views',
 
 	#  Monkey/Cohort/Tissue display views
 	url(r'^monkeys/(?P<monkey_id>\S+)/$', 								monkey_detail_view),
-	url(r'(?P<avail_up>^available|upcoming|cohort)/$', 					display_cohorts),
-	url(r'(?P<avail_up>^available|upcoming|cohort)/(?P<pk>\d+)/$', 		display_cohorts),
+	url(r'(?P<avail_up>^available|upcoming|cohort|assay)/$', 					display_cohorts),
+	url(r'(?P<avail_up>^available|upcoming|cohort|assay)/(?P<pk>\d+)/$', 		display_cohorts),
 #*** This is a hack, does nothing but display a message saying we don't have necropsy data.  This will need to be changed if/when we get a batch of necropsy data
     url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/necropsy/$', 		cohort_necropsy, name="cohortnect"),
 #***

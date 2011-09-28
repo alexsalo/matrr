@@ -47,12 +47,13 @@ def display_cohorts(request, **kwargs):
 	cohorts = ''
 	template_name = ''
 
-	## If the URL holds a cohort's pk
-	if kwargs.has_key('pk'):
-		cohort = get_object_or_404(Cohort, pk=kwargs['pk']) # Get that cohort
-		template_name = 'matrr/cohort.html' # and display that cohort's page
-	# This will display the cohort regardless of its available/upcoming status
-	# Which will be good after cohorts go to necropsy, if the user will ever see/manipulate the URL
+	if kwargs['avail_up'] == 'assay':
+		# If the URL requested an assay, give it the only assay.
+		return redirect('/available/%d' % Cohort.objects.get(coh_cohort_name__icontains="assay").pk)
+	elif kwargs.has_key('pk'):
+		# If a PK exists, display that cohorts detail page, regardless of the URL that lead to it
+		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
+		template_name = 'matrr/cohort.html'
 	## otherwise, display a list of cohorts based on the URL
 	elif kwargs['avail_up'] == 'cohort':
 		cohorts = Cohort.objects.order_by('coh_cohort_name')
@@ -670,16 +671,23 @@ def experimental_plan_view(request, plan):
 
 
 def tissue_shop_landing_view(request, cohort_id):
+	context = dict()
+	assay = Cohort.objects.get(coh_cohort_name__icontains="assay")
 	cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
+	context['cohort'] = cohort
+	if cohort != assay:
+		context['assay'] = assay
 	categories = list(TissueCategory.objects.order_by('cat_name').all())
 	if TissueCategory.objects.filter(cat_name='Custom'):
 		custom = TissueCategory.objects.get(cat_name='Custom')
 		categories.remove(custom)
 		categories.append(custom)
-	return render_to_response('matrr/tissue_shopping_landing.html',
-			{'cohort': cohort,
-			 'categories': categories},
-							  context_instance=RequestContext(request))
+
+	context['categories'] = categories
+	context['cohort'] = cohort
+	if cohort != assay:
+		context['assay'] = assay
+	return render_to_response('matrr/tissue_shopping_landing.html', context, context_instance=RequestContext(request))
 
 
 def tissue_list(request, tissue_category=None, cohort_id=None):

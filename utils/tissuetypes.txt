@@ -112,8 +112,7 @@ Spleen
 Stomach
 Urine
 
-Custom brain
-Custom peripheral
+Custom
 
 
 Serum
