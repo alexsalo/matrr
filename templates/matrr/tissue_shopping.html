@@ -44,10 +44,12 @@
 		{% endif %}
 		<div class='right' style="background-color: #9F6000;background-color: #FEEFB3;padding: 10px;font-size:1.3em;text-align: center">
 			<div class='mini-headline'>Estimated Cost (per monkey)</div>
-			{% if "Brain" in form.tissue.category.cat_name %}Frozen:  $250<br>{% if cohort.upcoming %}Special Process: $350{% endif %}{% endif %}
-			{% if "Peripheral" in form.tissue.category.cat_name %}Frozen:  $100<br>{% if cohort.upcoming %}Special Process: $200{% endif %}{% endif %}
 			{% if "Custom" in form.tissue.category.cat_name or "Assay" in cohort.coh_cohort_name %}
-				<div class=small>Contact MATRR for price.</div>{% endif %}
+				<div class=small>Contact MATRR for price.</div>
+			{% else %}
+				{% if "Brain" in form.tissue.category.cat_name %}Frozen:  $250<br>{% if cohort.coh_upcoming %}Special Process: $350{% endif %}{% endif %}
+				{% if "Peripheral" in form.tissue.category.cat_name %}Frozen:  $100<br>{% if cohort.coh_upcoming %}Special Process: $200{% endif %}{% endif %}
+			{% endif %}
 		</div>
 		<table>
 			{% for field in form.visible_fields %}
