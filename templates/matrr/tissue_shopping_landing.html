@@ -33,6 +33,17 @@
 		{% endif %}
 	{% endfor %}
 
+	{# Display a link to the assay cohort for ALL non-assay cohorts #}
+	{% if assay %}
+		<div class='clearfix'>
+			<div class='mini-headline'>Assay Development</div>
+			<div class='table-left' style="width:75%">Use this to request generic tissues for assay development purposes.</div>
+			<div class='table-right text-right'>
+				{# Bad django-fu #}
+				<a href="/available/{{ assay.pk }}/tissues" class='blockLinkButton'>Request Assay Tissues</a>
+			</div>
+		</div>
+	{% endif %}
 	<br><br>
 
 	{% if cart_exists %}
