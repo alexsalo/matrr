@@ -889,6 +889,15 @@ class TissueSample(models.Model):
 	def get_quantity(self):
 		return self.tss_sample_quantity
 
+	def save(self, *args, **kwargs):
+		if self.monkey.mky_real_id == 0:
+			self.tss_sample_quantity = 999
+			self.tss_freezer = "Assay Tissue"
+			self.tss_location = "Assay Tissue"
+			self.tss_details = "MATRR does not track assay inventory."
+		super(TissueSample, self).save(*args, **kwargs)
+
+
 	class Meta:
 		db_table = 'tss_tissue_samples'
 		ordering = ['-monkey__mky_real_id', '-tissue_type__tst_tissue_name']
