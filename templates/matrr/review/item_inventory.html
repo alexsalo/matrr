@@ -1,56 +1,57 @@
 {% load tissue_filters %}
-
-<a onclick="javascript:toggle_visibility('availability_{{ tissue_request.get_html_label }}');">Show monkeys</a>
-<table id=full>
-	<tbody id='availability_{{ tissue_request.get_html_label }}' class='hidden'>
-	<tr class='bordered-cell-row'>
-		<th>Monkey</th>
-		{% if user_is_member_of_uberuser or user_is_member_of_tech_user or user_is_member_of_committee %}
-			<th>Name</th>
+{% if tissue_request.accepted_monkeys.count > 0 %}
+	<a onclick="javascript:toggle_visibility('availability_{{ tissue_request.get_html_label }}');">Show monkeys</a>
+	<table id=full>
+		<tbody id='availability_{{ tissue_request.get_html_label }}' class='hidden'>
+		<tr class='bordered-cell-row'>
+			<th>Monkey</th>
+			{% if user_is_member_of_uberuser or user_is_member_of_tech_user or user_is_member_of_committee %}
+				<th>Name</th>
+				{% if spacing %}
+					<th class='spacing'></th>{% endif %}
+			{% endif %}
 			{% if spacing %}
 				<th class='spacing'></th>{% endif %}
-		{% endif %}
-		{% if spacing %}
-			<th class='spacing'></th>{% endif %}
-		<th>Assignment</th>
-		{% if spacing %}
-			<th class='spacing'></th>{% endif %}
-		<th>Request collisions</th>
+			<th>Assignment</th>
+			{% if spacing %}
+				<th class='spacing'></th>{% endif %}
+			<th>Request collisions</th>
 
-		{% for monkey in tissue_request.accepted_monkeys.all %}
-			<tr>
-				<td>
-					<a href="{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}/"
-					   onclick='javascript:window.open("{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}/");return false;'>
-						{{ monkey.mky_real_id }}
-						<img src="{{ STATIC_URL }}images/arrow_popup.png" width="8" height="8" style='vertical-align: text-top'
-							 alt='external link'/>
-					</a>
-				</td>
-				{% if spacing %}<td class='spacing'></td>{% endif %}
-
-				{% if user_is_member_of_uberuser or user_is_member_of_tech_user or user_is_member_of_committee %}
-					<td>{{ monkey.mky_name }}</td>
+			{% for monkey in tissue_request.accepted_monkeys.all %}
+				<tr>
+					<td>
+						<a href="{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}/"
+						   onclick='javascript:window.open("{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}/");return false;'>
+							{{ monkey.mky_real_id }}
+							<img src="{{ STATIC_URL }}images/arrow_popup.png" width="8" height="8" style='vertical-align: text-top'
+								 alt='external link'/>
+						</a>
+					</td>
 					{% if spacing %}<td class='spacing'></td>{% endif %}
-				{% endif %}
 
-				<td>
-					{% if monkey.mky_drinking %}
-						Ethanol
-						{% else %}
-						{% if monkey.mky_housing_control %}
-							Housing Control
-						{% else %}
-							Control
-						{% endif %}
+					{% if user_is_member_of_uberuser or user_is_member_of_tech_user or user_is_member_of_committee %}
+						<td>{{ monkey.mky_name }}</td>
+						{% if spacing %}<td class='spacing'></td>{% endif %}
 					{% endif %}
-				</td>
 
-				<td>
-					{% load review_tags %}
-					{% colliding_requests req_request monkey %}
-				</td>
-			</tr>
-		{% endfor %}
-	</tbody>
-</table>
+					<td>
+						{% if monkey.mky_drinking %}
+							Ethanol
+							{% else %}
+							{% if monkey.mky_housing_control %}
+								Housing Control
+							{% else %}
+								Control
+							{% endif %}
+						{% endif %}
+					</td>
+
+					<td>
+						{% load review_tags %}
+						{% colliding_requests req_request monkey %}
+					</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endif %}

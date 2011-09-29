@@ -596,7 +596,7 @@ class Request(models.Model, DiffingMixin):
 	def __get_collision_request(self, collisions):
 		collision_requests = list()
 		for collision in collisions:
-			if collision != self:
+			if collision.tissue_request.req_request != self:
 				collision_requests.append(collision.tissue_request.req_request)
 
 		return collision_requests
@@ -722,9 +722,9 @@ class TissueRequest(models.Model):
 
 		tiv_collisions = TissueInventoryVerification.objects.none()
 		for monkey in self.monkeys.all():
-
 			tiv_collisions |= other_tivs.filter(monkey=monkey, tissue_type=self.tissue_type)
-		tiv_collisions.distinct()
+
+		tiv_collisions = tiv_collisions.distinct()
 		return tiv_collisions
 
 	def save(self, *args, **kwargs):
