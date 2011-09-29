@@ -3,6 +3,7 @@ from django.forms import Form, ModelForm, CharField, widgets, ModelMultipleChoic
 from django.forms.models import inlineformset_factory
 from django.db import transaction
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from matrr.models import *
 
 import re
 
@@ -156,4 +157,4 @@ class TissueInventoryVerificationForm(Form):
 	quantity = DecimalField(required=False)
 	units = ModelChoiceField(queryset=Unit.objects.all(), required=False)
 	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
-	inventory = ModelChoiceField(queryset=InventoryStatus.objects.all(), required=False)
+	inventory = ChoiceField(choices=InventoryStatus, required=False)

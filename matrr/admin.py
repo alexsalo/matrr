@@ -52,5 +52,4 @@ admin.site.register(Request, RequestAdmin)
 admin.site.register(TissueInventoryVerification)
 admin.site.register(TissueRequest)
 admin.site.register(TissueRequestReview)
-admin.site.register(InventoryStatus)
 

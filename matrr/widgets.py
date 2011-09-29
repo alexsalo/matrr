@@ -238,9 +238,9 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 				verif = False
 				if len(verifications) > 0:
 					for ver in verifications:
-						if ver.inventory.inv_status == 'Sufficient':
+						if ver.tiv_inventory == 'Sufficient':
 							suf = True
-						elif ver.inventory.inv_status == 'Insufficient':
+						elif ver.tiv_inventory == 'Insufficient':
 							verif = True
 				if suf:
 					availability_str = 'Sufficient'

@@ -31,5 +31,5 @@ def get_stock(tissue, monkey):
 
 @register.filter()
 def get_verification(tissue_request, monkey):
-	return TissueInventoryVerification.objects.get(tissue_request=tissue_request, monkey=monkey, tissue_type=tissue_request.tissue_type).inventory.__unicode__()
+	return TissueInventoryVerification.objects.get(tissue_request=tissue_request, monkey=monkey, tissue_type=tissue_request.tissue_type).tiv_inventory
 	
