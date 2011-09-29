@@ -49,7 +49,7 @@ def display_cohorts(request, **kwargs):
 
 	if kwargs['avail_up'] == 'assay':
 		# If the URL requested an assay, give it the only assay.
-		return redirect('/available/%d' % Cohort.objects.get(coh_cohort_name__icontains="assay").pk)
+		return redirect('/available/%d/tissues' % Cohort.objects.get(coh_cohort_name__icontains="assay").pk)
 	elif kwargs.has_key('pk'):
 		# If a PK exists, display that cohorts detail page, regardless of the URL that lead to it
 		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])

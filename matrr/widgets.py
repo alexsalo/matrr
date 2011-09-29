@@ -232,31 +232,9 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 				assignment = 'Control'
 			#      import pdb
 			#      pdb.set_trace()
-			verifications = self.tissue.tissue_verification_set.filter(monkey=monkey, tissue_request=self.tis_request)
+			verification = self.tissue.tissue_verification_set.get(monkey=monkey, tissue_request=self.tis_request)
 			if self.tissue:
-				suf = False
-				verif = False
-				if len(verifications) > 0:
-					for ver in verifications:
-						if ver.tiv_inventory == 'Sufficient':
-							suf = True
-						elif ver.tiv_inventory == 'Insufficient':
-							verif = True
-				if suf:
-					availability_str = 'Sufficient'
-				elif verif:
-					availability_str = 'Insufficient'
-				else:
-					availability_str = 'Unverified'
-				#        availability = self.tissue.get_monkey_availability(monkey)
-				#        if availability == Availability.Available:
-				#          availability_str = 'Available'
-				#        elif availability == Availability.In_Stock:
-				#          availability_str = 'In Stock'
-				#        elif availability == Availability.Unavailable:
-				#          availability_str = 'Unavailable'
-
-				if availability_str == 'Unverified':
+				if verification.tiv_inventory == 'Unverified':
 					output.append(
 						u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=red>%s </font></td><td>%s</td></tr>' % (
 						self.link_base,
@@ -264,9 +242,9 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 						self.link_base,
 						mky_real_id,
 						mky_real_id,
-						availability_str,
+						verification.tiv_inventory,
 						assignment,))
-				elif availability_str == 'Insufficient':
+				elif verification.tiv_inventory == 'Insufficient':
 					output.append(
 						u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=orange>%s </font></td><td>%s</td></tr>' % (
 						self.link_base,
@@ -274,7 +252,7 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 						self.link_base,
 						mky_real_id,
 						mky_real_id,
-						availability_str,
+						verification.tiv_inventory,
 						assignment,))
 				else:
 					output.append(
@@ -286,7 +264,7 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 						self.link_base,
 						mky_real_id,
 						mky_real_id,
-						availability_str,
+						verification.tiv_inventory,
 						assignment))
 			else:
 				# this is for custom tissue requests
