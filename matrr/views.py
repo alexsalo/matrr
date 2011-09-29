@@ -1024,7 +1024,7 @@ def tissue_verification(request):
 				if data['units']:
 					tss.tss_units = data['units']
 				if data['inventory']:
-					tiv.inventory = data['inventory']
+					tiv.tiv_inventory = data['inventory']
 				tiv.save()
 				if not 'Do not edit' in tiv.tiv_notes: # see TissueInventoryVerification.save() for details
 					tss.save()
@@ -1045,7 +1045,7 @@ def tissue_verification(request):
 			messages.error(request, formset.errors)
 
 	initial = []
-	tiv_list = TissueInventoryVerification.objects.all().order_by('inventory')
+	tiv_list = TissueInventoryVerification.objects.all().order_by('tiv_inventory')
 	for tiv in tiv_list:
 		tss = tiv.tissue_sample
 		try:
@@ -1056,7 +1056,7 @@ def tissue_verification(request):
 					   'freezer': tss.tss_freezer,
 					   'location': tss.tss_location,
 					   'quantity': tss.tss_sample_quantity,
-					   'inventory': tiv.inventory.pk,
+					   'inventory': tiv.tiv_inventory,
 					   'units': tss.units.pk,
 					   'details': tss.tss_details,
 					   'monkey': tiv.monkey,

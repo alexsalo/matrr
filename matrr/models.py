@@ -30,6 +30,9 @@ class Acceptance:
 	Rejected, Partially_Accepted, Accepted = range(3)
 
 
+InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
+
+
 class DiffingMixin(object):
 	'''
 	this is a snippet from http://djangosnippets.org/snippets/1683/
@@ -942,16 +945,16 @@ class GenBankSequence(models.Model):
 		db_table = 'gen_genbank_sequences'
 
 
-class InventoryStatus(models.Model):
-	inv_id = models.AutoField("ID", primary_key=True)
-	inv_status = models.CharField('Tissue Inventory Status', max_length=30, unique=True, null=False)
-	inv_description = models.CharField('Status description', max_length=100, unique=True, null=False)
-
-	def __unicode__(self):
-		return self.inv_status
-
-	class Meta:
-		db_table = 'inv_inventory_status'
+#class InventoryStatus(models.Model):
+#	inv_id = models.AutoField("ID", primary_key=True)
+#	inv_status = models.CharField('Tissue Inventory Status', max_length=30, unique=True, null=False)
+#	inv_description = models.CharField('Status description', max_length=100, unique=True, null=False)
+#
+#	def __unicode__(self):
+#		return self.inv_status
+#
+#	class Meta:
+#		db_table = 'inv_inventory_status'
 
 
 class TissueInventoryVerification(models.Model):
@@ -962,15 +965,16 @@ class TissueInventoryVerification(models.Model):
 	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_verification_set', db_column='tst_type_id')
 	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')
-	inventory = models.ForeignKey(InventoryStatus, blank=False, null=False, db_column='inv_id', default=InventoryStatus.objects.get(inv_status="Unverified").pk)
-
+	#inventory = models.ForeignKey(InventoryStatus, blank=False, null=False, db_column='inv_id', default=InventoryStatus.objects.get(inv_status="Unverified").pk)
+	tiv_inventory = models.CharField('Is the tissue sample quantity sufficient to fill the indicated request?',
+								 choices=InventoryStatus, null=False, max_length=100, default=InventoryStatus[0][0])
 	tiv_notes = models.TextField('Verification Notes', blank=True,
 								 help_text='Used to articulate database inconsistencies.')
 	tiv_date_modified = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
 	tiv_date_created = models.DateTimeField(editable=False, auto_now_add=True)
 
 	def __unicode__(self):
-		return str(self.monkey) + ":" + self.tissue_type.tst_tissue_name + ': ' + self.inventory.inv_status
+		return str(self.monkey) + ":" + self.tissue_type.tst_tissue_name + ': ' + self.tiv_inventory
 
 	# Return a queryset of all TIV objects with the same monkey:tissue_type
 	def get_tiv_collisions(self):
@@ -1015,8 +1019,7 @@ class TissueInventoryVerification(models.Model):
 			super(TissueInventoryVerification, self).save(*args, **kwargs)
 
 		## If the tissue has been verified, but has NO tissue_request associated with it
-		if self.inventory != InventoryStatus.objects.get(inv_status="Unverified")\
-		and self.tissue_request is None:
+		if self.tiv_inventory != "Unverified" and self.tissue_request is None:
 			self.delete() # delete it
 
 	class Meta:

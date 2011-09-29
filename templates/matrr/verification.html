@@ -31,13 +31,13 @@
 				<center>
 					{% for tiv in formset %}
 						{{ tiv.primarykey }} {# Important! #}
-						{% if tiv.initial.inventory == 1 %}
+						{% if tiv.initial.inventory == "Unverified" %}
 							<div class='verification_border unverified'>
 						{% endif %}
-						{% if tiv.initial.inventory == 2 %}
+						{% if tiv.initial.inventory == "Sufficient" %}
 							<div class="verification_border sufficient">
 						{% endif %}
-						{% if tiv.initial.inventory == 3 %}
+						{% if tiv.initial.inventory == "Insufficient" %}
 							<div class="verification_border insufficient">
 						{% endif %}
 					{{ tiv.non_field_errors }}

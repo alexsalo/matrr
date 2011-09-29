@@ -586,16 +586,16 @@ def load_TissueCategories():
 
 # Creates InventoryStatus'
 # -jf
-def create_InventoryStatus():
-###				 Status Name  		Description
-	statuses = {"Unverified": "TissueSample inventory unverified",
-				"Sufficient": "TissueSample inventory verified sufficient for this TissueRequest",
-				"Insufficient": "TissueSample inventory verified insufficient for this TissueRequest.",
-				}
-	for key in statuses:
-		inv, is_new = InventoryStatus.objects.get_or_create(inv_status=key)
-		inv.inv_description = statuses[key]
-		inv.save()
+#def create_InventoryStatus():
+####				 Status Name  		Description
+#	statuses = {"Unverified": "TissueSample inventory unverified",
+#				"Sufficient": "TissueSample inventory verified sufficient for this TissueRequest",
+#				"Insufficient": "TissueSample inventory verified insufficient for this TissueRequest.",
+#				}
+#	for key in statuses:
+#		inv, is_new = InventoryStatus.objects.get_or_create(inv_status=key)
+#		inv.inv_description = statuses[key]
+#		inv.save()
 
 
 @transaction.commit_on_success
