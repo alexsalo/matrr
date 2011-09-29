@@ -8,7 +8,7 @@
 
 {% block content %}
 	<div class='large-headline'>
-		{% block title %}Accepting {{ req_request.user.username }}'s request{% endblock %}
+		{% block title %}Processing {{ req_request.user.username }}'s request{% endblock %}
 	</div>
 	<div>
 		<form action='' method='post'>
@@ -29,11 +29,12 @@
 					{% endif %}
 				{% endfor %}
 			</table>
-			<div class='headline'> Set tissues as unavailable</div>
+			<div class='headline'> Tissue Requests</div>
 			<div class='clearfix'>
 				{% for field in form.visible_fields %}
 					{% if field.name != 'body' and field.name != "subject" %}
 						{% for tissue_request in req_request.get_requested_tissues %}
+							<div class="clearfix">
 							{% ifequal tissue_request|stringformat:"s" field.name %}
 								{% for datum in tissue_request.get_data %}
 									{% if forloop.first %}
@@ -50,14 +51,13 @@
 										<br>
 									{% endif %}
 								{% endfor %}
-
-
 							{% endifequal %}
+							</div>
 						{% endfor %}
 					{% endif %}
 				{% endfor %}
 			</div>
-
+			<br>
 			<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Finalize and Send Email'/>
 			<input type='submit' name='submit' class='blockLinkDeleteButton' value='cancel'/>
 		</form>
