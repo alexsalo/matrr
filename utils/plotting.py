@@ -5,13 +5,14 @@ from matplotlib import pyplot
 import Image
 
 ###############  matplotlibrc settings
-mpl.rc_params['figure.subplot.left'] 	= 0.1	# the left side of the subplots of the figure
-mpl.rc_params['figure.subplot.right'] 	= 0.98	# the right side of the subplots of the figure
-mpl.rc_params['figure.subplot.bottom'] 	= 0.12	# the bottom of the subplots of the figure
-mpl.rc_params['figure.subplot.top'] 	= 0.96	# the top of the subplots of the figure
-mpl.rc_params['figure.subplot.wspace'] 	= 0.05	# the amount of width reserved for blank space between subplots
-mpl.rc_params['figure.subplot.hspace'] 	= 0.05	# the amount of height reserved for white space between subplots
+mpl.rcParams['figure.subplot.left'] 	= 0.1	# the left side of the subplots of the figure
+mpl.rcParams['figure.subplot.right'] 	= 0.98	# the right side of the subplots of the figure
+mpl.rcParams['figure.subplot.bottom'] 	= 0.12	# the bottom of the subplots of the figure
+mpl.rcParams['figure.subplot.top'] 	= 0.96	# the top of the subplots of the figure
+mpl.rcParams['figure.subplot.wspace'] 	= 0.05	# the amount of width reserved for blank space between subplots
+mpl.rcParams['figure.subplot.hspace'] 	= 0.05	# the amount of height reserved for white space between subplots
 ############### end
+
 
 def cohort_boxplot_m2de(cohort, days=10):
 	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
