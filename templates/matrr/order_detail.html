@@ -77,11 +77,11 @@
 		<div class='left'>
 			<a href='{% url manifest order.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
 		</div>
+	{% else %}
+		{% if not processed %}
+			<div>
+				<a href='delete' class='blockLinkDeleteButton'>Delete</a>
+			</div>
+		{% endif %}
 	{% endif %}
-	{% if not processed %}
-		<div>
-			<a href='delete' class='blockLinkDeleteButton'>Delete</a>
-		</div>
-	{% endif %}
-
 {% endblock %}
