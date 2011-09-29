@@ -1,40 +1,56 @@
 {% load tissue_filters %}
 
-{% if tissue_request.get_tissue %}
-	<div>
-		<a onclick="javascript:toggle_visibility('inventory_{{ tissue_request.get_html_label }}');">
-			Check Inventory
-		</a>
-		<table id='inventory_{{ tissue_request.get_html_label }}' class='hidden'>
-			{% for monkey in tissue_request.monkeys.all %}
-				<tbody>
-				<tr>
-					<th>Monkey:</th>
-					<td>{{ monkey.mky_real_id }}</td>
+<a onclick="javascript:toggle_visibility('availability_{{ tissue_request.get_html_label }}');">Show monkeys</a>
+<table id=full>
+	<tbody id='availability_{{ tissue_request.get_html_label }}' class='hidden'>
+	<tr class='bordered-cell-row'>
+		<th>Monkey</th>
+		{% if user_is_member_of_uberuser or user_is_member_of_tech_user or user_is_member_of_committee %}
+			<th>Name</th>
+			{% if spacing %}
+				<th class='spacing'></th>{% endif %}
+		{% endif %}
+		{% if spacing %}
+			<th class='spacing'></th>{% endif %}
+		<th>Assignment</th>
+		{% if spacing %}
+			<th class='spacing'></th>{% endif %}
+		<th>Request collisions</th>
+
+		{% for monkey in tissue_request.accepted_monkeys.all %}
+			<tr>
+				<td>
+					<a href="{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}/"
+					   onclick='javascript:window.open("{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}/");return false;'>
+						{{ monkey.mky_real_id }}
+						<img src="{{ STATIC_URL }}images/arrow_popup.png" width="8" height="8" style='vertical-align: text-top'
+							 alt='external link'/>
+					</a>
+				</td>
+				{% if spacing %}<td class='spacing'></td>{% endif %}
+
+				{% if user_is_member_of_uberuser or user_is_member_of_tech_user or user_is_member_of_committee %}
 					<td>{{ monkey.mky_name }}</td>
-				</tr>
-				{% with samples=tissue_request.get_tissue|get_stock:monkey %}
-					{% if samples.count %}
-						{% for sample in samples.all %}
-							<tr>
-								<th>Sample Location:</th>
-								<td colspan="2">{{ sample.get_location }}</td>
-							</tr>
-							<tr>
-								<th>Last Updated:</th>
-								<td colspan="2">{{ sample.get_modified }}</td>
-							</tr>
-						{% endfor %}
-					{% else %}
-						<tr>
-							<td colspan="3">There are no samples for this tissue and monkey in the inventory.</td>
-						</tr>
+					{% if spacing %}<td class='spacing'></td>{% endif %}
+				{% endif %}
+
+				<td>
+					{% if monkey.mky_drinking %}
+						Ethanol
+						{% else %}
+						{% if monkey.mky_housing_control %}
+							Housing Control
+						{% else %}
+							Control
+						{% endif %}
 					{% endif %}
-				{% endwith %}
-				</tbody>
-			{% endfor %}
-		</table>
-	</div>
-{% else %}
-	<div style='float: left;'>No inventory data is available for custom tissue requests.</div>
-{% endif %}
+				</td>
+
+				<td>
+					{% load review_tags %}
+					{% colliding_requests req_request monkey %}
+				</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+</table>
