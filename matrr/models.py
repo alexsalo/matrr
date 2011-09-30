@@ -978,10 +978,11 @@ class TissueInventoryVerification(models.Model):
 	def invalidate_collisions(self):
 		collisions = self.get_tiv_collisions()
 		for tiv in collisions:
-			tiv.inventory = InventoryStatus.objects.get(inv_status="Unverified")
+			tiv.tiv_inventory = "Unverified"
 			tiv.save()
 
 	def save(self, *args, **kwargs):
+		notes = self.tiv_notes
 		# This will set the tissue_sample field with several database consistency checks
 		if self.tissue_sample is None:
 			try:
@@ -993,22 +994,25 @@ class TissueInventoryVerification(models.Model):
 				# All tissue samples should have been previously created.
 				# Currently, I don't think a TIV can be created (thru the website) without a tissue sample record already existing
 				if is_new:
-					self.tiv_notes = "%s:Database Error:  There was no previous record for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
+					notes = "%s:Database Error:  There was no previous record for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
 			# There should only be 1 tissue sample for each monkey:tissue_type.
 			# Possibly should make them unique-together
 			except TissueSample.MultipleObjectsReturned:
-				self.tiv_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin. Do not edit, changes will not be saved." % str(datetime.now().date())
+				notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin. Do not edit, changes will not be saved." % str(datetime.now().date())
 		# tissue_sample should ALWAYS == monkey:tissue_type
 		elif self.tissue_sample.monkey != self.monkey\
 		or   self.tissue_sample.tissue_type != self.tissue_type:
-			self.tiv_notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(datetime.now().date())
+			notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(datetime.now().date())
 
-		if not 'Do not edit' in self.tiv_notes:
+		if 'Do not edit' in notes:
+			# this shouldn't save any other changes
+			TissueInventoryVerification.objects.filter(pk=self.pk).update(tiv_notes=notes)
+		else:
+			self.tiv_notes = notes
 			super(TissueInventoryVerification, self).save(*args, **kwargs)
-
-		## If the tissue has been verified, but has NO tissue_request associated with it
-		if self.tiv_inventory != "Unverified" and self.tissue_request is None:
-			self.delete() # delete it
+			## If the tissue has been verified, but has NO tissue_request associated with it
+			if self.tiv_inventory != "Unverified" and self.tissue_request is None:
+				self.delete() # delete it
 
 	class Meta:
 		db_table = 'tiv_tissue_verification'
