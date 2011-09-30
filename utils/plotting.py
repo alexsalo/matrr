@@ -3,6 +3,14 @@ from matrr.models import *
 import matplotlib as mpl
 from matplotlib import pyplot
 import Image
+from matplotlib.patches import Circle
+
+import numpy as np
+from pylab import *
+
+from settings import STATIC_ROOT
+from os import path, makedirs
+
 
 ###############  matplotlibrc settings
 mpl.rcParams['figure.subplot.left'] 	= 0.1	# the left side of the subplots of the figure
@@ -387,3 +395,126 @@ def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
 	else:
 		print "No drinking experiments for this cohort."
 
+DEFAULT_CIRCLE_MAX = 280
+DEFAULT_CIRCLE_MIN = 20
+
+def monkey_bouts_drinks(monkey, filename=None, from_date=None, to_date=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
+    """
+        Scatter plot for monkey
+            x axis - dates of monkey experiments in range [from_date, to_date] or all possible
+            y axis - total number of drinks (bouts * drinks per bout)
+            color - number of bouts
+            size - drinks per bout
+        Circle sizes scaled to range [cirle_min, circle_max]
+        Plot saved to filename or to static/images/monkeys-bouts-drinks as mky_[real_id].png and mky_[real_id]-thumb.png
+    """
+    thumbnail_size = (240,240)
+    
+    mpl.rcParams['figure.subplot.top'] 	= 0.92
+    mpl.rcParams['figure.subplot.bottom'] 	= 0.08
+    mpl.rcParams['figure.subplot.right'] 	= 1
+    if not isinstance(monkey, Monkey):
+        try:
+            monkey = Monkey.objects.get(pk=monkey)
+        except Monkey.DoesNotExist:
+            print("That's not a valid monkey.")
+            return    
+        
+    if circle_max < circle_min:
+        circle_max = DEFAULT_CIRCLE_MAX
+        circle_min = DEFAULT_CIRCLE_MIN
+    else:
+        if circle_max < 10:
+            circle_max = DEFAULT_CIRCLE_MAX
+        if circle_min < 1:
+            circle_min = DEFAULT_CIRCLE_MIN    
+
+    drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+    if from_date:
+        drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
+    if to_date:
+        drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+    
+    drinking_experiments = drinking_experiments.exclude(mtd_etoh_bout=None, mtd_etoh_drink_bout=None)
+    
+    if drinking_experiments.count() > 0:
+        dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
+    else:
+        return
+    dr_per_bout =list()
+    bouts = list()
+
+    for date in dates:
+        de = drinking_experiments.get(drinking_experiment__dex_date=date)
+        bouts.append(de.mtd_etoh_bout)
+        dr_per_bout.append(de.mtd_etoh_drink_bout)
+
+    x = np.array(range(1,len(dr_per_bout)+1))
+    dr_per_bout       = np.array(dr_per_bout)
+    bouts   = np.array(bouts)
+   
+    size_min = circle_min
+    size_scale = circle_max - size_min
+     
+    patches = []
+    for x1,b,pb in zip(x, dr_per_bout, bouts):
+        circle = Circle((x1,b*pb), b*0.1)
+        patches.append(circle)
+       
+    bouts_max = float(dr_per_bout.max())
+    total_drinks = [ b*pb for b, pb in zip(dr_per_bout, bouts)]
+    rescaled_bouts = [ (b/bouts_max)*size_scale+size_min for b in dr_per_bout ] # rescaled, so that circles will be in range (size_min, size_scale)
+      
+    fig = pyplot.figure()
+    
+#    main graph
+    ax1 = fig.add_subplot(111)
+
+    s= ax1.scatter(x, total_drinks, c=bouts, s=rescaled_bouts, alpha=0.4)
+    
+    ax1.set_ylabel("Total number of drinks =  bouts * drinks per bout")
+    ax1.set_xlabel("Days")
+    
+    ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_real_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))    
+    y_max = max(total_drinks)
+    pyplot.ylim(0,y_max + y_max*0.25) # + % to show circles under the size legend instead of behind it
+    pyplot.xlim(0,len(x) + 1)
+    
+    cb = pyplot.colorbar(s)
+
+    cb.set_label("Number of bouts")
+    
+#    size legend
+    x =np.array(range(1,6))
+    y =np.array([1,1,1,1,1])
+    
+    size_m = size_scale/(len(y)-1)
+    size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
+    size.insert(0,1+size_min)
+    size = np.array(size)
+    
+    m = bouts_max/(len(y)-1)
+    bout_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of bouts
+    bout_labels.insert(0,"1")
+    bout_labels.insert(0, "")
+    bout_labels.append("")
+   
+    ax2 = fig.add_subplot(721)
+    ax2.scatter(x, y, s=size, alpha=0.4)
+    ax2.set_xlabel("Drinks per bout")
+    ax2.yaxis.set_major_locator(NullLocator())
+    pyplot.setp(ax2, xticklabels=bout_labels)
+    if not filename:
+
+
+        dir = path.join(STATIC_ROOT, 'images', 'monkeys-bouts-drinks')
+        if not path.exists(dir):
+            makedirs(dir)
+        filename = "mky_%d" % monkey.mky_real_id
+        filename = path.join(dir, filename)
+       
+    fig.savefig(filename + ".png")
+
+    img = Image.open(filename + ".png")
+    img.thumbnail(thumbnail_size, Image.ANTIALIAS)
+    img.save(filename + "-thumb.jpg")
