@@ -5,6 +5,24 @@ from django.views.generic import DetailView, ListView
 from matrr.views import *
 import settings
 
+cohort_timeline = DetailView.as_view(
+            queryset=Cohort.objects.filter(),
+            context_object_name='cohort',
+            template_name='matrr/timeline.html',
+            )
+
+
+available_timeline = DetailView.as_view(
+            queryset=Cohort.objects.filter(coh_upcoming=False),
+            context_object_name='cohort',
+            template_name='matrr/timeline.html',
+            )
+upcoming_timeline = DetailView.as_view(
+            queryset=Cohort.objects.filter(coh_upcoming=True),
+            context_object_name='cohort',
+            template_name='matrr/timeline.html',
+            )
+
 # Pretend views
 urlpatterns = patterns('matrr.views',
     url(r'^events/$',
@@ -27,18 +45,10 @@ urlpatterns = patterns('matrr.views',
             context_object_name='cohort',
             template_name='matrr/publications.html',
             )),
-    url(r'^upcoming/(?P<pk>\d+)/timeline$',
-        DetailView.as_view(
-            queryset=Cohort.objects.filter(coh_upcoming=True),
-            context_object_name='cohort',
-            template_name='matrr/timeline.html',
-            )),
-    url(r'^(available|cohort)/(?P<pk>\d+)/timeline$',
-        DetailView.as_view(
-            queryset=Cohort.objects.filter(coh_upcoming=False),
-            context_object_name='cohort',
-            template_name='matrr/timeline.html',
-            )),
+    url(r'^upcoming/(?P<pk>\d+)/timeline$', upcoming_timeline, name='upcoming-timeline'),
+    url(r'^cohort/(?P<pk>\d+)/timeline$', cohort_timeline, name='cohort-timeline'),
+    url(r'^available/(?P<pk>\d+)/timeline$', available_timeline, name='available-timeline'),
+    
     url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/publications/$',
         DetailView.as_view(queryset=Cohort.objects.filter(),
 			context_object_name='cohort',
@@ -66,12 +76,12 @@ urlpatterns += patterns('matrr.views',
 #*** This is a hack, does nothing but display a message saying we don't have necropsy data.  This will need to be changed if/when we get a batch of necropsy data
     url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/necropsy/$', 		cohort_necropsy, name="cohortnect"),
 #***
-	url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 		monkey_cohort_detail_view, name='monkey_detail_coh'),
-    url(r'^available/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey_detail_av'),
-    url(r'^upcoming/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey_detail_up'),
-	url(r'^(available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list),
-	url(r'^(available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/$', 								tissue_shop_landing_view),
-    url(r'^(available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/[^/]*/?(?P<tissue_id>\d+)/$', 	tissue_shop_detail_view),
+#	url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 		monkey_cohort_detail_view, name='monkey_detail_coh'),
+#    url(r'^available/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey_detail_av'),
+    url(r'^(?P<avail_up>^available|upcoming|cohort)/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey_detail'),
+	url(r'^(?P<avail_up>^available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list),
+	url(r'^(?P<avail_up>^available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/$', 								tissue_shop_landing_view, name='tissue-shop-landing'),
+    url(r'^(?P<avail_up>^available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/[^/]*/?(?P<tissue_id>\d+)/$', 	tissue_shop_detail_view),
 
 	#  Cart Views
 	url(r'^cart/$', 			                            cart_view, name='cart'),

@@ -386,3 +386,4 @@ def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
 			img.save(filename + "-thumb.jpg")
 	else:
 		print "No drinking experiments for this cohort."
+
