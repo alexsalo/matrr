@@ -93,7 +93,7 @@ def cohort_necropsy(request, pk):
 	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
 
 
-def monkey_cohort_detail_view(request, cohort_id, monkey_id):
+def monkey_cohort_detail_view(request, avail_up, cohort_id, monkey_id):
 	try:
 		monkey = Monkey.objects.get(mky_id=monkey_id)
 	except:
@@ -157,7 +157,7 @@ def get_or_create_cart(request, cohort):
 	return cart_request
 
 
-def tissue_shop_detail_view(request, cohort_id, tissue_id):
+def tissue_shop_detail_view(request, avail_up, cohort_id, tissue_id):
 	current_cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
 	cart_request = get_or_create_cart(request, current_cohort)
 	if cart_request is None:
@@ -463,21 +463,21 @@ def review_history_list(request):
 	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
 	request_status_cart = RequestStatus.objects.get(rqs_status_name='Cart')
 	req_requests = Request.objects.filter(Q(request_status__gte=0), ~Q(request_status=request_status), ~Q(request_status=request_status_cart)).order_by('-req_modified_date')
-	
+	req_requests = req_requests.distinct()
 	group = Group.objects.get(name='Committee')
 	reviewers = group.user_set.all().order_by('-username')
-	verified_requests = list()
-	for req_request in req_requests:
-		req_request.complete = list()
-		for reviewer in reviewers:
-			for review in req_request.review_set.all():
-				if reviewer == review.user:
-					req_request.complete.append(req_request.request_status.rqs_status_name)
-			if req_request.complete:
-				verified_requests.append(req_request)
+#	verified_requests = list()
+#	for req_request in req_requests:
+#		req_request.complete = list()
+#		for reviewer in reviewers:
+#			for review in req_request.review_set.all():
+#				if reviewer == review.user:
+#					req_request.complete.append(req_request.request_status.rqs_status_name)
+#			if req_request.complete:
+#				verified_requests.append(req_request)
 	
 	
-	paginator = Paginator(verified_requests, 20) # Show 25 contacts per page
+	paginator = Paginator(req_requests, 20) # Show 25 contacts per page
 
 	if request.GET and 'page' in request.GET:
 		page = request.GET.get('page')
@@ -670,7 +670,7 @@ def experimental_plan_view(request, plan):
 	raise Http404('This page does not exist.')
 
 
-def tissue_shop_landing_view(request, cohort_id):
+def tissue_shop_landing_view(request, avail_up, cohort_id):
 	context = dict()
 	assay = Cohort.objects.get(coh_cohort_name__icontains="assay")
 	cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
@@ -690,7 +690,7 @@ def tissue_shop_landing_view(request, cohort_id):
 	return render_to_response('matrr/tissue_shopping_landing.html', context, context_instance=RequestContext(request))
 
 
-def tissue_list(request, tissue_category=None, cohort_id=None):
+def tissue_list(request, avail_up, tissue_category=None, cohort_id=None):
 	cohort = None
 	if cohort_id is not None:
 		cohort = Cohort.objects.get(coh_cohort_id=cohort_id)

@@ -23,9 +23,9 @@
 
 		<div style='float: left;'>
 			{% if cohort.coh_upcoming %}
-				<a href="/upcoming/{{ cohort.coh_cohort_id }}/timeline">
+				<a href="{% url upcoming-timeline cohort.coh_cohort_id %}">
 			{% else %}
-				<a href="/available/{{ cohort.coh_cohort_id }}/timeline">
+				<a href="{% url available-timeline cohort.coh_cohort_id %}">
 			{% endif %}
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 			&nbsp;View Cohort Timeline</a>

@@ -17,9 +17,9 @@
 				<th>Cohort</th>
 				<th>User</th>
 				<th>Date Modified</th>
-				{% for reviewer in reviewers %}
-					<th>{{ reviewer }}</th>
-				{% endfor %}
+				
+					<th>Request Status</th>
+				
 			</tr>
 			{% for req_request in req_requests.object_list %}
 				<tr>
@@ -30,7 +30,7 @@
 						{% endif %}</a></td>
 					<td nowrap>{{ req_request.req_modified_date|date:"m/d/Y, g:i a" }}</td>
 
-					{% for item in req_request.complete %}
+					{% with item=req_request.request_status.rqs_status_name %}
 						{% if item == "Rejected" %}
 							<td style="color: red" align="center">{{ item }}</td>
 						{% else %}
@@ -47,7 +47,7 @@
 							{% endif %}
 						{% endif %}
 
-					{% endfor %}
+					{% endwith %}
 
 					<td><a href='{% url review-overview req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>
 				</tr>
