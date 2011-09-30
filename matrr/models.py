@@ -945,18 +945,6 @@ class GenBankSequence(models.Model):
 		db_table = 'gen_genbank_sequences'
 
 
-#class InventoryStatus(models.Model):
-#	inv_id = models.AutoField("ID", primary_key=True)
-#	inv_status = models.CharField('Tissue Inventory Status', max_length=30, unique=True, null=False)
-#	inv_description = models.CharField('Status description', max_length=100, unique=True, null=False)
-#
-#	def __unicode__(self):
-#		return self.inv_status
-#
-#	class Meta:
-#		db_table = 'inv_inventory_status'
-
-
 class TissueInventoryVerification(models.Model):
 	tiv_id = models.AutoField(primary_key=True)
 
