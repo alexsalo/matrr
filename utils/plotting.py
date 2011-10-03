@@ -516,4 +516,4 @@ def monkey_bouts_drinks(monkey, filename=None, from_date=None, to_date=None, cir
 
     img = Image.open(filename + ".png")
     img.thumbnail(thumbnail_size, Image.ANTIALIAS)
-    img.save(filename + "-thumb.png")
+    img.save(filename + "-thumb.jpg")
