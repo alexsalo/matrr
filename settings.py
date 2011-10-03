@@ -53,7 +53,7 @@ MEDIA_URL = '/media/'
 STATIC_ROOT = '/web/www/MATRR/prod/static'
 STATIC_URL = '/static/'
 MATRR_STATIC_STRING = 'static'
-ADMIN_MEDIA_PREFIX = MATRR_STATIC_STRING + '/admin/'
+ADMIN_MEDIA_PREFIX = '/' + MATRR_STATIC_STRING + '/admin/'
 STATICFILES_DIRS = (
         path + '/' + MATRR_STATIC_STRING,
     )
