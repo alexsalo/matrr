@@ -52,9 +52,10 @@ MEDIA_ROOT = '/web/www/MATRR/prod/media'
 MEDIA_URL = '/media/'
 STATIC_ROOT = '/web/www/MATRR/prod/static'
 STATIC_URL = '/static/'
-ADMIN_MEDIA_PREFIX = '/static/admin/'
+MATRR_STATIC_STRING = 'static'
+ADMIN_MEDIA_PREFIX = 'MATRR_STATIC_STRING + /admin/'
 STATICFILES_DIRS = (
-        path + '/static',
+        path + '/' + MATRR_STATIC_STRING,
     )
 # List of finder classes that know how to find static files in
 # various locations.

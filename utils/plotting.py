@@ -8,7 +8,7 @@ from matplotlib.patches import Circle
 import numpy as np
 from pylab import *
 
-from settings import STATICFILES_DIRS
+from settings import MATRR_STATIC_STRING
 from os import path, makedirs
 
 
@@ -52,7 +52,7 @@ def cohort_boxplot_m2de(cohort, days=10):
 		fig_size = (10,10)
 		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
 		for data_type, data in all_data.items():
-			dir = 'static/images/' + data_type + "/"
+			dir = MATRR_STATIC_STRING + '/images/' + data_type + "/"
 			if not os.path.exists(dir):
 				os.makedirs(dir)
 			filename = dir + cohort.coh_cohort_name
@@ -88,7 +88,7 @@ def monkey_boxplot_etoh(monkey):
 	fig_size = (10,10)
 	thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
 	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
-	filename = 'static/images/' + 'etoh' + "/" + str(monkey)
+	filename = MATRR_STATIC_STRING + '/images/' + 'etoh' + "/" + str(monkey)
 
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
@@ -151,7 +151,7 @@ def monkey_boxplot_pellet(monkey):
 	coh_pellet_data = {}
 	mky_pellet_data = {}
 	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
-	filename = 'static/images/' + 'pellet' + "/" + str(monkey)
+	filename = MATRR_STATIC_STRING + '/images/' + 'pellet' + "/" + str(monkey)
 
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
@@ -210,7 +210,7 @@ def monkey_boxplot_veh(monkey):
 	fig_size = (10,10)
 	thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
 	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
-	filename = 'static/images/' + 'veh' + "/" + str(monkey)
+	filename = MATRR_STATIC_STRING + '/images/' + 'veh' + "/" + str(monkey)
 
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
@@ -274,7 +274,7 @@ def monkey_boxplot_weight(monkey):
 	coh_weight_data = {}
 	mky_weight_data = {}
 	colors = {'monkey' : "#FF6600", 'cohort' : 'black'}
-	filename = 'static/images/' + 'weight' + "/" + str(monkey)
+	filename = MATRR_STATIC_STRING + '/images/' + 'weight' + "/" + str(monkey)
 
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
@@ -364,7 +364,7 @@ def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
 		fig_size = (10,10)
 		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
 		for data_type, data in all_data.iteritems():
-			dir = 'static/images/' + data_type + "/"
+			dir = MATRR_STATIC_STRING + '/images/' + data_type + "/"
 			if not os.path.exists(dir):
 				os.makedirs(dir)
 			filename = dir + cohort.coh_cohort_name
@@ -506,7 +506,7 @@ def monkey_bouts_drinks(monkey, filename=None, from_date=None, to_date=None, cir
     pyplot.setp(ax2, xticklabels=bout_labels)
     if not filename:
 
-        dir = path.join(STATICFILES_DIRS[0], 'images', 'monkeys-bouts-drinks')
+        dir = path.join(MATRR_STATIC_STRING, 'images', 'monkeys-bouts-drinks')
         if not path.exists(dir):
             makedirs(dir)
         filename = "%d" % monkey.mky_real_id
