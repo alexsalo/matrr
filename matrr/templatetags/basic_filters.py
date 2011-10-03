@@ -1,7 +1,7 @@
 __author__ = 'Jon'
 import os
 from django import template
-from settings import STATIC_ROOT
+from settings import STATIC_ROOT, STATICFILES_DIRS
 
 register = template.Library()
 
