@@ -1066,3 +1066,25 @@ def tissue_verification(request):
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
+
+from settings import MEDIA_ROOT
+import os
+import mimetypes
+
+def sendfile(request, id):
+	print "not found view"
+	req = Request.objects.filter(req_experimental_plan=id)
+	if req.count() == 0:
+			raise Http404()
+	file = req[0].req_experimental_plan
+	response = HttpResponse() 
+	response['X-Sendfile'] =  os.path.join(MEDIA_ROOT, file.url)
+	content_type, encoding = mimetypes.guess_type(file.url)
+	if not content_type: 
+		content_type = 'application/octet-stream' 
+	response['Content-Type'] = content_type 
+#	response['Content-Length'] = project_file.get_file_size() 
+	response['Content-Disposition'] = 'attachment; filename="%s"' %  os.path.basename(file.url) 
+	return response 
+
+

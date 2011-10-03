@@ -1,3 +1,4 @@
+from settings import DEVELOPMENT
 __author__ = 'soltau'
 
 from django.conf.urls.defaults import patterns, url
@@ -116,12 +117,13 @@ urlpatterns += patterns('matrr.views',
 
 	url(r'^verification/?$',
 		tissue_verification),
+
 	)
 
 if settings.DEVELOPMENT:
     urlpatterns += patterns('matrr.views',
 	)
-
+    
 # I don't know what this does.  if you understand it, please tell me.
 # -jf
 if settings.DEVELOPMENT:
@@ -135,3 +137,5 @@ if settings.DEVELOPMENT:
              serve,
                  {'document_root': settings.MEDIA_ROOT}))
     del(_media_url, serve)
+else:
+     urlpatterns += patterns('matrr.views', url(r'media/(?P<id>.*)$', sendfile),)
