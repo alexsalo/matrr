@@ -1005,7 +1005,7 @@ class TissueInventoryVerification(models.Model):
 			notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(datetime.now().date())
 
 		if 'Do not edit' in notes:
-			# this shouldn't save any other changes
+			# this doesnt save any other changes
 			TissueInventoryVerification.objects.filter(pk=self.pk).update(tiv_notes=notes)
 		else:
 			self.tiv_notes = notes
