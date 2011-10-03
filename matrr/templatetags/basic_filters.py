@@ -38,7 +38,7 @@ def cohort_images(cohort, test_dir):
 @register.filter()
 def monkey_images(monkey, test_dir):
 	# Directories to check
-	image_dirs = {'etoh' : "Ethanol Intake", 'pellet' : "Total Pellets", 'veh' : 'Veh Intake', 'weight' : 'Weights'}
+	image_dirs = {'etoh' : "Ethanol Intake", 'pellet' : "Total Pellets", 'veh' : 'Veh Intake', 'weight' : 'Weights', 'monkeys-bouts-drinks': 'Bouts, drinks per bout and total drinks'}
 	images = {}
 
 	if test_dir == 'all':

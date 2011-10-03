@@ -8,7 +8,7 @@ from matplotlib.patches import Circle
 import numpy as np
 from pylab import *
 
-from settings import STATIC_ROOT
+from settings import STATICFILES_DIRS
 from os import path, makedirs
 
 
@@ -412,10 +412,10 @@ def monkey_bouts_drinks(monkey, filename=None, from_date=None, to_date=None, cir
     
     mpl.rcParams['figure.subplot.top'] 	= 0.92
     mpl.rcParams['figure.subplot.bottom'] 	= 0.08
-    mpl.rcParams['figure.subplot.right'] 	= 1
+    
     if not isinstance(monkey, Monkey):
         try:
-            monkey = Monkey.objects.get(pk=monkey)
+            monkey = Monkey.objects.get(mky_real_id=monkey)
         except Monkey.DoesNotExist:
             print("That's not a valid monkey.")
             return    
@@ -506,15 +506,14 @@ def monkey_bouts_drinks(monkey, filename=None, from_date=None, to_date=None, cir
     pyplot.setp(ax2, xticklabels=bout_labels)
     if not filename:
 
-
-        dir = path.join(STATIC_ROOT, 'images', 'monkeys-bouts-drinks')
+        dir = path.join(STATICFILES_DIRS[0], 'images', 'monkeys-bouts-drinks')
         if not path.exists(dir):
             makedirs(dir)
-        filename = "mky_%d" % monkey.mky_real_id
+        filename = "%d" % monkey.mky_real_id
         filename = path.join(dir, filename)
-       
+
     fig.savefig(filename + ".png")
 
     img = Image.open(filename + ".png")
     img.thumbnail(thumbnail_size, Image.ANTIALIAS)
-    img.save(filename + "-thumb.jpg")
+    img.save(filename + "-thumb.png")
