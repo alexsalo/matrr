@@ -208,9 +208,19 @@ class Mta(models.Model):
 			self.mta_title = self.mta_file.name
 		super(Mta, self).save(force_insert, force_update, using)
 
+	def verify_user_access_to_file(self, user):
+		if self.user == user:
+			return True
+		if user.has_perm('view_mta_file'):
+			return True
+		return False
+	
+
 	class Meta:
 		db_table = 'mta_material_transfer'
-
+		permissions = (
+					('view_mta_file', 'Can view MTA files of other users'),
+					)
 
 class Account(models.Model):
 	user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
@@ -567,6 +577,13 @@ class Request(models.Model, DiffingMixin):
 			   ' Cohort: ' + self.cohort.coh_cohort_name +\
 			   ' Date: ' + self.req_request_date.strftime("%I:%M%p  %m/%d/%y")
 
+	def verify_user_access_to_file(self, user):
+		if self.user == user:
+			return True
+		if user.has_perm('view_experimental_plan'):
+			return True
+		return False
+
 	def print_setf_in_detail(self):		
 		return "Project title: %s\nRequested: %s\nCohort: %s\nRequest reason: %s\nNotes: %s" % (self.req_project_title,
 							str(self.req_request_date), self.cohort.coh_cohort_name, self.req_reason, self.req_notes or "None")
@@ -647,6 +664,9 @@ class Request(models.Model, DiffingMixin):
 
 	class Meta:
 		db_table = 'req_requests'
+		permissions = (
+					('view_experimental_plan', 'Can view experimental plans of other users'),
+					)
 
 
 class TissueRequest(models.Model):
