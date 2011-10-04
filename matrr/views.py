@@ -1076,19 +1076,37 @@ import os
 import mimetypes
 
 def sendfile(request, id):
-	print "not found view"
-	req = Request.objects.filter(req_experimental_plan=id)
-	if req.count() == 0:
-			raise Http404()
-	file = req[0].req_experimental_plan
-	response = HttpResponse() 
-	response['X-Sendfile'] =  os.path.join(MEDIA_ROOT, file.url)
-	content_type, encoding = mimetypes.guess_type(file.url)
-	if not content_type: 
-		content_type = 'application/octet-stream' 
+	files = list()
+
+#	append all possible files
+	r = Request.objects.filter(req_experimental_plan=id)
+	files.append((r, 'req_experimental_plan'))
+	r = Mta.objects.filter(mta_file=id)
+	files.append((r, 'mta_file'))
+
+	file = None
+	for r,f in files:
+		if len(r) > 0:
+			file = getattr(r[0], f) 
+			break
+	if not file:
+		print "not found"
+		raise Http404()
+	
+	if file.url.count('/media') > 0:
+		file_url = file.url.replace('/media/', '')
+	else:
+		file_url = file.url.replace('/', '', 1)
+	
+	response = HttpResponse()
+	response['X-Sendfile'] =  os.path.join(MEDIA_ROOT, file_url)
+
+	
+	content_type, encoding = mimetypes.guess_type(file_url)
+	if not content_type:
+			content_type = 'application/octet-stream'
 	response['Content-Type'] = content_type 
-#	response['Content-Length'] = project_file.get_file_size() 
-	response['Content-Disposition'] = 'attachment; filename="%s"' %  os.path.basename(file.url) 
-	return response 
+	response['Content-Disposition'] = 'attachment; filename="%s"' %  os.path.basename(file_url)
+	return response
 
 
