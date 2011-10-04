@@ -125,7 +125,6 @@ if settings.DEVELOPMENT:
     
 # I don't know what this does.  if you understand it, please tell me.
 # -jf
-settings.DEVELOPMENT = False
 if settings.DEVELOPMENT:
     from django.views.static import serve
 
