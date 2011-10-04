@@ -1,4 +1,3 @@
-from settings import DEVELOPMENT
 __author__ = 'soltau'
 
 from django.conf.urls.defaults import patterns, url
