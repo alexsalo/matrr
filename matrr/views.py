@@ -696,7 +696,7 @@ def tissue_list(request, avail_up, tissue_category=None, cohort_id=None):
 		cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
 	if tissue_category == "Custom":
 		# This breaks the URL scheme
-		return tissue_shop_detail_view(request, cohort.coh_cohort_id, TissueType.objects.get(tst_tissue_name="Custom").tst_type_id)
+		return tissue_shop_detail_view(request, avail_up, cohort.coh_cohort_id, TissueType.objects.get(tst_tissue_name="Custom").tst_type_id)
 	elif tissue_category:
 		tissue_list = TissueType.objects.filter(category__cat_name=tissue_category).order_by('tst_tissue_name')
 	else:
