@@ -1030,28 +1030,31 @@ def tissue_verification(request):
 					tss.save()
 				if "export" in request.POST:
 					tiv_list = TissueInventoryVerification.objects.all().order_by('inventory').order_by("monkey")
-
 					#Create the HttpResponse object with the appropriate PDF headers.
 					response = HttpResponse(mimetype='application/pdf')
 					response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
 					return process_latex('latex/tissue_verification.tex',
-							{'tiv_list': tiv_list,
-							 'user': request.user,
-							 'date': datetime.today(),
-							 },
-										 outfile=response)
+																		{'tiv_list': tiv_list,
+																		 'user': request.user,
+																		 'date': datetime.today()},
+																		 outfile=response)
 			return redirect('/verification')
 		else:
 			messages.error(request, formset.errors)
-
+	# if request method != post and/or formset isNOT valid
+	# build a new formset
 	initial = []
 	tiv_list = TissueInventoryVerification.objects.all().order_by('tiv_inventory')
 	for tiv in tiv_list:
-		tss = tiv.tissue_sample
 		try:
 			amount = tiv.tissue_request.get_amount()
-		except AttributeError:
+			req_request = tiv.tissue_request.req_request\
+						  if tiv.tissue_request.req_request.get_acc_req_collisions_for_tissuetype_monkey(tiv.tissue_type, tiv.monkey) \
+						  else False
+		except AttributeError: # tissue_request == None
+			req_request = False
 			amount = "None"
+		tss = tiv.tissue_sample
 		tiv_initial = {'primarykey': tiv.tiv_id,
 					   'freezer': tss.tss_freezer,
 					   'location': tss.tss_location,
@@ -1062,7 +1065,8 @@ def tissue_verification(request):
 					   'monkey': tiv.monkey,
 					   'tissue': tiv.tissue_type,
 					   'notes': tiv.tiv_notes,
-					   'amount': amount, }
+					   'amount': amount,
+					   'req_request': req_request,}
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))

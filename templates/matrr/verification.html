@@ -42,10 +42,18 @@
 						{% endif %}
 					{{ tiv.non_field_errors }}
 					{% if tiv.initial.notes %}
-						<div style="background-color: yellow">
+						<div style="background-color: orange;">
 							{{ tiv.initial.notes }}
 						</div>
 					{% endif %}
+					{% if tiv.initial.req_request %}
+						<div style='text-align: left; background-color: yellow'>
+								<b>Warning:</b> This tissue has been accepted, but not shipped, for another request.  Please take into account the accepted request before verifying this tissue.<br>
+								{% load review_tags %}
+								{% colliding_accepted_requests tiv.initial.req_request tiv.initial.tissue tiv.initial.monkey %}
+						</div>
+					{% endif %}
+
 					<center>
 						<table class='verification_table'>
 							<tr>

@@ -49,8 +49,7 @@
 					{% endwith %}
 					<td>
 						{% load review_tags %}
-						{% colliding_requests req_request monkey %}
-
+						{% colliding_submitted_requests req_request monkey %}
 					</td>
 					<!--    <td>
         {{ tissue_request.get_tissue|accepted_requests:monkey }}

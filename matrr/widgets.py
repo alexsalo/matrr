@@ -232,7 +232,10 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 				assignment = 'Control'
 			#      import pdb
 			#      pdb.set_trace()
-			verification = self.tissue.tissue_verification_set.get(monkey=monkey, tissue_request=self.tis_request)
+
+			# Using get_or_create because the review view errors hard if you manually delete a random TIV.
+			# Given they're temporary objects anyway, I don't foresee an issue with this.
+			verification, is_new = self.tissue.tissue_verification_set.get_or_create(monkey=monkey, tissue_request=self.tis_request)
 			if self.tissue:
 				if verification.tiv_inventory == 'Unverified':
 					output.append(
