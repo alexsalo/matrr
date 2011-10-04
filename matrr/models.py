@@ -591,34 +591,51 @@ class Request(models.Model, DiffingMixin):
 	def get_tiv_collisions(self):
 		tissue_requests = self.tissue_request_set.all()
 		collisions = TissueInventoryVerification.objects.none()
-
 		for tissue_request in tissue_requests:
 			collisions |= tissue_request.get_tiv_collisions()
 		return collisions
 
-	def __get_collision_request(self, collisions):
-		collision_requests = list()
+	def get_rtt_collisions(self):
+		colliding_tissue_requests = TissueRequest.objects.none()
+		for tissue_request in self.tissue_request_set.all():
+			colliding_tissue_requests |= tissue_request.get_rtt_collisions()
+		return colliding_tissue_requests
+
+	def __get_tiv_collision_request(self, collisions):
+		collision_requests = set()
 		for collision in collisions:
 			if collision.tissue_request.req_request != self:
-				collision_requests.append(collision.tissue_request.req_request)
+				collision_requests.add(collision.tissue_request.req_request)
+		return collision_requests
+
+	def __get_rtt_collision_request(self, collisions):
+		collision_requests = set()
+		for collision in collisions:
+			if collision.req_request != self:
+				collision_requests.add(collision.req_request)
 
 		return collision_requests
 
 	def get_sub_req_collisions_for_monkey(self, monkey):
 		collisions = self.get_tiv_collisions()
-
 		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'), monkey=monkey)
-
-		return self.__get_collision_request(collisions)
-
+		return self.__get_tiv_collision_request(collisions)
 
 	def get_sub_req_collisions(self):
 		collisions = self.get_tiv_collisions()
-
 		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'))
+		return self.__get_tiv_collision_request(collisions)
 
-		return self.__get_collision_request(collisions)
+	def get_acc_req_collisions(self):
+		collisions = self.get_rtt_collisions()
+		collisions = collisions.filter(req_request__request_status__rqs_status_name__contains="Accepted")
+		return self.__get_rtt_collision_request(collisions)
 
+	def get_acc_req_collisions_for_tissuetype_monkey(self, tissue_type, monkey):
+		collisions = self.get_rtt_collisions()
+		collisions = collisions.filter(req_request__request_status__rqs_status_name__contains="Accepted")
+		collisions = collisions.filter(tissue_type=tissue_type, accepted_monkeys__in=[monkey])
+		return self.__get_rtt_collision_request(collisions)
 
 	def save(self, force_insert=False, force_update=False, using=None):
 		if self.request_status.rqs_status_id != self._original_state['request_status_id']\
@@ -729,6 +746,11 @@ class TissueRequest(models.Model):
 
 		tiv_collisions = tiv_collisions.distinct()
 		return tiv_collisions
+
+	def get_rtt_collisions(self):
+		other_rtts = TissueRequest.objects.exclude(pk=self.pk)
+		rtt_collisions = other_rtts.filter(tissue_type=self.tissue_type, monkeys__in=self.monkeys.all())
+		return rtt_collisions
 
 	def save(self, *args, **kwargs):
 		super(TissueRequest, self).save(*args, **kwargs)
