@@ -1079,16 +1079,17 @@ def sendfile(request, id):
 	files = list()
 
 #	append all possible files
-	r = Request.objects.filter(req_experimental_plan=id, user=request.user)
+	r = Request.objects.filter(req_experimental_plan=id)	
 	files.append((r, 'req_experimental_plan'))
-	r = Mta.objects.filter(mta_file=id, user=request.user)
+	r = Mta.objects.filter(mta_file=id)
 	files.append((r, 'mta_file'))
 
 #	this will work for all listed files
 	file = None
 	for r,f in files:
 		if len(r) > 0:
-			file = getattr(r[0], f) 
+			if r[0].verify_user_access_to_file(request.user):
+				file = getattr(r[0], f) 
 			break
 	if not file:
 		raise Http404()
