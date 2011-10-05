@@ -374,6 +374,22 @@ def mta_upload(request):
 		},
 							  context_instance=RequestContext(request))
 
+def rud_upload(request):
+	if request.method == 'POST':
+		form = RudForm(request.user, request.POST, request.FILES)
+		if form.is_valid():
+			# all the fields in the form are valid, so save the data
+			form.save()
+			messages.success(request, 'Research Uploaded Successfully')
+			return redirect(reverse('account-view'))
+	else:
+		# create the form for the MTA upload
+		form = RudForm(request.user)
+	return render_to_response('matrr/rud_upload_form.html',
+			{'form': form,
+		},
+							  context_instance=RequestContext(request))
+
 
 def account_shipping(request):
 	# make address form if one does not exist
@@ -1083,6 +1099,8 @@ def sendfile(request, id):
 	files.append((r, 'req_experimental_plan'))
 	r = Mta.objects.filter(mta_file=id)
 	files.append((r, 'mta_file'))
+	r = ResearchUpdate.objects.filter(rud_file=id)
+	files.append((r, 'rud_file'))
 
 #	this will work for all listed files
 	file = None

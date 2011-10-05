@@ -112,7 +112,7 @@ urlpatterns += patterns('matrr.views',
     url(r'^account/shipping/$', 		account_shipping, name='account-shipping'),
 	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-reviewer-view'),
 	url(r'^mta/upload/$', 				mta_upload, name='mta-upload'),
-
+    url(r'^research_update/upload/$',   rud_upload, name='rud-upload'),
 
 	url(r'^verification/?$',
 		tissue_verification),

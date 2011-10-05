@@ -108,6 +108,13 @@ class MtaForm(ModelForm):
 	class Meta:
 		model = Mta
 
+class RudForm(ModelForm):
+	def __init__(self, user, *args, **kwargs):
+		super(RudForm, self).__init__(*args, **kwargs)
+		self.fields['request'].queryset = Request.objects.filter(user=user, request_status__rqs_status_name='Shipped')
+	
+	class Meta:
+		model = ResearchUpdate
 
 class ReviewResponseForm(Form):
 	subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 130}))
