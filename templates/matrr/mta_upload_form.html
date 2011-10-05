@@ -13,9 +13,9 @@
 				<div class="error">
 					{% for field in form %}
 					{% if field.errors %}
-					{{ field.label_tag }}
+					{{ field.label_tag }}:
 						{% for error in field.errors %}
-							:  {{ error }}
+							 {{ error }}
 						{% endfor %}
 					{% endif %}
 					{% endfor %}
