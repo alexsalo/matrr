@@ -15,7 +15,7 @@ def urge_progress_reports():
     days90 = timedelta(days = 90)
     limit_date = today - days90
     ship_to_report_req = Shipment.objects.filter(shp_shipment_date__lte = limit_date,
-             req_request__req_report_asked=False).values('req_request','user','shp_shipment_date')
+             req_request__req_report_asked=False, req_request__rud_set=None).values('req_request','user','shp_shipment_date')
     
     
     for shipment in ship_to_report_req:
@@ -27,7 +27,7 @@ def urge_progress_reports():
         
         subject = 'Progress report'
         body = 'Hello, \nthe tissue(s) you requested were shipped on %s. ' % shipment['shp_shipment_date'] + \
-            'Please, submit a 90 day progress report concerning this request.\n' + \
+            'Please, submit a 90 day progress report concerning this request on My Account page, section Research Updates.\n' + \
             "\nRequest overview:\n\n%s\n" % req.print_setf_in_detail() + \
             "\nYours sincerely,\n\nMatrr team\n\n" + \
             'This is an automated message.\n'
