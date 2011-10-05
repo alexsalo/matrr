@@ -14,7 +14,7 @@ import settings
 from matrr.forms import *
 from matrr.models import *
 import math
-from datetime import datetime
+from datetime import date, timedelta
 from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
 from process_latex import process_latex
@@ -420,14 +420,33 @@ def account_detail_view(request, user_id):
 	else:
 		edit = False
 	# get information from the act_account relation
+	
 	account_info = Account.objects.get(user__id=user_id)
 	mta_info = Mta.objects.filter(user__id=user_id)
+	display_rud_from = date.today() - timedelta(days=30)
+	urge_rud_from = date.today() - timedelta(days=90)
+	pending_rud = Shipment.objects.filter(req_request__user=user_id,shp_shipment_date__lte=display_rud_from,
+										shp_shipment_date__gte=urge_rud_from, req_request__rud_set=None)
+	urged_rud = Shipment.objects.filter(req_request__user=user_id,shp_shipment_date__lte=urge_rud_from,
+									req_request__rud_set=None)
+	
+	rud_info = ResearchUpdate.objects.filter(request__user=user_id)
+	
+	if pending_rud or urged_rud or rud_info:
+		rud_on = True
+	else:
+		rud_on = False
+
 	order_list = Request.objects.filter(user__id=user_id).exclude(
 		request_status=RequestStatus.objects.get(rqs_status_name='Cart')).order_by("-req_request_date")[:20]
 
 	return render_to_response('matrr/account.html',
 			{'account_info': account_info,
 			 'mta_info': mta_info,
+			 'rud_info': rud_info,
+			 'rud_on' : rud_on,
+			 'pending_rud': pending_rud,
+			 'urged_rud': urged_rud,
 			 'order_list': order_list,
 			 'edit': edit,
 			 },
