@@ -188,7 +188,7 @@ class Monkey(models.Model):
 	class Meta:
 		db_table = 'mky_monkeys'
 
-
+		
 class Mta(models.Model):
 	mta_id = models.AutoField(primary_key=True)
 	user = models.ForeignKey(User, related_name='mta_set', db_column='usr_id', editable=False, blank=True)
@@ -667,7 +667,31 @@ class Request(models.Model, DiffingMixin):
 		permissions = (
 					('view_experimental_plan', 'Can view experimental plans of other users'),
 					)
-
+		
+class ResearchUpdate(models.Model):
+	rud_id = models.AutoField(primary_key=True)
+	request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False,
+							help_text='Choose a shipped request you want to upload research update for.')
+	rud_date = models.DateField('Date uploaded', editable=False, blank=True, null=True)
+	rud_title = models.CharField('Title', blank=True, null=False, max_length=25,
+								 help_text='Give your research update a short name to make it easier for you to reference')
+	rud_file = models.FileField(upload_to='rud/', default='', null=False, blank=False,
+								help_text='File to Upload')
+	def __unicode__(self):
+		return "%s: %s (%s)" % (self.request.__unicode__(), self.rud_title, self.rud_file.name)
+	
+	def verify_user_access_to_file(self, user):
+		if self.request.user == user:
+			return True
+		if user.has_perm('view_rud_file'):
+			return True
+		return False
+	
+	class Meta:
+		db_table = 'rud_research_update'
+		permissions = (
+					('view_rud_file', 'Can view research update files of other users'),
+					)
 
 class TissueRequest(models.Model):
 	rtt_tissue_request_id = models.AutoField(primary_key=True)
