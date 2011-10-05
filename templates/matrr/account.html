@@ -115,10 +115,43 @@ This section displays the status of requests
 {% endif %}
 
 
-
+{% if rud_on %}
 <div class='headline'>Research Updates</div>
+      {% if pending_rud %}
       <div class="messages"><div class="info">
-       {% if edit %}You do{% else %}{{ account_info.user.username }} does{% endif %} not have any pending research updates required.
-     </div></div>
+       {% if edit %}You have {% else %}{{ account_info.user.username }} has{% endif %} orders shipped more than 30 days ago. Research update is available.
+ 	  </div>
+ 	  {% endif %}
+ 	  {% if urged_rud %}
+      <div class="messages"><div class="warning">
+       {% if edit %}You have {% else %}{{ account_info.user.username }} has{% endif %} orders shipped more than 90 days ago with no research updates uploaded.
+ 	  </div>
+ 	  {% endif %}
+ 	  {% if not pending_rud and not urged_rud %}
+ 	  <div class="messages"><div class="info">
+       {% if edit %}You do {% else %}{{ account_info.user.username }} does{% endif %} not have any research updates required.
+ 	  </div>
+ 	  {% endif %}
+ 	  {% if rud_info %}
+  <table class="common">
+    <tr><th>ID</th><th>Date Uploaded</th><th>Title</th><th>Request: Date Placed</th><th>&nbsp;</th>
+    {% for rud in rud_info %}
+        <tr>
+            <td class='text-center-common-td'>{{ rud.rud_id }}</td>
+            <td class='text-center-common-td'>{{ rud.rud_date|date:"m/d/Y" }}</td>
+            <td class='text-center-common-td'>{{ rud.rud_title }}</td>
+            <td class='text-center-common-td'>{{ rud.request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+            <td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{rud.rud_file }}'>View MTA File</a></td>
+        </tr>
+    {% endfor %}
+  </table>
+	{% endif %}
+</div>
+<div class="text-right"><a href="{% url rud-upload %}" class='blockLinkButton'>
+  Update
+  </a>
+</div>
+{% endif %}
+
 
 {% endblock %}

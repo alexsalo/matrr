@@ -671,8 +671,8 @@ class Request(models.Model, DiffingMixin):
 class ResearchUpdate(models.Model):
 	rud_id = models.AutoField(primary_key=True)
 	request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False,
-							help_text='Choose a shipped request you want to upload research update for.')
-	rud_date = models.DateField('Date uploaded', editable=False, blank=True, null=True)
+							help_text='Choose among shipped request one you want to upload research update for.')
+	rud_date = models.DateField('Date uploaded', editable=False, blank=True, null=True, auto_now_add=True)
 	rud_title = models.CharField('Title', blank=True, null=False, max_length=25,
 								 help_text='Give your research update a short name to make it easier for you to reference')
 	rud_file = models.FileField(upload_to='rud/', default='', null=False, blank=False,
