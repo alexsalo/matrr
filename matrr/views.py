@@ -43,17 +43,12 @@ def pages_view(request, static_page):
 
 ### Handles the display of each cohort and the lists of cohorts
 def display_cohorts(request, **kwargs):
-	cohort = ''
 	cohorts = ''
 	template_name = ''
 
 	if kwargs['avail_up'] == 'assay':
-		# If the URL requested an assay, give it the only assay.
+	# If the URL requested an assay, give it the only assay.
 		return redirect('/available/%d/tissues' % Cohort.objects.get(coh_cohort_name__icontains="assay").pk)
-	elif kwargs.has_key('pk'):
-		# If a PK exists, display that cohorts detail page, regardless of the URL that lead to it
-		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
-		template_name = 'matrr/cohort.html'
 	## otherwise, display a list of cohorts based on the URL
 	elif kwargs['avail_up'] == 'cohort':
 		cohorts = Cohort.objects.order_by('coh_cohort_name')
@@ -83,6 +78,15 @@ def display_cohorts(request, **kwargs):
 
 	return render_to_response(template_name, {'cohort': cohort, 'cohort_list': cohort_list, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
+
+def cohort_details(request, **kwargs):
+	# Handle the displaying of cohort details
+	if kwargs.has_key('pk'):
+		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
+		coh_data = True if cohort.cod_set.all().count() else False
+	else:
+		return redirect('/cohorts')
+	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'coh_data': coh_data}, context_instance=RequestContext(request))
 
 ### Currently a very simple hack to tell everyone we don't have any necropsy data.  Placeholder, mostly.
 def cohort_necropsy(request, pk):
@@ -390,6 +394,18 @@ def rud_upload(request):
 		},
 							  context_instance=RequestContext(request))
 
+def cod_upload(request, coh_id=1):
+	if request.method == 'POST':
+		form = CodForm(request.POST, request.FILES)
+		if form.is_valid():
+			# all the fields in the form are valid, so save the data
+			form.save()
+			messages.success(request, 'Upload Successful')
+			return redirect('/cohort')
+	else:
+		cohort = Cohort.objects.get(pk=coh_id)
+		form = CodForm(cohort=cohort)
+	return render_to_response('matrr/cod_upload_form.html', {'form': form,}, context_instance=RequestContext(request))
 
 def account_shipping(request):
 	# make address form if one does not exist
@@ -1120,6 +1136,8 @@ def sendfile(request, id):
 	files.append((r, 'mta_file'))
 	r = ResearchUpdate.objects.filter(rud_file=id)
 	files.append((r, 'rud_file'))
+	r = CohortData.objects.filter(cod_file=id)
+	files.append((r, 'cod_file'))
 
 #	this will work for all listed files
 	file = None
