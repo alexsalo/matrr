@@ -83,6 +83,8 @@ Fat (Retroperitoneal)
 Fat (Subcutaneous)
 Gall bladder
 Gonads (testes, ovaries)
+Hair (With skin)
+Hair (Without skin)
 Heart (Lt Atrium)
 Heart (Rt Atrium)
 Heart (Lt ventricle)
@@ -107,9 +109,11 @@ Nerve (Sciatic)
 Pancreas
 Prostate
 Septum
+Skin
 Small intestine
 Spleen
 Stomach
+Tongue
 Urine
 
 Custom
