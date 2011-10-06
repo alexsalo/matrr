@@ -42,7 +42,7 @@ def pages_view(request, static_page):
 	return render_to_response(template, {}, context_instance=RequestContext(request))
 
 ### Handles the display of each cohort and the lists of cohorts
-def display_cohorts(request, **kwargs):
+def cohorts_view(request, **kwargs):
 	cohorts = ''
 	template_name = ''
 
