@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+
+	<div class="content-item">
+		<div id="headline">Upload additional cohort data</div>
+
+		{% if form.errors %}
+			<div class="messages">
+				<div class="error">
+					{% for field in form %}
+					{% if field.errors %}
+					{{ field.label_tag }}:
+						{% for error in field.errors %}
+							 {{ error }}
+						{% endfor %}
+					{% endif %}
+					{% endfor %}
+				</div></div>
+		{% endif %}
+
+		<form method="post" action="" enctype="multipart/form-data">{% csrf_token %}
+			<div id="table-wrap">
+				<div class="table-left">
+					<div class="text-right">
+					<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ form.cod_title.help_text }}</span></a>Title:
+				</div>
+				</div>
+				<div class="table-right">{{ form.cod_title }}</div>
+				<div class="table-left">
+					<div class="text-right">Selected File:</div>
+				</div>
+				<div class="table-right">{{ form.cod_file }}</div>
+
+				<div class="table-left text-right">
+					<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ form.cohort.help_text }}</span></a>Cohort:
+				</div>
+				<div class="table-right">{{ form.cohort }}</div>
+				<div class="table-right">
+					<input type="submit" value="{% trans 'Upload' %}"/>
+				</div>
+			</div>
+		</form>
+	
+	</div>
+
+
+{% endblock %}

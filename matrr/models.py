@@ -16,6 +16,9 @@ def percentage_validator(value):
 
 
 
+InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
+
+
 class Availability:
 	'''
 	This class is an enumeration for the availability statuses.
@@ -28,9 +31,6 @@ class Acceptance:
 	This class is an enumeration for the acceptance statuses.
 	'''
 	Rejected, Partially_Accepted, Accepted = range(3)
-
-
-InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
 
 
 class DiffingMixin(object):
@@ -119,6 +119,24 @@ class Cohort(models.Model):
 
 	class Meta:
 		db_table = 'coh_cohorts'
+
+
+class CohortData(models.Model):
+	cod_id = models.AutoField(primary_key=True)
+	cohort = models.ForeignKey(Cohort, related_name='cod_set', db_column='coh_cohort_id', null=False, blank=False,
+							help_text='Choose a cohort associated with this file.')
+	cod_title = models.CharField('Title', blank=True, null=False, max_length=35,
+								 help_text='Brief description of this file.')
+	cod_file = models.FileField('Selected file', upload_to='cod/', default='', null=False, blank=False,
+								help_text='File to Upload')
+	def __unicode__(self):
+		return "%s: %s (%s)" % (self.cohort.__unicode__(), self.cod_title, self.cod_file.name)
+
+	def verify_user_access_to_file(self, user):
+		return user.is_authenticated()
+
+	class Meta:
+		db_table = 'cod_cohort_datafile'
 
 
 class CohortEvent(models.Model):
@@ -221,6 +239,7 @@ class Mta(models.Model):
 		permissions = (
 					('view_mta_file', 'Can view MTA files of other users'),
 					)
+
 
 class Account(models.Model):
 	user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
@@ -667,14 +686,15 @@ class Request(models.Model, DiffingMixin):
 		permissions = (
 					('view_experimental_plan', 'Can view experimental plans of other users'),
 					)
-		
+
+
 class ResearchUpdate(models.Model):
 	rud_id = models.AutoField(primary_key=True)
 	request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False,
-							help_text='Choose among shipped request one you want to upload research update for.')
+							help_text='Choose a shipped request for which you would like to upload a research update:')
 	rud_date = models.DateField('Date uploaded', editable=False, blank=True, null=True, auto_now_add=True)
 	rud_title = models.CharField('Title', blank=True, null=False, max_length=25,
-								 help_text='Give your research update a short name to make it easier for you to reference')
+								 help_text='Give your research update a short name to make it easier for you to reference.')
 	rud_file = models.FileField('Selected file', upload_to='rud/', default='', null=False, blank=False,
 								help_text='File to Upload')
 	def __unicode__(self):
@@ -692,6 +712,7 @@ class ResearchUpdate(models.Model):
 		permissions = (
 					('view_rud_file', 'Can view research update files of other users'),
 					)
+
 
 class TissueRequest(models.Model):
 	rtt_tissue_request_id = models.AutoField(primary_key=True)

@@ -70,12 +70,14 @@ urlpatterns += patterns('matrr.views',
 	url(r'^search/?$', search),
 
 	#  Monkey/Cohort/Tissue display views
-	url(r'^monkeys/(?P<monkey_id>\S+)/$', 								monkey_detail_view),
+	url(r'^monkeys/(?P<monkey_id>\S+)/$', 										monkey_detail_view),
 	url(r'(?P<avail_up>^available|upcoming|cohort|assay)/$', 					display_cohorts),
-	url(r'(?P<avail_up>^available|upcoming|cohort|assay)/(?P<pk>\d+)/$', 		display_cohorts),
+	url(r'(?P<avail_up>^available|upcoming|cohort|assay)/(?P<pk>\d+)/$', 		cohort_details),
+
 #*** This is a hack, does nothing but display a message saying we don't have necropsy data.  This will need to be changed if/when we get a batch of necropsy data
     url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/necropsy/$', 		cohort_necropsy, name="cohortnect"),
 #***
+
 #	url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 		monkey_cohort_detail_view, name='monkey_detail_coh'),
 #    url(r'^available/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey_detail_av'),
     url(r'^(?P<avail_up>^available|upcoming|cohort)/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey_detail'),
@@ -111,8 +113,10 @@ urlpatterns += patterns('matrr.views',
 	url(r'^account/$', 					account_view, name='account-view'),
     url(r'^account/shipping/$', 		account_shipping, name='account-shipping'),
 	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-reviewer-view'),
-	url(r'^mta/upload/$', 				mta_upload, name='mta-upload'),
-    url(r'^research_update/upload/$',   rud_upload, name='rud-upload'),
+
+	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),
+    url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
+	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
 	url(r'^verification/?$',
 		tissue_verification),
@@ -123,9 +127,8 @@ if settings.DEVELOPMENT:
     urlpatterns += patterns('matrr.views',
 	)
     
-# I don't know what this does.  if you understand it, please tell me.
-# -jf
 if settings.DEVELOPMENT:
+#if False:
     from django.views.static import serve
 
     _media_url = settings.MEDIA_URL

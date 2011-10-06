@@ -40,7 +40,11 @@
 		</div>
 
 		<div style='float: right;'>
-			<a class='blockLinkButton' href='tissues'>Request Tissues from this Cohort</a></div>
+			<a class='blockLinkButton' href='tissues'>Request Tissues from this Cohort</a>
+			{% if user_is_member_of_committee or user_is_member_of_uberuser %}
+				<div class="text-right"><a href="{% url cod-upload cohort.coh_cohort_id %}" class='blockLinkButton'>Add Cohort Data</a></div>
+			{% endif %}
+		</div>
 
 	</div>
 
@@ -86,6 +90,24 @@
 			{% endfor %}
 		</table>
 	</div>
+	<div class='clearfix'>
+		{% if coh_data %}
+			<div class='mini-headline'>Cohort Data</div>
+			<table class="common">
+				<tr>
+					<th>Title</th>
+					<th>&nbsp;</th>
+				</tr>
+				{% for cod in cohort.cod_set.all %}
+					<tr>
+						<td class='text-center-common-td'><a href="{{ MEDIA_URL }}{{ cod.cod_file }}">{{ cod.cod_title }}</a></td>
+						<td class='text-center-common-td'><a href="{{ MEDIA_URL }}{{ cod.cod_file }}"><img src="{{ STATIC_URL }}/images/pdf.png" height="25" width="25"></a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% endif %}
+	</div>
+
 
 	<div class="clearfix">
 	{% with images=cohort|cohort_images:"all" %}

@@ -108,6 +108,19 @@ class MtaForm(ModelForm):
 	class Meta:
 		model = Mta
 
+class CodForm(ModelForm):
+	def __init__(self, *args, **kwargs):
+		cohort = ''
+		if 'cohort' in kwargs:
+			cohort = kwargs.pop('cohort')
+		super(CodForm, self).__init__(*args, **kwargs)
+		self.fields['cohort'].queryset = Cohort.objects.all()
+		self.fields['cohort'].initial = cohort
+
+	class Meta:
+		model = CohortData
+
+
 class RudForm(ModelForm):
 	def __init__(self, user, *args, **kwargs):
 		super(RudForm, self).__init__(*args, **kwargs)
