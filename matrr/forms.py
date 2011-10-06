@@ -74,7 +74,6 @@ class CartCheckoutForm(ModelForm):
 		widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
 
 
-
 class ReviewForm(ModelForm):
 	def __init__(self, *args, **kwargs):
 		TissueRequestReviewFormSet = inlineformset_factory(Review,
@@ -108,6 +107,7 @@ class MtaForm(ModelForm):
 	class Meta:
 		model = Mta
 
+
 class CodForm(ModelForm):
 	def __init__(self, *args, **kwargs):
 		cohort = ''
@@ -130,6 +130,7 @@ class RudForm(ModelForm):
 	class Meta:
 		model = ResearchUpdate
 
+
 class ReviewResponseForm(Form):
 	subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 130}))
 	body = CharField(widget=widgets.Textarea(attrs={'cols': 94,
@@ -145,8 +146,11 @@ class ReviewResponseForm(Form):
 																			widget=GroupedCheckboxSelectMultipleMonkeys(
 																				tissue_request=tissue_request)
 				)
+
+
 class FulltextSearchForm(Form):
 	terms = CharField(label='Search', widget=widgets.TextInput(attrs={'size': 40}))
+
 
 class ContactUsForm(Form):
 	email_subject = CharField(max_length=200, widget=widgets.TextInput(attrs={'size': 40}))
