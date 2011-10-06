@@ -76,7 +76,7 @@ def cohorts_view(request, **kwargs):
 	else:
 		cohort_list = cohorts
 
-	return render_to_response(template_name, {'cohort': cohort, 'cohort_list': cohort_list, 'plot_gallery': True},
+	return render_to_response(template_name, {'cohort_list': cohort_list, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
 
 def cohort_details(request, **kwargs):
