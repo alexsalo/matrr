@@ -81,7 +81,7 @@ def display_cohorts(request, **kwargs):
 	else:
 		cohort_list = cohorts
 
-	return render_to_response(template_name, {'cohort': cohort, 'cohort_list': cohort_list},
+	return render_to_response(template_name, {'cohort': cohort, 'cohort_list': cohort_list, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
 
 ### Currently a very simple hack to tell everyone we don't have any necropsy data.  Placeholder, mostly.
@@ -104,7 +104,7 @@ def monkey_cohort_detail_view(request, avail_up, cohort_id, monkey_id):
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	return render_to_response('matrr/monkey.html', {'monkey': monkey},
+	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'plot_gallery':True},
 							  context_instance=RequestContext(request))
 
 
@@ -115,7 +115,7 @@ def monkey_detail_view(request, monkey_id):
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	return render_to_response('matrr/monkey.html', {'monkey': monkey},
+	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
 
 
