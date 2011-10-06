@@ -76,7 +76,7 @@ def cohorts_view(request, **kwargs):
 	else:
 		cohort_list = cohorts
 
-	return render_to_response(template_name, {'cohort_list': cohort_list, 'plot_gallery': True},
+	return render_to_response(template_name, {'cohort_list': cohort_list},
 							  context_instance=RequestContext(request))
 
 def cohort_details(request, **kwargs):
@@ -86,7 +86,7 @@ def cohort_details(request, **kwargs):
 		coh_data = True if cohort.cod_set.all().count() else False
 	else:
 		return redirect('/cohorts')
-	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'coh_data': coh_data}, context_instance=RequestContext(request))
+	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'coh_data': coh_data, 'plot_gallery': True }, context_instance=RequestContext(request))
 
 ### Currently a very simple hack to tell everyone we don't have any necropsy data.  Placeholder, mostly.
 def cohort_necropsy(request, pk):
