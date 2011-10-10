@@ -206,7 +206,52 @@ class Monkey(models.Model):
 	class Meta:
 		db_table = 'mky_monkeys'
 
-		
+
+#  This model breaks MATRR field name scheme
+class MATRRImage(models.Model):
+	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
+	title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this image.')
+	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
+	parameters = models.CharField('Paremeters', blank=True, null=False, max_length=500, help_text="The method's parameters used to generate this image.")
+	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
+	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
+	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_image/fragments/', null=True, blank=False)
+
+	class Meta:
+		abstract = True
+
+#  This model breaks MATRR field name scheme
+class MonkeyImage(MATRRImage):
+	mig_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
+
+
+	def verify_user_access_to_file(self, user):
+		return user.is_authenticated()
+
+	def __unicode__(self):
+		return "%s: %s (%s)" % (self.monkey.__unicode__(), self.title, self.image)
+
+	class Meta:
+		db_table = 'mig_monkey_image'
+
+
+#  This model breaks MATRR field name scheme
+class CohortImage(MATRRImage):
+	cig_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
+
+
+	def verify_user_access_to_file(self, user):
+		return user.is_authenticated()
+
+	def __unicode__(self):
+		return "%s: %s (%s)" % (self.monkey.__unicode__(), self.title, self.image)
+
+	class Meta:
+		db_table = 'cig_cohort_image'
+
+
 class Mta(models.Model):
 	mta_id = models.AutoField(primary_key=True)
 	user = models.ForeignKey(User, related_name='mta_set', db_column='usr_id', editable=False, blank=True)
@@ -1104,7 +1149,7 @@ class TissueInventoryVerification(models.Model):
 	class Meta:
 		db_table = 'tiv_tissue_verification'
 
-		
+
 # put any signal callbacks down here after the model declarations
 
 # this is a method that should be called after a request is saved.
