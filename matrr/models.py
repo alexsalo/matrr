@@ -239,14 +239,14 @@ class MonkeyImage(MATRRImage):
 #  This model breaks MATRR field name scheme
 class CohortImage(MATRRImage):
 	cig_id = models.AutoField(primary_key=True)
-	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
+	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
 
 
 	def verify_user_access_to_file(self, user):
 		return user.is_authenticated()
 
 	def __unicode__(self):
-		return "%s: %s (%s)" % (self.monkey.__unicode__(), self.title, self.image)
+		return "%s: %s (%s)" % (self.cohort.__unicode__(), self.title, self.image)
 
 	class Meta:
 		db_table = 'cig_cohort_image'
