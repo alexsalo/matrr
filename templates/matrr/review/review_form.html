@@ -16,11 +16,11 @@
 		<table id=eighty class='margin'>
 			<tr>
 				<th>Cohort:</th>
-				<td><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></td>
+				<td><a href='{% cohort-details req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></td>
 			</tr>
 			<tr>
 				<th>User:</th>
-				<td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></td>
+				<td><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></td>
 			</tr>
 			<tr>
 				<th>Requested On:</th>

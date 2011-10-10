@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 from django.utils.encoding import  force_unicode
 from matrr.models import Availability, Monkey
 from django.forms.util import flatatt
-
+from django.core.urlresolvers import reverse
 from django.forms import *
 from django.forms.widgets import Input
 import re
@@ -63,36 +63,36 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
 
 				if availability == Availability.Unavailable:
 					output.append(
-						u'<li><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> Status: %s Assignment: %s</li>' % (
+						u'<li><a href=\'%s%s\' target=\'_blank\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> Status: %s Assignment: %s</li>' % (
 						self.link_base,
 						mky_real_id,
-						self.link_base,
-						mky_real_id,
+#						self.link_base,
+#						mky_real_id,
 						mky_real_id,
 						availability_str,
 						assignment,))
 				else:
 					output.append(
-						u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>  Status: %s  Assignment: %s</li>' % (
+						u'<li><label%s>%s <a href=\'%s%s\' target=\'_blank\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>  Status: %s  Assignment: %s</li>' % (
 						label_for,
 						rendered_cb,
 						self.link_base,
 						mky_real_id,
-						self.link_base,
-						mky_real_id,
+#						self.link_base,
+#						mky_real_id,
 						mky_real_id,
 						availability_str,
 						assignment))
 			else:
 				# this is for custom tissue requests
 				output.append(
-					u'<li><label%s>%s <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>  Assignment: %s</li>' % (
+					u'<li><label%s>%s <a href=\'%s%s\' target=\'_blank\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>  Assignment: %s</li>' % (
 					label_for,
 					rendered_cb,
 					self.link_base,
 					mky_real_id,
-					self.link_base,
-					mky_real_id,
+#					self.link_base,
+#					mky_real_id,
 					mky_real_id,
 					assignment))
 		output.append(u'</ul></fieldset>')
@@ -103,8 +103,6 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
 
 class CheckboxSelectMultipleLinkByTableNoVerification(CheckboxSelectMultipleLink):
 	def render(self, name, value, attrs=None, choices=()):
-		print self.tissue
-		print self.link_base
 		if value is None: value = []
 		has_id = attrs and 'id' in attrs
 		final_attrs = self.build_attrs(attrs, name=name)
@@ -151,36 +149,36 @@ class CheckboxSelectMultipleLinkByTableNoVerification(CheckboxSelectMultipleLink
 
 				if availability == Availability.Unavailable:
 					output.append(
-						u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td>%s </td><td>%s</td></tr>' % (
-						self.link_base,
-						mky_real_id,
-						self.link_base,
-						mky_real_id,
+						u'<tr><td></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td>%s </td><td>%s</td></tr>' % (
+						reverse('monkey-detail', args=[self.link_base, mky_id]),
+#						mky_real_id,
+#						self.link_base,
+#						mky_real_id,
 						mky_real_id,
 						availability_str,
 						assignment,))
 				else:
 					output.append(
-						u'<tr><td><label%s>%s </label></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td>%s </td><td>%s</td></tr>' % (
+						u'<tr><td><label%s>%s </label></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td>%s </td><td>%s</td></tr>' % (
 						label_for,
 						rendered_cb,
-						self.link_base,
-						mky_real_id,
-						self.link_base,
-						mky_real_id,
+						reverse('monkey-detail', args=[self.link_base, mky_id]),
+#						mky_real_id,
+#						self.link_base,
+#						mky_real_id,
 						mky_real_id,
 						availability_str,
 						assignment))
 			else:
 				# this is for custom tissue requests
 				output.append(
-					u'<tr><td><label%s>%s</label></td><td> <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></td><td></td><td>%s</td></tr>' % (
+					u'<tr><td><label%s>%s</label></td><td> <a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a></td><td></td><td>%s</td></tr>' % (
 					label_for,
 					rendered_cb,
-					self.link_base,
-					mky_real_id,
-					self.link_base,
-					mky_real_id,
+					reverse('monkey-detail', args=[self.link_base, mky_id]),
+#					mky_real_id,
+#					self.link_base,
+#					mky_real_id,
 					mky_real_id,
 					assignment))
 		output.append(u'</table></fieldset>')
@@ -239,46 +237,46 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 			if self.tissue:
 				if verification.tiv_inventory == 'Unverified':
 					output.append(
-						u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=red>%s </font></td><td>%s</td></tr>' % (
-						self.link_base,
-						mky_real_id,
-						self.link_base,
-						mky_real_id,
+						u'<tr><td></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td><font color=red>%s </font></td><td>%s</td></tr>' % (
+						reverse('monkey-detail', args=[self.link_base, mky_id]),
+#						mky_real_id,
+#						self.link_base,
+#						mky_real_id,
 						mky_real_id,
 						verification.tiv_inventory,
 						assignment,))
 				elif verification.tiv_inventory == 'Insufficient':
 					output.append(
-						u'<tr><td></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=orange>%s </font></td><td>%s</td></tr>' % (
-						self.link_base,
-						mky_real_id,
-						self.link_base,
-						mky_real_id,
+						u'<tr><td></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td><font color=orange>%s </font></td><td>%s</td></tr>' % (
+						reverse('monkey-detail', args=[self.link_base, mky_id]),
+#						mky_real_id,
+#						self.link_base,
+#						mky_real_id,
 						mky_real_id,
 						verification.tiv_inventory,
 						assignment,))
 				else:
 					output.append(
-						u'<tr><td><label%s>%s </label></td><td><a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> </td><td><font color=green>%s </font></td><td>%s</td></tr>' % (
+						u'<tr><td><label%s>%s </label></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td><font color=green>%s </font></td><td>%s</td></tr>' % (
 						label_for,
 						rendered_cb,
-						self.link_base,
-						mky_real_id,
-						self.link_base,
-						mky_real_id,
+						reverse('monkey-detail', args=[self.link_base, mky_id]),
+#						mky_real_id,
+#						self.link_base,
+#						mky_real_id,
 						mky_real_id,
 						verification.tiv_inventory,
 						assignment))
 			else:
 				# this is for custom tissue requests
 				output.append(
-					u'<tr><td><label%s>%s</label></td><td> <a href=\'%s%s\' onClick=\'javascript:window.open("%s%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></td><td></td><td>%s</td></tr>' % (
+					u'<tr><td><label%s>%s</label></td><td>%s<a href=\'%s\' target=\'_blank\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a></td><td></td><td>%s</td></tr>' % (
 					label_for,
 					rendered_cb,
-					self.link_base,
-					mky_real_id,
-					self.link_base,
-					mky_real_id,
+					reverse('monkey-detail', args=[self.link_base, mky_id]),
+#					mky_real_id,
+#					self.link_base,
+#					mky_real_id,
 					mky_real_id,
 					assignment))
 
@@ -380,10 +378,10 @@ class GroupedCheckboxSelectMultipleMonkeys(CheckboxSelectMultiple):
 			mky_real_id = conditional_escape(force_unicode(mky_real_id))
 			link = '/monkeys/' + str(mky_real_id)
 			output.append(
-				u'<label%s>%s <a href=\'%s\' onClick=\'javascript:window.open("%s");return false;\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>' %\
+				u'<label%s>%s <a href=\'%s\' target=\'_blank\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>' %\
 				(label_for,
 				 rendered_cb,
-				 link,
+#				 link,
 				 link,
 				 mky_real_id))
 		output.append(u'</fieldset>')

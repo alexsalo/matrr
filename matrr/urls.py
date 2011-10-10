@@ -11,18 +11,6 @@ cohort_timeline = DetailView.as_view(
             template_name='matrr/timeline.html',
             )
 
-
-available_timeline = DetailView.as_view(
-            queryset=Cohort.objects.filter(coh_upcoming=False),
-            context_object_name='cohort',
-            template_name='matrr/timeline.html',
-            )
-upcoming_timeline = DetailView.as_view(
-            queryset=Cohort.objects.filter(coh_upcoming=True),
-            context_object_name='cohort',
-            template_name='matrr/timeline.html',
-            )
-
 # Pretend views
 urlpatterns = patterns('matrr.views',
     url(r'^events/$',
@@ -31,35 +19,30 @@ urlpatterns = patterns('matrr.views',
             context_object_name='event_list',
             template_name='matrr/events.html',
             paginate_by=10,
-            )),
+            ), name='events'),
     url(r'^archived-events/$',
         ListView.as_view(
             queryset=Event.objects.filter(date__lt=datetime.now()).order_by('-date', 'name'),
             context_object_name='event_list',
             template_name='matrr/archived-events.html',
             paginate_by=10,
-            )),
-	url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/publications/$',
+            ), name='archieved-events'),
+	url(r'^cohort/(?P<pk>\d+)/publications/$',
         DetailView.as_view(
             queryset=Cohort.objects.all(),
             context_object_name='cohort',
             template_name='matrr/publications.html',
-            )),
-    url(r'^upcoming/(?P<pk>\d+)/timeline$', upcoming_timeline, name='upcoming-timeline'),
-    url(r'^cohort/(?P<pk>\d+)/timeline$', cohort_timeline, name='cohort-timeline'),
-    url(r'^available/(?P<pk>\d+)/timeline$', available_timeline, name='available-timeline'),
-    
-    url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/publications/$',
-        DetailView.as_view(queryset=Cohort.objects.filter(),
-			context_object_name='cohort',
-			template_name='matrr/publications.html')),
+            ), name='cohort-publications'),
+                       
+    url(r'^cohort(?P<pk>\d+)/timeline$', cohort_timeline, name='cohort-timeline'),
+
     url(r'^publications/$',
         ListView.as_view(
             queryset=Publication.objects.all(),
             context_object_name='publications',
             template_name='matrr/all_publications.html',
             paginate_by=15,
-            )),
+            ), name='publications'),
 )
 # Real views
 urlpatterns += patterns('matrr.views',
@@ -67,23 +50,24 @@ urlpatterns += patterns('matrr.views',
 	url(r'^$', index_view),
 	url(r'^(?P<static_page>privacy|data|usage|browser|faq|about|benefits|denied|fee|safety)/$', pages_view),  #  These are non-dynamic pages. Mostly text/html.
     url(r'^contact_us/$', contact_us),
-	url(r'^search/?$', search),
+	url(r'^search/?$', search, name='search'),
 
 	#  Monkey/Cohort/Tissue display views
-	url(r'^monkeys/(?P<monkey_id>\S+)/$', 										monkey_detail_view),
-	url(r'(?P<avail_up>^available|upcoming|cohort|assay)/$', 					cohorts_view),
-	url(r'(?P<avail_up>^available|upcoming|cohort|assay)/(?P<pk>\d+)/$', 		cohort_details),
+	url(r'^available/$', 	cohorts_view_available, name='available'),
+    url(r'^upcoming/$',     cohorts_view_upcoming, name='upcoming'),
+    url(r'^cohort/$',     cohorts_view_all, name='cohorts'),
+    url(r'^assay/$',     cohorts_view_assay, name='assay'),
+        
+	url(r'cohort/(?P<pk>\d+)/$', 		cohort_details, name='cohort-details'),
 
 #*** This is a hack, does nothing but display a message saying we don't have necropsy data.  This will need to be changed if/when we get a batch of necropsy data
-    url(r'^(available|upcoming|cohort)/(?P<pk>\d+)/necropsy/$', 		cohort_necropsy, name="cohortnect"),
+    url(r'^cohort/(?P<pk>\d+)/necropsy/$', 		cohort_necropsy, name="cohort-necropsy"),
 #***
 
-#	url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 		monkey_cohort_detail_view, name='monkey_detail_coh'),
-#    url(r'^available/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey_detail_av'),
-    url(r'^(?P<avail_up>^available|upcoming|cohort)/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey_detail'),
-	url(r'^(?P<avail_up>^available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list),
-	url(r'^(?P<avail_up>^available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/$', 								tissue_shop_landing_view, name='tissue-shop-landing'),
-    url(r'^(?P<avail_up>^available|upcoming|cohort)/(?P<cohort_id>\d+)/tissues/[^/]*/?(?P<tissue_id>\d+)/$', 	tissue_shop_detail_view),
+    url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey-detail'),
+	url(r'^cohort/(?P<cohort_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list, name='tissue-category'),
+	url(r'^cohort/(?P<cohort_id>\d+)/tissues/$', 								tissue_shop_landing_view, name='tissue-shop-landing'),
+    url(r'^cohort/(?P<cohort_id>\d+)/tissues/add-to-cart/(?P<tissue_id>\d+)/$',     tissue_shop_detail_view, name='tissue-shop-detail'),
 
 	#  Cart Views
 	url(r'^cart/$', 			                            cart_view, name='cart'),
@@ -95,9 +79,9 @@ urlpatterns += patterns('matrr.views',
 	#  Ordering process views
     url(r'^orders/$',                                           orders_list, name='order-list'),
     url(r'^orders/(?P<req_request_id>\d+)/$', 					order_detail, name='order-detail'),
-	url(r'^orders/(?P<req_request_id>\d+)/delete/?$', 			order_delete),
+	url(r'^orders/(?P<req_request_id>\d+)/delete/?$', 			order_delete, name='order-delete'),
 	url(r'^experimental_plans/(?P<plan>\S+)/?$', 				experimental_plan_view),
-	url(r'^shipping_overview/$',								shipping_overview),
+	url(r'^shipping_overview/$',								shipping_overview, name='shipping-overview'),
 	url(r'^shipping/build/(?P<req_request_id>\d+)/$', 			build_shipment, name='build-shippment'),
 	url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$', 	make_shipping_manifest_latex, name='manifest'),
 
@@ -118,7 +102,7 @@ urlpatterns += patterns('matrr.views',
     url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
-	url(r'^verification/?$', tissue_verification),
+	url(r'^verification/?$', tissue_verification, name='verification'),
 	)
 
 if settings.DEVELOPMENT:

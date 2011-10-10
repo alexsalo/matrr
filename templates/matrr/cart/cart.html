@@ -1,7 +1,7 @@
 {% if cart_exists %}
 	<div id='sidebar-block'>
 		<div id='headline'>
-			<a href='/cart'> Cart({{ cart_num_items }})</a>
+			<a href='{% url cart %}'> Cart({{ cart_num_items }})</a>
 
 		</div>
 		{% if cart_num_items > 0 %}

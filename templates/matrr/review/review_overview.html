@@ -16,7 +16,7 @@
 			<div class='div-table'>
 				<div>
 					<div>Cohort:</div>
-					<div><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></div>
+					<div><a href='{% url cohort-details req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></div>
 					<div>Requesting User:</div>
 					<div><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></div>
 				</div>
@@ -98,7 +98,7 @@
 								{% for monkey in tissue_request.accepted_monkeys.all %}
 									<tr>
 										<td>
-											<a href="{% url monkey_detail 'cohort' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+											<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
 												{{ monkey.mky_real_id }}
 												<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
 										</td>
@@ -132,7 +132,7 @@
 								{% for monkey in tissue_request.not_accepted_monkeys %}
 									<tr>
 										<td>
-											<a href="{% url monkey_detail 'cohort' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+											<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
 												{{ monkey.mky_real_id }}
 												<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
 										</td>

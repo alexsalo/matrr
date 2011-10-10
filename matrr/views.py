@@ -42,23 +42,25 @@ def pages_view(request, static_page):
 	return render_to_response(template, {}, context_instance=RequestContext(request))
 
 ### Handles the display of each cohort and the lists of cohorts
-def cohorts_view(request, **kwargs):
-	cohorts = ''
-	template_name = ''
+def cohorts_view_available(request):
+	cohorts = Cohort.objects.filter(coh_upcoming=False).order_by('coh_cohort_name')
+	template_name = 'matrr/available_cohorts.html'
+	return __cohorts_view(request, cohorts, template_name)
 
-	if kwargs['avail_up'] == 'assay':
-	# If the URL requested an assay, give it the only assay.
-		return redirect('/available/%d/tissues' % Cohort.objects.get(coh_cohort_name__icontains="assay").pk)
-	## otherwise, display a list of cohorts based on the URL
-	elif kwargs['avail_up'] == 'cohort':
-		cohorts = Cohort.objects.order_by('coh_cohort_name')
-		template_name = 'matrr/cohorts.html'
-	elif kwargs['avail_up'] == 'upcoming':
-		cohorts = Cohort.objects.filter(coh_upcoming=True).order_by('coh_cohort_name')
-		template_name = 'matrr/upcoming_cohorts.html'
-	elif kwargs['avail_up'] == 'available':
-		cohorts = Cohort.objects.filter(coh_upcoming=False).order_by('coh_cohort_name')
-		template_name = 'matrr/available_cohorts.html'
+def cohorts_view_upcoming(request):
+	cohorts = Cohort.objects.filter(coh_upcoming=True).order_by('coh_cohort_name')
+	template_name = 'matrr/upcoming_cohorts.html'
+	return __cohorts_view(request, cohorts, template_name)
+
+def cohorts_view_all(request):
+	cohorts = Cohort.objects.order_by('coh_cohort_name')
+	template_name = 'matrr/cohorts.html'
+	return __cohorts_view(request, cohorts, template_name)
+
+def cohorts_view_assay(request):
+	return redirect(reverse('tissue-shop-landing', args =[Cohort.objects.get(coh_cohort_name__icontains="assay").pk,]))
+
+def __cohorts_view(request, cohorts, template_name):
 
 	## Paginator stuff
 	if len(cohorts) > 0:
@@ -85,7 +87,7 @@ def cohort_details(request, **kwargs):
 		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
 		coh_data = True if cohort.cod_set.all().count() else False
 	else:
-		return redirect('/cohorts')
+		return redirect(reverse('cohorts'))
 	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'coh_data': coh_data, 'plot_gallery': True }, context_instance=RequestContext(request))
 
 ### Currently a very simple hack to tell everyone we don't have any necropsy data.  Placeholder, mostly.
@@ -97,7 +99,7 @@ def cohort_necropsy(request, pk):
 	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
 
 
-def monkey_cohort_detail_view(request, avail_up, cohort_id, monkey_id):
+def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 	try:
 		monkey = Monkey.objects.get(mky_id=monkey_id)
 	except:
@@ -161,7 +163,7 @@ def get_or_create_cart(request, cohort):
 	return cart_request
 
 
-def tissue_shop_detail_view(request, avail_up, cohort_id, tissue_id):
+def tissue_shop_detail_view(request, cohort_id, tissue_id):
 	current_cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
 	cart_request = get_or_create_cart(request, current_cohort)
 	if cart_request is None:
@@ -195,7 +197,7 @@ def tissue_shop_detail_view(request, avail_up, cohort_id, tissue_id):
 												tissue=current_tissue,
 												instance=instance)
 		if tissue_request_form.is_valid():
-			url = cart_request.cohort.get_url() + 'tissues/'
+			url = reverse('tissue-shop-landing', args=[cart_request.cohort.coh_cohort_id,])
 			try:
 				tissue_request_form.save()
 			except:
@@ -401,7 +403,7 @@ def cod_upload(request, coh_id=1):
 			# all the fields in the form are valid, so save the data
 			form.save()
 			messages.success(request, 'Upload Successful')
-			return redirect('/cohort')
+			return redirect(reverse('cohort'))
 	else:
 		cohort = Cohort.objects.get(pk=coh_id)
 		form = CodForm(cohort=cohort)
@@ -721,7 +723,7 @@ def experimental_plan_view(request, plan):
 	raise Http404('This page does not exist.')
 
 
-def tissue_shop_landing_view(request, avail_up, cohort_id):
+def tissue_shop_landing_view(request,  cohort_id):
 	context = dict()
 	assay = Cohort.objects.get(coh_cohort_name__icontains="assay")
 	cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
@@ -741,13 +743,13 @@ def tissue_shop_landing_view(request, avail_up, cohort_id):
 	return render_to_response('matrr/tissue_shopping_landing.html', context, context_instance=RequestContext(request))
 
 
-def tissue_list(request, avail_up, tissue_category=None, cohort_id=None):
+def tissue_list(request, tissue_category=None, cohort_id=None):
 	cohort = None
 	if cohort_id is not None:
 		cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
 	if tissue_category == "Custom":
 		# This breaks the URL scheme
-		return tissue_shop_detail_view(request, avail_up, cohort.coh_cohort_id, TissueType.objects.get(tst_tissue_name="Custom").tst_type_id)
+		return tissue_shop_detail_view(request, cohort.coh_cohort_id, TissueType.objects.get(tst_tissue_name="Custom").tst_type_id)
 	elif tissue_category:
 		tissue_list = TissueType.objects.filter(category__cat_name=tissue_category).order_by('tst_tissue_name')
 	else:

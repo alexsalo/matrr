@@ -39,7 +39,7 @@
 					<a style='color: #FAF9ED;' href="{% url registration_register %}?next={{ request.path }}">
 						Create an Account</a>
 				{% else %}
-					Welcome {{ user.username }} | <a style='color: #FAF9ED' href="/logout/">Logout</a>
+					Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{% url auth_logout %}">Logout</a>
 				{% endif %}
 			</div>
 		</div>
@@ -55,7 +55,7 @@
 					</ul>
 					<ul>
 						<li class='top'>
-							<a href='/search'>Search</a>
+							<a href='{% url search %}'>Search</a>
 						</li>
 					</ul>
 					
@@ -81,7 +81,7 @@
 					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
 						<ul>
 							<li class='top'>
-								<a href='/shipping_overview'>Shipping</a>
+								<a href='{% url shipping-overview %}'>Shipping</a>
 							</li>
 						</ul>
 					{% endif %}
@@ -97,7 +97,7 @@
 					{% if user.is_staff %}
 						<ul>
 							<li class='top'><a href="/admin/">Admin</a></li>
-							<li class='drop-down'><a href="/verification/">Inventory Verification</a></li>
+							<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
 						</ul>
 					{% endif %}
 					
@@ -147,13 +147,13 @@
 					<div class='headline'>
 						Quick Links
 					</div>
-					<a href="/upcoming">View Upcoming Cohorts</a><br/>
-					<a href="/available">View Archival Cohorts</a><br/>
-					<a href="/cohort">View All Cohorts</a><br/>
-					<a href="/assay">Request tissues for Assay Development</a><br/>
+					<a href="{% url upcoming %}">View Upcoming Cohorts</a><br/>
+					<a href="{% url available %}">View Archival Cohorts</a><br/>
+					<a href="{% url cohorts %}">View All Cohorts</a><br/>
+					<a href="{% url assay %}">Request tissues for Assay Development</a><br/>
 					<a href="{% url mta-upload %}">Upload an MTA</a><br/>
 					<a href="{% url account-view %}">Submit Research Updates</a><br/>
-					<a href="/publications">View Publications</a>
+					<a href="{% url publications %}">View Publications</a>
 				</div>
 
 				<div class='sidebar-block'>
