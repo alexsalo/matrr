@@ -15,7 +15,7 @@
 			<td>{{ account_info.user.username }}</td>
 			{% if edit %}
 				<td class="text-right-common-td">Password:</td>
-				<td><a href="/accounts/password/change/">Change
+				<td><a href="{% url auth_password_change %}">Change
 					Password</a></td></tr>{% endif %}
 		<tr>
 			<td class="text-right-common-td">Last Logged In:</td>

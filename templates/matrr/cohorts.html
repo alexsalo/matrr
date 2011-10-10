@@ -32,7 +32,7 @@ All Cohorts
 							<th>Birthdate</th></tr>
 						{% for monkey in cohort.monkey_set.all|dictsortreversed:"mky_drinking" %}
 							<tr>
-								<td class='text-center-common-td'><a href='{{ cohort.coh_cohort_id }}/monkey/{{monkey.mky_id}}'>{{ monkey.mky_real_id }}</a></td>
+								<td class='text-center-common-td'><a href='{% url monkey-detail cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_real_id }}<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
 								{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
 									<td class='text-center-common-td'>{{ monkey.mky_name }}</td>
 								{% endif %}
@@ -55,15 +55,15 @@ All Cohorts
 
 				<div class="right-content clearfix content-padding">
 					
-					<a href="{{ cohort.coh_cohort_id }}/">Cohort Details</a><br/>
-					<a href="{{ cohort.coh_cohort_id }}/timeline">Cohort Timeline</a><br/>
-					{% if cohort.coh_upcoming %}<a href="{{ cohort.coh_cohort_id }}/necropsy/">Expected Necropsy Date</a><br/>{% endif %}
-					<a href="{{ cohort.coh_cohort_id }}/publications">Publications</a><br/>
-					<a href='{{ cohort.coh_cohort_id }}/tissues'>Request Tissue from {{ cohort.coh_cohort_name }}</a>
+					<a href="{% url cohort-details cohort.coh_cohort_id %}">Cohort Details</a><br/>
+					<a href="{% url cohort-timeline cohort.coh_cohort_id %}">Cohort Timeline</a><br/>
+					{% if cohort.coh_upcoming %}<a href="{% url cohort-necropsy cohort.coh_cohort_id %}">Expected Necropsy Date</a><br/>{% endif %}
+					<a href="{% url cohort-publications cohort.coh_cohort_id %}">Publications</a><br/>
+					<a href='{% url tissue-shop-landing cohort.coh_cohort_id %}'>Request Tissue from {{ cohort.coh_cohort_name }}</a>
 					{% with images=cohort|cohort_images:"etoh" %}
 						{% if images %}
 							<div class="image_container">
-								<a href="{{ cohort.coh_cohort_id }}/">
+								<a href="{% url cohort-details cohort.coh_cohort_id %}">
 									<img src="{{ STATIC_URL }}/images/etoh/{{ cohort.coh_cohort_name}}-thumb.jpg"/>
 								</a>
 							</div>

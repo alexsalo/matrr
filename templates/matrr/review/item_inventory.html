@@ -20,8 +20,8 @@
 			{% for monkey in tissue_request.accepted_monkeys.all %}
 				<tr>
 					<td>
-						<a href="{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}/"
-						   onclick='javascript:window.open("{{ SITE_ROOT }}/monkeys/{{ monkey.mky_real_id }}/");return false;'>
+						<a href="{% monkey-detail monkey.cohort.coh_cohort_id monkey.mky_real_id %}"
+						   target="_blank">
 							{{ monkey.mky_real_id }}
 							<img src="{{ STATIC_URL }}images/arrow_popup.png" width="8" height="8" style='vertical-align: text-top'
 								 alt='external link'/>

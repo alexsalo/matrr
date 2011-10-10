@@ -10,10 +10,10 @@
 	{% if cart_exists %}
 		<div>
 
-			<a href='{% if cart.cohort.coh_upcoming %}
-			{% url tissue-shop-landing 'upcoming' cart.cohort.coh_cohort_id %}
-			{% else %}{% url tissue-shop-landing 'available' cart.cohort.coh_cohort_id %}
-			{% endif %}'>
+			<a href='
+			{% url tissue-shop-landing cart.cohort.coh_cohort_id %}
+
+'>
 				<img src='{{ STATIC_URL }}/images/cart_add.png' width='16' height='16' alt='add more items to cart'/>
 				&nbsp;Add more tissues
 			</a>
@@ -21,10 +21,10 @@
 		<br/>
 		{% if cart_num_items != 0 %}
 			<a href='
-			{% if cart.cohort.coh_upcoming %}
-			{% url cohort-detail 'upcoming' cart.cohort.coh_cohort_id %}
-			{% else %}{% url cohort-detail 'available' cart.cohort.coh_cohort_id %}
-			{% endif %}'>{{ cart.cohort }}</a>
+			
+			{% url cohort-details cart.cohort.coh_cohort_id %}
+			
+		'>{{ cart.cohort }}</a>
 			{% include 'matrr/cart/cart_items_table.html' %}
 			<br/>
 			<div style='float: left;'>

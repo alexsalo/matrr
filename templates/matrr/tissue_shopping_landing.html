@@ -25,7 +25,7 @@
 				<div class='mini-headline'>{{ category.cat_name }}</div>
 				<div class='table-left' style="width:75%">{{ category.cat_description }}</div>
 				<div class='table-right text-right'>
-					<a href='{{ category.cat_name }}/' class='blockLinkButton'>
+					<a href='{% url tissue-category cohort.coh_cohort_id category.cat_name %}' class='blockLinkButton'>
 						Request {{ category.cat_name }}
 					</a>
 				</div>
@@ -40,7 +40,7 @@
 			<div class='table-left' style="width:75%">Use this to request generic tissues for assay development purposes.</div>
 			<div class='table-right text-right'>
 				{# Bad django-fu #}
-				<a href="/available/{{ assay.pk }}/tissues" class='blockLinkButton'>Request Assay Tissues</a>
+				<a href="{% url tissue-shop-landing assay.pk %}" class='blockLinkButton'>Request Assay Tissues</a>
 			</div>
 		</div>
 	{% endif %}

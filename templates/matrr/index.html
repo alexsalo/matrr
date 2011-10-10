@@ -25,9 +25,9 @@
         <div class='content-block-lower'>
             <div class='headline'>Request Tissues</div>
             <div class='buttons'>
-                <a class="cohortButton cohortUpcoming" href='/upcoming'>Request tissues from Upcoming Cohorts</a><br>
-                <a class="cohortButton cohortAvailable" href='/available'>Request tissues from Available Cohorts</a><br>
-				<a class="cohortButton cohortAssay" href='/assay'>Request tissues for Assay Development</a>
+                <a class="cohortButton cohortUpcoming" href='{% url upcoming %}'>Request tissues from Upcoming Cohorts</a><br>
+                <a class="cohortButton cohortAvailable" href='{% url available %}'>Request tissues from Available Cohorts</a><br>
+				<a class="cohortButton cohortAssay" href='{% url assay %}'>Request tissues for Assay Development</a>
             </div>
         </div>
 
@@ -68,7 +68,7 @@
             <ul>
                 {% for pub in pub_list %}
                     <li>
-                        <a href='/publications/'>
+                        <a href='{% url publications %}'>
                             {{ pub.title|truncatewords:5 }},
                             {% if pub.journal == 'Proceedings of the National Academy of Sciences of the United States of America' %}
                                 PNAS,
@@ -92,8 +92,8 @@
                     </div>
                 {% endfor %}
                 <div>
-                    <div style='float:left;'><a href='/events/'>more</a></div>
-                    <div style='float:right;'><a href='/archived-events/'>archived</a></div>
+                    <div style='float:left;'><a href='{% url events %}'>more</a></div>
+                    <div style='float:right;'><a href='{% url archived-events %}'>archived</a></div>
                 </div>
             </div>
         {% endif %}

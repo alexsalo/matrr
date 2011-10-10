@@ -10,9 +10,9 @@
 	<table class="common_right">
 		<tr>
 			<th>User:</th>
-			<td><a href='{{ SITE_ROOT }}/account/{{ order.user.id }}'>{{ order.user }}</a></td>
+			<td><a href='{% url account-reviewer-view order.user.id %}'>{{ order.user }}</a></td>
 			<th>Cohort:</th>
-			<td><a href='{{ order.cohort.get_url }}'>{{ order.cohort }}</a></td>
+			<td><a href='{% url cohort-details order.cohort.coh_cohort_id %}'>{{ order.cohort }}</a></td>
 		</tr>
 		<tr>
 			<th>Requested On:</th>
@@ -80,7 +80,7 @@
 	{% else %}
 		{% if not processed %}
 			<div>
-				<a href='delete' class='blockLinkDeleteButton'>Delete</a>
+				<a href='{% url order-delete order.req_request_id %}' class='blockLinkDeleteButton'>Delete</a>
 			</div>
 		{% endif %}
 	{% endif %}

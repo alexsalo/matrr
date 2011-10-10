@@ -27,7 +27,7 @@ class TissueRequestForm(ModelForm):
 		self.tissue = tissue
 		super(TissueRequestForm, self).__init__(*args, **kwargs)
 		self.fields['rtt_fix_type'].required = False
-		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTableNoVerification(link_base='/monkeys/', tissue=self.tissue,
+		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTableNoVerification(link_base=self.req_request.cohort.coh_cohort_id, tissue=self.tissue,
 																		)
 		self.fields['monkeys'].queryset = self.req_request.cohort.monkey_set.all()
 		# change the help text to match the checkboxes
@@ -161,7 +161,7 @@ class ContactUsForm(Form):
 class TissueRequestProcessForm(ModelForm):
 	def __init__(self, *args, **kwargs):
 		super(ModelForm, self).__init__(*args, **kwargs)
-		self.fields['accepted_monkeys'].widget = CheckboxSelectMultipleLinkByTable(link_base='/monkeys/',
+		self.fields['accepted_monkeys'].widget = CheckboxSelectMultipleLinkByTable(link_base=self.instance.req_request.cohort.coh_cohort_id,
 																			tissue=self.instance.get_tissue(),
 																			tis_request=self.instance)
 		self.fields['accepted_monkeys'].required = False

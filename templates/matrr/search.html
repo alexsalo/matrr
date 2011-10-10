@@ -52,7 +52,7 @@
                                 {% if user_auth %}
                                     <td>{{ monkey.mky_name }}</td>
                                 {% endif %}
-                                <td><a href="{% url monkey_detail 'cohort' monkey.cohort.coh_cohort_id monkey.mky_id%}"
+                                <td><a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id%}"
                                        target="_blank">
                                     {{ monkey.mky_real_id }}
                                     <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8'
@@ -91,7 +91,7 @@
                         {% for cohort in results.cohorts %}
                             <tr>
 
-                                <td><a href="/cohort/{{ cohort.coh_cohort_id }}">{{ cohort.coh_cohort_name }}</a></td>
+                                <td><a href="{% url cohort-details cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a></td>
 
 
                             </tr>

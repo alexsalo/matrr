@@ -7,9 +7,10 @@ register = template.Library()
 
 @register.filter()
 def truncate_by_char(value, arg):
+	print "truncate"
 	try:
 		array = value.split(arg)
-	except ValueError:
+	except Exception:
 		return value
 	return array[0]
 
