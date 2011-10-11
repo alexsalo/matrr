@@ -189,6 +189,7 @@ table.common {
     border-style: none;
     border-spacing: 2px;
     padding: 10px;
+    width: 100%;
 }
 
 table.common th {
@@ -204,6 +205,7 @@ table.common td {
 .center-content,
 .content-block {
     background-color: #FAF9ED;
+    width: 99.5%;
     padding: 5px;
     border-radius: 11px;
     -moz-border-radius: 11px;
@@ -257,6 +259,12 @@ a:hover {
 
 a img {
     border: none;
+}
+
+.small {
+    color: #E46E3B;
+    font-size: 90%;
+    font-style: italic;
 }
 
 table tr:nth-child(odd) {
@@ -390,10 +398,59 @@ table.clear tr {
     background-color: #DFF2BF;
 }
 
+.cohortButton {
+    display: inline-block;
+    padding: 3px 5px;
+    margin: 5px 5px;
+    text-decoration: none;
+    line-height: 1;
+    font-size: 15px;
+    border-style: solid;
+    border-width: 2px;
+    -moz-box-shadow: 1px #999;
+    -webkit-box-shadow: 1px #999;
+    position: relative;
+    cursor: pointer;
+}
+
+.cohortAvailable {
+    color: #000;
+    border-color: #5133F7;
+    background-color: #BAACFF;
+}
+.cohortAvailable:Hover {
+	color: #5133F7;
+}
+
+.cohortUpcoming {
+    color: #000	;
+    border-color: #D8000C;
+    background-color: #FFBABA;
+}
+.cohortUpcoming:Hover {
+	color: #D8000C;
+}
+
+.cohortAssay {
+	color: #000;
+	border-color: #CF27FF;
+	background-color: #EEB4FF;
+}
+.cohortAssay:Hover {
+	color: #CF27FF;
+}
+
 .messages div {
     border: 1px solid;
     margin: 10px 0px;
     padding: 15px 10px 15px 50px;
+    background-repeat: no-repeat;
+    background-position: 10px center;
+}
+.messages-small div {
+    border: 1px solid;
+    margin: 10px 0px;
+    padding: 5px 5px 5px 50px;
     background-repeat: no-repeat;
     background-position: 10px center;
 }
@@ -450,7 +507,19 @@ table.common_center td {
 }
 
 table.common_center th {
-    padding: 2px 4px 2px 4px;
+    padding: 2px 6px 2px 6px;
+    font-size: small;
+}
+
+table.common_small td {
+    color: #4E4E4E;
+    font-size: small;
+    padding: 2px 6px 2px 1px;
+}
+
+table.common_small th {
+    text-align: right;
+    padding: 2px 2px 2px 4px;
     font-size: small;
 }
 
@@ -663,4 +732,21 @@ a.tool-tip:hover span {
 
 .hidden {
     display: none;
+}
+#eighty {
+  width: 80%;
+}
+#full {
+  width: 100%;
+}
+
+/* Jon added below */
+.unverified {
+	border: solid red;
+}
+.insufficient {
+	border: solid #ff8c00;
+}
+.sufficient {
+	border: solid green;
 }

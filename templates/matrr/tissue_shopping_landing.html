@@ -1,46 +1,55 @@
 {% extends "base.html" %}
 
 {% block cart %}
-{% include 'matrr/cart/cart.html' %}
+	{% include 'matrr/cart/cart.html' %}
 {% endblock %}
 
 {% block warning %}
-  {% include 'matrr/cart/cohort_warning.html' %}
+	{% include 'matrr/cart/cohort_warning.html' %}
 {% endblock %}
 
 {% block login %}
 {% endblock %}
 
 {% block content %}
-  
-<div id="large-headline">Tissue Request for Cohort: {{ cohort.coh_cohort_name }}</div>
-  <img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_2.png" width='700' height='25'
-       alt='order timeline'/>
-<div id="headline">{% block content_title %}Select Tissue Type{% endblock %}</div>
-  <br/>
 
-  {% for category in categories %}
-    {% if not category.cat_internal %}
-      <div class='clearfix'>
-      <div class='mini-headline'>
-        {{ category.cat_name }}
-      </div>
-      <div class='table-left'>{{ category.cat_description }}</div>
-      <div class='table-right text-right'>
-        <a href='{{ category.cat_name }}/' class='blockLinkButton'>
-          Request {{ category.cat_name }}
-        </a>
-      </div>
-      </div>
-    {% endif %}
-  {% endfor %}
+	<div id="large-headline">Tissue Request for Cohort: {{ cohort.coh_cohort_name }}</div>
+	<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_2.png" width='700' height='25'
+		 alt='order timeline'/>
+	<div id="headline">{% block content_title %}Select Tissue Type{% endblock %}</div>
+	<br/>
 
-  <br><br>
-  
-  {% if cart_exists %}
-  <div style='float: right;'>
-      <a href='/cart/checkout/'><div class="blockLinkCheckoutButton">Proceed to Checkout</div></a>
-    </div>
-  {% endif %}
-  
+	{% for category in categories %}
+		{% if not category.cat_internal %}
+			<div class='clearfix'>
+				<div class='mini-headline'>{{ category.cat_name }}</div>
+				<div class='table-left' style="width:75%">{{ category.cat_description }}</div>
+				<div class='table-right text-right'>
+					<a href='{% url tissue-category cohort.coh_cohort_id category.cat_name %}' class='blockLinkButton'>
+						Request {{ category.cat_name }}
+					</a>
+				</div>
+			</div>
+		{% endif %}
+	{% endfor %}
+
+	{# Display a link to the assay cohort for ALL non-assay cohorts #}
+	{% if assay %}
+		<div class='clearfix'>
+			<div class='mini-headline'>Assay Development</div>
+			<div class='table-left' style="width:75%">Use this to request generic tissues for assay development purposes.</div>
+			<div class='table-right text-right'>
+				{# Bad django-fu #}
+				<a href="{% url tissue-shop-landing assay.pk %}" class='blockLinkButton'>Request Assay Tissues</a>
+			</div>
+		</div>
+	{% endif %}
+	<br><br>
+
+	{% if cart_exists %}
+		<div style='float: right;'>
+			<a href='{% url cart-checkout %}'><div class="blockLinkCheckoutButton">Proceed to Checkout</div></a>
+		</div>
+	{% endif %}
+
 {% endblock %}

@@ -1,86 +1,172 @@
 {% extends 'base.html' %}
 
 {% block extra_js %}
-{{ block.super }}
-<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+	{{ block.super }}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
 {% endblock %}
 
 {% block content %}
-<div class='large-headline'> 
-{% block title %}Overview: {{ req_request.user.username }}'s request for {{req_request.cohort.coh_cohort_name}}{% endblock %}
-</div>
-<form action='' method='post'>
-{% csrf_token %}
-<div style='margin-top: 10px;'>
-<div class='div-table'>
-    <div>
-      <div>Cohort:</div>
-      <div><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></div>
-      <div>Requesting User:</div>
-      <div><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></div>
-    </div>
-    <div>
-      <div>Requested On:</div><div>{{ req_request.req_request_date }}</div>
-      <div>Referred By:</div><div>{{ req_request.req_referred_by }}</div>
-    </div>
-    <div>
-      <div>Progress Agreement:</div><div>{{ req_request.req_progress_agreement }}</div>
-      <div>Experimental Plan:</div>
-      <div>
-        {% if req_request.req_experimental_plan %}
-          <a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a>
-        {% else %}
-          None
-        {% endif %}
-      </div>
-    </div>
-</div>
+	<div class='large-headline'>
+		{% block title %}Overview: {{ req_request.user.username }}'s request for {{ req_request.cohort.coh_cohort_name }}{% endblock %}
+	</div>
+	<form action='' method='post'>
+		{% csrf_token %}
+		<div style='margin-top: 10px;'>
+			<div class='div-table'>
+				<div>
+					<div>Cohort:</div>
+					<div><a href='{% url cohort-details req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></div>
+					<div>Requesting User:</div>
+					<div><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></div>
+				</div>
+				<div>
+					<div>Requested On:</div>
+					<div>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</div>
+					<div>Referred By:</div>
+					<div>{{ req_request.req_referred_by }}</div>
+				</div>
+				<div>
+					<div>Total Estimated Cost:</div>
+					<div>${{ req_request.get_total_estimated_cost|floatformat:2 }}</div>
+					<div>Experimental Plan:</div>
+					<div>
+						{% if req_request.req_experimental_plan %}
+							<a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a>
+						{% else %}
+							None
+						{% endif %}
+					</div>
+				</div>
+			</div>
+			<div class='div-table'>
+				<div>
+					<div>Project Title:</div>
+					<div>{{ req_request.req_project_title }}</div>
+				</div>
+				<div>
+					<div>Motivation:</div>
+					<div>{{ req_request.req_reason }}</div>
+				</div>
+				<div>
+					<div>Additional Notes:</div>
+					<div>
+						{% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}
+					</div>
+				</div>
+			</div>
+			<hr>
+			<table>
+				{% if req_request.req_notes != None and req_request.req_notes != '' %}
+					<tr>
+						<th>Request Notes:</th>
+						<td colspan='9'>{{ req_request.req_notes }}</td>
+					</tr>
+				{% endif %}
+				<tr>
+					<th>Reviewer</th>
+					<th colspan='10'>Reviewer's Notes</th>
+				</tr>
+				{% for review in reviews %}
+					<tr>
+						<th>{{ review.user }}</th>
+						{% if review.rvs_notes != None and review.rvs_notes != '' %}
+							<td colspan='9'>{{ review.rvs_notes }}</td>
+						{% else %}
+							<td colspan='9'>
+								<div class='small'>No notes</div>
+							</td>
+							</tr>
+						{% endif %}
+				{% endfor %}
+			</table>
+			<br/>
+			{{ tissue_requests.management_form }}
+			{% for form in tissue_requests %}
+				{% include 'matrr/review/review_overview_item.html' %}
+				{% if not no_monkeys %}
+					{{ form }}
+					{% else %}
+					{% with tissue_request=form.instance %}
+						<div class="mini-headline">Monkeys accepted for this tissue request:</div>
+						{% if tissue_request.accepted_monkeys.all %}
+							<table class="common" style="width:30%">
+								<thead>
+								<th>Monkey</th>
+								<th>Assignment</th>
+								</thead>
+								{% for monkey in tissue_request.accepted_monkeys.all %}
+									<tr>
+										<td>
+											<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+												{{ monkey.mky_real_id }}
+												<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
+										</td>
+										<td>
+											{% if monkey.mky_drinking %}
+												Ethanol
+												{% else %}
+												{% if monkey.mky_housing_control %}
+													Housing Control
+												{% else %}
+													Control
+												{% endif %}
+											{% endif %}
+										</td></tr>
+								{% endfor %}
+							</table>
+						{% else %}
+							<div class="messages-small">
+								<div class="info">
+									No monkeys were accepted for this tissue request.
+								</div>
+							</div>
+						{% endif %}
+						<div class="mini-headline">Monkeys rejected for this tissue request:</div>
+						{% if tissue_request.not_accepted_monkeys %}
+							<table class="common" style="width:30%">
+								<thead>
+								<th>Monkey</th>
+								<th>Assignment</th>
+								</thead>
+								{% for monkey in tissue_request.not_accepted_monkeys %}
+									<tr>
+										<td>
+											<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+												{{ monkey.mky_real_id }}
+												<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
+										</td>
+										<td>
+											{% if monkey.mky_drinking %}
+												Ethanol
+												{% else %}
+												{% if monkey.mky_housing_control %}
+													Housing Control
+												{% else %}
+													Control
+												{% endif %}
+											{% endif %}
 
-<div class='div-table'>
-    <div>
-      <div>Project Title:</div><div>{{ req_request.req_project_title }}</div>
-    </div>
-    <div>
-      <div>Motivation:</div><div>{{ req_request.req_reason }}</div>
-    </div>
-    <div>
-      <div>Additional Notes:</div>
-      <div>
-        {% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}
-      </div>
-    </div>
-</div>
-
-<br>
-{{ tissue_requests.management_form }}
-{% for form in tissue_requests %}
-  {% include 'matrr/review/review_overview_item.html' %}
-  {{ form }}
-{% endfor %}
-  
-<table>
-  {% if req_request.req_notes != None and req_request.req_notes != '' %}
-    <tr><th class='tissue_info'>Request Notes:</th><td class='tissue_info' colspan='9'>{{ req_request.req_notes }}</td></tr>
-  {% endif %}
-  <tr><th>Reviewer</th><th colspan='10'>Reviewer's Notes</th></tr>
-  {% for review in reviews %}
-    {% if review.rvs_notes != None and review.rvs_notes != '' %}
-      <tr>
-        <th>{{ review.user }}</th>
-        <td colspan='9'>{{ review.rvs_notes }}</td>
-      </tr>
-    {% endif %}
-  {% endfor %}
-
-</table>
-
-<div>
-{% if req_request.request_status.rqs_status_name == 'Submitted' %}
-  <input type='submit' class='blockLinkButton' value='Process Request'/>
-{% endif %}
-<a href='/reviews_overviews/' class='blockLinkButton'>Back</a>
-</div>
-</div>
-</form>
+										</td></tr>
+								{% endfor %}
+							</table>
+						{% else %}
+							<div class="messages-small">
+								<div class="info">
+									No monkeys were rejected for this tissue request.
+								</div>
+							</div>
+						{% endif %}
+					{% endwith %}
+				{% endif %}
+			{% endfor %}
+			<br>
+			<div>
+				{% if req_request.request_status.rqs_status_name == 'Submitted' %}
+					<input type='submit' class='blockLinkCheckoutButton' value='Process Request'/>
+				{% endif %}
+				<a href='{% if back_url %}{{ back_url }}{% else %}{% url review-overview-list %}{% endif %}' class='blockLinkButton'>Back</a>
+			</div>
+		</div>
+	</form>
 {% endblock %}

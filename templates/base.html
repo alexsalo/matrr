@@ -4,13 +4,23 @@
 
 	<html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<meta http-equiv="X-UA-Compatible" content="chrome=1">
+		<meta http-equiv="X-UA-Compatible" content="chrome=1">	
 <!--		<meta http-equiv='Content-Type' content='text/html; charset=utf-8'/> -->
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/layout.css"/>
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/style.css"/>
+		{% if plot_gallery %}
+			<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+			
+			<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.colorbox.js"></script>
+			<script type="text/javascript" src="{{ STATIC_URL }}js/plot_gallery.js"></script>
+			<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/colorbox.css"/>
+		{% endif %}
+
+
 		<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-ui-1.8.11.custom.min.js"></script>
 		<script type="text/javascript" src="{{ STATIC_URL }}js/main.js"></script>
 		{% block extra_js %}{% endblock %}
+
 		<link rel="shortcut icon" href="{{ STATIC_URL }}images/matrr_favicon.ico"/>
 		<title>{% block title %}{% endblock %}</title>
 
@@ -25,11 +35,11 @@
 			</div>
 			<div class='right'>
 				{% if not user.is_authenticated %}
-					<a style='color: #FAF9ED' href="/accounts/login?next={{ request.path }}">Login</a> |
+					<a style='color: #FAF9ED' href="{% url auth_login %}?next={{ request.path }}">Login</a> |
 					<a style='color: #FAF9ED;' href="{% url registration_register %}?next={{ request.path }}">
 						Create an Account</a>
 				{% else %}
-					Welcome {{ user.username }} | <a style='color: #FAF9ED' href="/logout/">Logout</a>
+					Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{% url auth_logout %}">Logout</a>
 				{% endif %}
 			</div>
 		</div>
@@ -43,24 +53,27 @@
 						<li class='top'><a href="/">Home</a></li>
 
 					</ul>
+					<ul>
+						<li class='top'>
+							<a href='{% url search %}'>Search</a>
+						</li>
+					</ul>
+					
 					{% if user.is_authenticated %}
 						<ul>
-							<li class='top'><a href="/account/">My Account</a></li>
-							<li class='drop-down'><a href="/orders/">My Orders</a></li>
+							<li class='top'><a href="{% url account-view %}">My Account</a></li>
+							<li class='drop-down'><a href="{% url order-list %}">My Orders</a></li>
 						</ul>
 					{% endif %}
-					{% if user.is_staff %}
-						<ul>
-							<li class='top'><a href="/admin/">Admin</a></li>
-						</ul>
-					{% endif %}
+					
 					{% if user_is_member_of_committee or user_is_member_of_uberuser %}
 						<ul>
 							<li class='top'>
-								<a href="/reviews/">Reviews</a>
+								<a href="{% url review-list %}">My Reviews</a>
 							</li>
 							{% if user_is_member_of_uberuser %}
-								<li class='drop-down'><a href="/reviews_overviews/">Reviews Overview</a></li>
+								<li class='drop-down'><a href="{% url review-overview-list %}">Overview</a></li>
+								<li class='drop-down'><a href="{% url review-history-list %}">History</a></li>
 							{% endif %}
 						</ul>
 					{% endif %}
@@ -68,15 +81,11 @@
 					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
 						<ul>
 							<li class='top'>
-								<a href='/shipping_overview'>Shipping Overview</a>
+								<a href='{% url shipping-overview %}'>Shipping</a>
 							</li>
 						</ul>
 					{% endif %}
-						<ul>
-							<li class='top'>
-								<a href='/search'>Fulltext search</a>
-							</li>
-						</ul>
+
 					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
 						<ul>
 							<li class='top'>
@@ -84,7 +93,13 @@
 							</li>
 						</ul>
 					{% endif %}			
-		
+					
+					{% if user.is_staff %}
+						<ul>
+							<li class='top'><a href="/admin/">Admin</a></li>
+							<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
+						</ul>
+					{% endif %}
 					
 					{#      {% if user.is_staff %}#}
 					{#      <ul>#}
@@ -100,17 +115,7 @@
 	</div>
 	<!-- Body div -->
 	<div class='page-content clearfix'>
-		<!-- Message div -->
-		<div class='messages clearfix'>
-			{% if unsupported_browser %}
-				<div class="warning">Your browser is not supported by MATRR. <a href="/browser/">Click here for details.</a></div>
-			{% endif %}
-			{% if messages %}
-				{% for message in messages %}
-					<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
-				{% endfor %}
-			{% endif %}
-		</div>
+
 
 		<!-- Sidebar div -->
 		<div class='sidebar clearfix'>
@@ -142,12 +147,13 @@
 					<div class='headline'>
 						Quick Links
 					</div>
-					<a href="/upcoming">Request Upcoming Tissue</a><br/>
-					<a href="/available">Request Archival Tissue</a><br/>
-					<a href="/cohort">View All Cohorts</a><br/>
-					<a href="/mta/upload">Upload an MTA</a><br/>
-					<a href="/account">Submit Research Updates</a><br/>
-					<a href="/publications">View Publications</a>
+					<a href="{% url upcoming %}">View Upcoming Cohorts</a><br/>
+					<a href="{% url available %}">View Archival Cohorts</a><br/>
+					<a href="{% url cohorts %}">View All Cohorts</a><br/>
+					<a href="{% url assay %}">Request tissues for Assay Development</a><br/>
+					<a href="{% url mta-upload %}">Upload an MTA</a><br/>
+					<a href="{% url account-view %}">Submit Research Updates</a><br/>
+					<a href="{% url publications %}">View Publications</a>
 				</div>
 
 				<div class='sidebar-block'>
@@ -163,6 +169,7 @@
 						Info
 					</div>
 					<a href="/benefits">Account Benefits</a><br/>
+					<a href="/fee">Tissue Fee Schedule</a><br/>
 					<a href="/contact_us">Contact Us</a>
 				</div>
 
@@ -174,6 +181,17 @@
 		<!-- Content div -->
 		<div class='content clearfix'>
 
+		<!-- Message div -->
+		<div class='messages clearfix'>
+			{% if unsupported_browser %}
+				<div class="warning">Your browser is not supported by MATRR. <a href="/browser/">Click here for details.</a></div>
+			{% endif %}
+			{% if messages %}
+				{% for message in messages %}
+					<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+				{% endfor %}
+			{% endif %}
+		</div>
 			{% block content %}{% endblock %}
 
 			<!-- End of content div -->

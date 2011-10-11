@@ -4,106 +4,130 @@
 {% endblock %}
 
 {% block title %}
-Finalize Tissue Request
+	Finalize Tissue Request
 {% endblock %}
 
 {% block content %}
-{% if not cart_exists or cart_num_items == 0 %}
-  <div class="messages"><div class="error">You cannot submit a tissue request with no requested tissues.</div></div>
-{% else %}
-<div id='large-headline'>
-Finalize Tissue Request
-</div>
-<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_5.png" width='700' height='25'
-       alt='order timeline'/>
-<br/>
+	{% if not cart_exists or cart_num_items == 0 %}
+		<div class="messages">
+			<div class="error">You cannot submit a tissue request with no requested tissues.</div>
+		</div>
+		{% else %}
+		<div id='large-headline'>
+			Finalize Tissue Request
+		</div>
+		<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_5.png" width='700' height='25'
+			 alt='order timeline'/>
+		<br/>
 
-<div id="headline">Current Items in Cart</div>
-<br/>
-{% include 'matrr/cart/cart_items_table.html' %}
+		<div id="headline">Current Items in Cart</div>
+		<br/>
+		{% include 'matrr/cart/cart_items_table.html' %}
 
-<div id="headline">Checkout Form</div>
-<br/>
+		<div id="headline">Checkout Form</div>
+		<br/>
 
-<form action='/cart/checkout/' enctype="multipart/form-data" method='POST'>
-{% csrf_token %}
-  {% for field in form.hidden_fields %}
-    {{ field }}
-  {% endfor %}
+		<form action='{% url cart-checkout %}' enctype="multipart/form-data" method='POST'>
+			{% csrf_token %}
+			{% for field in form.hidden_fields %}
+				{{ field }}
+			{% endfor %}
 
 
-{% for error in form.non_field_errors %}
-  <div class="messages"><div class='error'>{{ error }}</div></div>
-{% endfor %}
-<div>
+			{% for error in form.non_field_errors %}
+				<div class="messages">
+					<div class='error'>{{ error }}</div>
+				</div>
+			{% endfor %}
+			<div>
 
-  {% for field in form.visible_fields %}
-    {% if field.html_name != "req_progress_agreement" %}
-      {% if field.html_name != 'req_reason' %}
-    <div class='clearfix'>
-    <div style='margin:0px; padding:2px;' class='table-left'>
-      <label for='{{ field.auto_id }}' style='float: right'>
-        {% if field.help_text %}
-          <a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ field.help_text }}</span></a>
-        {% endif %}
-          {{ field.label}}
-        {% if field.field.required %}<span style='color: #FF0000; font-size: 75%'>Required</span>{% endif %}
-      </label>
-    </div>
-    
-    <div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
-    </div>
-    {% if field.errors %}
-      <div class="messages"><div class="error">
-      {{ field.errors }}
-      </div></div>
-    {% endif %}
-      {% else %}
-      <div class='clearfix'>
-    <div style='margin:0px; padding:2px;' class='table-left'>
-      <label for='{{ field.auto_id }}' style='float: right'>
-          {{ field.label}}
-        {% if field.help_text %}
-          <div class='tool-tip-box' style='float:right;'>{{ field.help_text }}</div>
-        {% endif %}
-        {% if field.field.required %}<span style='color: #FF0000; font-size: 75%'>Required</span>{% endif %}
-      </label>
-    </div>
+				{% for field in form.visible_fields %}
+					{% if field.html_name != "req_progress_agreement" and field.html_name != "req_safety_agreement" %}
+						{% if field.html_name != 'req_reason' %}
+							<div class='clearfix'>
+								<div style='margin:0px; padding:2px;' class='table-left'>
+									<label for='{{ field.auto_id }}' style='float: right;text-align: right'>
+										{% if field.help_text %}
+											<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ field.help_text }}</span></a>
+										{% endif %}
+										{{ field.label }}
+										{% if field.field.required %}<span style='color: #FF0000; font-size: 75%'>Required</span>{% endif %}
+									</label>
+								</div>
 
-    <div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
-    </div>
-    {% if field.errors %}
-      <div class="messages"><div class="error">
-      {{ field.errors }}
-      </div></div>
-      {% endif %}
-    {% endif %}
-    {% endif %}
-  {% endfor %}
-</div>
+								<div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
+							</div>
+							{% if field.errors %}
+								<div class="messages">
+									<div class="error">
+										{{ field.errors }}
+									</div>
+								</div>
+							{% endif %}
+						{% else %}
+							<div class='clearfix'>
+								<div style='margin:0px; padding:2px;' class='table-left'>
+									<label for='{{ field.auto_id }}' style='float: right;text-align: right'>
+										{{ field.label }}
+										{% if field.field.required %}<span style='color: #FF0000; font-size: 75%'>Required</span>{% endif %}
+										{% if field.help_text %}
+											<div class='tool-tip-box' style='float:left;'>{{ field.help_text }}</div>
+										{% endif %}
+									</label>
+								</div>
 
-<div class="messages"><div class="forms">
-  {{ form.req_progress_agreement.label_tag }}{{ form.req_progress_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
-</div></div>
+								<div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
+							</div>
+							{% if field.errors %}
+								<div class="messages">
+									<div class="error">
+										{{ field.errors }}
+									</div>
+								</div>
+							{% endif %}
+						{% endif %}
+					{% endif %}
+				{% endfor %}
+			</div>
 
-<div class="messages"><div class="warning">
-  Upon acceptance of tissue request, a Material Transfer Agreement will be required before tissue is released.
-</div></div>
+			<div class="messages">
+				<div class="forms">
+					{{ form.req_progress_agreement.label_tag }}{{ form.req_progress_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
+				</div>
+			</div>
 
-<div class="messages"><div class="warning">
-  You will be sent an invoice before the tissues are shipped.
-  The price on the invoice may be different from the estimated total cost.
-</div></div>
+			<div class="messages">
+				<div class="forms">
+					{{ form.req_safety_agreement.label_tag }}{{ form.req_safety_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span><br>
+					<a href='/safety/' target="_blank">Read it here.<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a>
+				</div>
+			</div>
 
-<br>
-<div style='padding:3px; float: left;'>
-  <button type='submit' name='submit' value='checkout' class="blockLinkCheckoutButton">Submit Request</button>
-</div>
-<div style='padding:3px; float: right;'>
-  <a href='/cart/'><div class="blockLinkDeleteButton">Cancel Request</div></a>
-</div>
-</form>
-<br><br><br>
+			<div class="messages">
+				<div class="warning">
+					Upon acceptance of tissue request, a Material Transfer Agreement will be required before tissue is released.
+				</div>
+			</div>
 
-{% endif %}
+			<div class="messages">
+				<div class="warning">
+					You will be sent an invoice before the tissues are shipped.
+					The price on the invoice may be different from the estimated total cost.
+				</div>
+			</div>
+
+			<br>
+
+			<div style='padding:3px; float: left;'>
+				<button type='submit' name='submit' value='checkout' class="blockLinkCheckoutButton">Submit Request</button>
+			</div>
+			<div style='padding:3px; float: right;'>
+				<a href='{% url cart %}'>
+					<div class="blockLinkDeleteButton">Cancel Request</div>
+				</a>
+			</div>
+		</form>
+		<br><br><br>
+
+	{% endif %}
 {% endblock %}

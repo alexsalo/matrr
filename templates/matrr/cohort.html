@@ -22,25 +22,29 @@
 	<div class='clearfix'>
 
 		<div style='float: left;'>
-			{% if cohort.coh_upcoming %}
-				<a href="/upcoming/{{ cohort.coh_cohort_id }}/timeline">
-			{% else %}
-				<a href="/available/{{ cohort.coh_cohort_id }}/timeline">
-			{% endif %}
+
+				<a href="{% url cohort-timeline cohort.coh_cohort_id %}">
+
+				<a href="{% url cohort-timeline cohort.coh_cohort_id %}">
+
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 			&nbsp;View Cohort Timeline</a>
 			<br>
 			{% if cohort.coh_upcoming %}
-				<a href="/upcoming/">
+				<a href="{% url upcoming %}">
 			{% else %}
-				<a href="/available/">
+				<a href="{% url available %}">
 			{% endif %}
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 			&nbsp;View {% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohorts</a>
 		</div>
 
 		<div style='float: right;'>
-			<a class='blockLinkButton' href='tissues'>Request Tissues from this Cohort</a></div>
+			<a class='blockLinkButton' href='{% url tissue-shop-landing cohort.coh_cohort_id %}'>Request Tissues from this Cohort</a>
+			{% if user_is_member_of_committee or user_is_member_of_uberuser %}
+				<div class="text-right"><a href="{% url cod-upload cohort.coh_cohort_id %}" class='blockLinkButton'>Add Cohort Data</a></div>
+			{% endif %}
+		</div>
 
 	</div>
 
@@ -62,7 +66,7 @@
 					{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
 						<td>{{ monkey.mky_name }}</td>
 					{% endif %}
-					<td><a href="monkey/{{monkey.mky_id}}" target="_blank">
+					<td><a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
 						{{ monkey.mky_real_id }}
 						<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
 					</a>
@@ -86,6 +90,24 @@
 			{% endfor %}
 		</table>
 	</div>
+	<div class='clearfix'>
+		{% if coh_data %}
+			<div class='mini-headline'>Cohort Data</div>
+			<table class="common">
+				<tr>
+					<th>Title</th>
+					<th>&nbsp;</th>
+				</tr>
+				{% for cod in cohort.cod_set.all %}
+					<tr>
+						<td class='text-center-common-td'><a href="{{ MEDIA_URL }}{{ cod.cod_file }}">{{ cod.cod_title }}</a></td>
+						<td class='text-center-common-td'><a href="{{ MEDIA_URL }}{{ cod.cod_file }}"><img src="{{ STATIC_URL }}/images/pdf.png" height="25" width="25"></a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% endif %}
+	</div>
+
 
 	<div class="clearfix">
 	{% with images=cohort|cohort_images:"all" %}
@@ -95,8 +117,8 @@
 				<div class="image_container">
 					<div class="image_thumbnail left">
 						<center>{{ title }}</center>
-						<a href="{{ STATIC_URL }}/images/{{ dir }}/{{ cohort.coh_cohort_name}}.png" target="_blank">
-							<img src="{{ STATIC_URL }}/images/{{ dir }}/{{ cohort.coh_cohort_name}}-thumb.jpg">
+						<a rel="plot_gallery" title="{{ title }}" href="{{ STATIC_URL }}images/{{ dir }}/{{ cohort.coh_cohort_name}}.png" target="_blank">
+							<img src="{{ STATIC_URL }}images/{{ dir }}/{{ cohort.coh_cohort_name}}-thumb.jpg">
 						</a>
 					</div>
 				</div>

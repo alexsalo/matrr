@@ -1,0 +1,10 @@
+
+# /
+/.gitignore
+/.idea/
+/.DS_Store
+/.komodotools/
+*.pyc
+/*.komodoproject
+/local_settings.py
+/matrr/migrations/

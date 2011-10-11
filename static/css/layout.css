@@ -117,15 +117,29 @@ div{
 
 .right-content{
   float:right;
-  width: 49%;
+  width: 48%;
   min-height:10px;
 }
 
 .left-content{
   float:left;
-  width: 49%;
+  width: 48%;
   min-height:10px;
 }
+.content-padding{
+  width: 47%;
+  padding-left: 10pt;
+  padding-top: 10pt;
+}
+.margin{
+  margin-left: 10pt;
+  margin-top: 10pt;
+}
+
+.full-width{
+  width: 100%;
+}
+
 
 #buttons,
 .buttons{
@@ -163,4 +177,18 @@ div{
 }
 .image_thumbnail {
 	max-width: 240px;
+}
+
+
+.verification_border {
+	width: 97%;
+	margin: 5px;
+}
+.verification_legend {
+	width: 20%;
+	height: 3px;
+	padding: 0;
+}
+.verification_table {
+	width:99%;
 }

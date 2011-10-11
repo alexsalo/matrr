@@ -3,6 +3,7 @@ import os
 path = os.path.dirname(os.path.realpath(__file__))
 
 DEBUG = False
+#DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -51,9 +52,10 @@ MEDIA_ROOT = '/web/www/MATRR/prod/media'
 MEDIA_URL = '/media/'
 STATIC_ROOT = '/web/www/MATRR/prod/static'
 STATIC_URL = '/static/'
-ADMIN_MEDIA_PREFIX = '/static/admin/'
+MATRR_STATIC_STRING = 'static'
+ADMIN_MEDIA_PREFIX = '/' + MATRR_STATIC_STRING + '/admin/'
 STATICFILES_DIRS = (
-        path + '/static',
+      os.path.join(path, MATRR_STATIC_STRING),
     )
 # List of finder classes that know how to find static files in
 # various locations.
@@ -62,6 +64,18 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.DefaultStorageFinder',
     )
+
+# List of regex URLs which do NOT require user to be logged in.
+# Your Login URL MUST be included. 
+PUBLIC_URLS = (
+	r'^$',
+	r'^login/?$',
+	r'^logout/?$',
+	r'^accounts/', # django.auth url, NOT matrr's "account" url.  -.-
+	r'^(privacy|data|usage|browser|faq|about|benefits|denied|fee)/', # all non-dynamic pages.  Should find a way to pull this from matrr.urls
+	r'^contact_us/$',
+	r'^publications/$',
+	)
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '@+5ijd@xf%17@7euip67u)%(fq4+3g(83+azo3ia7^f=-(w1u2'
@@ -80,7 +94,11 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
-    )
+
+#	'matrr.middleware.LoginRequiredMiddleware',
+#	'matrr.middleware.RequireLoginMiddleware'
+	'matrr.middleware.EnforceLoginMiddleware',
+	)
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -93,7 +111,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'matrr.context_processors.cart',
     'matrr.context_processors.login_form',
     'matrr.context_processors.group_membership',
-    'matrr.context_processors.unsupported_browser'
+    'matrr.context_processors.unsupported_browser',
+
+#	"django.core.context_processors.auth",
     )
 
 TEMPLATE_DIRS = (
@@ -131,8 +151,7 @@ ACCOUNT_ACTIVATION_DAYS = 2
 EMAIL_HOST = 'localhost'
 DEFAULT_FROM_EMAIL = 'matrr_admin@localhost'
 
-LOGIN_REDIRECT_URL = '/accounts/login'
+LOGIN_REDIRECT_URL = '/'
 
 if DEVELOPMENT:
     from develop_settings import *
-

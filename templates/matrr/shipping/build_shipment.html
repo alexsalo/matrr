@@ -7,22 +7,25 @@
 
 {% block content %}
   <div class="headline">{% block title %}Building Shipment for {{ req_request }}{% endblock %}</div>
+  <div class='clearfix'><div class='left'>
+    <a href="{% url shipping-overview %}"><img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>&nbsp;Shipping Overview</a>
+  </div></div>
 
   {# show the request details here #}
   <div>
     <table class="overview">
       <tr>
         <th>Cohort:</th>
-        <td style='min-width: 100px;'><a href='{{ req_request.cohort.get_url }}'>{{ req_request.cohort }}</a></td>
+        <td style='min-width: 100px;'><a href='{% url cohort-details req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></td>
         <th>Requesting User:</th>
-        <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></td>
+        <td><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></td>
       </tr>
       <tr>
-        <th>Requested On:</th><td>{{ req_request.req_request_date }}</td>
+        <th>Requested On:</th><td>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
         <th>Referred By:</th><td>{{ req_request.req_referred_by }}</td>
       </tr>
       <tr>
-        <th>Progress Agreement:</th><td>{{ req_request.req_progress_agreement }}</td>
+		  <th>Progress Agreement:</th><td>{{ req_request.req_progress_agreement }}</td>
         <th>Experimental Plan:</th>
         <td>
           {% if req_request.req_experimental_plan %}
@@ -32,6 +35,9 @@
           {% endif %}
         </td>
       </tr>
+	  <tr>
+		  <th>Safety Agreement:</th><td>{{ req_request.req_safety_agreement }}</td>
+	  </tr>
       <tr>
         <th>Project Title:</th><td colspan='3'>{{ req_request.req_project_title }}</td>
       </tr>
@@ -46,7 +52,7 @@
       <tr>
         <th>Shipped to:</th>
         <td>{{ account.act_shipping_name }}</td>
-        <th>MTA</th>
+        <th>MTA:</th>
         <td>
           {% if req_request.user.mta_set.count %}
             The user has submitted at least one MTA.
@@ -96,7 +102,16 @@
     <div class='clearfix'></div>
   {% endfor %}
   {# have a button at the print the shipping manifest #}
-  <div>
-    <a href='manifest/' class='blockLinkButton'>Download Shipping Manifest</a>
+  <div class='left'>
+    <a href='{% url manifest req_request.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
   </div>
+  <div class='right'>
+    {% if req_request.shipment.shp_shipment_date %}
+      <div class='sufficient'>Shipped on: {{ req_request.shipment.shp_shipment_date }}</div>
+    {% else %}
+    <form action='' method='post'>
+      {% csrf_token %}
+      <button type='submit' name='shipped' class="blockLinkCheckoutButton">Ship Order</button>
+    </form>
+    {% endif %}
 {% endblock %}

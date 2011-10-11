@@ -1,38 +1,41 @@
-<table class='cart_table' width='95%'>
-  {% for item in cart_items %}
-    <tbody>
-    <tr>
-      <td valign='middle' style='width:30;'>
-        <a href='/cart/{{item.rtt_tissue_request_id}}/'>
-          <img src="{{ STATIC_URL }}/images/cart_edit.png" width='16' height='16' alt='edit cart'/>
-        </a>
-      </td>
-      <td valign='middle' style='width:30;'>
-        <a href='/cart/{{item.rtt_tissue_request_id}}/delete/'>
-          <img src="{{ STATIC_URL }}/css/images/badge-circle-cross-24.png" width='16' height='16' alt='delete item'/>
-        </a>
-      </td>
-      <th align='right' style='width:20%;'>Tissue Type:</th>
-      <td align='left' style='white-space: nowrap'>{{ item.tissue_type }}</td>
-      <th align='right' style='width:20%;'>Fix:</th>
-      <td align='left' style='white-space: nowrap'>{{ item.rtt_fix_type }}</td>
-      <th align='right' style='width:20%;'>Amount:</th>
-      <td align='left' style='white-space: nowrap'>{{ item.rtt_amount }}{{ item.rtt_unit }}</td>
-    </tr>
-    <tr>
-      <th align='right' colspan="3">Estimated Cost:</th>
-      <td align='left'>${{ item.get_estimated_cost }}</td>
-    </tr>
-    {% if item.has_notes %}
-      <tr>
-     	  <td colspan='4'>&nbsp;</td>
-	      <td colspan='5' style='font-size:-1;'><b>Notes:</b>{{ item.rtt_notes }}</td>
-      </tr>
-    {% endif %}
-    </tbody>
-  {% endfor %}
+<table class='cart_table' width='100%'>
+	{% for item in cart_items %}
+		<tbody>
+		<tr>
+			<td valign='middle' style='width:30;'>
+				<a href='{% url cart-item item.rtt_tissue_request_id %}'>
+					<img src="{{ STATIC_URL }}/images/cart_edit.png" width='16' height='16' alt='edit cart'/>
+				</a>
+			</td>
+			<td valign='middle' style='width:30;'>
+				<a href='{% url cart-item-delete item.rtt_tissue_request_id %}'>
+					<img src="{{ STATIC_URL }}/css/images/badge-circle-cross-24.png" width='16' height='16' alt='delete item'/>
+				</a>
+			</td>
+			<th align='right' style='width:20%;'>Tissue Type:</th>
+			<td align='left' style='white-space: nowrap'>{{ item.tissue_type }}</td>
+			<th align='right' style='width:20%;'>Fix:</th>
+			<td align='left' style='white-space: nowrap'>{{ item.rtt_fix_type }}</td>
+			<th align='right' style='width:20%;'>Amount:</th>
+			<td align='left' style='white-space: nowrap'>{{ item.get_amount }}</td>
+		</tr>
+		<tr>
+			<th align='right' colspan="3">Estimated Cost:</th>
+			<td align='left'>${{ item.get_estimated_cost|floatformat:2 }}</td>
+		</tr>
+		{% if item.has_notes %}
+			<tr>
+				<td colspan='3'><b>Notes:</b></td>
+				<td colspan='5' style='font-size:-1;'>{{ item.rtt_notes }}</td>
+			</tr>
+		{% endif %}
+		</tbody>
+	{% endfor %}
 </table>
 
-<div class='right clearfix'>
-  Estimated Total: ${{ cart.get_total_estimated_cost }}
+<div class='right' style='padding-right:5pt;text-align: right'>
+	Estimated Total: ${{ cart.get_total_estimated_cost|floatformat:2 }}
+	<br>
+	<font class='small'> + $10 handling fee.</font>
 </div>
+<div class='clearfix'></div>

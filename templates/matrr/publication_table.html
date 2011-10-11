@@ -1,9 +1,10 @@
 {% load basic_filters %}
 <table>
     {% for pub in publications|dictsortreversed:"published_year" %}
+       
         <tr>
             {% if pub.pmid %}
-                <a href="http://www.ncbi.nlm.nih.gov/pubmed?term={{ pub.pmid }}">
+                <a href="http://www.ncbi.nlm.nih.gov/pubmed?term={{ pub.pmid }}" target='_blank'>
                     {{ pub.title }}
                 </a>
             {% else %}
@@ -27,8 +28,8 @@
                 {{ pub.published_year }}
             {% endif %}
             <br>
-            {% for cohort in pub.cohorts.all %}
-                <a href="{{ cohort.get_url }}">{{ cohort.coh_cohort_name }}</a>{% if not forloop.last %}, {% else %}<br>{% endif %}
+			{% for cohort in pub.cohorts.all %}
+                <a href="{% url cohort-details cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a>{% if not forloop.last %}, {% else %}<br>{% endif %}
             {% endfor %}
         </tr>
         {% if not forloop.last %}<br> {% endif %}

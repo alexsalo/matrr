@@ -11,11 +11,15 @@
 		{% if form.errors %}
 			<div class="messages">
 				<div class="error">
-					{% for key, value in form.errors.items %}
-						{% for error in value %}
-							{{ key }}:  {{ error }}
+					{% for field in form %}
+					{% if field.errors %}
+					{{ field.label_tag }}:
+						{% for error in field.errors %}
+							 {{ error }}
 						{% endfor %}
+					{% endif %}
 					{% endfor %}
+					
 				</div></div>
 		{% endif %}
 

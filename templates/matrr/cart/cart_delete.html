@@ -4,25 +4,25 @@
 {% endblock %}
 
 {% block content %}
-{% if cart_exists %}
-<div id='large-headline'>
-Delete Cart?
-</div>
-<div class="messages">
-	<div class="warning">
-This will delete your entire cart and all items in it.
-	</div>
-</div>
+	{% if cart_exists %}
+		<div id='large-headline'>
+			Delete Cart?
+		</div>
+		<div class="messages">
+			<div class="warning">
+				This will delete your entire cart and all items in it.
+			</div>
+		</div>
 
-<form action='/cart/delete' method='post'>
-{% csrf_token %}
-<button type='submit' name='submit' value='no' class="blockLinkCheckoutButton">Cancel</button>
-<button type='submit' name='submit' value='yes' class="blockLinkDeleteButton">Delete</button>
-</form>
-{% else %}
-<div id='large-headline'>
-  You have do not have a cart to delete.
-</div>
-{% endif %}
-</div>
+		<form action='{% url cart-delete %}' method='post'>
+			{% csrf_token %}
+			<button type='submit' name='submit' value='no' class="blockLinkCheckoutButton">Cancel</button>
+			<button type='submit' name='submit' value='yes' class="blockLinkDeleteButton">Delete</button>
+		</form>
+	{% else %}
+		<div id='large-headline'>
+			You have do not have a cart to delete.
+		</div>
+	{% endif %}
+	</div>
 {% endblock %}

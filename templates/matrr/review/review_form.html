@@ -2,59 +2,82 @@
 
 
 {% block extra_js %}
-{{ block.super }}
-<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
+	{{ block.super }}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
 {% endblock %}
 
 {% block content %}
-<div class='large-headline'> 
-{% block title %}Review{% endblock %}
-</div>
+	<div class='large-headline'>
+		{% block title %}Review{% endblock %}
+	</div>
 
-<form action='' method='post'>
-{% csrf_token %}
-<table class='common_right'>
-  <tr>
-    <th>Cohort:</th>
-    <td>
-      <a href='{{ req_request.cohort.get_url }}'>
-        {{ req_request.cohort }}
-      </a>
-    </td>
-  </tr>
-  <tr><th>User:</th>
-    <td><a href='{{ SITE_ROOT }}/account/{{ req_request.user.id }}'>{{ req_request.user }}</a></td></tr>
-  <tr><th>Requested On:</th><td>{{ req_request.req_request_date }}</td></tr>
-  <tr><th>Experimental Plan:</th><td><a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a></td></tr>
-  <tr><th>Project Title:</th><td>{{ req_request.req_project_title }}</td></tr>
-  <tr><th>Reason:</th><td colspan='5'>{{ req_request.req_reason }}</td></tr>
-  <tr><th>Referred By:</th><td>{{ req_request.req_referred_by }}</td></tr>
-  <tr><th>Progress Agreement:</th><td>{{ req_request.req_progress_agreement }}</td></tr>
-  {% if req_request.req_notes %}
-    <tr><th>Extra Notes:</th><td colspan='4'>{{ req_request.req_notes }}</td></tr>
-  {% endif %}
-{{ form }}
-</table>
+	<form action='' method='post'>
+		{% csrf_token %}
+		<table id=eighty class='margin'>
+			<tr>
+				<th>Cohort:</th>
+				<td><a href='{% cohort-details req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></td>
+			</tr>
+			<tr>
+				<th>User:</th>
+				<td><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></td>
+			</tr>
+			<tr>
+				<th>Requested On:</th>
+				<td>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+			</tr>
+			<tr>
+				<th>Experimental Plan:</th>
+				<td><a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a></td>
+			</tr>
+			<tr>
+				<th>Project Title:</th>
+				<td>{{ req_request.req_project_title }}</td>
+			</tr>
+			<tr>
+				<th>Reason:</th>
+				<td colspan='5'>{{ req_request.req_reason }}</td>
+			</tr>
+			<tr>
+				<th>Referred By:</th>
+				<td>{{ req_request.req_referred_by }}</td>
+			</tr>
+			<tr>
+				<th>Progress Agreement:</th>
+				<td>{{ req_request.req_progress_agreement }}</td>
+			</tr>
+			{% if req_request.req_notes %}
+			<tr>
+				<th>Extra Notes:</th>
+				<td colspan='4'>{{ req_request.req_notes }}</td>
+			</tr>
+			{% endif %}
+			<tr>
+				<th>Total Estimate Cost:</th>
+				<td>${{ req_request.get_total_estimated_cost|floatformat:2 }}</td>
+			</tr>
+			{{ form }}
+		</table>
 
-<div style='display: none'>
-{{ form.tissue_request_formset.management_form }}
-  {% for tform in form.tissue_request_formset %}
-    {% for field in tform.hidden_fields %}
-      {{ field }}
-    {% endfor %}
-  {% endfor %}
-</div>
+		<div style='display: none'>
+			{{ form.tissue_request_formset.management_form }}
+			{% for tform in form.tissue_request_formset %}
+				{% for field in tform.hidden_fields %}
+					{{ field }}
+				{% endfor %}
+			{% endfor %}
+		</div>
 
-{% for tform in form.tissue_request_formset %}
-  {% include 'matrr/review/review_form_item.html' %}
-{% endfor %}
-<div>
-{% if review.is_finished %}
-<button type='submit' name='submit' value='update'>Update</button>
-{% else %}
-<button type='submit' name='submit' value='submit'>Submit</button>
-{% endif %}
-<button type='submit' name='submit' value='cancel'>Cancel</button>
-</div>
-</form>
+		{% for tform in form.tissue_request_formset %}
+			{% include 'matrr/review/review_form_item.html' %}
+		{% endfor %}
+		<div>
+			{% if review.is_finished %}
+				<button type='submit' name='submit' value='update'>Update</button>
+			{% else %}
+				<button type='submit' name='submit' value='submit'>Submit</button>
+			{% endif %}
+			<button type='submit' name='submit' value='cancel'>Cancel</button>
+		</div>
+	</form>
 {% endblock %}

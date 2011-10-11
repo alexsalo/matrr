@@ -1,89 +1,104 @@
 {% extends 'base.html' %}
 
 {% block title %}
-  Results for: {{ terms }}
+    Results for: {{ terms }}
 {% endblock %}
 
 {% block content %}
 
-<div style='float: left'>
-  <form action='' method='post'>
-  {% csrf_token %}
-  <table class='common'>
-{{ form.as_table }}
-  </table>
-</form>
+    <div class='large-headline'>Advanced Search</div>
+
+    <div style='margin: auto'>
+        <form action='' method='post'>
+            {% csrf_token %}
+			<center>
+            <table class='common'>
+                <tr>
+                    <td align='center'>{{ form.terms }}
+                    <button type='submit' name='submit' class="blockLinkCheckoutButton">Search
+                    </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td align=center><font size=-1 color=gray>AND = &, OR = |, NOT = ! or -, Grouping = () <i>Ex: (cat
+                        -dog)|(cat -mouse)</i></font></td>
+                </tr>
+            </table>
+			</center>
+        </form>
+
+        {% if results %}
+            <div class='headline'>
+                {{ num_results }} results for: {{ terms }}
+            </div>
+        {% endif %}
+        <div class='margin'>
+            {% if results.monkeys %}
+                <div class="mini-headline">Monkeys</div>
+
+                <table class='common_center'>
+                    <tr>
+                        {% if user_auth %}
+                            <th>Real Name</th>{% endif %}
+                        <th>Monkey ID</th>
+                        <th>Cohort name</th>
+                        <th>Sex</th>
+                        <th>Birthdate</th>
+                        <th>Weight</th>
+                        <th>Test Group</th>
+
+                        {% for monkey in results.monkeys %}
+                            <tr>
+                                {% if user_auth %}
+                                    <td>{{ monkey.mky_name }}</td>
+                                {% endif %}
+                                <td><a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id%}"
+                                       target="_blank">
+                                    {{ monkey.mky_real_id }}
+                                    <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8'
+                                         style="vertical-align: text-top">
+                                </a>
+                                </td>
+                                <td>{{ monkey.cohort.coh_cohort_name }}</td>
+                                <td>{{ monkey.mky_gender }}</td>
+                                <td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
+                                <td>{{ monkey.mky_weight }}</td>
+                                <td>
+                                    {% if monkey.mky_drinking %}
+                                        Ethanol
+                                        {% else %}{% if monkey.mky_housing_control %}
+                                            Housing Control
+                                        {% else %}
+                                            Control
+                                        {% endif %}{% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                </table>
+                </div>
+
+            {% endif %}
+        {% if results.cohorts %}
+            <div class="mini-headline">Cohorts</div>
+            <div>
+                <table class='common_center'>
+                    <tr>
+
+                        <th>Cohort name</th>
+
+</div>
+
+                        {% for cohort in results.cohorts %}
+                            <tr>
+
+                                <td><a href="{% url cohort-details cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a></td>
 
 
-{% if results %}
-  <div class='headline'>
-    {{ num_results }} results for: {{ terms }}
-  </div>
- {% endif %}
- 
-{% if results.monkeys %}
-			<div class="mini-headline">Monkeys</div>
-  <div>
-		<table class='common_center'>
-			<tr>
-				{% if user_auth %}
-					<th>Real Name</th>{% endif %}
-				<th>Monkey ID</th>
-				<th>Cohort name</th>
-				<th>Sex</th>
-				<th>Birthdate</th>
-				<th>Weight</th>
-				<th>Test Group</th>
-				
-			{% for monkey in results.monkeys %}
-				<tr>
-					{% if user_auth %}
-						<td>{{ monkey.mky_name }}</td>
-					{% endif %}
-					<td><a href="{% url monkey_detail_coh monkey.cohort.coh_cohort_id monkey.mky_id%}" target="_blank">
-						{{ monkey.mky_real_id }}
-						<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
-					</a>
-					</td>
-					<td>{{ monkey.cohort.coh_cohort_name }}</td>
-					<td>{{ monkey.mky_gender }}</td>
-					<td>{{ monkey.mky_birthdate|date:"m/d/Y"  }}</td>
-					<td>{{ monkey.mky_weight }}</td>
-					<td>
-						{% if monkey.mky_drinking %}
-							Ethanol
-						{% else %}{% if monkey.mky_housing_control %}
-							Housing Control
-						{% else %}
-							Control
-						{% endif %}{% endif %}
-					</td>
-				</tr>
-			{% endfor %}
-		</table>
-	</div>
-  
-{% endif %}
-{% if results.cohorts %}
-			<div class="mini-headline">Cohorts</div>
-  <div>
-		<table class='common_center'>
-			<tr>
-
-				<th>Cohort name</th>
-				
-				
-			{% for cohort in results.cohorts %}
-				<tr>
-
-					<td><a href="/cohort/{{ cohort.coh_cohort_id }}">{{ cohort.coh_cohort_name }}</a></td>
-					
-
-				</tr>
-			{% endfor %}
-		</table>
-	</div>
-{% endif %}
-
+                            </tr>
+                        {% endfor %}
+                </table>
+            </div>
+        {% endif %}
+    </div>
 
 {% endblock %}

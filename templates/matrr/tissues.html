@@ -3,49 +3,71 @@
 {% load tissue_filters %}
 
 {% block content %}
-  <div id="large-headline">Tissue Request</div>
-  <img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_3.png" width=700 height=25>
+	<div id="large-headline">Tissue Request</div>
+	<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_3.png" width=700 height=25>
 
-{% if cohort != None %}
-<div id="headline">
-{% block title %}
-  Available {{ title }} for cohort: {{ cohort.coh_cohort_name }}
-{% endblock %}
-</div>
-{% endif %}
+	{% if cohort != None %}
+		<div id="headline">
+			{% block title %}
+				Available {{ title }} for cohort: {{ cohort.coh_cohort_name }}
+			{% endblock %}
+		</div>
 
-
-
-<table class="three_column">
-  <tr>
-  {% for tissue in tissues.object_list %}
-    {% if tissue|cohort_availability:cohort %}
-      <td><a href='{{ tissue.tst_type_id }}'>{{ tissue.tst_tissue_name }}</a></td>
-    {% else %}
-      <td>{{ tissue.tst_tissue_name }}</td><td>Unavailable</td>
-    {% endif %}
-    {% if forloop.counter|divisibleby:"3" and not forloop.last %}
-      </tr><tr>
-    {% endif %}
-  {% endfor %}
-  </tr>
-</table>
+		{% if tissues %}
+			<table class="three_column">
+				<tr>
+					{% for tissue in tissues %}
 
 
+						<td><a href='{% url tissue-shop-detail cohort.coh_cohort_id tissue.tst_type_id %}'>{{ tissue.tst_tissue_name }}</a></td>
 
-<div class="pagination">
-  <span class="step-links">
-    {% if tissues.has_previous %}
-      <a href="?page={{ tissues.previous_page_number }}">previous</a>
-    {% endif %}
 
+						{% if forloop.counter|divisibleby:"3" and not forloop.last %}
+							</tr>
+							<tr>
+						{% endif %}
+					{% endfor %}
+					</tr>
+			</table>
+		{% else %}
+			<div class="messages"> <div class="info">No tissues available.</div></div>
+		{% endif %}
+
+		{% if tissues_unavailable %}
+			<div id="headline">Unavailable {{ title }} for cohort: {{ cohort.coh_cohort_name }}</div>
+
+			<table class="three_column">
+				<tr>
+					{% for tissue in tissues_unavailable %}
+						<td>{{ tissue.tst_tissue_name }}
+
+							{% if forloop.counter|divisibleby:"3" and not forloop.last %}
+								</tr>
+								<tr>
+							{% endif %}
+					{% endfor %}
+					</tr>
+			</table>
+		{% endif %}
+
+	{% endif %}
+
+
+	<div class="pagination">
+		<span class="step-links">
+			{% if tissues.has_previous %}
+				<a href="?page={{ tissues.previous_page_number }}">previous</a>
+			{% endif %}
+
+			<!--
     <span class="current">
       Page {{ tissues.number }} of {{ tissues.paginator.num_pages }}.
     </span>
+-->
 
-    {% if tissues.has_next %}
-      <a href="?page={{ tissues.next_page_number }}">next</a>
-    {% endif %}
-  </span>
-</div>
+			{% if tissues.has_next %}
+				<a href="?page={{ tissues.next_page_number }}">next</a>
+			{% endif %}
+		</span>
+	</div>
 {% endblock %}
