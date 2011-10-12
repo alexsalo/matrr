@@ -7,4 +7,3 @@
 *.pyc
 /*.komodoproject
 /local_settings.py
-/matrr/migrations/
