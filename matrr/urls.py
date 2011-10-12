@@ -107,6 +107,7 @@ urlpatterns += patterns('matrr.views',
 
 if settings.DEVELOPMENT:
     urlpatterns += patterns('matrr.views',
+		url(r'^test/$', matrr_image_example),
 	)
     
 if settings.DEVELOPMENT:
