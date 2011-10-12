@@ -90,15 +90,6 @@ def cohort_details(request, **kwargs):
 		return redirect(reverse('cohorts'))
 	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'coh_data': coh_data, 'plot_gallery': True }, context_instance=RequestContext(request))
 
-### Currently a very simple hack to tell everyone we don't have any necropsy data.  Placeholder, mostly.
-def cohort_necropsy(request, pk):
-	# Simple message
-	messages.info(request, 'No necropsy date available at this time.')
-	# and display the cohort detail page
-	cohort = Cohort.objects.get(pk=pk)
-	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
-
-
 def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 	try:
 		monkey = Monkey.objects.get(mky_id=monkey_id)

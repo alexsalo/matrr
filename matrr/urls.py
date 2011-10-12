@@ -60,10 +60,6 @@ urlpatterns += patterns('matrr.views',
         
 	url(r'cohort/(?P<pk>\d+)/$', 		cohort_details, name='cohort-details'),
 
-#*** This is a hack, does nothing but display a message saying we don't have necropsy data.  This will need to be changed if/when we get a batch of necropsy data
-    url(r'^cohort/(?P<pk>\d+)/necropsy/$', 		cohort_necropsy, name="cohort-necropsy"),
-#***
-
     url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey-detail'),
 	url(r'^cohort/(?P<cohort_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list, name='tissue-category'),
 	url(r'^cohort/(?P<cohort_id>\d+)/tissues/$', 								tissue_shop_landing_view, name='tissue-shop-landing'),
