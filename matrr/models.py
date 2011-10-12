@@ -360,10 +360,10 @@ class MonkeyImage(MATRRImage):
 		return PLOTS[self.method]
 
 	def save(self, *args, **kwargs):
+		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.monkey and self.method and self.title:
 			if not (self.image and self.thumbnail and self.html_fragment):
 				self._construct_filefields()
-		super(MonkeyImage, self).save(*args, **kwargs)
 
 	def __unicode__(self):
 		return "%s.%s.(%s)" % (self.monkey.__unicode__(), self.title, str(self.pk))
