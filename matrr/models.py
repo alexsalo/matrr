@@ -8,22 +8,76 @@ from django.dispatch import receiver
 from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
-
+from django.core.exceptions import ValidationError
 	
 def percentage_validator(value):
 	MinValueValidator(0).__call__(value)
 	MaxValueValidator(100).__call__(value)
 
 
+class Enumeration(object):
+    """
+    A small helper class for more readable enumerations,
+    and compatible with Django's choice convention.
+    You may just pass the instance of this class as the choices
+    argument of model/form fields.
+
+    Example:
+        MY_ENUM = Enumeration([
+            (100, 'MY_NAME', 'My verbose name'),
+            (200, 'MY_AGE', 'My verbose age'),
+        ])
+        assert MY_ENUM.MY_AGE == 100
+        assert MY_ENUM[1] == (200, 'My verbose age')
+    """
+
+    def __init__(self, enum_list):
+        self.enum_list = [(item[0], item[2]) for item in enum_list]
+        self.enum_dict = {}
+        for item in enum_list:
+            self.enum_dict[item[1]] = item[0]
+
+    def __contains__(self, v):
+        return (v in self.enum_list)
+
+    def __len__(self):
+        return len(self.enum_list)
+
+    def __getitem__(self, v):
+        if isinstance(v, basestring):
+            return self.enum_dict[v]
+        elif isinstance(v, int):
+            return self.enum_list[v]
+
+    def __getattr__(self, name):
+        return self.enum_dict[name]
+
+    def __iter__(self):
+        return self.enum_list.__iter__()
+
+
+
 
 InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
 
+ExperimentEventType = Enumeration([
+								('D', 'Drink', 'Drink event'),
+								('T', 'Time', 'Time event'),
+								('P', 'Pellet', 'Pellet event'),
+								])
+
+LeftRight = Enumeration([
+						('L', 'Left', 'Left side'),
+						('R', 'Right', 'Right side'),
+						])
 
 class Availability:
 	'''
 	This class is an enumeration for the availability statuses.
 	'''
 	Available, In_Stock, Unavailable = range(3)
+
+
 
 
 class Acceptance:
@@ -384,6 +438,76 @@ class MonkeyToDrinkingExperiment(models.Model):
 	class Meta:
 		db_table = 'mtd_monkeys_to_drinking_experiments'
 
+class ExperimentBout(models.Model):
+	ebt_id = models.AutoField(primary_key=True)
+	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='bouts_set')
+	ebt_number = models.IntegerField('Bout number',blank=False, null=False)
+	ebt_start_time = models.IntegerField('Start time [s]',blank=False, null=False)
+	ebt_end_time = models.IntegerField('End time [s]',blank=False, null=False)
+	ebt_length = models.IntegerField('Bout length [s]',blank=False, null=False)
+	ebt_ibi = models.IntegerField('Inter-Bout Interval [s]', blank=True, null=True)
+	ebt_volume = models.FloatField('Bout volume [ml]',blank=False, null=False)
+	
+	def clean(self):
+		if self.ebt_end_time < self.ebt_start_time:
+			raise ValidationError('End time cannot be lower that Start time')
+	
+		if self.ebt_end_time - self.ebt_start_time != self.ebt_length:
+			#		An isolated bout is given the length of 1 second, despite start time and end time being equal. 
+			if  self.ebt_end_time == self.ebt_start_time and self.ebt_length == 1:
+				return
+			raise ValidationError('Bout length does not correspond the Start and End time')
+
+class ExperimentDrink(models.Model):
+	edr_id = models.AutoField(primary_key=True)
+	ebt = models.ForeignKey(ExperimentBout, null=False, db_column='ebt_id', related_name='drinks_set')
+	edr_number = models.IntegerField('Drink number', blank=False, null=False)
+	edr_start_time = models.IntegerField('Start time [s]',blank=False, null=False)
+	edr_end_time = models.IntegerField('End time [s]',blank=False, null=False)
+	edr_length = models.IntegerField('Drink length [s]',blank=False, null=False)
+	edr_ibi = models.IntegerField('Inter-Drink Interval [s]',blank=True, null=True)
+	edr_volume = models.FloatField('Bout volume [ml]',blank=False, null=False)
+
+	def clean(self):
+		if self.edr_end_time < self.edr_start_time:
+			raise ValidationError('End time cannot be lower that Start time')
+	
+		if self.edr_end_time - self.edr_start_time != self.edr_length:
+			#		An isolated drink is given the length of 1 second, despite start time and end time being equal. 
+			if  self.edr_end_time == self.edr_start_time and self.edr_length == 1:
+				return
+			raise ValidationError('Drink length does not correspond to Start and End time')
+
+class ExperimentEvent(models.Model):
+	eev_id = models.AutoField(primary_key=True)
+	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='events_set')
+	eev_occurred = models.DateTimeField('Event occurred', blank=False, null=False)
+	eev_dose = models.FloatField('Dose', blank=False, null=False)
+	eev_fixed_time = models.IntegerField('Fixed time [s]', blank=False, null=False)
+	eev_experiment_state = models.IntegerField('Induction experiment state',validators = [MaxValueValidator(3),MinValueValidator(0)],blank=False, null=False)
+	eev_event_type = models.CharField('Event type (Time/Pellet/Drink)', max_length=1, choices=ExperimentEventType,blank=False, null=False)
+	eev_session_time = models.IntegerField('Session time [s]', blank=False, null=False)
+	eev_segement_time = models.IntegerField('Segment time [s]', blank=False, null=False)
+	eev_pellet_time = models.IntegerField('Pellet time [s]', blank=False, null=False)
+	eev_etoh_side = models.CharField('EtOH side (Right/Left)', max_length=1, choices=LeftRight, blank=True, null=True)
+	eev_etoh_volume = models.FloatField('EtOH volume of most recent drink', blank=True, null=True)
+	eev_etoh_total = models.FloatField('EtOH total volume', blank=True, null=True)
+	eev_etoh_elapsed_time_since_last = models.IntegerField('Elapsed time since last etOh drink [s]', blank=True, null=True)
+	eev_veh_side = models.CharField('H20 side (Right/Left)', max_length=1, choices=LeftRight, blank=True, null=True)
+	eev_veh_volume = models.FloatField('H20 volume of most recent drink', blank=True, null=True)
+	eev_veh_total = models.FloatField('H20 total volume',blank=True, null=True)
+	eev_veh_elapsed_time_since_last = models.IntegerField('Elapsed time since last H20 drink [s]',blank=True, null=True)
+	eev_scale_string = models.CharField('Original string data from scale', max_length=50,blank=True, null=True)
+	eev_hand_in_bar = models.BooleanField('Hand in bar', blank=False, null=False)
+	eev_blank = models.IntegerField('This should be blank but I found some values', blank=True, null=True)
+	eev_etoh_bout_number = models.IntegerField('EtOh bout number', blank=True, null=True)
+	eev_etoh_drink_number = models.IntegerField('EtOh drink number', blank=True, null=True)
+	eev_veh_bout_number = models.IntegerField('H20 bout number', blank=True, null=True)
+	eev_veh_drink_number = models.IntegerField('H20 drink number',blank=True, null=True)
+	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
+	
+	class Meta:
+		db_table = 'eev_experiment_events'
 
 class RequestStatus(models.Model):
 	rqs_status_id = models.AutoField('ID', primary_key=True)
