@@ -1177,9 +1177,11 @@ def matrr_image_example(request):
 	if settings.PRODUCTION:
 		raise Http404
 
-	monkey = Monkey.objects.get(mky_real_id=28479)
+	monkey = Monkey.objects.get(mky_real_id=28477)
 	graph = 'monkey_bouts_drinks'
-	monkeyimage = MonkeyImage(monkey=monkey, method=graph, title='sweet title')
+	parameters = str({'from_date': str(datetime(2011,6,1)),'to_date': str(datetime(2011,8,4))})
+
+	monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title='sweet title', parameters=parameters)
 	# if a MonkeyImage has all 3 of monkey, method and title, it will generate the filefields (if not already present).
 	monkeyimage.save()
 	return render_to_response('MATRRImage-example.html', {'monkeyimage': monkeyimage,}, context_instance=RequestContext(request))
