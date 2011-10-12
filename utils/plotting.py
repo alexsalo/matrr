@@ -7,7 +7,8 @@ import numpy as np
 from pylab import *
 from settings import MATRR_STATIC_STRING
 from os import path, makedirs
-
+from datetime import datetime
+import dateutil
 
 ###############  matplotlibrc settings
 mpl.rcParams['figure.subplot.left'] 	= 0.1	# the left side of the subplots of the figure
@@ -50,8 +51,6 @@ def cohort_boxplot_m2de(cohort, days=10):
 		all_data = {"etoh" : ("Ethanol Intake (in ml)", etoh_data), "pellet" : ("Total Pellets", pellet_data), "veh" : ("Veh Intake", veh_data), "weight" : ("Weight (in kg)", weight_data)}
 
 
-		DEFAULT_FIG_SIZE = (10,10)
-		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
 		for data_type, data in all_data.items():
 			dir = MATRR_STATIC_STRING + '/images/' + data_type + "/"
 			if not os.path.exists(dir):
@@ -76,11 +75,6 @@ def cohort_boxplot_m2de(cohort, days=10):
 			pyplot.setp(bp['fliers'], color='red', marker='+')
 			xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 			pyplot.setp(xtickNames, rotation=45)
-			fig.savefig(filename + ".png", dpi=DEFAULT_DPI)
-
-			img = Image.open(filename + ".png")
-			img.thumbnail(thumb_size, Image.ANTIALIAS)
-			img.save(filename + "-thumb.jpg")
 	else:
 		print "No drinking experiments for this cohort."
 
@@ -155,7 +149,7 @@ COHORT_PLOTS = ((cohort_boxplot_m2de, "cohort_boxplot_m2de"),
 )
 
 
-def monkey_bouts_drinks(monkey=None, monkey_image=None, from_date=None, to_date=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
+def monkey_bouts_drinks(monkey, from_date=None, to_date=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
 		Scatter plot for monkey
 			x axis - dates of monkey experiments in range [from_date, to_date] or all possible
@@ -171,13 +165,31 @@ def monkey_bouts_drinks(monkey=None, monkey_image=None, from_date=None, to_date=
 	mpl.rcParams['figure.subplot.top'] 	= 0.92
 	mpl.rcParams['figure.subplot.bottom'] 	= 0.08
 
-	if monkey_image:
-		monkey = monkey_image.monkey
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
-			print("That's not a valid monkey.")
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
+
+	if not isinstance(from_date, datetime):
+		try:
+			#maybe its a str(datetime)
+			from_date = dateutil.parser.parse(from_date)
+		except:
+			#otherwise give up
+			print("Invalid paremeter, from_date")
+			return
+	if not isinstance(to_date, datetime):
+		try:
+			#maybe its a str(datetime)
+			to_date = dateutil.parser.parse(to_date)
+		except:
+			#otherwise give up
+			print("Invalid paremeter, from_date")
 			return
 
 	if circle_max < circle_min:
@@ -274,13 +286,11 @@ def monkey_bouts_drinks(monkey=None, monkey_image=None, from_date=None, to_date=
 
 	return fig, datapoint_map
 
-def monkey_boxplot_etoh(monkey=None, monkey_image=None):
+def monkey_boxplot_etoh(monkey=None):
 	from matrr.models import Monkey
 	from matrr.models import MonkeyToDrinkingExperiment
 	
 	##  Verify argument is actually a monkey
-	if monkey_image:
-		monkey = monkey_image.monkey
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(mky_real_id=monkey)
@@ -331,13 +341,11 @@ def monkey_boxplot_etoh(monkey=None, monkey_image=None):
 
 	return fig, 'NO MAP'
 
-def monkey_boxplot_pellet(monkey=None, monkey_image=None):
+def monkey_boxplot_pellet(monkey=None):
 	from matrr.models import Monkey
 	from matrr.models import MonkeyToDrinkingExperiment
 
 	##  Verify argument is actually a monkey
-	if monkey_image:
-		monkey = monkey_image.monkey
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(mky_real_id=monkey)
@@ -392,8 +400,6 @@ def monkey_boxplot_veh(monkey=None, monkey_image=None):
 	from matrr.models import MonkeyToDrinkingExperiment
 
 	##  Verify argument is actually a monkey
-	if monkey_image:
-		monkey = monkey_image.monkey
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(mky_real_id=monkey)
@@ -449,8 +455,6 @@ def monkey_boxplot_weight(monkey=None, monkey_image=None):
 	from matrr.models import MonkeyToDrinkingExperiment
 
 	##  Verify argument is actually a monkey
-	if monkey_image:
-		monkey = monkey_image.monkey
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(mky_real_id=monkey)
