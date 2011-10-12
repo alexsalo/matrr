@@ -1140,6 +1140,12 @@ def sendfile(request, id):
 	files.append((r, 'rud_file'))
 	r = CohortData.objects.filter(cod_file=id)
 	files.append((r, 'cod_file'))
+	r = MonkeyImage.objects.filter(thumbnail=id)
+	files.append((r, 'image'))
+	r = MonkeyImage.objects.filter(image=id)
+	files.append((r, 'thumbnail'))
+	r = MonkeyImage.objects.filter(html_fragment=id)
+	files.append((r, 'html_fragment'))
 
 #	this will work for all listed files
 	file = None
@@ -1167,4 +1173,13 @@ def sendfile(request, id):
 	response['Content-Disposition'] = 'attachment; filename="%s"' %  os.path.basename(file_url)
 	return response
 
+def matrr_image_example(request):
+	if settings.PRODUCTION:
+		raise Http404
 
+	monkey = Monkey.objects.get(mky_real_id=28479)
+	graph = 'monkey_bouts_drinks'
+	monkeyimage = MonkeyImage(monkey=monkey, method=graph, title='sweet title')
+	# if a MonkeyImage has all 3 of monkey, method and title, it will generate the filefields (if not already present).
+	monkeyimage.save()
+	return render_to_response('MATRRImage-example.html', {'monkeyimage': monkeyimage,}, context_instance=RequestContext(request))
