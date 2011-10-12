@@ -1,14 +1,14 @@
 #encoding=utf-8
 from django.db import models
 from django.contrib.auth.models import User, Group
-from django.db.models import Q
+from django.db.models.query import QuerySet
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from utils import plotting
-import os
+import os, ast
 
 
 def percentage_validator(value):
@@ -213,7 +213,7 @@ class MATRRImage(models.Model):
 	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
 	title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this image.')
 	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
-	parameters = models.CharField('Paremeters', blank=True, null=False, max_length=500, help_text="The method's parameters used to generate this image.")
+	parameters = models.CharField('Paremeters', blank=True, null=False, max_length=500, default='defaults', help_text="The method's parameters used to generate this image.")
 	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
 	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
 	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
@@ -290,7 +290,12 @@ class MonkeyImage(MATRRImage):
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
-		mpl_figure, data_map = spiffy_method(monkey=self.monkey)
+		if self.parameters == 'defaults':
+			mpl_figure, data_map = spiffy_method(self.monkey)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(self.monkey, **params)
+
 		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
 
 	def _plot_picker(self):
@@ -1224,6 +1229,7 @@ class TissueInventoryVerification(models.Model):
 			## If the tissue has been verified, but has NO tissue_request associated with it
 			if self.tiv_inventory != "Unverified" and self.tissue_request is None:
 				self.delete() # delete it
+
 	class Meta:
 		db_table = 'tiv_tissue_verification'
 
