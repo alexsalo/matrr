@@ -1164,10 +1164,17 @@ def sendfile(request, id):
 	response['Content-Disposition'] = 'attachment; filename="%s"' %  os.path.basename(file_url)
 	return response
 
-def matrr_image_example(request):
-	if settings.PRODUCTION:
-		raise Http404
 
+
+####################
+#  Analysis tools  #
+####################
+
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
+							u.groups.filter(name='Committee').count() or
+							u.groups.filter(name='Uberuser').count(),
+				  login_url='/denied/')
+def analysis_index(request):
 	monkey = Monkey.objects.get(mky_real_id=28477)
 	graph = 'monkey_bouts_drinks'
 	parameters = str({'from_date': str(datetime(2011,6,1)),'to_date': str(datetime(2011,8,4))})
@@ -1175,4 +1182,4 @@ def matrr_image_example(request):
 	monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title='sweet title', parameters=parameters)
 	# if a MonkeyImage has all 3 of monkey, method and title, it will generate the filefields (if not already present).
 	monkeyimage.save()
-	return render_to_response('MATRRImage-example.html', {'monkeyimage': monkeyimage,}, context_instance=RequestContext(request))
+	return render_to_response('analysis/analysis_index.html', {'monkeyimage': monkeyimage,}, context_instance=RequestContext(request))

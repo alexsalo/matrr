@@ -1,4 +1,7 @@
+{% extends "analysis/analysis_base.html" %}
+{% block content %}
 {% if monkeyimage %}
 	<img src='{{ monkeyimage.image.url }}' ismap usemap="#points">
 	{% include  monkeyimage.frag %}
 {% endif %}
+{% endblock %}
