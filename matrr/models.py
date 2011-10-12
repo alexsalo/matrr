@@ -1193,30 +1193,37 @@ class TissueInventoryVerification(models.Model):
 			tiv.save()
 
 	def save(self, *args, **kwargs):
+		notes = self.tiv_notes
+		# This will set the tissue_sample field with several database consistency checks
 		if self.tissue_sample is None:
-			try:  ## Set the tissue_sample field
+			try:
+				units = Unit.objects.get(unt_unit_name="whole")
 				self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
 																				defaults={'tss_freezer': "No Previous Record",
-																						  'tss_location': "No Previous Record"})
-			## Or write to the note field with error.
+																						  'tss_location': "No Previous Record",
+																						  'units': units})
+				# All tissue samples should have been previously created.
+				# Currently, I don't think a TIV can be created (thru the website) without a tissue sample record already existing
+				if is_new:
+					notes = "%s:Database Error:  There was no previous record for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
+			# There should only be 1 tissue sample for each monkey:tissue_type.
+			# Possibly should make them unique-together
 			except TissueSample.MultipleObjectsReturned:
-				self.tissue_sample = self.get_sample()[0]
-				self.tiv_notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin." % str(datetime.now().date())
+				notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin. Do not edit, changes will not be saved." % str(datetime.now().date())
+		# tissue_sample should ALWAYS == monkey:tissue_type
+		elif self.tissue_sample.monkey != self.monkey\
+		or   self.tissue_sample.tissue_type != self.tissue_type:
+			notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(datetime.now().date())
 
-		## Update timestamps
-		if self.tiv_date_created is None:
-			self.tiv_date_created = datetime.now()
-			self.inventory = InventoryStatus.objects.get(inv_status="Unverified")
-		self.tiv_date_modified = datetime.now()
-
-		super(TissueInventoryVerification, self).save(*args, **kwargs)
-
-		## If the tissue has doesn't have a tissue_request associated with it
-		if self.tissue_request is None:
-			# AND it has been verified
-			if not self.inventory == InventoryStatus.objects.get(inv_status="Unverified"):
+		if 'Do not edit' in notes:
+			# this doesnt save any other changes
+			TissueInventoryVerification.objects.filter(pk=self.pk).update(tiv_notes=notes)
+		else:
+			self.tiv_notes = notes
+			super(TissueInventoryVerification, self).save(*args, **kwargs)
+			## If the tissue has been verified, but has NO tissue_request associated with it
+			if self.tiv_inventory != "Unverified" and self.tissue_request is None:
 				self.delete() # delete it
-
 	class Meta:
 		db_table = 'tiv_tissue_verification'
 
