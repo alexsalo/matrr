@@ -1097,7 +1097,7 @@ def tissue_verification(request):
 	# if request method != post and/or formset isNOT valid
 	# build a new formset
 	initial = []
-	tiv_list = TissueInventoryVerification.objects.all().order_by('tiv_inventory')
+	tiv_list = TissueInventoryVerification.objects.all().order_by('monkey').order_by('tissue_type').order_by('tiv_inventory')
 	for tiv in tiv_list:
 		try:
 			amount = tiv.tissue_request.get_amount()
