@@ -55,11 +55,10 @@ All Cohorts
 
 				<div class="right-content clearfix content-padding">
 					
-					<a href="{% url cohort-details cohort.coh_cohort_id %}">Cohort Details</a><br/>
-					<a href="{% url cohort-timeline cohort.coh_cohort_id %}">Cohort Timeline</a><br/>
-					{% if cohort.coh_upcoming %}<a href="{% url cohort-necropsy cohort.coh_cohort_id %}">Expected Necropsy Date</a><br/>{% endif %}
-					<a href="{% url cohort-publications cohort.coh_cohort_id %}">Publications</a><br/>
-					<a href='{% url tissue-shop-landing cohort.coh_cohort_id %}'>Request Tissue from {{ cohort.coh_cohort_name }}</a>
+					<a href="{{ cohort.coh_cohort_id }}/">Cohort Details</a><br/>
+					<a href="{{ cohort.coh_cohort_id }}/timeline">Cohort Timeline</a><br/>
+					<a href="{{ cohort.coh_cohort_id }}/publications">Publications</a><br/>
+					<a href='{{ cohort.coh_cohort_id }}/tissues'>Request Tissue from {{ cohort.coh_cohort_name }}</a>
 					{% with images=cohort|cohort_images:"etoh" %}
 						{% if images %}
 							<div class="image_container">

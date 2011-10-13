@@ -1,5 +1,4 @@
 #encoding=utf-8
-
 from django.db import models
 from django.contrib.auth.models import User, Group
 from django.db.models.query import QuerySet
@@ -8,8 +7,10 @@ from django.dispatch import receiver
 from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
+from utils import plotting
 from django.core.exceptions import ValidationError
-	
+import os, ast
+
 def percentage_validator(value):
 	MinValueValidator(0).__call__(value)
 	MaxValueValidator(100).__call__(value)
@@ -70,14 +71,11 @@ LeftRight = Enumeration([
 						('L', 'Left', 'Left side'),
 						('R', 'Right', 'Right side'),
 						])
-
 class Availability:
 	'''
 	This class is an enumeration for the availability statuses.
 	'''
 	Available, In_Stock, Unavailable = range(3)
-
-
 
 
 class Acceptance:
@@ -266,10 +264,71 @@ class MATRRImage(models.Model):
 	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
 	title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this image.')
 	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
-	parameters = models.CharField('Paremeters', blank=True, null=False, max_length=500, help_text="The method's parameters used to generate this image.")
+	parameters = models.CharField('Paremeters', blank=True, null=False, max_length=500, default='defaults', help_text="The method's parameters used to generate this image.")
 	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
 	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
-	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_image/fragments/', null=True, blank=False)
+	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
+
+	def _construct_filefields(self, mpl_figure, data_map, *args, **kwargs):
+		from django.core.files.base import File
+
+		# export the image and thumbnail to a temp folder and save them to the self.ImageFields
+		image, thumbnail = self._draw_image(mpl_figure)
+		self.image = File(open(image, 'r'))
+		self.thumbnail = File(open(thumbnail, 'r'))
+
+		# generate the html fragment for the image and save it
+		html_frag_path = self._build_html_fragment(data_map)
+		html_frag = open(html_frag_path, 'r')
+		self.html_fragment = File(html_frag)
+
+		self.save()
+
+	def _plot_picker(self):
+		#  This needs to be overridden by subclasses
+		return
+
+	def _draw_image(self, mpl_figure):
+		import Image
+		thumbnail_size = (240,240)
+		DPI =  plotting.DEFAULT_DPI
+
+		filename = '/tmp/' + str(self)
+		image_path = filename + '.png'
+		thumb_path = filename + '-thumb.jpg'
+		mpl_figure.savefig(image_path, dpi=DPI)
+
+		image_file = Image.open(image_path)
+		image_file.thumbnail(thumbnail_size, Image.ANTIALIAS)
+		image_file.save(thumb_path)
+
+		return image_path, thumb_path
+
+	def _build_html_fragment(self, data_map):
+		from django.template.context import Context
+		from django.template.loader import get_template
+
+		fragment_path = '/tmp/%s.html' % str(self)
+
+		t = get_template('image_maps/%s.html' % self.method) # templates will be named identical to the plotting method
+		c = Context({'map': data_map, 'monkeyimage': self})
+
+		html_fragment = open(fragment_path, 'w+')
+		html_fragment.write(str(t.render(c)))
+		html_fragment.flush()
+		html_fragment.close()
+		return fragment_path
+
+
+	def verify_user_access_to_file(self, user):
+		return user.is_authenticated()
+
+	def frag(self):
+		return os.path.basename(self.html_fragment.name)
+
+	def __unicode__(self):
+		# You should override this method too
+		return "%s.(%s)" % (self.title, 'MATRRImage')
 
 	class Meta:
 		abstract = True
@@ -279,31 +338,54 @@ class MonkeyImage(MATRRImage):
 	mig_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
 
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		if self.parameters == 'defaults':
+			mpl_figure, data_map = spiffy_method(self.monkey)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(self.monkey, **params)
 
-	def verify_user_access_to_file(self, user):
-		return user.is_authenticated()
+		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		PLOTS = plotting.MONKEY_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method]
+
+	def save(self, *args, **kwargs):
+		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.monkey and self.method and self.title:
+			if not (self.image and self.thumbnail and self.html_fragment):
+				self._construct_filefields()
 
 	def __unicode__(self):
-		return "%s: %s (%s)" % (self.monkey.__unicode__(), self.title, self.image)
+		return "%s.%s.(%s)" % (self.monkey.__unicode__(), self.title, str(self.pk))
 
 	class Meta:
 		db_table = 'mig_monkey_image'
 
 
 #  This model breaks MATRR field name scheme
-class CohortImage(MATRRImage):
-	cig_id = models.AutoField(primary_key=True)
-	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
-
-
-	def verify_user_access_to_file(self, user):
-		return user.is_authenticated()
-
-	def __unicode__(self):
-		return "%s: %s (%s)" % (self.cohort.__unicode__(), self.title, self.image)
-
-	class Meta:
-		db_table = 'cig_cohort_image'
+#class CohortImage(MATRRImage):
+#	cig_id = models.AutoField(primary_key=True)
+#	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
+#
+#
+#	def verify_user_access_to_file(self, user):
+#		return user.is_authenticated()
+#
+#	def __unicode__(self):
+#		return "%s.%s.(%s)" % (self.cohort.__unicode__(), self.title, self.image)
+#
+#	class Meta:
+#		db_table = 'cig_cohort_image'
 
 
 class Mta(models.Model):
@@ -557,6 +639,7 @@ class ExperimentEvent(models.Model):
 	
 	class Meta:
 		db_table = 'eev_experiment_events'
+
 
 class RequestStatus(models.Model):
 	rqs_status_id = models.AutoField('ID', primary_key=True)
@@ -1159,7 +1242,6 @@ class TissueSample(models.Model):
 			self.tss_location = "Assay Tissue"
 			self.tss_details = "MATRR does not track assay inventory."
 		super(TissueSample, self).save(*args, **kwargs)
-
 
 	class Meta:
 		db_table = 'tss_tissue_samples'

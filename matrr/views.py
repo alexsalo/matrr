@@ -90,15 +90,6 @@ def cohort_details(request, **kwargs):
 		return redirect(reverse('cohorts'))
 	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'coh_data': coh_data, 'plot_gallery': True }, context_instance=RequestContext(request))
 
-### Currently a very simple hack to tell everyone we don't have any necropsy data.  Placeholder, mostly.
-def cohort_necropsy(request, pk):
-	# Simple message
-	messages.info(request, 'No necropsy date available at this time.')
-	# and display the cohort detail page
-	cohort = Cohort.objects.get(pk=pk)
-	return render_to_response('matrr/cohort.html', {'cohort': cohort}, context_instance=RequestContext(request))
-
-
 def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 	try:
 		monkey = Monkey.objects.get(mky_id=monkey_id)
@@ -1097,7 +1088,7 @@ def tissue_verification(request):
 	# if request method != post and/or formset isNOT valid
 	# build a new formset
 	initial = []
-	tiv_list = TissueInventoryVerification.objects.all().order_by('tiv_inventory')
+	tiv_list = TissueInventoryVerification.objects.all().order_by('monkey').order_by('tissue_type').order_by('tiv_inventory')
 	for tiv in tiv_list:
 		try:
 			amount = tiv.tissue_request.get_amount()
@@ -1140,6 +1131,12 @@ def sendfile(request, id):
 	files.append((r, 'rud_file'))
 	r = CohortData.objects.filter(cod_file=id)
 	files.append((r, 'cod_file'))
+	r = MonkeyImage.objects.filter(thumbnail=id)
+	files.append((r, 'image'))
+	r = MonkeyImage.objects.filter(image=id)
+	files.append((r, 'thumbnail'))
+	r = MonkeyImage.objects.filter(html_fragment=id)
+	files.append((r, 'html_fragment'))
 
 #	this will work for all listed files
 	file = None
@@ -1167,4 +1164,15 @@ def sendfile(request, id):
 	response['Content-Disposition'] = 'attachment; filename="%s"' %  os.path.basename(file_url)
 	return response
 
+def matrr_image_example(request):
+	if settings.PRODUCTION:
+		raise Http404
 
+	monkey = Monkey.objects.get(mky_real_id=28477)
+	graph = 'monkey_bouts_drinks'
+	parameters = str({'from_date': str(datetime(2011,6,1)),'to_date': str(datetime(2011,8,4))})
+
+	monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title='sweet title', parameters=parameters)
+	# if a MonkeyImage has all 3 of monkey, method and title, it will generate the filefields (if not already present).
+	monkeyimage.save()
+	return render_to_response('MATRRImage-example.html', {'monkeyimage': monkeyimage,}, context_instance=RequestContext(request))
