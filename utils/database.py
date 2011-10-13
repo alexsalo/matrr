@@ -884,6 +884,46 @@ def load_edr_one_file(file_name, dex):
 				continue
 			edr.save()	
 			
-			
+def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
+
+	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
+	entries = os.listdir(file_dir)
+	bouts = list()
+	drinks = list()
+	print "Reading list of files in folder..."
+	for entry in entries:
+		file_name = os.path.join(file_dir, entry)
+		if not os.path.isdir(file_name):
+			m = re.match(r'([0-9]+_[0-9]+_[0-9]+)_(bout|drink)_', entry)
+			if not m:
+				print "Invalid file name format: %s" % entry
+				continue
+			try:
+				day = dt.strptime(m.group(1), "%Y_%m_%d")
+			except:
+				print "Invalid date format in file name: %s" % entry
+				continue
+			type = m.group(2)
+			dexs = DrinkingExperiment.objects.filter(cohort=cohort,dex_type=dex_type,dex_date=day)
+			if dexs.count() == 0:
+				print "DEX does not exist: %s" % entry
+				continue
+			if dexs.count() > 1:
+				print "More than one DEX: %s" % entry
+				continue
+			dex = dexs[0]
+			if type == 'bout':
+				bouts.append((dex, file_name))
+			else:
+				drinks.append((dex, file_name))
+	
+	for (dex, bout) in bouts:
+		print "Loading %s..." % bout
+		load_ebt_one_file(bout, dex, create_mtd)
+	for (dex, drink) in drinks:
+		print "Loading %s..." % drink
+		load_edr_one_file(drink, dex)
+				
+				
 			
 			
