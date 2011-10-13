@@ -820,6 +820,69 @@ def load_ebt_one_file(file_name, dex, create_mtd=False):
 				continue
 			ebt.save()
 			
+def load_edr_one_file(file_name, dex):
+	fields = (
+		'edr_number',
+		'edr_start_time',
+		'edr_end_time',
+		'edr_length',
+		'edr_idi',
+		'edr_volume'
+		)
+	FIELDS_INDEX = (2,8) #[1,7) => 1,2,3,4,5,6
+	MONKEY_DATA_INDEX = 0
+	BOUT_NUMBER_DATA_INDEX = 1
+	DRINK_NUMBER_DATA_INDEX = 2
+	
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line_number, line in enumerate(read_data[1:], start=1):
+			data = line.split("\t")
+			try:
+				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
+			except:
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				continue
+			
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
+			if mtds.count() == 0:
+				print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+				continue
+			if mtds.count() > 1:
+				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+				continue
+			mtd = mtds[0]
+			
+			ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data[BOUT_NUMBER_DATA_INDEX])
+			if ebts.count() == 0:
+				print ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
+				continue
+			if ebts.count() > 1:
+				print ERROR_OUTPUT % (line_number, "More than one EBT.", line)
+				continue
+			ebt = ebts[0]
+			
+			edrs = ExperimentDrink.objects.filter(ebt=ebt, edr_number = data[DRINK_NUMBER_DATA_INDEX])
+			if edrs.count() != 0:
+				print ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
+				continue
+			
+			edr = ExperimentDrink()
+			edr.ebt = ebt
+					
+			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+			
+			for i, field in enumerate(fields):
+				if data_fields[i] != '':
+					setattr(edr, field, data_fields[i])
+					
+			try:
+				edr.full_clean()
+				
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, e, line)
+				continue
+			edr.save()	
 			
 			
 			

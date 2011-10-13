@@ -594,7 +594,7 @@ class ExperimentDrink(models.Model):
 	edr_start_time = models.PositiveIntegerField('Start time [s]',blank=False, null=False)
 	edr_end_time = models.PositiveIntegerField('End time [s]',blank=False, null=False)
 	edr_length = models.PositiveIntegerField('Drink length [s]',blank=False, null=False)
-	edr_ibi = models.PositiveIntegerField('Inter-Drink Interval [s]',blank=True, null=True)
+	edr_idi = models.PositiveIntegerField('Inter-Drink Interval [s]',blank=True, null=True)
 	edr_volume = models.FloatField('Bout volume [ml]',blank=False, null=False)
 
 	def clean(self):
