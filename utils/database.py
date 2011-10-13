@@ -628,6 +628,9 @@ def create_Assay_Development_tree():
 		tissue_sample[0].tss_details = "MATRR does not track assay inventory."
 
 
+
+ERROR_OUTPUT = "%d %s # %s"
+
 @transaction.commit_on_success
 def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 	"""
@@ -700,13 +703,13 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 			data = line.split(',')
 			data_fields = data[2:38]
 			data_fields.extend(data[40:46])
-			error_output = "%d %s # %s"
+
 			#			create or get experiment - date, cohort, dex_type
 			try:
 				dex_date = dt.strptime(data[0], "%m/%d/%y")
 			#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
 			except Exception as e:
-				print error_output % (line_number, "Wrong date format", line)
+				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
 				continue
 			#			if dex_date != dex_check_date:
 			#				print error_output % (line_number, "Date check failed", line)
@@ -719,28 +722,28 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 				elif des.count() == 1:
 					de = des[0]
 				else:
-					print error_output % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
+					print ERROR_OUTPUT % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
 					continue
 
 			monkey_real_id = data[1]
 			monkey_real_id_check = data[39]
 			if monkey_real_id != monkey_real_id_check:
-				print error_output % (line_number, "Monkey real id check failed", line)
+				print ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
 				continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
 			except:
-				print error_output % (line_number, "Monkey does not exist", line)
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist", line)
 				continue
 
 			bad_data = data[47]
 			if bad_data != '':
-				print error_output % (line_number, "Bad data flag", line)
+				print ERROR_OUTPUT % (line_number, "Bad data flag", line)
 				continue
 
 			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment=de, monkey=monkey)
 			if mtds.count() != 0:
-				print error_output % (line_number, "MTD with monkey and date already exists.", line)
+				print ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
 				continue
 			mtd = MonkeyToDrinkingExperiment()
 			mtd.monkey = monkey
@@ -754,7 +757,70 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 			try:
 				mtd.clean_fields()
 			except Exception as e:
-				print error_output % (line_number, e, line)
+				print ERROR_OUTPUT % (line_number, e, line)
 				continue
 			mtd.save()
 
+def load_ebt_one_file(file_name, dex, create_mtd=False):
+	fields = (
+		'ebt_number',
+		'ebt_start_time',
+		'ebt_end_time',
+		'ebt_length',
+		'ebt_ibi',
+		'ebt_volume'
+		)
+	FIELDS_INDEX = (1,7) #[1,7) => 1,2,3,4,5,6
+	MONKEY_DATA_INDEX = 0
+	BOUT_NUMBER_DATA_INDEX = 1
+	
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line_number, line in enumerate(read_data[1:], start=1):
+			data = line.split("\t")
+			try:
+				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
+			except:
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				continue
+			
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
+			if mtds.count() == 0:
+				if create_mtd:
+					mtd = MonkeyToDrinkingExperiment(monkey=monkey, drinking_experiment=dex, mtd_etoh_intake=-1, mtd_veh_intake=-1, mtd_total_pellets=-1)
+					mtd.save()
+					mtd = [mtd,]
+					print "%d Creating MTD." % line_number
+				else:
+					print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+					continue
+			if mtds.count() > 1:
+				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+				continue
+			mtd = mtds[0]
+			
+			ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data[BOUT_NUMBER_DATA_INDEX])
+			if ebts.count() != 0:
+				print ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
+				continue
+			
+			ebt = ExperimentBout()
+			ebt.mtd = mtd			
+			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+			
+			for i, field in enumerate(fields):
+				if data_fields[i] != '':
+					setattr(ebt, field, data_fields[i])
+					
+			try:
+				ebt.full_clean()
+				
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, e, line)
+				continue
+			ebt.save()
+			
+			
+			
+			
+			

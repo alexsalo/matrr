@@ -486,69 +486,73 @@ class MonkeyToDrinkingExperiment(models.Model):
 class ExperimentBout(models.Model):
 	ebt_id = models.AutoField(primary_key=True)
 	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='bouts_set')
-	ebt_number = models.IntegerField('Bout number',blank=False, null=False)
-	ebt_start_time = models.IntegerField('Start time [s]',blank=False, null=False)
-	ebt_end_time = models.IntegerField('End time [s]',blank=False, null=False)
-	ebt_length = models.IntegerField('Bout length [s]',blank=False, null=False)
-	ebt_ibi = models.IntegerField('Inter-Bout Interval [s]', blank=True, null=True)
+	ebt_number = models.PositiveIntegerField('Bout number',blank=False, null=False)
+	ebt_start_time = models.PositiveIntegerField('Start time [s]',blank=False, null=False)
+	ebt_end_time = models.PositiveIntegerField('End time [s]',blank=False, null=False)
+	ebt_length = models.PositiveIntegerField('Bout length [s]',blank=False, null=False)
+	ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
 	ebt_volume = models.FloatField('Bout volume [ml]',blank=False, null=False)
 	
 	def clean(self):
 		if self.ebt_end_time < self.ebt_start_time:
 			raise ValidationError('End time cannot be lower that Start time')
 	
-		if self.ebt_end_time - self.ebt_start_time != self.ebt_length:
+		if self.ebt_end_time - self.ebt_start_time != self.ebt_length or self.ebt_end_time == self.ebt_start_time:
 			#		An isolated bout is given the length of 1 second, despite start time and end time being equal. 
 			if  self.ebt_end_time == self.ebt_start_time and self.ebt_length == 1:
 				return
-			raise ValidationError('Bout length does not correspond the Start and End time')
-
+			raise ValidationError('Bout length does not correspond the Start and End time. An isolated drink is given the length of 1 second, despite start time and end time being equal.')
+	class Meta:
+		db_table = 'ebt_experiment_bouts'
+		
 class ExperimentDrink(models.Model):
 	edr_id = models.AutoField(primary_key=True)
 	ebt = models.ForeignKey(ExperimentBout, null=False, db_column='ebt_id', related_name='drinks_set')
-	edr_number = models.IntegerField('Drink number', blank=False, null=False)
-	edr_start_time = models.IntegerField('Start time [s]',blank=False, null=False)
-	edr_end_time = models.IntegerField('End time [s]',blank=False, null=False)
-	edr_length = models.IntegerField('Drink length [s]',blank=False, null=False)
-	edr_ibi = models.IntegerField('Inter-Drink Interval [s]',blank=True, null=True)
+	edr_number = models.PositiveIntegerField('Drink number', blank=False, null=False)
+	edr_start_time = models.PositiveIntegerField('Start time [s]',blank=False, null=False)
+	edr_end_time = models.PositiveIntegerField('End time [s]',blank=False, null=False)
+	edr_length = models.PositiveIntegerField('Drink length [s]',blank=False, null=False)
+	edr_ibi = models.PositiveIntegerField('Inter-Drink Interval [s]',blank=True, null=True)
 	edr_volume = models.FloatField('Bout volume [ml]',blank=False, null=False)
 
 	def clean(self):
 		if self.edr_end_time < self.edr_start_time:
 			raise ValidationError('End time cannot be lower that Start time')
 	
-		if self.edr_end_time - self.edr_start_time != self.edr_length:
+		if self.edr_end_time - self.edr_start_time != self.edr_length or self.edr_end_time == self.edr_start_time:
 			#		An isolated drink is given the length of 1 second, despite start time and end time being equal. 
 			if  self.edr_end_time == self.edr_start_time and self.edr_length == 1:
 				return
-			raise ValidationError('Drink length does not correspond to Start and End time')
+			raise ValidationError('Drink length does not correspond to Start and End time. (An isolated drink is given the length of 1 second, despite start time and end time being equal.)')
+	class Meta:
+		db_table = 'edr_experiment_drinks'
 
 class ExperimentEvent(models.Model):
 	eev_id = models.AutoField(primary_key=True)
 	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='events_set')
 	eev_occurred = models.DateTimeField('Event occurred', blank=False, null=False)
 	eev_dose = models.FloatField('Dose', blank=False, null=False)
-	eev_fixed_time = models.IntegerField('Fixed time [s]', blank=False, null=False)
+	eev_fixed_time = models.PositiveIntegerField('Fixed time [s]', blank=False, null=False)
 	eev_experiment_state = models.IntegerField('Induction experiment state',validators = [MaxValueValidator(3),MinValueValidator(0)],blank=False, null=False)
 	eev_event_type = models.CharField('Event type (Time/Pellet/Drink)', max_length=1, choices=ExperimentEventType,blank=False, null=False)
-	eev_session_time = models.IntegerField('Session time [s]', blank=False, null=False)
-	eev_segement_time = models.IntegerField('Segment time [s]', blank=False, null=False)
-	eev_pellet_time = models.IntegerField('Pellet time [s]', blank=False, null=False)
+	eev_session_time = models.PositiveIntegerField('Session time [s]', blank=False, null=False)
+	eev_segement_time = models.PositiveIntegerField('Segment time [s]', blank=False, null=False)
+	eev_pellet_time = models.PositiveIntegerField('Pellet time [s]', blank=False, null=False)
 	eev_etoh_side = models.CharField('EtOH side (Right/Left)', max_length=1, choices=LeftRight, blank=True, null=True)
 	eev_etoh_volume = models.FloatField('EtOH volume of most recent drink', blank=True, null=True)
 	eev_etoh_total = models.FloatField('EtOH total volume', blank=True, null=True)
-	eev_etoh_elapsed_time_since_last = models.IntegerField('Elapsed time since last etOh drink [s]', blank=True, null=True)
+	eev_etoh_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last etOh drink [s]', blank=True, null=True)
 	eev_veh_side = models.CharField('H20 side (Right/Left)', max_length=1, choices=LeftRight, blank=True, null=True)
 	eev_veh_volume = models.FloatField('H20 volume of most recent drink', blank=True, null=True)
 	eev_veh_total = models.FloatField('H20 total volume',blank=True, null=True)
-	eev_veh_elapsed_time_since_last = models.IntegerField('Elapsed time since last H20 drink [s]',blank=True, null=True)
+	eev_veh_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last H20 drink [s]',blank=True, null=True)
 	eev_scale_string = models.CharField('Original string data from scale', max_length=50,blank=True, null=True)
 	eev_hand_in_bar = models.BooleanField('Hand in bar', blank=False, null=False)
 	eev_blank = models.IntegerField('This should be blank but I found some values', blank=True, null=True)
-	eev_etoh_bout_number = models.IntegerField('EtOh bout number', blank=True, null=True)
-	eev_etoh_drink_number = models.IntegerField('EtOh drink number', blank=True, null=True)
-	eev_veh_bout_number = models.IntegerField('H20 bout number', blank=True, null=True)
-	eev_veh_drink_number = models.IntegerField('H20 drink number',blank=True, null=True)
+	eev_etoh_bout_number = models.PositiveIntegerField('EtOh bout number', blank=True, null=True)
+	eev_etoh_drink_number = models.PositiveIntegerField('EtOh drink number', blank=True, null=True)
+	eev_veh_bout_number = models.PositiveIntegerField('H20 bout number', blank=True, null=True)
+	eev_veh_drink_number = models.PositiveIntegerField('H20 drink number',blank=True, null=True)
 	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
 	
 	class Meta:
