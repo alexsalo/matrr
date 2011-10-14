@@ -611,9 +611,11 @@ class ExperimentDrink(models.Model):
 
 class ExperimentEvent(models.Model):
 	eev_id = models.AutoField(primary_key=True)
+	eev_source_row_number = models.PositiveIntegerField('Source file row number', blank=False, null=False)
 	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='events_set')
 	eev_occurred = models.DateTimeField('Event occurred', blank=False, null=False)
 	eev_dose = models.FloatField('Dose', blank=False, null=False)
+	eev_panel = models.PositiveIntegerField('Panel', null=False, blank=False)
 	eev_fixed_time = models.PositiveIntegerField('Fixed time [s]', blank=False, null=False)
 	eev_experiment_state = models.IntegerField('Induction experiment state',validators = [MaxValueValidator(3),MinValueValidator(0)],blank=False, null=False)
 	eev_event_type = models.CharField('Event type (Time/Pellet/Drink)', max_length=1, choices=ExperimentEventType,blank=False, null=False)

@@ -1,6 +1,9 @@
 from matrr.models import *
 from django.db import transaction
 from datetime import datetime as dt
+#from datetime import date
+from datetime import timedelta
+import string
 import datetime
 import csv, re
 
@@ -829,7 +832,7 @@ def load_edr_one_file(file_name, dex):
 		'edr_idi',
 		'edr_volume'
 		)
-	FIELDS_INDEX = (2,8) #[1,7) => 1,2,3,4,5,6
+	FIELDS_INDEX = (2,8) #[2,8) => 2,3,4,5,6,7
 	MONKEY_DATA_INDEX = 0
 	BOUT_NUMBER_DATA_INDEX = 1
 	DRINK_NUMBER_DATA_INDEX = 2
@@ -924,6 +927,121 @@ def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 		print "Loading %s..." % drink
 		load_edr_one_file(drink, dex)
 				
-				
+
+def convert_excel_time_to_datetime(time_string):
+	DATE_BASE = dt(day=1, month=1, year=1904)
+	SECONDS_BASE = 24*60*60
+	data_days = int(time_string.split('.')[0])
+	date_time = float("0.%s" % time_string.split('.')[1])
+	seconds = round(date_time * SECONDS_BASE)
+	return DATE_BASE + timedelta(days=data_days, seconds=seconds)
+	
+def parse_left_right(side_string):
+	if string.count(side_string, "Left") != 0:
+		return LeftRight.Left
+	elif string.count(side_string, "Right") != 0:
+		return LeftRight.Right
+	else:
+		return None
+	
+def load_eev_one_file(file_name, dex):
+	
+	fields = (
+#		'eev_occurred',
+		'eev_dose',
+		'eev_panel',
+		'eev_fixed_time',
+		'eev_experiment_state',
+#		'eev_event_type',
+		'eev_session_time',
+		'eev_segement_time',
+		'eev_pellet_time',
+#		'eev_etoh_side',
+		'eev_etoh_volume',
+		'eev_etoh_total',
+		'eev_etoh_elapsed_time_since_last',
+#		'eev_veh_side',
+		'eev_veh_volume',
+		'eev_veh_total',
+		'eev_veh_elapsed_time_since_last',
+		'eev_scale_string',
+#		'eev_hand_in_bar',
+		'eev_blank',
+		'eev_etoh_bout_number',
+		'eev_etoh_drink_number',
+		'eev_veh_bout_number',
+		'eev_veh_drink_number',
+		'eev_timing_comment',		
+			)
+	FIELDS_INDEX = (
+				(2,6),
+				(9,12),
+				(13,16),
+				(17,21),
+				(22,28),
+				)
+	MONKEY_DATA_INDEX = 0
+	DATE_DATA_INDEX = 1
+	DATA_TYPE_T_INDEX = 8
+	DATA_TYPE_P_INDEX = 7
+	DATA_TYPE_D_INDEX = 6
+	DATA_ETOH_SIDE_INDEX = 11
+	DATA_VEH_SIDE_INDEX = 15
+	DATA_HIB_INDEX = 20
+	
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line_number, line in enumerate(read_data[1:], start=1):
+			data = line.split("\t")
+			try:
+				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
+			except:
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				continue
 			
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
+			if mtds.count() == 0:
+				print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+				continue
+			if mtds.count() > 1:
+				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+				continue
+			mtd = mtds[0]
+			
+			eev_date = convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
+			
+			eevs = ExperimentEvent.objects.filter(mtd=mtd, eev_source_row_number=line_number, eev_occurred=eev_date)
+			if eevs.count() != 0:
+				print ERROR_OUTPUT % (line_number, "EEV with MTD, date occurred and source row number already exists.", line)
+				continue
+			
+			eev = ExperimentEvent()
+			eev.mtd = mtd
+			eev.eev_occurred = eev_date
+			eev.eev_event_type = data[DATA_TYPE_D_INDEX] or data[DATA_TYPE_P_INDEX] or data[DATA_TYPE_T_INDEX]
+			eev.eev_veh_side = parse_left_right(data[DATA_VEH_SIDE_INDEX])
+			eev.eev_etoh_side = parse_left_right(data[DATA_ETOH_SIDE_INDEX])
+			eev.eev_source_row_number = line_number
+			
+			if data[DATA_HIB_INDEX] == 'X':
+				eev.eev_hand_in_bar = False
+			else:
+				eev.eev_hand_in_bar = True
+			
+			data_fields = list()
+			for low_ind, high_ind in FIELDS_INDEX:
+				data_fields.extend(data[low_ind:high_ind])
+		
+			for i, field in enumerate(fields):
+			
+				if data_fields[i] != '':
+					setattr(eev, field, data_fields[i])
+					
+			try:
+				eev.full_clean()
+				
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, e, line)
+				continue
+			eev.save()	
 			
