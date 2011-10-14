@@ -944,7 +944,7 @@ def parse_left_right(side_string):
 	else:
 		return None
 	
-def load_eev_one_file(file_name, dex):
+def load_eev_one_file(file_name, dex, create_mtd=False):
 	
 	fields = (
 #		'eev_occurred',
@@ -1001,12 +1001,19 @@ def load_eev_one_file(file_name, dex):
 			
 			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
 			if mtds.count() == 0:
-				print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
-				continue
+				if create_mtd:
+					mtd = MonkeyToDrinkingExperiment(monkey=monkey, drinking_experiment=dex, mtd_etoh_intake=-1, mtd_veh_intake=-1, mtd_total_pellets=-1)
+					mtd.save()
+					mtds = [mtd,]
+					print "%d Creating MTD." % line_number
+				else:
+					print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+					continue
 			if mtds.count() > 1:
 				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
 				continue
 			mtd = mtds[0]
+
 			
 			eev_date = convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
 			
@@ -1045,3 +1052,30 @@ def load_eev_one_file(file_name, dex):
 				continue
 			eev.save()	
 			
+def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
+
+	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
+	entries = os.listdir(file_dir)
+	print "Reading list of files in folder..."
+	for entry in entries:
+		file_name = os.path.join(file_dir, entry)
+		if not os.path.isdir(file_name):
+			m = re.match(r'([0-9]+_[0-9]+_[0-9]+)_', entry)
+			if not m:
+				print "Invalid file name format: %s" % entry
+				continue
+			try:
+				day = dt.strptime(m.group(1), "%Y_%m_%d")
+			except:
+				print "Invalid date format in file name: %s" % entry
+				continue
+			dexs = DrinkingExperiment.objects.filter(cohort=cohort,dex_type=dex_type,dex_date=day)
+			if dexs.count() == 0:
+				print "DEX does not exist: %s" % entry
+				continue
+			if dexs.count() > 1:
+				print "More than one DEX: %s" % entry
+				continue
+			dex = dexs[0]	
+			print "Loading %s..." % file_name
+			load_eev_one_file(file_name, dex, create_mtd)
