@@ -2,12 +2,20 @@ __author__ = 'Jon'
 import os
 from django import template
 from settings import STATIC_ROOT, STATICFILES_DIRS
-
+import string
 register = template.Library()
+
+
+@register.filter()
+def strip_activate(value):
+	
+	
+	if string.count(value, 'accounts/activate/') != 0:
+		return ""
+	return value
 
 @register.filter()
 def truncate_by_char(value, arg):
-	print "truncate"
 	try:
 		array = value.split(arg)
 	except Exception:
