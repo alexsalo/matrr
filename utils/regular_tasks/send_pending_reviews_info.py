@@ -10,7 +10,7 @@ from matrr.models import RequestStatus, Review
 from django.contrib.auth.models import Group
 
 
-def send_pending_request_info():
+def send_pending_reviews_info():
 	g = Group.objects.get(name='Committee')
 	users = g.user_set.all()
 	for user in users:
@@ -33,4 +33,4 @@ def send_pending_request_info():
 			
 	
 
-send_pending_request_info()
+send_pending_reviews_info()
