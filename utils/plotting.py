@@ -144,6 +144,73 @@ def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
 	else:
 		print "No drinking experiments for this cohort."
 
+def convert_timedelta(t):
+	if t:
+		return t.seconds
+	else:
+		return None
+
+def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
+	from matrr.models import Cohort, MonkeyToDrinkingExperiment, ExperimentEventType
+	from django.db.models import Min
+	from datetime import date
+	
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print("That's not a valid cohort.")
+			return
+	if not isinstance(from_date, date):
+		try:
+			#maybe its a str(datetime)
+			from_date = dateutil.parser.parse(from_date)
+		except:
+			#otherwise give up
+			print("Invalid paremeter, from_date")
+			return
+	if not isinstance(to_date, date):
+		try:
+			#maybe its a str(datetime)
+			to_date = dateutil.parser.parse(to_date)
+		except:
+			#otherwise give up
+			print("Invalid paremeter, from_date")
+			return
+	mtds = MonkeyToDrinkingExperiment.objects.all()
+	if from_date:
+		mtds = mtds.filter(drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		mtds = mtds.filter(drinking_experiment__dex_date__lte=to_date)
+	mtds = mtds.exclude(mtd_etoh_intake=-1)
+	if mtds.count() > 0:
+		dates = mtds.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
+	else:
+		return
+	
+	monkeys = dict()
+	for dex_date in dates:
+		mtds_by_day = mtds.filter(drinking_experiment__dex_date=dex_date)
+		
+		min_etoh_intake = mtds_by_day.aggregate(Min('mtd_etoh_intake'))['mtd_etoh_intake__min']
+		for mtd in mtds_by_day:
+			events = mtd.events_set.filter(eev_event_type=ExperimentEventType.Drink, eev_etoh_total__gte=min_etoh_intake).order_by('eev_etoh_total')
+			min_occurred = mtd.events_set.filter(eev_event_type=ExperimentEventType.Time).aggregate(Min('eev_occurred'))['eev_occurred__min']
+			if events.count() > 0:
+				event = events[0]
+				if mtd.monkey.mky_real_id not in monkeys:
+					monkeys[mtd.monkey.mky_real_id] = dict()
+				monkeys[mtd.monkey.mky_real_id][dex_date] = event.eev_occurred - min_occurred # elapsed time since the beginning of the experiment
+
+	for dex_date in dates:
+		for event_dates in monkeys.itervalues():
+			if dex_date not in event_dates:
+				event_dates[dex_date] = None
+	formatted_monkeys = dict()
+	for monkey, event_dates in monkeys.iteritems():
+		formatted_monkeys[monkey] = [ convert_timedelta(event_dates[key]) for key in sorted(event_dates.keys()) ]	
+	return formatted_monkeys
+
 COHORT_PLOTS = ((cohort_boxplot_m2de, "cohort_boxplot_m2de"),
 		 (cohort_boxplot_m2de_month, "cohort_boxplot_m2de_month"),
 )
