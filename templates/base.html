@@ -54,13 +54,14 @@
 						<li class='top'><a href="/">Home</a></li>
 
 					</ul>
+				
 					<ul>
 						<li class='top'>
 							<a href='{% url search %}'>Search</a>
 						</li>
 					</ul>
 					
-					{% if user.is_authenticated %}
+					{% if user.is_authenticated and user_is_verified %}
 						<ul>
 							<li class='top'><a href="{% url account-view %}">My Account</a></li>
 							<li class='drop-down'><a href="{% url order-list %}">My Orders</a></li>
@@ -151,7 +152,9 @@
 					<a href="{% url upcoming %}">View Upcoming Cohorts</a><br/>
 					<a href="{% url available %}">View Archival Cohorts</a><br/>
 					<a href="{% url cohorts %}">View All Cohorts</a><br/>
+					{% if user_is_member_of_tech_user %}
 					<a href="{% url assay %}">Request tissues for Assay Development</a><br/>
+					{% endif %}
 					<a href="{% url mta-upload %}">Upload an MTA</a><br/>
 					<a href="{% url account-view %}">Submit Research Updates</a><br/>
 					<a href="{% url publications %}">View Publications</a>
@@ -161,8 +164,10 @@
 					<div class='headline'>
 						FAQ
 					</div>
+					{% if user_is_verified %}
 					<a href="/faq/#SubmitRequest">Submitting requests</a><br/>
 					<a href="/faq/">more...</a>
+					{% endif %}
 				</div>
 
 				<div class='sidebar-block'>
@@ -170,7 +175,9 @@
 						Info
 					</div>
 					<a href="/benefits">Account Benefits</a><br/>
+					{% if user_is_verified %}
 					<a href="/fee">Tissue Fee Schedule</a><br/>
+					{% endif %}
 					<a href="/contact_us">Contact Us</a>
 				</div>
 

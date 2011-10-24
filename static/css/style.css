@@ -178,6 +178,14 @@ body {
     padding: 12px 0px 0px 6px;
 }
 
+.table-left-long {
+    width: 38%;
+    float: left;
+    padding: 12px 0px 4px 6px;
+}
+
+
+
 #table-right,
 .table-right {
     width: 58%;

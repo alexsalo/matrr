@@ -36,6 +36,8 @@ def group_membership(request):
 		for group in groups:
 			key = 'user_is_member_of_' + replace(lower(group.name), ' ', '_')
 			context[key] = True
+		if request.user.account.verified:
+			context['user_is_verified'] = True
 	return context
 
 

@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import Form, ModelForm, CharField, widgets, ModelMultipleChoiceField
+from django.forms import Form, ModelForm, CharField, widgets, ModelMultipleChoiceField, RegexField,Textarea
 from django.forms.models import inlineformset_factory
 from django.db import transaction
 from django.contrib.admin.widgets import FilteredSelectMultiple
@@ -9,16 +9,36 @@ import re
 
 from matrr.models import *
 from matrr.widgets import *
-
+from registration.forms import RegistrationForm
 
 FIX_CHOICES = (('', '---------'), ('Flash Frozen', 'Flash Frozen'),
 			   ('4% Paraformaldehyde', '4% Paraformaldehyde'),
 			   ('Fresh', 'Fresh'),
 			   ('other', 'other'))
 
+
 def trim_help_text(text):
 	return re.sub(r' Hold down .*$', '', text)
 
+
+class MatrrRegistrationForm(RegistrationForm):
+	first_name = CharField(label="First name", max_length=30)
+	last_name = CharField(label="Last name", max_length=30)
+	institution = CharField(label="Institution", max_length=60)
+	phone_number = RegexField(regex=r'^[0-9]{10}$',max_length=10,label="Phone number")
+	address = CharField(label="Address", widget=Textarea(attrs={'cols': '40', 'rows': '5'}), max_length=350)
+
+	def save(self, profile_callback=None):
+		user = super(MatrrRegistrationForm, self).save(profile_callback)
+		user.last_name = self.cleaned_data['last_name']
+		user.first_name = self.cleaned_data['first_name']
+		user.save()
+		account = Account(user=user)
+		account.institution = self.cleaned_data['institution']
+		account.phone_number = self.cleaned_data['phone_number']
+		account.address = self.cleaned_data['address']
+		account.save()
+		return user
 
 class TissueRequestForm(ModelForm):
 	def __init__(self, req_request, tissue, *args, **kwargs):

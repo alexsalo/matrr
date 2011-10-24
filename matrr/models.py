@@ -425,6 +425,10 @@ class Mta(models.Model):
 class Account(models.Model):
 	user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
 								editable=False, blank=True, primary_key=True)
+	address = models.TextField(blank=False)
+	phone_number = models.CharField(max_length=10,blank=False)
+	institution = models.CharField(max_length=60,blank=False)
+	verified = models.BooleanField(default=False, blank=False, null=False)
 	act_shipping_name = models.CharField(max_length=25, null=True, blank=True,
 										 help_text="Your shipping name is required because it may be different from your username.")
 	act_address1 = models.CharField(max_length=50, null=True, blank=True)

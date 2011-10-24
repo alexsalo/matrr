@@ -21,6 +21,12 @@ from process_latex import process_latex
 from django.db.models import Q
 from django.core.urlresolvers import reverse
 
+
+def registration(request):
+	from registration.views import register
+	print 'my_reg'
+	return register(request, form_class=MatrrRegistrationForm)
+
 def index_view(request):
 	index_context = {'event_list': Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name')[:5],
 					 'pub_list': Publication.objects.all().exclude(published_year=None).order_by('-published_year',

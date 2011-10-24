@@ -25,10 +25,13 @@ class EnforceLoginMiddleware(object):
 		Redirect anonymous users to login_url from non public urls
 		"""
 		try:
-			if request.user.is_anonymous():
+			if request.user.is_anonymous() or not request.user.account.verified:
 				for url in self.public_urls:
 					if url.match(request.path[1:]):
 						return None
+				if  not request.user.account.verified:
+					return HttpResponseRedirect('/not-verified')
 				return HttpResponseRedirect("%s?next=%s" % (self.login_url, request.path))
+			
 		except AttributeError: #  I have no idea when this could happen.  *shrug*
 			return HttpResponseRedirect("%s?next=%s" % (self.login_url, request.path))
