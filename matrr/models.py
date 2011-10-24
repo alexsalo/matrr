@@ -278,9 +278,10 @@ class MATRRImage(models.Model):
 		self.thumbnail = File(open(thumbnail, 'r'))
 
 		# generate the html fragment for the image and save it
-		html_frag_path = self._build_html_fragment(data_map)
-		html_frag = open(html_frag_path, 'r')
-		self.html_fragment = File(html_frag)
+		if data_map != "NO MAP":
+			html_frag_path = self._build_html_fragment(data_map)
+			html_frag = open(html_frag_path, 'r')
+			self.html_fragment = File(html_frag)
 
 		self.save()
 
@@ -321,7 +322,7 @@ class MATRRImage(models.Model):
 
 
 	def verify_user_access_to_file(self, user):
-		return user.is_authenticated()
+		return user.is_authenticated() and user.account.verified
 
 	def frag(self):
 		return os.path.basename(self.html_fragment.name)
@@ -341,7 +342,7 @@ class MonkeyImage(MATRRImage):
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
-		if self.parameters == 'defaults':
+		if self.parameters == 'defaults' or self.parameters == '':
 			mpl_figure, data_map = spiffy_method(self.monkey)
 		else:
 			params = ast.literal_eval(self.parameters)
@@ -362,7 +363,7 @@ class MonkeyImage(MATRRImage):
 	def save(self, *args, **kwargs):
 		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.monkey and self.method and self.title:
-			if not (self.image and self.thumbnail and self.html_fragment):
+			if not self.image:
 				self._construct_filefields()
 
 	def __unicode__(self):

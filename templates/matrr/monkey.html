@@ -57,21 +57,19 @@
 	</table>
 	<br>
 	<div class="clearfix">
-	{% with images=monkey|monkey_images:"all" %}
-		{% if images %}
-			<div class='mini-headline'>Monkey Plots</div>
-			{% for dir, title in images.items %}
-				<div class="image_container">
-					<div class="image_thumbnail left">
-						<center>{{ title }}</center>
-						<a rel="plot_gallery" title="{{ title }}" href="{{ STATIC_URL }}images/{{ dir }}/{{ monkey }}.png" target="_blank">
-							<img src="{{ STATIC_URL }}images/{{ dir }}/{{ monkey}}-thumb.jpg">
-						</a>
-					</div>
+	{% if images %}
+		<div class='mini-headline'>Monkey Plots</div>
+		{% for mig in images %}
+			<div class="image_container">
+				<div class="image_thumbnail left">
+					<center>{{ mig.title }}</center>
+					<a rel="plot_gallery" title="{{ mig.title }}" href="{{ mig.image.url }}" target="_blank">
+						<img src="{{ mig.thumbnail.url }}">
+					</a>
 				</div>
-			{% endfor %}
-		{% endif %}
-	{% endwith %}
+			</div>
+		{% endfor %}
+	{% endif %}
 	</div>
 
 {% endblock %}

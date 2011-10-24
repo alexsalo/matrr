@@ -8,6 +8,7 @@ from pylab import *
 from settings import MATRR_STATIC_STRING
 from os import path, makedirs
 from datetime import datetime
+from matrr.models import *
 import dateutil
 
 ###############  matplotlibrc settings
@@ -462,7 +463,7 @@ def monkey_boxplot_pellet(monkey=None):
 
 	return fig, 'NO MAP'
 
-def monkey_boxplot_veh(monkey=None, monkey_image=None):
+def monkey_boxplot_veh(monkey=None):
 	from matrr.models import Monkey
 	from matrr.models import MonkeyToDrinkingExperiment
 
@@ -517,7 +518,7 @@ def monkey_boxplot_veh(monkey=None, monkey_image=None):
 
 	return fig, 'NO MAP'
 
-def monkey_boxplot_weight(monkey=None, monkey_image=None):
+def monkey_boxplot_weight(monkey=None):
 	from matrr.models import Monkey
 	from matrr.models import MonkeyToDrinkingExperiment
 

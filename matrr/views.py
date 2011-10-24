@@ -105,7 +105,8 @@ def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'plot_gallery':True},
+	images = MonkeyImage.objects.filter(monkey=monkey)
+	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery':True},
 							  context_instance=RequestContext(request))
 
 
@@ -116,7 +117,8 @@ def monkey_detail_view(request, monkey_id):
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'plot_gallery': True},
+	images = MonkeyImage.objects.filter(monkey=monkey)
+	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
 
 
