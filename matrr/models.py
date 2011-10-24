@@ -273,9 +273,10 @@ class MATRRImage(models.Model):
 		from django.core.files.base import File
 
 		# export the image and thumbnail to a temp folder and save them to the self.ImageFields
-		image, thumbnail = self._draw_image(mpl_figure)
-		self.image = File(open(image, 'r'))
-		self.thumbnail = File(open(thumbnail, 'r'))
+		if mpl_figure:
+			image, thumbnail = self._draw_image(mpl_figure)
+			self.image = File(open(image, 'r'))
+			self.thumbnail = File(open(thumbnail, 'r'))
 
 		# generate the html fragment for the image and save it
 		if data_map != "NO MAP":
