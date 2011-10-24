@@ -1,0 +1,220 @@
+{% spaceless %}
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+			"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+	<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="chrome=1">	
+<!--		<meta http-equiv='Content-Type' content='text/html; charset=utf-8'/> -->
+		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/layout.css"/>
+		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/style.css"/>
+		{% if plot_gallery %}
+			<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+			
+			<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.colorbox.js"></script>
+			<script type="text/javascript" src="{{ STATIC_URL }}js/plot_gallery.js"></script>
+			<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/colorbox.css"/>
+		{% endif %}
+
+
+		<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-ui-1.8.11.custom.min.js"></script>
+		<script type="text/javascript" src="{{ STATIC_URL }}js/main.js"></script>
+		{% block extra_js %}{% endblock %}
+
+		<link rel="shortcut icon" href="{{ STATIC_URL }}images/matrr_favicon.ico"/>
+		<title>{% block title %}{% endblock %}</title>
+
+	</head>
+
+	<body>
+	<!-- Header div -->
+	<div class='header'>
+		<div class='header-content clearfix'>
+			<div class='left'>
+				<a href='/'><img src="{{ STATIC_URL }}images/MATRR_logo.png" alt="MATRR logo"/></a>
+			</div>
+			<div class='right'>
+				{% if not user.is_authenticated %}
+					<a style='color: #FAF9ED' href="{% url auth_login %}?next={{ request.path }}">Login</a> |
+					<a style='color: #FAF9ED;' href="{% url registration_register %}?next={{ request.path }}">
+						Create an Account</a>
+				{% else %}
+					Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{% url auth_logout %}">Logout</a>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+	<!-- Menu div -->
+	<div class='navigation clearfix'>
+		<div class='navigation-content'>
+			<div class="nav clearfix">
+				{% block nav-list %}
+					<ul>
+						<li class='top'><a href="/">Home</a></li>
+
+					</ul>
+					<ul>
+						<li class='top'>
+							<a href='{% url search %}'>Search</a>
+						</li>
+					</ul>
+					
+					{% if user.is_authenticated %}
+						<ul>
+							<li class='top'><a href="{% url account-view %}">My Account</a></li>
+							<li class='drop-down'><a href="{% url order-list %}">My Orders</a></li>
+						</ul>
+					{% endif %}
+					
+					{% if user_is_member_of_committee or user_is_member_of_uberuser %}
+						<ul>
+							<li class='top'>
+								<a href="{% url review-list %}">My Reviews</a>
+							</li>
+							{% if user_is_member_of_uberuser %}
+								<li class='drop-down'><a href="{% url review-overview-list %}">Overview</a></li>
+								<li class='drop-down'><a href="{% url review-history-list %}">History</a></li>
+							{% endif %}
+						</ul>
+					{% endif %}
+					
+					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
+						<ul>
+							<li class='top'>
+								<a href='{% url shipping-overview %}'>Shipping</a>
+							</li>
+						</ul>
+					{% endif %}
+
+					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
+						<ul>
+							<li class='top'>
+								<a href='https://gleek.ecs.baylor.edu/wiki/index.php?title=Issue_Tracker'>Issue Tracker</a>
+							</li>
+						</ul>
+					{% endif %}			
+					
+					{% if user.is_staff %}
+						<ul>
+							<li class='top'><a href="/admin/">Admin</a></li>
+							<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
+						</ul>
+					{% endif %}
+					
+					{#      {% if user.is_staff %}#}
+					{#      <ul>#}
+					{#          <li class='top'><a href="/qc/">Quality Control</a></li>#}
+					{#          <li class='drop-down'><a href="/upload_rna/">Upload RNA</a></li>#}
+					{#          <li class='drop-down'><a href="/view_rna/">View RNA</a></li>#}
+					{#      </ul>#}
+					{#      {% endif %}#}
+				{% endblock %}
+			</div>
+
+		</div>
+	</div>
+	<!-- Body div -->
+	<div class='page-content clearfix'>
+
+
+		<!-- Sidebar div -->
+		<div class='sidebar clearfix'>
+			{% block sidebar %}
+				{% block login %}
+					<div class='sidebar-block'>
+						{% if not user.is_authenticated %}
+							<div class='headline'>
+								Login
+							</div>
+							{% include 'login.form' %}
+							<a href="{% url registration_register %}">Create an Account</a>
+						{% else %}
+							Welcome {{ user.username }}
+
+						{% endif %}
+					</div>
+				{% endblock %}
+
+				{% block cart %}
+					{% if user.is_authenticated %}
+						{% if cart_items != None %}
+							{% include 'matrr/cart/cart.html' %}
+						{% endif %}
+					{% endif %}
+				{% endblock %}
+
+				<div class='sidebar-block'>
+					<div class='headline'>
+						Quick Links
+					</div>
+					<a href="{% url upcoming %}">View Upcoming Cohorts</a><br/>
+					<a href="{% url available %}">View Archival Cohorts</a><br/>
+					<a href="{% url cohorts %}">View All Cohorts</a><br/>
+					<a href="{% url assay %}">Request tissues for Assay Development</a><br/>
+					<a href="{% url mta-upload %}">Upload an MTA</a><br/>
+					<a href="{% url account-view %}">Submit Research Updates</a><br/>
+					<a href="{% url publications %}">View Publications</a>
+				</div>
+
+				<div class='sidebar-block'>
+					<div class='headline'>
+						FAQ
+					</div>
+					<a href="/faq/#SubmitRequest">Submitting requests</a><br/>
+					<a href="/faq/">more...</a>
+				</div>
+
+				<div class='sidebar-block'>
+					<div class='headline'>
+						Info
+					</div>
+					<a href="/benefits">Account Benefits</a><br/>
+					<a href="/fee">Tissue Fee Schedule</a><br/>
+					<a href="/contact_us">Contact Us</a>
+				</div>
+
+				{% block warning %}{% endblock %}
+
+			{% endblock %}
+		</div>
+
+		<!-- Content div -->
+		<div class='content clearfix'>
+
+		<!-- Message div -->
+		<div class='messages clearfix'>
+			{% if unsupported_browser %}
+				<div class="warning">Your browser is not supported by MATRR. <a href="/browser/">Click here for details.</a></div>
+			{% endif %}
+			{% if messages %}
+				{% for message in messages %}
+					<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+				{% endfor %}
+			{% endif %}
+		</div>
+			{% block content %}{% endblock %}
+
+			<!-- End of content div -->
+		</div>
+
+
+	</div>
+	<!-- Footer div -->
+	<div class='footer clearfix'>
+		{% block footer %}
+
+			<div class='footer-line'></div>
+			<div class='footer clearfix'>
+				The Monkey Alcohol and Tissue Research Resource (MATRR) is supported by <a href="http://www.niaaa.nih.gov">NIAAA</a> as an R24. This site is maintained by <a
+					href="mailto:erich_baker@baylor.edu">Erich Baker</a>. For applicable policies see our <a href="/privacy">privacy</a>, <a href="/data">data sharing</a>, and <a
+					href="/usage">usage</a> documents.
+			</div>
+
+		{% endblock %}
+	</div>
+
+	</body>
+
+	</html>
+
+{% endspaceless %}

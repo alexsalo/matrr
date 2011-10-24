@@ -1,6 +1,5 @@
 __author__ = 'soltau'
-
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls.defaults import patterns, include, url
 from django.views.generic import DetailView, ListView
 from matrr.views import *
 import settings
@@ -99,13 +98,12 @@ urlpatterns += patterns('matrr.views',
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
 	url(r'^verification/?$', tissue_verification, name='verification'),
+
+	# Data analysis tools
+	url(r'^analysis/?$', analysis_index, name='analysis_index'),
+
 	)
 
-if settings.DEVELOPMENT:
-    urlpatterns += patterns('matrr.views',
-		url(r'^test/$', matrr_image_example),
-	)
-    
 if settings.DEVELOPMENT:
 #if False:
     from django.views.static import serve
