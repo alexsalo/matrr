@@ -28,3 +28,4 @@ urlpatterns += staticfiles_urlpatterns()
 urlpatterns += patterns('',
   url( r'', include('matrr.urls') ),
 )
+handler500 = 'matrr.views.matrr_handler500'

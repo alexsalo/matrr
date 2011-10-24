@@ -60,6 +60,10 @@ def cohorts_view_all(request):
 def cohorts_view_assay(request):
 	return redirect(reverse('tissue-shop-landing', args =[Cohort.objects.get(coh_cohort_name__icontains="assay").pk,]))
 
+def matrr_handler500(request):
+	from django.core.context_processors import static
+	return render_to_response('500.html', static(request),context_instance=RequestContext(request)
+							  )
 def __cohorts_view(request, cohorts, template_name):
 
 	## Paginator stuff
