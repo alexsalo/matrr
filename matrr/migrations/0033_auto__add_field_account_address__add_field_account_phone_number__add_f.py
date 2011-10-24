@@ -9,13 +9,13 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         
         # Adding field 'Account.address'
-        db.add_column('act_account', 'address', self.gf('django.db.models.fields.TextField')(default=''), keep_default=False)
+        db.add_column('act_account', 'address', self.gf('django.db.models.fields.TextField')(default='address'), keep_default=False)
 
         # Adding field 'Account.phone_number'
-        db.add_column('act_account', 'phone_number', self.gf('django.db.models.fields.CharField')(default='', max_length=10), keep_default=False)
+        db.add_column('act_account', 'phone_number', self.gf('django.db.models.fields.CharField')(default='111111111', max_length=10), keep_default=False)
 
         # Adding field 'Account.institution'
-        db.add_column('act_account', 'institution', self.gf('django.db.models.fields.CharField')(default='', max_length=60), keep_default=False)
+        db.add_column('act_account', 'institution', self.gf('django.db.models.fields.CharField')(default='institution', max_length=60), keep_default=False)
 
 
     def backwards(self, orm):
