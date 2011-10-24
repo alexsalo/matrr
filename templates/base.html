@@ -35,8 +35,9 @@
 			</div>
 			<div class='right'>
 				{% if not user.is_authenticated %}
-					<a style='color: #FAF9ED' href="{% url auth_login %}?next={{ request.path }}">Login</a> |
-					<a style='color: #FAF9ED;' href="{% url registration_register %}?next={{ request.path }}">
+					{% load basic_filters %}
+					<a style='color: #FAF9ED' href="{% url auth_login %}?next={{ request.path|strip_activate }}">Login</a> |
+					<a style='color: #FAF9ED;' href="{% url registration_register %}?next={{ request.path|strip_activate }}">
 						Create an Account</a>
 				{% else %}
 					Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{% url auth_logout %}">Logout</a>

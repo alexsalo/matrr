@@ -10,6 +10,7 @@ from matrr.models import Shipment, Request
 from datetime import date, timedelta
 from django.contrib.auth.models import User
 
+
 def urge_progress_reports():
     today = date.today()
     days90 = timedelta(days = 90)

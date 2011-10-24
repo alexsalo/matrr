@@ -1,6 +1,9 @@
 from matrr.models import *
 from django.db import transaction
 from datetime import datetime as dt
+#from datetime import date
+from datetime import timedelta
+import string
 import datetime
 import csv, re
 
@@ -628,6 +631,9 @@ def create_Assay_Development_tree():
 		tissue_sample[0].tss_details = "MATRR does not track assay inventory."
 
 
+
+ERROR_OUTPUT = "%d %s # %s"
+
 @transaction.commit_on_success
 def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 	"""
@@ -700,13 +706,13 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 			data = line.split(',')
 			data_fields = data[2:38]
 			data_fields.extend(data[40:46])
-			error_output = "%d %s # %s"
+
 			#			create or get experiment - date, cohort, dex_type
 			try:
 				dex_date = dt.strptime(data[0], "%m/%d/%y")
 			#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
 			except Exception as e:
-				print error_output % (line_number, "Wrong date format", line)
+				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
 				continue
 			#			if dex_date != dex_check_date:
 			#				print error_output % (line_number, "Date check failed", line)
@@ -719,28 +725,28 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 				elif des.count() == 1:
 					de = des[0]
 				else:
-					print error_output % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
+					print ERROR_OUTPUT % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
 					continue
 
 			monkey_real_id = data[1]
 			monkey_real_id_check = data[39]
 			if monkey_real_id != monkey_real_id_check:
-				print error_output % (line_number, "Monkey real id check failed", line)
+				print ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
 				continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
 			except:
-				print error_output % (line_number, "Monkey does not exist", line)
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist", line)
 				continue
 
 			bad_data = data[47]
 			if bad_data != '':
-				print error_output % (line_number, "Bad data flag", line)
+				print ERROR_OUTPUT % (line_number, "Bad data flag", line)
 				continue
 
 			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment=de, monkey=monkey)
 			if mtds.count() != 0:
-				print error_output % (line_number, "MTD with monkey and date already exists.", line)
+				print ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
 				continue
 			mtd = MonkeyToDrinkingExperiment()
 			mtd.monkey = monkey
@@ -754,7 +760,322 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 			try:
 				mtd.clean_fields()
 			except Exception as e:
-				print error_output % (line_number, e, line)
+				print ERROR_OUTPUT % (line_number, e, line)
 				continue
 			mtd.save()
 
+def load_ebt_one_file(file_name, dex, create_mtd=False):
+	fields = (
+		'ebt_number',
+		'ebt_start_time',
+		'ebt_end_time',
+		'ebt_length',
+		'ebt_ibi',
+		'ebt_volume'
+		)
+	FIELDS_INDEX = (1,7) #[1,7) => 1,2,3,4,5,6
+	MONKEY_DATA_INDEX = 0
+	BOUT_NUMBER_DATA_INDEX = 1
+	
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line_number, line in enumerate(read_data[1:], start=1):
+			data = line.split("\t")
+			try:
+				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
+			except:
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				continue
+			
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
+			if mtds.count() == 0:
+				if create_mtd:
+					mtd = MonkeyToDrinkingExperiment(monkey=monkey, drinking_experiment=dex, mtd_etoh_intake=-1, mtd_veh_intake=-1, mtd_total_pellets=-1)
+					mtd.save()
+					mtd = [mtd,]
+					print "%d Creating MTD." % line_number
+				else:
+					print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+					continue
+			if mtds.count() > 1:
+				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+				continue
+			mtd = mtds[0]
+			
+			ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data[BOUT_NUMBER_DATA_INDEX])
+			if ebts.count() != 0:
+				print ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
+				continue
+			
+			ebt = ExperimentBout()
+			ebt.mtd = mtd			
+			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+			
+			for i, field in enumerate(fields):
+				if data_fields[i] != '':
+					setattr(ebt, field, data_fields[i])
+					
+			try:
+				ebt.full_clean()
+				
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, e, line)
+				continue
+			ebt.save()
+			
+def load_edr_one_file(file_name, dex):
+	fields = (
+		'edr_number',
+		'edr_start_time',
+		'edr_end_time',
+		'edr_length',
+		'edr_idi',
+		'edr_volume'
+		)
+	FIELDS_INDEX = (2,8) #[2,8) => 2,3,4,5,6,7
+	MONKEY_DATA_INDEX = 0
+	BOUT_NUMBER_DATA_INDEX = 1
+	DRINK_NUMBER_DATA_INDEX = 2
+	
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line_number, line in enumerate(read_data[1:], start=1):
+			data = line.split("\t")
+			try:
+				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
+			except:
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				continue
+			
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
+			if mtds.count() == 0:
+				print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+				continue
+			if mtds.count() > 1:
+				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+				continue
+			mtd = mtds[0]
+			
+			ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data[BOUT_NUMBER_DATA_INDEX])
+			if ebts.count() == 0:
+				print ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
+				continue
+			if ebts.count() > 1:
+				print ERROR_OUTPUT % (line_number, "More than one EBT.", line)
+				continue
+			ebt = ebts[0]
+			
+			edrs = ExperimentDrink.objects.filter(ebt=ebt, edr_number = data[DRINK_NUMBER_DATA_INDEX])
+			if edrs.count() != 0:
+				print ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
+				continue
+			
+			edr = ExperimentDrink()
+			edr.ebt = ebt
+					
+			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+			
+			for i, field in enumerate(fields):
+				if data_fields[i] != '':
+					setattr(edr, field, data_fields[i])
+					
+			try:
+				edr.full_clean()
+				
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, e, line)
+				continue
+			edr.save()	
+			
+def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
+
+	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
+	entries = os.listdir(file_dir)
+	bouts = list()
+	drinks = list()
+	print "Reading list of files in folder..."
+	for entry in entries:
+		file_name = os.path.join(file_dir, entry)
+		if not os.path.isdir(file_name):
+			m = re.match(r'([0-9]+_[0-9]+_[0-9]+)_(bout|drink)_', entry)
+			if not m:
+				print "Invalid file name format: %s" % entry
+				continue
+			try:
+				day = dt.strptime(m.group(1), "%Y_%m_%d")
+			except:
+				print "Invalid date format in file name: %s" % entry
+				continue
+			type = m.group(2)
+			dexs = DrinkingExperiment.objects.filter(cohort=cohort,dex_type=dex_type,dex_date=day)
+			if dexs.count() == 0:
+				print "DEX does not exist: %s" % entry
+				continue
+			if dexs.count() > 1:
+				print "More than one DEX: %s" % entry
+				continue
+			dex = dexs[0]
+			if type == 'bout':
+				bouts.append((dex, file_name))
+			else:
+				drinks.append((dex, file_name))
+	
+	for (dex, bout) in bouts:
+		print "Loading %s..." % bout
+		load_ebt_one_file(bout, dex, create_mtd)
+	for (dex, drink) in drinks:
+		print "Loading %s..." % drink
+		load_edr_one_file(drink, dex)
+				
+
+def convert_excel_time_to_datetime(time_string):
+	DATE_BASE = dt(day=1, month=1, year=1904)
+	SECONDS_BASE = 24*60*60
+	data_days = int(time_string.split('.')[0])
+	date_time = float("0.%s" % time_string.split('.')[1])
+	seconds = round(date_time * SECONDS_BASE)
+	return DATE_BASE + timedelta(days=data_days, seconds=seconds)
+	
+def parse_left_right(side_string):
+	if string.count(side_string, "Left") != 0:
+		return LeftRight.Left
+	elif string.count(side_string, "Right") != 0:
+		return LeftRight.Right
+	else:
+		return None
+	
+def load_eev_one_file(file_name, dex, create_mtd=False):
+	
+	fields = (
+#		'eev_occurred',
+		'eev_dose',
+		'eev_panel',
+		'eev_fixed_time',
+		'eev_experiment_state',
+#		'eev_event_type',
+		'eev_session_time',
+		'eev_segement_time',
+		'eev_pellet_time',
+#		'eev_etoh_side',
+		'eev_etoh_volume',
+		'eev_etoh_total',
+		'eev_etoh_elapsed_time_since_last',
+#		'eev_veh_side',
+		'eev_veh_volume',
+		'eev_veh_total',
+		'eev_veh_elapsed_time_since_last',
+		'eev_scale_string',
+#		'eev_hand_in_bar',
+		'eev_blank',
+		'eev_etoh_bout_number',
+		'eev_etoh_drink_number',
+		'eev_veh_bout_number',
+		'eev_veh_drink_number',
+		'eev_timing_comment',		
+			)
+	FIELDS_INDEX = (
+				(2,6),
+				(9,12),
+				(13,16),
+				(17,21),
+				(22,28),
+				)
+	MONKEY_DATA_INDEX = 0
+	DATE_DATA_INDEX = 1
+	DATA_TYPE_T_INDEX = 8
+	DATA_TYPE_P_INDEX = 7
+	DATA_TYPE_D_INDEX = 6
+	DATA_ETOH_SIDE_INDEX = 11
+	DATA_VEH_SIDE_INDEX = 15
+	DATA_HIB_INDEX = 20
+	
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line_number, line in enumerate(read_data[1:], start=1):
+			data = line.split("\t")
+			try:
+				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
+			except:
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				continue
+			
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
+			if mtds.count() == 0:
+				if create_mtd:
+					mtd = MonkeyToDrinkingExperiment(monkey=monkey, drinking_experiment=dex, mtd_etoh_intake=-1, mtd_veh_intake=-1, mtd_total_pellets=-1)
+					mtd.save()
+					mtds = [mtd,]
+					print "%d Creating MTD." % line_number
+				else:
+					print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+					continue
+			if mtds.count() > 1:
+				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+				continue
+			mtd = mtds[0]
+
+			
+			eev_date = convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
+			
+			eevs = ExperimentEvent.objects.filter(mtd=mtd, eev_source_row_number=line_number, eev_occurred=eev_date)
+			if eevs.count() != 0:
+				print ERROR_OUTPUT % (line_number, "EEV with MTD, date occurred and source row number already exists.", line)
+				continue
+			
+			eev = ExperimentEvent()
+			eev.mtd = mtd
+			eev.eev_occurred = eev_date
+			eev.eev_event_type = data[DATA_TYPE_D_INDEX] or data[DATA_TYPE_P_INDEX] or data[DATA_TYPE_T_INDEX]
+			eev.eev_veh_side = parse_left_right(data[DATA_VEH_SIDE_INDEX])
+			eev.eev_etoh_side = parse_left_right(data[DATA_ETOH_SIDE_INDEX])
+			eev.eev_source_row_number = line_number
+			
+			if data[DATA_HIB_INDEX] == 'X':
+				eev.eev_hand_in_bar = False
+			else:
+				eev.eev_hand_in_bar = True
+			
+			data_fields = list()
+			for low_ind, high_ind in FIELDS_INDEX:
+				data_fields.extend(data[low_ind:high_ind])
+		
+			for i, field in enumerate(fields):
+			
+				if data_fields[i] != '':
+					setattr(eev, field, data_fields[i])
+					
+			try:
+				eev.full_clean()
+				
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, e, line)
+				continue
+			eev.save()	
+			
+def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
+
+	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
+	entries = os.listdir(file_dir)
+	print "Reading list of files in folder..."
+	for entry in entries:
+		file_name = os.path.join(file_dir, entry)
+		if not os.path.isdir(file_name):
+			m = re.match(r'([0-9]+_[0-9]+_[0-9]+)_', entry)
+			if not m:
+				print "Invalid file name format: %s" % entry
+				continue
+			try:
+				day = dt.strptime(m.group(1), "%Y_%m_%d")
+			except:
+				print "Invalid date format in file name: %s" % entry
+				continue
+			dexs = DrinkingExperiment.objects.filter(cohort=cohort,dex_type=dex_type,dex_date=day)
+			if dexs.count() == 0:
+				print "DEX does not exist: %s" % entry
+				continue
+			if dexs.count() > 1:
+				print "More than one DEX: %s" % entry
+				continue
+			dex = dexs[0]	
+			print "Loading %s..." % file_name
+			load_eev_one_file(file_name, dex, create_mtd)
