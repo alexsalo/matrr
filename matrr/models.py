@@ -431,17 +431,29 @@ class Account(models.Model):
 	verified = models.BooleanField(default=False, blank=False, null=False)
 	act_shipping_name = models.CharField(max_length=25, null=True, blank=True,
 										 help_text="Your shipping name is required because it may be different from your username.")
-	act_address1 = models.CharField(max_length=50, null=True, blank=True)
-	act_address2 = models.CharField(max_length=50, null=True, blank=True)
-	act_city = models.CharField(max_length=25, null=True, blank=True)
-	act_state = models.CharField(max_length=2, null=True, blank=True)
-	act_zip = models.CharField(max_length=10, null=True, blank=True)
-	act_country = models.CharField(max_length=25, null=True, blank=True)
+	act_address1 = models.CharField('Shipping address 1',max_length=50, null=True, blank=True)
+	act_address2 = models.CharField('Shipping address 2',max_length=50, null=True, blank=True)
+	act_city = models.CharField('Shipping city',max_length=25, null=True, blank=True)
+	act_state = models.CharField('Shipping state', max_length=2, null=True, blank=True)
+	act_zip = models.CharField('Shipping ZIP', max_length=10, null=True, blank=True)
+	act_country = models.CharField('Shipping country', max_length=25, null=True, blank=True)
 	act_fedex = models.CharField('FedEx', max_length=9, null=True, blank=True,
 								 help_text="Your 9-digit FedEx Account number is required to ship tissues.")
-
+	username = ''
+	first_name = ''
+	last_name = ''
+	email= ''
+	
+	def __init__(self, *args, **kwargs):
+		super(Account, self).__init__(*args, **kwargs)
+		if self.user:
+			self.username = self.user.username
+			self.first_name = self.user.first_name
+			self.last_name = self.user.last_name
+			self.email = self.user.email
+	
 	def __unicode__(self):
-		return str(self.user.id)
+		return str(self.user.username) + ": " + self.user.first_name + " " + self.user.last_name  
 
 	class Meta:
 		db_table = 'act_account'

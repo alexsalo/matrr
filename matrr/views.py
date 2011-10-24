@@ -24,7 +24,6 @@ from django.core.urlresolvers import reverse
 
 def registration(request):
 	from registration.views import register
-	print 'my_reg'
 	return register(request, form_class=MatrrRegistrationForm)
 
 def index_view(request):
