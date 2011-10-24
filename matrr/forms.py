@@ -24,10 +24,10 @@ def trim_help_text(text):
 #from django.forms.util import ErrorList
 # 
 class OtOAcountForm(ModelForm):
-	username = CharField()
-	first_name = CharField()
-	last_name = CharField()
-	email = EmailField()
+	username = CharField(required = False)
+	first_name = CharField(required = False)
+	last_name = CharField(required = False)
+	email = EmailField(required = False)
 	
 #	This would be needed if we want to edit user through account + save data from fields
 #	def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
