@@ -1,4 +1,6 @@
 #encoding=utf-8
+import os, ast
+os.environ['HOME'] = "/web/www/html"
 from django.db import models
 from django.contrib.auth.models import User, Group
 from django.db.models.query import QuerySet
@@ -9,7 +11,6 @@ from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from utils import plotting
 from django.core.exceptions import ValidationError
-import os, ast
 
 def percentage_validator(value):
 	MinValueValidator(0).__call__(value)
@@ -277,6 +278,7 @@ class MATRRImage(models.Model):
 			image, thumbnail = self._draw_image(mpl_figure)
 			self.image = File(open(image, 'r'))
 			self.thumbnail = File(open(thumbnail, 'r'))
+<<<<<<< HEAD
 
 		# generate the html fragment for the image and save it
 		if data_map != "NO MAP":
@@ -285,6 +287,18 @@ class MATRRImage(models.Model):
 			self.html_fragment = File(html_frag)
 
 		self.save()
+=======
+			
+			# generate the html fragment for the image and save it
+			if data_map != "NO MAP":
+				html_frag_path = self._build_html_fragment(data_map)
+				html_frag = open(html_frag_path, 'r')
+				self.html_fragment = File(html_frag)
+
+			self.save()
+		else:
+			self.delete()
+>>>>>>> 9d75cec47377300290cb0c7a1e8c97e3da91bd60
 
 	def _plot_picker(self):
 		#  This needs to be overridden by subclasses
