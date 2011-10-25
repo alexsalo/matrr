@@ -1,5 +1,6 @@
 import os
 
+
 path = os.path.dirname(os.path.realpath(__file__))
 
 DEBUG = False
@@ -72,7 +73,7 @@ PUBLIC_URLS = (
 	r'^login/?$',
 	r'^logout/?$',
 	r'^accounts/', # django.auth url, NOT matrr's "account" url.  -.-
-	r'^(privacy|data|usage|browser|faq|about|benefits|denied)/', # all non-dynamic pages.  Should find a way to pull this from matrr.urls
+	r'^(privacy|data|usage|browser|faq|about|benefits|denied|not-verified)/', # all non-dynamic pages.  Should find a way to pull this from matrr.urls
 	r'^contact_us/$',
 	r'^publications/$',
 	)

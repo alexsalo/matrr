@@ -21,6 +21,7 @@
 
     <!-- Left-aligned Content -->
     <div class='left-content'>
+    	{% if user_is_verified %}
         <!-- Buttons div -->
         <div class='content-block-lower'>
             <div class='headline'>Request Tissues</div>
@@ -30,7 +31,7 @@
 				<a class="cohortButton cohortAssay" href='{% url assay %}'>Request tissues for Assay Development</a>
             </div>
         </div>
-
+		{% endif %}
         <!-- Links to other resources div -->
         <div class='content-block-lower'>
             <div class='headline'>Links to Other Resources</div>

@@ -17,8 +17,9 @@
 </div>
 
 <div class='login-text'>
+{% load basic_filters %}
   <input type="submit" value="login" />
-  <input type="hidden" name="next" value="{{ request.path }}" />
+  <input type="hidden" name="next" value="{{ request.path|strip_account }}" />
 </div>
 
 

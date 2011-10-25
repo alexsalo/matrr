@@ -1,24 +1,72 @@
 from django import forms
-from django.forms import Form, ModelForm, CharField, widgets, ModelMultipleChoiceField
+from django.forms import Form, ModelForm, CharField, widgets, ModelMultipleChoiceField, RegexField,Textarea
 from django.forms.models import inlineformset_factory
 from django.db import transaction
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from matrr.models import *
 from datetime import date, timedelta
 import re
+from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
 
 from matrr.models import *
 from matrr.widgets import *
-
+from registration.forms import RegistrationForm
 
 FIX_CHOICES = (('', '---------'), ('Flash Frozen', 'Flash Frozen'),
 			   ('4% Paraformaldehyde', '4% Paraformaldehyde'),
 			   ('Fresh', 'Fresh'),
 			   ('other', 'other'))
 
+
 def trim_help_text(text):
 	return re.sub(r' Hold down .*$', '', text)
 
+#from django.forms.util import ErrorList
+# 
+class OtOAcountForm(ModelForm):
+	username = CharField(required = False)
+	first_name = CharField(required = False)
+	last_name = CharField(required = False)
+	email = EmailField(required = False)
+	
+#	This would be needed if we want to edit user through account + save data from fields
+#	def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
+#                 initial=None, error_class=ErrorList, label_suffix=':',
+#                 empty_permitted=False, instance=None):
+#		super(OtOAcountForm, self).__init__(data, files, auto_id, prefix, initial, error_class, label_suffix, empty_permitted, instance)
+#		if instance:
+#			self.fields['username'].initial = self.instance.user.username
+#			self.fields['first_name'].initial = self.instance.user.first_name
+#			self.fields['last_name'].initial = self.instance.user.last_name
+#			self.fields['email'].initial = self.instance.user.email
+	class Meta:
+		model = Account
+
+class MatrrRegistrationForm(RegistrationForm):
+	first_name = CharField(label="First name", max_length=30)
+	last_name = CharField(label="Last name", max_length=30)
+	institution = CharField(label="Institution", max_length=60)
+	phone_number = RegexField(regex=r'^[0-9]{10}$',max_length=10,label="Phone number")
+	address = CharField(label="Address", widget=Textarea(attrs={'cols': '40', 'rows': '5'}), max_length=350)
+
+	def save(self, profile_callback=None):
+		user = super(MatrrRegistrationForm, self).save(profile_callback)
+		user.last_name = self.cleaned_data['last_name']
+		user.first_name = self.cleaned_data['first_name']
+		user.save()
+		account = Account(user=user)
+		account.institution = self.cleaned_data['institution']
+		account.phone_number = self.cleaned_data['phone_number']
+		account.address = self.cleaned_data['address']
+		account.save()
+		subject = "New account on www.matrr.com"
+		body = "New account %s created. Go to %s to verify the account (check verified and save)." % (user.username,
+							 "http://gleek.ecs.baylor.edu/admin/matrr/account/" + str(user.id))
+		from_e = "Erich_Baker@baylor.edu"
+		to_e = list()
+		to_e.append(from_e)
+		send_mail(subject, body, from_e, to_e, fail_silently=True)
+		return user
 
 class TissueRequestForm(ModelForm):
 	def __init__(self, req_request, tissue, *args, **kwargs):

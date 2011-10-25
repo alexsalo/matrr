@@ -7,10 +7,10 @@ register = template.Library()
 
 
 @register.filter()
-def strip_activate(value):
+def strip_account(value):
 	
 	
-	if string.count(value, 'accounts/activate/') != 0:
+	if string.count(value, 'accounts/') != 0:
 		return ""
 	return value
 
