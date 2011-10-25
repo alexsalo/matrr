@@ -1143,9 +1143,9 @@ def sendfile(request, id):
 	r = CohortData.objects.filter(cod_file=id)
 	files.append((r, 'cod_file'))
 	r = MonkeyImage.objects.filter(thumbnail=id)
-	files.append((r, 'image'))
-	r = MonkeyImage.objects.filter(image=id)
 	files.append((r, 'thumbnail'))
+	r = MonkeyImage.objects.filter(image=id)
+	files.append((r, 'image'))
 	r = MonkeyImage.objects.filter(html_fragment=id)
 	files.append((r, 'html_fragment'))
 
