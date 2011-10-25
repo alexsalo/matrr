@@ -2,93 +2,132 @@
 {% load i18n %}
 
 
-{% block login%}{% endblock %}
+{% block login %}{% endblock %}
 
 {% block content %}
 
 
 
-<div id='headline'>Create an Account</div>
-
-<form method="post" action="">{% csrf_token %}
-	<div class="table-wrap">
-		<div class="table-left"><div class="text-right"><font color=red size=-2>Required</font>
-			Username:</div></div>
+	<div id='headline'>Create an Account <font color=red size=-2>All fields are required.</font> </div>
+	<form method="post" action="">{% csrf_token %}
+		<div class=clearfix>
+			<div class="table-left">
+				<div class="text-right">
+					Username:
+				</div>
+			</div>
 			<div class="table-right">{{ form.username }}</div>
 			{% if form.username.errors %}
-                        <div class="table-left"></div>
-			<div class="field-error"> {{ form.username.errors }}</div>
+				<div class="table-left"></div>
+				<div class="field-error"> {{ form.username.errors }}</div>
 			{% endif %}
-		<br>
-		<div class="table-left"><div class="text-right"><font color=red size=-2>Required</font>
-			email:</div></div>
-			<div class="table-right">{{ form.email }}</div>
-			{% if form.email.errors %}
-                        <div class="table-left"></div>
-			<div class="field-error"> {{ form.email.errors }}</div>
-			{% endif %}
-		<br>
-		<div class="table-left"><div class="text-right"><font color=red size=-2>Required</font>
-			{{ form.first_name.label }}:</div></div>
-			<div class="table-right">{{ form.first_name }}</div>
-			{% if form.first_name.errors %}
-                        <div class="table-left"></div>
-			<div class="field-error"> {{ form.first_name.errors }}</div>
-			{% endif %}
-                <br>
-		<div class="table-left"><div class="text-right"><font color=red size=-2>Required</font>
-			{{ form.last_name.label }}:</div></div>
-			<div class="table-right">{{ form.last_name }}</div>
-			{% if form.last_name.errors %}
-                        <div class="table-left"></div>
-			<div class="field-error"> {{ form.last_name.errors }}</div>
-			{% endif %}
-                <br>
-		<div class="table-left"><div class="text-right"><font color=red size=-2>Required</font>
-			{{ form.institution.label }}:</div></div>
-			<div class="table-right">{{ form.institution }}</div>
-			{% if form.institution.errors %}
-                        <div class="table-left"></div>
-			<div class="field-error"> {{ form.institution.errors }}</div>
-			{% endif %}
-                <br>
-		<div class="table-left"><div class="text-right"><font color=red size=-2>Required</font>
-			{{ form.phone_number.label }}:</div></div>
-			<div class="table-right">{{ form.phone_number }}</div>
-			{% if form.phone_number.errors %}
-                        <div class="table-left"></div>
-			<div class="field-error"> {{ form.phone_number.errors }}</div>
-			{% endif %}		
-                <br>
-		<div class="table-left"><div class="text-right"><font color=red size=-2>Required</font>
-			Password:</div></div>
-			<div class="table-right">{{ form.password1 }}</div>
-			{% if form.password1.errors %}
-                        <div class="table-left"></div>
-			<div class="field-error"> {{ form.password1.errors }}</div>
-			{% endif %}
-                <br>
-		<div class="table-left"><div class="text-right"><font color=red size=-2>Required</font>
-			Password (again):</div></div>
-			<div class="table-right">{{ form.password2 }}</div>
-			{% if form.password2.errors %}
-                        <div class="table-left"></div>
-			<div class="field-error"> {{ form.password2.errors }}</div>
-			{% endif %}
-                <br>
-		<div class="table-left"><div class="text-right"><font color=red size=-2>Required</font>
-			{{ form.address.label }}:</div></div>
-			<div class="table-right">{{ form.address }}</div>
-			{% if form.address.errors %}
-                        <div class="table-left"></div>
-			<div class="field-error"> {{ form.address.errors }}</div>
-			{% endif %}	
-		<div class="table-right">
-  		<input type="submit" value="{% trans 'Submit' %}" />
 		</div>
 
-	</div>
-</form>
+		<div class=clearfix>
+			<div class="table-left">
+				<div class="text-right">Password:</div>
+			</div>
+			<div class="table-right">{{ form.password1 }}</div>
+			{% if form.password1.errors %}
+				<div class="table-left"></div>
+				<div class="field-error"> {{ form.password1.errors }}</div>
+			{% endif %}
+		</div>
+
+		<div class=clearfix>
+			<div class="table-left">
+				<div class="text-right">
+					Password (again):
+				</div>
+			</div>
+			<div class="table-right">{{ form.password2 }}</div>
+			{% if form.password2.errors %}
+				<div class="table-left"></div>
+				<div class="field-error"> {{ form.password2.errors }}</div>
+			{% endif %}
+		</div>
+
+		<div class=clearfix>
+			<div class="table-left">
+				<div class="text-right">
+					Email:
+				</div>
+			</div>
+			<div class="table-right">{{ form.email }}</div>
+			{% if form.email.errors %}
+				<div class="table-left"></div>
+				<div class="field-error"> {{ form.email.errors }}</div>
+			{% endif %}
+		</div>
+
+		<div class=clearfix>
+			<div class="table-left">
+				<div class="text-right">
+					{{ form.first_name.label }}:
+				</div>
+			</div>
+			<div class="table-right">{{ form.first_name }}</div>
+			{% if form.first_name.errors %}
+				<div class="table-left"></div>
+				<div class="field-error"> {{ form.first_name.errors }}</div>
+			{% endif %}
+		</div>
+
+		<div class=clearfix>
+			<div class="table-left">
+				<div class="text-right">
+					{{ form.last_name.label }}:
+				</div>
+			</div>
+			<div class="table-right">{{ form.last_name }}</div>
+			{% if form.last_name.errors %}
+				<div class="table-left"></div>
+				<div class="field-error"> {{ form.last_name.errors }}</div>
+			{% endif %}
+		</div>
+
+		<div class=clearfix>
+			<div class="table-left">
+				<div class="text-right">
+					{{ form.institution.label }}:
+				</div>
+			</div>
+			<div class="table-right">{{ form.institution }}</div>
+			{% if form.institution.errors %}
+				<div class="table-left"></div>
+				<div class="field-error"> {{ form.institution.errors }}</div>
+			{% endif %}
+		</div>
+
+		<div class=clearfix>
+			<div class="table-left">
+				<div class="text-right">
+					{{ form.phone_number.label }}:
+				</div>
+			</div>
+			<div class="table-right">{{ form.phone_number }}</div>
+			{% if form.phone_number.errors %}
+				<div class="table-left"></div>
+				<div class="field-error"> {{ form.phone_number.errors }}</div>
+			{% endif %}
+		</div>
+
+		<div class=clearfix>
+			<div class="table-left">
+				<div class="text-right">
+					{{ form.address.label }}:
+				</div>
+			</div>
+			<div class="table-right">{{ form.address }}</div>
+			{% if form.address.errors %}
+				<div class="table-left"></div>
+				<div class="field-error"> {{ form.address.errors }}</div>
+			{% endif %}
+			<div class="table-right">
+				<input type="submit" value="{% trans 'Submit' %}"/>
+			</div>
+		</div>
+	</form>
 
 
 
