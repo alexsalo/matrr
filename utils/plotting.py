@@ -1,5 +1,4 @@
 import os
-os.environ['HOME'] = "/web/www/html"
 import matplotlib as mpl
 from matplotlib import pyplot
 import Image

@@ -1,6 +1,5 @@
 #encoding=utf-8
 import os, ast
-os.environ['HOME'] = "/web/www/html"
 from django.db import models
 from django.contrib.auth.models import User, Group
 from django.db.models.query import QuerySet
