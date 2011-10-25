@@ -1,4 +1,5 @@
 import os
+os.environ['HOME'] = "/web/www/html"
 import matplotlib as mpl
 from matplotlib import pyplot
 import Image
@@ -364,11 +365,11 @@ def monkey_boxplot_etoh(monkey=None):
 			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
 			print("That's not a real monkey.")
-			return
+			return 0, 'NO MAP'
 	##  Because this is ethanol data, only bother with drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return
+		return 0, 'NO MAP'
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -419,12 +420,12 @@ def monkey_boxplot_pellet(monkey=None):
 			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
 			print("That's not a real monkey.")
-			return
+			return 0, 'NO MAP'
 
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return
+		return 0, 'NO MAP'
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -473,12 +474,12 @@ def monkey_boxplot_veh(monkey=None):
 			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
 			print("That's not a real monkey.")
-			return
+			return 0, 'NO MAP'
 
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return
+		return 0, 'NO MAP'
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -528,12 +529,12 @@ def monkey_boxplot_weight(monkey=None):
 			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
 			print("That's not a real monkey.")
-			return
+			return 0, 'NO MAP'
 
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return
+		return 0, 'NO MAP'
 
 	##  The fun stuff:
 	cohort = monkey.cohort
