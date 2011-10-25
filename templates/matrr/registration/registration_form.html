@@ -5,9 +5,7 @@
 {% block login %}{% endblock %}
 
 {% block content %}
-
-
-
+	
 	<div id='headline'>Create an Account <font color=red size=-2>All fields are required.</font> </div>
 	<form method="post" action="">{% csrf_token %}
 		<div class=clearfix>
@@ -128,7 +126,5 @@
 			</div>
 		</div>
 	</form>
-
-
 
 {% endblock %}
