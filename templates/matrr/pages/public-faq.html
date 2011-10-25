@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}
+	MATRR Troubleshooting
+{% endblock %}
+
+{% block content %}
+
+	<div class='center-content'>
+		<div id='large-headline'>Troubleshooting</div>
+		
+		<div class="headline">I got: Forbidden (403) CSRF verification failed </div>
+		<p>
+		Due to its inconsistent compatibilities with web standards, Microsoft's Internet Explorer is specifically not support by MATRR.
+		<strong>IE users </strong>will mainly experience incorrectly displayed elements on pages,
+		although it is possible for them (while handling forms) to see <strong>Forbidden (403) CSRF verification failed error</strong>.
+		The error partially depends on local browser settings. So far, we identified this issue with default settings of 64-bit version of IE 6 or higher. 
+		</p>
+		<div class="mini-headline">Possible solutions:</div>
+		<ul>
+		<li>Go to <a href="/browser">supported browsers</a> to learn more about alternatives to Internet Explorer including IE plug-in.</li>
+		<li> Try our alternative <a href='http://gleek.ecs.baylor.edu'>university based domain</a>.</li>
+		<li> Enable third-party cookies for www.matrr.com in your web browser. See description below.
+		</ul>
+		<p>
+		 Second and third solutions won't help you with appearance issues, but they will bypass the problem, thus you will be able to properly fill any form.
+		 </p>
+		<div class="mini-headline">Enabling third-party cookies</div>
+		<p>
+		An example how-to for IE 7 on Windows follows, visit <a href='http://feedjit.com/static/howToEnableThirdPartyCookies.html'>How to enable third-party cookies in your web browser</a> to learn more for different browsers. 
+		<p>
+		<ul>
+		<li>Click the "Tools" menu</li>
+		<li>Click "Internet Options"</li>
+		<li>Select the "Privacy" tab</li>
+		<li>Click "Sites"</li>
+		<li>Add "www.matrr.com" and click "Allow"</li>
+		<li>Click "OK"</li>
+		<li>Select the "Accept" button under "Third-party Cookies" and click "OK"</li>
+
+		</ul>
+		
+	</div>
+
+{% endblock %}
