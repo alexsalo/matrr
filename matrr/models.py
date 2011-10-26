@@ -429,12 +429,12 @@ class Mta(models.Model):
 class Account(models.Model):
 	user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
 								editable=False, blank=True, primary_key=True)
-	address = models.TextField(blank=False)
+#	address = models.TextField(blank=False)
 	phone_number = models.CharField(max_length=10,blank=False)
 	institution = models.CharField(max_length=60,blank=False)
 	verified = models.BooleanField(default=False, blank=False, null=False)
 	act_shipping_name = models.CharField(max_length=25, null=True, blank=True,
-										 help_text="Your shipping name is required because it may be different from your username.")
+										 help_text="If you want to ship to different person, please fill his/her name as shipping name.")
 	act_address1 = models.CharField('Shipping address 1',max_length=50, null=True, blank=True)
 	act_address2 = models.CharField('Shipping address 2',max_length=50, null=True, blank=True)
 	act_city = models.CharField('Shipping city',max_length=25, null=True, blank=True)
@@ -443,6 +443,13 @@ class Account(models.Model):
 	act_country = models.CharField('Shipping country', max_length=25, null=True, blank=True)
 	act_fedex = models.CharField('FedEx', max_length=9, null=True, blank=True,
 								 help_text="Your 9-digit FedEx Account number is required to ship tissues.")
+	act_real_address1 = models.CharField('Address 1',max_length=50, null=True, blank=False)
+	act_real_address2 = models.CharField('Address 2',max_length=50, null=True, blank=True)
+	act_real_city = models.CharField('City',max_length=25, null=True, blank=False)
+	act_real_state = models.CharField('State', max_length=2, null=True, blank=False)
+	act_real_zip = models.CharField('ZIP', max_length=10, null=True, blank=False)
+	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
+	
 	username = ''
 	first_name = ''
 	last_name = ''

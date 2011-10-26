@@ -18,17 +18,42 @@
 				<td><a href="{% url auth_password_change %}">Change
 					Password</a></td></tr>{% endif %}
 		<tr>
-			<td class="text-right-common-td">Last Logged In:</td>
-			<td>{{ account_info.user.last_login|date:"m/d/Y, g:i a" }}</td>
+			<td class="text-right-common-td">Name:</td>
+			<td>{{ account_info.user.first_name }} {{ account_info.user.last_name }}</td>
+			
 			<td class="text-right-common-td">Member Since:</td>
 			<td>{{ account_info.user.date_joined|date:"m/d/Y, g:i a" }}</td>
 		</tr>
 		<tr>
 			<td class="text-right-common-td">Email:</td>
 			<td>{{ account_info.user.email }}</td>
+			<td class="text-right-common-td">Last Logged In:</td>
+			<td>{{ account_info.user.last_login|date:"m/d/Y, g:i a" }}</td>
+		</tr>
+		<tr>
+			<td class="text-right-common-td">Phone number:</td>
+			<td>{{ account_info.phone_number }}</td>
 		</tr>
 	</table>
+	<div class='headline'>Address</div>
+	<table class="common">
+		<col style="width:15%"/>
+		<col style="width:35%"/>
+		<col style="width:7%"/>
+		<col style="width:43%"/>
 
+		<tr>
+			<td class="text-right-common-td">Street Address:</td>
+			<td>{{ account_info.act_real_address1 }}</td>
+			<td class="text-right-common-td">City:</td>
+			<td>{{ account_info.act_real_city }}{% if account_info.act_real_city and account_info.act_real_state %},{% endif %} {{ account_info.act_real_state }}</td></tr>
+		<tr>
+			<td class="text-right-common-td">&nbsp;</td>
+			<td>{{ account_info.act_real_address2 }}</td>
+			<td class="text-right-common-td">&nbsp;</td>
+			<td>{{ account_info.act_real_zip }}{% if account_info.act_real_zip and account_info.act_real_country %},{% endif %} {{ account_info.act_real_country }}</td></tr>
+
+	</table>
 	<div class='headline'>Shipping Information</div>
 	<table class="common">
 		<col style="width:15%"/>

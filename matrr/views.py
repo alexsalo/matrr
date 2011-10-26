@@ -414,7 +414,7 @@ def cod_upload(request, coh_id=1):
 def account_shipping(request):
 	# make address form if one does not exist
 	if request.method == 'POST':
-		form = AccountForm(data=request.POST, instance=request.user.account)
+		form = ShippingAccountForm(data=request.POST, instance=request.user.account)
 		if form.is_valid():
 			# all the fields in the form are valid, so save the data
 			form.save()
@@ -422,7 +422,7 @@ def account_shipping(request):
 			return redirect(reverse('account-view'))
 	else:
 		#create the form for shipping address
-		form = AccountForm(instance=request.user.account)
+		form = ShippingAccountForm(instance=request.user.account)
 	return render_to_response('matrr/account_shipping_form.html',
 			{'form': form,
 			 'user': request.user

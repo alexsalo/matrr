@@ -47,7 +47,14 @@ class MatrrRegistrationForm(RegistrationForm):
 	last_name = CharField(label="Last name", max_length=30)
 	institution = CharField(label="Institution", max_length=60)
 	phone_number = RegexField(regex=r'^[0-9]{10}$',max_length=10,label="Phone number")
-	address = CharField(label="Address", widget=Textarea(attrs={'cols': '40', 'rows': '5'}), max_length=350)
+#	address = CharField(label="Address", widget=Textarea(attrs={'cols': '40', 'rows': '5'}), max_length=350)
+	act_real_address1 =CharField(label='Address 1',max_length=50,)
+	act_real_address2 =CharField(label='Address 2',max_length=50,required=False)
+	act_real_city = CharField(label='City',max_length=25, )
+	act_real_state =CharField(label='State', max_length=2,)
+	act_real_zip =CharField(label='ZIP', max_length=10,)
+	act_real_country =CharField(label='Country', max_length=25,required=False)
+
 
 	def save(self, profile_callback=None):
 		user = super(MatrrRegistrationForm, self).save(profile_callback)
@@ -57,7 +64,22 @@ class MatrrRegistrationForm(RegistrationForm):
 		account = Account(user=user)
 		account.institution = self.cleaned_data['institution']
 		account.phone_number = self.cleaned_data['phone_number']
-		account.address = self.cleaned_data['address']
+#		account.address = self.cleaned_data['address']
+		account.act_real_address1 = self.cleaned_data['act_real_address1']
+		account.act_real_address2 = self.cleaned_data['act_real_address2']
+		account.act_real_city = self.cleaned_data['act_real_city']
+		account.act_real_state = self.cleaned_data['act_real_state']
+		account.act_real_zip = self.cleaned_data['act_real_zip']
+		account.act_real_country = self.cleaned_data['act_real_country']
+		
+		account.act_address1 = account.act_real_address1
+		account.act_address2 = account.act_real_address2
+		account.act_city = account.act_real_city
+		account.act_country = account.act_real_country
+		account.act_state = account.act_real_state
+		account.act_zip = account.act_real_zip
+		account.act_shipping_name = user.first_name + " " + user.last_name
+		
 		account.save()
 		subject = "New account on www.matrr.com"
 		body = "New account %s created. Go to %s to verify the account (check verified and save)." % (user.username,
@@ -146,10 +168,11 @@ class ReviewForm(ModelForm):
 		model = Review
 
 
-class AccountForm(ModelForm):
+class ShippingAccountForm(ModelForm):
+	
 	class Meta:
 		model = Account
-
+		fields = ['act_shipping_name', 'act_fedex','act_country', 'act_zip', 'act_state', 'act_city', 'act_address2', 'act_address1'] 
 
 class MtaForm(ModelForm):
 	class Meta:
