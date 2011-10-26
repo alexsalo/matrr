@@ -2,7 +2,7 @@
 from django.forms.models import modelformset_factory
 from django.forms.models import formset_factory
 from django.template import RequestContext
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import  render_to_response, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator, InvalidPage, EmptyPage, PageNotAnInteger
@@ -25,6 +25,11 @@ from django.core.urlresolvers import reverse
 def registration(request):
 	from registration.views import register
 	return register(request, form_class=MatrrRegistrationForm)
+
+def logout(request, next_page=None):
+	from django.contrib.auth import logout as auth_logout
+	auth_logout(request)
+	return HttpResponseRedirect(next_page or "/")
 
 def index_view(request):
 	index_context = {'event_list': Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name')[:5],
