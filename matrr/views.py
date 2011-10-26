@@ -2,7 +2,7 @@
 from django.forms.models import modelformset_factory
 from django.forms.models import formset_factory
 from django.template import RequestContext
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse
 from django.shortcuts import  render_to_response, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator, InvalidPage, EmptyPage, PageNotAnInteger
@@ -35,11 +35,6 @@ def index_view(request):
 					 }
 
 	return render_to_response('matrr/index.html', index_context, context_instance=RequestContext(request))
-
-def logout(request, next_page=None):
-	from django.contrib.auth import logout as auth_logout
-	auth_logout(request)
-	return HttpResponseRedirect(next_page or "/")
 
 ### Handles all non-dynamic pages.
 def pages_view(request, static_page):
@@ -482,7 +477,7 @@ def account_detail_view(request, user_id):
 	else:
 		edit = False
 	# get information from the act_account relation
-
+	
 	account_info = Account.objects.get(user__id=user_id)
 	mta_info = Mta.objects.filter(user__id=user_id)
 	display_rud_from = date.today() - timedelta(days=30)
@@ -491,9 +486,9 @@ def account_detail_view(request, user_id):
 										shp_shipment_date__gte=urge_rud_from, req_request__rud_set=None)
 	urged_rud = Shipment.objects.filter(req_request__user=user_id,shp_shipment_date__lte=urge_rud_from,
 									req_request__rud_set=None)
-
+	
 	rud_info = ResearchUpdate.objects.filter(request__user=user_id)
-
+	
 	if pending_rud or urged_rud or rud_info:
 		rud_on = True
 	else:
@@ -556,7 +551,7 @@ def review_detail(request, review_id):
 
 
 def review_history_list(request):
-
+	
 	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
 	request_status_cart = RequestStatus.objects.get(rqs_status_name='Cart')
 	req_requests = Request.objects.filter(Q(request_status__gte=0), ~Q(request_status=request_status), ~Q(request_status=request_status_cart)).order_by('-req_modified_date')
@@ -572,8 +567,8 @@ def review_history_list(request):
 #					req_request.complete.append(req_request.request_status.rqs_status_name)
 #			if req_request.complete:
 #				verified_requests.append(req_request)
-
-
+	
+	
 	paginator = Paginator(req_requests, 20) # Show 25 contacts per page
 
 	if request.GET and 'page' in request.GET:
@@ -590,8 +585,8 @@ def review_history_list(request):
 		# If page is out of range (e.g. 9999), deliver last page of results.
 		verified_requests = paginator.page(paginator.num_pages)
 
-
-
+	
+					
 	return render_to_response('matrr/review/reviews_history.html',
 			{'req_requests': verified_requests,
 			 'reviewers': reviewers,
@@ -639,7 +634,7 @@ def review_overview(request, req_request_id):
 	# get the request being reviewed
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	no_monkeys = False
-
+	
 	if req_request.request_status.rqs_status_name != 'Submitted' and req_request.request_status.rqs_status_name != 'Cart':
 		no_monkeys = True
 	if  'HTTP_REFERER' in request.META:
@@ -686,7 +681,7 @@ def review_overview(request, req_request_id):
 			for monkey in form.instance.monkeys.all():
 				if monkey not in form.instance.accepted_monkeys.all():
 					form.instance.not_accepted_monkeys.append(monkey)
-
+		
 		# get the reviews for the request
 		reviews = list(req_request.review_set.all())
 		reviews.sort(key=lambda x: x.user.username)
@@ -1200,16 +1195,16 @@ def sendfile(request, id):
 			break
 	if not file:
 		raise Http404()
-
+	
 	if file.url.count('/media') > 0:
 		file_url = file.url.replace('/media/', '')
 	else:
 		file_url = file.url.replace('/', '', 1)
-
+	
 	response = HttpResponse()
 	response['X-Sendfile'] =  os.path.join(MEDIA_ROOT, file_url)
 
-
+	
 	content_type, encoding = mimetypes.guess_type(file_url)
 	if not content_type:
 			content_type = 'application/octet-stream'
