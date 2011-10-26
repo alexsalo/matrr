@@ -47,7 +47,6 @@ urlpatterns = patterns('matrr.views',
 urlpatterns += patterns('matrr.views',
 	#  Basic views
 	url(r'^$', index_view),
-	url(r'^logout/?$', logout, name='matrr-logout'),
 	url(r'^(?P<static_page>privacy|data|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', pages_view),  #  These are non-dynamic pages. Mostly text/html.
     url(r'^contact_us/$', contact_us),
 	url(r'^search/?$', search, name='search'),
