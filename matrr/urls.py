@@ -47,7 +47,7 @@ urlpatterns = patterns('matrr.views',
 urlpatterns += patterns('matrr.views',
 	#  Basic views
 	url(r'^$', index_view),
-	url(r'^(?P<static_page>privacy|data|usage|browser|faq|about|benefits|denied|fee|safety|not-verified)/$', pages_view),  #  These are non-dynamic pages. Mostly text/html.
+	url(r'^(?P<static_page>privacy|data|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', pages_view),  #  These are non-dynamic pages. Mostly text/html.
     url(r'^contact_us/$', contact_us),
 	url(r'^search/?$', search, name='search'),
 
@@ -91,6 +91,8 @@ urlpatterns += patterns('matrr.views',
 	#  Account stuff
 	url(r'^account/$', 					account_view, name='account-view'),
     url(r'^account/shipping/$', 		account_shipping, name='account-shipping'),
+    url(r'^account/address/$',         account_address, name='account-address'),
+    url(r'^account/info/$',         account_info, name='account-info'),
 	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-reviewer-view'),
 
 	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),

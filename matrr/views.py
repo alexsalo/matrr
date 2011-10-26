@@ -411,10 +411,47 @@ def cod_upload(request, coh_id=1):
 		form = CodForm(cohort=cohort)
 	return render_to_response('matrr/cod_upload_form.html', {'form': form,}, context_instance=RequestContext(request))
 
-def account_shipping(request):
+
+def account_info(request):
 	# make address form if one does not exist
 	if request.method == 'POST':
 		form = AccountForm(data=request.POST, instance=request.user.account)
+		if form.is_valid():
+			# all the fields in the form are valid, so save the data
+			form.save()
+			messages.success(request, 'Account Info Saved')
+			return redirect(reverse('account-view'))
+	else:
+		#create the form for shipping address
+		form = AccountForm(instance=request.user.account)
+	return render_to_response('matrr/account_info_form.html',
+			{'form': form,
+			 'user': request.user
+		},
+							  context_instance=RequestContext(request))
+
+def account_address(request):
+	# make address form if one does not exist
+	if request.method == 'POST':
+		form = AddressAccountForm(data=request.POST, instance=request.user.account)
+		if form.is_valid():
+			# all the fields in the form are valid, so save the data
+			form.save()
+			messages.success(request, 'Account Address Saved')
+			return redirect(reverse('account-view'))
+	else:
+		#create the form for shipping address
+		form = AddressAccountForm(instance=request.user.account)
+	return render_to_response('matrr/account_address_form.html',
+			{'form': form,
+			 'user': request.user
+		},
+							  context_instance=RequestContext(request))
+
+def account_shipping(request):
+	# make address form if one does not exist
+	if request.method == 'POST':
+		form = ShippingAccountForm(data=request.POST, instance=request.user.account)
 		if form.is_valid():
 			# all the fields in the form are valid, so save the data
 			form.save()
@@ -422,7 +459,7 @@ def account_shipping(request):
 			return redirect(reverse('account-view'))
 	else:
 		#create the form for shipping address
-		form = AccountForm(instance=request.user.account)
+		form = ShippingAccountForm(instance=request.user.account)
 	return render_to_response('matrr/account_shipping_form.html',
 			{'form': form,
 			 'user': request.user
@@ -1143,9 +1180,9 @@ def sendfile(request, id):
 	r = CohortData.objects.filter(cod_file=id)
 	files.append((r, 'cod_file'))
 	r = MonkeyImage.objects.filter(thumbnail=id)
-	files.append((r, 'image'))
-	r = MonkeyImage.objects.filter(image=id)
 	files.append((r, 'thumbnail'))
+	r = MonkeyImage.objects.filter(image=id)
+	files.append((r, 'image'))
 	r = MonkeyImage.objects.filter(html_fragment=id)
 	files.append((r, 'html_fragment'))
 

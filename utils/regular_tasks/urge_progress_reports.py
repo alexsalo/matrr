@@ -4,7 +4,7 @@ sys.path.append(project)
 from django.core.management import setup_environ
 import settings
 setup_environ(settings)
-
+from datetime import datetime
 from django.core.mail import send_mail
 from matrr.models import Shipment, Request
 from datetime import date, timedelta
@@ -37,6 +37,6 @@ def urge_progress_reports():
         req.req_report_asked = True
         req.save()
         if ret > 0:
-            print "Report urged for request: %s" % `req`
+            print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
 
 urge_progress_reports()
