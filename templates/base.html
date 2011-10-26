@@ -40,7 +40,7 @@
 					<a style='color: #FAF9ED;' href="{% url registration_register %}?next={{ request.path|strip_account }}">
 						Create an Account</a>
 				{% else %}
-					Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{% url matrr-logout %}">Logout</a>
+					Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{% url auth_logout %}">Logout</a>
 				{% endif %}
 			</div>
 		</div>
@@ -164,11 +164,11 @@
 					<div class='headline'>
 						FAQ
 					</div>
+					<a href="/public-faq/">Troubleshooting</a><br>
 					{% if user_is_verified %}
 					<a href="/faq/#SubmitRequest">Submitting requests</a><br/>
 					<a href="/faq/">more...</a><br/>					
 					{% endif %}
-					<a href="/public-faq/">Troubleshooting</a>	
 				</div>
 
 				<div class='sidebar-block'>
