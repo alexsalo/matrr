@@ -22,7 +22,6 @@ urlpatterns += patterns('',
   (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': settings.MEDIA_ROOT}),
   (r'^login/?$', authviews.login, {'template_name': 'login.html'}),
-  (r'^logout/?$', authviews.logout, {'template_name': 'login.html', 'next_page':'/'}),
 )
 
 urlpatterns += staticfiles_urlpatterns()
