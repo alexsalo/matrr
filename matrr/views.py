@@ -405,7 +405,7 @@ def cod_upload(request, coh_id=1):
 			# all the fields in the form are valid, so save the data
 			form.save()
 			messages.success(request, 'Upload Successful')
-			return redirect(reverse('cohort'))
+			return redirect(reverse('cohort-details', args=[str(coh_id)]))
 	else:
 		cohort = Cohort.objects.get(pk=coh_id)
 		form = CodForm(cohort=cohort)

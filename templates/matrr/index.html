@@ -31,6 +31,11 @@
 				<a class="cohortButton cohortAssay" href='{% url assay %}'>Request tissues for Assay Development</a>
             </div>
         </div>
+		{% else %}
+        <div class='content-block-lower'>
+            <div class='headline'>Request Tissues</div>
+			"MATRR is a controlled community resource. In order to view data or request material registered users must be authenticated by our staff."
+        </div>
 		{% endif %}
         <!-- Links to other resources div -->
         <div class='content-block-lower'>
