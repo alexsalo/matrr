@@ -5,8 +5,12 @@
 {% block login %}{% endblock %}
 
 {% block content %}
-	
-	<div id='headline'>Create an Account <font color=red size=-2>All fields expert Address 2 and Country are required.</font> </div>
+	<div id='headline'>Create an Account</div>
+	Please fill out the information below to begin creating an account.  Follow the link in the email you receive to finish creating an account.
+	After an account has been created a MATRR staff will verify your account information within 48 hours.  Access to MATRR will be approved once
+	this information has been verified.
+
+	<br><font color=red size=-1>All fields expert Address 2 and Country are required.</font>
 	<form method="post" action="">{% csrf_token %}
 		{% for field in form %}
 		<div class=clearfix>
