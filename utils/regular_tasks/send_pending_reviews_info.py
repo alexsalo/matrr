@@ -4,6 +4,7 @@ sys.path.append(project)
 from django.core.management import setup_environ
 import settings
 setup_environ(settings)
+from datetime import datetime
 
 from django.core.mail import send_mail
 from matrr.models import RequestStatus, Review
@@ -29,7 +30,7 @@ def send_pending_reviews_info():
 		
 			ret = send_mail(subject, body, email, recipient_list=recipients, fail_silently=False)
 			if ret > 0:
-				print "Pending info sent for user: %s" % user.username
+				print "%s Pending info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 			
 	
 
