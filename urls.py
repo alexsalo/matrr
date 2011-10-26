@@ -1,6 +1,7 @@
 from django.conf.urls.defaults import patterns, include, url
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from matrr.views import logout
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -22,7 +23,6 @@ urlpatterns += patterns('',
   (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': settings.MEDIA_ROOT}),
   (r'^login/?$', authviews.login, {'template_name': 'login.html'}),
-  (r'^logout/?$', authviews.logout, {'template_name': 'login.html', 'next_page':'/'}),
 )
 
 urlpatterns += staticfiles_urlpatterns()
