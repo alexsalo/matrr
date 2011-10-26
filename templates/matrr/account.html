@@ -34,7 +34,18 @@
 			<td class="text-right-common-td">Phone number:</td>
 			<td>{{ account_info.phone_number }}</td>
 		</tr>
+		<tr>
+			<td class="text-right-common-td">Institution:</td>
+			<td>{{ account_info.institution }}</td>
+		</tr>
 	</table>
+		{% if edit %}
+		<div class="text-right"><a href="{% url account-info %}" class='blockLinkButton'>
+			<!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45' alt='update button'/>-->
+			Update
+		</a>
+		</div>
+	{% endif %}
 	<div class='headline'>Address</div>
 	<table class="common">
 		<col style="width:15%"/>
@@ -54,6 +65,13 @@
 			<td>{{ account_info.act_real_zip }}{% if account_info.act_real_zip and account_info.act_real_country %},{% endif %} {{ account_info.act_real_country }}</td></tr>
 
 	</table>
+	{% if edit %}
+		<div class="text-right"><a href="{% url account-address %}" class='blockLinkButton'>
+			<!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45' alt='update button'/>-->
+			Update
+		</a>
+		</div>
+	{% endif %}
 	<div class='headline'>Shipping Information</div>
 	<table class="common">
 		<col style="width:15%"/>

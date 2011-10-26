@@ -91,6 +91,8 @@ urlpatterns += patterns('matrr.views',
 	#  Account stuff
 	url(r'^account/$', 					account_view, name='account-view'),
     url(r'^account/shipping/$', 		account_shipping, name='account-shipping'),
+    url(r'^account/address/$',         account_address, name='account-address'),
+    url(r'^account/info/$',         account_info, name='account-info'),
 	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-reviewer-view'),
 
 	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),

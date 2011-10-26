@@ -411,6 +411,43 @@ def cod_upload(request, coh_id=1):
 		form = CodForm(cohort=cohort)
 	return render_to_response('matrr/cod_upload_form.html', {'form': form,}, context_instance=RequestContext(request))
 
+
+def account_info(request):
+	# make address form if one does not exist
+	if request.method == 'POST':
+		form = AccountForm(data=request.POST, instance=request.user.account)
+		if form.is_valid():
+			# all the fields in the form are valid, so save the data
+			form.save()
+			messages.success(request, 'Account Info Saved')
+			return redirect(reverse('account-view'))
+	else:
+		#create the form for shipping address
+		form = AccountForm(instance=request.user.account)
+	return render_to_response('matrr/account_info_form.html',
+			{'form': form,
+			 'user': request.user
+		},
+							  context_instance=RequestContext(request))
+
+def account_address(request):
+	# make address form if one does not exist
+	if request.method == 'POST':
+		form = AddressAccountForm(data=request.POST, instance=request.user.account)
+		if form.is_valid():
+			# all the fields in the form are valid, so save the data
+			form.save()
+			messages.success(request, 'Account Address Saved')
+			return redirect(reverse('account-view'))
+	else:
+		#create the form for shipping address
+		form = AddressAccountForm(instance=request.user.account)
+	return render_to_response('matrr/account_address_form.html',
+			{'form': form,
+			 'user': request.user
+		},
+							  context_instance=RequestContext(request))
+
 def account_shipping(request):
 	# make address form if one does not exist
 	if request.method == 'POST':
