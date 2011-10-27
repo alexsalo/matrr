@@ -1,7 +1,7 @@
 import os
 import matplotlib as mpl
 from matplotlib import pyplot
-import Image
+import Image, numpy
 from matplotlib.patches import Circle
 import numpy as np
 from pylab import *
@@ -24,7 +24,7 @@ DEFAULT_CIRCLE_MAX = 280
 DEFAULT_CIRCLE_MIN = 20
 DEFAULT_FIG_SIZE = (10,10)
 DEFAULT_DPI = 80
-COLORS = {'monkey' : "#FF6600", 'cohort' : 'black'}
+COLORS = {'monkey' : "#00C043", 'cohort' : 'black'}
 
 def cohort_boxplot_m2de(cohort, days=10):
 	# Gather drinking monkeys from the cohort
@@ -363,8 +363,11 @@ def monkey_boxplot_etoh(monkey=None):
 		try:
 			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
-			print("That's not a real monkey.")
-			return 0, 'NO MAP'
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
 	##  Because this is ethanol data, only bother with drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
@@ -418,8 +421,11 @@ def monkey_boxplot_pellet(monkey=None):
 		try:
 			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
-			print("That's not a real monkey.")
-			return 0, 'NO MAP'
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
 
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
@@ -472,8 +478,11 @@ def monkey_boxplot_veh(monkey=None):
 		try:
 			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
-			print("That's not a real monkey.")
-			return 0, 'NO MAP'
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
 
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
@@ -527,8 +536,11 @@ def monkey_boxplot_weight(monkey=None):
 		try:
 			monkey = Monkey.objects.get(mky_real_id=monkey)
 		except Monkey.DoesNotExist:
-			print("That's not a real monkey.")
-			return 0, 'NO MAP'
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
 
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
@@ -572,9 +584,79 @@ def monkey_boxplot_weight(monkey=None):
 
 	return fig, 'NO MAP'
 
+def monkey_errorbox_etoh(monkey=None):
+	##  Verify argument is actually a monkey
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(mky_real_id=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
+
+	##  No data for non-drinking monkeys
+	if monkey.mky_drinking is False:
+		print "This monkey isn't drinking:  " + str(monkey)
+		return 0, 'NO MAP'
+
+	monkey_alpha = .5
+	cohort = monkey.cohort
+
+	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
+	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+
+	if cohort_drinking_experiments.count() > 0:
+		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
+
+		# For each experiment date, gather the drinking data
+		cohort_data = {}
+		monkey_data = {}
+		for date in dates:
+			cde_of_month = cohort_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+			mde_of_month = monkey_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+			cohort_data[date] = cde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
+			monkey_data[date] = mde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
+
+		monkey_avg = {}
+		monkey_std = {}
+		for key in monkey_data:
+			monkey_avg[key] = numpy.mean(monkey_data[key])
+			monkey_std[key] = numpy.std(monkey_data[key])
+
+
+		coh_sorted_keys = [item[0].strftime("%b %Y") for item in sorted(cohort_data.items())]
+		coh_sorted_values = [item[1] for item in sorted(cohort_data.items())]
+		mky_sorted_means = [item[1] for item in sorted(monkey_avg.items())]
+		mky_sorted_stdevs = [item[1] for item in sorted(monkey_std.items())]
+
+		pos = range(1,len(coh_sorted_values)+1)  # This is what aligns the boxplot and line graphs
+
+		fig1 = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+		ax1 = fig1.add_subplot(111)
+		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=monkey_alpha)
+		ax1.set_axisbelow(True)
+		ax1.set_title('MATRR Boxplot')
+		ax1.set_xlabel("Date of Experiment")
+
+		errorbar = pyplot.errorbar(pos, mky_sorted_means, yerr=mky_sorted_stdevs, fmt='go', ms=15, mfc=COLORS['monkey'], mec=COLORS['monkey'], elinewidth=8, alpha=.5)
+		errorbar[2][0].set_alpha(monkey_alpha)
+		errorbar[2][0].set_color(COLORS['monkey'])
+		bp = pyplot.boxplot(coh_sorted_values)
+		plt = pyplot.plot(pos, mky_sorted_means, COLORS['monkey'], linewidth=8, alpha=monkey_alpha)
+		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
+		pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
+		pyplot.setp(bp['fliers'], color='red', marker='+')
+		pyplot.ylim(ymin=0)
+		xtickNames = pyplot.setp(ax1, xticklabels=coh_sorted_keys)
+		pyplot.setp(xtickNames, rotation=45)
+
+
 MONKEY_PLOTS = {'monkey_bouts_drinks': monkey_bouts_drinks,
 				 'monkey_boxplot_etoh': monkey_boxplot_etoh,
 				 'monkey_boxplot_pellet': monkey_boxplot_pellet,
 				 'monkey_boxplot_veh': monkey_boxplot_veh,
 				 'monkey_boxplot_weight': monkey_boxplot_weight,
+				 'monkey_errorbox_etoh': monkey_errorbox_etoh,
 }
