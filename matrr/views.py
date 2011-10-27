@@ -20,7 +20,7 @@ from djangosphinx.models import SphinxQuerySet
 from process_latex import process_latex
 from django.db.models import Q
 from django.core.urlresolvers import reverse
-
+from django.contrib.admin.views.decorators import staff_member_required
 
 def registration(request):
 	from registration.views import register
@@ -416,6 +416,27 @@ def cod_upload(request, coh_id=1):
 		form = CodForm(cohort=cohort)
 	return render_to_response('matrr/cod_upload_form.html', {'form': form,}, context_instance=RequestContext(request))
 
+@staff_member_required
+def account_verify(request, user_id):
+	account = get_object_or_404(Account, pk=user_id)
+	if not account.verified:
+		account.verified = True
+		account.save()
+#		send email
+		subject = "Account on www.matrr.com has been verified"
+		body = "Your account on www.matrr.com has been verified\n" + \
+				"\t username: %s\n" % account.user.username + \
+				"From now on, you can access pages on www.matrr.com.\n" + \
+				"This is an automated message, please, do not respond.\n"
+		
+		from_e = account.user.email
+		to_e = list()
+		to_e.append(from_e)
+		send_mail(subject, body, from_e, to_e, fail_silently=True)
+		messages.success(request, "Account %s was successfully verified." % account.user.username)
+	else:
+		messages.info(request, "Account %s is already verified."  % account.user.username)
+	return render_to_response('base.html', {}, context_instance=RequestContext(request))
 
 def account_info(request):
 	# make address form if one does not exist
