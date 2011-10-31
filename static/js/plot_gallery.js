@@ -1,6 +1,6 @@
 		$(document).ready(function(){
 			//Examples of how to assign the ColorBox event to elements
-			$("a[rel='plot_gallery']").colorbox({opacity:0.5, maxHeight:"75%", fixed:true});
+			$("a[rel='plot_gallery']").colorbox({opacity:0.5, maxHeight:"100%", maxWidth:"100%", fixed:true});
 				
 			//Example of preserving a JavaScript event for inline calls.
 			$("#click").click(function(){ 

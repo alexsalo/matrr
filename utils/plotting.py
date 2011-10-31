@@ -24,7 +24,7 @@ DEFAULT_CIRCLE_MAX = 280
 DEFAULT_CIRCLE_MIN = 20
 DEFAULT_FIG_SIZE = (10,10)
 DEFAULT_DPI = 80
-COLORS = {'monkey' : "#00C043", 'cohort' : 'black'}
+COLORS = {'monkey' : "#01852F", 'cohort' : 'black'}
 
 def cohort_boxplot_m2de(cohort, days=10):
 	# Gather drinking monkeys from the cohort
@@ -243,21 +243,21 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 				print("That's not a valid monkey.")
 				return
 
-	if not isinstance(from_date, datetime):
+	if from_date and not isinstance(from_date, datetime):
 		try:
 			#maybe its a str(datetime)
 			from_date = dateutil.parser.parse(from_date)
 		except:
 			#otherwise give up
-			print("Invalid paremeter, from_date")
+			print("Invalid parameter, from_date")
 			return
-	if not isinstance(to_date, datetime):
+	if from_date and not isinstance(to_date, datetime):
 		try:
 			#maybe its a str(datetime)
 			to_date = dateutil.parser.parse(to_date)
 		except:
 			#otherwise give up
-			print("Invalid paremeter, from_date")
+			print("Invalid parameter, from_date")
 			return
 
 	if circle_max < circle_min:
@@ -280,7 +280,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 	if drinking_experiments.count() > 0:
 		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
 	else:
-		return
+		return None, 'NO MAP'
 	dr_per_bout =list()
 	bouts = list()
 
@@ -410,7 +410,7 @@ def monkey_boxplot_etoh(monkey=None):
 	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 	pyplot.setp(xtickNames, rotation=45)
 
-	return fig, 'NO MAP'
+	return fig, 'etoh'
 
 def monkey_boxplot_pellet(monkey=None):
 	from matrr.models import Monkey
@@ -467,7 +467,7 @@ def monkey_boxplot_pellet(monkey=None):
 	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 	pyplot.setp(xtickNames, rotation=45)
 
-	return fig, 'NO MAP'
+	return fig, 'pellet'
 
 def monkey_boxplot_veh(monkey=None):
 	from matrr.models import Monkey
@@ -525,7 +525,7 @@ def monkey_boxplot_veh(monkey=None):
 	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 	pyplot.setp(xtickNames, rotation=45)
 
-	return fig, 'NO MAP'
+	return fig, 'veh'
 
 def monkey_boxplot_weight(monkey=None):
 	from matrr.models import Monkey
@@ -582,7 +582,7 @@ def monkey_boxplot_weight(monkey=None):
 	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 	pyplot.setp(xtickNames, rotation=45)
 
-	return fig, 'NO MAP'
+	return fig, 'weight'
 
 def monkey_errorbox_etoh(monkey=None):
 	from matrr.models import Monkey, MonkeyToDrinkingExperiment
@@ -602,7 +602,7 @@ def monkey_errorbox_etoh(monkey=None):
 		print "This monkey isn't drinking:  " + str(monkey)
 		return 0, 'NO MAP'
 
-	monkey_alpha = .5
+	monkey_alpha = .7
 	cohort = monkey.cohort
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
@@ -634,20 +634,24 @@ def monkey_errorbox_etoh(monkey=None):
 
 		fig1 = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 		ax1 = fig1.add_subplot(111)
-		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=monkey_alpha)
+		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
 		ax1.set_axisbelow(True)
 		ax1.set_title('MATRR Boxplot')
 		ax1.set_xlabel("Date of Experiment")
 		ax1.set_ylabel('Ethanol Intake (in ml)')
 
-		errorbar = pyplot.errorbar(pos, mky_sorted_means, yerr=mky_sorted_stdevs, fmt='go', ms=15, mfc=COLORS['monkey'], mec=COLORS['monkey'], elinewidth=8, alpha=.5)
+		errorbar = pyplot.errorbar(pos, mky_sorted_means, yerr=mky_sorted_stdevs, fmt='o', ms=8, mfc=COLORS['monkey'], mec=COLORS['monkey'], elinewidth=4, alpha=monkey_alpha)
 		bp = pyplot.boxplot(coh_sorted_values)
-		plt = pyplot.plot(pos, mky_sorted_means, COLORS['monkey'], linewidth=8, alpha=monkey_alpha)
+		plt = pyplot.plot(pos, mky_sorted_means, COLORS['monkey'], linewidth=4, alpha=monkey_alpha)
 
-		errorbar[2][0].set_alpha(monkey_alpha)
 		errorbar[2][0].set_color(COLORS['monkey'])
-		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
-		pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
+		# colors are stored in LineCollections differently, as an RBGA array(list())
+		eb20_colors = errorbar[2][0].get_colors()[0] # get_colors()[0] gets rid of an unneeded list
+		eb20_colors[3] = monkey_alpha
+		errorbar[2][0].set_color(eb20_colors)
+
+		pyplot.setp(bp['boxes'], linewidth=3, color='gray')
+		pyplot.setp(bp['whiskers'], linewidth=3, color='gray')
 		pyplot.setp(bp['fliers'], color='red', marker='+')
 		xtickNames = pyplot.setp(ax1, xticklabels=coh_sorted_keys)
 		pyplot.setp(xtickNames, rotation=45)
@@ -656,7 +660,7 @@ def monkey_errorbox_etoh(monkey=None):
 		oldxlims = pyplot.xlim()
 		pyplot.xlim(xmin=oldxlims[0]/2, xmax=oldxlims[1]*1.05) #  add some spacing, keeps the boxplots from hugging teh axis
 
-		return fig1, 'NO MAP'
+		return fig1, 'errorbox_html'
 	else:
 		return 0, 'NO MAP'
 
