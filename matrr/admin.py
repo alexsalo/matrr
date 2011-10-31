@@ -45,7 +45,7 @@ class VerificationAccountAdmin(admin.ModelAdmin):
 	
 	form = OtOAcountForm
 	
-	readonly_fields = ['username','first_name', 'last_name','act_real_address1','act_real_address1', 'act_real_address2', 'act_real_city', 'act_real_state', 'act_real_country', 'act_shipping_name','email', 'phone_number', 'institution','act_address1', 'act_address2', 'act_city', 'act_state', 'act_country', 'act_fedex']
+	readonly_fields = ['username','verified', 'first_name', 'last_name','act_real_address1','act_real_address1', 'act_real_address2', 'act_real_city', 'act_real_state', 'act_real_country', 'act_shipping_name','email', 'phone_number', 'institution','act_address1', 'act_address2', 'act_city', 'act_state', 'act_country', 'act_fedex']
 	fieldsets = (
 				('Account information',{
 									'fields':('username','first_name', 'last_name', 'email', 'phone_number', 'institution', 'verified'),

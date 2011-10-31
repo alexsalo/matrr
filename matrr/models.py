@@ -258,7 +258,25 @@ class Monkey(models.Model):
 	class Meta:
 		db_table = 'mky_monkeys'
 
+VIP_IMAGES_LIST = (
+				'monkey_bouts_drinks',
+				)
 
+class VIPQuerySet(models.query.QuerySet):
+	def vip_filter(self, user):
+		if user.has_perm('view_vip_images'):
+			return self
+		else:
+			return self.exclude(method__in=VIP_IMAGES_LIST)
+	
+class VIPManager(models.Manager):
+	def get_query_set(self):
+		return VIPQuerySet(self.model, using=self._db)
+		
+	def vip_filter(self, user):
+		return self.get_query_set().vip_filter(user)
+
+	
 #  This model breaks MATRR field name scheme
 class MATRRImage(models.Model):
 	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
@@ -277,13 +295,13 @@ class MATRRImage(models.Model):
 			image, thumbnail = self._draw_image(mpl_figure)
 			self.image = File(open(image, 'r'))
 			self.thumbnail = File(open(thumbnail, 'r'))
+			self.save()
 
 			# generate the html fragment for the image and save it
 			if data_map != "NO MAP":
 				html_frag_path = self._build_html_fragment(data_map)
 				html_frag = open(html_frag_path, 'r')
 				self.html_fragment = File(html_frag)
-
 			self.save()
 		else:
 			self.delete()
@@ -315,7 +333,7 @@ class MATRRImage(models.Model):
 		fragment_path = '/tmp/%s.html' % str(self)
 
 		t = get_template('image_maps/%s.html' % self.method) # templates will be named identical to the plotting method
-		c = Context({'map': data_map, 'monkeyimage': self})
+		c = Context({'map': data_map, 'monkeyimage': self, 'bigWidth':self.image.width*1.1, 'bigHeight':self.image.height*1.1 })
 
 		html_fragment = open(fragment_path, 'w+')
 		html_fragment.write(str(t.render(c)))
@@ -336,20 +354,24 @@ class MATRRImage(models.Model):
 
 	class Meta:
 		abstract = True
-
+		permissions = (
+					('view_vip_images', 'Can view VIP images'),
+					)
+	
 #  This model breaks MATRR field name scheme
 class MonkeyImage(MATRRImage):
 	mig_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
-
+	objects = VIPManager()
+	
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
 		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(self.monkey)
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey)
 		else:
 			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(self.monkey, **params)
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, **params)
 
 		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
 

@@ -1,3 +1,9 @@
+<div style='width:{{ bigWidth }}px; height:{{ bigHeight }}px; margin:auto; padding: 10px'>
+	<center>{{ monkeyimage.title }}</center>
+	<div class="image_container">
+		<img src="{{ monkeyimage.image.url }}"><br>
+	</div>
+</div>
 {% if map %}
 	<map name='points'>
 	{% for point in map %}

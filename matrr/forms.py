@@ -42,6 +42,30 @@ class OtOAcountForm(ModelForm):
 	class Meta:
 		model = Account
 
+def generate_email_body_new_registration(account):
+	
+	body = "New account was created.\n" + \
+				"\t username: %s\n" % account.user.username + \
+				"\t first name: %s\n" % account.user.first_name + \
+				"\t last name: %s\n" % account.user.last_name + \
+				"\t e-mail: %s\n" % account.user.email + \
+				"\t phone number: %s\n" % account.phone_number + \
+				"\t institution: %s\n" % account.institution + \
+				"\t first name: %s\n" % account.user.first_name + \
+				"\t address 1: %s\n" % account.act_real_address1 + \
+				"\t address 2: %s\n" % account.act_real_address2 + \
+				"\t city: %s\n" % account.act_real_city + \
+				"\t ZIP code: %s\n" % account.act_real_zip + \
+				"\t state: %s\n" % account.act_real_state + \
+			"\nTo view account in admin, go to:\n" + \
+				"\t http://gleek.ecs.baylor.edu/admin/matrr/account/%d/\n" % account.user.id + \
+			"To verify account follow this link:\n" + \
+				"\t http://gleek.ecs.baylor.edu%s\n" % reverse('account-verify', args=[account.user.id,]) + \
+			"To delete account follow this link and confirm deletion of all objects (Yes, I'm sure):\n" + \
+				"\t http://gleek.ecs.baylor.edu/admin/auth/user/%d/delete/\n" % account.user.id + \
+			"All the links might require a proper log-in."
+	return body
+
 class MatrrRegistrationForm(RegistrationForm):
 	first_name = CharField(label="First name", max_length=30)
 	last_name = CharField(label="Last name", max_length=30)
@@ -82,13 +106,13 @@ class MatrrRegistrationForm(RegistrationForm):
 		
 		account.save()
 		subject = "New account on www.matrr.com"
-		body = "New account %s created. Go to %s to verify the account (check verified and save)." % (user.username,
-							 "http://gleek.ecs.baylor.edu/admin/matrr/account/" + str(user.id))
+		body = generate_email_body_new_registration(account)
 		from_e = "Erich_Baker@baylor.edu"
 		to_e = list()
 		to_e.append(from_e)
 		send_mail(subject, body, from_e, to_e, fail_silently=True)
 		return user
+
 
 class TissueRequestForm(ModelForm):
 	def __init__(self, req_request, tissue, *args, **kwargs):
