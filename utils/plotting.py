@@ -217,7 +217,7 @@ COHORT_PLOTS = ((cohort_boxplot_m2de, "cohort_boxplot_m2de"),
 )
 
 
-def monkey_bouts_drinks(monkey, from_date=None, to_date=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
+def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
 		Scatter plot for monkey
 			x axis - dates of monkey experiments in range [from_date, to_date] or all possible
@@ -585,6 +585,7 @@ def monkey_boxplot_weight(monkey=None):
 	return fig, 'NO MAP'
 
 def monkey_errorbox_etoh(monkey=None):
+	from matrr.models import Monkey, MonkeyToDrinkingExperiment
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
@@ -625,13 +626,11 @@ def monkey_errorbox_etoh(monkey=None):
 			monkey_avg[key] = numpy.mean(monkey_data[key])
 			monkey_std[key] = numpy.std(monkey_data[key])
 
-
 		coh_sorted_keys = [item[0].strftime("%b %Y") for item in sorted(cohort_data.items())]
 		coh_sorted_values = [item[1] for item in sorted(cohort_data.items())]
 		mky_sorted_means = [item[1] for item in sorted(monkey_avg.items())]
 		mky_sorted_stdevs = [item[1] for item in sorted(monkey_std.items())]
-
-		pos = range(1,len(coh_sorted_values)+1)  # This is what aligns the boxplot and line graphs
+		pos = range(1,len(coh_sorted_values)+1)  # This is what aligns the boxplot with other graphs
 
 		fig1 = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 		ax1 = fig1.add_subplot(111)
@@ -639,18 +638,27 @@ def monkey_errorbox_etoh(monkey=None):
 		ax1.set_axisbelow(True)
 		ax1.set_title('MATRR Boxplot')
 		ax1.set_xlabel("Date of Experiment")
+		ax1.set_ylabel('Ethanol Intake (in ml)')
 
 		errorbar = pyplot.errorbar(pos, mky_sorted_means, yerr=mky_sorted_stdevs, fmt='go', ms=15, mfc=COLORS['monkey'], mec=COLORS['monkey'], elinewidth=8, alpha=.5)
-		errorbar[2][0].set_alpha(monkey_alpha)
-		errorbar[2][0].set_color(COLORS['monkey'])
 		bp = pyplot.boxplot(coh_sorted_values)
 		plt = pyplot.plot(pos, mky_sorted_means, COLORS['monkey'], linewidth=8, alpha=monkey_alpha)
+
+		errorbar[2][0].set_alpha(monkey_alpha)
+		errorbar[2][0].set_color(COLORS['monkey'])
 		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
 		pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
 		pyplot.setp(bp['fliers'], color='red', marker='+')
-		pyplot.ylim(ymin=0)
 		xtickNames = pyplot.setp(ax1, xticklabels=coh_sorted_keys)
 		pyplot.setp(xtickNames, rotation=45)
+
+		pyplot.ylim(ymin=-1) #  add some spacing, keeps the boxplots from hugging teh axis
+		oldxlims = pyplot.xlim()
+		pyplot.xlim(xmin=oldxlims[0]/2, xmax=oldxlims[1]*1.05) #  add some spacing, keeps the boxplots from hugging teh axis
+
+		return fig1, 'NO MAP'
+	else:
+		return 0, 'NO MAP'
 
 
 MONKEY_PLOTS = {'monkey_bouts_drinks': monkey_bouts_drinks,

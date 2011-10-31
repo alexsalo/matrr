@@ -346,10 +346,10 @@ class MonkeyImage(MATRRImage):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
 		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(self.monkey)
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey)
 		else:
 			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(self.monkey, **params)
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, **params)
 
 		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
 

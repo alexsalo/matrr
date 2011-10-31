@@ -42,7 +42,7 @@
 				</div>
 			</div>
 		{% endif %}
-		<div class='right' style="background-color: #9F6000;background-color: #FEEFB3;padding: 10px;font-size:1.3em;text-align: center">
+		<div class='right' style="background-color: #9F6000;background-color: #FEEFB3;padding: 10px;font-size:1.3em;text-align: center; width: 36%">
 			<div class='mini-headline'>Estimated Cost (per monkey)</div>
 			{% if "Custom" in form.tissue.category.cat_name or "Assay" in cohort.coh_cohort_name %}
 				<div class=small>Contact MATRR for price.</div>
@@ -50,6 +50,8 @@
 				{% if "Brain" in form.tissue.category.cat_name %}Frozen:  $250<br>{% if cohort.coh_upcoming %}Special Process: $350{% endif %}{% endif %}
 				{% if "Peripheral" in form.tissue.category.cat_name %}Frozen:  $100<br>{% if cohort.coh_upcoming %}Special Process: $200{% endif %}{% endif %}
 			{% endif %}
+			<div class='mini-headline'> </div>
+			<div style="text-align: left"><font style="font-size:9pt;">If this tissue is being requested for DNA or RNA analysis then MATRR will perform the extraction prior to distribution.</font></div>
 		</div>
 		<table>
 			{% for field in form.visible_fields %}
