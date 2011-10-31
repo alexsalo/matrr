@@ -258,7 +258,25 @@ class Monkey(models.Model):
 	class Meta:
 		db_table = 'mky_monkeys'
 
+VIP_IMAGES_LIST = (
+				'monkey_bouts_drinks',
+				)
 
+class VIPQuerySet(models.query.QuerySet):
+	def vip_filter(self, user):
+		if user.has_perm('view_vip_images'):
+			return self
+		else:
+			return self.exclude(method__in=VIP_IMAGES_LIST)
+	
+class VIPManager(models.Manager):
+	def get_query_set(self):
+		return VIPQuerySet(self.model, using=self._db)
+		
+	def vip_filter(self, user):
+		return self.get_query_set().vip_filter(user)
+
+	
 #  This model breaks MATRR field name scheme
 class MATRRImage(models.Model):
 	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
@@ -336,12 +354,16 @@ class MATRRImage(models.Model):
 
 	class Meta:
 		abstract = True
-
+		permissions = (
+					('view_vip_images', 'Can view VIP images'),
+					)
+	
 #  This model breaks MATRR field name scheme
 class MonkeyImage(MATRRImage):
 	mig_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
-
+	objects = VIPManager()
+	
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
