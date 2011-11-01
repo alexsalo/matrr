@@ -162,6 +162,12 @@
 			{% endfor %}
 			<br>
 			<div>
+				{% if req_request.user.mta_set.all.count == 0 %}
+					<div class='messages clearfix'>
+						<div class="error">User has not uploaded any MTAs</div>
+					</div>
+				{% endif %}
+
 				{% if req_request.request_status.rqs_status_name == 'Submitted' %}
 					<input type='submit' class='blockLinkCheckoutButton' value='Process Request'/>
 				{% endif %}

@@ -881,6 +881,8 @@ class Request(models.Model, DiffingMixin):
 										 help_text='The name of the project or proposal these tissues will be used in.')
 	req_reason = models.TextField('Purpose of Tissue Request', null=False, blank=False,
 								  help_text='Please provide a short paragraph describing the hypothesis and methods proposed.')
+#	req_funding = models.TextField('Source of Funding', null=False, blank=False,
+#								  help_text='Please describe the source of funding which will be used for this request.')
 	req_progress_agreement = models.BooleanField(
 		'I acknowledge that I will be required to submit a 90 day progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.'
 		,
@@ -1183,7 +1185,7 @@ class TissueRequestReview(models.Model):
 	vtr_quantity = models.CharField('Quantity', null=True, blank=False, max_length=12,
 													choices=(
 													("Too little", "Too little"), ("Appropriate", "Appropriate"), ("Too much", "Too much"),),
-													help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
+													help_text='Select a choice which best describes the amount of tissue requested.')
 	vtr_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
 													choices=(
 													(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7),
