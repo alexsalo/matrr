@@ -1,4 +1,5 @@
 {% with tissue_request=form.instance %}
+	<div style="float:left; width:100%">
 	{% for datum in tissue_request.get_data %}
 		{% if forloop.counter == 1 %}
 			<div class="headline">{{ datum.0 }}: {{ datum.1 }}</div>
@@ -9,108 +10,60 @@
 			</div>
 			{% endcomment %}
 		{% else %}
-			<div style="float:right; color: #4E4E4E; clear:right;">{{ datum.0 }}: {{ datum.1 }}</div>
+			<div style="float:right; text-align: right; color: #4E4E4E; clear:right; width:25%">{{ datum.0 }} : {{ datum.1 }}</div>
 		{% endif %}
 	{% endfor %}
+
+	{% if tissue_request.rtt_notes %}
+		<b>Tissue Request Notes: </b> <font size="-1">{{ tissue_request.rtt_notes }}</font><br>
+	{% endif %}
 	<br>
-
-
 	<table class='reviews_table'>
 		<tr>
-			<th>Reviewer:</th>
-			<th>Scientific Merit:</th>
-			<th>Quantity:</th>
-			<th>Priority:</th>
-			<th>Notes:</th>
+			<th>Reviewer</th>
+			<th>Scientific Merit</th>
+			<th>Quantity</th>
+			<th>Priority</th>
+			<th>Notes</th>
 		</tr>
 		{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
 			<tr>
-				<td class='spacing'></td>
+				<td>{{ tissue_request_review.review.user }}</td>
+
 				{% if tissue_request_review.is_finished %}
 					<td class='review-color-{{ tissue_request_review.get_merit }}'>
 						{{ tissue_request_review.get_merit }}
 					</td>
 				{% else %}
-					<td class='review-color-incomplete'>
-					</td>
+					<td class='review-color-incomplete'></td>
 				{% endif %}
-			</tr>
-		{% endfor %}
 
-
-
-
-
-
-		{% for review in reviews %}
-			<td class='spacing'></td>
-			<td>{{ review.user }}</td>
-		{% endfor %}
-
-
-		{# display the review info for each tissue request #}
-		<tr>
-			<th>Scientific Merit:</th>
-			{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
-				<td class='spacing'></td>
-				{% if tissue_request_review.is_finished %}
-					<td class='review-color-{{ tissue_request_review.get_merit }}'>
-						{{ tissue_request_review.get_merit }}
-					</td>
-				{% else %}
-					<td class='review-color-incomplete'>
-					</td>
-				{% endif %}
-			{% endfor %}
-		</tr>
-		<tr>
-			<th>Quantity:</th>
-			{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
-				<td class='spacing'></td>
 				{% if tissue_request_review.is_finished %}
 					<td class='review-color-{{ tissue_request_review.quantity_css_value }}'>
 						{{ tissue_request_review.get_quantity }}
 					</td>
 				{% else %}
-					<td class='review-color-incomplete'>
-					</td>
+					<td class='review-color-incomplete'></td>
 				{% endif %}
-			{% endfor %}
-		</tr>
-		<tr>
-			<th>Priority:</th>
-			{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
-				<td class='spacing'></td>
+
 				{% if tissue_request_review.is_finished %}
 					<td class='review-color-{{ tissue_request_review.get_priority }}'>
 						{{ tissue_request_review.get_priority }}
 					</td>
 				{% else %}
-					<td class='review-color-incomplete'>
+					<td class='review-color-incomplete'></td>
+				{% endif %}
+
+				{% if tissue_request_review.is_finished %}
+					<td style='text-align: left'>
+						<font size="-1">{{ tissue_request_review.get_notes }}</font>
 					</td>
+				{% else %}
+					<td class='review-color-incomplete'></td>
 				{% endif %}
-			{% endfor %}
-		</tr>
-
-		{% if tissue_request.has_notes %}
-			<tr>
-				<th class='tissue_info'>Notes:</th>
-				<td class='tissue_info' colspan='9'>{{ tissue_request.get_notes }}</td>
 			</tr>
-		{% endif %}
-
-
-		<table class="common_right">
-			{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
-				{% if tissue_request_review.get_notes %}
-					<tr>
-						<th>Comments:</th>
-						<td>{{ tissue_request_review.get_notes }}</td>
-					</tr>
-				{% endif %}
-			{% endfor %}
-		</table>
-
+		{% endfor %}
 	</table>
-
+	</div>
+	<div class='clearfix'></div>
 {% endwith %}

@@ -573,6 +573,7 @@ table.review_table td {
     border-collapse: collapse;
     border-width: 1px;
     border-color: black;
+	max-width: 100%
 }
 
 table.reviews_table th,
