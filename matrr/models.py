@@ -343,6 +343,8 @@ class MATRRImage(models.Model):
 
 
 	def verify_user_access_to_file(self, user):
+		if self.method in VIP_IMAGES_LIST:
+			return user.is_authenticated() and user.account.verified and user.has_perm('view_vip_images')
 		return user.is_authenticated() and user.account.verified
 
 	def frag(self):
@@ -426,8 +428,8 @@ class CohortImage(MATRRImage):
 		return PLOTS[self.method]
 	
 	def save(self, *args, **kwargs):
-		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
-		if self.monkey and self.method and self.title:
+		super(CohortImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.cohort and self.method and self.title:
 			if not self.image:
 				self._construct_filefields()
 
