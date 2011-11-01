@@ -305,7 +305,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 	total_drinks = [ b*pb for b, pb in zip(dr_per_bout, bouts)]
 	rescaled_bouts = [ (b/bouts_max)*size_scale+size_min for b in dr_per_bout ] # rescaled, so that circles will be in range (size_min, size_scale)
 
-	fig = pyplot.figure(dpi=DEFAULT_DPI)
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 
 #    main graph
 	ax1 = fig.add_subplot(111)
@@ -411,7 +411,7 @@ def monkey_boxplot_etoh(monkey=None):
 
 	return fig, 'etoh'
 
-def monkey_boxplot_pellet(monkey=None):
+def monkey_boxplot_pellets(monkey=None):
 	from matrr.models import Monkey
 	from matrr.models import MonkeyToDrinkingExperiment
 
@@ -608,7 +608,7 @@ def monkey_errorbox_etoh(monkey=None):
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
 	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
 
-	if cohort_drinking_experiments.count() > 0:
+	if monkey_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
 
 		# For each experiment date, gather the drinking data
@@ -636,9 +636,89 @@ def monkey_errorbox_etoh(monkey=None):
 		ax1 = fig1.add_subplot(111)
 		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
 		ax1.set_axisbelow(True)
-		ax1.set_title('MATRR Boxplot')
+		ax1.set_title('Ethanol Intake for Monkey %s and Cohort %s' % (monkey.mky_real_id, monkey.cohort.coh_cohort_name))
 		ax1.set_xlabel("Date of Experiment")
 		ax1.set_ylabel('Ethanol Intake (in ml)')
+
+		errorbar = pyplot.errorbar(pos, mky_sorted_means, yerr=mky_sorted_stdevs, fmt='o', ms=8, mfc=COLORS['monkey'], mec=COLORS['monkey'], elinewidth=4, alpha=monkey_alpha)
+		bp = pyplot.boxplot(coh_sorted_values)
+		plt = pyplot.plot(pos, mky_sorted_means, COLORS['monkey'], linewidth=4, alpha=monkey_alpha)
+
+		errorbar[2][0].set_color(COLORS['monkey'])
+		# colors are stored in LineCollections differently, as an RBGA array(list())
+		eb20_colors = errorbar[2][0].get_colors()[0] # get_colors()[0] gets rid of an unneeded list
+		eb20_colors[3] = monkey_alpha
+		errorbar[2][0].set_color(eb20_colors)
+
+		pyplot.setp(bp['boxes'], linewidth=3, color='gray')
+		pyplot.setp(bp['whiskers'], linewidth=3, color='gray')
+		pyplot.setp(bp['fliers'], color='red', marker='+')
+		xtickNames = pyplot.setp(ax1, xticklabels=coh_sorted_keys)
+		pyplot.setp(xtickNames, rotation=45)
+
+		pyplot.ylim(ymin=-1) #  add some spacing, keeps the boxplots from hugging teh axis
+		oldxlims = pyplot.xlim()
+		pyplot.xlim(xmin=oldxlims[0]/2, xmax=oldxlims[1]*1.05) #  add some spacing, keeps the boxplots from hugging teh axis
+
+		return fig1, 'errorbox'
+	else:
+		return 0, 'NO MAP'
+
+def monkey_errorbox_veh(monkey=None):
+	from matrr.models import Monkey, MonkeyToDrinkingExperiment
+	##  Verify argument is actually a monkey
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(mky_real_id=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
+
+	##  No data for non-drinking monkeys
+	if monkey.mky_drinking is False:
+		print "This monkey isn't drinking:  " + str(monkey)
+		return 0, 'NO MAP'
+
+	monkey_alpha = .7
+	##  The fun stuff:
+	cohort = monkey.cohort
+	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
+	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+
+	if monkey_drinking_experiments.count() > 0:
+		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
+
+		# For each experiment date, gather the drinking data
+		cohort_data = {}
+		monkey_data = {}
+		for date in dates:
+			cde_of_month = cohort_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+			mde_of_month = monkey_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+			cohort_data[date] = cde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_veh_intake')
+			monkey_data[date] = mde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_veh_intake')
+
+		monkey_avg = {}
+		monkey_std = {}
+		for key in monkey_data:
+			monkey_avg[key] = numpy.mean(monkey_data[key])
+			monkey_std[key] = numpy.std(monkey_data[key])
+
+		coh_sorted_keys = [item[0].strftime("%b %Y") for item in sorted(cohort_data.items())]
+		coh_sorted_values = [item[1] for item in sorted(cohort_data.items())]
+		mky_sorted_means = [item[1] for item in sorted(monkey_avg.items())]
+		mky_sorted_stdevs = [item[1] for item in sorted(monkey_std.items())]
+		pos = range(1,len(coh_sorted_values)+1)  # This is what aligns the boxplot with other graphs
+
+		fig1 = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+		ax1 = fig1.add_subplot(111)
+		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+		ax1.set_axisbelow(True)
+		ax1.set_title('Veh Intake for Monkey %s and Cohort %s' % (monkey.mky_real_id, monkey.cohort.coh_cohort_name))
+		ax1.set_xlabel("Date of Experiment")
+		ax1.set_ylabel('Veh Intake (in ml)')
 
 		errorbar = pyplot.errorbar(pos, mky_sorted_means, yerr=mky_sorted_stdevs, fmt='o', ms=8, mfc=COLORS['monkey'], mec=COLORS['monkey'], elinewidth=4, alpha=monkey_alpha)
 		bp = pyplot.boxplot(coh_sorted_values)
@@ -664,11 +744,179 @@ def monkey_errorbox_etoh(monkey=None):
 	else:
 		return 0, 'NO MAP'
 
+def monkey_errorbox_weight(monkey=None):
+	from matrr.models import Monkey, MonkeyToDrinkingExperiment
+	##  Verify argument is actually a monkey
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(mky_real_id=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
 
-MONKEY_PLOTS = {'monkey_bouts_drinks': monkey_bouts_drinks,
-				 'monkey_boxplot_etoh': monkey_boxplot_etoh,
-				 'monkey_boxplot_pellet': monkey_boxplot_pellet,
-				 'monkey_boxplot_veh': monkey_boxplot_veh,
-				 'monkey_boxplot_weight': monkey_boxplot_weight,
-				 'monkey_errorbox_etoh': monkey_errorbox_etoh,
+	##  No data for non-drinking monkeys
+	if monkey.mky_drinking is False:
+		print "This monkey isn't drinking:  " + str(monkey)
+		return 0, 'NO MAP'
+
+	monkey_alpha = .7
+	##  The fun stuff:
+	cohort = monkey.cohort
+	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
+	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+
+	if monkey_drinking_experiments.count() > 0:
+		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
+
+		# For each experiment date, gather the drinking data
+		cohort_data = {}
+		monkey_data = {}
+		for date in dates:
+			cde_of_month = cohort_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+			mde_of_month = monkey_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+			cohort_data[date] = cde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_weight')
+			monkey_data[date] = mde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_weight')
+
+		monkey_avg = {}
+		monkey_std = {}
+		for key in monkey_data:
+			monkey_avg[key] = numpy.mean(monkey_data[key])
+			monkey_std[key] = numpy.std(monkey_data[key])
+
+		coh_sorted_keys = [item[0].strftime("%b %Y") for item in sorted(cohort_data.items())]
+		coh_sorted_values = [item[1] for item in sorted(cohort_data.items())]
+		mky_sorted_means = [item[1] for item in sorted(monkey_avg.items())]
+		mky_sorted_stdevs = [item[1] for item in sorted(monkey_std.items())]
+		pos = range(1,len(coh_sorted_values)+1)  # This is what aligns the boxplot with other graphs
+
+		fig1 = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+		ax1 = fig1.add_subplot(111)
+		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+		ax1.set_axisbelow(True)
+		ax1.set_title('Weight Measurements for Monkey %s and Cohort %s' % (monkey.mky_real_id, monkey.cohort.coh_cohort_name))
+		ax1.set_xlabel("Date of Experiment")
+		ax1.set_ylabel('Weight (in kg)')
+
+		errorbar = pyplot.errorbar(pos, mky_sorted_means, yerr=mky_sorted_stdevs, fmt='o', ms=8, mfc=COLORS['monkey'], mec=COLORS['monkey'], elinewidth=4, alpha=monkey_alpha)
+		bp = pyplot.boxplot(coh_sorted_values)
+		plt = pyplot.plot(pos, mky_sorted_means, COLORS['monkey'], linewidth=4, alpha=monkey_alpha)
+
+		errorbar[2][0].set_color(COLORS['monkey'])
+		# colors are stored in LineCollections differently, as an RBGA array(list())
+		eb20_colors = errorbar[2][0].get_colors()[0] # get_colors()[0] gets rid of an unneeded list
+		eb20_colors[3] = monkey_alpha
+		errorbar[2][0].set_color(eb20_colors)
+
+		pyplot.setp(bp['boxes'], linewidth=3, color='gray')
+		pyplot.setp(bp['whiskers'], linewidth=3, color='gray')
+		pyplot.setp(bp['fliers'], color='red', marker='+')
+		xtickNames = pyplot.setp(ax1, xticklabels=coh_sorted_keys)
+		pyplot.setp(xtickNames, rotation=45)
+
+		pyplot.ylim(ymin=-1) #  add some spacing, keeps the boxplots from hugging teh axis
+		oldxlims = pyplot.xlim()
+		pyplot.xlim(xmin=oldxlims[0]/2, xmax=oldxlims[1]*1.05) #  add some spacing, keeps the boxplots from hugging teh axis
+
+		return fig1, 'errorbox'
+	else:
+		return 0, 'NO MAP'
+
+def monkey_errorbox_pellets(monkey=None):
+	from matrr.models import Monkey, MonkeyToDrinkingExperiment
+	##  Verify argument is actually a monkey
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(mky_real_id=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
+
+	##  No data for non-drinking monkeys
+	if monkey.mky_drinking is False:
+		print "This monkey isn't drinking:  " + str(monkey)
+		return 0, 'NO MAP'
+
+	monkey_alpha = .7
+	##  The fun stuff:
+	cohort = monkey.cohort
+	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
+	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+
+	if monkey_drinking_experiments.count() > 0:
+		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
+
+		# For each experiment date, gather the drinking data
+		cohort_data = {}
+		monkey_data = {}
+		for date in dates:
+			cde_of_month = cohort_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+			mde_of_month = monkey_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+			cohort_data[date] = cde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_total_pellets')
+			monkey_data[date] = mde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_total_pellets')
+
+		monkey_avg = {}
+		monkey_std = {}
+		for key in monkey_data:
+			monkey_avg[key] = numpy.mean(monkey_data[key])
+			monkey_std[key] = numpy.std(monkey_data[key])
+
+		coh_sorted_keys = [item[0].strftime("%b %Y") for item in sorted(cohort_data.items())]
+		coh_sorted_values = [item[1] for item in sorted(cohort_data.items())]
+		mky_sorted_means = [item[1] for item in sorted(monkey_avg.items())]
+		mky_sorted_stdevs = [item[1] for item in sorted(monkey_std.items())]
+		pos = range(1,len(coh_sorted_values)+1)  # This is what aligns the boxplot with other graphs
+
+		fig1 = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+		ax1 = fig1.add_subplot(111)
+		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+		ax1.set_axisbelow(True)
+		ax1.set_title('Total Pellets for Monkey %s and Cohort %s' % (monkey.mky_real_id, monkey.cohort.coh_cohort_name))
+		ax1.set_xlabel("Date of Experiment")
+		ax1.set_ylabel('Total Pellets')
+
+		errorbar = pyplot.errorbar(pos, mky_sorted_means, yerr=mky_sorted_stdevs, fmt='o', ms=8, mfc=COLORS['monkey'], mec=COLORS['monkey'], elinewidth=4, alpha=monkey_alpha)
+		bp = pyplot.boxplot(coh_sorted_values)
+		plt = pyplot.plot(pos, mky_sorted_means, COLORS['monkey'], linewidth=4, alpha=monkey_alpha)
+
+		errorbar[2][0].set_color(COLORS['monkey'])
+		# colors are stored in LineCollections differently, as an RBGA array(list())
+		eb20_colors = errorbar[2][0].get_colors()[0] # get_colors()[0] gets rid of an unneeded list
+		eb20_colors[3] = monkey_alpha
+		errorbar[2][0].set_color(eb20_colors)
+
+		pyplot.setp(bp['boxes'], linewidth=3, color='gray')
+		pyplot.setp(bp['whiskers'], linewidth=3, color='gray')
+		pyplot.setp(bp['fliers'], color='red', marker='+')
+		xtickNames = pyplot.setp(ax1, xticklabels=coh_sorted_keys)
+		pyplot.setp(xtickNames, rotation=45)
+
+		pyplot.ylim(ymin=-1) #  add some spacing, keeps the boxplots from hugging teh axis
+		oldxlims = pyplot.xlim()
+		pyplot.xlim(xmin=oldxlims[0]/2, xmax=oldxlims[1]*1.05) #  add some spacing, keeps the boxplots from hugging teh axis
+
+		return fig1, 'errorbox'
+	else:
+		return 0, 'NO MAP'
+
+
+
+
+MONKEY_PLOTS = {
+#				'monkey_boxplot_etoh': monkey_boxplot_etoh,
+#				'monkey_boxplot_veh': monkey_boxplot_veh,
+#				'monkey_boxplot_pellets': monkey_boxplot_pellets,
+#				'monkey_boxplot_weight': monkey_boxplot_weight,
+
+				'monkey_errorbox_etoh': monkey_errorbox_etoh,
+				'monkey_errorbox_veh': monkey_errorbox_veh,
+				'monkey_errorbox_pellets': monkey_errorbox_pellets,
+				'monkey_errorbox_weight': monkey_errorbox_weight,
+
+				'monkey_bouts_drinks': monkey_bouts_drinks,
 }

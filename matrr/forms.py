@@ -1,3 +1,4 @@
+#encoding=utf-8
 from django import forms
 from django.forms import Form, ModelForm, CharField, widgets, ModelMultipleChoiceField, RegexField,Textarea
 from django.forms.models import inlineformset_factory
@@ -15,6 +16,8 @@ from registration.forms import RegistrationForm
 FIX_CHOICES = (('', '---------'), ('Flash Frozen', 'Flash Frozen'),
 			   ('4% Paraformaldehyde', '4% Paraformaldehyde'),
 			   ('Fresh', 'Fresh'),
+			   ('DNA', 'DNA'),
+			   ('RNA', 'RNA'),
 			   ('other', 'other'))
 
 
@@ -137,6 +140,10 @@ class TissueRequestForm(ModelForm):
 		if not self.req_request.cohort.coh_upcoming or cleaned_data['rtt_fix_type'] == "":
 			cleaned_data['rtt_fix_type'] = "Flash Frozen"
 		fix_type = cleaned_data.get('rtt_fix_type')
+
+		if fix_type == 'DNA' or fix_type == 'RNA':
+			if cleaned_data['unit'] != Unit.objects.get(unt_unit_name='μg'):
+				raise forms.ValidationError("Requests for DNA or RNA units must be in micrograms.")
 
 		if self.req_request and self.tissue and fix_type \
 		and (self.instance is None		or		(self.instance.rtt_tissue_request_id is not None and self.instance.rtt_fix_type != fix_type )) \
