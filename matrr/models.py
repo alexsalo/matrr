@@ -399,19 +399,43 @@ class MonkeyImage(MATRRImage):
 
 
 #  This model breaks MATRR field name scheme
-#class CohortImage(MATRRImage):
-#	cig_id = models.AutoField(primary_key=True)
-#	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
-#
-#
-#	def verify_user_access_to_file(self, user):
-#		return user.is_authenticated()
-#
-#	def __unicode__(self):
-#		return "%s.%s.(%s)" % (self.cohort.__unicode__(), self.title, self.image)
-#
-#	class Meta:
-#		db_table = 'cig_cohort_image'
+class CohortImage(MATRRImage):
+	cig_id = models.AutoField(primary_key=True)
+	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
+	objects = VIPManager()
+	
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort, **params)
+
+		super(CohortImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		PLOTS = plotting.COHORT_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method]
+	
+	def save(self, *args, **kwargs):
+		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.monkey and self.method and self.title:
+			if not self.image:
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s.%s.(%s)" % (self.cohort.__unicode__(), self.title, str(self.pk))
+
+	class Meta:
+		db_table = 'cig_cohort_image'
 
 
 class Mta(models.Model):
