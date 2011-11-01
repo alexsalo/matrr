@@ -13,22 +13,40 @@
 		{% endif %}
 	{% endfor %}
 	<br>
+
+
 	<table class='reviews_table'>
 		<tr>
 			<th>Reviewer:</th>
-			{% for review in reviews %}
-				<td class='spacing'></td>
-				<td>{{ review.user }}</td>
-			{% endfor %}
+			<th>Scientific Merit:</th>
+			<th>Quantity:</th>
+			<th>Priority:</th>
+			<th>Notes:</th>
 		</tr>
-
-		<tbody>
-		{% if tissue_request.has_notes %}
+		{% for tissue_request_review in tissue_request.sorted_tissue_request_reviews %}
 			<tr>
-				<th class='tissue_info'>Notes:</th>
-				<td class='tissue_info' colspan='9'>{{ tissue_request.get_notes }}</td>
+				<td class='spacing'></td>
+				{% if tissue_request_review.is_finished %}
+					<td class='review-color-{{ tissue_request_review.get_merit }}'>
+						{{ tissue_request_review.get_merit }}
+					</td>
+				{% else %}
+					<td class='review-color-incomplete'>
+					</td>
+				{% endif %}
 			</tr>
-		{% endif %}
+		{% endfor %}
+
+
+
+
+
+
+		{% for review in reviews %}
+			<td class='spacing'></td>
+			<td>{{ review.user }}</td>
+		{% endfor %}
+
 
 		{# display the review info for each tissue request #}
 		<tr>
@@ -73,7 +91,13 @@
 				{% endif %}
 			{% endfor %}
 		</tr>
-		</tbody>
+
+		{% if tissue_request.has_notes %}
+			<tr>
+				<th class='tissue_info'>Notes:</th>
+				<td class='tissue_info' colspan='9'>{{ tissue_request.get_notes }}</td>
+			</tr>
+		{% endif %}
 
 
 		<table class="common_right">
@@ -88,5 +112,5 @@
 		</table>
 
 	</table>
-	
+
 {% endwith %}
