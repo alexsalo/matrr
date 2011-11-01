@@ -100,9 +100,10 @@ def cohort_details(request, **kwargs):
 	if kwargs.has_key('pk'):
 		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
 		coh_data = True if cohort.cod_set.all().count() else False
+		images = CohortImage.objects.filter(cohort=cohort)
 	else:
 		return redirect(reverse('cohorts'))
-	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'coh_data': coh_data, 'plot_gallery': True }, context_instance=RequestContext(request))
+	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'images': images, 'coh_data': coh_data, 'plot_gallery': True }, context_instance=RequestContext(request))
 
 def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 	try:
