@@ -390,7 +390,6 @@ def monkey_boxplot_etoh(monkey=None):
 	sorted_values = [item[1][0] for item in sorted(mky_etoh_data.items())]
 
 	pos = range(1,len(sorted_values)+1)  # This is what aligns the boxplot and line graphs
-
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = fig.add_subplot(111)
 	plt = pyplot.plot(pos, sorted_values, COLORS['monkey'], linewidth=5)
@@ -570,6 +569,7 @@ def monkey_boxplot_weight(monkey=None):
 
 	sorted_values = [item[1] for item in sorted(coh_weight_data.items())]
 	bp = pyplot.boxplot(sorted_values, positions=pos)
+
 	## Pretty colors and fancy letters
 	pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
 	pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
