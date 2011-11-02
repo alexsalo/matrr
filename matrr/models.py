@@ -332,7 +332,7 @@ class MATRRImage(models.Model):
 
 		fragment_path = '/tmp/%s.html' % str(self)
 
-		t = get_template('image_maps/%s.html' % self.method) # templates will be named identical to the plotting method
+		t = get_template('html_fragments/%s.html' % self.method) # templates will be named identical to the plotting method
 		c = Context({'map': data_map, 'image': self, 'bigWidth':self.image.width*1.1, 'bigHeight':self.image.height*1.1 })
 
 		html_fragment = open(fragment_path, 'w+')
