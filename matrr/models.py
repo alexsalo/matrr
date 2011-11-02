@@ -328,7 +328,7 @@ class MATRRImage(models.Model):
 
 	def _build_html_fragment(self, data_map):
 		from django.template.context import Context
-		from django.template.loader import get_template
+		from django.template.loader import get_template 
 
 		fragment_path = '/tmp/%s.html' % str(self)
 
