@@ -44,6 +44,13 @@
 				{% for field in form.visible_fields %}
 					{% if field.html_name != "req_progress_agreement" and field.html_name != "req_safety_agreement" %}
 						{% if field.html_name != 'req_reason' %}
+							{% if field.errors %}
+								<div class="messages">
+									<div class="error">
+										{{ field.errors }}
+									</div>
+								</div>
+							{% endif %}
 							<div class='clearfix'>
 								<div style='margin:0px; padding:2px;' class='table-left'>
 									<label for='{{ field.auto_id }}' style='float: right;text-align: right'>
@@ -57,6 +64,7 @@
 
 								<div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
 							</div>
+						{% else %}
 							{% if field.errors %}
 								<div class="messages">
 									<div class="error">
@@ -64,7 +72,6 @@
 									</div>
 								</div>
 							{% endif %}
-						{% else %}
 							<div class='clearfix'>
 								<div style='margin:0px; padding:2px;' class='table-left'>
 									<label for='{{ field.auto_id }}' style='float: right;text-align: right'>
@@ -78,13 +85,6 @@
 
 								<div style='margin:0px; padding:2px;' class='table-right'>{{ field }}</div>
 							</div>
-							{% if field.errors %}
-								<div class="messages">
-									<div class="error">
-										{{ field.errors }}
-									</div>
-								</div>
-							{% endif %}
 						{% endif %}
 					{% endif %}
 				{% endfor %}

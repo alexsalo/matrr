@@ -345,12 +345,12 @@ COHORT_PLOTS = {
 		 
 		 "cohort_boxplot_m2de_month_etoh_intake":cohort_boxplot_m2de_month_etoh_intake,
 		 "cohort_boxplot_m2de_month_veh_intake":cohort_boxplot_m2de_month_veh_intake,
-		  "cohort_boxplot_m2de_month_total_pellets": cohort_boxplot_m2de_month_total_pellets,
+		 "cohort_boxplot_m2de_month_total_pellets": cohort_boxplot_m2de_month_total_pellets,
 		 "cohort_boxplot_m2de_month_mtd_weight": cohort_boxplot_m2de_month_mtd_weight, 
-		  "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
-		 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake, 
-		 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
-		 "cohort_boxplot_m2de_mtd_weight":cohort_boxplot_m2de_mtd_weight,
+#		 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
+#		 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
+#		 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
+#		 "cohort_boxplot_m2de_mtd_weight":cohort_boxplot_m2de_mtd_weight,
 }
 
 
