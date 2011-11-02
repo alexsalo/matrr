@@ -1442,6 +1442,9 @@ class TissueInventoryVerification(models.Model):
 
 	class Meta:
 		db_table = 'tiv_tissue_verification'
+		permissions = (
+					('can_verify_tissues', 'Can verify tissues'),
+					)
 
 		
 # put any signal callbacks down here after the model declarations
