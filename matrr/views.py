@@ -74,7 +74,12 @@ def matrr_handler500(request):
 	from django.core.context_processors import static
 	return render_to_response('500.html', static(request),context_instance=RequestContext(request)
 							  )
+def __set_images(cohort, user):
+	cohort.images = cohort.image_set.vip_filter(user)
+	return cohort
+
 def __cohorts_view(request, cohorts, template_name):
+	cohorts = [__set_images(cohort, request.user) for cohort in cohorts]
 
 	## Paginator stuff
 	if len(cohorts) > 0:
@@ -100,9 +105,10 @@ def cohort_details(request, **kwargs):
 	if kwargs.has_key('pk'):
 		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
 		coh_data = True if cohort.cod_set.all().count() else False
+		images = CohortImage.objects.filter(cohort=cohort).vip_filter(request.user)
 	else:
 		return redirect(reverse('cohorts'))
-	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'coh_data': coh_data, 'plot_gallery': True }, context_instance=RequestContext(request))
+	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'images': images, 'coh_data': coh_data, 'plot_gallery': True }, context_instance=RequestContext(request))
 
 def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 	try:

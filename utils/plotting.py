@@ -26,67 +26,149 @@ DEFAULT_FIG_SIZE = (10,10)
 DEFAULT_DPI = 80
 COLORS = {'monkey' : "#01852F", 'cohort' : 'black'}
 
-def cohort_boxplot_m2de(cohort, days=10):
-	# Gather drinking monkeys from the cohort
+
+def etoh_intake(queryset):
+	return queryset.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
+
+def total_pellets(queryset):
+	return queryset.exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
+
+def veh_intake(queryset):
+	return queryset.exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
+
+def mtd_weight(queryset):
+	return queryset.exclude(mtd_weight=None).values_list('mtd_weight')
+
+def cohort_boxplot_m2de_etoh_intake(cohort, days=10):
+	return cohort_boxplot_m2de_general(etoh_intake, "Ethanol Intake (in ml)",cohort, days)
+
+def cohort_boxplot_m2de_veh_intake(cohort, days=10):
+	return cohort_boxplot_m2de_general(veh_intake , "Veh Intake",cohort, days)
+	
+def cohort_boxplot_m2de_total_pellets(cohort, days=10):
+	return cohort_boxplot_m2de_general(total_pellets,"Total Pellets",cohort, days )
+	
+def cohort_boxplot_m2de_mtd_weight(cohort, days=10):
+	return cohort_boxplot_m2de_general(mtd_weight, "Weight (in kg)", cohort, days )
+
+
+def cohort_boxplot_m2de_general(specific_callable, y_label, cohort, days=10,):
+	from matrr.models import Cohort, MonkeyToDrinkingExperiment
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return
-
+			return 0, "NO MAP"
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 	if cohort_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('-drinking_experiment__dex_date')
 
 		# For each experiment date, gather the drinking data
-		etoh_data = {}
-		pellet_data = {}
-		veh_data = {}
-		weight_data = {}
+		data = dict()
 		for date in dates[:days]:
-			etoh_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
-			pellet_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
-			veh_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
-			weight_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_weight=None).values_list('mtd_weight')
-		all_data = {"etoh" : ("Ethanol Intake (in ml)", etoh_data), "pellet" : ("Total Pellets", pellet_data), "veh" : ("Veh Intake", veh_data), "weight" : ("Weight (in kg)", weight_data)}
+			data[str(date.date())] = specific_callable(cohort_drinking_experiments.filter(drinking_experiment__dex_date=date))
 
+		sorted_keys = [item[0] for item in sorted(data.items())]
+		sorted_values = [item[1] for item in sorted(data.items())]
 
-		for data_type, data in all_data.items():
-			dir = MATRR_STATIC_STRING + '/images/' + data_type + "/"
-			if not os.path.exists(dir):
-				os.makedirs(dir)
-			filename = dir + cohort.coh_cohort_name
-			print filename
+		fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+		ax1 = fig.add_subplot(111)
+		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+		ax1.set_axisbelow(True)
+		ax1.set_title('MATRR Boxplot')
+		ax1.set_xlabel("Date of Experiment")
+		ax1.set_ylabel(y_label)
 
-			sorted_keys = [item[0] for item in sorted(data[1].items())]
-			sorted_values = [item[1] for item in sorted(data[1].items())]
-
-			fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-			ax1 = fig.add_subplot(111)
-			ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-			ax1.set_axisbelow(True)
-			ax1.set_title('MATRR Boxplot')
-			ax1.set_xlabel("Date of Experiment")
-			ax1.set_ylabel(data[0])
-
-			bp = pyplot.boxplot(sorted_values)
-			pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
-			pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
-			pyplot.setp(bp['fliers'], color='red', marker='+')
-			xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
-			pyplot.setp(xtickNames, rotation=45)
+		bp = pyplot.boxplot(sorted_values)
+		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
+		pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
+		pyplot.setp(bp['fliers'], color='red', marker='+')
+		xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
+		pyplot.setp(xtickNames, rotation=45)
+		return fig, 'NO MAP'
+		
 	else:
 		print "No drinking experiments for this cohort."
+		return 0, "NO MAP"
 
-def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
+#def cohort_boxplot_m2de(cohort, days=10):
+#	# Gather drinking monkeys from the cohort
+#	if not isinstance(cohort, Cohort):
+#		try:
+#			cohort = Cohort.objects.get(pk=cohort)
+#		except Cohort.DoesNotExist:
+#			print("That's not a valid cohort.")
+#			return
+#
+#	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
+#	if cohort_drinking_experiments.count() > 0:
+#		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('-drinking_experiment__dex_date')
+#
+#		# For each experiment date, gather the drinking data
+#		etoh_data = {}
+#		pellet_data = {}
+#		veh_data = {}
+#		weight_data = {}
+#		for date in dates[:days]:
+#			etoh_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
+#			pellet_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
+#			veh_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
+#			weight_data[str(date.date())] = cohort_drinking_experiments.filter(drinking_experiment__dex_date=date).exclude(mtd_weight=None).values_list('mtd_weight')
+#		all_data = {"etoh" : ("Ethanol Intake (in ml)", etoh_data), "pellet" : ("Total Pellets", pellet_data),
+#				 "veh" : ("Veh Intake", veh_data), "weight" : ("Weight (in kg)", weight_data)}
+#
+#
+#		for data_type, data in all_data.items():
+#			dir = MATRR_STATIC_STRING + '/images/' + data_type + "/"
+#			if not os.path.exists(dir):
+#				os.makedirs(dir)
+#			filename = dir + cohort.coh_cohort_name
+#			print filename
+#
+#			sorted_keys = [item[0] for item in sorted(data[1].items())]
+#			sorted_values = [item[1] for item in sorted(data[1].items())]
+#
+#			fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+#			ax1 = fig.add_subplot(111)
+#			ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+#			ax1.set_axisbelow(True)
+#			ax1.set_title('MATRR Boxplot')
+#			ax1.set_xlabel("Date of Experiment")
+#			ax1.set_ylabel(data[0])
+#
+#			bp = pyplot.boxplot(sorted_values)
+#			pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
+#			pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
+#			pyplot.setp(bp['fliers'], color='red', marker='+')
+#			xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
+#			pyplot.setp(xtickNames, rotation=45)
+#		
+#	else:
+#		print "No drinking experiments for this cohort."
+
+
+def cohort_boxplot_m2de_month_etoh_intake(cohort, from_date=None, to_date=None):
+	return cohort_boxplot_m2de_month_general(etoh_intake, "Ethanol Intake (in ml)",cohort, from_date, to_date)
+
+def cohort_boxplot_m2de_month_veh_intake(cohort, from_date=None, to_date=None):
+	return cohort_boxplot_m2de_month_general(veh_intake , "Veh Intake",cohort, from_date, to_date)
+	
+def cohort_boxplot_m2de_month_total_pellets(cohort,from_date=None, to_date=None):
+	return cohort_boxplot_m2de_month_general(total_pellets,"Total Pellets" ,cohort, from_date, to_date)
+	
+def cohort_boxplot_m2de_month_mtd_weight(cohort, from_date=None, to_date=None):
+	return cohort_boxplot_m2de_month_general(mtd_weight, "Weight (in kg)",cohort, from_date, to_date)
+
+def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_date=None, to_date=None):
 	# Gather drinking monkeys from the cohort
+	from matrr.models import Cohort, MonkeyToDrinkingExperiment
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return
+			return 0, "NO MAP"
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 	if from_date:
@@ -97,53 +179,99 @@ def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
 	if cohort_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
 
-		# For each experiment date, gather the drinking data
-		etoh_data = {}
-		pellet_data = {}
-		veh_data = {}
-		weight_data = {}
+		all_data = dict()
 		for date in dates:
 			cde_of_month = cohort_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
-			etoh_data[date] = cde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
-			pellet_data[date] = cde_of_month.exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
-			veh_data[date] = cde_of_month.exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
-			weight_data[date] = cde_of_month.exclude(mtd_weight=None).values_list('mtd_weight')
-		all_data = {"etoh" : ("Ethanol Intake (in ml)", etoh_data), "pellet" : ("Total Pellets", pellet_data), "veh" : ("Veh Intake", veh_data), "weight" : ("Weight (in kg)", weight_data)}
+			all_data[date] = specific_callable(cde_of_month)
 
+		
+		sorted_keys = [item[0].strftime("%b %Y") for item in sorted(all_data.items())]
+		sorted_values = [item[1] for item in sorted(all_data.items())]
 
-		DEFAULT_FIG_SIZE = (10,10)
-		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
-		for data_type, data in all_data.iteritems():
-			dir = MATRR_STATIC_STRING + '/images/' + data_type + "/"
-			if not os.path.exists(dir):
-				os.makedirs(dir)
-			filename = dir + cohort.coh_cohort_name
-			print filename
+		fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+		ax1 = fig.add_subplot(111)
+		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+		ax1.set_axisbelow(True)
+		ax1.set_title('MATRR Boxplot')
+		ax1.set_xlabel("Date of Experiment")
+		ax1.set_ylabel(y_label)
 
-			sorted_keys = [item[0].strftime("%b %Y") for item in sorted(data[1].items())]
-			sorted_values = [item[1] for item in sorted(data[1].items())]
-
-			fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-			ax1 = fig.add_subplot(111)
-			ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-			ax1.set_axisbelow(True)
-			ax1.set_title('MATRR Boxplot')
-			ax1.set_xlabel("Date of Experiment")
-			ax1.set_ylabel(data[0])
-
-			bp = pyplot.boxplot(sorted_values)
-			pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
-			pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
-			pyplot.setp(bp['fliers'], color='red', marker='+')
-			xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
-			pyplot.setp(xtickNames, rotation=45)
-			fig.savefig(filename + ".png", dpi=DEFAULT_DPI)
-
-			img = Image.open(filename + ".png")
-			img.thumbnail(thumb_size, Image.ANTIALIAS)
-			img.save(filename + "-thumb.jpg")
+		bp = pyplot.boxplot(sorted_values)
+		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
+		pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
+		pyplot.setp(bp['fliers'], color='red', marker='+')
+		xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
+		pyplot.setp(xtickNames, rotation=45)
+		return fig, "NO MAP"
 	else:
 		print "No drinking experiments for this cohort."
+		return 0, "NO MAP"
+	
+#def cohort_boxplot_m2de_month(cohort, from_date=None, to_date=None):
+#	# Gather drinking monkeys from the cohort
+#	if not isinstance(cohort, Cohort):
+#		try:
+#			cohort = Cohort.objects.get(pk=cohort)
+#		except Cohort.DoesNotExist:
+#			print("That's not a valid cohort.")
+#			return
+#
+#	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
+#	if from_date:
+#		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
+#	if to_date:
+#		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+#
+#	if cohort_drinking_experiments.count() > 0:
+#		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
+#
+#		# For each experiment date, gather the drinking data
+#		etoh_data = {}
+#		pellet_data = {}
+#		veh_data = {}
+#		weight_data = {}
+#		for date in dates:
+#			cde_of_month = cohort_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
+#			etoh_data[date] = cde_of_month.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
+#			pellet_data[date] = cde_of_month.exclude(mtd_total_pellets=None).values_list('mtd_total_pellets')
+#			veh_data[date] = cde_of_month.exclude(mtd_veh_intake=None).values_list('mtd_veh_intake')
+#			weight_data[date] = cde_of_month.exclude(mtd_weight=None).values_list('mtd_weight')
+#		all_data = {"etoh" : ("Ethanol Intake (in ml)", etoh_data), "pellet" : ("Total Pellets", pellet_data), "veh" : ("Veh Intake", veh_data), "weight" : ("Weight (in kg)", weight_data)}
+#
+#
+#		DEFAULT_FIG_SIZE = (10,10)
+#		thumb_size = (240, 240) # Image.thumbnail() will preserve aspect ratio
+#		for data_type, data in all_data.iteritems():
+#			dir = MATRR_STATIC_STRING + '/images/' + data_type + "/"
+#			if not os.path.exists(dir):
+#				os.makedirs(dir)
+#			filename = dir + cohort.coh_cohort_name
+#			print filename
+#
+#			sorted_keys = [item[0].strftime("%b %Y") for item in sorted(data[1].items())]
+#			sorted_values = [item[1] for item in sorted(data[1].items())]
+#
+#			fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+#			ax1 = fig.add_subplot(111)
+#			ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+#			ax1.set_axisbelow(True)
+#			ax1.set_title('MATRR Boxplot')
+#			ax1.set_xlabel("Date of Experiment")
+#			ax1.set_ylabel(data[0])
+#
+#			bp = pyplot.boxplot(sorted_values)
+#			pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
+#			pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
+#			pyplot.setp(bp['fliers'], color='red', marker='+')
+#			xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
+#			pyplot.setp(xtickNames, rotation=45)
+#			fig.savefig(filename + ".png", dpi=DEFAULT_DPI)
+#
+#			img = Image.open(filename + ".png")
+#			img.thumbnail(thumb_size, Image.ANTIALIAS)
+#			img.save(filename + "-thumb.jpg")
+#	else:
+#		print "No drinking experiments for this cohort."
 
 def convert_timedelta(t):
 	if t:
@@ -212,9 +340,18 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 		formatted_monkeys[monkey] = [ convert_timedelta(event_dates[key]) for key in sorted(event_dates.keys()) ]	
 	return formatted_monkeys
 
-COHORT_PLOTS = ((cohort_boxplot_m2de, "cohort_boxplot_m2de"),
-		 (cohort_boxplot_m2de_month, "cohort_boxplot_m2de_month"),
-)
+
+COHORT_PLOTS = {
+		 
+		 "cohort_boxplot_m2de_month_etoh_intake":cohort_boxplot_m2de_month_etoh_intake,
+		 "cohort_boxplot_m2de_month_veh_intake":cohort_boxplot_m2de_month_veh_intake,
+		 "cohort_boxplot_m2de_month_total_pellets": cohort_boxplot_m2de_month_total_pellets,
+		 "cohort_boxplot_m2de_month_mtd_weight": cohort_boxplot_m2de_month_mtd_weight, 
+#		 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
+#		 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
+#		 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
+#		 "cohort_boxplot_m2de_mtd_weight":cohort_boxplot_m2de_mtd_weight,
+}
 
 
 def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):

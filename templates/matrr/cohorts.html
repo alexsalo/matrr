@@ -59,11 +59,11 @@ All Cohorts
 					<a href="{% url cohort-timeline cohort.coh_cohort_id %}">Cohort Timeline</a><br/>
 					<a href="{% url cohort-publications cohort.coh_cohort_id %}">Publications</a><br/>
 					<a href="{% url tissue-shop-landing cohort.coh_cohort_id %}">Request Tissue from {{ cohort.coh_cohort_name }}</a>
-					{% with images=cohort|cohort_images:"etoh" %}
+					{% with images=cohort.images %}
 						{% if images %}
 							<div class="image_container">
 								<a href="{% url cohort-details cohort.coh_cohort_id %}">
-									<img src="{{ STATIC_URL }}/images/etoh/{{ cohort.coh_cohort_name}}-thumb.jpg"/>
+									<img src="{{ images.0.thumbnail.url }}"/>
 								</a>
 							</div>
 						{% endif %}

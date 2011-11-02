@@ -3,7 +3,7 @@ import os, ast
 from django.db import models
 from django.contrib.auth.models import User, Group
 from django.db.models.query import QuerySet
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from datetime import datetime
 from string import lower, replace
@@ -328,12 +328,12 @@ class MATRRImage(models.Model):
 
 	def _build_html_fragment(self, data_map):
 		from django.template.context import Context
-		from django.template.loader import get_template
+		from django.template.loader import get_template 
 
 		fragment_path = '/tmp/%s.html' % str(self)
 
-		t = get_template('image_maps/%s.html' % self.method) # templates will be named identical to the plotting method
-		c = Context({'map': data_map, 'monkeyimage': self, 'bigWidth':self.image.width*1.1, 'bigHeight':self.image.height*1.1 })
+		t = get_template('html_fragments/%s.html' % self.method) # templates will be named identical to the plotting method
+		c = Context({'map': data_map, 'image': self, 'bigWidth':self.image.width*1.1, 'bigHeight':self.image.height*1.1 })
 
 		html_fragment = open(fragment_path, 'w+')
 		html_fragment.write(str(t.render(c)))
@@ -343,6 +343,8 @@ class MATRRImage(models.Model):
 
 
 	def verify_user_access_to_file(self, user):
+		if self.method in VIP_IMAGES_LIST:
+			return user.is_authenticated() and user.account.verified and user.has_perm('view_vip_images')
 		return user.is_authenticated() and user.account.verified
 
 	def frag(self):
@@ -399,19 +401,43 @@ class MonkeyImage(MATRRImage):
 
 
 #  This model breaks MATRR field name scheme
-#class CohortImage(MATRRImage):
-#	cig_id = models.AutoField(primary_key=True)
-#	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
-#
-#
-#	def verify_user_access_to_file(self, user):
-#		return user.is_authenticated()
-#
-#	def __unicode__(self):
-#		return "%s.%s.(%s)" % (self.cohort.__unicode__(), self.title, self.image)
-#
-#	class Meta:
-#		db_table = 'cig_cohort_image'
+class CohortImage(MATRRImage):
+	cig_id = models.AutoField(primary_key=True)
+	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
+	objects = VIPManager()
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort, **params)
+
+		super(CohortImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		PLOTS = plotting.COHORT_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method]
+
+	def save(self, *args, **kwargs):
+		super(CohortImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.cohort and self.method and self.title:
+			if not self.image:
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s.%s.(%s)" % (self.cohort.__unicode__(), self.title, str(self.pk))
+
+	class Meta:
+		db_table = 'cig_cohort_image'
 
 
 class Mta(models.Model):
@@ -881,8 +907,8 @@ class Request(models.Model, DiffingMixin):
 										 help_text='The name of the project or proposal these tissues will be used in.')
 	req_reason = models.TextField('Purpose of Tissue Request', null=False, blank=False,
 								  help_text='Please provide a short paragraph describing the hypothesis and methods proposed.')
-#	req_funding = models.TextField('Source of Funding', null=False, blank=False,
-#								  help_text='Please describe the source of funding which will be used for this request.')
+	req_funding = models.TextField('Source of Funding', null=True, blank=False,
+								  help_text='Please describe the source of funding which will be used for this request.')
 	req_progress_agreement = models.BooleanField(
 		'I acknowledge that I will be required to submit a 90 day progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.'
 		,
@@ -1509,4 +1535,28 @@ def user_post_save(**kwargs):
 	if not Account.objects.filter(user=user).count():
 		account = Account(user=user)
 		account.save()
+
+# This will delete MATRRImage's FileField's files from media before deleting the database entry.
+# Helps keep the media folder pretty.
+@receiver(pre_delete, sender=MonkeyImage)
+def matrrimage_pre_delete(**kwargs):
+	mig = kwargs['instance']
+	if mig.image and os.path.exists(mig.image.path):
+		os.remove(mig.image.path)
+	if mig.thumbnail and os.path.exists(mig.thumbnail.path):
+		os.remove(mig.thumbnail.path)
+	if mig.html_fragment and os.path.exists(mig.html_fragment.path):
+		os.remove(mig.html_fragment.path)
+
+# This will delete MATRRImage's FileField's files from media before deleting the database entry.
+# Helps keep the media folder pretty.
+@receiver(pre_delete, sender=CohortImage)
+def cohortimage_pre_delete(**kwargs):
+	cig = kwargs['instance']
+	if cig.image and os.path.exists(cig.image.path):
+		os.remove(cig.image.path)
+	if cig.thumbnail and os.path.exists(cig.thumbnail.path):
+		os.remove(cig.thumbnail.path)
+	if cig.html_fragment and os.path.exists(cig.html_fragment.path):
+		os.remove(cig.html_fragment.path)
 
