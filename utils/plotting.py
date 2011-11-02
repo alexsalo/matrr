@@ -343,10 +343,10 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 
 COHORT_PLOTS = {
 		 
-		 "cohort_boxplot_m2de_month_etoh_intake":cohort_boxplot_m2de_month_etoh_intake,
-		 "cohort_boxplot_m2de_month_veh_intake":cohort_boxplot_m2de_month_veh_intake,
-		 "cohort_boxplot_m2de_month_total_pellets": cohort_boxplot_m2de_month_total_pellets,
-		 "cohort_boxplot_m2de_month_mtd_weight": cohort_boxplot_m2de_month_mtd_weight, 
+		 "cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2de_month_etoh_intake, 'Ethanol Intake'),
+		 "cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 'Water Intake'),
+		 "cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 'Pellets'),
+		 "cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 'Weight'),
 #		 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
 #		 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
 #		 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
@@ -1050,10 +1050,10 @@ MONKEY_PLOTS = {
 #				'monkey_boxplot_pellets': monkey_boxplot_pellets,
 #				'monkey_boxplot_weight': monkey_boxplot_weight,
 
-				'monkey_errorbox_etoh': monkey_errorbox_etoh,
-				'monkey_errorbox_veh': monkey_errorbox_veh,
-				'monkey_errorbox_pellets': monkey_errorbox_pellets,
-				'monkey_errorbox_weight': monkey_errorbox_weight,
+				'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Ethanol Intake'),
+				'monkey_errorbox_veh': (monkey_errorbox_veh, 'Water Intake'),
+				'monkey_errorbox_pellets': (monkey_errorbox_pellets, 'Pellets'),
+				'monkey_errorbox_weight': (monkey_errorbox_weight, 'Weight'),
 
-				'monkey_bouts_drinks': monkey_bouts_drinks,
+				'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake'),
 }

@@ -385,7 +385,7 @@ class MonkeyImage(MATRRImage):
 		if not self.method in PLOTS:
 			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
 
-		return PLOTS[self.method]
+		return PLOTS[self.method][0]
 
 	def save(self, *args, **kwargs):
 		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
@@ -425,7 +425,7 @@ class CohortImage(MATRRImage):
 		if not self.method in PLOTS:
 			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
 
-		return PLOTS[self.method]
+		return PLOTS[self.method][0]
 
 	def save(self, *args, **kwargs):
 		super(CohortImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
