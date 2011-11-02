@@ -121,7 +121,7 @@ def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	images = MonkeyImage.objects.filter(monkey=monkey)
+	images = MonkeyImage.objects.filter(monkey=monkey).vip_filter(request.user)
 	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery':True},
 							  context_instance=RequestContext(request))
 
@@ -133,7 +133,7 @@ def monkey_detail_view(request, monkey_id):
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	images = MonkeyImage.objects.filter(monkey=monkey)
+	images = MonkeyImage.objects.filter(monkey=monkey).vip_filter(request.user)
 	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
 
@@ -1216,6 +1216,12 @@ def sendfile(request, id):
 	r = MonkeyImage.objects.filter(image=id)
 	files.append((r, 'image'))
 	r = MonkeyImage.objects.filter(html_fragment=id)
+	files.append((r, 'html_fragment'))
+	r = CohortImage.objects.filter(thumbnail=id)
+	files.append((r, 'thumbnail'))
+	r = CohortImage.objects.filter(image=id)
+	files.append((r, 'image'))
+	r = CohortImage.objects.filter(html_fragment=id)
 	files.append((r, 'html_fragment'))
 
 #	this will work for all listed files
