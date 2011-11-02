@@ -226,9 +226,6 @@ class Monkey(models.Model):
 								help_text='The monkey\'s name.')
 	mky_gender = models.CharField('Sex', max_length=1, choices=SEX_CHOICES, blank=True, null=True,
 								  help_text='The sex of the monkey.')
-#	mky_birthdate = models.CharField('Date of Birth', blank=True, null=True,
-#									 max_length=20,
-#									 help_text='Please enter the date the monkey was born on.')
 	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True,
 									 max_length=20,
 									 help_text='Please enter the date the monkey was born on.')

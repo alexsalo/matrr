@@ -483,6 +483,36 @@ def dump_monkey_data(output_file):
 			output.writerow(row)
 		print "Success"
 
+def load_monkey_data(input_file):
+	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+	columns = input_data.next()
+
+	for row in input_data:
+		if row[0] == '145':
+			continue
+		monkey = Monkey.objects.get(pk=row[0])
+		if str(row[2]) != str(monkey.mky_real_id):
+			raise Exception('ruh roh, bad monkey number, no continue!')
+		monkey.mky_name = str(row[3])
+		monkey.mky_gender = str(row[4])
+		year = int(row[5].split('/')[2])
+		year = year + 2000 if year < 12 else year + 1900
+		monkey.mky_birthdate = datetime(year, int(row[5].split('/')[0]), int(row[5].split('/')[1]))
+		if row[6]:
+			monkey.mky_weight = float(row[6])
+		monkey.mky_drinking = row[7] == 'TRUE'
+		monkey.mky_housing_control = row[8] == 'TRUE'
+		if row[9]:
+			year = int(row[9].split('/')[2])
+			year = year + 2000 if year < 12 else year + 1900
+			monkey.mky_necropsy_start_date = datetime(year, int(row[9].split('/')[0]), int(row[9].split('/')[1]))
+		monkey.mky_study_complete = row[13] == 'TRUE'
+		monkey.mky_stress_model = row[14]
+		monkey.mky_age_at_necropsy = row[15]
+		monkey.save()
+	print "Success"
+
+
 
 ## Wrote this, ended up not using it.  May still need it, necropsy dates in the DB are different than in the spreadsheet I was given.
 ## -jf
