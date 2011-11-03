@@ -1510,14 +1510,13 @@ def request_post_save(**kwargs):
 	and current_status == RequestStatus.objects.get(rqs_status_name='Shipped'):
 		# Create new TIVs to update MATRR inventory after a tissue has shipped.
 		for tissue_request in tissue_requests:
-			for monkey in tissue_request.accepted_monkeys.all():
+			for monkey in tissue_request.accepted_monkeys.all().exclude(mky_real_id=0): # dont create tivs for assay monkeys after shipment
 				tv = TissueInventoryVerification.objects.create(tissue_type=tissue_request.tissue_type,
 																monkey=monkey,
 																tissue_request=None)
 				tv.save()
 
 	req_request._previous_status_id = None
-
 
 # This is a method to check to see if a user_id exists that does not have
 # an account attached to it.
