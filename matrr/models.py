@@ -61,6 +61,8 @@ class Enumeration(object):
 
 InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
 
+Units =  (('μl','Microliters'), ('μg','Micrograms'), ('whole','Whole'), ('mg','Milligrams'), ('ml','Milliliter'), ('g','Gram'))
+
 ExperimentEventType = Enumeration([
 								('D', 'Drink', 'Drink event'),
 								('T', 'Time', 'Time event'),
@@ -637,6 +639,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 	class Meta:
 		db_table = 'mtd_monkeys_to_drinking_experiments'
 
+
 class ExperimentBout(models.Model):
 	ebt_id = models.AutoField(primary_key=True)
 	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='bouts_set')
@@ -658,7 +661,8 @@ class ExperimentBout(models.Model):
 			raise ValidationError('Bout length does not correspond the Start and End time. An isolated drink is given the length of 1 second, despite start time and end time being equal.')
 	class Meta:
 		db_table = 'ebt_experiment_bouts'
-		
+
+
 class ExperimentDrink(models.Model):
 	edr_id = models.AutoField(primary_key=True)
 	ebt = models.ForeignKey(ExperimentBout, null=False, db_column='ebt_id', related_name='drinks_set')
@@ -680,6 +684,7 @@ class ExperimentDrink(models.Model):
 			raise ValidationError('Drink length does not correspond to Start and End time. (An isolated drink is given the length of 1 second, despite start time and end time being equal.)')
 	class Meta:
 		db_table = 'edr_experiment_drinks'
+
 
 class ExperimentEvent(models.Model):
 	eev_id = models.AutoField(primary_key=True)
