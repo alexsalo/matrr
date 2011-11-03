@@ -490,7 +490,11 @@ def load_monkey_data(input_file):
 	for row in input_data:
 		if row[2] == '0':
 			continue
-		monkey = Monkey.objects.get(mky_real_id=row[2])
+		try:
+			monkey = Monkey.objects.get(mky_real_id=row[2])
+		except:
+			print "Monkey not found:  " + str(row[2])
+			continue
 		monkey.mky_name = str(row[3])
 		monkey.mky_gender = str(row[4])
 		year = int(row[5].split('/')[2])
