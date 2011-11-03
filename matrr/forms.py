@@ -142,7 +142,7 @@ class TissueRequestForm(ModelForm):
 		fix_type = cleaned_data.get('rtt_fix_type')
 
 		if fix_type == 'DNA' or fix_type == 'RNA':
-			if cleaned_data['unit'] != Unit.objects.get(unt_unit_name='μg'):
+			if cleaned_data['rtt_units'] != 'μg':
 				raise forms.ValidationError("Requests for DNA or RNA units must be in micrograms.")
 
 		if self.req_request and self.tissue and fix_type \
@@ -314,6 +314,6 @@ class TissueInventoryVerificationForm(Form):
 	freezer = CharField(max_length=100, required=False)
 	location = CharField(max_length=100, required=False)
 	quantity = DecimalField(required=False)
-	units = ModelChoiceField(queryset=Unit.objects.all(), required=False)
+	units = ChoiceField(choices=Units, required=False)
 	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
 	inventory = ChoiceField(choices=InventoryStatus, required=False)

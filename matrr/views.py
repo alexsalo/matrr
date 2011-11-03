@@ -1184,7 +1184,7 @@ def tissue_verification(request):
 					   'location': tss.tss_location,
 					   'quantity': tss.tss_sample_quantity,
 					   'inventory': tiv.tiv_inventory,
-					   'units': tss.units.pk,
+					   'units': tss.tss_units,
 					   'details': tss.tss_details,
 					   'monkey': tiv.monkey,
 					   'tissue': tiv.tissue_type,

@@ -61,7 +61,7 @@ class Enumeration(object):
 
 InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
 
-Units =  (('μl','Microliters'), ('μg','Micrograms'), ('whole','Whole'), ('mg','Milligrams'), ('ml','Milliliter'), ('g','Gram'))
+Units =  (('μl','μl'), ('μg','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
 
 ExperimentEventType = Enumeration([
 								('D', 'Drink', 'Drink event'),
@@ -874,18 +874,6 @@ class TissueType(models.Model):
 		unique_together = (('tst_tissue_name', 'category'),)
 
 
-class Unit(models.Model):
-	unt_unit_id = models.AutoField('ID', primary_key=True)
-	unt_unit_name = models.CharField('Name', max_length=100, unique=True, null=False,
-									 help_text='The name of the unit type. (ex. ml, mg)')
-
-	def __unicode__(self):
-		return self.unt_unit_name
-
-	class Meta:
-		db_table = 'unt_units'
-
-
 class Request(models.Model, DiffingMixin):
 	REFERRAL_CHOICES = (
 		('Internet Search', 'Internet Search'),
@@ -1062,8 +1050,10 @@ class TissueRequest(models.Model):
 	# for a tissue in a single order while allowing multiple custom requests in an order.
 	rtt_custom_increment = models.IntegerField('Custom Increment', default=0, editable=False, null=False)
 	rtt_amount = models.FloatField('Amount', help_text='Please enter the amount of tissue you need.')
-	unit = models.ForeignKey(Unit, null=False, related_name='+', db_column='unt_unit_id',
-							 help_text='Please select the unit of measure.')
+#	unit = models.ForeignKey(Unit, null=False, related_name='+', db_column='unt_unit_id',
+#							 help_text='Please select the unit of measure.')
+	rtt_units = models.CharField('Amount units',
+								 choices=Units, null=False, max_length=20, default=Units[0][0])
 	rtt_notes = models.TextField('Tissue Notes', null=True, blank=True,
 								 help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular tissue request.')
 	monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
@@ -1090,7 +1080,7 @@ class TissueRequest(models.Model):
 		return self.rtt_fix_type
 
 	def get_amount(self):
-		return str(self.rtt_amount) + ' ' + self.unit.unt_unit_name
+		return str(self.rtt_amount) + ' ' + self.rtt_units
 
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
@@ -1298,7 +1288,8 @@ class TissueSample(models.Model):
 								   null=True, blank=True,
 								   help_text='Any extras details about this tissue sample.')
 	tss_sample_quantity = models.FloatField('Sample Quantity', null=True, default=0)
-	units = models.ForeignKey(Unit, null=False, default=Unit.objects.get(unt_unit_name="whole").pk)
+	tss_units = models.CharField('Quantity units',
+								 choices=Units, null=False, max_length=20, default=Units[3][0])
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='+', db_column='usr_usr_id', editable=False, null=True)
 
@@ -1308,7 +1299,7 @@ class TissueSample(models.Model):
 
 	def __unicode__(self):
 		return str(self.monkey) + ' ' + str(self.tissue_type) + ' ' + self.tss_freezer\
-			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.units.__unicode__() + ')'
+			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.tss_unit + ')'
 
 	def get_location(self):
 		return self.tss_freezer + ': ' + self.tss_location
@@ -1409,7 +1400,7 @@ class TissueInventoryVerification(models.Model):
 		# This will set the tissue_sample field with several database consistency checks
 		if self.tissue_sample is None:
 			try:
-				units = Unit.objects.get(unt_unit_name="whole")
+				units = Units[3][0]
 				self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
 																				defaults={'tss_freezer': "No Previous Record",
 																						  'tss_location': "No Previous Record",

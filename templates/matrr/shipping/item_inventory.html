@@ -14,7 +14,7 @@
           {% for sample in samples.all %}
             <tr><th>Sample Location:</th><td colspan="2">{{ sample.get_location }}</td></tr>
             <tr><th>Last Updated:</th><td colspan="2">{{ sample.get_modified|date:"m/d/Y, g:i a" }}</td></tr>
-            <tr><th>Quantity: </th><td colspan="2">{{ sample.tss_sample_quantity|floatformat }} {{ sample.units.unt_unit_name }}</td></tr>
+            <tr><th>Quantity: </th><td colspan="2">{{ sample.tss_sample_quantity|floatformat }} {{ sample.tss_units }}</td></tr>
             
           {% endfor %}
         {% else %}
