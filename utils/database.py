@@ -499,7 +499,7 @@ def load_monkey_data(input_file):
 		monkey.mky_gender = str(row[4])
 		year = int(row[5].split('/')[2])
 		year = year + 2000 if year < 12 else year + 1900
-		monkey.mky_birthdate = datetime.datetime(year, int(row[5].split('/')[0]), int(row[5].split('/')[1]))
+		monkey.mky_birthdate = datetime(year, int(row[5].split('/')[0]), int(row[5].split('/')[1]))
 		if row[6]:
 			monkey.mky_weight = float(row[6])
 		monkey.mky_drinking = row[7] == 'TRUE'
@@ -507,7 +507,7 @@ def load_monkey_data(input_file):
 		if row[9]:
 			year = int(row[9].split('/')[2])
 			year = year + 2000 if year < 12 else year + 1900
-			monkey.mky_necropsy_start_date = datetime.datetime(year, int(row[9].split('/')[0]), int(row[9].split('/')[1]))
+			monkey.mky_necropsy_start_date = datetime(year, int(row[9].split('/')[0]), int(row[9].split('/')[1]))
 		monkey.mky_study_complete = row[13] == 'TRUE'
 		monkey.mky_stress_model = row[14]
 		monkey.mky_age_at_necropsy = row[15]
