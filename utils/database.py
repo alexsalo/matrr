@@ -488,11 +488,9 @@ def load_monkey_data(input_file):
 	columns = input_data.next()
 
 	for row in input_data:
-		if row[0] == '145':
+		if row[2] == '0':
 			continue
-		monkey = Monkey.objects.get(pk=row[0])
-		if str(row[2]) != str(monkey.mky_real_id):
-			raise Exception('ruh roh, bad monkey number, no continue!')
+		monkey = Monkey.objects.get(mky_real_id=row[2])
 		monkey.mky_name = str(row[3])
 		monkey.mky_gender = str(row[4])
 		year = int(row[5].split('/')[2])
