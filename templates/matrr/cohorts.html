@@ -32,7 +32,7 @@ All Cohorts
 							<th>Birthdate</th></tr>
 						{% for monkey in cohort.monkey_set.all|dictsortreversed:"mky_drinking" %}
 							<tr>
-								<td class='text-center-common-td'><a href='{% url monkey-detail cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_real_id }}<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
+								<td class='text-center-common-td'><a href='{% url monkey-detail cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
 								{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
 									<td class='text-center-common-td'>{{ monkey.mky_name }}</td>
 								{% endif %}

@@ -8,7 +8,7 @@
     <table id='inventory_{{ tissue_request.get_html_label }}' class='hidden'>
     {% for monkey in tissue_request.accepted_monkeys.all %}
       <tbody>
-      <tr><th>Monkey:</th><td>{{ monkey.mky_real_id }}</td><td>{{ monkey.mky_name }}</td></tr>
+      <tr><th>Monkey:</th><td>{{ monkey.mky_id }}</td><td>{{ monkey.mky_name }}</td></tr>
       {% with samples=tissue_request.get_tissue|get_stock:monkey %}
         {% if samples.count %}
           {% for sample in samples.all %}
