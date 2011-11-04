@@ -1311,7 +1311,7 @@ class TissueSample(models.Model):
 
 	def __unicode__(self):
 		return str(self.monkey) + ' ' + str(self.tissue_type) + ' ' + self.tss_freezer\
-			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.tss_unit + ')'
+			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.tss_units + ')'
 
 	def get_location(self):
 		return self.tss_freezer + ': ' + self.tss_location
