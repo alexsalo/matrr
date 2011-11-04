@@ -51,7 +51,6 @@ def cohort_boxplot_m2de_total_pellets(cohort, days=10):
 def cohort_boxplot_m2de_mtd_weight(cohort, days=10):
 	return cohort_boxplot_m2de_general(mtd_weight, "Weight (in kg)", cohort, days )
 
-
 def cohort_boxplot_m2de_general(specific_callable, y_label, cohort, days=10,):
 	from matrr.models import Cohort, MonkeyToDrinkingExperiment
 	if not isinstance(cohort, Cohort):
@@ -59,7 +58,7 @@ def cohort_boxplot_m2de_general(specific_callable, y_label, cohort, days=10,):
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return 0, "NO MAP"
+			return False, 'NO MAP'
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 	if cohort_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('-drinking_experiment__dex_date')
@@ -90,7 +89,8 @@ def cohort_boxplot_m2de_general(specific_callable, y_label, cohort, days=10,):
 
 	else:
 		print "No drinking experiments for this cohort."
-		return 0, "NO MAP"
+		return False, 'NO MAP'
+
 
 def cohort_boxplot_m2de_month_etoh_intake(cohort, from_date=None, to_date=None):
 	return cohort_boxplot_m2de_month_general(etoh_intake, "Ethanol Intake (in ml)",cohort, from_date, to_date)
@@ -112,13 +112,27 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return 0, "NO MAP"
+			return False, 'NO MAP'
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
-	if from_date:
-		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
-	if to_date:
-		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+
+	if from_date and not isinstance(from_date, datetime):
+		try:
+			#maybe its a str(datetime)
+			from_date = dateutil.parser.parse(from_date)
+		except:
+			#otherwise give up
+			print("Invalid parameter, from_date")
+			return False, 'NO MAP'
+	if from_date and not isinstance(to_date, datetime):
+		try:
+			#maybe its a str(datetime)
+			to_date = dateutil.parser.parse(to_date)
+		except:
+			#otherwise give up
+			print("Invalid parameter, from_date")
+		return False, 'NO MAP'
+
 
 	if cohort_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
@@ -149,7 +163,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 		return fig, "NO MAP"
 	else:
 		print "No drinking experiments for this cohort."
-		return 0, "NO MAP"
+		return False, 'NO MAP'
 
 def convert_timedelta(t):
 	if t:
@@ -249,7 +263,7 @@ def monkey_boxplot_etoh(monkey=None):
 	##  Because this is ethanol data, only bother with drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return 0, 'NO MAP'
+		return False, 'NO MAP'
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -307,7 +321,7 @@ def monkey_boxplot_pellets(monkey=None):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return 0, 'NO MAP'
+		return False, 'NO MAP'
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -364,7 +378,7 @@ def monkey_boxplot_veh(monkey=None):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return 0, 'NO MAP'
+		return False, 'NO MAP'
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -422,7 +436,7 @@ def monkey_boxplot_weight(monkey=None):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return 0, 'NO MAP'
+		return False, 'NO MAP'
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -600,19 +614,19 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 
 	return fig, datapoint_map
 
-def monkey_errorbox_etoh(monkey=None):
-	return monkey_errorbox_general(etoh_intake, 'Ethanol Intake (in ml)', monkey)
+def monkey_errorbox_etoh(monkey=None, **kwargs):
+	return monkey_errorbox_general(etoh_intake, 'Ethanol Intake (in ml)', monkey, **kwargs)
 
-def monkey_errorbox_veh(monkey=None):
-	return monkey_errorbox_general(veh_intake, 'Veh Intake (in ml)', monkey)
+def monkey_errorbox_veh(monkey=None, **kwargs):
+	return monkey_errorbox_general(veh_intake, 'Veh Intake (in ml)', monkey, **kwargs)
 
-def monkey_errorbox_weight(monkey=None):
-	return monkey_errorbox_general(mtd_weight, 'Weight (in kg)', monkey)
+def monkey_errorbox_weight(monkey=None, **kwargs):
+	return monkey_errorbox_general(mtd_weight, 'Weight (in kg)', monkey, **kwargs)
 
-def monkey_errorbox_pellets(monkey=None):
-	return monkey_errorbox_general(total_pellets, 'Total Pellets', monkey)
+def monkey_errorbox_pellets(monkey=None, **kwargs):
+	return monkey_errorbox_general(total_pellets, 'Total Pellets', monkey, **kwargs)
 
-def monkey_errorbox_general(specific_callable, y_label, monkey):
+def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 	from matrr.models import Monkey, MonkeyToDrinkingExperiment
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
@@ -628,8 +642,30 @@ def monkey_errorbox_general(specific_callable, y_label, monkey):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return 0, 'NO MAP'
+		return False, 'NO MAP'
 
+	from_date = to_date = False
+	if kwargs.has_key('from_date'):
+		from_date = kwargs['from_date']
+	if kwargs.has_key('to_date'):
+		to_date = kwargs['to_date']
+	if from_date and not isinstance(from_date, datetime):
+		try:
+			#maybe its a str(datetime)
+			from_date = dateutil.parser.parse(from_date)
+		except:
+			#otherwise give up
+			print("Invalid parameter, from_date")
+			return False, 'NO MAP'
+	if from_date and not isinstance(to_date, datetime):
+		try:
+			#maybe its a str(datetime)
+			to_date = dateutil.parser.parse(to_date)
+		except:
+			#otherwise give up
+			print("Invalid parameter, from_date")
+		return False, 'NO MAP'
+			
 	monkey_alpha = .7
 	cohort = monkey.cohort
 
@@ -690,7 +726,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey):
 
 		return fig1, 'errorbox'
 	else:
-		return 0, 'NO MAP'
+		return False, 'NO MAP'
 
 
 

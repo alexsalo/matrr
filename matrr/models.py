@@ -1416,7 +1416,7 @@ class TissueInventoryVerification(models.Model):
 				self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
 																				defaults={'tss_freezer': "No Previous Record",
 																						  'tss_location': "No Previous Record",
-																						  'units': units})
+																						  'tss_units': units})
 				# All tissue samples should have been previously created.
 				# Currently, I don't think a TIV can be created (thru the website) without a tissue sample record already existing
 				if is_new:
