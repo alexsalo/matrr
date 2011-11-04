@@ -205,9 +205,9 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 			min_occurred = mtd.events_set.filter(eev_event_type=ExperimentEventType.Time).aggregate(Min('eev_occurred'))['eev_occurred__min']
 			if events.count() > 0:
 				event = events[0]
-				if mtd.monkey.mky_real_id not in monkeys:
-					monkeys[mtd.monkey.mky_real_id] = dict()
-				monkeys[mtd.monkey.mky_real_id][dex_date] = event.eev_occurred - min_occurred # elapsed time since the beginning of the experiment
+				if mtd.monkey.mky_id not in monkeys:
+					monkeys[mtd.monkey.mky_id] = dict()
+				monkeys[mtd.monkey.mky_id][dex_date] = event.eev_occurred - min_occurred # elapsed time since the beginning of the experiment
 
 	for dex_date in dates:
 		for event_dates in monkeys.itervalues():
@@ -239,7 +239,7 @@ def monkey_boxplot_etoh(monkey=None):
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mky_real_id=monkey)
+			monkey = Monkey.objects.get(mky_id=monkey)
 		except Monkey.DoesNotExist:
 			try:
 				monkey = Monkey.objects.get(pk=monkey)
@@ -296,7 +296,7 @@ def monkey_boxplot_pellets(monkey=None):
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mky_real_id=monkey)
+			monkey = Monkey.objects.get(mky_id=monkey)
 		except Monkey.DoesNotExist:
 			try:
 				monkey = Monkey.objects.get(pk=monkey)
@@ -353,7 +353,7 @@ def monkey_boxplot_veh(monkey=None):
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mky_real_id=monkey)
+			monkey = Monkey.objects.get(mky_id=monkey)
 		except Monkey.DoesNotExist:
 			try:
 				monkey = Monkey.objects.get(pk=monkey)
@@ -411,7 +411,7 @@ def monkey_boxplot_weight(monkey=None):
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mky_real_id=monkey)
+			monkey = Monkey.objects.get(mky_id=monkey)
 		except Monkey.DoesNotExist:
 			try:
 				monkey = Monkey.objects.get(pk=monkey)
@@ -481,7 +481,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mky_real_id=monkey)
+			monkey = Monkey.objects.get(mky_id=monkey)
 		except Monkey.DoesNotExist:
 			try:
 				monkey = Monkey.objects.get(pk=monkey)
@@ -561,7 +561,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 	ax1.set_ylabel("Total number of drinks =  bouts * drinks per bout")
 	ax1.set_xlabel("Days")
 
-	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_real_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
+	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 	y_max = max(total_drinks)
 	pyplot.ylim(0,y_max + y_max*0.25) # + % to show circles under the size legend instead of behind it
 	pyplot.xlim(0,len(xaxis) + 1)
@@ -617,7 +617,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey):
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mky_real_id=monkey)
+			monkey = Monkey.objects.get(mky_id=monkey)
 		except Monkey.DoesNotExist:
 			try:
 				monkey = Monkey.objects.get(pk=monkey)
