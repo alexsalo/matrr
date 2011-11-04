@@ -301,7 +301,7 @@ class MATRRImage(models.Model):
 				html_frag_path = self._build_html_fragment(data_map)
 				html_frag = open(html_frag_path, 'r')
 				self.html_fragment = File(html_frag)
-			self.save()
+				self.save()
 		else:
 			self.delete()
 
@@ -312,7 +312,7 @@ class MATRRImage(models.Model):
 	def _draw_image(self, mpl_figure):
 		import Image
 		thumbnail_size = (240,240)
-		DPI =  plotting.DEFAULT_DPI
+		DPI =  mpl_figure.get_dpi()
 
 		filename = '/tmp/' + str(self)
 		image_path = filename + '.png'
