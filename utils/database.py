@@ -249,7 +249,7 @@ def load_inventory(file, output_file, load_tissue_types=False,  delete_name_dupl
 		10 - Freezer
 	  """
 	if load_tissue_types:
-		load_TissueTypes('tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
+		load_TissueTypes('utils/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
 	input = csv.reader(open(file, 'rU'), delimiter=',')
 	output = csv.writer(open(output_file, 'w'), delimiter=',')
 	unknown_monkeys = csv.writer(open('unknown_monkeys.csv', 'w'), delimiter=',')
