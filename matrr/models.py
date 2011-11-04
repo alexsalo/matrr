@@ -1,7 +1,7 @@
 #encoding=utf-8
 import os, ast
 from django.db import models
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -472,6 +472,17 @@ class Mta(models.Model):
 					('view_mta_file', 'Can view MTA files of other users'),
 					)
 
+class AccountManager(models.Manager):
+	def users_with_perm(self, perm_string):
+		try:
+			p = Permission.objects.get(codename=perm_string)
+		except:
+			return Permission.objects.filter(codename=perm_string)
+		users = p.user_set.all()
+		groups = p.group_set.all()
+		for group in groups:
+			users |= group.user_set.all()
+		return users.distinct()
 
 class Account(models.Model):
 	user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
@@ -496,6 +507,7 @@ class Account(models.Model):
 	act_real_state = models.CharField('State', max_length=2, null=True, blank=False)
 	act_real_zip = models.CharField('ZIP', max_length=10, null=True, blank=False)
 	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
+	objects = AccountManager()
 	
 	username = ''
 	first_name = ''
@@ -1430,6 +1442,9 @@ class TissueInventoryVerification(models.Model):
 
 	class Meta:
 		db_table = 'tiv_tissue_verification'
+		permissions = (
+					('can_verify_tissues', 'Can verify tissues'),
+					)
 
 		
 # put any signal callbacks down here after the model declarations
