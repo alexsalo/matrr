@@ -9,7 +9,7 @@
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}
 {% trans "Requested Monkeys:" %}
-{% for monkey in tissue_request.monkeys.all %}{{ monkey.mky_real_id }}  {% endfor %}
+{% for monkey in tissue_request.monkeys.all %}{{ monkey.mky_id }}  {% endfor %}
 {% endfor %}
 
 {% trans "You can view your request at: " %}https://gleek.ecs.baylor.edu{{ request_url }}

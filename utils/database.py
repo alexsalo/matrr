@@ -259,7 +259,7 @@ def load_inventory(file, output_file, load_tissue_types=False,  delete_name_dupl
 	output.writerow(columns)
 	unknown_monkeys.writerow(columns)
 	monkeys = []
-	units = Unit.objects.get(unt_unit_name="whole")
+	units = "whole"
 	for row in input:
 		# Empty monkey cell
 		if row[1] is '' or row[1] is None:

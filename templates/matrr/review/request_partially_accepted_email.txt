@@ -12,7 +12,7 @@
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}
 {% trans "Requested Monkeys:" %}
-{% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_real_id }}  {% endfor %}
+{% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}  {% endfor %}
 {% endif %}{% endfor %}
 
 {% trans "Rejected requests:" %}
@@ -22,7 +22,7 @@
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}
 {% trans "Requested Monkeys:" %}{% for monkey in tissue_request.monkeys.all %}{% if monkey not in tissue_request.accepted_monkeys.all %}
-{{ monkey.mky_real_id }}
+{{ monkey.mky_id }}
 {% endif %}{% endfor %}{% endif %}{% endfor %}
 
 {% trans "You can view your request at: " %}https://gleek.ecs.baylor.edu{{ request_url }}

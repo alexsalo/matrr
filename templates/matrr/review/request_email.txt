@@ -12,7 +12,7 @@
 {% endif %}
 
 {% trans "Requested Monkeys:" %}
-{% for monkey in tissue_request.monkeys.all %}{{ monkey.mky_real_id }}  {% endfor %}
+{% for monkey in tissue_request.monkeys.all %}{{ monkey.mky_id }}  {% endfor %}
 {% endfor %}
 
 {% else %}

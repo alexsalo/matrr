@@ -1,7 +1,7 @@
 #encoding=utf-8
 import os, ast
 from django.db import models
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -60,6 +60,8 @@ class Enumeration(object):
 
 
 InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
+
+Units =  (('μl','μl'), ('μg','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
 
 ExperimentEventType = Enumeration([
 								('D', 'Drink', 'Drink event'),
@@ -250,7 +252,7 @@ class Monkey(models.Model):
 	mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
 
 	def __unicode__(self):
-		return str(self.mky_real_id)
+		return str(self.mky_id)
 
 	class Meta:
 		db_table = 'mky_monkeys'
@@ -299,7 +301,7 @@ class MATRRImage(models.Model):
 				html_frag_path = self._build_html_fragment(data_map)
 				html_frag = open(html_frag_path, 'r')
 				self.html_fragment = File(html_frag)
-			self.save()
+				self.save()
 		else:
 			self.delete()
 
@@ -310,7 +312,7 @@ class MATRRImage(models.Model):
 	def _draw_image(self, mpl_figure):
 		import Image
 		thumbnail_size = (240,240)
-		DPI =  plotting.DEFAULT_DPI
+		DPI =  mpl_figure.get_dpi()
 
 		filename = '/tmp/' + str(self)
 		image_path = filename + '.png'
@@ -470,6 +472,17 @@ class Mta(models.Model):
 					('view_mta_file', 'Can view MTA files of other users'),
 					)
 
+class AccountManager(models.Manager):
+	def users_with_perm(self, perm_string):
+		try:
+			p = Permission.objects.get(codename=perm_string)
+		except:
+			return Permission.objects.filter(codename=perm_string)
+		users = p.user_set.all()
+		groups = p.group_set.all()
+		for group in groups:
+			users |= group.user_set.all()
+		return users.distinct()
 
 class Account(models.Model):
 	user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
@@ -494,6 +507,7 @@ class Account(models.Model):
 	act_real_state = models.CharField('State', max_length=2, null=True, blank=False)
 	act_real_zip = models.CharField('ZIP', max_length=10, null=True, blank=False)
 	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
+	objects = AccountManager()
 	
 	username = ''
 	first_name = ''
@@ -637,6 +651,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 	class Meta:
 		db_table = 'mtd_monkeys_to_drinking_experiments'
 
+
 class ExperimentBout(models.Model):
 	ebt_id = models.AutoField(primary_key=True)
 	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='bouts_set')
@@ -658,7 +673,8 @@ class ExperimentBout(models.Model):
 			raise ValidationError('Bout length does not correspond the Start and End time. An isolated drink is given the length of 1 second, despite start time and end time being equal.')
 	class Meta:
 		db_table = 'ebt_experiment_bouts'
-		
+
+
 class ExperimentDrink(models.Model):
 	edr_id = models.AutoField(primary_key=True)
 	ebt = models.ForeignKey(ExperimentBout, null=False, db_column='ebt_id', related_name='drinks_set')
@@ -680,6 +696,7 @@ class ExperimentDrink(models.Model):
 			raise ValidationError('Drink length does not correspond to Start and End time. (An isolated drink is given the length of 1 second, despite start time and end time being equal.)')
 	class Meta:
 		db_table = 'edr_experiment_drinks'
+
 
 class ExperimentEvent(models.Model):
 	eev_id = models.AutoField(primary_key=True)
@@ -869,18 +886,6 @@ class TissueType(models.Model):
 		unique_together = (('tst_tissue_name', 'category'),)
 
 
-class Unit(models.Model):
-	unt_unit_id = models.AutoField('ID', primary_key=True)
-	unt_unit_name = models.CharField('Name', max_length=100, unique=True, null=False,
-									 help_text='The name of the unit type. (ex. ml, mg)')
-
-	def __unicode__(self):
-		return self.unt_unit_name
-
-	class Meta:
-		db_table = 'unt_units'
-
-
 class Request(models.Model, DiffingMixin):
 	REFERRAL_CHOICES = (
 		('Internet Search', 'Internet Search'),
@@ -1057,8 +1062,10 @@ class TissueRequest(models.Model):
 	# for a tissue in a single order while allowing multiple custom requests in an order.
 	rtt_custom_increment = models.IntegerField('Custom Increment', default=0, editable=False, null=False)
 	rtt_amount = models.FloatField('Amount', help_text='Please enter the amount of tissue you need.')
-	unit = models.ForeignKey(Unit, null=False, related_name='+', db_column='unt_unit_id',
-							 help_text='Please select the unit of measure.')
+#	unit = models.ForeignKey(Unit, null=False, related_name='+', db_column='unt_unit_id',
+#							 help_text='Please select the unit of measure.')
+	rtt_units = models.CharField('Amount units',
+								 choices=Units, null=False, max_length=20, default=Units[0][0])
 	rtt_notes = models.TextField('Tissue Notes', null=True, blank=True,
 								 help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular tissue request.')
 	monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
@@ -1085,7 +1092,7 @@ class TissueRequest(models.Model):
 		return self.rtt_fix_type
 
 	def get_amount(self):
-		return str(self.rtt_amount) + ' ' + self.unit.unt_unit_name
+		return str(self.rtt_amount) + ' ' + self.rtt_units
 
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
@@ -1293,7 +1300,8 @@ class TissueSample(models.Model):
 								   null=True, blank=True,
 								   help_text='Any extras details about this tissue sample.')
 	tss_sample_quantity = models.FloatField('Sample Quantity', null=True, default=0)
-	units = models.ForeignKey(Unit, null=False, default=Unit.objects.get(unt_unit_name="whole").pk)
+	tss_units = models.CharField('Quantity units',
+								 choices=Units, null=False, max_length=20, default=Units[3][0])
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='+', db_column='usr_usr_id', editable=False, null=True)
 
@@ -1303,7 +1311,7 @@ class TissueSample(models.Model):
 
 	def __unicode__(self):
 		return str(self.monkey) + ' ' + str(self.tissue_type) + ' ' + self.tss_freezer\
-			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.units.__unicode__() + ')'
+			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.tss_unit + ')'
 
 	def get_location(self):
 		return self.tss_freezer + ': ' + self.tss_location
@@ -1404,7 +1412,7 @@ class TissueInventoryVerification(models.Model):
 		# This will set the tissue_sample field with several database consistency checks
 		if self.tissue_sample is None:
 			try:
-				units = Unit.objects.get(unt_unit_name="whole")
+				units = Units[3][0]
 				self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
 																				defaults={'tss_freezer': "No Previous Record",
 																						  'tss_location': "No Previous Record",
@@ -1434,6 +1442,9 @@ class TissueInventoryVerification(models.Model):
 
 	class Meta:
 		db_table = 'tiv_tissue_verification'
+		permissions = (
+					('can_verify_tissues', 'Can verify tissues'),
+					)
 
 		
 # put any signal callbacks down here after the model declarations
@@ -1514,14 +1525,13 @@ def request_post_save(**kwargs):
 	and current_status == RequestStatus.objects.get(rqs_status_name='Shipped'):
 		# Create new TIVs to update MATRR inventory after a tissue has shipped.
 		for tissue_request in tissue_requests:
-			for monkey in tissue_request.accepted_monkeys.all():
+			for monkey in tissue_request.accepted_monkeys.all().exclude(mky_real_id=0): # dont create tivs for assay monkeys after shipment
 				tv = TissueInventoryVerification.objects.create(tissue_type=tissue_request.tissue_type,
 																monkey=monkey,
 																tissue_request=None)
 				tv.save()
 
 	req_request._previous_status_id = None
-
 
 # This is a method to check to see if a user_id exists that does not have
 # an account attached to it.

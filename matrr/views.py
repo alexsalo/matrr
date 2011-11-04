@@ -128,7 +128,7 @@ def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 
 def monkey_detail_view(request, monkey_id):
 	try:
-		monkey = Monkey.objects.get(mky_real_id=monkey_id)
+		monkey = Monkey.objects.get(mky_id=monkey_id)
 	except:
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
@@ -1184,7 +1184,7 @@ def tissue_verification(request):
 					   'location': tss.tss_location,
 					   'quantity': tss.tss_sample_quantity,
 					   'inventory': tiv.tiv_inventory,
-					   'units': tss.units.pk,
+					   'units': tss.tss_units,
 					   'details': tss.tss_details,
 					   'monkey': tiv.monkey,
 					   'tissue': tiv.tissue_type,
