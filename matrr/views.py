@@ -128,7 +128,7 @@ def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 
 def monkey_detail_view(request, monkey_id):
 	try:
-		monkey = Monkey.objects.get(mky_real_id=monkey_id)
+		monkey = Monkey.objects.get(mky_id=monkey_id)
 	except:
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})

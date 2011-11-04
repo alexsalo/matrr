@@ -252,7 +252,7 @@ class Monkey(models.Model):
 	mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
 
 	def __unicode__(self):
-		return str(self.mky_real_id)
+		return str(self.mky_id)
 
 	class Meta:
 		db_table = 'mky_monkeys'
