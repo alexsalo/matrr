@@ -13,13 +13,14 @@ GLEEK = DEVELOPMENT = PRODUCTION = False
 
 if path == '/web/www/matrr-prod':
 	PRODUCTION = True
-	os.environ['HOME'] = "/web/www/html"
+	
 elif path == '/web/www/matrr-dev':
 	DEVELOPMENT = GLEEK = True
 else:
 	DEVELOPMENT = True
 
-
+if PRODUCTION or GLEEK:
+	os.environ['HOME'] = "/web/www/html"
 
 DATABASES = {
 		'default': {
