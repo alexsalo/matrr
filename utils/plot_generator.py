@@ -7,7 +7,7 @@ Goal is to make this more fancy, so that you can pass "MonkeyImage" as a paramet
 '''
 
 MonkeyImage.objects.all().delete()
-for monkey in Cohort.objects.all():
+for monkey in Monkey.objects.all():
 	for key in plotting.MONKEY_PLOTS:
 		graph = key
 		monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=plotting.MONKEY_PLOTS[key][1])

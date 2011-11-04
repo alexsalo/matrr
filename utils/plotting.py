@@ -644,8 +644,11 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 		print "This monkey isn't drinking:  " + str(monkey)
 		return False, 'NO MAP'
 
-	from_date = kwargs['from_date']
-	to_date = kwargs['to_date']
+	from_date = to_date = False
+	if kwargs.has_key('from_date'):
+		from_date = kwargs['from_date']
+	if kwargs.has_key('to_date'):
+		to_date = kwargs['to_date']
 	if from_date and not isinstance(from_date, datetime):
 		try:
 			#maybe its a str(datetime)
