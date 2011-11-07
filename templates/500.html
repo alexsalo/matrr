@@ -64,29 +64,6 @@
 		<!-- Sidebar div -->
 		<div class='sidebar clearfix'>
 			{% block sidebar %}
-				{% block login %}
-					<div class='sidebar-block'>
-						{% if not user.is_authenticated %}
-							<div class='headline'>
-								Login
-							</div>
-							{% include 'login.form' %}
-							<a href="{% url registration_register %}">Create an Account</a>
-						{% else %}
-							Welcome {{ user.username }}
-
-						{% endif %}
-					</div>
-				{% endblock %}
-
-				{% block cart %}
-					{% if user.is_authenticated %}
-						{% if cart_items != None %}
-							{% include 'matrr/cart/cart.html' %}
-						{% endif %}
-					{% endif %}
-				{% endblock %}
-
 				<div class='sidebar-block'>
 					<div class='headline'>
 						Quick Links
