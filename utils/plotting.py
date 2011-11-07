@@ -745,7 +745,7 @@ MONKEY_PLOTS = {
 }
 
 def plot_generator():
-	from matrr.models import MonkeyImage
+	from matrr.models import MonkeyImage, Monkey
 	MonkeyImage.objects.all().delete()
 	for monkey in Monkey.objects.all():
 		for key in plotting.MONKEY_PLOTS:
@@ -753,7 +753,7 @@ def plot_generator():
 			monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=plotting.MONKEY_PLOTS[key][1])
 			monkeyimage.save()
 
-	from matrr.models import CohortImage
+	from matrr.models import CohortImage, Cohort
 	CohortImage.objects.all().delete()
 	for cohort in Cohort.objects.all():
 		for key in plotting.COHORT_PLOTS:
