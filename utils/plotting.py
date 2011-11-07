@@ -1,13 +1,6 @@
-import os
-import matplotlib as mpl
 from matplotlib import pyplot
-import Image, numpy
-from matplotlib.patches import Circle
-import numpy as np
+import numpy
 from pylab import *
-from settings import MATRR_STATIC_STRING
-from os import path, makedirs
-from datetime import datetime
 from matrr.models import *
 import dateutil
 
@@ -38,6 +31,7 @@ def veh_intake(queryset):
 
 def mtd_weight(queryset):
 	return queryset.exclude(mtd_weight=None).values_list('mtd_weight')
+
 
 def cohort_boxplot_m2de_etoh_intake(cohort, days=10):
 	return cohort_boxplot_m2de_general(etoh_intake, "Ethanol Intake (in ml)",cohort, days)
@@ -744,19 +738,19 @@ MONKEY_PLOTS = {
 				'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake'),
 }
 
-def plot_generator():
+def create_plots():
 	from matrr.models import MonkeyImage, Monkey
 	MonkeyImage.objects.all().delete()
 	for monkey in Monkey.objects.all():
-		for key in plotting.MONKEY_PLOTS:
+		for key in MONKEY_PLOTS:
 			graph = key
-			monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=plotting.MONKEY_PLOTS[key][1])
+			monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[key][1])
 			monkeyimage.save()
 
 	from matrr.models import CohortImage, Cohort
 	CohortImage.objects.all().delete()
 	for cohort in Cohort.objects.all():
-		for key in plotting.COHORT_PLOTS:
+		for key in COHORT_PLOTS:
 			graph = key
-			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=plotting.COHORT_PLOTS[key][1])
+			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[key][1])
 			cohortimage.save()

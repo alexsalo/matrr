@@ -8,7 +8,6 @@ from django.dispatch import receiver
 from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
-from utils import plotting
 from django.core.exceptions import ValidationError
 
 def percentage_validator(value):
@@ -377,6 +376,7 @@ class MonkeyImage(MATRRImage):
 		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
 
 	def _plot_picker(self):
+		from utils import plotting
 		PLOTS = plotting.MONKEY_PLOTS
 
 		if not self.method:
@@ -417,6 +417,7 @@ class CohortImage(MATRRImage):
 		super(CohortImage, self)._construct_filefields(mpl_figure, data_map)
 
 	def _plot_picker(self):
+		from utils import plotting
 		PLOTS = plotting.COHORT_PLOTS
 
 		if not self.method:
