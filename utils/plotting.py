@@ -743,3 +743,18 @@ MONKEY_PLOTS = {
 
 				'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake'),
 }
+
+def plot_generator():
+	MonkeyImage.objects.all().delete()
+	for monkey in Monkey.objects.all():
+		for key in plotting.MONKEY_PLOTS:
+			graph = key
+			monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=plotting.MONKEY_PLOTS[key][1])
+			monkeyimage.save()
+
+	CohortImage.objects.all().delete()
+	for cohort in Cohort.objects.all():
+		for key in plotting.COHORT_PLOTS:
+			graph = key
+			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=plotting.COHORT_PLOTS[key][1])
+			cohortimage.save()
