@@ -22,7 +22,7 @@
 		{% block extra_js %}{% endblock %}
 
 		<link rel="shortcut icon" href="/static/images/matrr_favicon.ico"/>
-		<title>{% block title %}{% endblock %}</title>
+		<title></title>
 
 	</head>
 
@@ -34,14 +34,6 @@
 				<a href='/'><img src="/static/images/MATRR_logo.png" alt="MATRR logo"/></a>
 			</div>
 			<div class='right'>
-				{% if not user.is_authenticated %}
-					{% load basic_filters %}
-					<a style='color: #FAF9ED' href="{% url auth_login %}?next={{ request.path|strip_account }}">Login</a> |
-					<a style='color: #FAF9ED;' href="{% url registration_register %}?next={{ request.path|strip_account }}">
-						Create an Account</a>
-				{% else %}
-					Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{% url matrr-logout %}">Logout</a>
-				{% endif %}
 			</div>
 		</div>
 	</div>
@@ -60,56 +52,6 @@
 							<a href='{% url search %}'>Search</a>
 						</li>
 					</ul>
-					
-					{% if user.is_authenticated and user_is_verified %}
-						<ul>
-							<li class='top'><a href="{% url account-view %}">My Account</a></li>
-							<li class='drop-down'><a href="{% url order-list %}">My Orders</a></li>
-						</ul>
-					{% endif %}
-					
-					{% if user_is_member_of_committee or user_is_member_of_uberuser %}
-						<ul>
-							<li class='top'>
-								<a href="{% url review-list %}">My Reviews</a>
-							</li>
-							{% if user_is_member_of_uberuser %}
-								<li class='drop-down'><a href="{% url review-overview-list %}">Overview</a></li>
-								<li class='drop-down'><a href="{% url review-history-list %}">History</a></li>
-							{% endif %}
-						</ul>
-					{% endif %}
-					
-					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
-						<ul>
-							<li class='top'>
-								<a href='{% url shipping-overview %}'>Shipping</a>
-							</li>
-						</ul>
-					{% endif %}
-
-					{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
-						<ul>
-							<li class='top'>
-								<a href='https://gleek.ecs.baylor.edu/wiki/index.php?title=Issue_Tracker'>Issue Tracker</a>
-							</li>
-						</ul>
-					{% endif %}			
-					
-					{% if user.is_staff %}
-						<ul>
-							<li class='top'><a href="/admin/">Admin</a></li>
-							<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
-						</ul>
-					{% endif %}
-					
-					{#      {% if user.is_staff %}#}
-					{#      <ul>#}
-					{#          <li class='top'><a href="/qc/">Quality Control</a></li>#}
-					{#          <li class='drop-down'><a href="/upload_rna/">Upload RNA</a></li>#}
-					{#          <li class='drop-down'><a href="/view_rna/">View RNA</a></li>#}
-					{#      </ul>#}
-					{#      {% endif %}#}
 				{% endblock %}
 			</div>
 
