@@ -28,7 +28,11 @@
 
 	<body>
 	<!-- Header div -->
+	{% if PRODUCTION %}
 	<div class='header'>
+	{% else %}
+	<div class='header-dev'>
+	{% endif %}
 		<div class='header-content clearfix'>
 			<div class='left'>
 				<a href='/'><img src="{{ STATIC_URL }}images/MATRR_logo.png" alt="MATRR logo"/></a>
