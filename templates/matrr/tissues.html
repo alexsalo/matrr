@@ -1,6 +1,7 @@
-{% extends 'matrr/tissue_shopping.html' %}
-
+{% extends 'matrr/tissue_shopping.html' %}	
 {% load tissue_filters %}
+
+
 
 {% block content %}
 	<div id="large-headline">Tissue Request</div>
@@ -49,22 +50,15 @@
 
 	{% endif %}
 
-
-	<div class="pagination">
-		<span class="step-links">
-			{% if tissues.has_previous %}
-				<a href="?page={{ tissues.previous_page_number }}">previous</a>
-			{% endif %}
-
-			<!--
-    <span class="current">
-      Page {{ tissues.number }} of {{ tissues.paginator.num_pages }}.
-    </span>
--->
-
-			{% if tissues.has_next %}
-				<a href="?page={{ tissues.next_page_number }}">next</a>
-			{% endif %}
-		</span>
+	<div class='clearfix'>
+			<div class='mini-headline'>Brain Blocks</div>
+			<div class="image_container">
+				<div class="image_thumbnail left">
+					<center>Brain Block 1</center>
+					<a rel="plot_gallery" title="Brain Block 1" href="{{ STATIC_URL }}images/brain_blocks/brain_block_1.html" target="_blank">
+						<img src="{{ STATIC_URL }}images/brain_blocks/brain_block_1-thumb.jpg">
+					</a>
+				</div>
+		</div>
 	</div>
 {% endblock %}

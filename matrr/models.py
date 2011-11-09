@@ -1,5 +1,7 @@
 #encoding=utf-8
+import Image
 import os, ast
+from django.core.files.base import File
 from django.db import models
 from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
@@ -285,32 +287,31 @@ class MATRRImage(models.Model):
 	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
 	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
 
+	thumbnail_size = (240,240)
+	
 	def _construct_filefields(self, mpl_figure, data_map, *args, **kwargs):
-		from django.core.files.base import File
-
 		# export the image and thumbnail to a temp folder and save them to the self.ImageFields
 		if mpl_figure:
 			image, thumbnail = self._draw_image(mpl_figure)
 			self.image = File(open(image, 'r'))
 			self.thumbnail = File(open(thumbnail, 'r'))
-			self.save()
 
 			# generate the html fragment for the image and save it
 			if data_map != "NO MAP":
 				html_frag_path = self._build_html_fragment(data_map)
 				html_frag = open(html_frag_path, 'r')
 				self.html_fragment = File(html_frag)
-				self.save()
+
+			self.save()
 		else:
 			self.delete()
+
 
 	def _plot_picker(self):
 		#  This needs to be overridden by subclasses
 		return
 
 	def _draw_image(self, mpl_figure):
-		import Image
-		thumbnail_size = (240,240)
 		DPI =  mpl_figure.get_dpi()
 
 		filename = '/tmp/' + str(self)
@@ -319,7 +320,7 @@ class MATRRImage(models.Model):
 		mpl_figure.savefig(image_path, dpi=DPI)
 
 		image_file = Image.open(image_path)
-		image_file.thumbnail(thumbnail_size, Image.ANTIALIAS)
+		image_file.thumbnail(self.thumbnail_size, Image.ANTIALIAS)
 		image_file.save(thumb_path)
 
 		return image_path, thumb_path
@@ -438,6 +439,33 @@ class CohortImage(MATRRImage):
 
 	class Meta:
 		db_table = 'cig_cohort_image'
+
+
+#  This model breaks MATRR field name scheme
+#class BrainImage(MATRRImage):
+#	big_id = models.AutoField(primary_key=True)
+#	brain_block = models.CharField('Brain Block', blank=True, null=False, max_length=50, help_text='The brain block pictured')
+#	objects = VIPManager()
+#
+#	def save(self, *args, **kwargs):
+#		super(BrainImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+#		self.method = 'brain_block'
+#		if self.brain_block and self.title and self.image and not (self.thumbnail and self.html_fragment): # Different from CohortImage and MonkeyImage.
+#			thumb_path = '/tmp/' + str(self) + '-thumb.jpg'
+#			image_file = Image.open(self.image.path)
+#			image_file.thumbnail(self.thumbnail_size, Image.ANTIALIAS)
+#			image_file.save(thumb_path)
+#			self.thumbnail = File(open(thumb_path, 'r'))
+#
+#			frag_path = self._build_html_fragment('data map')
+#			self.html_fragment = File(open(frag_path, 'r'))
+#			super(BrainImage, self).save(*args, **kwargs)
+#
+#	def __unicode__(self):
+#		return "%s.%s" % (self.brain_block, self.title)
+#
+#	class Meta:
+#		db_table = 'big_brain_image'
 
 
 class Mta(models.Model):

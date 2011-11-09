@@ -825,6 +825,7 @@ def tissue_list(request, tissue_category=None, cohort_id=None):
 		tissue_list = TissueType.objects.filter(category__cat_name=tissue_category).order_by('tst_tissue_name')
 	else:
 		tissue_list = TissueType.objects.order_by('tst_tissue_name')
+
 	available = list()
 	unavailable = list()
 
@@ -852,7 +853,8 @@ def tissue_list(request, tissue_category=None, cohort_id=None):
 	return render_to_response('matrr/tissues.html', {'tissues': available,
 													 'tissues_unavailable': unavailable,
 													 'title': tissue_category,
-													 'cohort': cohort},
+													 'cohort': cohort,
+													 'plot_gallery': True,},
 							  context_instance=RequestContext(request))
 
 
