@@ -298,6 +298,7 @@ class MATRRImage(models.Model):
 
 			# generate the html fragment for the image and save it
 			if data_map != "NO MAP":
+				self.save() # must be called before html frag gets built, or else the image paths are still in /tmp
 				html_frag_path = self._build_html_fragment(data_map)
 				html_frag = open(html_frag_path, 'r')
 				self.html_fragment = File(html_frag)
