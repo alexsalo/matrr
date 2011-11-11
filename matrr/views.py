@@ -21,6 +21,7 @@ from process_latex import process_latex
 from django.db.models import Q
 from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
+from utils import plotting
 
 def registration(request):
 	from registration.views import register
@@ -1255,19 +1256,50 @@ def sendfile(request, id):
 
 
 ####################
-#  Analysis tools  #
+#  VIP tools  #
 ####################
 
 @user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
 							u.groups.filter(name='Committee').count() or
+							u.groups.filter(name='VIP').count() or
 							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
-def analysis_index(request):
-	monkey = Monkey.objects.get(mky_real_id=28477)
-	graph = 'monkey_bouts_drinks'
-	parameters = str({'from_date': str(datetime(2011,6,1)),'to_date': str(datetime(2011,8,4))})
+def vip_tools(request):
+	return render_to_response('VIP/vip_index.html', {}, context_instance=RequestContext(request))
 
-	monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title='sweet title', parameters=parameters)
-	# if a MonkeyImage has all 3 of monkey, method and title, it will generate the filefields (if not already present).
-	monkeyimage.save()
-	return render_to_response('analysis/analysis_index.html', {'monkeyimage': monkeyimage,}, context_instance=RequestContext(request))
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
+							u.groups.filter(name='Committee').count() or
+							u.groups.filter(name='VIP').count() or
+							u.groups.filter(name='Uberuser').count(),
+				  login_url='/denied/')
+def vip_graph_builder(request, method_name):
+	monkey_graph = "monkey" in method_name
+	if request.POST:
+		
+	cohortform = VIPGraphForm_cohorts()
+
+	return render_to_response('VIP/vip_graph_builder.html', {'monkeyform': cohortform, 'monkey_graph': monkey_graph}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
+							u.groups.filter(name='Committee').count() or
+							u.groups.filter(name='VIP').count() or
+							u.groups.filter(name='Uberuser').count(),
+				  login_url='/denied/')
+def vip_graphs(request):
+	if request.POST:
+		for key in plotting.MONKEY_PLOTS:
+			if key in request.POST:
+				return redirect(reverse('vip-graph-builder', args = [key]))
+		for key in plotting.COHORT_PLOTS:
+			if key in request.POST:
+				return redirect(reverse('vip-graph-builder', args = [key]))
+		return reverse(vip_graphs) #  this should never be hit.  I dunno how it could be.
+	else:
+		context = {}
+		keys = []
+		for key in plotting.MONKEY_PLOTS:
+			keys.append((key, MonkeyImage.objects.filter(method=key)[0]))
+		for key in plotting.COHORT_PLOTS:
+			keys.append((key, CohortImage.objects.filter(method=key)[0]))
+		context['keys'] = keys
+		return render_to_response('VIP/vip_graphs.html', context, context_instance=RequestContext(request))

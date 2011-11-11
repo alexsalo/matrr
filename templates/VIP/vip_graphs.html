@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block extra_js %}
+{% endblock %}
+
+{% block content %}
+<div class='large-headline'>Build Your Own MATRR Graph</div><br>
+	{% if keys %}
+		<table>
+			<tr>
+				<th>Example thumbnail</th>
+				<th>Method Name</th>
+			</tr>
+		{% for key in keys %}
+			<tr align="center">
+				<td><img src='{{ key.1.thumbnail.url }}'></td>
+				<td>
+					{{ key.0 }}<br><br>
+					<form action='' method='post'>
+						{% csrf_token %}
+						<button type='submit' name='{{ key.0 }}' class="blockLinkCheckoutButton">Build Graph</button>
+					</form>
+				</td>
+			</tr>
+		{% endfor %}
+		</table>
+	{% endif %}
+{% endblock %}
