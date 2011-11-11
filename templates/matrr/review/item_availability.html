@@ -12,6 +12,12 @@
 		{% endif %}
 		{% if spacing %}
 			<th class='spacing'></th>{% endif %}
+			<th>Sex</th>
+		{% if spacing %}
+			<th class='spacing'></th>{% endif %}
+			<th>Weight</th>
+		{% if spacing %}
+			<th class='spacing'></th>{% endif %}
 		<th>Status</th>
 		{% if spacing %}
 			<th class='spacing'></th>{% endif %}
@@ -36,6 +42,12 @@
 					{% if spacing %}
 						<td class='spacing'></td>{% endif %}
 				{% endif %}
+				{% if spacing %}
+					<td class='spacing'></td>{% endif %}
+				<td>{{ monkey.mky_gender }}</td>
+				{% if spacing %}
+					<td class='spacing'></td>{% endif %}
+				<td>{{ monkey.mky_weight }}</td>
 				{% if tissue_request.get_tissue %}
 					{% with verification=tissue_request|get_verification:monkey %}
 						<td>
