@@ -1273,9 +1273,8 @@ def vip_tools(request):
 							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
 def vip_graph_builder(request, method_name):
+	# this method is unfinished and completely broken
 	monkey_graph = "monkey" in method_name
-	if request.POST:
-		
 	cohortform = VIPGraphForm_cohorts()
 
 	return render_to_response('VIP/vip_graph_builder.html', {'monkeyform': cohortform, 'monkey_graph': monkey_graph}, context_instance=RequestContext(request))
