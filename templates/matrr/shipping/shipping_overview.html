@@ -19,7 +19,7 @@ Pending Shipments
       <tr><td>{{ request.user }}</td><td>{{ request.cohort.coh_cohort_name }}</td>
         <td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
         <td><a href='{% url order-detail request.req_request_id %}'>Details</a></td>
-        <td><a class='blockLinkButton' href='{% url build-shippment request.req_request_id %}'>Build Shipment</a></td>
+        <td><a class='blockLinkButton' href='{% url build-shipment request.req_request_id %}'>Build Shipment</a></td>
       </tr>
     {% endfor %}
   </table>

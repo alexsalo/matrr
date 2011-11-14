@@ -78,7 +78,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^orders/(?P<req_request_id>\d+)/delete/?$', 			order_delete, name='order-delete'),
 	url(r'^experimental_plans/(?P<plan>\S+)/?$', 				experimental_plan_view),
 	url(r'^shipping_overview/$',								shipping_overview, name='shipping-overview'),
-	url(r'^shipping/build/(?P<req_request_id>\d+)/$', 			build_shipment, name='build-shippment'),
+	url(r'^shipping/build/(?P<req_request_id>\d+)/$', 			build_shipment, name='build-shipment'),
 	url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$', 	make_shipping_manifest_latex, name='manifest'),
 
 	#  Order review views
@@ -103,8 +103,10 @@ urlpatterns += patterns('matrr.views',
 
 	url(r'^verification/?$', tissue_verification, name='verification'),
 
-	# Data analysis tools
-	url(r'^analysis/?$', analysis_index, name='analysis_index'),
+	# VIP tools
+	url(r'^vip/$', vip_tools, name='vip-tools'),
+	url(r'^vip/graphs$', vip_graphs, name='vip-graphs'),
+	url(r'^vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
 
 	)
 

@@ -1,6 +1,7 @@
 #encoding=utf-8
 from django import forms
 from django.forms import Form, ModelForm, CharField, widgets, ModelMultipleChoiceField, RegexField,Textarea
+from django.forms.extras.widgets import SelectDateWidget
 from django.forms.models import inlineformset_factory
 from django.db import transaction
 from django.contrib.admin.widgets import FilteredSelectMultiple
@@ -317,3 +318,19 @@ class TissueInventoryVerificationForm(Form):
 	units = ChoiceField(choices=Units, required=False)
 	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
 	inventory = ChoiceField(choices=InventoryStatus, required=False)
+
+
+class VIPGraphForm_dates(Form):
+	from_date = DateField(widget=DateTimeWidget)
+	to_date = DateField(widget=DateTimeWidget)
+
+	def __init__(self, min_date=None, max_date=None, *args, **kwargs):
+		super(VIPGraphForm_dates, self).__init__(*args, **kwargs)
+		self.fields['from_date'].widget.attrs['min_date'] = min_date
+		self.fields['from_date'].widget.attrs['max_date'] = max_date
+		self.fields['to_date'].widget.attrs['min_date'] = min_date
+		self.fields['to_date'].widget.attrs['max_date'] = max_date
+
+
+class VIPGraphForm_cohorts(Form):
+	cohorts = ModelMultipleChoiceField(queryset=Cohort.objects.all().order_by('coh_cohort_name'), required=False, widget=CheckboxSelectMultiple)

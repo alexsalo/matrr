@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class='large-headline'>Build Your Own MATRR Graph</div><br>
+{% if form %}
+	<form action='' method='post'>
+		{% csrf_token %}
+		{{ form.as_p }}
+		<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Build Graph' style='float: right;'/>
+	</form>
+{% endif %}
+	
+{% if monkeyimage %}
+	{% include  monkeyimage.frag %}
+{% endif %}
+
+
+{% endblock %}

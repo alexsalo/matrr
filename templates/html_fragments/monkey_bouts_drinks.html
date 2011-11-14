@@ -1,11 +1,12 @@
 <div style='width: {{ bigWidth }}px; height:{{ bigHeight }}px; margin:auto; padding: 10px'>
 	<center>{{ image.title }}</center>
 	<div class="image_container">
-		<img src="{{ image.image.url }}"><br>
+		<!--<img src="{{ image.image.url }}" ismap usemap="#{{ image.monkey.pk }}"><br> -->
+		<img src="{{ image.image.url }}"    > <br>
 	</div>
 </div>
 {% if map %}
-	<map name='points'>
+	<map name='{{ image.monkey.pk }}'>
 	{% for point in map %}
 		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 5' href="http://www.google.com/search?q={{ point.0 }}" target='_blank'>
 	{% endfor %}
