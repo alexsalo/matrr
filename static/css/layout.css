@@ -87,6 +87,11 @@ div{
   clear: both;
 }
 
+#center,
+.center{
+  margin: auto;
+}
+
 #left,
 .left{
   float: left;

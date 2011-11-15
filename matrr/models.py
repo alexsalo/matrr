@@ -582,7 +582,7 @@ class DrinkingExperiment(models.Model):
 
 class MonkeyToDrinkingExperiment(models.Model):
 	mtd_id = models.AutoField(primary_key=True)
-	monkey = models.ForeignKey(Monkey, null=False, related_name='+', db_column='mky_id', editable=False)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='mtd_set', db_column='mky_id', editable=False)
 	drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
 											editable=False)
 	mtd_etoh_intake = models.FloatField('EtOH Intake', null=False, blank=False,
@@ -1576,7 +1576,7 @@ def user_post_save(**kwargs):
 # This will delete MATRRImage's FileField's files from media before deleting the database entry.
 # Helps keep the media folder pretty.
 @receiver(pre_delete, sender=MonkeyImage)
-def matrrimage_pre_delete(**kwargs):
+def monkeyimage_pre_delete(**kwargs):
 	mig = kwargs['instance']
 	if mig.image and os.path.exists(mig.image.path):
 		os.remove(mig.image.path)

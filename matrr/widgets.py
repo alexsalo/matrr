@@ -9,6 +9,10 @@ from django.forms import *
 from django.forms.widgets import Input
 import re
 
+def date_to_padded_int(date):
+	return str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2)
+
+
 class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
 	def __init__(self, link_base, tissue, attrs=None, choices=()):
 		self.tissue = tissue
@@ -388,9 +392,7 @@ class GroupedCheckboxSelectMultipleMonkeys(CheckboxSelectMultiple):
 		return mark_safe(u'\n'.join(output))
 
 
-# -*- coding: utf-8 -*-
-# utils/widgets.py
-
+# -*- coding: utf-8 -*-   // i dunno if this is important -jf
 '''
 http://djangosnippets.org/snippets/1629/
 

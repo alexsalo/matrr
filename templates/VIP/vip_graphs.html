@@ -4,18 +4,40 @@
 {% endblock %}
 
 {% block content %}
-<div class='large-headline'>Build Your Own MATRR Graph</div><br>
-	{% if keys %}
+	<div class='large-headline'>Build Your Own MATRR Graph</div><br>
+	{% if mky_keys  %}
+		<div class='headline'>Monkey Graphs</div><br>
 		<table>
 			<tr>
 				<th>Example thumbnail</th>
-				<th>Method Name</th>
+				<th>Description</th>
 			</tr>
-		{% for key in keys %}
+		{% for key in mky_keys %}
 			<tr align="center">
 				<td><img src='{{ key.1.thumbnail.url }}'></td>
 				<td>
-					{{ key.0 }}<br><br>
+					{{ key.2 }}<br><br>
+					<form action='' method='post'>
+						{% csrf_token %}
+						<button type='submit' name='{{ key.0 }}' class="blockLinkCheckoutButton">Build Graph</button>
+					</form>
+				</td>
+			</tr>
+		{% endfor %}
+		</table>
+	{% endif %}
+	{% if coh_keys  %}
+		<div class='headline'>Cohort Graphs</div><br>
+		<table>
+			<tr>
+				<th>Example thumbnail</th>
+				<th>Description</th>
+			</tr>
+		{% for key in coh_keys %}
+			<tr align="center">
+				<td><img src='{{ key.1.thumbnail.url }}'></td>
+				<td>
+					{{ key.2 }}<br><br>
 					<form action='' method='post'>
 						{% csrf_token %}
 						<button type='submit' name='{{ key.0 }}' class="blockLinkCheckoutButton">Build Graph</button>

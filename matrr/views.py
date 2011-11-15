@@ -1272,18 +1272,6 @@ def vip_tools(request):
 							u.groups.filter(name='VIP').count() or
 							u.groups.filter(name='Uberuser').count(),
 				  login_url='/denied/')
-def vip_graph_builder(request, method_name):
-	# this method is unfinished and completely broken
-	monkey_graph = "monkey" in method_name
-	cohortform = VIPGraphForm_cohorts()
-
-	return render_to_response('VIP/vip_graph_builder.html', {'monkeyform': cohortform, 'monkey_graph': monkey_graph}, context_instance=RequestContext(request))
-
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='VIP').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
 def vip_graphs(request):
 	if request.POST:
 		for key in plotting.MONKEY_PLOTS:
@@ -1295,10 +1283,132 @@ def vip_graphs(request):
 		return reverse(vip_graphs) #  this should never be hit.  I dunno how it could be.
 	else:
 		context = {}
-		keys = []
-		for key in plotting.MONKEY_PLOTS:
-			keys.append((key, MonkeyImage.objects.filter(method=key)[0]))
-		for key in plotting.COHORT_PLOTS:
-			keys.append((key, CohortImage.objects.filter(method=key)[0]))
-		context['keys'] = keys
+		mky_keys = []
+		coh_keys = []
+		mky_plots = plotting.MONKEY_PLOTS
+		coh_plots = plotting.COHORT_PLOTS
+		for key in mky_plots:
+			mky_keys.append((key, MonkeyImage.objects.filter(method=key)[0], mky_plots[key][1]))
+		for key in coh_plots:
+			coh_keys.append((key, CohortImage.objects.filter(method=key)[0], coh_plots[key][1]))
+		context['mky_keys'] = mky_keys
+		context['coh_keys'] = coh_keys
 		return render_to_response('VIP/vip_graphs.html', context, context_instance=RequestContext(request))
+
+
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
+							u.groups.filter(name='Committee').count() or
+							u.groups.filter(name='VIP').count() or
+							u.groups.filter(name='Uberuser').count(),
+				  login_url='/denied/')
+def vip_graph_builder(request, method_name):
+	if 'vip-graphs' in request.POST:
+		return redirect(reverse('vip-graphs'))
+
+	date_ranges = {}
+	all_max = datetime.min.date() # keep track of the max date range possible for all cohorts
+	all_min = datetime.today().date() # keep track of the min date range possible for all cohorts
+	if 'monkey' in method_name:
+		for monkey in Monkey.objects.filter(mtd_set__gt=0).distinct(): # for any monkey we have drinking data for
+			mky_min = min(MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).values_list('drinking_experiment__dex_date'))[0]
+			mky_max = max(MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).values_list('drinking_experiment__dex_date'))[0]
+			date_ranges[monkey] = (mky_min, mky_max)
+			# update all_max and all_min
+			if mky_min < all_min:
+				all_min = mky_min
+			if mky_max > all_max:
+				all_max = mky_max
+	else:
+		for cohort in Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct(): # for any cohort we have drinking data for
+			coh_min = min(DrinkingExperiment.objects.filter(cohort=cohort).values_list('dex_date'))[0]
+			coh_max = max(DrinkingExperiment.objects.filter(cohort=cohort).values_list('dex_date'))[0]
+			date_ranges[cohort] = (coh_min, coh_max)
+			# update all_max and all_min
+			if coh_min < all_min:
+				all_min = coh_min
+			if coh_max > all_max:
+				all_max = coh_max
+
+
+	min_date = date_to_padded_int(all_min)
+	max_date = date_to_padded_int(all_max)
+	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
+
+	if 'monkey' in method_name:
+		if request.POST:
+			return monkey_graph_builder(request, method_name, date_ranges, min_date, max_date)
+		else:
+			subject_form = VIPGraphForm_monkeys()
+	else:
+		if request.POST:
+			return cohort_graph_builder(request, method_name, date_ranges, min_date, max_date)
+		else:
+			subject_form = VIPGraphForm_cohorts()
+	# only reachable if NOT request.POST
+	return render_to_response('VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}, context_instance=RequestContext(request))
+
+def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
+	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
+	subject_form = VIPGraphForm_monkeys(data=request.POST)
+
+	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}
+
+	if date_form.is_valid() and subject_form.is_valid():
+		date_data = date_form.cleaned_data
+		subject_data = subject_form.cleaned_data
+		_from = date_data['from_date']
+		_to = date_data['to_date']
+		subject = subject_data['monkey']
+
+		parameters = {}
+		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey=subject)
+		if _from:
+			m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
+			parameters['from_date'] = str(_from)
+		if _to:
+			m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
+			parameters['to_date'] = str(_to)
+
+		if m2de.count():
+			parameters = str(parameters)
+			matrr_image, is_new = MonkeyImage.objects.get_or_create(monkey=subject, method=method_name, title='sweet title', parameters=parameters)
+			if is_new:
+				matrr_image.save()
+
+			context['matrr_image'] = matrr_image
+		else:
+			messages.info(request, "No drinking experiments for the given date range for this monkey")
+	return render_to_response('VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
+
+def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
+	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
+	subject_form = VIPGraphForm_cohorts(data=request.POST)
+
+	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}
+
+	if date_form.is_valid() and subject_form.is_valid():
+		date_data = date_form.cleaned_data
+		subject_data = subject_form.cleaned_data
+		_from = date_data['from_date']
+		_to = date_data['to_date']
+		subject = subject_data['cohort']
+
+		parameters = {}
+		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=subject)
+		if _from:
+			m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
+			parameters['from_date:'] = str(_from)
+		if _to:
+			m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
+			parameters['to_date:'] = str(_to)
+
+		if m2de.count():
+			parameters = str(parameters)
+			matrr_image, is_new = CohortImage.objects.get_or_create(cohort=subject, method=method_name, title='sweet title', parameters=parameters)
+			if is_new:
+				matrr_image.save()
+
+			context['matrr_image'] = matrr_image
+		else:
+			messages.info(request, "No drinking experiments for the given date range for this cohort")
+	return render_to_response('VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))

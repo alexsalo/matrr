@@ -321,8 +321,8 @@ class TissueInventoryVerificationForm(Form):
 
 
 class VIPGraphForm_dates(Form):
-	from_date = DateField(widget=DateTimeWidget)
-	to_date = DateField(widget=DateTimeWidget)
+	from_date = DateField(widget=DateTimeWidget, required=False)
+	to_date = DateField(widget=DateTimeWidget, required=False)
 
 	def __init__(self, min_date=None, max_date=None, *args, **kwargs):
 		super(VIPGraphForm_dates, self).__init__(*args, **kwargs)
@@ -333,4 +333,8 @@ class VIPGraphForm_dates(Form):
 
 
 class VIPGraphForm_cohorts(Form):
-	cohorts = ModelMultipleChoiceField(queryset=Cohort.objects.all().order_by('coh_cohort_name'), required=False, widget=CheckboxSelectMultiple)
+	cohort = ModelChoiceField(queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
+
+class VIPGraphForm_monkeys(Form):
+	monkey = ModelChoiceField(queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
+

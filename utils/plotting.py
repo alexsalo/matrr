@@ -118,15 +118,19 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 			#otherwise give up
 			print("Invalid parameter, from_date")
 			return False, 'NO MAP'
-	if from_date and not isinstance(to_date, datetime):
+	if to_date and not isinstance(to_date, datetime):
 		try:
 			#maybe its a str(datetime)
 			to_date = dateutil.parser.parse(to_date)
 		except:
 			#otherwise give up
 			print("Invalid parameter, from_date")
-		return False, 'NO MAP'
+			return False, 'NO MAP'
 
+	if from_date:
+		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
 
 	if cohort_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
@@ -154,7 +158,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 		pyplot.setp(bp['fliers'], color='red', marker='+')
 		xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 		pyplot.setp(xtickNames, rotation=45)
-		return fig, "NO MAP"
+		return fig, "cohort map"
 	else:
 		print "No drinking experiments for this cohort."
 		return False, 'NO MAP'
@@ -229,10 +233,10 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 
 COHORT_PLOTS = {
 		 
-		 "cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2de_month_etoh_intake, 'Ethanol Intake'),
-		 "cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 'Water Intake'),
-		 "cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 'Pellets'),
-		 "cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 'Weight'),
+		 "cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2de_month_etoh_intake, 'Cohort Ethanol Intake, by month'),
+		 "cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 'Cohort Water Intake, by month'),
+		 "cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 'Cohort Pellets, by month'),
+		 "cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 'Cohort Weight, by month'),
 #		 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
 #		 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
 #		 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
@@ -658,13 +662,20 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 		except:
 			#otherwise give up
 			print("Invalid parameter, from_date")
-		return False, 'NO MAP'
-			
+			return False, 'NO MAP'
+
 	monkey_alpha = .7
 	cohort = monkey.cohort
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
 	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+
+	if from_date:
+		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
+		monkey_drinking_experiments = monkey_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+		monkey_drinking_experiments = monkey_drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
 
 	if monkey_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
@@ -730,10 +741,10 @@ MONKEY_PLOTS = {
 #				'monkey_boxplot_pellets': monkey_boxplot_pellets,
 #				'monkey_boxplot_weight': monkey_boxplot_weight,
 
-				'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Ethanol Intake'),
-				'monkey_errorbox_veh': (monkey_errorbox_veh, 'Water Intake'),
-				'monkey_errorbox_pellets': (monkey_errorbox_pellets, 'Pellets'),
-				'monkey_errorbox_weight': (monkey_errorbox_weight, 'Weight'),
+				'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
+				'monkey_errorbox_veh': (monkey_errorbox_veh, 'Monkey Water Intake'),
+				'monkey_errorbox_pellets': (monkey_errorbox_pellets, 'Monkey Pellets'),
+				'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
 
 				'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake'),
 }
