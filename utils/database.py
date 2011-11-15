@@ -1054,6 +1054,8 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data[1:], start=1):
 			data = line.split("\t")
+			if data[MONKEY_DATA_INDEX] == 28479:
+				continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
 			except:
