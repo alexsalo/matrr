@@ -5,6 +5,7 @@ import os
 path = os.path.dirname(os.path.realpath(__file__))
 
 DEBUG = True
+TEMPLATE_DEBUG = DEBUG
 SEARCH_INDEXES = {'monkey':"t_monkey", 'monkey_auth':"t_monkey_auth", 'cohort':"t_cohort"}
 
 DATABASES = {
