@@ -41,6 +41,19 @@ INSTALLED_APPS = (
         'utils',
         'south',
         )
+
+# Jon added this on 11/15/2011 to see if it'll make VIP pages work
+TEMPLATE_DIRS = (
+    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
+    path + "/templates",
+    path + "/templates/matrr",
+	path + "/media/matrr_images/fragments",
+    )
+## --end jon add
+
+
 try:
     from local_settings import *
 except:
