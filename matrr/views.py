@@ -1291,6 +1291,8 @@ def vip_graphs(request):
 			mky_keys.append((key, MonkeyImage.objects.filter(method=key)[0], mky_plots[key][1]))
 		for key in coh_plots:
 			coh_keys.append((key, CohortImage.objects.filter(method=key)[0], coh_plots[key][1]))
+		mky_keys.sort()
+		coh_keys.sort()
 		context['mky_keys'] = mky_keys
 		context['coh_keys'] = coh_keys
 		return render_to_response('VIP/vip_graphs.html', context, context_instance=RequestContext(request))
