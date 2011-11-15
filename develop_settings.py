@@ -49,7 +49,7 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
     path + "/templates",
     path + "/templates/matrr",
-	path + "/media/matrr_images/fragments",
+	"/web/www/MATRR/dev/media/matrr_images/fragments",
     )
 ## --end jon add
 
