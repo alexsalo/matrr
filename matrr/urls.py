@@ -106,6 +106,7 @@ urlpatterns += patterns('matrr.views',
 	# VIP tools
 	url(r'^vip/$', vip_tools, name='vip-tools'),
 	url(r'^vip/graphs$', vip_graphs, name='vip-graphs'),
+	url(r'^vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
 	url(r'^vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
 
 	)

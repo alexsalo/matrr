@@ -1198,62 +1198,6 @@ def tissue_verification(request):
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
 
-from settings import MEDIA_ROOT
-import os
-import mimetypes
-
-def sendfile(request, id):
-	files = list()
-
-#	append all possible files
-	r = Request.objects.filter(req_experimental_plan=id)	
-	files.append((r, 'req_experimental_plan'))
-	r = Mta.objects.filter(mta_file=id)
-	files.append((r, 'mta_file'))
-	r = ResearchUpdate.objects.filter(rud_file=id)
-	files.append((r, 'rud_file'))
-	r = CohortData.objects.filter(cod_file=id)
-	files.append((r, 'cod_file'))
-	r = MonkeyImage.objects.filter(thumbnail=id)
-	files.append((r, 'thumbnail'))
-	r = MonkeyImage.objects.filter(image=id)
-	files.append((r, 'image'))
-	r = MonkeyImage.objects.filter(html_fragment=id)
-	files.append((r, 'html_fragment'))
-	r = CohortImage.objects.filter(thumbnail=id)
-	files.append((r, 'thumbnail'))
-	r = CohortImage.objects.filter(image=id)
-	files.append((r, 'image'))
-	r = CohortImage.objects.filter(html_fragment=id)
-	files.append((r, 'html_fragment'))
-
-#	this will work for all listed files
-	file = None
-	for r,f in files:
-		if len(r) > 0:
-			if r[0].verify_user_access_to_file(request.user):
-				file = getattr(r[0], f) 
-			break
-	if not file:
-		raise Http404()
-	
-	if file.url.count('/media') > 0:
-		file_url = file.url.replace('/media/', '')
-	else:
-		file_url = file.url.replace('/', '', 1)
-	
-	response = HttpResponse()
-	response['X-Sendfile'] =  os.path.join(MEDIA_ROOT, file_url)
-
-	
-	content_type, encoding = mimetypes.guess_type(file_url)
-	if not content_type:
-			content_type = 'application/octet-stream'
-	response['Content-Type'] = content_type 
-	response['Content-Disposition'] = 'attachment; filename="%s"' %  os.path.basename(file_url)
-	return response
-
-
 
 ####################
 #  VIP tools  #
@@ -1288,14 +1232,31 @@ def vip_graphs(request):
 		mky_plots = plotting.MONKEY_PLOTS
 		coh_plots = plotting.COHORT_PLOTS
 		for key in mky_plots:
-			mky_keys.append((key, MonkeyImage.objects.filter(method=key)[0], mky_plots[key][1]))
+			if MonkeyImage.objects.filter(method=key):
+				mky_keys.append((key, MonkeyImage.objects.filter(method=key)[0], mky_plots[key][1]))
 		for key in coh_plots:
-			coh_keys.append((key, CohortImage.objects.filter(method=key)[0], coh_plots[key][1]))
+			if CohortImage.objects.filter(method=key):
+				coh_keys.append((key, CohortImage.objects.filter(method=key)[0], coh_plots[key][1]))
 		mky_keys.sort()
 		coh_keys.sort()
 		context['mky_keys'] = mky_keys
 		context['coh_keys'] = coh_keys
 		return render_to_response('VIP/vip_graphs.html', context, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
+							u.groups.filter(name='Committee').count() or
+							u.groups.filter(name='VIP').count() or
+							u.groups.filter(name='Uberuser').count(),
+				  login_url='/denied/')
+def vip_mtd_graph(request, mtd_id):
+	if MonkeyToDrinkingExperiment.objects.filter(pk=mtd_id).count():
+		mtd = MonkeyToDrinkingExperiment.objects.get(pk=mtd_id)
+		mtd_image, is_new = MTDImage.objects.get_or_create(
+							monkey_to_drinking_experiment=mtd,
+						   	method='monkey_bouts_drinks_intraday',
+						   	title="Drinks on %s for monkey %s" % (str(mtd.drinking_experiment.dex_date), str(mtd.monkey))
+							)
+		return render_to_response('VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
@@ -1348,7 +1309,6 @@ def vip_graph_builder(request, method_name):
 			subject_form = VIPGraphForm_cohorts()
 	# only reachable if NOT request.POST
 	return render_to_response('VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}, context_instance=RequestContext(request))
-
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = VIPGraphForm_monkeys(data=request.POST)
@@ -1381,7 +1341,6 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 		else:
 			messages.info(request, "No drinking experiments for the given date range for this monkey")
 	return render_to_response('VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
-
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = VIPGraphForm_cohorts(data=request.POST)
@@ -1414,3 +1373,69 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 		else:
 			messages.info(request, "No drinking experiments for the given date range for this cohort")
 	return render_to_response('VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
+
+###############
+### End VIP ###
+###############
+
+
+# Permission-restricted media file hosting
+from settings import MEDIA_ROOT
+import os
+import mimetypes
+def sendfile(request, id):
+	files = list()
+
+#	append all possible files
+	r = Request.objects.filter(req_experimental_plan=id)	
+	files.append((r, 'req_experimental_plan'))
+	r = Mta.objects.filter(mta_file=id)
+	files.append((r, 'mta_file'))
+	r = ResearchUpdate.objects.filter(rud_file=id)
+	files.append((r, 'rud_file'))
+	r = CohortData.objects.filter(cod_file=id)
+	files.append((r, 'cod_file'))
+	r = MonkeyImage.objects.filter(thumbnail=id)
+	files.append((r, 'thumbnail'))
+	r = MonkeyImage.objects.filter(image=id)
+	files.append((r, 'image'))
+	r = MonkeyImage.objects.filter(html_fragment=id)
+	files.append((r, 'html_fragment'))
+	r = CohortImage.objects.filter(thumbnail=id)
+	files.append((r, 'thumbnail'))
+	r = CohortImage.objects.filter(image=id)
+	files.append((r, 'image'))
+	r = CohortImage.objects.filter(html_fragment=id)
+	files.append((r, 'html_fragment'))
+	r = MTDImage.objects.filter(thumbnail=id)
+	files.append((r, 'thumbnail'))
+	r = MTDImage.objects.filter(image=id)
+	files.append((r, 'image'))
+	r = MTDImage.objects.filter(html_fragment=id)
+	files.append((r, 'html_fragment'))
+
+#	this will work for all listed files
+	file = None
+	for r,f in files:
+		if len(r) > 0:
+			if r[0].verify_user_access_to_file(request.user):
+				file = getattr(r[0], f) 
+			break
+	if not file:
+		raise Http404()
+	
+	if file.url.count('/media') > 0:
+		file_url = file.url.replace('/media/', '')
+	else:
+		file_url = file.url.replace('/', '', 1)
+	
+	response = HttpResponse()
+	response['X-Sendfile'] =  os.path.join(MEDIA_ROOT, file_url)
+
+	
+	content_type, encoding = mimetypes.guess_type(file_url)
+	if not content_type:
+			content_type = 'application/octet-stream'
+	response['Content-Type'] = content_type 
+	response['Content-Disposition'] = 'attachment; filename="%s"' %  os.path.basename(file_url)
+	return response

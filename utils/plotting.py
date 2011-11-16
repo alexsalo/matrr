@@ -499,7 +499,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 				monkey = Monkey.objects.get(pk=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return
+				return False, 'NO MAP'
 
 	if from_date and not isinstance(from_date, datetime):
 		try:
@@ -508,7 +508,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 		except:
 			#otherwise give up
 			print("Invalid parameter, from_date")
-			return
+			return False, 'NO MAP'
 	if from_date and not isinstance(to_date, datetime):
 		try:
 			#maybe its a str(datetime)
@@ -516,7 +516,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 		except:
 			#otherwise give up
 			print("Invalid parameter, from_date")
-			return
+			return False, 'NO MAP'
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -612,6 +612,47 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 
 	return fig, datapoint_map
 
+def monkey_bouts_drinks_intraday(mtd=None):
+	if not isinstance(mtd, MonkeyToDrinkingExperiment):
+		try:
+			mtd = MonkeyToDrinkingExperiment.objects.get(mtd_id=mtd)
+		except MonkeyToDrinkingExperiment.DoesNotExist:
+			print("That's not a valid MonkeyToDrinkingExperiment.")
+			return False, 'NO MAP'
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = fig.add_subplot(111)
+	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+	ax1.set_axisbelow(True)
+	ax1.set_title('%s' % str(mtd.pk))
+	ax1.set_xlabel("Date of Experiment")
+	ax1.set_ylabel("etoh intake")
+
+	drink_colors = ['red', 'orange']
+	bout_colors =  ['green', 'blue']
+	colorcount = 0
+
+	bouts = mtd.bouts_set.all()
+	if bouts:
+		for bout in bouts:
+			X = bout.ebt_start_time
+			Xend = bout.ebt_length
+			Y = bout.ebt_volume
+			pyplot.bar(X, Y, width=Xend, color=bout_colors[colorcount%2], alpha=.5, zorder=1)
+			for drink in bout.drinks_set.all():
+				xaxis = drink.edr_start_time
+				yaxis = drink.edr_volume
+				pyplot.scatter(xaxis, yaxis, c=drink_colors[colorcount%2], s=60, zorder=2)
+
+			colorcount+= 1
+
+		pyplot.xlim(xmin=0)
+		pyplot.ylim(ymin=0)
+		return fig, "bouts intraday"
+	else:
+		print("No bouts data available for this monkey drinking experiment.")
+		return False, 'NO MAP'
+
 def monkey_errorbox_etoh(monkey=None, **kwargs):
 	return monkey_errorbox_general(etoh_intake, 'Ethanol Intake (in ml)', monkey, **kwargs)
 
@@ -635,7 +676,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 				monkey = Monkey.objects.get(pk=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return
+				return False, 'NO MAP'
 
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
@@ -746,21 +787,24 @@ MONKEY_PLOTS = {
 				'monkey_errorbox_pellets': (monkey_errorbox_pellets, 'Monkey Pellets'),
 				'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
 
-				'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake'),
+				'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake Pattern'),
+				'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
 }
 
 def create_plots():
 	from matrr.models import MonkeyImage, Monkey
 	MonkeyImage.objects.all().delete()
-	for monkey in Monkey.objects.all():
+	for monkey in Monkey.objects.filter(mtd_set__gt=0).distinct():
 		for key in MONKEY_PLOTS:
+			if 'intraday' in key:
+				continue
 			graph = key
 			monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[key][1])
 			monkeyimage.save()
 
 	from matrr.models import CohortImage, Cohort
 	CohortImage.objects.all().delete()
-	for cohort in Cohort.objects.all():
+	for cohort in Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct():
 		for key in COHORT_PLOTS:
 			graph = key
 			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[key][1])
