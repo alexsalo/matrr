@@ -7,13 +7,11 @@ setup_environ(settings)
 from datetime import datetime
 
 from django.core.mail import send_mail
-from matrr.models import RequestStatus, Review
-from django.contrib.auth.models import Group
+from matrr.models import RequestStatus, Review, Account
 
 
 def send_pending_reviews_info():
-	g = Group.objects.get(name='Committee')
-	users = g.user_set.all()
+	users = Account.objects.users_with_perm('can_receive_pending_reviews_info')
 	for user in users:
 	
 		submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
