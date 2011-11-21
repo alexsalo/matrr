@@ -481,7 +481,7 @@ def dump_monkey_data(output_file):
 			row.append(monkey.mky_stress_model)
 			row.append(monkey.mky_age_at_necropsy)
 			output.writerow(row)
-		print "Success"
+		print "Cohort %s Success" % cohort.coh_cohort_name
 
 def load_monkey_data(input_file):
 	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
