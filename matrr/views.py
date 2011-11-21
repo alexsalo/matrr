@@ -1478,6 +1478,7 @@ def vip_graphs(request):
 			migs = MonkeyImage.objects.filter(method=key)
 			if migs:
 				mky_keys.append((key, migs[0], mky_plots[key][1]))
+			#else
 		for key in coh_plots:
 			cigs = CohortImage.objects.filter(method=key)
 			if cigs:

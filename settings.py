@@ -124,6 +124,7 @@ TEMPLATE_DIRS = (
 	# Don't forget to use absolute paths, not relative paths.
 	path + "/templates",
 	path + "/templates/matrr",
+	"/web/www/MATRR/prod/media/matrr_images/fragments",
 	)
 
 SPHINX_API_VERSION = 0x116
