@@ -654,9 +654,7 @@ class MATRRImage(models.Model):
 
 	class Meta:
 		abstract = True
-		permissions = (
-					('view_vip_images', 'Can view VIP images'),
-					)
+
 
 
 #  This model breaks MATRR field name scheme
@@ -738,7 +736,11 @@ class MonkeyImage(MATRRImage):
 		return "%s.%s.(%s)" % (self.monkey.__unicode__(), self.title, str(self.pk))
 
 	class Meta:
+		permissions = (
+                    ('view_vip_images', 'Can view VIP images'),
+                    )
 		db_table = 'mig_monkey_image'
+
 
 
 #  This model breaks MATRR field name scheme
@@ -1273,9 +1275,11 @@ class Review(models.Model):
 			review=self.rvs_review_id))
 
 	class Meta:
+		permissions = (
+                    ('can_receive_pending_reviews_info', 'Can receive pending reviews info by e-mail'),
+                    )
 		db_table = 'rvs_reviews'
 		unique_together = ('user', 'req_request')
-
 
 class TissueRequestReview(models.Model):
 	vtr_request_review_id = models.AutoField(primary_key=True)

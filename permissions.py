@@ -14,10 +14,12 @@ def sync_permissions():
 		perms = ct.model_class()._meta.permissions
 		if perms:
 			for codename, desc in perms:
+				print desc
 				perm, created = Permission.objects.get_or_create(content_type=ct, codename=codename)
 				if created:
 					perm.name=desc
 					perm.save()
+					print "created: %s: %s" % (ct.model_class(), desc)
 		
 
 sync_permissions()
