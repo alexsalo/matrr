@@ -1,6 +1,7 @@
 from matrr.models import *
 from django.contrib.auth.views import AuthenticationForm
 from string import lower, replace
+from settings import PRODUCTION
 
 def cart(request):
 	# get the cart for the user in the request
@@ -29,7 +30,9 @@ def login_form(request):
 
 
 def group_membership(request):
-	context = {}
+	#context = {}
+	# cheezy, should be somewhere else
+	context = {'PRODUCTION': PRODUCTION}
 	if request.user.is_authenticated():
 		# if the user is logged in, get the groups the user is a member of
 		groups = request.user.groups.all()

@@ -1,0 +1,122 @@
+Amygdala (Accessory Basal)
+Amygdala (Basal)
+Amygdala (Basolateral)
+Amygdala (Central)
+Amygdala (Dorsal)
+Amygdala (Lateral)
+Amygdala (Medial)
+Area 1, 2, 3
+Area 4
+Area 9
+Area 10
+Area 12
+Area 13
+Area 14
+Area 17
+Area 24
+Area 25
+Area 32
+Area 46
+Brainstem
+Caudate
+Cerebellum (Anterior lobe)
+Cerebellum (Posterior lobe)
+Cerebellum (Vermis)
+Cerebrospinal fluid
+Corpus callosum
+Cortex (Lateral orbital)
+Cortex (Occipital)
+Cortex (Orbital frontal)
+Cortex (Prefrontal)
+Dentate gyrus
+Edinger-Westphal
+Entorhinal cortex
+Globus pallidus
+Habenula
+Hippocampus
+Hypothalamus
+Insula
+Locus coeruleus
+Medulla
+Nucleus accumbens (Core)
+Nucleus accumbens (Shell)
+Olfactory bulb
+Periaqueductal gray
+Pituitary
+Pons
+Posterior Cerebellum
+Putamen
+Raphe
+Spinal cord (Cervical)
+Spinal cord (Lumbar)
+Spinal cord (Thoracic)
+Substantia nigra (pars compacta)
+Substantia nigra (pars reticulate)
+Thalamus (Lateral geniculate)
+Thalamus (Mediodorsal)
+Thalamus (Midline nuclei)
+Thalamus (Pulvinar)
+Thalamus (Medial geniculate)
+White matter
+White matter (Frontal)
+
+Adrenal (lt, rt)
+Aorta (descending)
+Aortic arch
+Artery (Brain)
+Artery (Coronary)
+Artery (Pulmonary)
+Bile
+Blood
+Bone (Femur)
+Bone (Be specific)
+Bone Marrow (From Femur)
+Esophagus
+Fat (Abdominal)
+Fat (Brown)
+Fat (Mesenteric)
+Fat (Pericardial)
+Fat (Perigonadal)
+Fat (Perirenal)
+Fat (Retroperitoneal)
+Fat (Subcutaneous)
+Gall bladder
+Gonads (testes, ovaries)
+Hair (With skin)
+Hair (Without skin)
+Heart (Lt Atrium)
+Heart (Rt Atrium)
+Heart (Lt ventricle)
+Heart (Rt ventricle)
+Kidney (lt, rt)
+Large intestine
+Liver
+Lung (Lt lower lobe)
+Lung (Lt middle lobe)
+Lung (Lt upper lobe)
+Lung (Rt lower lobe)
+Lung (Rt middle lobe)
+Lung (Rt upper lobe)
+Lymph node (Axial)
+Lymph node (Inguinal)
+Lymph node (Mesenteric)
+Muscle (Gastrocnemius)
+Muscle (Quadriceps)
+Muscle (Be specific)
+Nerve (Inguinal)
+Nerve (Sciatic)
+Pancreas
+Prostate
+Septum
+Skin
+Small intestine
+Spleen
+Stomach
+Thymus
+Tongue
+Urine
+
+Custom
+
+
+Serum

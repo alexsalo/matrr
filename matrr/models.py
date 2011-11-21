@@ -1,5 +1,7 @@
 #encoding=utf-8
+import Image
 import os, ast
+from django.core.files.base import File
 from django.db import models
 from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
@@ -72,6 +74,13 @@ LeftRight = Enumeration([
 						('L', 'Left', 'Left side'),
 						('R', 'Right', 'Right side'),
 						])
+
+VIP_IMAGES_LIST = (
+					'monkey_bouts_drinks',
+					'monkey_bouts_drinks_intraday',
+				)
+
+
 class Availability:
 	'''
 	This class is an enumeration for the availability statuses.
@@ -256,190 +265,6 @@ class Monkey(models.Model):
 	class Meta:
 		db_table = 'mky_monkeys'
 
-VIP_IMAGES_LIST = (
-				'monkey_bouts_drinks',
-				)
-
-class VIPQuerySet(models.query.QuerySet):
-	def vip_filter(self, user):
-		if user.has_perm('view_vip_images'):
-			return self
-		else:
-			return self.exclude(method__in=VIP_IMAGES_LIST)
-	
-class VIPManager(models.Manager):
-	def get_query_set(self):
-		return VIPQuerySet(self.model, using=self._db)
-		
-	def vip_filter(self, user):
-		return self.get_query_set().vip_filter(user)
-
-	
-#  This model breaks MATRR field name scheme
-class MATRRImage(models.Model):
-	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
-	title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this image.')
-	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
-	parameters = models.CharField('Paremeters', blank=True, null=False, max_length=500, default='defaults', help_text="The method's parameters used to generate this image.")
-	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
-	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
-	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
-
-	def _construct_filefields(self, mpl_figure, data_map, *args, **kwargs):
-		from django.core.files.base import File
-
-		# export the image and thumbnail to a temp folder and save them to the self.ImageFields
-		if mpl_figure:
-			image, thumbnail = self._draw_image(mpl_figure)
-			self.image = File(open(image, 'r'))
-			self.thumbnail = File(open(thumbnail, 'r'))
-			self.save()
-
-			# generate the html fragment for the image and save it
-			if data_map != "NO MAP":
-				html_frag_path = self._build_html_fragment(data_map)
-				html_frag = open(html_frag_path, 'r')
-				self.html_fragment = File(html_frag)
-				self.save()
-		else:
-			self.delete()
-
-	def _plot_picker(self):
-		#  This needs to be overridden by subclasses
-		return
-
-	def _draw_image(self, mpl_figure):
-		import Image
-		thumbnail_size = (240,240)
-		DPI =  mpl_figure.get_dpi()
-
-		filename = '/tmp/' + str(self)
-		image_path = filename + '.png'
-		thumb_path = filename + '-thumb.jpg'
-		mpl_figure.savefig(image_path, dpi=DPI)
-
-		image_file = Image.open(image_path)
-		image_file.thumbnail(thumbnail_size, Image.ANTIALIAS)
-		image_file.save(thumb_path)
-
-		return image_path, thumb_path
-
-	def _build_html_fragment(self, data_map):
-		from django.template.context import Context
-		from django.template.loader import get_template 
-
-		fragment_path = '/tmp/%s.html' % str(self)
-
-		t = get_template('html_fragments/%s.html' % self.method) # templates will be named identical to the plotting method
-		c = Context({'map': data_map, 'image': self, 'bigWidth':self.image.width*1.1, 'bigHeight':self.image.height*1.1 })
-
-		html_fragment = open(fragment_path, 'w+')
-		html_fragment.write(str(t.render(c)))
-		html_fragment.flush()
-		html_fragment.close()
-		return fragment_path
-
-
-	def verify_user_access_to_file(self, user):
-		if self.method in VIP_IMAGES_LIST:
-			return user.is_authenticated() and user.account.verified and user.has_perm('view_vip_images')
-		return user.is_authenticated() and user.account.verified
-
-	def frag(self):
-		return os.path.basename(self.html_fragment.name)
-
-	def __unicode__(self):
-		# You should override this method too
-		return "%s.(%s)" % (self.title, 'MATRRImage')
-
-	class Meta:
-		abstract = True
-		permissions = (
-					('view_vip_images', 'Can view VIP images'),
-					)
-	
-#  This model breaks MATRR field name scheme
-class MonkeyImage(MATRRImage):
-	mig_id = models.AutoField(primary_key=True)
-	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
-	objects = VIPManager()
-	
-	def _construct_filefields(self, *args, **kwargs):
-		# fetch the plotting method and build the figure, map
-		spiffy_method = self._plot_picker()
-		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(monkey=self.monkey)
-		else:
-			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(monkey=self.monkey, **params)
-
-		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
-
-	def _plot_picker(self):
-		from utils import plotting
-		PLOTS = plotting.MONKEY_PLOTS
-
-		if not self.method:
-			return "My plot method field has not been populated.  I don't know what I am."
-		if not self.method in PLOTS:
-			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
-
-		return PLOTS[self.method][0]
-
-	def save(self, *args, **kwargs):
-		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
-		if self.monkey and self.method and self.title:
-			if not self.image:
-				self._construct_filefields()
-
-	def __unicode__(self):
-		return "%s.%s.(%s)" % (self.monkey.__unicode__(), self.title, str(self.pk))
-
-	class Meta:
-		db_table = 'mig_monkey_image'
-
-
-#  This model breaks MATRR field name scheme
-class CohortImage(MATRRImage):
-	cig_id = models.AutoField(primary_key=True)
-	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
-	objects = VIPManager()
-
-	def _construct_filefields(self, *args, **kwargs):
-		# fetch the plotting method and build the figure, map
-		spiffy_method = self._plot_picker()
-		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(cohort=self.cohort)
-		else:
-			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(cohort=self.cohort, **params)
-
-		super(CohortImage, self)._construct_filefields(mpl_figure, data_map)
-
-	def _plot_picker(self):
-		from utils import plotting
-		PLOTS = plotting.COHORT_PLOTS
-
-		if not self.method:
-			return "My plot method field has not been populated.  I don't know what I am."
-		if not self.method in PLOTS:
-			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
-
-		return PLOTS[self.method][0]
-
-	def save(self, *args, **kwargs):
-		super(CohortImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
-		if self.cohort and self.method and self.title:
-			if not self.image:
-				self._construct_filefields()
-
-	def __unicode__(self):
-		return "%s.%s.(%s)" % (self.cohort.__unicode__(), self.title, str(self.pk))
-
-	class Meta:
-		db_table = 'cig_cohort_image'
-
-
 class Mta(models.Model):
 	mta_id = models.AutoField(primary_key=True)
 	user = models.ForeignKey(User, related_name='mta_set', db_column='usr_id', editable=False, blank=True)
@@ -473,6 +298,7 @@ class Mta(models.Model):
 					('view_mta_file', 'Can view MTA files of other users'),
 					)
 
+
 class AccountManager(models.Manager):
 	def users_with_perm(self, perm_string):
 		try:
@@ -484,6 +310,7 @@ class AccountManager(models.Manager):
 		for group in groups:
 			users |= group.user_set.all()
 		return users.distinct()
+
 
 class Account(models.Model):
 	user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
@@ -553,7 +380,7 @@ class DrinkingExperiment(models.Model):
 
 class MonkeyToDrinkingExperiment(models.Model):
 	mtd_id = models.AutoField(primary_key=True)
-	monkey = models.ForeignKey(Monkey, null=False, related_name='+', db_column='mky_id', editable=False)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='mtd_set', db_column='mky_id', editable=False)
 	drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
 											editable=False)
 	mtd_etoh_intake = models.FloatField('EtOH Intake', null=False, blank=False,
@@ -731,6 +558,257 @@ class ExperimentEvent(models.Model):
 	
 	class Meta:
 		db_table = 'eev_experiment_events'
+
+
+class VIPQuerySet(models.query.QuerySet):
+	def vip_filter(self, user):
+		if user.has_perm('view_vip_images'):
+			return self
+		else:
+			return self.exclude(method__in=VIP_IMAGES_LIST)
+
+class VIPManager(models.Manager):
+	def get_query_set(self):
+		return VIPQuerySet(self.model, using=self._db)
+
+	def vip_filter(self, user):
+		return self.get_query_set().vip_filter(user)
+
+
+#  This model breaks MATRR field name scheme
+class MATRRImage(models.Model):
+	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
+	title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this image.')
+	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
+	parameters = models.CharField('Paremeters', blank=True, null=False, max_length=500, default='defaults', help_text="The method's parameters used to generate this image.")
+	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
+	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
+	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
+
+	thumbnail_size = (240,240)
+
+	def _construct_filefields(self, mpl_figure, data_map, *args, **kwargs):
+		# export the image and thumbnail to a temp folder and save them to the self.ImageFields
+		if mpl_figure:
+			image, thumbnail = self._draw_image(mpl_figure)
+			self.image = File(open(image, 'r'))
+			self.thumbnail = File(open(thumbnail, 'r'))
+
+			# generate the html fragment for the image and save it
+			if data_map != "NO MAP":
+				self.save() # must be called before html frag gets built, or else the image paths are still in /tmp
+				html_frag_path = self._build_html_fragment(data_map)
+				html_frag = open(html_frag_path, 'r')
+				self.html_fragment = File(html_frag)
+
+			self.save()
+		else:
+			self.delete()
+
+
+	def _plot_picker(self):
+		#  This needs to be overridden by subclasses
+		return
+
+	def _draw_image(self, mpl_figure):
+		DPI =  mpl_figure.get_dpi()
+
+		filename = '/tmp/' + str(self)
+		image_path = filename + '.png'
+		thumb_path = filename + '-thumb.jpg'
+		mpl_figure.savefig(image_path, dpi=DPI)
+
+		image_file = Image.open(image_path)
+		image_file.thumbnail(self.thumbnail_size, Image.ANTIALIAS)
+		image_file.save(thumb_path)
+
+		return image_path, thumb_path
+
+	def _build_html_fragment(self, data_map):
+		from django.template.context import Context
+		from django.template.loader import get_template
+
+		fragment_path = '/tmp/%s.html' % str(self)
+
+		t = get_template('html_fragments/%s.html' % self.method) # templates will be named identical to the plotting method
+		c = Context({'map': data_map, 'image': self, 'bigWidth':self.image.width*1.1, 'bigHeight':self.image.height*1.1 })
+
+		html_fragment = open(fragment_path, 'w+')
+		html_fragment.write(str(t.render(c)))
+		html_fragment.flush()
+		html_fragment.close()
+		return fragment_path
+
+
+	def verify_user_access_to_file(self, user):
+		if self.method in VIP_IMAGES_LIST:
+			return user.is_authenticated() and user.account.verified and user.has_perm('view_vip_images')
+		return user.is_authenticated() and user.account.verified
+
+	def frag(self):
+		return os.path.basename(self.html_fragment.name)
+
+	def __unicode__(self):
+		# You should override this method too
+		return "%s.(%s)" % (self.title, 'MATRRImage')
+
+	class Meta:
+		abstract = True
+
+
+
+#  This model breaks MATRR field name scheme
+class MTDImage(MATRRImage):
+	mdi_id = models.AutoField(primary_key=True)
+	monkey_to_drinking_experiment = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, related_name='image_set', editable=False)
+	objects = VIPManager()
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(mtd=self.monkey_to_drinking_experiment)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(mtd=self.monkey_to_drinking_experiment, **params)
+
+		super(MTDImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+		PLOTS = plotting.MONKEY_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(MTDImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.monkey_to_drinking_experiment and self.method and self.title:
+			if not self.image:
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "MTDImage.%s.(%s)" % (self.title, str(self.pk))
+
+	class Meta:
+		db_table = 'mdi_mtd_image'
+
+
+#  This model breaks MATRR field name scheme
+class MonkeyImage(MATRRImage):
+	mig_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
+	objects = VIPManager()
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, **params)
+
+		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+		PLOTS = plotting.MONKEY_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.monkey and self.method and self.title:
+			if not self.image:
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s.%s.(%s)" % (self.monkey.__unicode__(), self.title, str(self.pk))
+
+	class Meta:
+		permissions = (
+                    ('view_vip_images', 'Can view VIP images'),
+                    )
+		db_table = 'mig_monkey_image'
+
+
+
+#  This model breaks MATRR field name scheme
+class CohortImage(MATRRImage):
+	cig_id = models.AutoField(primary_key=True)
+	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
+	objects = VIPManager()
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort, **params)
+
+		super(CohortImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+		PLOTS = plotting.COHORT_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(CohortImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.cohort and self.method and self.title:
+			if not self.image:
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s.%s.(%s)" % (self.cohort.__unicode__(), self.title, str(self.pk))
+
+	class Meta:
+		db_table = 'cig_cohort_image'
+
+
+#  This model breaks MATRR field name scheme
+#class BrainImage(MATRRImage):
+#	big_id = models.AutoField(primary_key=True)
+#	brain_block = models.CharField('Brain Block', blank=True, null=False, max_length=50, help_text='The brain block pictured')
+#	objects = VIPManager()
+#
+#	def save(self, *args, **kwargs):
+#		super(BrainImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+#		self.method = 'brain_block'
+#		if self.brain_block and self.title and self.image and not (self.thumbnail and self.html_fragment): # Different from CohortImage and MonkeyImage.
+#			thumb_path = '/tmp/' + str(self) + '-thumb.jpg'
+#			image_file = Image.open(self.image.path)
+#			image_file.thumbnail(self.thumbnail_size, Image.ANTIALIAS)
+#			image_file.save(thumb_path)
+#			self.thumbnail = File(open(thumb_path, 'r'))
+#
+#			frag_path = self._build_html_fragment('data map')
+#			self.html_fragment = File(open(frag_path, 'r'))
+#			super(BrainImage, self).save(*args, **kwargs)
+#
+#	def __unicode__(self):
+#		return "%s.%s" % (self.brain_block, self.title)
+#
+#	class Meta:
+#		db_table = 'big_brain_image'
 
 
 class RequestStatus(models.Model):
@@ -1197,9 +1275,11 @@ class Review(models.Model):
 			review=self.rvs_review_id))
 
 	class Meta:
+		permissions = (
+                    ('can_receive_pending_reviews_info', 'Can receive pending reviews info by e-mail'),
+                    )
 		db_table = 'rvs_reviews'
 		unique_together = ('user', 'req_request')
-
 
 class TissueRequestReview(models.Model):
 	vtr_request_review_id = models.AutoField(primary_key=True)
@@ -1547,7 +1627,7 @@ def user_post_save(**kwargs):
 # This will delete MATRRImage's FileField's files from media before deleting the database entry.
 # Helps keep the media folder pretty.
 @receiver(pre_delete, sender=MonkeyImage)
-def matrrimage_pre_delete(**kwargs):
+def monkeyimage_pre_delete(**kwargs):
 	mig = kwargs['instance']
 	if mig.image and os.path.exists(mig.image.path):
 		os.remove(mig.image.path)
