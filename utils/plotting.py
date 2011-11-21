@@ -624,9 +624,9 @@ def monkey_bouts_drinks_intraday(mtd=None):
 	ax1 = fig.add_subplot(111)
 	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
 	ax1.set_axisbelow(True)
-	ax1.set_title('%s' % str(mtd.pk))
-	ax1.set_xlabel("Date of Experiment")
-	ax1.set_ylabel("etoh intake")
+	ax1.set_title('Drinks on %s for monkey %s' % (mtd.drinking_experiment.dex_date, str(mtd.monkey.pk)))
+	ax1.set_xlabel("Time from Start of Experiment (in seconds)")
+	ax1.set_ylabel("Ethanol Amount (in ml)")
 
 	drink_colors = ['red', 'orange']
 	bout_colors =  ['green', 'blue']
@@ -648,6 +648,10 @@ def monkey_bouts_drinks_intraday(mtd=None):
 
 		pyplot.xlim(xmin=0)
 		pyplot.ylim(ymin=0)
+		if X+Xend > 60*60:
+			ax1.set_xticks(range(0, X+Xend, 60*60))
+		else:
+			ax1.set_xticks(range(0, 60*60+1, 60*60))
 		return fig, "bouts intraday"
 	else:
 		print("No bouts data available for this monkey drinking experiment.")
@@ -670,7 +674,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mky_id=monkey)
+			monkey = Monkey.objects.get(mky_id=monkey)	
 		except Monkey.DoesNotExist:
 			try:
 				monkey = Monkey.objects.get(pk=monkey)
