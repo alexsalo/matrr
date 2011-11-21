@@ -75,6 +75,12 @@ LeftRight = Enumeration([
 						('R', 'Right', 'Right side'),
 						])
 
+TissueTypeSexRelevant =  Enumeration([
+						('F', 'Female', 'Female relevant tissue type'),
+						('M', 'Male', 'Male relevant tissue type'),
+						('B', 'Both', 'Sex independent tissue type'),
+					])
+
 VIP_IMAGES_LIST = (
 					'monkey_bouts_drinks',
 					'monkey_bouts_drinks_intraday',
@@ -865,6 +871,7 @@ class TissueType(models.Model):
 											  blank=True,
 											  help_text='The monkeys this tissue type is not available for.')
 	tst_cost = models.FloatField('Cost', default=0.00)
+	tst_sex_relevant = models.CharField('Sex relevant tissue type', max_length=1, choices=TissueTypeSexRelevant, default=TissueTypeSexRelevant.Both)
 
 	def __unicode__(self):
 		return self.tst_tissue_name
@@ -883,7 +890,10 @@ class TissueType(models.Model):
 		return False
 
 	def get_monkey_availability(self, monkey):
-
+		if self.tst_sex_relevant != TissueTypeSexRelevant.Both:
+			if monkey.mky_gender != self.tst_sex_relevant:
+				return Availability.Unavailable
+			
 		if monkey.cohort.coh_upcoming:
 #			just idea: is possible a situation when we know that some tissue of this monkey will never be in stock?
 # 			if yes, we should probably track it somehow and reflect here, but not important right now
