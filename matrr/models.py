@@ -1101,6 +1101,7 @@ class Request(models.Model, DiffingMixin):
 		db_table = 'req_requests'
 		permissions = (
 					('view_experimental_plan', 'Can view experimental plans of other users'),
+					('can_receive_colliding_requests_info', 'Can receive colliding requests info'),
 					)
 
 
