@@ -50,7 +50,9 @@ body {
     list-style-type: none;
     float: left;
     background-color: #4E4E4E;
-	border: 1px solid #4E4E4E;
+    border-width: 1px;
+    border-color: #4E4E4E;
+    border-style: solid;
 }
 
 #nav a,
@@ -424,8 +426,9 @@ table.clear tr {
     text-decoration: none;
     line-height: 1;
     font-size: 15px;
-	border: 2px solid;
-	-moz-box-shadow: 1px #999;
+    border-style: solid;
+    border-width: 2px;
+    -moz-box-shadow: 1px #999;
     -webkit-box-shadow: 1px #999;
     position: relative;
     cursor: pointer;
@@ -462,13 +465,15 @@ table.clear tr {
     border: 1px solid;
     margin: 10px 0px;
     padding: 15px 10px 15px 50px;
-	background: no-repeat 10px center;
+    background-repeat: no-repeat;
+    background-position: 10px center;
 }
 .messages-small div {
     border: 1px solid;
     margin: 10px 0px;
     padding: 5px 5px 5px 50px;
-	background: no-repeat 10px center;
+    background-repeat: no-repeat;
+    background-position: 10px center;
 }
 
 table.overview {
@@ -562,7 +567,9 @@ table.common_right th {
 
 table.cart_table tbody,
 table.review_table tbody {
-	border: 3px solid #FFFFFF;
+    border-style: solid;
+    border-width: 3px;
+    border-color: #FFFFFF;
 }
 
 table.cart_table td,
@@ -577,19 +584,24 @@ table.review_table td {
 
 .reviews_table {
     border-collapse: collapse;
-	border: 1px black;
+    border-width: 1px;
+    border-color: black;
 	max-width: 100%
 }
 
 table.reviews_table th,
 table.reviews_table td {
-	border: 1px solid black;
-	padding: 2px;
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    padding: 2px;
     text-align: center;
 }
 
 table.reviews_table tbody {
-	border: 2px solid black;
+    border-width: 2px;
+    border-color: black;
+    border-style: solid;
 }
 
 table.reviews_table .spacing {
@@ -598,8 +610,9 @@ table.reviews_table .spacing {
 }
 
 table.reviews_table .tissue_info {
-	border: 0px none;
-	background-color: #FAF9ED;
+    border-width: 0px;
+    border-style: none;
+    background-color: #FAF9ED;
     padding: 3px;
 }
 
@@ -706,8 +719,10 @@ a.tool-tip:hover span {
     margin: 10px;
     z-index: 10;
     color: #000000;
-	border: 1px solid #000000;
-	background-color: #FAF9ED;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #000000;
+    background-color: #FAF9ED;
     font: 10px Verdana, sans-serif;
     text-align: center;
 }
@@ -720,16 +735,20 @@ a.tool-tip:hover span {
     margin: 10px;
     z-index: 10;
     color: #000000;
-	border: 1px solid #000000;
-	background-color: #FAF9ED;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #000000;
+    background-color: #FAF9ED;
     font: 10px Verdana, sans-serif;
     text-align: center;
 }
 
 .bordered-cell-row td,
 .bordered-cell-row th {
-	border: 1px solid #000000;
-	padding-left: 0.3em;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #000000;
+    padding-left: 0.3em;
     padding-right: 0.3em;
 }
 
