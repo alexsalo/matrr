@@ -361,6 +361,10 @@ class Account(models.Model):
 
 	class Meta:
 		db_table = 'act_account'
+		permissions = ([
+					('view_other_accounts', 'Can view accounts of other users'),
+					
+					])
 
 
 class DrinkingExperiment(models.Model):
@@ -1288,6 +1292,7 @@ class Review(models.Model):
 	class Meta:
 		permissions = (
                     ('can_receive_pending_reviews_info', 'Can receive pending reviews info by e-mail'),
+                    ('view_review_overview', 'Can view review overview and history overview')
                     )
 		db_table = 'rvs_reviews'
 		unique_together = ('user', 'req_request')
