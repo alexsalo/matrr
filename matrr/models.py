@@ -1570,8 +1570,10 @@ def request_post_save(**kwargs):
 	if previous_status == RequestStatus.objects.get(rqs_status_name='Cart')\
 	and current_status == RequestStatus.objects.get(rqs_status_name='Submitted'):
 		# start by finding all members of the group 'Committee'
-		committee_group = Group.objects.get(name='Committee')
-		committee_members = committee_group.user_set.all()
+		#committee_group = Group.objects.get(name='Committee')
+		#committee_members = committee_group.user_set.all()
+#		rather use users that has permission to modify reviews
+		committee_members = Account.objects.users_with_perm('change_review')
 
 		# for each committee member, create a new review for the request
 		for user in committee_members:
