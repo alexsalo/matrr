@@ -338,3 +338,56 @@ class VIPGraphForm_cohorts(Form):
 class VIPGraphForm_monkeys(Form):
 	monkey = ModelChoiceField(queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
 
+
+class SpiffyForm(Form):
+	OPERATORS = (
+		("", "are equal to"),
+		("__gte", "are greater than or equal to"),
+		("__lte", "are less than or equal to"),
+		("__gt", "are greater than"),
+		("__lt", "are less than"),
+		("__icontains", "contain (case insensitive"),
+	)
+	is_related = {}
+
+	def __init__(self, list_of_fields, *args, **kwargs):
+		from django.db.models.fields.related import ForeignKey, ManyToManyRel # i'm not sure about many2manyrel.  might be many2manyfield
+		related = (ForeignKey, ManyToManyRel)
+		super(SpiffyForm, self).__init__(*args, **kwargs)
+		for index, key in enumerate(list_of_fields):
+			name = key.name
+			if isinstance(key, related):
+				model = key.related.parent_model
+				self.fields[name] = ModelMultipleChoiceField(queryset=model.objects.all(), required=False)
+				self.fields[name].label = "Name"
+				self.is_related[name] = True
+			else:
+				self.fields[name + "_operator"] = ChoiceField(choices=self.OPERATORS, required=False)
+				self.fields[name + "_operator"].label = "Select " + name + "'s which "
+				self.fields[name] = CharField(max_length=50, required=False)
+				self.fields[name].label = ""
+				self.is_related[name] = False
+
+	def crazy_town_q_builder(self):
+		from django.db.models import Q
+		#this shit is nuts
+		if self.is_valid(): # hooray, we have a valid form!
+			data = self.cleaned_data # grab the spiffy data
+			q_object = Q() # create an empty Q object, which we will populate with the spiffy data
+			for field in self.fields: # fields is a list of the column _!objects!_ in the model
+				if '_operator' in field:
+					continue # we don't actually care about operator fields by themselves
+				name = field # but the form uses the field names in cleaned_data
+				if data[name]: # ignore empty data.  django doesn't let you query/filter empty strings.  IE: filter(column_name='') will error out.
+					if not self.is_related[field]: # if this field is NOT a relation field (foreign key or m2m)
+						q_dict = {name + data[name+"_operator"]: data[name]} # then we have to build the funky dictionary entry to join 'column_name' and '__gte'
+						q_object = q_object & Q(**q_dict) # and finally AND this fresh-build query with any previous queries built
+					else: # but wait, there's more!
+						if len(data[name]): # if this field is a related field, and at least one was selected
+							related_q = Q() # create an _different_ Q object, because related objects are first OR'd together, then AND'd with the other fields
+							for datum in data[name]: # so for every related object selected
+								q_dict = {name: datum} # create the funky Q object dictionary (which we immediatly unpack -.-)
+								related_q = related_q | Q(**q_dict) # or the related Q objects together
+							q_object = q_object & related_q # and then finally AND the related field Q objects with the other fields
+			# return that sexy Q object
+			return q_object # but only if .is_valid()
