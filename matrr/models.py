@@ -133,6 +133,10 @@ class DiffingMixin(object):
 				result[key] = {'old': value, 'new': self.__dict__.get(key, missing)}
 		return result
 
+Permission._meta.permissions = ([
+							('issue_tracker', 'Can view link to issue tracker'),
+							])
+
 
 class Institution(models.Model):
 	ins_institution_id = models.AutoField('ID', primary_key=True)
@@ -187,6 +191,7 @@ class Cohort(models.Model):
 
 	class Meta:
 		db_table = 'coh_cohorts'
+
 
 
 class CohortData(models.Model):
@@ -270,6 +275,9 @@ class Monkey(models.Model):
 
 	class Meta:
 		db_table = 'mky_monkeys'
+		permissions = ([
+					('monkey_view_confidential', 'Can view confidential data'),
+					])
 
 class Mta(models.Model):
 	mta_id = models.AutoField(primary_key=True)

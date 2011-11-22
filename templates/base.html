@@ -72,19 +72,19 @@
 					</ul>
 				{% endif %}
 
-				{% if user_is_member_of_committee or user_is_member_of_uberuser %}
+				{% if perms.matrr.change_review %}
 					<ul>
 						<li class='top'>
 							<a href="{% url review-list %}">My Reviews</a>
 						</li>
-						{% if user_is_member_of_uberuser %}
+						{% if perms.matrr.view_review_overview %}
 							<li class='drop-down'><a href="{% url review-overview-list %}">Overview</a></li>
 							<li class='drop-down'><a href="{% url review-history-list %}">History</a></li>
 						{% endif %}
 					</ul>
 				{% endif %}
 
-				{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
+				{% if perms.matrr.change_shipment %}
 					<ul>
 						<li class='top'>
 							<a href='{% url shipping-overview %}'>Shipping</a>
@@ -92,7 +92,7 @@
 					</ul>
 				{% endif %}
 
-				{% if user_is_member_of_committee or user_is_member_of_uberuser or user_is_member_of_tech_user %}
+				{% if perms.auth.issue_tracker %}
 					<ul>
 						<li class='top'>
 							<a href='https://gleek.ecs.baylor.edu/wiki/index.php?title=Issue_Tracker'>Issue Tracker</a>
