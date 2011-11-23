@@ -62,7 +62,7 @@ class Enumeration(object):
 
 InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
 
-Units =  (('μl','μl'), ('μg','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
+Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
 
 ExperimentEventType = Enumeration([
 								('D', 'Drink', 'Drink event'),
@@ -1194,7 +1194,7 @@ class TissueRequest(models.Model):
 		return self.rtt_fix_type
 
 	def get_amount(self):
-		return str(self.rtt_amount) + ' ' + self.rtt_units
+		return str(self.rtt_amount) + ' ' + self.get_rtt_units_display()
 
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
@@ -1416,7 +1416,7 @@ class TissueSample(models.Model):
 
 	def __unicode__(self):
 		return str(self.monkey) + ' ' + str(self.tissue_type) + ' ' + self.tss_freezer\
-			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.tss_units + ')'
+			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.get_tss_units_display() + ')'
 
 	def get_location(self):
 		return self.tss_freezer + ': ' + self.tss_location
