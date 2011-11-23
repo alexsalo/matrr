@@ -63,7 +63,14 @@ class Enumeration(object):
 InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
 
 Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
-
+LatexUnits = {
+			'ul': '$\mu l$',
+			'ug': '$\mu g$',
+			'whole': '$whole$',
+			'mg': '$mg$',
+			'ml': '$ml$',
+			'g': '$g$',
+			}
 ExperimentEventType = Enumeration([
 								('D', 'Drink', 'Drink event'),
 								('T', 'Time', 'Time event'),
@@ -1196,10 +1203,18 @@ class TissueRequest(models.Model):
 	def get_amount(self):
 		return str(self.rtt_amount) + ' ' + self.get_rtt_units_display()
 
+	def get_latex_amount(self):
+		return str(self.rtt_amount) + ' ' + LatexUnits[self.rtt_units]
+	
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
 			['Fix', self.rtt_fix_type],
 			['Amount', self.get_amount()],
+			['Estimated Cost', "$%.2f"%self.get_estimated_cost()]]
+	def get_latex_data(self):
+		return [['Tissue Type', self.tissue_type],
+			['Fix', self.rtt_fix_type],
+			['Amount', self.get_latex_amount()],
 			['Estimated Cost', "$%.2f"%self.get_estimated_cost()]]
 
 	def get_type_url(self):
