@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<form action='' method='post'>
+		{% csrf_token %}
+		<table class="left">
+			{% for field in spiffy_form %}
+				{% if field.errors %}
+					<tr>
+						<td align=right>Error:</td>
+						<td class='field-error' colspan='3'>{{ field.errors }}</td>
+					</tr>
+				{% endif %}
+				<tr>
+					<td>{{ field.label }}</td>
+					<td>{{ field }}</td>
+				</tr>
+			{% endfor %}
+			<tr>
+				<td><input type='submit' name='submit' class='blockLinkCheckoutButton' value='Sweeeet' style='float: right;'/></td>
+			</tr>
+		</table>
+	</form>
+
+	{% if monkeys %}
+		{% for monkey in monkeys %}
+			{{ monkey }}
+		{% endfor %}
+	{% endif %}
+
+{% endblock %}
