@@ -1111,8 +1111,28 @@ def order_delete(request, req_request_id):
 				 'Acceptance': Acceptance, },
 								  context_instance=RequestContext(request))
 
-
-def tissue_verification(request):
+def tissue_verification_list(request):
+	request_ids = TissueInventoryVerification.objects.values_list('tissue_request__req_request')
+	print request_ids
+	requests = Request.objects.filter(req_request_id__in=request_ids)
+	print requests
+	return render_to_response('matrr/verification_request_list.html',
+							{
+							'requests': requests,
+							},
+							context_instance=RequestContext(request))
+	
+def tissue_verification_export(request, req_request_id):
+	tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('inventory').order_by("monkey")
+	#Create the HttpResponse object with the appropriate PDF headers.
+	response = HttpResponse(mimetype='application/pdf')
+	response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
+	return process_latex('latex/tissue_verification.tex',
+														{'tiv_list': tiv_list,
+														 'user': request.user,
+														 'date': datetime.today()},
+														 outfile=response)
+def tissue_verification(request, req_request_id):
 	TissueVerificationFormSet = formset_factory(TissueInventoryVerificationForm, extra=0)
 	if request.method == "POST":
 		formset = TissueVerificationFormSet(request.POST)
@@ -1134,23 +1154,15 @@ def tissue_verification(request):
 				tiv.save()
 				if not 'Do not edit' in tiv.tiv_notes: # see TissueInventoryVerification.save() for details
 					tss.save()
-				if "export" in request.POST:
-					tiv_list = TissueInventoryVerification.objects.all().order_by('inventory').order_by("monkey")
-					#Create the HttpResponse object with the appropriate PDF headers.
-					response = HttpResponse(mimetype='application/pdf')
-					response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
-					return process_latex('latex/tissue_verification.tex',
-																		{'tiv_list': tiv_list,
-																		 'user': request.user,
-																		 'date': datetime.today()},
-																		 outfile=response)
+
 			return redirect('/verification')
 		else:
 			messages.error(request, formset.errors)
 	# if request method != post and/or formset isNOT valid
 	# build a new formset
 	initial = []
-	tiv_list = TissueInventoryVerification.objects.all().order_by('monkey').order_by('tissue_type').order_by('tiv_inventory')
+	tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('monkey').order_by('tissue_type').order_by('tiv_inventory')
+
 	for tiv in tiv_list:
 		try:
 			amount = tiv.tissue_request.get_amount()
@@ -1175,7 +1187,7 @@ def tissue_verification(request):
 					   'req_request': req_request,}
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
-	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
+	return render_to_response('matrr/verification.html', {"formset": formset, "req_id": req_request_id}, context_instance=RequestContext(request))
 
 
 ####################

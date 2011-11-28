@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Tissue Inventory Verification{% endblock %}
+
+
+{% block content %}
+
+	<div class='large-headline'>Tissue Inventory Verification</div>
+	<div class='clearfix'>
+	{% if order_list.object_list|length > 0 %}
+<table class="common_center" cellpadding='4' cellspacing='2'>
+  <tr>
+    <th>Cohort</th>
+    <th>Date Placed</th>
+    <th>Status</th>
+
+  </tr>
+
+  {% for req in requests %}
+    <tr>
+      <td>{{ req.cohort }}</td>
+      <td>{{ req.req_request_date|date:"m/d/Y, g:i a" }}</td>
+      <td {% if req.request_status|lower == "accepted" %}
+      style='color: green'
+      {% endif %}
+      {% if req.request_status|lower == "rejected" %}
+          style='color: red'   
+      {% endif %}>
+      {{ req.request_status }}</td>
+    
+      <td><a href='{% url verification-detail req.req_request_id %}'>Inventory verification forms</a></td>
+      <td><a href='{% url verification-detail-export req.req_request_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a> </td>
+    </tr>
+  {% endfor %}
+</table>
+	{% endif %}
+	</div>
+		
+	<br>
+
+
+{% endblock %}
