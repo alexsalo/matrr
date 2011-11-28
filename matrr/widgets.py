@@ -12,100 +12,13 @@ import re
 def date_to_padded_int(date):
 	return str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2)
 
-
+#this class is supposed to be abstract
 class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
 	def __init__(self, link_base, tissue, attrs=None, choices=()):
 		self.tissue = tissue
 		self.link_base = link_base
 		super(CheckboxSelectMultipleLink, self).__init__(attrs, choices)
 
-
-	def render(self, name, value, attrs=None, choices=()):
-		if value is None: value = []
-		has_id = attrs and 'id' in attrs
-		final_attrs = self.build_attrs(attrs, name=name)
-		output = [u'<fieldset><legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (
-		attrs['id'], name, attrs['id'])]
-		output.append(u'<ul style="list-style-type:none;">')
-		# Normalize to strings
-		str_values = set([force_unicode(v) for v in value])
-		for i, (mky_id, mky_real_id) in enumerate(chain(self.choices, choices)):
-			# If an ID attribute was given, add a numeric index as a suffix,
-			# so that the checkboxes don't all have the same ID attribute.
-			if has_id:
-				final_attrs = dict(final_attrs,
-								   id='%s_%s' % (attrs['id'], i),
-								   onclick="check_toggler(document.getElementById('%s'), '%s')" %\
-										   (attrs['id'], name))
-				label_for = u' for="%s"' % final_attrs['id']
-			else:
-				label_for = ''
-
-			cb = CheckboxInput(final_attrs,
-							   check_test=lambda value: value in str_values, )
-			mky_id = force_unicode(mky_id)
-			rendered_cb = cb.render(name, mky_id)
-			mky_real_id = conditional_escape(force_unicode(mky_real_id))
-
-			monkey = Monkey.objects.get(mky_id=mky_id)
-
-			if monkey.mky_drinking:
-				assignment = 'Ethanol'
-			elif monkey.mky_housing_control:
-				assignment = 'Housing Control'
-			else:
-				assignment = 'Control'
-
-			if self.tissue:
-				availability = self.tissue.get_monkey_availability(monkey)
-				if availability == Availability.Available:
-					availability_str = 'Available'
-				elif availability == Availability.In_Stock:
-					availability_str = 'In Stock'
-				elif availability == Availability.Unavailable:
-					availability_str = 'Unavailable'
-
-				if availability == Availability.Unavailable:
-					output.append(
-						u'<li><a href=\'%s%s\' target=\'_blank\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a> Status: %s Assignment: %s</li>' % (
-						self.link_base,
-						mky_real_id,
-						#						self.link_base,
-						#						mky_real_id,
-						mky_real_id,
-						availability_str,
-						assignment,))
-				else:
-					output.append(
-						u'<li><label%s>%s <a href=\'%s%s\' target=\'_blank\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>  Status: %s  Assignment: %s</li>' % (
-						label_for,
-						rendered_cb,
-						self.link_base,
-						mky_real_id,
-						#						self.link_base,
-						#						mky_real_id,
-						mky_real_id,
-						availability_str,
-						assignment))
-			else:
-				# this is for custom tissue requests
-				output.append(
-					u'<li><label%s>%s <a href=\'%s%s\' target=\'_blank\'><img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/>%s</a></label>  Assignment: %s</li>' % (
-					label_for,
-					rendered_cb,
-					self.link_base,
-					mky_real_id,
-					#					self.link_base,
-					#					mky_real_id,
-					mky_real_id,
-					assignment))
-		output.append(u'</ul></fieldset>')
-		output.append(u"<script type='text/javascript'>check_toggler(document.getElementById('%s'), '%s');</script>" %\
-					  (attrs['id'], name))
-		return mark_safe(u'\n'.join(output))
-
-
-class CheckboxSelectMultipleLinkByTableNoVerification(CheckboxSelectMultipleLink):
 	def render(self, name, value, attrs=None, choices=()):
 		if value is None: value = []
 		has_id = attrs and 'id' in attrs
@@ -142,122 +55,15 @@ class CheckboxSelectMultipleLinkByTableNoVerification(CheckboxSelectMultipleLink
 			else:
 				assignment = 'Control'
 
+			positive, status_str, color,  = self.get_status(monkey)
 			if self.tissue:
-				availability = self.tissue.get_monkey_availability(monkey)
-				if availability == Availability.Available:
-					availability_str = 'Available'
-				elif availability == Availability.In_Stock:
-					availability_str = 'In Stock'
-				elif availability == Availability.Unavailable:
-					availability_str = 'Unavailable'
-
-				if availability == Availability.Unavailable:
+				if not positive:
 					output.append(
-						u'<tr><td></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td>%s </td><td>%s</td></tr>' % (
+						u'<tr><td></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td><font color=%s>%s </font></td><td>%s</td></tr>' % (
 						reverse('monkey-detail', args=[self.link_base, mky_id]),
-						#						mky_real_id,
-						#						self.link_base,
-						#						mky_real_id,
 						mky_real_id,
-						availability_str,
-						assignment,))
-				else:
-					output.append(
-						u'<tr><td><label%s>%s </label></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td>%s </td><td>%s</td></tr>' % (
-						label_for,
-						rendered_cb,
-						reverse('monkey-detail', args=[self.link_base, mky_id]),
-						#						mky_real_id,
-						#						self.link_base,
-						#						mky_real_id,
-						mky_real_id,
-						availability_str,
-						assignment))
-			else:
-				# this is for custom tissue requests
-				output.append(
-					u'<tr><td><label%s>%s</label></td><td> <a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a></td><td></td><td>%s</td></tr>' % (
-					label_for,
-					rendered_cb,
-					reverse('monkey-detail', args=[self.link_base, mky_id]),
-					#					mky_real_id,
-					#					self.link_base,
-					#					mky_real_id,
-					mky_real_id,
-					assignment))
-		output.append(u'</table></fieldset>')
-		output.append(u"<script type='text/javascript'>check_toggler(document.getElementById('%s'), '%s');</script>" %\
-					  (attrs['id'], name))
-		return mark_safe(u'\n'.join(output))
-
-
-class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
-	def __init__(self, link_base, tissue, tis_request, attrs=None, choices=()):
-		self.tis_request = tis_request
-
-		super(CheckboxSelectMultipleLinkByTable, self).__init__(link_base, tissue, attrs, choices)
-
-	def render(self, name, value, attrs=None, choices=()):
-		if value is None: value = []
-		has_id = attrs and 'id' in attrs
-		final_attrs = self.build_attrs(attrs, name=name)
-		output = [u'<fieldset><legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (
-		attrs['id'], name, attrs['id'])]
-		output.append(u'<table class="full-width" ><thead><td></td><td>Monkey</td><td>Status</td><td>Assignment</td></thead>')
-		# Normalize to strings
-		str_values = set([force_unicode(v) for v in value])
-		for i, (mky_id, mky_real_id) in enumerate(chain(self.choices, choices)):
-			# If an ID attribute was given, add a numeric index as a suffix,
-			# so that the checkboxes don't all have the same ID attribute.
-			if has_id:
-				final_attrs = dict(final_attrs,
-								   id='%s_%s' % (attrs['id'], i),
-								   onclick="check_toggler(document.getElementById('%s'), '%s')" %\
-										   (attrs['id'], name))
-				label_for = u' for="%s"' % final_attrs['id']
-			else:
-				label_for = ''
-
-			cb = CheckboxInput(final_attrs,
-							   check_test=lambda value: value in str_values, )
-			mky_id = force_unicode(mky_id)
-			rendered_cb = cb.render(name, mky_id)
-			mky_real_id = conditional_escape(force_unicode(mky_real_id))
-
-			monkey = Monkey.objects.get(mky_id=mky_id)
-
-			if monkey.mky_drinking:
-				assignment = 'Ethanol'
-			elif monkey.mky_housing_control:
-				assignment = 'Housing Control'
-			else:
-				assignment = 'Control'
-			#      import pdb
-			#      pdb.set_trace()
-
-			# Using get_or_create because the review view errors hard if you manually delete a random TIV.
-			# Given they're temporary objects anyway, I don't foresee an issue with this.
-			verification, is_new = self.tissue.tissue_verification_set.get_or_create(monkey=monkey, tissue_request=self.tis_request)
-			if self.tissue:
-				if verification.tiv_inventory == 'Unverified':
-					output.append(
-						u'<tr><td></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td><font color=red>%s </font></td><td>%s</td></tr>' % (
-						reverse('monkey-detail', args=[self.link_base, mky_id]),
-						#						mky_real_id,
-						#						self.link_base,
-						#						mky_real_id,
-						mky_real_id,
-						verification.tiv_inventory,
-						assignment,))
-				elif verification.tiv_inventory == 'Insufficient':
-					output.append(
-						u'<tr><td></td><td><a href=\'%s\' target=\'_blank\'>%s<img src="/static/images/arrow_popup.png" width="8" height="8" style=\'vertical-align: text-top\' alt="external link"/></a> </td><td><font color=orange>%s </font></td><td>%s</td></tr>' % (
-						reverse('monkey-detail', args=[self.link_base, mky_id]),
-						#						mky_real_id,
-						#						self.link_base,
-						#						mky_real_id,
-						mky_real_id,
-						verification.tiv_inventory,
+						color,
+						status_str,
 						assignment,))
 				else:
 					output.append(
@@ -265,11 +71,8 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 						label_for,
 						rendered_cb,
 						reverse('monkey-detail', args=[self.link_base, mky_id]),
-						#						mky_real_id,
-						#						self.link_base,
-						#						mky_real_id,
 						mky_real_id,
-						verification.tiv_inventory,
+						status_str,
 						assignment))
 			else:
 				# this is for custom tissue requests
@@ -278,9 +81,6 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 					label_for,
 					rendered_cb,
 					reverse('monkey-detail', args=[self.link_base, mky_id]),
-					#					mky_real_id,
-					#					self.link_base,
-					#					mky_real_id,
 					mky_real_id,
 					assignment))
 
@@ -289,6 +89,44 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 					  (attrs['id'], name))
 		return mark_safe(u'\n'.join(output))
 
+
+class CheckboxSelectMultipleLinkByTableNoVerification(CheckboxSelectMultipleLink):
+	def get_status(self, monkey):
+		availability = self.tissue.get_monkey_availability(monkey)
+		if availability == Availability.Available:
+			availability_str = 'Available'
+			color = ""
+			positive = True
+		elif availability == Availability.In_Stock:
+			availability_str = 'In Stock'
+			positive = True
+			color = ""
+		elif availability == Availability.Unavailable:
+			availability_str = 'Unavailable'
+			positive = False
+			color = "red"
+		return positive, availability_str, color
+		
+
+class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
+	def __init__(self, link_base, tissue, tis_request, attrs=None, choices=()):
+		self.tis_request = tis_request
+
+		super(CheckboxSelectMultipleLinkByTable, self).__init__(link_base, tissue, attrs, choices)
+
+	def get_status(self, monkey):
+		verification, is_new = self.tissue.tissue_verification_set.get_or_create(monkey=monkey, tissue_request=self.tis_request)
+		if verification.tiv_inventory == 'Unverified':
+			color = "orange"
+			positive = False
+		elif verification.tiv_inventory == 'Insufficient':
+			color = "red"
+			positive = False
+		else:
+			color = ""
+			positive = True
+		return positive, verification.tiv_inventory, color
+		
 
 class FixTypeSelection(Input):
 	'''

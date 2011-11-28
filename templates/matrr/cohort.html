@@ -41,7 +41,7 @@
 
 		<div style='float: right;'>
 			<a class='blockLinkButton' href='{% url tissue-shop-landing cohort.coh_cohort_id %}'>Request Tissues from this Cohort</a>
-			{% if user_is_member_of_committee or user_is_member_of_uberuser %}
+			{% if perms.matrr.add_cohortdata %}
 				<div class="text-right"><a href="{% url cod-upload cohort.coh_cohort_id %}" class='blockLinkButton'>Add Cohort Data</a></div>
 			{% endif %}
 		</div>
@@ -51,7 +51,7 @@
 	<div>
 		<table class='common_center'>
 			<tr>
-				{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
+				{% if perms.matrr.monkey_view_confidential %}
 					<th>Real Name</th>{% endif %}
 				<th>Monkey ID</th>
 				<th>Sex</th>
@@ -63,7 +63,7 @@
 				<th>Study Complete</th></tr>
 			{% for monkey in cohort.monkey_set.all %}
 				<tr>
-					{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
+					{% if perms.matrr.monkey_view_confidential %}
 						<td>{{ monkey.mky_name }}</td>
 					{% endif %}
 					<td><a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
