@@ -3,10 +3,19 @@
 {% block content %}
 <div class='large-headline'>Build Your Own MATRR Graph</div><br>
 	<div class='clearfix'>
-		{% if form.non_field_errors %}
+		{% if date_form.non_field_errors %}
 			<div class="messages">
 				<div class="error">
-					{% for error in form.non_field_errors %}
+					{% for error in date_form.non_field_errors %}
+						{{ error }}
+					{% endfor %}
+				</div>
+			</div>
+		{% endif %}
+		{% if subject_form.non_field_errors %}
+			<div class="messages">
+				<div class="error">
+					{% for error in subject_form.non_field_errors %}
 						{{ error }}
 					{% endfor %}
 				</div>

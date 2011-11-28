@@ -1506,34 +1506,34 @@ def vip_graph_builder(request, method_name):
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = VIPGraphForm_monkeys(data=request.POST)
-
-	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}
+	matrr_image = ''
 
 	if date_form.is_valid() and subject_form.is_valid():
-		date_data = date_form.cleaned_data
-		subject_data = subject_form.cleaned_data
-		_from = date_data['from_date']
-		_to = date_data['to_date']
-		subject = subject_data['monkey']
-
 		parameters = {}
+		subject_data = subject_form.cleaned_data
+		subject = subject_data['monkey']
 		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey=subject)
-		if _from:
-			m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
-			parameters['from_date'] = str(_from)
-		if _to:
-			m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
-			parameters['to_date'] = str(_to)
+
+		date_data = date_form.cleaned_data
+		if date_data:
+			_from = date_data['from_date']
+			_to = date_data['to_date']
+			if _from:
+				m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
+				parameters['from_date'] = str(_from)
+			if _to:
+				m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
+				parameters['to_date'] = str(_to)
 
 		if m2de.count():
 			parameters = str(parameters)
 			matrr_image, is_new = MonkeyImage.objects.get_or_create(monkey=subject, method=method_name, title='sweet title', parameters=parameters)
 			if is_new:
 				matrr_image.save()
-
-			context['matrr_image'] = matrr_image
 		else:
 			messages.info(request, "No drinking experiments for the given date range for this monkey")
+
+	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges, 'matrr_image': matrr_image}
 	return render_to_response('VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
