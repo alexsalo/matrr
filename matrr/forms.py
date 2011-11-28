@@ -143,7 +143,7 @@ class TissueRequestForm(ModelForm):
 		fix_type = cleaned_data.get('rtt_fix_type')
 
 		if fix_type == 'DNA' or fix_type == 'RNA':
-			if cleaned_data['rtt_units'] != 'μg':
+			if cleaned_data['rtt_units'] != 'ug':
 				raise forms.ValidationError("Requests for DNA or RNA units must be in micrograms.")
 
 		if self.req_request and self.tissue and fix_type \

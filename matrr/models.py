@@ -62,8 +62,15 @@ class Enumeration(object):
 
 InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
 
-Units =  (('μl','μl'), ('μg','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
-
+Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
+LatexUnits = {
+			'ul': '$\mu l$',
+			'ug': '$\mu g$',
+			'whole': '$whole$',
+			'mg': '$mg$',
+			'ml': '$ml$',
+			'g': '$g$',
+			}
 ExperimentEventType = Enumeration([
 								('D', 'Drink', 'Drink event'),
 								('T', 'Time', 'Time event'),
@@ -133,6 +140,10 @@ class DiffingMixin(object):
 				result[key] = {'old': value, 'new': self.__dict__.get(key, missing)}
 		return result
 
+Permission._meta.permissions = ([
+							('issue_tracker', 'Can view link to issue tracker'),
+							])
+
 
 class Institution(models.Model):
 	ins_institution_id = models.AutoField('ID', primary_key=True)
@@ -187,6 +198,7 @@ class Cohort(models.Model):
 
 	class Meta:
 		db_table = 'coh_cohorts'
+
 
 
 class CohortData(models.Model):
@@ -270,6 +282,9 @@ class Monkey(models.Model):
 
 	class Meta:
 		db_table = 'mky_monkeys'
+		permissions = ([
+					('monkey_view_confidential', 'Can view confidential data'),
+					])
 
 class Mta(models.Model):
 	mta_id = models.AutoField(primary_key=True)
@@ -361,6 +376,10 @@ class Account(models.Model):
 
 	class Meta:
 		db_table = 'act_account'
+		permissions = ([
+					('view_other_accounts', 'Can view accounts of other users'),
+					
+					])
 
 
 class DrinkingExperiment(models.Model):
@@ -1182,12 +1201,20 @@ class TissueRequest(models.Model):
 		return self.rtt_fix_type
 
 	def get_amount(self):
-		return str(self.rtt_amount) + ' ' + self.rtt_units
+		return str(self.rtt_amount) + ' ' + self.get_rtt_units_display()
 
+	def get_latex_amount(self):
+		return str(self.rtt_amount) + ' ' + LatexUnits[self.rtt_units]
+	
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
 			['Fix', self.rtt_fix_type],
 			['Amount', self.get_amount()],
+			['Estimated Cost', "$%.2f"%self.get_estimated_cost()]]
+	def get_latex_data(self):
+		return [['Tissue Type', self.tissue_type],
+			['Fix', self.rtt_fix_type],
+			['Amount', self.get_latex_amount()],
 			['Estimated Cost', "$%.2f"%self.get_estimated_cost()]]
 
 	def get_type_url(self):
@@ -1288,6 +1315,7 @@ class Review(models.Model):
 	class Meta:
 		permissions = (
                     ('can_receive_pending_reviews_info', 'Can receive pending reviews info by e-mail'),
+                    ('view_review_overview', 'Can view review overview and history overview')
                     )
 		db_table = 'rvs_reviews'
 		unique_together = ('user', 'req_request')
@@ -1403,7 +1431,7 @@ class TissueSample(models.Model):
 
 	def __unicode__(self):
 		return str(self.monkey) + ' ' + str(self.tissue_type) + ' ' + self.tss_freezer\
-			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.tss_units + ')'
+			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.get_tss_units_display() + ')'
 
 	def get_location(self):
 		return self.tss_freezer + ': ' + self.tss_location
@@ -1565,8 +1593,10 @@ def request_post_save(**kwargs):
 	if previous_status == RequestStatus.objects.get(rqs_status_name='Cart')\
 	and current_status == RequestStatus.objects.get(rqs_status_name='Submitted'):
 		# start by finding all members of the group 'Committee'
-		committee_group = Group.objects.get(name='Committee')
-		committee_members = committee_group.user_set.all()
+		#committee_group = Group.objects.get(name='Committee')
+		#committee_members = committee_group.user_set.all()
+#		rather use users that has permission to modify reviews
+		committee_members = Account.objects.users_with_perm('change_review')
 
 		# for each committee member, create a new review for the request
 		for user in committee_members:
