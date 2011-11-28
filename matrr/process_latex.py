@@ -36,8 +36,8 @@ def process_latex(template, context={}, type='pdf', outfile=None):
 			  names['dvi'], '-o', names['png']],
 											   cwd=dirname(base), stdout=PIPE, stderr=PIPE)
 
-	remove(names['log'])
-	remove(names['aux'])
+#	remove(names['log'])
+#	remove(names['aux'])
 
 	o = file(output).read()
 	remove(output)
