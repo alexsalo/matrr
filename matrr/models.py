@@ -1186,7 +1186,7 @@ class TissueRequest(models.Model):
 											  help_text='The accepted monkeys for this request.')
 
 	def __unicode__(self):
-		return self.req_request.user + ":  " + self.tissue_type.tst_tissue_name + ' - ' + self.rtt_fix_type
+		return str(self.req_request.user) + ":  " + self.tissue_type.tst_tissue_name + ' - ' + self.rtt_fix_type
 
 	def get_tissue(self):
 		return self.tissue_type
