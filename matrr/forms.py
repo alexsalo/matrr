@@ -142,9 +142,13 @@ class TissueRequestForm(ModelForm):
 			cleaned_data['rtt_fix_type'] = "Flash Frozen"
 		fix_type = cleaned_data.get('rtt_fix_type')
 
+		# If a user requests DNA/RNA of bone marrow tissue (maybe never), the units will be forced in micrograms, not microliters.  I think this is correct.
 		if fix_type == 'DNA' or fix_type == 'RNA':
 			if cleaned_data['rtt_units'] != 'ug':
-				raise forms.ValidationError("Requests for DNA or RNA units must be in micrograms.")
+				raise forms.ValidationError("Units of DNA or RNA must be in micrograms.")
+		elif "marrow" in self.tissue.tst_tissue_name.lower():
+			if cleaned_data['rtt_units'] != 'ul':
+				raise forms.ValidationError("Units of bone marrow must be in microliters.")
 
 		if self.req_request and self.tissue and fix_type \
 		and (self.instance is None		or		(self.instance.rtt_tissue_request_id is not None and self.instance.rtt_fix_type != fix_type )) \
@@ -338,3 +342,78 @@ class VIPGraphForm_cohorts(Form):
 class VIPGraphForm_monkeys(Form):
 	monkey = ModelChoiceField(queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
 
+
+class SpiffyForm(Form):
+	OPERATORS = (
+		("", "equal to"),
+		("__gte", "greater than or equal to"),
+		("__lte", "less than or equal to"),
+		("__gt", "greater than"),
+		("__lt", "less than"),
+		("__icontains", "contains"),
+	)
+	has_operator = {}
+
+	def __init__(self, list_of_fields, *args, **kwargs):
+		from django.db.models import fields
+		integers = (fields.IntegerField, fields.AutoField)
+		related = (fields.related.ForeignKey, fields.related.ManyToManyRel)
+		super(SpiffyForm, self).__init__(*args, **kwargs)
+		for key in list_of_fields:
+			name = key.name
+			if isinstance(key, related):
+				model = key.related.parent_model
+				self.fields[name] = ModelMultipleChoiceField(queryset=model.objects.all(), required=False)
+				self.fields[name].label = "Relation: " + name
+				self.has_operator[name] = False
+			elif isinstance(key, integers):
+				self.fields[name + "_operator"] = ChoiceField(choices=self.OPERATORS, required=False)
+				self.fields[name + "_operator"].label = key.verbose_name
+				self.fields[name] = IntegerField(required=False)
+				self.fields[name].label = ""
+				self.has_operator[name] = True
+			elif isinstance(key, fields.FloatField):
+				self.fields[name + "_operator"] = ChoiceField(choices=self.OPERATORS, required=False)
+				self.fields[name + "_operator"].label = key.verbose_name
+				self.fields[name] = FloatField(required=False)
+				self.fields[name].label = ""
+				self.has_operator[name] = True
+			elif isinstance(key, fields.BooleanField):
+				self.fields[name] = NullBooleanField(required=False)
+				self.fields[name].label = key.verbose_name
+				self.has_operator[name] = False
+			else:
+				self.fields[name + "_operator"] = ChoiceField(choices=self.OPERATORS, required=False)
+				self.fields[name + "_operator"].label = key.verbose_name
+				self.fields[name] = CharField(max_length=50, required=False)
+				self.fields[name].label = ""
+				self.has_operator[name] = True
+
+	def crazy_town_q_builder(self):
+		from django.db.models import Q
+		#this shit is crazy
+		if self.is_valid(): # hooray, we have a valid form!
+			data = self.cleaned_data # grab the spiffy data
+			q_object = Q() # create an empty Q object, which we will populate with the spiffy data
+			for field in self.fields: # fields is a list of the column _!objects!_ in the model
+				if '_operator' in field:
+					continue # we don't actually care about operator fields by themselves
+				name = field # but the form uses the field names in cleaned_data
+				if data[name] is None or str(data[name]) is "": # the str() is a hack because u"" != "".  Feels safer to convert to the test that to assume it's unicode
+					continue
+				else: # ignore empty data.  django doesn't let you query/filter empty strings.  IE: filter(column_name='') will error out.
+					if self.has_operator[field]: # if this field has an operator field
+						q_dict = {name + data[name+"_operator"]: data[name]} # then we have to build the funky dictionary entry to join 'column_name' and '__gte'
+						q_object = q_object & Q(**q_dict) # and finally AND this fresh-build query with any previous queries built
+					else: # but wait, there's more!
+						if data[name] is True or data[name] is False:
+							q_dict = {name: data[name]}
+							q_object = q_object & Q(**q_dict)
+						else:
+							related_q = Q() # create an _different_ Q object, because related objects are first OR'd together, then AND'd with the other fields
+							for datum in data[name]: # so for every related object selected
+								q_dict = {name: datum} # create the funky Q object dictionary (which we immediately unpack -.-)
+								related_q = related_q | Q(**q_dict) # or the related Q objects together
+							q_object = q_object & related_q # and then finally AND the related field Q objects with the other fields
+			# return that sexy Q object
+			return q_object # but only if .is_valid()
