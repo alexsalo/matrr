@@ -245,10 +245,10 @@ class Monkey(models.Model):
 		('M', 'Male'),
 		('F', 'Female'),
 		)
-	mky_id = models.AutoField('Internal ID', primary_key=True)
+	mky_id = models.AutoField('Monkey ID', primary_key=True)
 	cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', verbose_name='Cohort',
 							   help_text='The cohort this monkey belongs to.')
-	mky_real_id = models.IntegerField('ID', unique=True, null=False,
+	mky_real_id = models.IntegerField('ID', unique=True,
 									  help_text='The ID of the monkey.')
 	mky_name = models.CharField('Name', max_length=100, blank=True, null=True,
 								help_text='The monkey\'s name.')
@@ -259,7 +259,7 @@ class Monkey(models.Model):
 									 help_text='Please enter the date the monkey was born on.')
 	mky_weight = models.FloatField('Weight', blank=True, null=True,
 									 help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
-	mky_drinking = models.BooleanField('Drinking', null=False,
+	mky_drinking = models.BooleanField('Is Drinking', null=False,
 									   help_text='Was this monkey given alcohol?')
 	mky_housing_control = models.BooleanField('Housing Control', null=False, default=False,
 											  help_text='Was this monkey part of a housing control group?')
@@ -1180,13 +1180,13 @@ class TissueRequest(models.Model):
 	monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
 									 verbose_name='Requested Monkeys',
 									 help_text='The monkeys this tissue is requested from.')
-	accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_accepted_monkeys_to_tissue_requests',
+	accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_accepted_monkeys_to_tissue_requests', required=False,
 											  verbose_name='Accepted Monkeys',
 											  related_name='accepted_tissue_request_set',
 											  help_text='The accepted monkeys for this request.')
 
 	def __unicode__(self):
-		return self.tissue_type.tst_tissue_name + ': ' + self.rtt_fix_type
+		return self.req_request.user + ": " + self.tissue_type.tst_tissue_name + ' - ' + self.rtt_fix_type
 
 	def get_tissue(self):
 		return self.tissue_type
@@ -1592,6 +1592,9 @@ def request_post_save(**kwargs):
 	# For Submitted Requests
 	if previous_status == RequestStatus.objects.get(rqs_status_name='Cart')\
 	and current_status == RequestStatus.objects.get(rqs_status_name='Submitted'):
+		from utils.regular_tasks.send_new_request_info import send_new_request_info
+		# Send email notification the request was submitted
+		send_new_request_info(req_request)
 		# start by finding all members of the group 'Committee'
 		#committee_group = Group.objects.get(name='Committee')
 		#committee_members = committee_group.user_set.all()
