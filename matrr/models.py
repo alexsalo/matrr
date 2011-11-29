@@ -1180,7 +1180,7 @@ class TissueRequest(models.Model):
 	monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
 									 verbose_name='Requested Monkeys',
 									 help_text='The monkeys this tissue is requested from.')
-	accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_accepted_monkeys_to_tissue_requests', required=False,
+	accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_accepted_monkeys_to_tissue_requests', blank=True, null=True,
 											  verbose_name='Accepted Monkeys',
 											  related_name='accepted_tissue_request_set',
 											  help_text='The accepted monkeys for this request.')
