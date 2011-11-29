@@ -17,7 +17,7 @@ def send_new_request_info(req_request):
 		email = user.email
 		recipients = list()
 		recipients.append(email)
-		subject = 'User %s submitted a request for %s tissues from %s.' % req_request.user, req_request.get_requested_tissue_count(), req_request.cohort
+		subject = 'User %s submitted a request for %s tissues from %s.' % (req_request.user, req_request.get_requested_tissue_count(), req_request.cohort)
 		body = 'More information about this request is available at matrr.com\n'\
 			'Please, do not respond. This is an automated message.\n'
 
