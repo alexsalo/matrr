@@ -24,7 +24,7 @@ All Cohorts
 					<table class="common">
 						<tr>
 							<th>Monkey ID</th>
-							{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
+							{% if perms.matrr.monkey_view_confidential %}
 								<th>Monkey Name</th>
 							{% endif %}
 							<th>Sex</th>
@@ -33,7 +33,7 @@ All Cohorts
 						{% for monkey in cohort.monkey_set.all|dictsortreversed:"mky_drinking" %}
 							<tr>
 								<td class='text-center-common-td'><a href='{% url monkey-detail cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
-								{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
+								{% if perms.matrr.monkey_view_confidential %}
 									<td class='text-center-common-td'>{{ monkey.mky_name }}</td>
 								{% endif %}
 								<td class='text-center-common-td'>{{ monkey.mky_gender }}</td>

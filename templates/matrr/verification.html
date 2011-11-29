@@ -7,6 +7,11 @@
 
 	<div class='large-headline'>Tissue Inventory Verification</div>
 	<div class='clearfix'>
+		<a href="{% url verification %}">
+
+			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+			&nbsp;Verification - list of requests</a>
+		
 		{% if formset %}
 			<form method="post" action="">
 				{{ formset.management_form }}
@@ -22,7 +27,7 @@
 						<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
 						<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
 						<td align="center">
-							<button type='submit' name='export' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</button>
+							<a href='{% url verification-detail-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
 						</td>
 					</tr>
 					<tr></tr>
@@ -84,7 +89,8 @@
 						<td align="center" class='verification_legend unverified'>Unverified</td>
 						<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
 						<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
-						<td align="center"><input type='submit' name='export' class='blockLinkDeleteButton' value='Export PDF' style='width:100px;float: right'/></td>
+						<td align="center">							<a href='{% url verification-detail-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
+</td>
 					</tr>
 				</table>
 			</form>
@@ -103,7 +109,7 @@
 						<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
 						<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
 						<td align="center">
-							<button type='submit' name='export' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</button>
+							<a href='{% url verification-detail-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
 						</td>
 					</tr>
 					<tr></tr>

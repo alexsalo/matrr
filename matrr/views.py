@@ -357,7 +357,7 @@ def cart_checkout(request):
 									  context_instance=context)
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Committee').count() != 0, login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_review'), login_url='/denied/')
 def reviews_list_view(request):
 	# get a list of all reviews for the current user
 	submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
@@ -543,14 +543,12 @@ def account_detail_view(request, user_id):
 							  context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Committee').count()or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_other_accounts'), login_url='/denied/')
 def account_reviewer_view(request, user_id):
 	return account_detail_view(request, user_id)
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Committee').count() != 0, login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_review'), login_url='/denied/')
 def review_detail(request, review_id):
 	# get the review
 	review = Review.objects.get(rvs_review_id=review_id)
@@ -582,25 +580,15 @@ def review_detail(request, review_id):
 			 },
 							  context_instance=RequestContext(request))
 
-
+@user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_history_list(request):
 	
 	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
 	request_status_cart = RequestStatus.objects.get(rqs_status_name='Cart')
 	req_requests = Request.objects.filter(Q(request_status__gte=0), ~Q(request_status=request_status), ~Q(request_status=request_status_cart)).order_by('-req_modified_date')
 	req_requests = req_requests.distinct()
-	group = Group.objects.get(name='Committee')
-	reviewers = group.user_set.all().order_by('-username')
-#	verified_requests = list()
-#	for req_request in req_requests:
-#		req_request.complete = list()
-#		for reviewer in reviewers:
-#			for review in req_request.review_set.all():
-#				if reviewer == review.user:
-#					req_request.complete.append(req_request.request_status.rqs_status_name)
-#			if req_request.complete:
-#				verified_requests.append(req_request)
-	
+
+	reviewers = Account.objects.users_with_perm('change_review').order_by('-username')
 	
 	paginator = Paginator(req_requests, 20) # Show 25 contacts per page
 
@@ -626,7 +614,7 @@ def review_history_list(request):
 			 },
 							  context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.groups.filter(name='Uberuser').count() != 0, login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_overview_list(request):
 	# get a list of all tissue requests that are submitted, but not accepted or rejected
 	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
@@ -662,7 +650,7 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 					10 - (math.fabs(5 - tissue_request_review.get_quantity(css=True)) * 2))
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Uberuser').count() != 0, login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_overview(request, req_request_id):
 	# get the request being reviewed
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -863,7 +851,7 @@ def remove_values_from_list(the_list, other_list):
 	return [value for value in the_list if value not in other_list]
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Uberuser').count(), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def request_review_process(request, req_request_id):
 	# get the tissue request
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -983,10 +971,7 @@ def contact_us(request):
 								  context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_overview(request):
 	# get the tissue requests that have been accepted
 	accepted_requests = Request.objects.filter(request_status__in=
@@ -1053,10 +1038,7 @@ def search(request):
 							  context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def build_shipment(request, req_request_id):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -1085,10 +1067,7 @@ def build_shipment(request, req_request_id):
 							  context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def make_shipping_manifest_latex(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
 
@@ -1132,8 +1111,28 @@ def order_delete(request, req_request_id):
 				 'Acceptance': Acceptance, },
 								  context_instance=RequestContext(request))
 
-
-def tissue_verification(request):
+def tissue_verification_list(request):
+	request_ids = TissueInventoryVerification.objects.values_list('tissue_request__req_request')
+	print request_ids
+	requests = Request.objects.filter(req_request_id__in=request_ids)
+	print requests
+	return render_to_response('matrr/verification_request_list.html',
+							{
+							'requests': requests,
+							},
+							context_instance=RequestContext(request))
+	
+def tissue_verification_export(request, req_request_id):
+	tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('inventory').order_by("monkey")
+	#Create the HttpResponse object with the appropriate PDF headers.
+	response = HttpResponse(mimetype='application/pdf')
+	response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
+	return process_latex('latex/tissue_verification.tex',
+														{'tiv_list': tiv_list,
+														 'user': request.user,
+														 'date': datetime.today()},
+														 outfile=response)
+def tissue_verification(request, req_request_id):
 	TissueVerificationFormSet = formset_factory(TissueInventoryVerificationForm, extra=0)
 	if request.method == "POST":
 		formset = TissueVerificationFormSet(request.POST)
@@ -1155,23 +1154,15 @@ def tissue_verification(request):
 				tiv.save()
 				if not 'Do not edit' in tiv.tiv_notes: # see TissueInventoryVerification.save() for details
 					tss.save()
-				if "export" in request.POST:
-					tiv_list = TissueInventoryVerification.objects.all().order_by('inventory').order_by("monkey")
-					#Create the HttpResponse object with the appropriate PDF headers.
-					response = HttpResponse(mimetype='application/pdf')
-					response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
-					return process_latex('latex/tissue_verification.tex',
-																		{'tiv_list': tiv_list,
-																		 'user': request.user,
-																		 'date': datetime.today()},
-																		 outfile=response)
+
 			return redirect('/verification')
 		else:
 			messages.error(request, formset.errors)
 	# if request method != post and/or formset isNOT valid
 	# build a new formset
 	initial = []
-	tiv_list = TissueInventoryVerification.objects.all().order_by('monkey').order_by('tissue_type').order_by('tiv_inventory')
+	tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('monkey').order_by('tissue_type').order_by('tiv_inventory')
+
 	for tiv in tiv_list:
 		try:
 			amount = tiv.tissue_request.get_amount()
@@ -1196,26 +1187,18 @@ def tissue_verification(request):
 					   'req_request': req_request,}
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
-	return render_to_response('matrr/verification.html', {"formset": formset}, context_instance=RequestContext(request))
+	return render_to_response('matrr/verification.html', {"formset": formset, "req_id": req_request_id}, context_instance=RequestContext(request))
 
 
 ####################
 #  VIP tools  #
 ####################
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='VIP').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_tools(request):
 	return render_to_response('VIP/vip_index.html', {}, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='VIP').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_graphs(request):
 	if request.POST:
 		for key in plotting.MONKEY_PLOTS:
@@ -1243,11 +1226,7 @@ def vip_graphs(request):
 		context['coh_keys'] = coh_keys
 		return render_to_response('VIP/vip_graphs.html', context, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='VIP').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_mtd_graph(request, mtd_id):
 	if MonkeyToDrinkingExperiment.objects.filter(pk=mtd_id).count():
 		mtd = MonkeyToDrinkingExperiment.objects.get(pk=mtd_id)
@@ -1259,11 +1238,7 @@ def vip_mtd_graph(request, mtd_id):
 		return render_to_response('VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='VIP').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_graph_builder(request, method_name):
 	if 'vip-graphs' in request.POST:
 		return redirect(reverse('vip-graphs'))
@@ -1309,6 +1284,7 @@ def vip_graph_builder(request, method_name):
 			subject_form = VIPGraphForm_cohorts()
 	# only reachable if NOT request.POST
 	return render_to_response('VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}, context_instance=RequestContext(request))
+
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = VIPGraphForm_monkeys(data=request.POST)
@@ -1446,19 +1422,11 @@ def sendfile(request, id):
 #  VIP tools  #
 ####################
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='VIP').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_tools(request):
 	return render_to_response('VIP/vip_index.html', {}, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='VIP').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_graphs(request):
 	if request.POST:
 		for key in plotting.MONKEY_PLOTS:
@@ -1488,11 +1456,7 @@ def vip_graphs(request):
 		return render_to_response('VIP/vip_graphs.html', context, context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.groups.filter(name='Tech User').count() or
-							u.groups.filter(name='Committee').count() or
-							u.groups.filter(name='VIP').count() or
-							u.groups.filter(name='Uberuser').count(),
-				  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_graph_builder(request, method_name):
 	if 'vip-graphs' in request.POST:
 		return redirect(reverse('vip-graphs'))
@@ -1542,34 +1506,34 @@ def vip_graph_builder(request, method_name):
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = VIPGraphForm_monkeys(data=request.POST)
-
-	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}
+	matrr_image = ''
 
 	if date_form.is_valid() and subject_form.is_valid():
-		date_data = date_form.cleaned_data
-		subject_data = subject_form.cleaned_data
-		_from = date_data['from_date']
-		_to = date_data['to_date']
-		subject = subject_data['monkey']
-
 		parameters = {}
+		subject_data = subject_form.cleaned_data
+		subject = subject_data['monkey']
 		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey=subject)
-		if _from:
-			m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
-			parameters['from_date'] = str(_from)
-		if _to:
-			m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
-			parameters['to_date'] = str(_to)
+
+		date_data = date_form.cleaned_data
+		if date_data:
+			_from = date_data['from_date']
+			_to = date_data['to_date']
+			if _from:
+				m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
+				parameters['from_date'] = str(_from)
+			if _to:
+				m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
+				parameters['to_date'] = str(_to)
 
 		if m2de.count():
 			parameters = str(parameters)
 			matrr_image, is_new = MonkeyImage.objects.get_or_create(monkey=subject, method=method_name, title='sweet title', parameters=parameters)
 			if is_new:
 				matrr_image.save()
-
-			context['matrr_image'] = matrr_image
 		else:
 			messages.info(request, "No drinking experiments for the given date range for this monkey")
+
+	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges, 'matrr_image': matrr_image}
 	return render_to_response('VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):

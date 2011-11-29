@@ -19,6 +19,29 @@ DEFAULT_FIG_SIZE = (10,10)
 DEFAULT_DPI = 80
 COLORS = {'monkey' : "#01852F", 'cohort' : 'black'}
 
+##UNFINISHED
+def validate_dates(**kwargs):
+	from_date = to_date = False
+	if kwargs.has_key('from_date'):
+		from_date = kwargs['from_date']
+	if kwargs.has_key('to_date'):
+		to_date = kwargs['to_date']
+	if from_date and not isinstance(from_date, datetime):
+		try:
+			#maybe its a str(datetime)
+			from_date = dateutil.parser.parse(from_date)
+		except:
+			#otherwise give up
+			print("Invalid parameter, from_date")
+			return False, 'NO MAP'
+	if from_date and not isinstance(to_date, datetime):
+		try:
+			#maybe its a str(datetime)
+			to_date = dateutil.parser.parse(to_date)
+		except:
+			#otherwise give up
+			print("Invalid parameter, from_date")
+			return False, 'NO MAP'
 
 def etoh_intake(queryset):
 	return queryset.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
@@ -708,7 +731,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 			#otherwise give up
 			print("Invalid parameter, from_date")
 			return False, 'NO MAP'
-
+		
 	monkey_alpha = .7
 	cohort = monkey.cohort
 
