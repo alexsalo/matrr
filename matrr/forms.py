@@ -142,9 +142,13 @@ class TissueRequestForm(ModelForm):
 			cleaned_data['rtt_fix_type'] = "Flash Frozen"
 		fix_type = cleaned_data.get('rtt_fix_type')
 
+		# If a user requests DNA/RNA of bone marrow tissue (maybe never), the units will be forced in micrograms, not microliters.  I think this is correct.
 		if fix_type == 'DNA' or fix_type == 'RNA':
 			if cleaned_data['rtt_units'] != 'ug':
-				raise forms.ValidationError("Requests for DNA or RNA units must be in micrograms.")
+				raise forms.ValidationError("Units of DNA or RNA must be in micrograms.")
+		elif "marrow" in self.tissue.tst_tissue_name.lower():
+			if cleaned_data['rtt_units'] != 'ul':
+				raise forms.ValidationError("Units of bone marrow must be in microliters.")
 
 		if self.req_request and self.tissue and fix_type \
 		and (self.instance is None		or		(self.instance.rtt_tissue_request_id is not None and self.instance.rtt_fix_type != fix_type )) \
