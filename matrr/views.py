@@ -1410,7 +1410,8 @@ def sendfile(request, id):
 
 def test_view(request):
 	monkeys = ''
-	fields = [field for field in MonkeyToDrinkingExperiment._meta.fields]
+	field_names = ["mky_id", 'mky_drinking', 'mky_weight', 'mky_gender',]
+	fields = [Monkey._meta.get_field(field) for field in field_names]
 	if request.POST:
 		spiffy_form = SpiffyForm(fields, data=request.POST)
 
@@ -1418,7 +1419,7 @@ def test_view(request):
 		#this shit is crazytown
 		if spiffy_form.is_valid(): # hooray, we have a valid form!
 			q_object = spiffy_form.crazy_town_q_builder()
-			monkeys = MonkeyToDrinkingExperiment.objects.filter(q_object)
+			monkeys = Monkey.objects.filter(q_object)
 	else:
 		spiffy_form = SpiffyForm(fields)
 	return render_to_response('test.html', {'spiffy_form': spiffy_form, 'monkeys': monkeys}, context_instance=RequestContext(request))
