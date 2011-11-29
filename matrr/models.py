@@ -1180,13 +1180,13 @@ class TissueRequest(models.Model):
 	monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
 									 verbose_name='Requested Monkeys',
 									 help_text='The monkeys this tissue is requested from.')
-	accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_accepted_monkeys_to_tissue_requests',
+	accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_accepted_monkeys_to_tissue_requests', required=False,
 											  verbose_name='Accepted Monkeys',
 											  related_name='accepted_tissue_request_set',
 											  help_text='The accepted monkeys for this request.')
 
 	def __unicode__(self):
-		return self.tissue_type.tst_tissue_name + ': ' + self.rtt_fix_type
+		return self.req_request.user + ":  " + self.tissue_type.tst_tissue_name + ' - ' + self.rtt_fix_type
 
 	def get_tissue(self):
 		return self.tissue_type
