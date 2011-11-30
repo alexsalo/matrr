@@ -15,7 +15,11 @@
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
 
 <!-- Container -->
+{% if PRODUCTION %}
 <div id="container">
+{% else %}
+<div id="container-dev">
+{% endif %}
 
     {% if not is_popup %}
     <!-- Header -->
