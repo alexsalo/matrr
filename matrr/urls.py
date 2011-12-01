@@ -111,6 +111,8 @@ urlpatterns += patterns('matrr.views',
 	url(r'^vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
 	url(r'^vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
 
+	url(r'^upload/$', raw_data_upload, name='raw-upload'),
+
 	)
 
 if settings.DEVELOPMENT:

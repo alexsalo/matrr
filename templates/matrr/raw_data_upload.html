@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}
+	MATRR data upload
+{% endblock %}
+
+{% block content %}
+	{% if success %}
+	<div class="messages" >
+			<div class="info">
+				Your data has been uploaded successfully.
+			</div>
+	</div>
+	{% endif %}
+	<div class='center-content'>
+		<div id='large-headline'>MATRR data upload</div>
+		You can upload your MATRR data here.
+		<form method="post" action="" enctype="multipart/form-data">
+				{% csrf_token %}
+				{{ form.as_p }}
+				<button type='submit' name='submit'>Upload</button>
+		</form>
+		
+	</div>
+{% endblock %}

@@ -114,6 +114,15 @@
 				{#          <li class='drop-down'><a href="/view_rna/">View RNA</a></li>#}
 				{#      </ul>#}
 				{#      {% endif %}#}
+				
+				{% if perms.auth.upload_raw_data %}
+					<ul>
+						<li class='top'>
+							<a href='{% url raw-upload %}'>Upload</a>
+						</li>
+					</ul>
+				{% endif %}
+			
 			{% endblock %}
 		</div>
 

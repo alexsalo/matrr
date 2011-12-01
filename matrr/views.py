@@ -1436,3 +1436,23 @@ def test_view(request):
 		spiffy_form = SpiffyForm(fields)
 	return render_to_response('test.html', {'spiffy_form': spiffy_form, 'monkeys': monkeys}, context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('auth.upload_raw_data'), login_url='/denied/')
+def raw_data_upload(request):
+	
+	if request.method == 'POST':
+		
+		form = RawDataUploadForm(request.POST, request.FILES)
+		if form.is_valid():
+			f = request.FILES['data']
+			name = f.name + datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+			upload_path = os.path.join(settings.UPLOAD_DIR, name)
+			destination = open(upload_path, 'wb+')
+			for chunk in f.chunks():
+				destination.write(chunk)
+			destination.close()
+			return render_to_response('raw_data_upload.html', {'form': RawDataUploadForm(), 'success' : True}, context_instance=RequestContext(request))
+	else:
+		form = RawDataUploadForm()
+	return render_to_response('raw_data_upload.html', {'form': form}, context_instance=RequestContext(request))
+
+
