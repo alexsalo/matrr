@@ -229,7 +229,7 @@ def load_cohorts(file):
 # Like I just did.
 # -jf
 @transaction.commit_on_success
-def load_inventory(file, output_file, load_tissue_types=False,  delete_name_duplicates=False, create_tissue_samples=False):
+def load_initial_inventory(file, output_file, load_tissue_types=False,  delete_name_duplicates=False, create_tissue_samples=False):
 	"""
 	  This function will load freezer inventories from a csv file.
 	  !!!!! It will only load monkeys that are already in the database !!!!!
@@ -249,7 +249,7 @@ def load_inventory(file, output_file, load_tissue_types=False,  delete_name_dupl
 		10 - Freezer
 	  """
 	if load_tissue_types:
-		load_TissueTypes('utils/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
+		load_TissueTypes('utils/DATA/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
 	input = csv.reader(open(file, 'rU'), delimiter=',')
 	output = csv.writer(open(output_file, 'w'), delimiter=',')
 	unknown_monkeys = csv.writer(open('unknown_monkeys.csv', 'w'), delimiter=',')
@@ -343,6 +343,70 @@ def load_inventory(file, output_file, load_tissue_types=False,  delete_name_dupl
 			row[11:] = ["No MATRR record for this monkey"]
 			unknown_monkeys.writerow(row)
 		#raise Exception('Just testing') #uncomment for testing purposes
+
+
+def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_duplicates=False, create_tissue_samples=False):
+	if load_tissue_types:
+		load_TissueTypes('utils/DATA/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
+	unmatched_output_file = input_file + "-unmatched-output.csv"
+
+	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+	unmatched_output = csv.writer(open(unmatched_output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+
+	columns = input_data.next()
+	unmatched_output.writerow(columns)
+
+	print "Loading Inventory..."
+	for row in input_data:
+		tissue 		= row[0]
+		name	 	= row[1]
+		realid 		= row[2]
+		freezer 	= row[3]
+		location 	= row[4]
+		details 	= row[5] #ignored
+		quantity 	= row[6] #ignored
+		units		= row[7] #ignored
+
+		if realid == '0':
+				continue
+		try:
+				monkey = Monkey.objects.get(mky_real_id=realid)
+		except Monkey.DoesNotExist:
+				error = "Error: Monkey not found:  " + str(realid)
+				row.append(error)
+				unmatched_output.writerow(row)
+				print error
+				continue
+
+		tsts = TissueType.objects.filter(tst_tissue_name__iexact=tissue)
+		if not tsts:
+			if tissue == "Heart":
+				heart_tsts = TissueType.objects.filter(tst_tissue_name__contains=tissue)
+				for tst in heart_tsts:
+					tss = TissueSample.objects.get(monkey=monkey, tissue_type=tst)
+					tss.tss_freezer = freezer
+					tss.tss_location = location
+					tss.tss_sample_quantity = 1
+					tss.save()
+				print "Found a Heart.  Updated each quadrant's inventory."
+				continue
+			else:
+				error = "Error: Unknown tissue type"
+				row.append(error)
+				unmatched_output.writerow(row)
+				print error
+				continue
+		elif tsts.count() == 1:
+			tss = TissueSample.objects.get(monkey=monkey, tissue_type=tsts[0])
+			tss.tss_freezer = freezer
+			tss.tss_location = location
+			tss.tss_sample_quantity = 1
+			tss.save()
+		else:
+			error = "Error:  Too many TissueType matches."
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
 
 
 ## Wrote this to correct birthdate string formats which load_experiments had slaughtered.
