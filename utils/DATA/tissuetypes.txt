@@ -71,6 +71,8 @@ Blood
 Bone (Femur)
 Bone (Be specific)
 Bone Marrow (From Femur)
+Colon
+Duodenum
 Esophagus
 Fat (Abdominal)
 Fat (Brown)
@@ -88,9 +90,12 @@ Heart (Lt Atrium)
 Heart (Rt Atrium)
 Heart (Lt ventricle)
 Heart (Rt ventricle)
+Illium
+Jejunum
 Kidney (lt, rt)
 Large intestine
 Liver
+Lung (Accessory Lobe)
 Lung (Lt lower lobe)
 Lung (Lt middle lobe)
 Lung (Lt upper lobe)
@@ -100,19 +105,23 @@ Lung (Rt upper lobe)
 Lymph node (Axial)
 Lymph node (Inguinal)
 Lymph node (Mesenteric)
+Mammary Gland (lt, rt)
 Muscle (Gastrocnemius)
 Muscle (Quadriceps)
 Muscle (Be specific)
 Nerve (Inguinal)
 Nerve (Sciatic)
+Nerve (Femoral)
 Pancreas
 Prostate
+Rectum
 Septum
 Skin
 Small intestine
 Spleen
 Stomach
 Thymus
+Thyroid
 Tongue
 Urine
 
