@@ -11,7 +11,7 @@ from matrr.models import Account, Request
 
 
 def send_new_request_info(req_request):
-	if not settings.PRODUCTION:
+	if not settings.PRODUCTION and req_request.user.username != 'matrr_admin':
 		print "%s - New request email not sent, settings.PRODUCTION = %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), settings.PRODUCTION)
 		return
 	req_request = Request.objects.get(pk=req_request.req_request_id)
