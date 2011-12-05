@@ -1,9 +1,9 @@
-import sys, os
-project =  os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-sys.path.append(project)
-from django.core.management import setup_environ
-import settings
-setup_environ(settings)
+#import sys, os
+#project =  os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+#sys.path.append(project)
+#from django.core.management import setup_environ
+#import settings
+#setup_environ(settings)
 from datetime import datetime
 
 from django.core.mail import send_mail

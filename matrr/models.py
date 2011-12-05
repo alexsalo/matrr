@@ -142,6 +142,7 @@ class DiffingMixin(object):
 
 Permission._meta.permissions = ([
 							('issue_tracker', 'Can view link to issue tracker'),
+							('upload_raw_data', 'Can upload MATRR data to server'),
 							])
 
 

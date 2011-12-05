@@ -19,6 +19,7 @@ DATABASES = {
 			#'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
 		}
     }
+UPLOAD_DIR = '/web/www/MATRR/dev/upload'
 MEDIA_ROOT = '/web/www/MATRR/dev/media'
 STATIC_ROOT = '/web/www/MATRR/dev/static'
 SPHINX_SERVER = 'localhost'

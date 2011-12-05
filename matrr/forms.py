@@ -287,6 +287,9 @@ class ReviewResponseForm(Form):
 				)
 
 
+class RawDataUploadForm(Form):
+	data = FileField()
+
 class FulltextSearchForm(Form):
 	terms = CharField(label='Search', widget=widgets.TextInput(attrs={'size': 40}))
 
