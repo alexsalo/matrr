@@ -32,4 +32,5 @@ def send_pending_reviews_info():
 			
 	
 
-send_pending_reviews_info()
+if settings.PRODUCTION:
+	send_pending_reviews_info()

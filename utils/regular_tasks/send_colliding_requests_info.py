@@ -60,5 +60,5 @@ def send_colliding_requests_info():
 				print "%s Colliding requests info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 			
 	
-
-send_colliding_requests_info()
+if settings.PRODUCTION:
+	send_colliding_requests_info()

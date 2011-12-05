@@ -33,5 +33,5 @@ def send_verify_tissues_info():
 				print "%s Verify tissues info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 				
 	
-
-send_verify_tissues_info()
+if settings.PRODUCTION:
+	send_verify_tissues_info()
