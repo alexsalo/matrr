@@ -104,6 +104,9 @@
 					<ul>
 						<li class='top'><a href="/admin/">Admin</a></li>
 						<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
+						{% if perms.auth.upload_raw_data %}
+							<li class='drop-down'><a href='{% url raw-upload %}'>Upload</a></li>
+						{% endif %}
 					</ul>
 				{% endif %}
 
@@ -114,15 +117,6 @@
 				{#          <li class='drop-down'><a href="/view_rna/">View RNA</a></li>#}
 				{#      </ul>#}
 				{#      {% endif %}#}
-				
-				{% if perms.auth.upload_raw_data %}
-					<ul>
-						<li class='top'>
-							<a href='{% url raw-upload %}'>Upload</a>
-						</li>
-					</ul>
-				{% endif %}
-			
 			{% endblock %}
 		</div>
 
