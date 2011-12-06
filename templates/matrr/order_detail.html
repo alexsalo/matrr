@@ -7,9 +7,9 @@
 
 	<br/>
 	{% if edit %}
-	<div class='blockLinkButton' style=''>This part of order can be edited only during checkout.</div>
+	<center><div class='blockLinkButton' style=''>This part of order can be edited only during checkout.</div></center>
 	{% endif %}
-	<table class="common_right">
+	<table class="common_right" style="margin: auto; width:95%">
 		<tr>
 			<th>User:</th>
 			<td><a href='{% url account-reviewer-view order.user.id %}'>{{ order.user }}</a></td>
@@ -46,7 +46,7 @@
 			{% if order.req_experimental_plan %}
 				<td colspan='3'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>{{ order.req_experimental_plan }}</a></td>
 			{% else %}
-				<td colspan='3'>None Uploaded</td>
+				<td colspan='3'>None uploaded</td>
 			{% endif %}
 		</tr>
 		<tr>
@@ -68,9 +68,9 @@
 	{% endif %}
 	{% if edit %}
 	  <div class="messages"><div class="info">
-      You cannot add new tissues to a revised order. Instead, create a new order to add new tissues.   </div></div>
+      You cannot add new tissues to a revised order. Instead, create a new order to request additional tissues.   </div></div>
 	
-	<div class="messages"><div class="warning">Revised order is just your draft, <strong>it has to be checked out (submitted)!</strong> Only then MATRR team will be able to see it and can accept/reject it.</div></div>
+	<div class="messages"><div class="warning">A Revised order is just your draft, <strong>it has to be checked out (submitted).</strong> Only then MATRR team will be able to process it.</div></div>
 	{% endif %}
 	<div style='margin-top: 20px;'>
 		<div class='headline'>Requested Tissues</div>

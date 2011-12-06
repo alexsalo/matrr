@@ -726,8 +726,8 @@ def orders_list(request):
 	order_list = ''
 	orders = Request.objects.filter(user=request.user).exclude(
 		request_status=RequestStatus.objects.get(rqs_status_name='Cart')).exclude(
-		request_status=RequestStatus.objects.get(rqs_status_name='Revised')).order_by('-req_request_date')
-	revised = Request.objects.filter(user=request.user, request_status=RequestStatus.objects.get(rqs_status_name='Revised'))
+		request_status=RequestStatus.objects.get_or_create(rqs_status_name='Revised')[0]).order_by('-req_request_date')
+	revised = Request.objects.filter(user=request.user, request_status=RequestStatus.objects.get_or_create(rqs_status_name='Revised')[0])
 	## Paginator stuff
 	paginator = Paginator(orders, 20)
 	# Make sure page request is an int. If not, deliver first page.
