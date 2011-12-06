@@ -15,7 +15,7 @@ def send_pending_reviews_info():
 	for user in users:
 	
 		submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
-		reviews = Review.objects.filter(user=user.id).filter(req_request__request_status=submitted)
+		reviews = Review.objects.filter(user=user.id).filter(req_request__request_status=submitted).exclude(req_request__user__username='matrr_admin')
 		unfinished_reviews = [review for review in reviews if not review.is_finished()]
 		if len(unfinished_reviews) > 0:
 		
@@ -32,4 +32,5 @@ def send_pending_reviews_info():
 			
 	
 
-send_pending_reviews_info()
+if settings.PRODUCTION:
+	send_pending_reviews_info()

@@ -15,7 +15,7 @@ def send_colliding_requests_info():
 	submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
 	time_now = datetime.now()
 	time_yesterday = time_now - timedelta(days=1)
-	requests = Request.objects.filter(request_status=submitted, req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now)
+	requests = Request.objects.filter(request_status=submitted, req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
 	
 	collisions = list()
 	
@@ -60,5 +60,5 @@ def send_colliding_requests_info():
 				print "%s Colliding requests info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 			
 	
-
-send_colliding_requests_info()
+if settings.PRODUCTION:
+	send_colliding_requests_info()

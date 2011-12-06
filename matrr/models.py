@@ -1098,6 +1098,28 @@ class Request(models.Model, DiffingMixin):
 
 		return collision_requests
 
+	def create_revised_duplicate(self):
+		kwargs = {}
+		# this does not capture m2m fields or other models with FK refs to Request
+		for field in self._meta.fields:
+			if field.name != 'req_request_id': # do not duplicate the primary key
+				kwargs[field.name] = self.__getattribute__(field.name)
+		revised = Request.objects.create(**kwargs)
+		# Don't duplicate some other fields
+		revised.req_modified_date = datetime.now()
+		revised.request_status = RequestStatus.objects.get_or_create(rqs_status_name='Revised')[0]
+		revised.req_report_asked = False
+
+		# Duplicate all TissueRequests
+		revised.save() # save() must be called before the forloop and m2m assignment
+		tr_duplicates = []
+		for tissue_request in self.tissue_request_set.all():
+			tr_duplicates.append(tissue_request.create_revised_duplicate(revised))
+		revised.tissue_request_set = tr_duplicates
+
+		revised.save()
+		return revised
+
 	def get_sub_req_collisions_for_monkey(self, monkey):
 		collisions = self.get_tiv_collisions()
 		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'), monkey=monkey)
@@ -1284,6 +1306,23 @@ class TissueRequest(models.Model):
 		other_rtts = TissueRequest.objects.exclude(pk=self.pk)
 		rtt_collisions = other_rtts.filter(tissue_type=self.tissue_type, monkeys__in=self.monkeys.all())
 		return rtt_collisions
+
+	def create_revised_duplicate(self, revised_request):
+		duplicate = TissueRequest() # I don't know why this worked for TissueRequest but not Request
+		# this does not capture M2M fields or other models with FK refs to TissueRequest
+		for field in self._meta.fields:
+			if field.name != 'rtt_tissue_request_id': # do not duplicate the primary key
+				duplicate.__setattr__(field.name, self.__getattribute__(field.name))
+
+		# Update the request FK with the new revised request
+		duplicate.req_request = revised_request
+		# And duplicate the requested and accepted monkeys
+		duplicate.save() # Must have a PK before doing m2m stuff
+		duplicate.monkeys = self.monkeys.all()
+		duplicate.accepted_monkeys = self.monkeys.all()
+
+		duplicate.save()
+		return duplicate
 
 	def save(self, *args, **kwargs):
 		super(TissueRequest, self).save(*args, **kwargs)
