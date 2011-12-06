@@ -1114,7 +1114,8 @@ class Request(models.Model, DiffingMixin):
 		revised.save() # save() must be called before the forloop and m2m assignment
 		tr_duplicates = []
 		for tissue_request in self.tissue_request_set.all():
-			tr_duplicates.append(tissue_request.create_revised_duplicate(revised))
+			if not tissue_request.is_fully_accepted():
+				tr_duplicates.append(tissue_request.create_revised_duplicate(revised))
 		revised.tissue_request_set = tr_duplicates
 
 		revised.save()
@@ -1151,7 +1152,7 @@ class Request(models.Model, DiffingMixin):
 		super(Request, self).save(force_insert, force_update, using)
 
 	def can_be_revised(self):
-		if self.request_status == RequestStatus.objects.get(rqs_status_name='Rejected'):
+		if self.request_status == RequestStatus.objects.get(rqs_status_name='Rejected') or self.request_status == RequestStatus.objects.get(rqs_status_name='Partially Accepted'):
 			return True
 		return False
 		
@@ -1218,6 +1219,11 @@ class TissueRequest(models.Model):
 											  verbose_name='Accepted Monkeys',
 											  related_name='accepted_tissue_request_set',
 											  help_text='The accepted monkeys for this request.')
+	def is_partially_accepted(self):
+		return self.accepted_monkeys.count() != 0
+	
+	def is_fully_accepted(self):
+		return self.monkeys.count() == self.accepted_monkeys.count()
 
 	def __unicode__(self):
 		return str(self.req_request.user) + ":  " + self.tissue_type.tst_tissue_name + ' - ' + self.rtt_fix_type
@@ -1308,6 +1314,7 @@ class TissueRequest(models.Model):
 		return rtt_collisions
 
 	def create_revised_duplicate(self, revised_request):
+		
 		duplicate = TissueRequest() # I don't know why this worked for TissueRequest but not Request
 		# this does not capture M2M fields or other models with FK refs to TissueRequest
 		for field in self._meta.fields:
@@ -1318,8 +1325,17 @@ class TissueRequest(models.Model):
 		duplicate.req_request = revised_request
 		# And duplicate the requested and accepted monkeys
 		duplicate.save() # Must have a PK before doing m2m stuff
-		duplicate.monkeys = self.monkeys.all()
-		duplicate.accepted_monkeys = self.monkeys.all()
+		
+		
+		duplicate.accepted_monkeys = self.accepted_monkeys.all()
+		if self.is_partially_accepted():
+			monk = list()
+			for m in self.monkeys.all():
+				if m not in self.accepted_monkeys.all():
+					monk.append(m)
+			duplicate.monkeys = monk
+		else:
+			duplicate.monkeys = self.monkeys.all()
 
 		duplicate.save()
 		return duplicate

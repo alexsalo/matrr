@@ -127,7 +127,9 @@ class TissueRequestForm(ModelForm):
 		self.fields['rtt_fix_type'].required = False
 		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTableNoVerification(link_base=self.req_request.cohort.coh_cohort_id, tissue=self.tissue,
 																		)
-		self.fields['monkeys'].queryset = self.req_request.cohort.monkey_set.all()
+		accepted = self.instance.accepted_monkeys.all().values_list('mky_id', flat=True)
+		self.fields['monkeys'].queryset = self.req_request.cohort.monkey_set.all().exclude(mky_id__in=accepted)
+		
 		# change the help text to match the checkboxes
 		self.fields['monkeys'].help_text = trim_help_text(unicode(self.fields['monkeys'].help_text))
 
