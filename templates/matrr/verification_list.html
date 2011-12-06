@@ -62,9 +62,9 @@
 									<td width=135px><a href="{% url verification-detail req_id tiv.initial.primarykey %}">Edit tissue details</a></td>
 									<td width=115px align="center">{{ tiv.initial.monkey }}</td>
 									<td width=260px align="left">{{ tiv.initial.tissue }}</td>
-									{% if tiv.initial.tiv_inventory == "Sufficient" %}
+									{% if tiv.initial.inventory == "Sufficient" %}
 										<td align="right" bgcolor="green">{{ tiv.initial.amount }}</td>
-									{% else %}{% if tiv.initial.tiv_inventory == "Insufficient" %}
+									{% else %}{% if tiv.initial.inventory == "Insufficient" %}
 										<td align="right" bgcolor="#ff8c00">{{ tiv.initial.amount }}</td>
 									{% else %}
 										<td align="right" bgcolor="#FFBABA">{{ tiv.initial.amount }}</td>

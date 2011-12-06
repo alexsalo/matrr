@@ -1184,7 +1184,6 @@ def tissue_verification_list(request, req_request_id):
 					   'tissue': tiv.tissue_type,
 					   'notes': tiv.tiv_notes,
 					   'amount': amount,
-					   'tiv_inventory': tiv.tiv_inventory,
 					   'req_request': req_request,}
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
