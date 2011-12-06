@@ -130,18 +130,18 @@
 	<div class='sidebar clearfix'>
 		{% block sidebar %}
 			{% block login %}
-				<div class='sidebar-block'>
-					{% if not user.is_authenticated %}
+				{% if not user.is_authenticated %}
+					<div class='sidebar-block'>
 						<div class='headline'>
 							Login
 						</div>
 						{% include 'login.form' %}
 						<a href="{% url registration_register %}">Create an Account</a>
-					{% else %}
+{% comment %}					{% else %}
 						Welcome {{ user.username }}
-
-					{% endif %}
-				</div>
+{% endcomment %}
+					</div>
+				{% endif %}
 			{% endblock %}
 
 			{% block cart %}

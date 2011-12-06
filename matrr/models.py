@@ -1313,6 +1313,9 @@ class TissueRequest(models.Model):
 		duplicate.save()
 		return duplicate
 
+	def cart_display(self):
+		return self.tissue_type.tst_tissue_name
+
 	def save(self, *args, **kwargs):
 		super(TissueRequest, self).save(*args, **kwargs)
 		if self.rtt_tissue_request_id is None and self.tissue_type.category.cat_name == 'Custom':
