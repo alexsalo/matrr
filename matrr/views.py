@@ -22,6 +22,7 @@ from django.db.models import Q
 from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from utils import plotting
+from matrr.decorators import user_owner_test
 
 def registration(request):
 	from registration.views import register
@@ -746,14 +747,14 @@ def orders_list(request):
 			 },
 							  context_instance=RequestContext(request))
 
-
+@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_detail(request, req_request_id, edit=False):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	# check that the request belongs to this user
-	if req_request.user != request.user and Group.objects.get(name='Committee') not in request.user.groups.all():
-		# if the request does not belong to the user, return a 404 error (alternately, we could give a permission denied message)
-		raise Http404('This page does not exist.')
+#	if req_request.user != request.user and Group.objects.get(name='Committee') not in request.user.groups.all():
+#		# if the request does not belong to the user, return a 404 error (alternately, we could give a permission denied message)
+#		raise Http404('This page does not exist.')
 	status = req_request.request_status.rqs_status_name
 	processed = False
 	if status == "Accepted" or status == "Rejected" or status == "Partially Accepted" or status=="Shipped" :
@@ -767,26 +768,31 @@ def order_detail(request, req_request_id, edit=False):
 			 },
 							  context_instance=RequestContext(request))
 
+@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_revise(request, req_request_id):
 	req = Request.objects.get(req_request_id=req_request_id)
 	if not req.can_be_revised():
 		raise Http404('This page does not exist.')
 	return render_to_response('matrr/order_revise.html', {'req_id': req_request_id},context_instance=RequestContext(request))
 	
+@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_duplicate(request, req_request_id):
 	req = Request.objects.get(req_request_id=req_request_id)
 	if not req.can_be_revised():
 		raise Http404('This page does not exist.')
+	req.create_revised_duplicate()
 	messages.success(request, 'A new editable copy has been created. You can find it under Revised Orders.')
 	return redirect(reverse('order-list'))
 
+@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_edit(request, req_request_id):
 	req = Request.objects.get(req_request_id=req_request_id)
 	if not req.can_be_edited():
 		raise Http404('This page does not exist.')
 	
-	return order_detail(request, req_request_id, True)
+	return order_detail(request, req_request_id=req_request_id, edit=True)
 
+@user_owner_test(lambda u, rtt_id: u == TissueRequest.objects.get(rtt_tissue_request_id=rtt_id).req_request.user, arg_name='req_rtt_id', redirect_url='/denied/')
 def order_delete_tissue(request, req_rtt_id):
 	rtt = TissueRequest.objects.get(rtt_tissue_request_id=req_rtt_id)
 	if rtt.req_request.request_status.rqs_status_name != "Revised":
@@ -795,6 +801,7 @@ def order_delete_tissue(request, req_rtt_id):
 	messages.success(request, 'Tissue request deleted.')
 	return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id,]))
 
+@user_owner_test(lambda u, rtt_id: u == TissueRequest.objects.get(rtt_tissue_request_id=rtt_id).req_request.user, arg_name='req_rtt_id', redirect_url='/denied/')
 def order_edit_tissue(request, req_rtt_id):
 	rtt = TissueRequest.objects.get(rtt_tissue_request_id=req_rtt_id)
 	if rtt.req_request.request_status.rqs_status_name != "Revised":
@@ -1155,13 +1162,13 @@ def make_shipping_manifest_latex(request, req_request_id):
 														},
 														outfile=response)
 
-
+@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_delete(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
-	if req_request.user != request.user:
-		# tissue requests can only be deleted by the
-		# user who made the tissue request.
-		raise Http404('This page does not exist.')
+#	if req_request.user != request.user:
+#		# tissue requests can only be deleted by the
+#		# user who made the tissue request.
+#		raise Http404('This page does not exist.')
 
 	status = req_request.request_status.rqs_status_name
 	if status == "Accepted" or status == "Rejected" or status == "Partially Accepted":
@@ -1185,7 +1192,8 @@ def order_delete(request, req_request_id):
 				 'Acceptance': Acceptance,
 				 'edit': edit },
 								  context_instance=RequestContext(request))
-
+		
+@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_checkout(request, req_request_id):
 	# get the context (because it loads the cart as well)
 	req = Request.objects.get(req_request_id=req_request_id)

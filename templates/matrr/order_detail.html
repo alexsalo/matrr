@@ -7,7 +7,7 @@
 
 	<br/>
 	{% if edit %}
-	<div class='blockLinkButton' style='width:200px;float: right'>This part of order can be edited only during checkout.</div>
+	<div class='blockLinkButton' style=''>This part of order can be edited only during checkout.</div>
 	{% endif %}
 	<table class="common_right">
 		<tr>
@@ -68,7 +68,7 @@
 	{% endif %}
 	{% if edit %}
 	  <div class="messages"><div class="info">
-      You cannot add new tissues to a revised order. Instead, create a new order.     </div></div>
+      You cannot add new tissues to a revised order. Instead, create a new order to add new tissues.   </div></div>
 	
 	<div class="messages"><div class="warning">Revised order is just your draft, <strong>it has to be checked out (submitted)!</strong> Only then MATRR team will be able to see it and can accept/reject it.</div></div>
 	{% endif %}
@@ -79,7 +79,10 @@
 		{% endfor %}
 		</table>
 	</div>
-
+	
+	{% if not edit %}
+		<a href='{% url order-list %}' class='blockLinkButton' style="float:left">Back</a>
+	{% endif %}
 	{% if edit %}
 		<a href='{% url order-list %}' class='blockLinkButton' style="float:left">Finish Editing</a>
 	{% endif %}
@@ -97,6 +100,9 @@
 	{% if edit %}
 		<a href='{% url order-checkout order.req_request_id %}' class='blockLinkCheckoutButton' style="float:right">Proceed to checkout</a>
 	{% endif %}
+	      {% if order.can_be_revised %}
+    <a href='{% url order-revise order.req_request_id %}' class='blockLinkCheckoutButton' style="float:right">Revise</a>
+      {% endif %}
 	
 	
 {% endblock %}

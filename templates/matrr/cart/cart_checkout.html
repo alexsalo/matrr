@@ -28,10 +28,10 @@
 		<div id="headline">Current Items in Cart</div>
 		<br/>
 		{% include 'matrr/cart/cart_items_table.html' %}
-		{% endif %}
+
 		<div id="headline">Checkout Form</div>
 		<br/>
-
+		{% endif %}
 		<form action='' enctype="multipart/form-data" method='POST'>
 			{% csrf_token %}
 			{% for field in form.hidden_fields %}
