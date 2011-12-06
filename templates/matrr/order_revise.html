@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class='large-headline'>
+  {% block title %}Revise Order{% endblock %}
+</div>
+<div class="messages"><div class="warning">Please, read the following carefully!</div></div>
+
+<div>
+<strong>
+A rejected order cannot be modified, but we can create a copy for you to edit.</strong>
+</div>
+
+The copy:
+<ul>
+	<li>will have status "revised"</li>
+	<li>you can edit it</li>
+	<li>you <strong>cannot</strong> change the cohort!</li>
+	<li>you can edit requested tissues (monkeys, amount, units, etc.)</li>
+	<li>you can delete requested tissues</li>
+	<li>you <strong>cannot</strong> add new tissues! (Instead, submit a new request).</li>
+	<li>If your order was partially accepted, you <strong>cannot</strong> select monkeys that were accepted!</li>
+</ul>
+<div class="messages">
+After your editing will be done, you have to <strong>resubmit the order!</strong> A revised order is just your draft. Without submission
+MATRR team cannon see the order and cannot accept/reject it. 
+</div>
+<br/>
+
+<a href='{% url order-duplicate req_id %}' class='blockLinkCheckoutButton' style='float: left'>Create Editable Copy</a>
+<a href='{% url order-list %}' class='blockLinkDeleteButton' style='float: left'>Cancel</a>
+
+
+{% endblock %}

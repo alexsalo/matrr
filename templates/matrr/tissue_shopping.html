@@ -19,9 +19,11 @@
 
 
 {% block content %}
+	{% block shopping-head %}
 	<div id="large-headline">Tissue Request</div>
 	<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_4.png" width='700' height='25'
 		 alt='order timeline'/>
+	{% endblock %}
 	<div id="headline">{% block title %}{{ page_title }}{% endblock %}</div>
 	<br/>
 
