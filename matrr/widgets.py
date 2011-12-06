@@ -6,7 +6,7 @@ from matrr.models import Availability, Monkey
 from django.forms.util import flatatt
 from django.core.urlresolvers import reverse
 from django.forms import *
-from django.forms.widgets import Input
+from django.forms.widgets import Input, RadioFieldRenderer
 import re
 
 def date_to_padded_int(date):
@@ -106,7 +106,7 @@ class CheckboxSelectMultipleLinkByTableNoVerification(CheckboxSelectMultipleLink
 			positive = False
 			color = "red"
 		return positive, availability_str, color
-		
+
 
 class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 	def __init__(self, link_base, tissue, tis_request, attrs=None, choices=()):
@@ -126,7 +126,7 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 			color = ""
 			positive = True
 		return positive, verification.tiv_inventory, color
-		
+
 
 class FixTypeSelection(Input):
 	'''
@@ -246,9 +246,9 @@ from django.utils.safestring import mark_safe
 # DATETIMEWIDGET
 calbtn = u'''<img src="%simages/calendar.gif" alt="calendar" id="%s_btn" style="cursor: pointer;" title="Select date" />
 <script type="text/javascript">
-    Calendar.setup({
-        inputField     	:    "%s",
-        dateFormat     	:    "%s",
+	Calendar.setup({
+		inputField     	:    "%s",
+		dateFormat     	:    "%s",
 		trigger        	:    "%s_btn",
 		weekNumbers		:	false,
 		bottomBar		:	false,

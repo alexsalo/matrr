@@ -1111,7 +1111,7 @@ def order_delete(request, req_request_id):
 				 'Acceptance': Acceptance, },
 								  context_instance=RequestContext(request))
 
-def tissue_verification_list(request):
+def tissue_verification(request):
 	request_ids = TissueInventoryVerification.objects.values_list('tissue_request__req_request')
 	print request_ids
 	requests = Request.objects.filter(req_request_id__in=request_ids)
@@ -1132,7 +1132,7 @@ def tissue_verification_export(request, req_request_id):
 														 'user': request.user,
 														 'date': datetime.today()},
 														 outfile=response)
-def tissue_verification(request, req_request_id):
+def tissue_verification_list(request, req_request_id):
 	TissueVerificationFormSet = formset_factory(TissueInventoryVerificationForm, extra=0)
 	if request.method == "POST":
 		formset = TissueVerificationFormSet(request.POST)
@@ -1161,7 +1161,7 @@ def tissue_verification(request, req_request_id):
 	# if request method != post and/or formset isNOT valid
 	# build a new formset
 	initial = []
-	tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('monkey').order_by('tissue_type').order_by('tiv_inventory')
+	tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('monkey', 'tissue_type__tst_tissue_name')
 
 	for tiv in tiv_list:
 		try:
@@ -1184,10 +1184,63 @@ def tissue_verification(request, req_request_id):
 					   'tissue': tiv.tissue_type,
 					   'notes': tiv.tiv_notes,
 					   'amount': amount,
+					   'tiv_inventory': tiv.tiv_inventory,
 					   'req_request': req_request,}
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
-	return render_to_response('matrr/verification.html', {"formset": formset, "req_id": req_request_id}, context_instance=RequestContext(request))
+	return render_to_response('matrr/verification_list.html', {"formset": formset, "req_id": req_request_id}, context_instance=RequestContext(request))
+
+def tissue_verification_detail(request, req_request_id, tiv_id):
+	tiv = TissueInventoryVerification.objects.get(pk=tiv_id)
+	if request.method == "POST":
+		tivform = TissueInventoryVerificationForm(data=request.POST)
+		if tivform.is_valid():
+			data = tivform.cleaned_data
+			tiv = TissueInventoryVerification.objects.get(pk=tiv_id)
+			tss = tiv.tissue_sample
+			tss.tss_location = data['location']
+			tss.tss_freezer = data['freezer']
+			tss.tss_details = data['details']
+			tss.user = request.user # who last modified the tissue sample
+			if data['quantity']:
+				tss.tss_sample_quantity = data['quantity']
+			if data['units']:
+				tss.tss_units = data['units']
+			if data['inventory']:
+				tiv.tiv_inventory = data['inventory']
+			tiv.save()
+			if not 'Do not edit' in tiv.tiv_notes: # see TissueInventoryVerification.save() for details
+				tss.save()
+
+			return redirect('/verification/%s' % req_request_id)
+		else:
+			messages.error(request, tivform.errors)
+
+	# if request method != post and/or formset isNOT valid
+	# build a new formset
+	try:
+		amount = tiv.tissue_request.get_amount()
+		req_request = tiv.tissue_request.req_request\
+					  if tiv.tissue_request.req_request.get_acc_req_collisions_for_tissuetype_monkey(tiv.tissue_type, tiv.monkey) \
+					  else False
+	except AttributeError: # tissue_request == None
+		req_request = False
+		amount = "None"
+	tss = tiv.tissue_sample
+	tiv_initial = {'primarykey': tiv.tiv_id,
+				   'freezer': tss.tss_freezer,
+				   'location': tss.tss_location,
+				   'quantity': tss.tss_sample_quantity,
+				   'inventory': tiv.tiv_inventory,
+				   'units': tss.tss_units,
+				   'details': tss.tss_details,
+				   'monkey': tiv.monkey,
+				   'tissue': tiv.tissue_type,
+				   'notes': tiv.tiv_notes,
+				   'amount': amount,
+				   'req_request': req_request,}
+	tivform = TissueInventoryVerificationForm(initial=tiv_initial)
+	return render_to_response('matrr/verification_detail.html', {"tivform": tivform, "req_id": req_request_id}, context_instance=RequestContext(request))
 
 
 ####################
@@ -1438,9 +1491,9 @@ def test_view(request):
 
 @user_passes_test(lambda u: u.has_perm('auth.upload_raw_data'), login_url='/denied/')
 def raw_data_upload(request):
-	
+
 	if request.method == 'POST':
-		
+
 		form = RawDataUploadForm(request.POST, request.FILES)
 		if form.is_valid():
 			f = request.FILES['data']

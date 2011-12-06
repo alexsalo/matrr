@@ -28,8 +28,8 @@
       {% endif %}>
       {{ req.request_status }}</td>
     
-      <td><a href='{% url verification-detail req.req_request_id %}'>Inventory verification forms</a></td>
-      <td><a href='{% url verification-detail-export req.req_request_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a> </td>
+      <td><a href='{% url verification-list req.req_request_id %}'>Inventory verification forms</a></td>
+      <td><a href='{% url verification-list-export req.req_request_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a> </td>
     </tr>
   {% endfor %}
 </table>

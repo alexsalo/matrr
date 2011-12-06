@@ -764,7 +764,7 @@ a.tool-tip:hover span {
 
 /* Jon added below */
 .unverified {
-	border: solid red;
+	border: solid #FFBABA;
 }
 .insufficient {
 	border: solid #ff8c00;

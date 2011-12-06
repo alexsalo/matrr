@@ -27,61 +27,52 @@
 						<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
 						<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
 						<td align="center">
-							<a href='{% url verification-detail-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
+							<a href='{% url verification-list-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
 						</td>
 					</tr>
 					<tr></tr>
 					{# hack to add a tiny space between this table and the formset #}
 				</table>
 				<center>
-					{% for tiv in formset %}
-						{{ tiv.primarykey }} {# Important! #}
-						{% if tiv.initial.inventory == "Unverified" %}
-							<div class='verification_border unverified'>
-						{% endif %}
-						{% if tiv.initial.inventory == "Sufficient" %}
-							<div class="verification_border sufficient">
-						{% endif %}
-						{% if tiv.initial.inventory == "Insufficient" %}
-							<div class="verification_border insufficient">
-						{% endif %}
-					{{ tiv.non_field_errors }}
-					{% if tiv.initial.notes %}
-						<div style="background-color: orange;">
-							{{ tiv.initial.notes }}
-						</div>
-					{% endif %}
-					{% if tiv.initial.req_request %}
-						<div style='text-align: left; background-color: yellow'>
-								<b>Warning:</b> This tissue has been accepted, but not shipped, for another request.  Please take into account the accepted request before verifying this tissue.<br>
-								{% load review_tags %}
-								{% colliding_accepted_requests tiv.initial.req_request tiv.initial.tissue tiv.initial.monkey %}
-						</div>
-					{% endif %}
-
-					<center>
-						<table class='verification_table'>
-							<tr>
-								<th>Monkey: {{ tiv.initial.monkey }}</th>
-								<th>Tissue: {{ tiv.initial.tissue }}</th>
-							</tr>
-							<tr>
-								<td>
-									<label>Freezer: </label>{{ tiv.freezer }}<br>
-									<label>Location:</label>{{ tiv.location }}<br>
-									<label>Quantity:</label>{{ tiv.quantity }}<br>
-									<label>Units:</label>{{ tiv.units }}<br>
-								</td>
-								<td>
-									<label>Tissue Details:</label><br>{{ tiv.details }}<br>
-									Freezer inventory is {{ tiv.inventory }} for request: {{ tiv.initial.amount }}
-
-								</td>
-							</tr>
-						</table>
-						<br>
-						</div>
-					{% endfor %}
+					<table>
+						<th>Tissue Details</th>
+						<th>Monkey</th>
+						<th>Tissue</th>
+						<th>Requested</th>
+						{% for tiv in formset %}
+							<tr style='padding: 4px'>
+								{{ tiv.primarykey }} {# Important! #}
+								{{ tiv.non_field_errors }}
+								{% if tiv.initial.notes %}
+									</tr><tr style='padding: 4px'>
+									<td colspan=5 style="background-color: orange;">
+										{{ tiv.initial.notes }}
+									</td>
+									</tr><tr style='padding: 4px'>
+								{% endif %}
+								{% if tiv.initial.req_request %}
+									</tr><tr style='padding: 4px'>
+									<td colspan=5 style='text-align: left; background-color: yellow'>
+											<b>Warning:</b> The tissue below has been accepted, but not shipped, for another request.  Please take into account the accepted request before verifying this tissue.<br>
+											{% load review_tags %}
+											{% colliding_accepted_requests tiv.initial.req_request tiv.initial.tissue tiv.initial.monkey %}
+									</td>
+									</tr><tr style='padding: 4px'>
+								{% endif %}
+									<td width=135px><a href="{% url verification-detail req_id tiv.initial.primarykey %}">Edit tissue details</a></td>
+									<td width=115px align="center">{{ tiv.initial.monkey }}</td>
+									<td width=260px align="left">{{ tiv.initial.tissue }}</td>
+									{% if tiv.initial.tiv_inventory == "Sufficient" %}
+										<td align="right" bgcolor="green">{{ tiv.initial.amount }}</td>
+									{% else %}{% if tiv.initial.tiv_inventory == "Insufficient" %}
+										<td align="right" bgcolor="#ff8c00">{{ tiv.initial.amount }}</td>
+									{% else %}
+										<td align="right" bgcolor="#FFBABA">{{ tiv.initial.amount }}</td>
+									{% endif %}{% endif %}
+									<td width=100px align=right>{{ tiv.inventory }}</td>
+								</tr>
+						{% endfor %}
+					</table>
 				</center>
 				<table style="width:100%;">
 					<tr>
@@ -89,7 +80,7 @@
 						<td align="center" class='verification_legend unverified'>Unverified</td>
 						<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
 						<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
-						<td align="center">							<a href='{% url verification-detail-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
+						<td align="center">							<a href='{% url verification-list-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
 </td>
 					</tr>
 				</table>
@@ -109,7 +100,7 @@
 						<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
 						<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
 						<td align="center">
-							<a href='{% url verification-detail-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
+							<a href='{% url verification-list-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
 						</td>
 					</tr>
 					<tr></tr>

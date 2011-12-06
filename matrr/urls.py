@@ -101,9 +101,10 @@ urlpatterns += patterns('matrr.views',
 	url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
-	url(r'^verification/$', tissue_verification_list, name='verification'),
-	url(r'^verification/(?P<req_request_id>\d+)/$', tissue_verification, name='verification-detail'),
-	url(r'^verification/(?P<req_request_id>\d+)/export$', tissue_verification_export, name='verification-detail-export'),
+	url(r'^verification/$', tissue_verification, name='verification'),
+	url(r'^verification/(?P<req_request_id>\d+)/$', tissue_verification_list, name='verification-list'),
+	url(r'^verification/(?P<req_request_id>\d+)/export$', tissue_verification_export, name='verification-list-export'),
+	url(r'^verification/(?P<req_request_id>\d+)/(?P<tiv_id>\d+)/$', tissue_verification_detail, name='verification-detail'),
 
 	# VIP tools
 	url(r'^vip/$', vip_tools, name='vip-tools'),
