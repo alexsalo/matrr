@@ -2,11 +2,13 @@
 
 {% block content %}
 	<div class='large-headline'>
-		{% block title %}Order Detail{% endblock %}
+		{% block title %}{% if edit %}Edit Order{% else %}Order Detail{% endif %}{% endblock %}
 	</div>
 
 	<br/>
-
+	{% if edit %}
+	<div class='blockLinkButton' style='width:200px;float: right'>This part of order can be edited only during checkout.</div>
+	{% endif %}
 	<table class="common_right">
 		<tr>
 			<th>User:</th>
@@ -58,13 +60,18 @@
 			</tr>
 		{% endif %}
 	</table>
+
 	{% if order.shipment.shp_shipment_date %}
 		<div class='small'>
 			Shipped On: {{ order.shipment.shp_shipment_date|date:"m/d/Y" }}
 		</div>
 	{% endif %}
-
-
+	{% if edit %}
+	  <div class="messages"><div class="info">
+      You cannot add new tissues to a revised order. Instead, create a new order.     </div></div>
+	
+	<div class="messages"><div class="warning">Revised order is just your draft, <strong>it has to be checked out (submitted)!</strong> Only then MATRR team will be able to see it and can accept/reject it.</div></div>
+	{% endif %}
 	<div style='margin-top: 20px;'>
 		<div class='headline'>Requested Tissues</div>
 		{% for item in order.tissue_request_set.all %}
@@ -73,15 +80,23 @@
 		</table>
 	</div>
 
+	{% if edit %}
+		<a href='{% url order-list %}' class='blockLinkButton' style="float:left">Finish Editing</a>
+	{% endif %}
 	{% if shipped %}
 		<div class='left'>
-			<a href='{% url manifest order.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
+			<a href='{% url manifest order.req_request_id %}' style="float:left" class='blockLinkButton'>Download Shipping Manifest</a>
 		</div>
 	{% else %}
 		{% if not processed %}
 			<div>
-				<a href='{% url order-delete order.req_request_id %}' class='blockLinkDeleteButton'>Delete</a>
+				<a href='{% url order-delete order.req_request_id %}' style="float:left"  class='blockLinkDeleteButton'>Delete</a>
 			</div>
 		{% endif %}
 	{% endif %}
+	{% if edit %}
+		<a href='{% url order-checkout order.req_request_id %}' class='blockLinkCheckoutButton' style="float:right">Proceed to checkout</a>
+	{% endif %}
+	
+	
 {% endblock %}

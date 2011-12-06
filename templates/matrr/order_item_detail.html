@@ -1,3 +1,7 @@
+{% if edit %}
+<a href='{% url orders-edit-tissue item.rtt_tissue_request_id %}' class='blockLinkCheckoutButton' style='float: right'>Edit</a>
+<a href='{% url orders-delete-tissue item.rtt_tissue_request_id %}' class='blockLinkDeleteButton' style='float: right'>Delete</a>
+{% endif %}
 <table class='common_small'>
   <tr>
     {% for datum in item.get_data %}
@@ -11,6 +15,7 @@
   {% endif %}
 </table>
 
+	
 <table class='monkey_table common_center'>
   {% if order.request_status|lower != 'partially accepted' %}
     <tr>

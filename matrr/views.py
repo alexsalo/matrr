@@ -724,7 +724,9 @@ def orders_list(request):
 	# get a list of all requests for the user
 	order_list = ''
 	orders = Request.objects.filter(user=request.user).exclude(
-		request_status=RequestStatus.objects.get(rqs_status_name='Cart')).order_by('-req_request_date')
+		request_status=RequestStatus.objects.get(rqs_status_name='Cart')).exclude(
+		request_status=RequestStatus.objects.get(rqs_status_name='Revised')).order_by('-req_request_date')
+	revised = Request.objects.filter(user=request.user, request_status=RequestStatus.objects.get(rqs_status_name='Revised'))
 	## Paginator stuff
 	paginator = Paginator(orders, 20)
 	# Make sure page request is an int. If not, deliver first page.
@@ -734,17 +736,18 @@ def orders_list(request):
 		page = 1
 	# If page request (9999) is out of range, deliver last page of results.
 	try:
-		order_list = paginator.page(page)
+		order_list = paginator.page(page)	
 	except (EmptyPage, InvalidPage):
 		order_list = paginator.page(paginator.num_pages)
+		
 
 	return render_to_response('matrr/orders.html',
-			{'order_list': order_list,
+			{'order_list': order_list, 'revised':revised,
 			 },
 							  context_instance=RequestContext(request))
 
 
-def order_detail(request, req_request_id):
+def order_detail(request, req_request_id, edit=False):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	# check that the request belongs to this user
@@ -753,16 +756,83 @@ def order_detail(request, req_request_id):
 		raise Http404('This page does not exist.')
 	status = req_request.request_status.rqs_status_name
 	processed = False
-	if status == "Accepted" or status == "Rejected" or status == "Partially Accepted":
+	if status == "Accepted" or status == "Rejected" or status == "Partially Accepted" or status=="Shipped" :
 		processed = True
 	return render_to_response('matrr/order_detail.html',
 			{'order': req_request,
 			 'Acceptance': Acceptance,
 			 'shipped': status == 'Shipped',
 			 'processed': processed,
+			 'edit': edit,
 			 },
 							  context_instance=RequestContext(request))
 
+def order_revise(request, req_request_id):
+	req = Request.objects.get(req_request_id=req_request_id)
+	if not req.can_be_revised():
+		raise Http404('This page does not exist.')
+	return render_to_response('matrr/order_revise.html', {'req_id': req_request_id},context_instance=RequestContext(request))
+	
+def order_duplicate(request, req_request_id):
+	req = Request.objects.get(req_request_id=req_request_id)
+	if not req.can_be_revised():
+		raise Http404('This page does not exist.')
+	messages.success(request, 'A new editable copy has been created. You can find it under Revised Orders.')
+	return redirect(reverse('order-list'))
+
+def order_edit(request, req_request_id):
+	req = Request.objects.get(req_request_id=req_request_id)
+	if not req.can_be_edited():
+		raise Http404('This page does not exist.')
+	
+	return order_detail(request, req_request_id, True)
+
+def order_delete_tissue(request, req_rtt_id):
+	rtt = TissueRequest.objects.get(rtt_tissue_request_id=req_rtt_id)
+	if rtt.req_request.request_status.rqs_status_name != "Revised":
+		raise Http404('This page does not exist.')
+	rtt.delete()
+	messages.success(request, 'Tissue request deleted.')
+	return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id,]))
+
+def order_edit_tissue(request, req_rtt_id):
+	rtt = TissueRequest.objects.get(rtt_tissue_request_id=req_rtt_id)
+	if rtt.req_request.request_status.rqs_status_name != "Revised":
+		raise Http404('This page does not exist.')
+
+	if request.method != 'POST': #or request.POST['submit'] == 'edit':
+		# create a form so the item can be edited
+		tissue_request_form = TissueRequestForm(instance=rtt,
+												req_request=rtt.req_request,
+												tissue=rtt.get_tissue())
+		return render_to_response('matrr/orders_tissue_edit.html', {'form': tissue_request_form,
+																'cohort': rtt.req_request.cohort,
+																'tissue': rtt.get_tissue(),
+																'cart_item': rtt, },
+								 context_instance=RequestContext(request))
+	else:
+		if request.POST['submit'] == 'cancel':
+			messages.info(request, 'No changes were made.')
+			return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id,]))
+		elif request.POST['submit'] == 'delete':
+			return order_delete_tissue(request, req_rtt_id)
+		else:
+			# validate the form and update the cart_item
+			tissue_request_form = TissueRequestForm(instance=rtt,
+													data=request.POST,
+													req_request=rtt.req_request,
+													tissue=rtt.get_tissue())
+			if tissue_request_form.is_valid():
+				# the form is valid, so update the tissue request
+				tissue_request_form.save()
+				messages.success(request, 'Tissue request updated.')
+				return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id,]))
+			else:
+				return render_to_response('matrr/orders_tissue_edit.html', {'form': tissue_request_form,
+																		'cohort': rtt.req_request.cohort,
+																		'tissue_type': rtt.get_tissue(),
+																		'cart_item': rtt, },
+										  context_instance=RequestContext(request))
 
 def experimental_plan_view(request, plan):
 	# create the response
@@ -1097,6 +1167,10 @@ def order_delete(request, req_request_id):
 	if status == "Accepted" or status == "Rejected" or status == "Partially Accepted":
 		messages.error(request, "You cannot delete an order which has been accepted/rejected.")
 		return redirect(reverse('order-list'))
+	if status == "Revised":
+		edit = True
+	else:
+		edit = False
 
 	if request.POST:
 		if request.POST['submit'] == 'yes':
@@ -1108,8 +1182,39 @@ def order_delete(request, req_request_id):
 	else:
 		return render_to_response('matrr/order_delete.html',
 				{'order': req_request,
-				 'Acceptance': Acceptance, },
+				 'Acceptance': Acceptance,
+				 'edit': edit },
 								  context_instance=RequestContext(request))
+
+def order_checkout(request, req_request_id):
+	# get the context (because it loads the cart as well)
+	req = Request.objects.get(req_request_id=req_request_id)
+	if req.request_status.rqs_status_name != "Revised":
+		raise Http404('This page does not exist.')
+	
+	if request.method != 'POST':
+		checkout_form = CartCheckoutForm(instance=req)
+		
+		return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form,  'edit':True, 'cart_exists':True},
+								  context_instance=RequestContext(request))
+	else:
+		data = request.POST.copy()
+		data['user'] = req.user.id
+		data['request_status'] = req.request_status.rqs_status_id
+		data['cohort'] = req.cohort.coh_cohort_id
+		checkout_form = CartCheckoutForm(request.POST, request.FILES, instance=req)
+
+		if checkout_form.is_valid() and request.POST['submit'] == 'checkout':
+			req.req_experimental_plan = checkout_form.cleaned_data['req_experimental_plan']
+			req.req_notes = checkout_form.cleaned_data['req_notes']
+			req.request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
+			req.req_request_date = datetime.now
+			req.save()
+			messages.success(request, 'Tissue Request Submitted.')
+			return redirect('order-list')
+		else:
+			return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form, 'edit':True, 'cart_exists':True},
+									  context_instance=RequestContext(request))
 
 def tissue_verification_list(request):
 	request_ids = TissueInventoryVerification.objects.values_list('tissue_request__req_request')

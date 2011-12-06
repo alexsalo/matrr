@@ -19,7 +19,10 @@ def cart(request):
 		else:
 			context['cart_exists'] = False
 	else:
-		context['cart_exists'] = False
+			context['cart_exists'] = False
+#	if context['edit'] ==True:
+#		context['cart_exists'] = True
+#	
 	return context
 
 

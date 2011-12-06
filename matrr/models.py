@@ -1121,11 +1121,22 @@ class Request(models.Model, DiffingMixin):
 
 	def save(self, force_insert=False, force_update=False, using=None):
 		if self.request_status.rqs_status_id != self._original_state['request_status_id']\
-		and self._original_state['request_status_id'] == RequestStatus.objects.get(rqs_status_name='Cart').rqs_status_id:
+		and (self._original_state['request_status_id'] == RequestStatus.objects.get(rqs_status_name='Cart').rqs_status_id or
+			self._original_state['request_status_id'] == RequestStatus.objects.get(rqs_status_name='Revised').rqs_status_id):
 			self.req_request_date = datetime.now()
 		self.req_modified_date = datetime.now()
 		self._previous_status_id = self._original_state['request_status_id']
 		super(Request, self).save(force_insert, force_update, using)
+
+	def can_be_revised(self):
+		if self.request_status == RequestStatus.objects.get(rqs_status_name='Rejected'):
+			return True
+		return False
+		
+	def can_be_edited(self):
+		if self.request_status == RequestStatus.objects.get(rqs_status_name='Revised'):
+			return True
+		return False
 
 	class Meta:
 		db_table = 'req_requests'
