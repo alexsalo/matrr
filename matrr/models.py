@@ -1660,7 +1660,7 @@ def request_post_save(**kwargs):
 	tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
 
 	# For Submitted Requests
-	if previous_status == RequestStatus.objects.get(rqs_status_name='Cart')\
+	if ( previous_status == RequestStatus.objects.get(rqs_status_name='Cart')  or  previous_status == RequestStatus.objects.get(rqs_status_name='Revised') )\
 	and current_status == RequestStatus.objects.get(rqs_status_name='Submitted'):
 		from utils.regular_tasks.send_new_request_info import send_new_request_info
 		# Send email notification the request was submitted
