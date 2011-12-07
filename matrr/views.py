@@ -1203,7 +1203,7 @@ def order_checkout(request, req_request_id):
 	if request.method != 'POST':
 		checkout_form = CartCheckoutForm(instance=req)
 		
-		return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form,  'edit':True, 'cart_exists':True},
+		return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form,  'edit':True, 'cart_exists':True, 'cart_num_items':1},
 								  context_instance=RequestContext(request))
 	else:
 		data = request.POST.copy()
@@ -1221,7 +1221,7 @@ def order_checkout(request, req_request_id):
 			messages.success(request, 'Tissue Request Submitted.')
 			return redirect('order-list')
 		else:
-			return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form, 'edit':True, 'cart_exists':True},
+			return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form, 'edit':True, 'cart_exists':True,'cart_num_items':1},
 									  context_instance=RequestContext(request))
 
 def tissue_verification(request):
