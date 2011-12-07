@@ -585,7 +585,8 @@ def review_history_list(request):
 	
 	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
 	request_status_cart = RequestStatus.objects.get(rqs_status_name='Cart')
-	req_requests = Request.objects.filter(Q(request_status__gte=0), ~Q(request_status=request_status), ~Q(request_status=request_status_cart)).order_by('-req_modified_date')
+	request_status_rev = RequestStatus.objects.get(rqs_status_name='Revised')
+	req_requests = Request.objects.filter(Q(request_status__gte=0), ~Q(request_status=request_status_rev), ~Q(request_status=request_status), ~Q(request_status=request_status_cart)).order_by('-req_modified_date')
 	req_requests = req_requests.distinct()
 
 	reviewers = Account.objects.users_with_perm('change_review').order_by('-username')
