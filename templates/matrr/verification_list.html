@@ -65,12 +65,19 @@
 									<td width=260px align="left">{{ tiv.initial.tissue }}</td>
 									{% if tiv.initial.inventory == "Sufficient" %}
 										<td align="right" bgcolor="green">{{ tiv.initial.amount }}</td>
+										<td width=100px align=right>{{ tiv.inventory }}</td>
 									{% else %}{% if tiv.initial.inventory == "Insufficient" %}
 										<td align="right" bgcolor="#ff8c00">{{ tiv.initial.amount }}</td>
-									{% else %}
+										<td width=100px align=right>{{ tiv.inventory }}</td>
+									{% else %}{% if tiv.initial.amount != "None" %}
 										<td align="right" bgcolor="#FFBABA">{{ tiv.initial.amount }}</td>
-									{% endif %}{% endif %}
-									<td width=100px align=right>{{ tiv.inventory }}</td>
+										<td width=100px align=right>{{ tiv.inventory }}</td>
+									{% else %}
+										<td align="right">Current Inventory</td>
+										<td style='width:50px;' align=right>{{ tiv.quantity }}</td>
+										<td>{{ tiv.units }}</td>
+
+									{% endif %}{% endif %}{% endif %}
 								</tr>
 						{% endfor %}
 					</table>
@@ -80,7 +87,9 @@
 		{% if formset.total_form_count >= 10 %}
 			<table style="width:100%;">
 				<tr>
-					<td align="center"><input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='width:100px;float: left'/></td>
+					<td align="center">
+						<button type='submit' name='submit' class='blockLinkCheckoutButton' style='width:100px;float: left'>Update</button>
+					</td>
 					<td align="center" class='verification_legend unverified'>Unverified</td>
 					<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
 					<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>

@@ -1226,17 +1226,23 @@ def order_checkout(request, req_request_id):
 
 def tissue_verification(request):
 	request_ids = TissueInventoryVerification.objects.values_list('tissue_request__req_request')
-	print request_ids
+#	print request_ids
 	requests = Request.objects.filter(req_request_id__in=request_ids)
-	print requests
+#	print requests
+	requestless_count = TissueInventoryVerification.objects.filter(tissue_request=None).count()
 	return render_to_response('matrr/verification_request_list.html',
 							{
 							'requests': requests,
+							'requestless_count': requestless_count,
 							},
 							context_instance=RequestContext(request))
 	
 def tissue_verification_export(request, req_request_id):
-	tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('inventory').order_by("monkey")
+	if req_request_id:
+		tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('inventory').order_by("monkey")
+	else:
+		tiv_list = TissueInventoryVerification.objects.filter(tissue_request=None).order_by('inventory').order_by("monkey")
+
 	#Create the HttpResponse object with the appropriate PDF headers.
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
@@ -1258,12 +1264,14 @@ def tissue_verification_list(request, req_request_id):
 				tss.tss_freezer = data['freezer']
 				tss.tss_details = data['details']
 				tss.user = request.user # who last modified the tissue sample
-				if data['quantity']:
+				if data['quantity'] != -1:
 					tss.tss_sample_quantity = data['quantity']
 				if data['units']:
 					tss.tss_units = data['units']
 				if data['inventory']:
 					tiv.tiv_inventory = data['inventory']
+				if tiv.tissue_request is None and data['quantity'] >= 0:
+					tiv.tiv_inventory = "Verified" # this will cause the TIV to delete itself.
 				tiv.save()
 				if not 'Do not edit' in tiv.tiv_notes: # see TissueInventoryVerification.save() for details
 					tss.save()
@@ -1274,8 +1282,10 @@ def tissue_verification_list(request, req_request_id):
 	# if request method != post and/or formset isNOT valid
 	# build a new formset
 	initial = []
-	tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('monkey', 'tissue_type__tst_tissue_name')
-
+	if int(req_request_id): # Page is displaying a specific requests' TIVs
+		tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('monkey', 'tissue_type__tst_tissue_name')
+	else: # Page is displaying the list of TIVs without tissue_requests
+		tiv_list = TissueInventoryVerification.objects.filter(tissue_request=None).order_by('monkey', 'tissue_type__tst_tissue_name')
 	for tiv in tiv_list:
 		try:
 			amount = tiv.tissue_request.get_amount()
@@ -1286,10 +1296,11 @@ def tissue_verification_list(request, req_request_id):
 			req_request = False
 			amount = "None"
 		tss = tiv.tissue_sample
+		quantity = -1 if tiv.tissue_request is None else tss.tss_sample_quantity
 		tiv_initial = {'primarykey': tiv.tiv_id,
 					   'freezer': tss.tss_freezer,
 					   'location': tss.tss_location,
-					   'quantity': tss.tss_sample_quantity,
+					   'quantity': quantity,
 					   'inventory': tiv.tiv_inventory,
 					   'units': tss.tss_units,
 					   'details': tss.tss_details,
