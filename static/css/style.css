@@ -461,7 +461,7 @@ table.clear tr {
 	color: #CF27FF;
 }
 
-.messages div {
+.messages div{
     border: 1px solid;
     margin: 10px 0px;
     padding: 15px 10px 15px 50px;
@@ -692,6 +692,7 @@ table.reviews_table .tissue_info {
     color: #9F6000;
     background-color: #FEEFB3;
     background-image: url('images/warning-24.png');
+    background-repeat: no-repeat;
 }
 
 .error {

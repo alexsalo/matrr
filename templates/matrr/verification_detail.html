@@ -44,10 +44,12 @@
 					</div>
 				{% endif %}
 				{% if tivform.initial.req_request %}
-					<div style='text-align: left; background-color: yellow'>
+					<div class="messages">
+					<div class="warning">
 							<b>Warning:</b> This tissue has been accepted, but not shipped, for another request.  Please take into account the accepted request before verifying this tissue.<br>
 							{% load review_tags %}
 							{% colliding_accepted_requests tivform.initial.req_request tivform.initial.tissue tivform.initial.monkey %}
+					</div>
 					</div>
 				{% endif %}
 

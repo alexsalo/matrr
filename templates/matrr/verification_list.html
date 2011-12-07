@@ -52,10 +52,11 @@
 								{% endif %}
 								{% if tiv.initial.req_request %}
 									</tr><tr style='padding: 4px'>
-									<td colspan=5 style='text-align: left; background-color: yellow'>
-											<b>Warning:</b> The tissue below has been accepted, but not shipped, for another request.  Please take into account the accepted request before verifying this tissue.<br>
+									<td colspan=5 class="warning" style="text-align: center">
+											<span style="white-space: pre">      </span><b>Warning:</b> The tissue below has been accepted, but not shipped, for another request.  Please take into account the accepted request before verifying this tissue.<br>
 											{% load review_tags %}
 											{% colliding_accepted_requests tiv.initial.req_request tiv.initial.tissue tiv.initial.monkey %}
+											
 									</td>
 									</tr><tr style='padding: 4px'>
 								{% endif %}
