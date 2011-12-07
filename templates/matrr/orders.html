@@ -24,7 +24,7 @@ Revised Orders
     <tr>
       <td>{{ order.cohort }}</td>
       <td>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
-      <td>{{ order.request_status }}</td>
+      <td>{{ order.get_req_status_display }}</td>
       <td>Order has not shipped.</td>
       <td><a href='{% url order-edit order.req_request_id %}'>Edit</a></td>
     </tr>
@@ -51,18 +51,8 @@ Orders
     <tr>
       <td>{{ order.cohort }}</td>
       <td>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
-      <td {% if order.request_status|lower == "accepted" or order.request_status|lower == "partially accepted"%}
-      style='color: green'
-      {% endif %}
-      {% if order.request_status|lower == "rejected" %}
-          style='color: red'   
-      {% endif %}
-      {% if order.request_status|lower == "shipped" %}
-          style='color: orange'   
-      {% endif %}
-      
-      >
-      {{ order.request_status }}</td>
+      <td id="{{ order.req_status|lower }}">
+      {{ order.get_req_status_display }}</td>
     
       <td>{% if order.shipment.shp_shipment_date %}{{ order.shipment.shp_shipment_date|date:"m/d/Y" }}{% else %}Order has not shipped.{% endif %}</td>
       <td><a href='{% url order-detail order.req_request_id %}'>Details</a></td>

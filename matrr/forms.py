@@ -132,6 +132,7 @@ class TissueRequestForm(ModelForm):
 			accepted = self.instance.accepted_monkeys.all().values_list('mky_id', flat=True)
 		else:
 			accepted = list()
+		print accepted
 		self.fields['monkeys'].queryset = self.req_request.cohort.monkey_set.all().exclude(mky_id__in=accepted)
 		
 		# change the help text to match the checkboxes
@@ -182,7 +183,7 @@ class CartCheckoutForm(ModelForm):
 
 	class Meta:
 		model = Request
-		exclude = ('request_status', 'req_report_asked')
+		exclude = ('req_status', 'req_report_asked')
 		widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
 
 

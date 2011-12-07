@@ -87,7 +87,7 @@ TissueTypeSexRelevant =  Enumeration([
 						('M', 'Male', 'Male relevant tissue type'),
 						('B', 'Both', 'Sex independent tissue type'),
 					])
-ReqStatus =  Enumeration([
+RequestStatus =  Enumeration([
 						('CA', 'Cart', 'Cart'),
 						('RV', 'Revised', 'Revised'),
 						('SB', 'Submitted', 'Submitted'),
@@ -846,18 +846,18 @@ class CohortImage(MATRRImage):
 #		db_table = 'big_brain_image'
 
 
-class RequestStatus(models.Model):
-	rqs_status_id = models.AutoField('ID', primary_key=True)
-	rqs_status_name = models.CharField('Name', max_length=100, unique=True, null=False,
-									   help_text='The name of the status.')
-	rqs_status_description = models.TextField('Description', null=True,
-											  help_text='The description of the status.')
-
-	def __unicode__(self):
-		return self.rqs_status_name
-
-	class Meta:
-		db_table = 'rqs_request_statuses'
+#class RequestStatus(models.Model):
+#	rqs_status_id = models.AutoField('ID', primary_key=True)
+#	rqs_status_name = models.CharField('Name', max_length=100, unique=True, null=False,
+#									   help_text='The name of the status.')
+#	rqs_status_description = models.TextField('Description', null=True,
+#											  help_text='The description of the status.')
+#
+#	def __unicode__(self):
+#		return self.rqs_status_name
+#
+#	class Meta:
+#		db_table = 'rqs_request_statuses'
 
 
 class TissueCategory(models.Model):
@@ -1002,8 +1002,13 @@ class TissueType(models.Model):
 	class Meta:
 		db_table = 'tst_tissue_types'
 		unique_together = (('tst_tissue_name', 'category'),)
-
-
+		
+class RequestManager(models.Manager):
+	def processed(self):
+		return self.get_query_set().exclude(req_status=RequestStatus.Cart).exclude(req_status=RequestStatus.Revised)
+	def revised(self):
+		return self.get_query_set().filter(req_status=RequestStatus.Revised)
+	
 class Request(models.Model, DiffingMixin):
 	REFERRAL_CHOICES = (
 		('Internet Search', 'Internet Search'),
@@ -1013,9 +1018,10 @@ class Request(models.Model, DiffingMixin):
 		('Colleague', 'Colleague'),
 		('other', 'other'),
 		)
+	objects = RequestManager()
 	req_request_id = models.AutoField('ID', primary_key=True)
-	request_status = models.ForeignKey(RequestStatus, null=False, db_column='rqs_status_id', )
-	req_status = models.CharField('Request Status', max_length=2, choices=ReqStatus, null=False, blank=False, default=ReqStatus.Cart)
+#	request_status = models.ForeignKey(RequestStatus, null=False, db_column='rqs_status_id', )
+	req_status = models.CharField('Request Status', max_length=2, choices=RequestStatus, null=False, blank=False, default=RequestStatus.Cart)
 	cohort = models.ForeignKey(Cohort, null=False, db_column='coh_cohort_id', editable=False, )
 	user = models.ForeignKey(User, null=False, db_column='usr_user_id', editable=False, )
 	req_modified_date = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
@@ -1117,7 +1123,7 @@ class Request(models.Model, DiffingMixin):
 		revised = Request.objects.create(**kwargs)
 		# Don't duplicate some other fields
 		revised.req_modified_date = datetime.now()
-		revised.request_status = RequestStatus.objects.get_or_create(rqs_status_name='Revised')[0]
+		revised.req_status = RequestStatus.Revised
 		revised.req_report_asked = False
 
 		# Duplicate all TissueRequests
@@ -1153,23 +1159,37 @@ class Request(models.Model, DiffingMixin):
 		return self.__get_rtt_collision_request(collisions)
 
 	def save(self, force_insert=False, force_update=False, using=None):
-		if self.request_status.rqs_status_id != self._original_state['request_status_id']\
-		and (self._original_state['request_status_id'] == RequestStatus.objects.get(rqs_status_name='Cart').rqs_status_id or
-			self._original_state['request_status_id'] == RequestStatus.objects.get(rqs_status_name='Revised').rqs_status_id):
+		if self.req_status != self._original_state['req_status']\
+		and (self._original_state['req_status'] == RequestStatus.Cart or
+			self._original_state['req_status'] == RequestStatus.Revised):
 			self.req_request_date = datetime.now()
 		self.req_modified_date = datetime.now()
-		self._previous_status_id = self._original_state['request_status_id']
+		self._previous_status = self._original_state['req_status']
 		super(Request, self).save(force_insert, force_update, using)
 
 	def can_be_revised(self):
-		if self.request_status == RequestStatus.objects.get(rqs_status_name='Rejected') or self.request_status == RequestStatus.objects.get(rqs_status_name='Partially Accepted'):
+		if self.req_status == RequestStatus.Rejected or self.req_status == RequestStatus.Partially:
 			return True
 		return False
 		
 	def can_be_edited(self):
-		if self.request_status == RequestStatus.objects.get(rqs_status_name='Revised'):
+		if self.req_status == RequestStatus.Revised:
 			return True
 		return False
+	
+	def is_processed(self):
+		if self.req_status != RequestStatus.Cart and self.req_status != RequestStatus.Revised:
+			return True
+		return False
+	
+	def is_evaluated(self):
+		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially \
+		or self.req_status == RequestStatus.Rejected or self.req_status == RequestStatus.Shipped:
+			return True
+		return False
+
+	def submit_request(self):
+		self.req_status = RequestStatus.Submitted
 
 	class Meta:
 		db_table = 'req_requests'
@@ -1660,18 +1680,18 @@ def request_post_save(**kwargs):
 	# get the Request instance
 	req_request = kwargs['instance']
 	# check if there was a change in the status
-	if req_request._previous_status_id is None or\
-	   req_request.request_status_id == req_request._previous_status_id:
+	if req_request._previous_status is None or\
+	   req_request.req_status == req_request._previous_status:
 		# if there was no change, don't do anything
 		return
 
-	current_status = RequestStatus.objects.get(rqs_status_id=req_request.request_status_id)
-	previous_status = RequestStatus.objects.get(rqs_status_id=req_request._previous_status_id)
+	current_status = req_request.req_status
+	previous_status = req_request._previous_status
 	tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
 
 	# For Submitted Requests
-	if ( previous_status == RequestStatus.objects.get(rqs_status_name='Cart')  or  previous_status == RequestStatus.objects.get(rqs_status_name='Revised') )\
-	and current_status == RequestStatus.objects.get(rqs_status_name='Submitted'):
+	if (previous_status == RequestStatus.Cart or previous_status == RequestStatus.Revised) \
+		and current_status == RequestStatus.Submitted:
 		from utils.regular_tasks.send_new_request_info import send_new_request_info
 		# Send email notification the request was submitted
 		send_new_request_info(req_request)
@@ -1700,8 +1720,8 @@ def request_post_save(**kwargs):
 				tv.save()
 
 	# For Accepted and Partially accepted Requests
-	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
-	and "Accepted" in current_status.rqs_status_name:
+	if previous_status == RequestStatus.Submitted\
+	and (current_status == RequestStatus.Accepted or current_status == RequestStatus.Partially):
 		for tissue_request in tissue_requests:
 			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
 			for tiv in tivs:
@@ -1715,8 +1735,8 @@ def request_post_save(**kwargs):
 				tiv.save()
 
 	# For Rejected Requests
-	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
-	and current_status == RequestStatus.objects.get(rqs_status_name='Rejected'):
+	if previous_status == RequestStatus.Submitted\
+	and current_status == RequestStatus.Rejected:
 		for tissue_request in tissue_requests:
 			# Disassociate the tissue request. This leaves unverified TIVs to have their
 			# inventory checked and deletes verified TIVs
@@ -1726,8 +1746,8 @@ def request_post_save(**kwargs):
 				tiv.save()
 
 	# For Shipped Requests
-	if "Accepted" in previous_status.rqs_status_name \
-	and current_status == RequestStatus.objects.get(rqs_status_name='Shipped'):
+	if (previous_status == RequestStatus.Accepted or previous_status == RequestStatus.Partially) \
+	and current_status == RequestStatus.Shipped:
 		# Create new TIVs to update MATRR inventory after a tissue has shipped.
 		for tissue_request in tissue_requests:
 			for monkey in tissue_request.accepted_monkeys.all().exclude(mky_real_id=0): # dont create tivs for assay monkeys after shipment
@@ -1736,7 +1756,7 @@ def request_post_save(**kwargs):
 																tissue_request=None)
 				tv.save()
 
-	req_request._previous_status_id = None
+	req_request._previous_status = None
 
 # This is a method to check to see if a user_id exists that does not have
 # an account attached to it.

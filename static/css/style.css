@@ -773,3 +773,18 @@ a.tool-tip:hover span {
 .sufficient {
 	border: solid green;
 }
+
+#ac {
+	color: green;
+}
+#pa {
+	color: green;
+}
+#rj {
+	color: red;
+}
+#sh {
+	color: orange;
+}
+
+
