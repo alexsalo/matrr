@@ -125,9 +125,13 @@ class TissueRequestForm(ModelForm):
 		self.tissue = tissue
 		super(TissueRequestForm, self).__init__(*args, **kwargs)
 		self.fields['rtt_fix_type'].required = False
-		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTableNoVerification(link_base=self.req_request.cohort.coh_cohort_id, tissue=self.tissue,
-																		)
-		accepted = self.instance.accepted_monkeys.all().values_list('mky_id', flat=True)
+		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTableNoVerification(link_base=self.req_request.cohort.coh_cohort_id,
+																					tissue=self.tissue)
+		# the first time the form is created the instance does not exist
+		if self.instance.pk:
+			accepted = self.instance.accepted_monkeys.all().values_list('mky_id', flat=True)
+		else:
+			accepted = list()
 		self.fields['monkeys'].queryset = self.req_request.cohort.monkey_set.all().exclude(mky_id__in=accepted)
 		
 		# change the help text to match the checkboxes
