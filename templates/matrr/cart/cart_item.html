@@ -9,9 +9,8 @@
 {% block destination %}{% url cart-item cart_item.get_id %}{% endblock %}
 
 {% block buttons %}
-	<button type='submit' name='submit' value='update'>Update</button>
-	<button type='submit' name='submit' value='cancel'>Cancel</button>
-	<button type='submit' name='submit' value='delete'>Delete</button>
+	<button class='blockLinkButton' type='submit' name='submit' value='cancel'>Cancel</button>
+	<button class='blockLinkDeleteButton' type='submit' name='submit' value='delete'>Delete</button>
+	<button class='blockLinkCheckoutButton' type='submit' name='submit' value='update'>Update</button>
 {% endblock %}
-
 

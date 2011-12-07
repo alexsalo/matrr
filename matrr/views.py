@@ -193,9 +193,8 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 
 	# get the current tissue
 	current_tissue = TissueType.objects.get(tst_type_id=tissue_id)
-	instance = TissueRequest(tissue_type=current_tissue,
-							 req_request=cart_request)
-
+	instance = TissueRequest(tissue_type=current_tissue, req_request=cart_request)
+	
 	if request.method != 'POST':
 		# now we need to create the form for the tissue type
 		tissue_request_form = TissueRequestForm(req_request=cart_request, tissue=current_tissue, instance=instance,
@@ -822,7 +821,7 @@ def order_edit_tissue(request, req_rtt_id):
 			messages.info(request, 'No changes were made.')
 			return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id,]))
 		elif request.POST['submit'] == 'delete':
-			return order_delete_tissue(request, req_rtt_id)
+			return order_delete_tissue(request, req_rtt_id=req_rtt_id) # order_delete_tissue's decorator looks for this as a kwarg, not an arg.  The URL passes the function a kwarg.
 		else:
 			# validate the form and update the cart_item
 			tissue_request_form = TissueRequestForm(instance=rtt,
