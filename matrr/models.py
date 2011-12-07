@@ -87,6 +87,16 @@ TissueTypeSexRelevant =  Enumeration([
 						('M', 'Male', 'Male relevant tissue type'),
 						('B', 'Both', 'Sex independent tissue type'),
 					])
+ReqStatus =  Enumeration([
+						('CA', 'Cart', 'Cart'),
+						('RV', 'Revised', 'Revised'),
+						('SB', 'Submitted', 'Submitted'),
+						('RJ', 'Rejected', 'Rejected'),
+						('AC', 'Accepted', 'Accepted'),
+						('PA', 'Partially', 'Partially accepted'),
+						('SH', 'Shipped', 'Shipped'),
+					])
+
 
 VIP_IMAGES_LIST = (
 					'monkey_bouts_drinks',
@@ -1005,6 +1015,7 @@ class Request(models.Model, DiffingMixin):
 		)
 	req_request_id = models.AutoField('ID', primary_key=True)
 	request_status = models.ForeignKey(RequestStatus, null=False, db_column='rqs_status_id', )
+	req_status = models.CharField('Request Status', max_length=2, choices=ReqStatus, null=False, blank=False, default=ReqStatus.Cart)
 	cohort = models.ForeignKey(Cohort, null=False, db_column='coh_cohort_id', editable=False, )
 	user = models.ForeignKey(User, null=False, db_column='usr_user_id', editable=False, )
 	req_modified_date = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
