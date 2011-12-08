@@ -360,8 +360,7 @@ def cart_checkout(request):
 @user_passes_test(lambda u: u.has_perm('matrr.change_review'), login_url='/denied/')
 def reviews_list_view(request):
 	# get a list of all reviews for the current user
-	submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
-	reviews = Review.objects.filter(user=request.user.id).filter(req_request__request_status=submitted)
+	reviews = Review.objects.filter(user=request.user.id).filter(req_request__req_status=RequestStatus.Submitted)
 
 	finished_reviews = [review for review in reviews if review.is_finished()]
 	unfinished_reviews = [review for review in reviews if not review.is_finished()]
@@ -581,11 +580,8 @@ def review_detail(request, review_id):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_history_list(request):
-	
-	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
-	request_status_cart = RequestStatus.objects.get(rqs_status_name='Cart')
-	request_status_rev = RequestStatus.objects.get(rqs_status_name='Revised')
-	req_requests = Request.objects.filter(Q(request_status__gte=0), ~Q(request_status=request_status_rev), ~Q(request_status=request_status), ~Q(request_status=request_status_cart)).order_by('-req_modified_date')
+
+	req_requests = Request.objects.evaluated().order_by('-req_modified_date')
 	req_requests = req_requests.distinct()
 
 	reviewers = Account.objects.users_with_perm('change_review').order_by('-username')
@@ -617,8 +613,8 @@ def review_history_list(request):
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_overview_list(request):
 	# get a list of all tissue requests that are submitted, but not accepted or rejected
-	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
-	req_requests = Request.objects.filter(request_status=request_status)
+
+	req_requests = Request.objects.submitted()
 	# get a list of all reviewers
 	reviewers = Account.objects.users_with_perm('change_review')
 	for req_request in req_requests:
@@ -655,7 +651,7 @@ def review_overview(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	no_monkeys = False
 	
-	if req_request.request_status.rqs_status_name != 'Submitted' and req_request.request_status.rqs_status_name != 'Cart':
+	if req_request.is_evaluated():
 		no_monkeys = True
 	if  'HTTP_REFERER' in request.META:
 		back_url = request.META['HTTP_REFERER']
@@ -937,13 +933,13 @@ def request_review_process(request, req_request_id):
 		if tissue_request.get_accepted() != Acceptance.Accepted:
 			partial = True
 	if accepted and not partial:
-		status = 'Accepted'
+		status = RequestStatus.Accepted
 		email_template = 'matrr/review/request_accepted_email.txt'
 	elif accepted and partial:
-		status = 'Partially Accepted'
+		status = RequestStatus.Partially
 		email_template = 'matrr/review/request_partially_accepted_email.txt'
 	else:
-		status = 'Rejected'
+		status = RequestStatus.Rejected
 		email_template = 'matrr/review/request_rejected_email.txt'
 
 	if request.POST:
@@ -963,7 +959,7 @@ def request_review_process(request, req_request_id):
 							Monkey.objects.filter(mky_id__in=form.cleaned_data[str(tissue_request)]))
 						tissue.unavailable_list = unavailable_list
 						tissue.save()
-				req_request.request_status = RequestStatus.objects.get(rqs_status_name=status)
+				req_request.req_status = status
 				req_request.save()
 				messages.success(request, "The tissue request has been processed.")
 				# Email subject *must not* contain newlines

@@ -30,24 +30,8 @@
 						{% endif %}</a></td>
 					<td nowrap>{{ req_request.req_modified_date|date:"m/d/Y, g:i a" }}</td>
 
-					{% with item=req_request.request_status.rqs_status_name %}
-						{% if item == "Rejected" %}
-							<td style="color: red" align="center">{{ item }}</td>
-						{% else %}
-							{% if item == "Accepted" or item == "Partially Accepted" %}
-							<td style="color: green" align="center">{{ item }}</td>
-
-							{% else %}
-								{% if item == "Shipped" %}
-									<td style="color: orange" align="center">{{ item }}</td>
-								{% else %}
-							
-							<td align="center">{{ item }}</td>
-							    {% endif %}
-							{% endif %}
-						{% endif %}
-
-					{% endwith %}
+							<td align="center" id="{{ req_request.req_status|lower }}">{{ req_request.get_req_status_display }}</td>
+			
 
 					<td><a href='{% url review-overview req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>
 				</tr>

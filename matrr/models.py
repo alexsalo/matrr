@@ -3,6 +3,7 @@ import Image
 import os, ast
 from django.core.files.base import File
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, pre_delete
@@ -993,11 +994,11 @@ class TissueType(models.Model):
 
 	def get_pending_request_count(self, monkey):
 		return self.tissue_request_set.filter(\
-			req_request__request_status=RequestStatus.objects.get(rqs_status_name='Submitted')).count()
+			req_request__req_status=RequestStatus.Submitted).count()
 
 	def get_accepted_request_count(self, monkey):
 		return self.tissue_request_set.filter(\
-			req_request__request_status=RequestStatus.objects.get(rqs_status_name='Accepted')).count()
+			req_request__req_status=RequestStatus.Accepted).count()
 
 	class Meta:
 		db_table = 'tst_tissue_types'
@@ -1006,8 +1007,13 @@ class TissueType(models.Model):
 class RequestManager(models.Manager):
 	def processed(self):
 		return self.get_query_set().exclude(req_status=RequestStatus.Cart).exclude(req_status=RequestStatus.Revised)
+	def evaluated(self):
+		return self.get_query_set().exclude(req_status=RequestStatus.Cart).exclude(req_status=RequestStatus.Revised).exclude(
+					req_status=RequestStatus.Submitted)
 	def revised(self):
 		return self.get_query_set().filter(req_status=RequestStatus.Revised)
+	def submitted(self):
+		return self.get_query_set().filter(req_status=RequestStatus.Submitted)
 	
 class Request(models.Model, DiffingMixin):
 	REFERRAL_CHOICES = (
@@ -1139,22 +1145,22 @@ class Request(models.Model, DiffingMixin):
 
 	def get_sub_req_collisions_for_monkey(self, monkey):
 		collisions = self.get_tiv_collisions()
-		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'), monkey=monkey)
+		collisions = collisions.filter(tissue_request__req_request__req_status=RequestStatus.Submitted, monkey=monkey)
 		return self.__get_tiv_collision_request(collisions)
 
 	def get_sub_req_collisions(self):
 		collisions = self.get_tiv_collisions()
-		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'))
+		collisions = collisions.filter(tissue_request__req_request__req_status=RequestStatus.Submitted)
 		return self.__get_tiv_collision_request(collisions)
 
 	def get_acc_req_collisions(self):
 		collisions = self.get_rtt_collisions()
-		collisions = collisions.filter(req_request__request_status__rqs_status_name__contains="Accepted")
+		collisions = collisions.filter(Q(req_request__req_status=RequestStatus.Accepted)|Q(req_request__req_status=RequestStatus.Partially))
 		return self.__get_rtt_collision_request(collisions)
 
 	def get_acc_req_collisions_for_tissuetype_monkey(self, tissue_type, monkey):
 		collisions = self.get_rtt_collisions()
-		collisions = collisions.filter(req_request__request_status__rqs_status_name__contains="Accepted")
+		collisions = collisions.filter(Q(req_request__req_status=RequestStatus.Accepted)|Q(req_request__req_status=RequestStatus.Partially))
 		collisions = collisions.filter(tissue_type=tissue_type, accepted_monkeys__in=[monkey])
 		return self.__get_rtt_collision_request(collisions)
 
@@ -1185,6 +1191,10 @@ class Request(models.Model, DiffingMixin):
 	def is_evaluated(self):
 		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially \
 		or self.req_status == RequestStatus.Rejected or self.req_status == RequestStatus.Shipped:
+			return True
+		return False
+	def can_be_evaluated(self):
+		if self.req_status == RequestStatus.Submitted:
 			return True
 		return False
 
