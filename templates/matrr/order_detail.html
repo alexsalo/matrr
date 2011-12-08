@@ -73,7 +73,7 @@
 	</div>
 	
 	{% if not edit %}
-		<a href='{% url order-list %}' class='blockLinkButton' style="float:left">Back</a>
+		<a href='{% if request.META.HTTP_REFERER %}{{ request.META.HTTP_REFERER }}{% else %}{% url order-list %}{% endif %}' class='blockLinkButton' style="float:left">Back</a>
 	{% endif %}
 	{% if edit %}
 		<a href='{% url order-list %}' class='blockLinkButton' style="float:left">Finish Editing</a>
