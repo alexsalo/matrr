@@ -354,12 +354,15 @@ class VIPGraphForm_monkeys(Form):
 
 
 class SpiffyForm(Form):
-	OPERATORS = (
+	NUMERIC_OPERATORS = (
 		("", "equal to"),
 		("__gte", "greater than or equal to"),
 		("__lte", "less than or equal to"),
 		("__gt", "greater than"),
 		("__lt", "less than"),
+	)
+	CHAR_OPERATORS = (
+		("__iexact", "is"),
 		("__icontains", "contains"),
 	)
 	has_operator = {}
@@ -377,13 +380,13 @@ class SpiffyForm(Form):
 				self.fields[name].label = "Relation: " + name
 				self.has_operator[name] = False
 			elif isinstance(key, integers):
-				self.fields[name + "_operator"] = ChoiceField(choices=self.OPERATORS, required=False)
+				self.fields[name + "_operator"] = ChoiceField(choices=self.NUMERIC_OPERATORS, required=False)
 				self.fields[name + "_operator"].label = key.verbose_name
 				self.fields[name] = IntegerField(required=False)
 				self.fields[name].label = ""
 				self.has_operator[name] = True
 			elif isinstance(key, fields.FloatField):
-				self.fields[name + "_operator"] = ChoiceField(choices=self.OPERATORS, required=False)
+				self.fields[name + "_operator"] = ChoiceField(choices=self.NUMERIC_OPERATORS, required=False)
 				self.fields[name + "_operator"].label = key.verbose_name
 				self.fields[name] = FloatField(required=False)
 				self.fields[name].label = ""
@@ -393,7 +396,7 @@ class SpiffyForm(Form):
 				self.fields[name].label = key.verbose_name
 				self.has_operator[name] = False
 			else:
-				self.fields[name + "_operator"] = ChoiceField(choices=self.OPERATORS, required=False)
+				self.fields[name + "_operator"] = ChoiceField(choices=self.CHAR_OPERATORS, required=False)
 				self.fields[name + "_operator"].label = key.verbose_name
 				self.fields[name] = CharField(max_length=50, required=False)
 				self.fields[name].label = ""
