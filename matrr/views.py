@@ -621,8 +621,7 @@ def review_overview_list(request):
 	request_status = RequestStatus.objects.get(rqs_status_name='Submitted')
 	req_requests = Request.objects.filter(request_status=request_status)
 	# get a list of all reviewers
-	group = Group.objects.get(name='Committee')
-	reviewers = group.user_set.all().order_by('-username')
+	reviewers = Account.objects.users_with_perm('change_review')
 	for req_request in req_requests:
 		req_request.complete = list()
 		for reviewer in reviewers:
