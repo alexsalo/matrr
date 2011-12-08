@@ -14,10 +14,9 @@ from django.contrib.auth.models import Group
 def send_verify_tissues_info():
 	
 	users = Account.objects.users_with_perm('can_verify_tissues')
-	submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
 	time_now = datetime.now()
 	time_yesterday = time_now - timedelta(days=1)
-	reguests = Request.objects.filter(request_status=submitted, req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
+	reguests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
 	
 	if len(reguests) > 0:
 		for user in users:

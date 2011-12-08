@@ -12,10 +12,9 @@ from matrr.models import RequestStatus, Request, Account
 
 def send_colliding_requests_info():
 	
-	submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
 	time_now = datetime.now()
 	time_yesterday = time_now - timedelta(days=1)
-	requests = Request.objects.filter(request_status=submitted, req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
+	requests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
 	
 	collisions = list()
 	

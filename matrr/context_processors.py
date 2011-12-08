@@ -7,8 +7,8 @@ def cart(request):
 	# get the cart for the user in the request
 	context = {}
 	if request.user.is_authenticated():
-		if Request.objects.filter(user=request.user.id, req_status=RequestStatus.Cart).count() == 1:
-			cart = Request.objects.get(user=request.user.id, req_status=RequestStatus.Cart)
+		if Request.objects.cart().filter(user=request.user.id).count() == 1:
+			cart = Request.objects.cart().get(user=request.user.id)
 			cart_items = TissueRequest.objects.filter(req_request=cart).all()
 			cart_num_items = len(cart_items)
 			context['cart_exists'] = True

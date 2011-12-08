@@ -17,7 +17,7 @@
 
 	
 <table class='monkey_table common_center'>
-  {% if order.request_status|lower != 'partially accepted' %}
+  {% if order.req_status != RequestStatus.Partially %}
     <tr>
       <th colspan='6'>Monkeys</th>
     </tr>

@@ -150,8 +150,8 @@ def get_or_create_cart(request, cohort):
 	 """
 
 	# get the user's cart if it already exists
-	if Request.objects.filter(user=request.user.id, req_status=RequestStatus.Cart).count():
-		cart_request = Request.objects.get(user=request.user.id, req_status=RequestStatus.Cart)
+	if Request.objects.cart().filter(user=request.user.id).count():
+		cart_request = Request.objects.cart().get(user=request.user.id)
 		# check that the cart is for this cohort
 		if cart_request.cohort != cohort:
 			# take corrective action (display a page that asks the user if they want to abandon their cart and start with this cohort)
@@ -753,7 +753,7 @@ def order_detail(request, req_request_id, edit=False):
 	return render_to_response('matrr/order_detail.html',
 			{'order': req_request,
 			 'Acceptance': Acceptance,
-			 'shipped': req_request.req_status == RequestStatus.Shipped,
+			 'shipped': req_request.is_shipped(),
 			 'after_submitted': eval,
 			 'edit': edit,
 			 },

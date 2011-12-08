@@ -1018,6 +1018,8 @@ class RequestManager(models.Manager):
 		return self.get_query_set().filter(req_status=RequestStatus.Shipped)
 	def accepted_and_partially(self):
 		return self.get_query_set().filter(Q(req_status=RequestStatus.Accepted)|Q(req_status=RequestStatus.Partially))
+	def cart(self):
+		return self.get_query_set().filter(req_status=RequestStatus.Cart)
 	
 class Request(models.Model, DiffingMixin):
 	REFERRAL_CHOICES = (
