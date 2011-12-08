@@ -92,7 +92,7 @@
 	{% if edit %}
 		<a href='{% url order-checkout order.req_request_id %}' class='blockLinkCheckoutButton' style="float:right">Proceed to checkout</a>
 	{% endif %}
-	      {% if order.can_be_revised %}
+		  {% if order.can_be_revised and request.user == order.user %}
     <a href='{% url order-revise order.req_request_id %}' class='blockLinkCheckoutButton' style="float:right">Revise</a>
       {% endif %}
 	

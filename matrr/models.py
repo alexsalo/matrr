@@ -1014,6 +1014,10 @@ class RequestManager(models.Manager):
 		return self.get_query_set().filter(req_status=RequestStatus.Revised)
 	def submitted(self):
 		return self.get_query_set().filter(req_status=RequestStatus.Submitted)
+	def shipped(self):
+		return self.get_query_set().filter(req_status=RequestStatus.Shipped)
+	def accepted_and_partially(self):
+		return self.get_query_set().filter(Q(req_status=RequestStatus.Accepted)|Q(req_status=RequestStatus.Partially))
 	
 class Request(models.Model, DiffingMixin):
 	REFERRAL_CHOICES = (
@@ -1193,13 +1197,27 @@ class Request(models.Model, DiffingMixin):
 		or self.req_status == RequestStatus.Rejected or self.req_status == RequestStatus.Shipped:
 			return True
 		return False
+
+	def is_shipped(self):
+		if self.req_status == RequestStatus.Shipped:
+			return True
+		return False
+		
 	def can_be_evaluated(self):
 		if self.req_status == RequestStatus.Submitted:
 			return True
 		return False
+	def can_be_shipped(self):
+		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
+			return True
+		return False
+
 
 	def submit_request(self):
 		self.req_status = RequestStatus.Submitted
+
+	def ship_request(self):
+		self.req_status = RequestStatus.Shipped
 
 	class Meta:
 		db_table = 'req_requests'

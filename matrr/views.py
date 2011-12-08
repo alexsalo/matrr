@@ -739,7 +739,7 @@ def orders_list(request):
 			 },
 							  context_instance=RequestContext(request))
 
-@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
+@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user or u.has_perm('change_shipment'), arg_name='req_request_id', redirect_url='/denied/')
 def order_detail(request, req_request_id, edit=False):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -1042,10 +1042,9 @@ def contact_us(request):
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_overview(request):
 	# get the tissue requests that have been accepted
-	accepted_requests = Request.objects.filter(request_status__in=
-	RequestStatus.objects.filter(rqs_status_name__in=('Accepted', 'Partially Accepted')))
+	accepted_requests = Request.objects.accepted_and_partially()
 	# get the tissue requests that have been shipped
-	shipped_requests = Request.objects.filter(request_status=RequestStatus.objects.get(rqs_status_name='Shipped'))
+	shipped_requests = Request.objects.shipped()
 
 	return render_to_response('matrr/shipping/shipping_overview.html',
 			{'accepted_requests': accepted_requests,
@@ -1111,8 +1110,7 @@ def build_shipment(request, req_request_id):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	# do a sanity check
-	if req_request.request_status.rqs_status_name != 'Accepted' and\
-	   req_request.request_status.rqs_status_name != 'Partially Accepted':
+	if not req_request.can_be_shipped():
 		raise Exception(
 			'You cannot create a shipment for a request that has not been accepted (or has already been shipped.')
 
@@ -1122,7 +1120,7 @@ def build_shipment(request, req_request_id):
 			shipment.shp_shipment_date = datetime.today()
 			shipment.user = request.user
 			shipment.save()
-			req_request.request_status = RequestStatus.objects.get(rqs_status_name='Shipped')
+			req_request.ship_request()
 			req_request.save()
 	else:
 		# create the shipment
@@ -1138,7 +1136,8 @@ def build_shipment(request, req_request_id):
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def make_shipping_manifest_latex(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
-
+	if not req_request.can_be_shipped() and not req_request.is_shipped():
+		raise Http404('Page does not exist.')
 	#Create the HttpResponse object with the appropriate PDF headers.
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=manifest-' +\
