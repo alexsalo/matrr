@@ -430,3 +430,155 @@ class SpiffyForm(Form):
 							q_object = q_object & related_q # and then finally AND the related field Q objects with the other fields
 			# return that sexy Q object
 			return q_object # but only if .is_valid()
+
+
+class FancyForm(Form):
+	NUMERIC_OPERATORS = (
+		("", "equal to"),
+		("__gte", "greater than or equal to"),
+		("__lte", "less than or equal to"),
+		("__gt", "greater than"),
+		("__lt", "less than"),
+	)
+	CHAR_OPERATORS = (
+		("__iexact", "is"),
+		("__icontains", "contains"),
+	)
+
+	INT_FIELD_CHOICES = []
+	FLOAT_FIELD_CHOICES = []
+	CHAR_FIELD_CHOICES = []
+	BOOL_FIELD_CHOICES = []
+
+	count = 0
+
+	# does not handle date/datetime fields (yet)
+	def __init__(self, list_of_model_fields, *args, **kwargs):
+		from django.db.models import fields
+		super(FancyForm, self).__init__(*args, **kwargs)
+		integers = (fields.IntegerField, fields.AutoField, fields.BigIntegerField, fields.PositiveIntegerField, fields.PositiveSmallIntegerField, fields.SmallIntegerField)
+		related = (fields.related.ForeignKey, fields.related.ManyToManyRel)
+		dates = (fields.DateTimeField, fields.DateField)
+		chars = (fields.CharField, fields.TextField)
+		bools = (fields.BooleanField, fields.NullBooleanField)
+
+		int_fields = []
+		related_fields = []
+		float_fields = []
+		date_fields = []
+		other_fields = []
+		bool_fields = []
+		char_fields = []
+
+		for field in list_of_model_fields:
+			if isinstance(field, integers):
+				int_fields.append(field)
+				self.INT_FIELD_CHOICES.append((field, field.verbose_name))
+			elif isinstance(field, integers):
+				float_fields.append(fields.FloatField)
+				self.FLOAT_FIELD_CHOICES.append((field, field.verbose_name))
+			elif isinstance(field, dates):
+				date_fields.append(field)
+				# Do something fancy?
+				continue
+			elif isinstance(field, related):
+				related_fields.append(field)
+			elif isinstance(field, chars):
+				self.CHAR_FIELD_CHOICES.append((field, field.verbose_name))
+				char_fields.append(field)
+			elif isinstance(field, bools):
+				self.BOOL_FIELD_CHOICES.append((field, field.verbose_name))
+				bool_fields.append(field)
+			else:
+				print "panic"
+				continue
+
+		for i, field in enumerate(int_fields):
+			i = str(i).zfill(3)
+			self.fields[i + ' Int Choice'] = ChoiceField(choices=self.INT_FIELD_CHOICES, required=False)
+			self.fields[i + ' Int Choice'].label = "Int " + i
+			self.fields[i + ' Int Choice'].help_text = "pick your favorite brand of Column"
+			self.fields[i + ' Int Op'] = ChoiceField(choices=self.OPERATORS, required=False)
+			self.fields[i + ' Int Op'].label = 'Operator on Int ' + i
+			self.fields[i + ' Int Op'].help_text = "pick your favorite flavor of Column"
+			self.fields[i + ' Int Val'] = CharField(max_length=50, required=False)
+			self.fields[i + ' Int Val'].label = "Value of Int " + i
+			self.fields[i + ' Int Val'].help_text = "words"
+		for i, field in enumerate(float_fields):
+			i = str(i)
+			self.fields[i + ' Float Choice'] = ChoiceField(choices=self.FLOAT_FIELD_CHOICES, required=False)
+			self.fields[i + ' Float Choice'].label = 'Float ' + i
+			self.fields[i + ' Float Choice'].help_text = "pick your favorite brand of Column"
+			self.fields[i + ' Float Op'] = ChoiceField(choices=self.OPERATORS, required=False)
+			self.fields[i + ' Float Op'].label = 'Operator on Float ' + i
+			self.fields[i + ' Float Op'].help_text = "pick your favorite flavor of Column"
+			self.fields[i + ' Float Val'] = CharField(max_length=50, required=False)
+			self.fields[i + ' Float Val'].label = "Value of Float " + i
+			self.fields[i + ' Float Val'].help_text = "words"
+		for i, field in enumerate(char_fields):
+			i = str(i)
+			self.fields[i + ' Char Choice'] = ChoiceField(choices=self.CHAR_FIELD_CHOICES, required=False)
+			self.fields[i + ' Char Choice'].label = "Char " + i
+			self.fields[i + ' Char Choice'].help_text = "pick your favorite brand of Column"
+			self.fields[i + ' Char Op'] = ChoiceField(choices=self.OPERATORS, required=False)
+			self.fields[i + ' Char Op'].label = "Operator on Char " + i
+			self.fields[i + ' Char Op'].help_text = "pick your favorite flavor of Column"
+			self.fields[i + ' Char Val'] = CharField(max_length=50, required=False)
+			self.fields[i + ' Char Val'].label = "Value of Char " + i
+			self.fields[i + ' Char Val'].help_text = "words"
+		for field in related_fields:
+			name = field.name
+			model = field.related.parent_model
+			self.fields[name] = ModelMultipleChoiceField(queryset=model.objects.all(), required=False)
+			self.fields[name].label = "Relation: " + name
+			self.fields[name].help_text = field.help_text
+		for i, field in enumerate(bool_fields):
+			i = str(i)
+			self.fields[i + ' Bool Choice'] = ChoiceField(choices=self.BOOL_FIELD_CHOICES, required=False)
+			self.fields[i + ' Bool Choice'].label = "Bool Choice " + i
+			self.fields[i + ' Bool Choice'].help_text = "Choose a Boolean field to filter."
+			self.fields[i + ' Bool Val'] = NullBooleanField(required=False)
+			self.fields[i + ' Bool Val'].label = "Bool Field " + i
+			self.fields[i + ' Bool Val'].help_text = "Choose how to filter the Boolean field"
+
+
+
+
+	def q_builder(self):
+		from django.db.models import Q
+		# Welcome to the Crazy-town Q factory
+		if self.is_valid(): # hooray, we have a valid form!
+			data = self.cleaned_data # grab the spiffy data
+			q_object = Q() # create an empty Q object, which we will populate with the spiffy data
+			for field in self.fields: # fields is a list of the column _!objects!_ in the model
+				name = field # but the form uses the field names in cleaned_data
+				if 'Op ' in name or 'Val ' in name:
+					continue # we don't actually care about operator/value fields by themselves
+				if data[name] is None or str(data[name]) is "": # ignore empty data.  django doesn't let you query/filter empty strings.  IE: filter(column_name='') will error out.
+					# the str() is a hack because u"" != "".  Feels safer to convert to the test that to assume it's unicode
+					continue
+
+				_index, _type, _choice = name.split(' ')
+
+
+
+
+
+
+				# this cleaned data has info!
+				if True:
+					q_dict = {name + data[name+"_operator"]: data[name]} # then we have to build the funky dictionary entry to join 'column_name' and '__operator'
+					q_object = q_object & Q(**q_dict) # and then we AND this fresh-build query with any previous queries built
+				else: # but wait, there's more!
+					if data[name] is True or data[name] is False: # Ah-hah!  We have a boolean field!
+						q_dict = {name: data[name]} # create a dict() that looks like {column_name: False}
+						q_object = q_object & Q(**q_dict) # unpack the dict() into a Q(), then AND this with the other fields
+					else: # the field is not empty, not a boolean, and does not have an operator
+						# This means it's a related field!!
+						related_q = Q() # create an _different_ Q object, because related objects are first OR'd together, then AND'd with the other fields
+						for datum in data[name]: # so for every related object selected
+							q_dict = {name: datum} # create the funky Q object dictionary (which we immediately unpack -.-)
+							related_q = related_q | Q(**q_dict) # or the related Q objects together
+						q_object = q_object & related_q # and then finally AND the related field Q objects with the other fields
+			# BAM!  Return that sexy Q object
+			return q_object # but only if .is_valid()
