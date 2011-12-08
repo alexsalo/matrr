@@ -1486,8 +1486,10 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 				parameters['to_date'] = str(_to)
 
 		if m2de.count():
+			from utils.plotting import MONKEY_PLOTS
+			title = "%s for monkey %s" % (MONKEY_PLOTS[method_name][1], subject)
 			parameters = str(parameters)
-			matrr_image, is_new = MonkeyImage.objects.get_or_create(monkey=subject, method=method_name, title='sweet title', parameters=parameters)
+			matrr_image, is_new = MonkeyImage.objects.get_or_create(monkey=subject, method=method_name, title=title, parameters=parameters)
 			if is_new:
 				matrr_image.save()
 		else:
@@ -1519,8 +1521,10 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 			parameters['to_date:'] = str(_to)
 
 		if m2de.count():
+			from utils.plotting import COHORT_PLOTS
+			title = "%s for cohort %s" % (COHORT_PLOTS[method_name][1], subject)
 			parameters = str(parameters)
-			matrr_image, is_new = CohortImage.objects.get_or_create(cohort=subject, method=method_name, title='sweet title', parameters=parameters)
+			matrr_image, is_new = CohortImage.objects.get_or_create(cohort=subject, method=method_name, title=title, parameters=parameters)
 			if is_new:
 				matrr_image.save()
 

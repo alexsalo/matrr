@@ -768,7 +768,6 @@ class MonkeyImage(MATRRImage):
 		db_table = 'mig_monkey_image'
 
 
-
 #  This model breaks MATRR field name scheme
 class CohortImage(MATRRImage):
 	cig_id = models.AutoField(primary_key=True)
