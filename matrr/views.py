@@ -1593,10 +1593,11 @@ def sendfile(request, id):
 
 def test_view(request):
 	monkeys = ''
-	field_names = ["mky_id", 'mky_drinking', 'mky_weight', 'mky_gender',]
-	fields = [Monkey._meta.get_field(field) for field in field_names]
+#	field_names = ["mky_id", 'mky_drinking', 'mky_weight', 'mky_gender',]
+#	fields = [Monkey._meta.get_field(field) for field in field_names]
+	fields = Monkey._meta.fields
 	if request.POST:
-		spiffy_form = SpiffyForm(fields, data=request.POST)
+		spiffy_form = FancyForm(fields, data=request.POST)
 
 
 		#this shit is crazytown
@@ -1604,7 +1605,7 @@ def test_view(request):
 			q_object = spiffy_form.crazy_town_q_builder()
 			monkeys = Monkey.objects.filter(q_object)
 	else:
-		spiffy_form = SpiffyForm(fields)
+		spiffy_form = FancyForm(fields)
 	return render_to_response('test.html', {'spiffy_form': spiffy_form, 'monkeys': monkeys}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('auth.upload_raw_data'), login_url='/denied/')
