@@ -456,6 +456,7 @@ class FancyForm(Form):
 	def __init__(self, list_of_model_fields, *args, **kwargs):
 		from django.db.models import fields
 		super(FancyForm, self).__init__(*args, **kwargs)
+		self.fields.clear()
 		integers = (fields.IntegerField, fields.AutoField, fields.BigIntegerField, fields.PositiveIntegerField, fields.PositiveSmallIntegerField, fields.SmallIntegerField)
 		related = (fields.related.ForeignKey, fields.related.ManyToManyRel)
 		dates = (fields.DateTimeField, fields.DateField)
@@ -495,45 +496,46 @@ class FancyForm(Form):
 
 		for i, field in enumerate(int_fields):
 			i = str(i).zfill(3)
-			self.fields[i + ' Int Choice'] = ChoiceField(choices=self.INT_FIELD_CHOICES, required=False)
-			self.fields[i + ' Int Choice'].label = "Int " + i
-			self.fields[i + ' Int Choice'].help_text = "pick your favorite brand of Column"
-			self.fields[i + ' Int Op'] = ChoiceField(choices=self.OPERATORS, required=False)
-			self.fields[i + ' Int Op'].label = 'Operator on Int ' + i
-			self.fields[i + ' Int Op'].help_text = "pick your favorite flavor of Column"
-			self.fields[i + ' Int Val'] = CharField(max_length=50, required=False)
-			self.fields[i + ' Int Val'].label = "Value of Int " + i
-			self.fields[i + ' Int Val'].help_text = "words"
+			self.fields[i + ' Num-Int Choice'] = ChoiceField(choices=self.INT_FIELD_CHOICES, required=False)
+			self.fields[i + ' Num-Int Choice'].label = "Int " + i
+			self.fields[i + ' Num-Int Choice'].help_text = "pick your favorite brand of Column"
+			self.fields[i + ' Num-Int Op'] = ChoiceField(choices=self.NUMERIC_OPERATORS, required=False)
+			self.fields[i + ' Num-Int Op'].label = 'Operator on Int ' + i
+			self.fields[i + ' Num-Int Op'].help_text = "pick your favorite flavor of Column"
+			self.fields[i + ' Num-Int Val'] = CharField(max_length=50, required=False)
+			self.fields[i + ' Num-Int Val'].label = "Value of Int " + i
+			self.fields[i + ' Num-Int Val'].help_text = "words"
 		for i, field in enumerate(float_fields):
-			i = str(i)
-			self.fields[i + ' Float Choice'] = ChoiceField(choices=self.FLOAT_FIELD_CHOICES, required=False)
-			self.fields[i + ' Float Choice'].label = 'Float ' + i
-			self.fields[i + ' Float Choice'].help_text = "pick your favorite brand of Column"
-			self.fields[i + ' Float Op'] = ChoiceField(choices=self.OPERATORS, required=False)
-			self.fields[i + ' Float Op'].label = 'Operator on Float ' + i
-			self.fields[i + ' Float Op'].help_text = "pick your favorite flavor of Column"
-			self.fields[i + ' Float Val'] = CharField(max_length=50, required=False)
-			self.fields[i + ' Float Val'].label = "Value of Float " + i
-			self.fields[i + ' Float Val'].help_text = "words"
+			i = str(i).zfill(3)
+			self.fields[i + ' Num-Float Choice'] = ChoiceField(choices=self.FLOAT_FIELD_CHOICES, required=False)
+			self.fields[i + ' Num-Float Choice'].label = 'Float ' + i
+			self.fields[i + ' Num-Float Choice'].help_text = "pick your favorite brand of Column"
+			self.fields[i + ' Num-Float Op'] = ChoiceField(choices=self.NUMERIC_OPERATORS, required=False)
+			self.fields[i + ' Num-Float Op'].label = 'Operator on Float ' + i
+			self.fields[i + ' Num-Float Op'].help_text = "pick your favorite flavor of Column"
+			self.fields[i + ' Num-Float Val'] = CharField(max_length=50, required=False)
+			self.fields[i + ' Num-Float Val'].label = "Value of Float " + i
+			self.fields[i + ' Num-Float Val'].help_text = "words"
 		for i, field in enumerate(char_fields):
-			i = str(i)
+			i = str(i).zfill(3)
 			self.fields[i + ' Char Choice'] = ChoiceField(choices=self.CHAR_FIELD_CHOICES, required=False)
 			self.fields[i + ' Char Choice'].label = "Char " + i
 			self.fields[i + ' Char Choice'].help_text = "pick your favorite brand of Column"
-			self.fields[i + ' Char Op'] = ChoiceField(choices=self.OPERATORS, required=False)
+			self.fields[i + ' Char Op'] = ChoiceField(choices=self.CHAR_OPERATORS, required=False)
 			self.fields[i + ' Char Op'].label = "Operator on Char " + i
 			self.fields[i + ' Char Op'].help_text = "pick your favorite flavor of Column"
 			self.fields[i + ' Char Val'] = CharField(max_length=50, required=False)
 			self.fields[i + ' Char Val'].label = "Value of Char " + i
 			self.fields[i + ' Char Val'].help_text = "words"
-		for field in related_fields:
+		for i, field in enumerate(related_fields):
+			i = str(i).zfill(3)
 			name = field.name
 			model = field.related.parent_model
-			self.fields[name] = ModelMultipleChoiceField(queryset=model.objects.all(), required=False)
-			self.fields[name].label = "Relation: " + name
-			self.fields[name].help_text = field.help_text
+			self.fields[i + ' Related'] = ModelMultipleChoiceField(queryset=model.objects.all(), required=False)
+			self.fields[i + ' Related'].label = "Relation: " + name
+			self.fields[i + ' Related'].help_text = field.help_text
 		for i, field in enumerate(bool_fields):
-			i = str(i)
+			i = str(i).zfill(3)
 			self.fields[i + ' Bool Choice'] = ChoiceField(choices=self.BOOL_FIELD_CHOICES, required=False)
 			self.fields[i + ' Bool Choice'].label = "Bool Choice " + i
 			self.fields[i + ' Bool Choice'].help_text = "Choose a Boolean field to filter."
