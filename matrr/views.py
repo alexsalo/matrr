@@ -831,24 +831,25 @@ def order_edit_tissue(request, req_rtt_id):
 																		'tissue_type': rtt.get_tissue(),
 																		'cart_item': rtt, },
 										  context_instance=RequestContext(request))
-
-def experimental_plan_view(request, plan):
-	# create the response
-	response = HttpResponse(mimetype='application/force-download')
-	response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(plan)
-	response['X-Sendfile'] = smart_str(settings.MEDIA_ROOT + 'media/experimental_plans/' + plan)
-
-	# serve the file if the user is a committee member or Uberuser
-	if request.user.groups.filter(name='Committee').count() != 0 or\
-	   request.user.groups.filter(name='Uberuser').count() != 0:
-		return response
-
-	# check that the plan belongs to the user
-	if Request.objects.filter(user=request.user, req_experimental_plan='experimental_plans/' + plan).count() > 0:
-		return response
-
-	#otherwise return a 404 error
-	raise Http404('This page does not exist.')
+				
+# this should be no more necessary, if we find some place, where this is being used, we should replace it be sendfile view
+#def experimental_plan_view(request, plan):
+#	# create the response
+#	response = HttpResponse(mimetype='application/force-download')
+#	response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(plan)
+#	response['X-Sendfile'] = smart_str(settings.MEDIA_ROOT + 'media/experimental_plans/' + plan)
+#
+#	# serve the file if the user is a committee member or Uberuser
+#	if request.user.groups.filter(name='Committee').count() != 0 or\
+#	   request.user.groups.filter(name='Uberuser').count() != 0:
+#		return response
+#
+#	# check that the plan belongs to the user
+#	if Request.objects.filter(user=request.user, req_experimental_plan='experimental_plans/' + plan).count() > 0:
+#		return response
+#
+#	#otherwise return a 404 error
+#	raise Http404('This page does not exist.')
 
 
 def tissue_shop_landing_view(request,  cohort_id):
@@ -1061,8 +1062,11 @@ def search_index(terms, index, model):
 	results = search.query(terms)
 	final_results = list()
 
+	
 	for result in results:
 		final_results.append(model.objects.get(pk=result['id']))
+
+
 
 	return final_results
 
@@ -1082,9 +1086,7 @@ def search(request):
 		if form.is_valid():
 			terms = form.cleaned_data['terms']
 
-			if request.user.groups.filter(name='Tech User').count() != 0 or\
-			   request.user.groups.filter(name='Committee').count() != 0 or\
-			   request.user.groups.filter(name='Uberuser').count() != 0:
+			if request.user.has_perm('monkey_view_confidential'):
 				user_auth = True
 				results['monkeys'] = search_index(terms, SEARCH_INDEXES['monkey_auth'], Monkey)
 			else:
