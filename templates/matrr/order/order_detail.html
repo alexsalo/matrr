@@ -67,7 +67,7 @@
 	<div style='margin-top: 20px;'>
 		<div class='headline'>Requested Tissues</div>
 		{% for item in order.tissue_request_set.all %}
-			{% include 'matrr/order_item_detail.html' %}
+			{% include 'matrr/order/order_item_detail.html' %}
 		{% endfor %}
 		</table>
 	</div>
