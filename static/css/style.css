@@ -217,6 +217,10 @@ table.common th {
     background: #D8D8CB;
     color: #4E4E4E;
 }
+table.common_center th {
+    background: #D8D8CB;
+    color: #4E4E4E;
+}
 
 table.common td {
     color: inherit;
