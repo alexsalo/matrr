@@ -401,7 +401,7 @@ table.clear tr {
     border-width: 2px;
     -moz-box-shadow: 1px #999;
     -webkit-box-shadow: 1px #999;
-    position: relative;
+  /*  position: relative; */
     cursor: pointer;
 }
 
