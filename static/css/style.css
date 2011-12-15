@@ -61,7 +61,7 @@ body {
     color: #FAF9ED;
     padding: .2em .8em;
     text-decoration: none;
-    float: left;
+    float: center;
 }
 
 #nav a:hover,
@@ -85,7 +85,7 @@ body {
 
 .nav ul:hover .drop-down {
     display: block;
-    min-width: 100%;
+    width: 100%;
     /*position: absolute;*/
 }
 
