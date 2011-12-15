@@ -769,7 +769,7 @@ def order_revise(request, req_request_id):
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_duplicate(request, req_request_id):
 	req = Request.objects.get(req_request_id=req_request_id)
-	if not req.can_be_revised():
+	if not req.can_be_revised() or not request.POST or request.POST['submit'] != "duplicate":
 		raise Http404('This page does not exist.')
 	req.create_revised_duplicate()
 	messages.success(request, 'A new editable copy has been created. You can find it under Revised Orders.')
@@ -786,7 +786,7 @@ def order_edit(request, req_request_id):
 @user_owner_test(lambda u, rtt_id: u == TissueRequest.objects.get(rtt_tissue_request_id=rtt_id).req_request.user, arg_name='req_rtt_id', redirect_url='/denied/')
 def order_delete_tissue(request, req_rtt_id):
 	rtt = TissueRequest.objects.get(rtt_tissue_request_id=req_rtt_id)
-	if not rtt.req_request.can_be_edited():
+	if not rtt.req_request.can_be_edited() or not request.POST or request.POST['submit'] != "delete":
 		raise Http404('This page does not exist.')
 	rtt.delete()
 	messages.success(request, 'Tissue request deleted.')
