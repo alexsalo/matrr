@@ -409,6 +409,7 @@ def rud_upload(request):
 		},
 							  context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.add_cohortdata'), login_url='/denied/')
 def cod_upload(request, coh_id=1):
 	if request.method == 'POST':
 		form = CodForm(request.POST, request.FILES)
