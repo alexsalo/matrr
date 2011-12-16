@@ -112,7 +112,7 @@
 
 	{% if monkeys %}
 		<div class=clearfix></div>
-		<div class=headline>Results</div>
+		<div class=headline>Results: {{ monkeys.count }}</div>
 		{% for monkey in monkeys %}
 			{{ monkey }}
 		{% endfor %}

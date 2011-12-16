@@ -534,6 +534,10 @@ class FilterForm(Form):
 			self.fields[i + ' Num-Int Value'] = CharField(max_length=50, required=False)
 			self.fields[i + ' Num-Int Value'].label = "Integer %s Value" % i
 			self.fields[i + ' Num-Int Value'].help_text = "Enter a whole-number value to filter the chosen field."
+			self.fields[i + ' Num-Int Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+																										   choices=(('AND','AND'),('OR','OR')) ),initial="AND" )
+			self.fields[i + ' Num-Int Logical'].label = "Integer %s Combine" % i
+			self.fields[i + ' Num-Int Logical'].help_text = "AND this field with the other or OR them together."
 		for i, field in enumerate(float_fields, 1):
 			if i > number_of_fields: break
 			i = str(i)
@@ -546,6 +550,10 @@ class FilterForm(Form):
 			self.fields[i + ' Num-Float Value'] = CharField(max_length=50, required=False)
 			self.fields[i + ' Num-Float Value'].label = "Float %s.0 Value" % i
 			self.fields[i + ' Num-Float Value'].help_text = "Enter a float value to filter the chosen field."
+			self.fields[i + ' Num-Float Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+																											 choices=(('AND','AND'),('OR','OR')) ),initial="AND" )
+			self.fields[i + ' Num-Float Logical'].label = "Float %s Combine" % i
+			self.fields[i + ' Num-Float Logical'].help_text = "AND this field with the other or OR them together."
 		for i, field in enumerate(char_fields, 1):
 			if i > number_of_fields: break
 			i = str(i)
@@ -558,6 +566,10 @@ class FilterForm(Form):
 			self.fields[i + ' Char Value'] = CharField(max_length=50, required=False)
 			self.fields[i + ' Char Value'].label = "Char %s Value" % i
 			self.fields[i + ' Char Value'].help_text = "Enter text by which to filter the chosen field."
+			self.fields[i + ' Char Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+																										choices=(('AND','AND'),('OR','OR')) ),initial="AND" )
+			self.fields[i + ' Char Logical'].label = "Char %s Combine" % i
+			self.fields[i + ' Char Logical'].help_text = "AND this field with the other or OR them together."
 		for i, field in enumerate(bool_fields, 1):
 			if i > number_of_fields: break
 			i = str(i)
@@ -567,6 +579,10 @@ class FilterForm(Form):
 			self.fields[i + ' Bool Value'] = NullBooleanField(required=False) # NullBoolean is important, otherwise the user _must_ filter the bool field
 			self.fields[i + ' Bool Value'].label = "Bool %s Value" % i
 			self.fields[i + ' Bool Value'].help_text = "Choose how to filter the Boolean field"
+			self.fields[i + ' Bool Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+																										choices=(('AND','AND'),('OR','OR')) ),initial="AND" )
+			self.fields[i + ' Bool Logical'].label = "Bool %s Combine" % i
+			self.fields[i + ' Bool Logical'].help_text = "AND this field with the other or OR them together."
 		for i, field in enumerate(discrete_fields, 1):
 			i = str(i)
 			name = field.name
@@ -574,10 +590,14 @@ class FilterForm(Form):
 			choices.append(("", 'None')) # The empty choice let the choice fields be excluded from the filter on submit
 			self.fields[i + ' Discrete Choice'] = ChoiceField(choices=self.DISCRETE_FIELD_CHOICES, required=False)
 			self.fields[i + ' Discrete Choice'].label = "Discrete %s" % i
-			self.fields[i + ' Discrete Choice'].help_text = "Choose a Boolean field to filter."
+			self.fields[i + ' Discrete Choice'].help_text = "Choose a Discrete field to filter."
 			self.fields[i + ' Discrete Value'] = ChoiceField(choices=choices, required=False)
 			self.fields[i + ' Discrete Value'].label = "Discrete %s Value" % i
-			self.fields[i + ' Discrete Value'].help_text = "words"
+			self.fields[i + ' Discrete Value'].help_text = "Choose how to filter the Discrete field"
+			self.fields[i + ' Discrete Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+																											choices=(('AND','AND'),('OR','OR')) ),initial="AND" )
+			self.fields[i + ' Discrete Logical'].label = "Discrete %s Combine" % i
+			self.fields[i + ' Discrete Logical'].help_text = "AND this field with the other or OR them together."
 		for i, field in enumerate(related_fields, 1):
 			i = str(i)
 			name = field.name
@@ -586,6 +606,14 @@ class FilterForm(Form):
 			self.fields[i + ' Related Value'].label = "Relation: %s" % name
 			self.fields[i + ' Related Value'].help_text = field.help_text
 			self.fields[i + ' Related Value'].field_name = name
+			self.fields[i + ' Related extra-Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+																												 choices=(('AND','AND'),('OR','OR')) ),initial="AND" )
+			self.fields[i + ' Related extra-Logical'].label = "Discrete %s extra-Combine" % i
+			self.fields[i + ' Related extra-Logical'].help_text = "AND this field with the other fields or OR them together."
+			self.fields[i + ' Related intra-Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+																												 choices=(('AND','AND'),('OR','OR')) ),initial="OR" )
+			self.fields[i + ' Related intra-Logical'].label = "Discrete %s intra-Combine" % i
+			self.fields[i + ' Related intra-Logical'].help_text = "AND each related object together or OR them together."
 
 
 	def get_q_object(self):
@@ -604,25 +632,46 @@ class FilterForm(Form):
 					else: # this cleaned data has info!
 						if _category == 'Related':
 							related_q = Q() # create an _different_ Q object, because related objects are first OR'd together, then AND'd with the other fields
+							intraAND = data[_index + " " + _category + " intra-Logical"] == 'AND'
 							for datum in data[name]: # so for every related object selected
 								q_dict = {self.fields[name].field_name: datum} # create the dictionary which we immediately unpack into a Q object
-								related_q = related_q | Q(**q_dict) # OR the related Q objects together
-							q_object = q_object & related_q # and then finally AND the related field Q objects with the other fields
+								if intraAND:
+									related_q = related_q & Q(**q_dict) # OR the related Q objects together
+								else:
+									related_q = related_q | Q(**q_dict) # AND the related Q objects together
+
+							extraAND = data[_index + " " + _category + " extra-Logical"] == 'AND'
+							if extraAND:
+								q_object = q_object & related_q # and then finally AND the related field Q objects with the other fields
+							else:
+								q_object = q_object | related_q # and then finally OR the related field Q objects with the other fields
 						elif _category == 'Bool':
 							choice = data[_index + " " + _category + " Choice"]
 							q_dict = {choice: value} # create a dict() that looks like {column_name: False}
-							q_object = q_object & Q(**q_dict) # unpack the dict() into a Q(), then AND this with the other fields
+							logicalAND = data[_index + " " + _category + " Logical"] == 'AND'
+							if logicalAND:
+								q_object = q_object & Q(**q_dict) # unpack the dict() into a Q(), then AND this with the other fields
+							else:
+								q_object = q_object | Q(**q_dict) # unpack the dict() into a Q(), then OR this with the other fields
 						elif _category == 'Char' or "Num-" in _category:
 							choice = data[_index + " " + _category + " Choice"]
 							operator = data[_index + " " + _category + " Operator"]
 							filter = choice + operator
 							q_dict = {filter: value} # create a dict() that looks like {column_name__operator: user_entered_value}
-							q_object = q_object & Q(**q_dict) # unpack the dict() into a Q(), then AND this with the other fields
+							logicalAND = data[_index + " " + _category + " Logical"] == 'AND'
+							if logicalAND:
+								q_object = q_object & Q(**q_dict) # unpack the dict() into a Q(), then AND this with the other fields
+							else:
+								q_object = q_object | Q(**q_dict) # unpack the dict() into a Q(), then OR this with the other fields
 						elif _category == 'Discrete':
 							# you get the idea
 							choice = data[_index + " " + _category + " Choice"]
 							q_dict = {choice: value}
-							q_object = q_object & Q(**q_dict)
+							logicalAND = data[_index + " " + _category + " Logical"] == 'AND'
+							if logicalAND:
+								q_object = q_object & Q(**q_dict) # unpack the dict() into a Q(), then AND this with the other fields
+							else:
+								q_object = q_object | Q(**q_dict) # unpack the dict() into a Q(), then OR this with the other fields
 						else:
 							print 'some field i didnt account for in the q builder, but i added in init'
 			return q_object # BAM!  Return that sexy Q object
