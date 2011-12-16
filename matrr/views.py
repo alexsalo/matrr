@@ -501,8 +501,7 @@ def account_shipping(request):
 
 
 def account_view(request):
-	return account_detail_view(request, request.user.id)
-
+	return account_detail_view(request=request, user_id=request.user.id)
 
 def account_detail_view(request, user_id):
 	if request.user.id == user_id:
@@ -511,7 +510,7 @@ def account_detail_view(request, user_id):
 		edit = False
 	# get information from the act_account relation
 	
-	account_info = Account.objects.get(user__id=user_id)
+	account_info = get_object_or_404(Account, pk=user_id)
 	mta_info = Mta.objects.filter(user__id=user_id)
 	display_rud_from = date.today() - timedelta(days=30)
 	urge_rud_from = date.today() - timedelta(days=90)
