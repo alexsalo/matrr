@@ -6,7 +6,7 @@ path = os.path.dirname(os.path.realpath(__file__))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
-SEARCH_INDEXES = {'monkey':"t_monkey", 'monkey_auth':"t_monkey_auth", 'cohort':"t_cohort"}
+SEARCH_INDEXES = {'monkey':"d_monkey", 'monkey_auth':"d_monkey_auth", 'cohort':"d_cohort"}
 
 DATABASES = {
 		'default': {

@@ -734,7 +734,7 @@ def orders_list(request):
 		order_list = paginator.page(paginator.num_pages)
 		
 
-	return render_to_response('matrr/orders.html',
+	return render_to_response('matrr/order/orders.html',
 			{'order_list': order_list, 'revised':revised,
 			 },
 							  context_instance=RequestContext(request))
@@ -750,7 +750,7 @@ def order_detail(request, req_request_id, edit=False):
 	
 	eval = req_request.is_evaluated()
 	
-	return render_to_response('matrr/order_detail.html',
+	return render_to_response('matrr/order/order_detail.html',
 			{'order': req_request,
 			 'Acceptance': Acceptance,
 			 'shipped': req_request.is_shipped(),
@@ -764,12 +764,12 @@ def order_revise(request, req_request_id):
 	req = Request.objects.get(req_request_id=req_request_id)
 	if not req.can_be_revised():
 		raise Http404('This page does not exist.')
-	return render_to_response('matrr/order_revise.html', {'req_id': req_request_id},context_instance=RequestContext(request))
+	return render_to_response('matrr/order/order_revise.html', {'req_id': req_request_id},context_instance=RequestContext(request))
 	
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_duplicate(request, req_request_id):
 	req = Request.objects.get(req_request_id=req_request_id)
-	if not req.can_be_revised():
+	if not req.can_be_revised() or not request.POST or request.POST['submit'] != "duplicate":
 		raise Http404('This page does not exist.')
 	req.create_revised_duplicate()
 	messages.success(request, 'A new editable copy has been created. You can find it under Revised Orders.')
@@ -786,7 +786,7 @@ def order_edit(request, req_request_id):
 @user_owner_test(lambda u, rtt_id: u == TissueRequest.objects.get(rtt_tissue_request_id=rtt_id).req_request.user, arg_name='req_rtt_id', redirect_url='/denied/')
 def order_delete_tissue(request, req_rtt_id):
 	rtt = TissueRequest.objects.get(rtt_tissue_request_id=req_rtt_id)
-	if not rtt.req_request.can_be_edited():
+	if not rtt.req_request.can_be_edited() or not request.POST or request.POST['submit'] != "delete":
 		raise Http404('This page does not exist.')
 	rtt.delete()
 	messages.success(request, 'Tissue request deleted.')
@@ -803,7 +803,7 @@ def order_edit_tissue(request, req_rtt_id):
 		tissue_request_form = TissueRequestForm(instance=rtt,
 												req_request=rtt.req_request,
 												tissue=rtt.get_tissue())
-		return render_to_response('matrr/orders_tissue_edit.html', {'form': tissue_request_form,
+		return render_to_response('matrr/order/orders_tissue_edit.html', {'form': tissue_request_form,
 																'cohort': rtt.req_request.cohort,
 																'tissue': rtt.get_tissue(),
 																'cart_item': rtt, },
@@ -826,29 +826,30 @@ def order_edit_tissue(request, req_rtt_id):
 				messages.success(request, 'Tissue request updated.')
 				return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id,]))
 			else:
-				return render_to_response('matrr/orders_tissue_edit.html', {'form': tissue_request_form,
+				return render_to_response('matrr/order/orders_tissue_edit.html', {'form': tissue_request_form,
 																		'cohort': rtt.req_request.cohort,
 																		'tissue_type': rtt.get_tissue(),
 																		'cart_item': rtt, },
 										  context_instance=RequestContext(request))
-
-def experimental_plan_view(request, plan):
-	# create the response
-	response = HttpResponse(mimetype='application/force-download')
-	response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(plan)
-	response['X-Sendfile'] = smart_str(settings.MEDIA_ROOT + 'media/experimental_plans/' + plan)
-
-	# serve the file if the user is a committee member or Uberuser
-	if request.user.groups.filter(name='Committee').count() != 0 or\
-	   request.user.groups.filter(name='Uberuser').count() != 0:
-		return response
-
-	# check that the plan belongs to the user
-	if Request.objects.filter(user=request.user, req_experimental_plan='experimental_plans/' + plan).count() > 0:
-		return response
-
-	#otherwise return a 404 error
-	raise Http404('This page does not exist.')
+				
+# this should be no more necessary, if we find some place, where this is being used, we should replace it be sendfile view
+#def experimental_plan_view(request, plan):
+#	# create the response
+#	response = HttpResponse(mimetype='application/force-download')
+#	response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(plan)
+#	response['X-Sendfile'] = smart_str(settings.MEDIA_ROOT + 'media/experimental_plans/' + plan)
+#
+#	# serve the file if the user is a committee member or Uberuser
+#	if request.user.groups.filter(name='Committee').count() != 0 or\
+#	   request.user.groups.filter(name='Uberuser').count() != 0:
+#		return response
+#
+#	# check that the plan belongs to the user
+#	if Request.objects.filter(user=request.user, req_experimental_plan='experimental_plans/' + plan).count() > 0:
+#		return response
+#
+#	#otherwise return a 404 error
+#	raise Http404('This page does not exist.')
 
 
 def tissue_shop_landing_view(request,  cohort_id):
@@ -1061,8 +1062,11 @@ def search_index(terms, index, model):
 	results = search.query(terms)
 	final_results = list()
 
+	
 	for result in results:
 		final_results.append(model.objects.get(pk=result['id']))
+
+
 
 	return final_results
 
@@ -1082,9 +1086,7 @@ def search(request):
 		if form.is_valid():
 			terms = form.cleaned_data['terms']
 
-			if request.user.groups.filter(name='Tech User').count() != 0 or\
-			   request.user.groups.filter(name='Committee').count() != 0 or\
-			   request.user.groups.filter(name='Uberuser').count() != 0:
+			if request.user.has_perm('monkey_view_confidential'):
 				user_auth = True
 				results['monkeys'] = search_index(terms, SEARCH_INDEXES['monkey_auth'], Monkey)
 			else:
@@ -1176,7 +1178,7 @@ def order_delete(request, req_request_id):
 			messages.info(request, 'The order was not deleted.')
 		return redirect(reverse('order-list'))
 	else:
-		return render_to_response('matrr/order_delete.html',
+		return render_to_response('matrr/order/order_delete.html',
 				{'order': req_request,
 				 'Acceptance': Acceptance,
 				 'edit': edit },
