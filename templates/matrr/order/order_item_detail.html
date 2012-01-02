@@ -39,7 +39,7 @@
       {% if item.get_accepted == Acceptance.Rejected %}
         <th colspan='6' style='color: red;'>This tissue request was rejected.</th>
       {% else %}
-        <th colspan='6' style='color: blue;'>This tissue request was partially accepted.</th>
+        <th colspan='6' style='color: orange;'>This tissue request was partially accepted.</th>
       {% endif %}
     {% endif %}
     {% if item.get_accepted != Acceptance.Partially_Accepted %}

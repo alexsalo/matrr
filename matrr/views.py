@@ -753,6 +753,7 @@ def order_detail(request, req_request_id, edit=False):
 	return render_to_response('matrr/order/order_detail.html',
 			{'order': req_request,
 			 'Acceptance': Acceptance,
+			 'RequestStatus': RequestStatus,
 			 'shipped': req_request.is_shipped(),
 			 'after_submitted': eval,
 			 'edit': edit,
