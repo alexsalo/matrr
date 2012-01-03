@@ -1222,7 +1222,7 @@ def tissue_verification(request):
 	requests = Request.objects.filter(req_request_id__in=request_ids)
 #	print requests
 	requestless_count = TissueInventoryVerification.objects.filter(tissue_request=None).count()
-	return render_to_response('matrr/verification_request_list.html',
+	return render_to_response('matrr/verification/verification_request_list.html',
 							{
 							'requests': requests,
 							'requestless_count': requestless_count,
@@ -1303,7 +1303,7 @@ def tissue_verification_list(request, req_request_id):
 					   'req_request': req_request,}
 		initial[len(initial):] = [tiv_initial]
 	formset = TissueVerificationFormSet(initial=initial)
-	return render_to_response('matrr/verification_list.html', {"formset": formset, "req_id": req_request_id}, context_instance=RequestContext(request))
+	return render_to_response('matrr/verification/verification_list.html', {"formset": formset, "req_id": req_request_id}, context_instance=RequestContext(request))
 
 def tissue_verification_detail(request, req_request_id, tiv_id):
 	tiv = TissueInventoryVerification.objects.get(pk=tiv_id)
@@ -1355,7 +1355,7 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 				   'amount': amount,
 				   'req_request': req_request,}
 	tivform = TissueInventoryVerificationForm(initial=tiv_initial)
-	return render_to_response('matrr/verification_detail.html', {"tivform": tivform, "req_id": req_request_id}, context_instance=RequestContext(request))
+	return render_to_response('matrr/verification/verification_detail.html', {"tivform": tivform, "req_id": req_request_id}, context_instance=RequestContext(request))
 
 
 ####################
