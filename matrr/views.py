@@ -457,7 +457,7 @@ def account_info(request):
 	else:
 		#create the form for shipping address
 		form = AccountForm(instance=request.user.account)
-	return render_to_response('matrr/account_info_form.html',
+	return render_to_response('matrr/account/account_info_form.html',
 			{'form': form,
 			 'user': request.user
 		},
@@ -475,7 +475,7 @@ def account_address(request):
 	else:
 		#create the form for shipping address
 		form = AddressAccountForm(instance=request.user.account)
-	return render_to_response('matrr/account_address_form.html',
+	return render_to_response('matrr/account/account_address_form.html',
 			{'form': form,
 			 'user': request.user
 		},
@@ -493,7 +493,7 @@ def account_shipping(request):
 	else:
 		#create the form for shipping address
 		form = ShippingAccountForm(instance=request.user.account)
-	return render_to_response('matrr/account_shipping_form.html',
+	return render_to_response('matrr/account/account_shipping_form.html',
 			{'form': form,
 			 'user': request.user
 		},
@@ -528,7 +528,7 @@ def account_detail_view(request, user_id):
 
 	order_list = Request.objects.processed().filter(user__id=user_id).order_by("-req_request_date")[:20]
 
-	return render_to_response('matrr/account.html',
+	return render_to_response('matrr/account/account.html',
 			{'account_info': account_info,
 			 'mta_info': mta_info,
 			 'rud_info': rud_info,
