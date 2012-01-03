@@ -271,7 +271,7 @@ class RudForm(ModelForm):
 	def __init__(self, user, *args, **kwargs):
 		super(RudForm, self).__init__(*args, **kwargs)
 		upload_from = date.today() - timedelta(days=30)
-		self.fields['request'].queryset = Request.objects.filter(user=user, request_status__rqs_status_name='Shipped', shipment__shp_shipment_date__lte=upload_from)
+		self.fields['request'].queryset = Request.objects.filter(user=user, req_status=RequestStatus.Shipped, shipment__shp_shipment_date__lte=upload_from)
 	
 	class Meta:
 		model = ResearchUpdate
