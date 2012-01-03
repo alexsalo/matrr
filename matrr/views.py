@@ -387,7 +387,7 @@ def mta_upload(request):
 	else:
 		# create the form for the MTA upload
 		form = MtaForm(instance=mta_object)
-	return render_to_response('matrr/mta_upload_form.html',
+	return render_to_response('matrr/upload_forms/mta_upload_form.html',
 			{'form': form,
 			 'user': request.user
 		},
@@ -404,7 +404,7 @@ def rud_upload(request):
 	else:
 		# create the form for the MTA upload
 		form = RudForm(request.user)
-	return render_to_response('matrr/rud_upload_form.html',
+	return render_to_response('matrr/upload_forms/rud_upload_form.html',
 			{'form': form,
 		},
 							  context_instance=RequestContext(request))
@@ -421,7 +421,7 @@ def cod_upload(request, coh_id=1):
 	else:
 		cohort = Cohort.objects.get(pk=coh_id)
 		form = CodForm(cohort=cohort)
-	return render_to_response('matrr/cod_upload_form.html', {'form': form,}, context_instance=RequestContext(request))
+	return render_to_response('matrr/upload_forms/cod_upload_form.html', {'form': form,}, context_instance=RequestContext(request))
 
 @staff_member_required
 def account_verify(request, user_id):
@@ -1623,9 +1623,9 @@ def raw_data_upload(request):
 			for chunk in f.chunks():
 				destination.write(chunk)
 			destination.close()
-			return render_to_response('raw_data_upload.html', {'form': RawDataUploadForm(), 'success' : True}, context_instance=RequestContext(request))
+			return render_to_response('upload_forms/raw_data_upload.html', {'form': RawDataUploadForm(), 'success' : True}, context_instance=RequestContext(request))
 	else:
 		form = RawDataUploadForm()
-	return render_to_response('raw_data_upload.html', {'form': form}, context_instance=RequestContext(request))
+	return render_to_response('upload_forms/raw_data_upload.html', {'form': form}, context_instance=RequestContext(request))
 
 
