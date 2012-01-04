@@ -13,8 +13,8 @@ DATABASES = {
 			'ENGINE': 'django.db.backends.postgresql_psycopg2',
 			# Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
 			'NAME': 'matrr_development', # Or path to database file if using sqlite3.
-			'USER': 'matrr_prod', # Not used with sqlite3.
-			'PASSWORD': 'm0nk3y_1s_drUnK', # Not used with sqlite3.
+			'USER': 'matrr_develop', # Not used with sqlite3.
+			'PASSWORD': 'PsNvAMDt91', # Not used with sqlite3.
 			'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
 			#'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
 		}
