@@ -1219,7 +1219,7 @@ def order_checkout(request, req_request_id):
 def tissue_verification(request):
 	request_ids = TissueInventoryVerification.objects.values_list('tissue_request__req_request')
 #	print request_ids
-	requests = Request.objects.filter(req_request_id__in=request_ids)
+	requests = Request.objects.filter(req_request_id__in=request_ids).order_by('req_request_date')
 #	print requests
 	requestless_count = TissueInventoryVerification.objects.filter(tissue_request=None).count()
 	return render_to_response('matrr/verification/verification_request_list.html',
@@ -1268,7 +1268,7 @@ def tissue_verification_list(request, req_request_id):
 				if not 'Do not edit' in tiv.tiv_notes: # see TissueInventoryVerification.save() for details
 					tss.save()
 
-			return redirect('/verification')
+			messages.success(request, message="This page of tissues has been successfully updated.")
 		else:
 			messages.error(request, formset.errors)
 	# if request method != post and/or formset isNOT valid
@@ -1302,8 +1302,21 @@ def tissue_verification_list(request, req_request_id):
 					   'amount': amount,
 					   'req_request': req_request,}
 		initial[len(initial):] = [tiv_initial]
-	formset = TissueVerificationFormSet(initial=initial)
-	return render_to_response('matrr/verification/verification_list.html', {"formset": formset, "req_id": req_request_id}, context_instance=RequestContext(request))
+		
+	paginator = Paginator(initial, 30) # Show 25 contacts per page
+
+	page = request.GET.get('page')
+	try:
+		p_initial = paginator.page(page)
+	except EmptyPage:
+	# If page is out of range (e.g. 9999), deliver last page of results.
+		p_initial = paginator.page(paginator.num_pages)
+	except:
+	# If page is not an integer, deliver first page.
+		p_initial = paginator.page(1)	
+		
+	formset = TissueVerificationFormSet(initial=p_initial.object_list)
+	return render_to_response('matrr/verification/verification_list.html', {"formset": formset, "req_id": req_request_id, "paginator": p_initial}, context_instance=RequestContext(request))
 
 def tissue_verification_detail(request, req_request_id, tiv_id):
 	tiv = TissueInventoryVerification.objects.get(pk=tiv_id)

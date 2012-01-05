@@ -34,8 +34,8 @@
 					{# hack to add a tiny space between this table and the formset #}
 				</table>
 				<center>
-					<table>
-						<th>Tissue Details</th>
+					<table class="common_center" cellpadding='2' cellspacing='2'>
+						<th>Details</th>
 						<th>Monkey</th>
 						<th>Tissue</th>
 						<th>Requested</th>
@@ -60,18 +60,18 @@
 									</td>
 									</tr><tr style='padding: 4px'>
 								{% endif %}
-									<td width=135px><a href="{% url verification-detail req_id tiv.initial.primarykey %}">Edit tissue details</a></td>
-									<td width=115px align="center">{{ tiv.initial.monkey }}</td>
-									<td width=260px align="left">{{ tiv.initial.tissue }}</td>
+									<td ><a href="{% url verification-detail req_id tiv.initial.primarykey %}">Edit</a></td>
+									<td  align="center">{{ tiv.initial.monkey }}</td>
+									<td width="250px" align="left">{{ tiv.initial.tissue }}</td>
 									{% if tiv.initial.inventory == "Sufficient" %}
-										<td align="right" bgcolor="green">{{ tiv.initial.amount }}</td>
-										<td width=100px align=right>{{ tiv.inventory }}</td>
+										<td width="90px" align="right" bgcolor="green">{{ tiv.initial.amount }}</td>
+										<td  align=right>{{ tiv.inventory }}</td>
 									{% else %}{% if tiv.initial.inventory == "Insufficient" %}
-										<td align="right" bgcolor="#ff8c00">{{ tiv.initial.amount }}</td>
-										<td width=100px align=right>{{ tiv.inventory }}</td>
+										<td width="90px" align="right" bgcolor="#ff8c00">{{ tiv.initial.amount }}</td>
+										<td  align=right>{{ tiv.inventory }}</td>
 									{% else %}{% if tiv.initial.amount != "None" %}
-										<td align="right" bgcolor="#FFBABA">{{ tiv.initial.amount }}</td>
-										<td width=100px align=right>{{ tiv.inventory }}</td>
+										<td width="90px" align="right" bgcolor="#FFBABA">{{ tiv.initial.amount }}</td>
+										<td  align=right>{{ tiv.inventory }}</td>
 									{% else %}
 										<td align="right">Current Inventory</td>
 										<td style='width:50px;' align=right>{{ tiv.quantity }}</td>
@@ -82,8 +82,25 @@
 						{% endfor %}
 					</table>
 				</center>
-			</form>
-		{% endif %}
+		
+		<center>
+				<div class="pagination">
+					<span class="step-links">
+						{% if paginator.has_previous %}
+							<a href="?page={{ paginator.previous_page_number }}">previous</a>
+						{% endif %}
+
+						<span class="current">
+					Page {{ paginator.number }} of {{ paginator.paginator.num_pages }}.
+				</span>
+
+						{% if paginator.has_next %}
+							<a href="?page={{ paginator.next_page_number }}">next</a>
+						{% endif %}
+					</span>
+				</div>
+			</center>
+		
 		{% if formset.total_form_count >= 10 %}
 			<table style="width:100%;">
 				<tr>
@@ -96,6 +113,8 @@
 					<td align="center">	<a href='{% url verification-list-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
 				</tr>
 			</table>
+		{% endif %}
+			</form>
 		{% endif %}
 	</div>
 
