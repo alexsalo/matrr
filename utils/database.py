@@ -649,24 +649,36 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 		print "TissueTypes not added, missing Tissue Categories. Following categories are necessary: "
 		for cat in categories.itervalues():
 			print cat
-
+	
+	from matrr.models import TissueTypeSexRelevant
 	category_iter = categs.__iter__()
 	current_category = category_iter.next()
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line in read_data:
-			line = line.rstrip()
-			if line == "":
+			line = line.rsplit('%')
+			tst_name = line[0].rstrip()
+			if len(line) > 1:
+				tissueSexRelevant = line[1].strip()
+				if tissueSexRelevant not in TissueTypeSexRelevant.enum_dict.values():
+					tissueSexRelevant = TissueTypeSexRelevant.Both
+			else:
+				tissueSexRelevant = TissueTypeSexRelevant.Both
+			if tst_name == "":
 				current_category = category_iter.next()
 				continue
-			duplicates = TissueType.objects.filter(tst_tissue_name=line)
+			duplicates = TissueType.objects.filter(tst_tissue_name=tst_name)
 			existing = list()
+			wrong_sr = list()
 			name_duplicates_ids = list()
 			name_duplicates = list()
 			if len(duplicates) > 0:
 				for duplicate in duplicates:
 					if duplicate.category == current_category:
-						existing.append(duplicate.tst_type_id)
+						if duplicate.tst_sex_relevant == tissueSexRelevant:
+							existing.append(duplicate.tst_type_id)
+						else:
+							wrong_sr.append(duplicate)
 					else:
 						name_duplicates_ids.append(duplicate.tst_type_id)
 						name_duplicates.append(duplicate)
@@ -674,16 +686,23 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 				if delete_name_duplicates:
 					for name_duplicate in name_duplicates:
 						name_duplicate.delete()
-					print "Deleting name duplicates for tissue type " + line + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
+					print "Deleting name duplicates for tissue type " + tst_name + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
 				else:
-					print "Found name duplicates for tissue type " + line + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
+					print "Found name duplicates for tissue type " + tst_name + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
 
 			if len(existing) > 0:
-				print "Tissue type " + line + " already exists with correct category. Duplicate ids = " + `existing`
+				print "Tissue type " + tst_name + " already exists with correct category and sex relevant field. Duplicate ids = " + `existing`
 				continue
-
+			if len(wrong_sr) > 0:
+				for wsr in wrong_sr:
+					wsr.tst_sex_relevant = tissueSexRelevant
+					wsr.save()
+					print "Tissue type " + tst_name + " already exists with correct category but with wrong sex relevant field. Updating that filed for id = " + `wsr.tst_type_id`
+				continue
+			
 			tt = TissueType()
-			tt.tst_tissue_name = line
+			tt.tst_tissue_name = tst_name
+			tt.tst_sex_relevant = tissueSexRelevant
 			tt.category = current_category
 			tt.save()
 
