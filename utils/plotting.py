@@ -516,10 +516,10 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 
 	if not isinstance(monkey, Monkey):
 		try:
-			monkey = Monkey.objects.get(mky_id=monkey)
+			monkey = Monkey.objects.get(pk=monkey)
 		except Monkey.DoesNotExist:
 			try:
-				monkey = Monkey.objects.get(pk=monkey)
+				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
 				return False, 'NO MAP'
