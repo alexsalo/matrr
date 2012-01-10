@@ -1,0 +1,14 @@
+<div class="pagination">
+	<span class="step-links">
+		{% if object_list.has_previous %}
+			<a href="?page={{ object_list.previous_page_number }}">previous &lt;</a> 
+		{% endif %}
+
+		<span class="current">
+		Page {{ object_list.number }} of {{ object_list.paginator.num_pages }}{% if not object_list.has_next %}.{% endif %}
+		</span>
+		{% if object_list.has_next %}
+			<a href="?page={{ object_list.next_page_number }}"> &gt; next</a>
+		{% endif %}
+	</span>
+</div>

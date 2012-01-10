@@ -16,6 +16,12 @@ All Cohorts
 	<div id="headline">{% block content_title %}All Cohorts{% endblock %}</div>
 
 	{% if cohort_list %}
+				<br/>
+			<center>
+				{% load inclusion_tags %}
+				{% pagination cohort_list %}
+			</center>
+	
 		{% for cohort in cohort_list.object_list %}
 			<br/>
 			<div class="mini-headline">{{ cohort.coh_cohort_name }}</div>
@@ -72,21 +78,8 @@ All Cohorts
 			</div>
 		{% endfor %}
 			<center>
-				<div class="pagination">
-					<span class="step-links">
-						{% if cohort_list.has_previous %}
-							<a href="?page={{ cohort_list.previous_page_number }}">previous</a>
-						{% endif %}
-
-						<span class="current">
-					Page {{ cohort_list.number }} of {{ cohort_list.paginator.num_pages }}.
-				</span>
-
-						{% if cohort_list.has_next %}
-							<a href="?page={{ cohort_list.next_page_number }}">next</a>
-						{% endif %}
-					</span>
-				</div>
+				{% load inclusion_tags %}
+				{% pagination cohort_list %}
 			</center>
 		{% else %}
 		<div class='messages clearfix'>
