@@ -608,11 +608,11 @@ class FilterForm(Form):
 			self.fields[i + ' Related Value'].field_name = name
 			self.fields[i + ' Related extra-Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
 																												 choices=(('AND','AND'),('OR','OR')) ),initial="AND" )
-			self.fields[i + ' Related extra-Logical'].label = "Discrete %s extra-Combine" % i
+			self.fields[i + ' Related extra-Logical'].label = "Relation %s extra-Combine" % i
 			self.fields[i + ' Related extra-Logical'].help_text = "AND this field with the other fields or OR them together."
 			self.fields[i + ' Related intra-Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
 																												 choices=(('AND','AND'),('OR','OR')) ),initial="OR" )
-			self.fields[i + ' Related intra-Logical'].label = "Discrete %s intra-Combine" % i
+			self.fields[i + ' Related intra-Logical'].label = "Relation %s intra-Combine" % i
 			self.fields[i + ' Related intra-Logical'].help_text = "AND each related object together or OR them together."
 
 
