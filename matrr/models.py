@@ -289,6 +289,8 @@ class Monkey(models.Model):
 										help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
 	mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
 
+	mky_notes = models.CharField('Monkey Notes', null=True, blank=True, max_length=100,)
+
 	def __unicode__(self):
 		return str(self.mky_id)
 
@@ -847,20 +849,6 @@ class CohortImage(MATRRImage):
 #		db_table = 'big_brain_image'
 
 
-#class RequestStatus(models.Model):
-#	rqs_status_id = models.AutoField('ID', primary_key=True)
-#	rqs_status_name = models.CharField('Name', max_length=100, unique=True, null=False,
-#									   help_text='The name of the status.')
-#	rqs_status_description = models.TextField('Description', null=True,
-#											  help_text='The description of the status.')
-#
-#	def __unicode__(self):
-#		return self.rqs_status_name
-#
-#	class Meta:
-#		db_table = 'rqs_request_statuses'
-
-
 class TissueCategory(models.Model):
 	cat_id = models.AutoField('ID', primary_key=True)
 	cat_name = models.CharField('Name', max_length=100, unique=True, null=False,
@@ -939,66 +927,11 @@ class TissueType(models.Model):
 
 		return Availability.Unavailable
 
-### 90% sure i just broke this.  -jf, 8/29/2011
-	def get_availability(self, monkey):
-		availability = Availability.Unavailable
-		if monkey in self.unavailable_list.all():
-			return availability
-
-		# get the number of accepted, but not shipped, requests
-		requests = TissueRequest.objects.filter(tissue_type=self,
-												req_request__cohort=monkey.cohort,
-												req_request__request_status=
-												RequestStatus.objects.get(
-													rqs_status_name='Accepted'))
-		monkey_requests = list()
-		for request in requests.all():
-			# keep requests that include this monkey
-			if monkey in request.monkeys.all():
-				monkey_requests.append(request)
-
-		requested = len(monkey_requests)
-
-		if monkey.cohort.coh_upcoming:
-			# if there is a limit to the number of samples,
-			# check if that limit has been reached
-			if self.tst_count_per_monkey and (requested < self.tst_count_per_monkey):
-				availability = Availability.Available
-			elif self.tst_count_per_monkey is None:
-				availability = Availability.Available
-		else:
-			# the tissues have been harvested, so check the inventory
-
-			# get the number of tissues that have been harvested
-			harvested_samples = TissueSample.objects.filter(monkey=monkey,
-															tissue_type=self)
-			if len(harvested_samples) > 0:
-				# tissues have been harvested, so we should use the inventories to determine if
-				# the tissue is available.
-
-				# get the tissues of this type for this monkey
-				available_count = 0
-				for sample in harvested_samples:
-					available_count += sample.get_quantity()
-					# check if the amount of stock exceeds the number of approved requests
-				if requested < available_count:
-					# if it does, the tissue is available (and in stock)
-					availability = Availability.In_Stock
-			elif self.tst_count_per_monkey and (requested < self.tst_count_per_monkey):
-				# otherwise check if the limit has been reached
-				availability = Availability.Available
-			elif self.tst_count_per_monkey is None:
-				availability = Availability.Available
-
-		return availability
-
 	def get_pending_request_count(self, monkey):
-		return self.tissue_request_set.filter(\
-			req_request__req_status=RequestStatus.Submitted).count()
+		return self.tissue_request_set.filter(req_request__req_status=RequestStatus.Submitted).count()
 
 	def get_accepted_request_count(self, monkey):
-		return self.tissue_request_set.filter(\
-			req_request__req_status=RequestStatus.Accepted).count()
+		return self.tissue_request_set.filter(req_request__req_status=RequestStatus.Accepted).count()
 
 	class Meta:
 		db_table = 'tst_tissue_types'
