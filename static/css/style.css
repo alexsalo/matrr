@@ -791,4 +791,8 @@ a.tool-tip:hover span {
 	color: orange;
 }
 
+.current {
+    padding-left: 5px;
+    padding-right: 5px;
+}
 

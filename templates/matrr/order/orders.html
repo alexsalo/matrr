@@ -39,7 +39,7 @@ Orders
 
 
 {% if order_list.object_list|length > 0 %}
-<table class="common_center" cellpadding='4' cellspacing='2'>
+<table class="common_center" cellpadding='4' cellspacing='2' width="100%">
   <tr>
     <th>Cohort</th>
     <th>Date Placed</th>
@@ -69,24 +69,10 @@ Orders
 {% endif %}
 
 {% if order_list.object_list|length > 0 %}
-      <center>
-              <div class="pagination">
-                      <span class="step-links">
-                              {% if order_list.has_previous %}
-                                      <a href="?page={{ order_list.previous_page_number }}">previous</a>
-                              {% endif %}
-
-                              <span class="current">
-                      Page {{ order_list.number }} of {{ order_list.paginator.num_pages }}.
-              </span>
-
-                              {% if order_list.has_next %}
-                                      <a href="?page={{ order_list.next_page_number }}">next</a>
-                              {% endif %}
-                      </span>
-              </div>
-      </center>
-{% endif %}
+		<center>
+			{% load inclusion_tags %}
+			{% pagination order_list %}
+		</center>{% endif %}
 
 
 {% endblock %}

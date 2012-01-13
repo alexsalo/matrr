@@ -13,6 +13,8 @@
 			&nbsp;Verification - list of requests</a>
 		
 		{% if formset %}
+		
+	
 			<form method="post" action="">
 				{{ formset.management_form }}
 				{% csrf_token %}
@@ -33,6 +35,12 @@
 					<tr></tr>
 					{# hack to add a tiny space between this table and the formset #}
 				</table>
+				{% if formset.total_form_count >= 10 %}
+				<center>
+					{% load inclusion_tags %}
+					{% pagination paginator %}
+				</center>
+				{% endif %}	
 				<center>
 					<table class="common_center" cellpadding='2' cellspacing='2'>
 						<th>Details</th>
@@ -84,21 +92,8 @@
 				</center>
 		
 		<center>
-				<div class="pagination">
-					<span class="step-links">
-						{% if paginator.has_previous %}
-							<a href="?page={{ paginator.previous_page_number }}">previous</a>
-						{% endif %}
-
-						<span class="current">
-					Page {{ paginator.number }} of {{ paginator.paginator.num_pages }}.
-				</span>
-
-						{% if paginator.has_next %}
-							<a href="?page={{ paginator.next_page_number }}">next</a>
-						{% endif %}
-					</span>
-				</div>
+					{% load inclusion_tags %}
+				{% pagination paginator %}
 			</center>
 		
 		{% if formset.total_form_count >= 10 %}

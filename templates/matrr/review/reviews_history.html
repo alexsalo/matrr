@@ -11,7 +11,7 @@
 			</div>
 		</div>
 		{% else %}
-
+	
 		<table class='common_center' cellpadding='4' cellspacing='2'>
 			<tr>
 				<th>Cohort</th>
@@ -37,22 +37,16 @@
 				</tr>
 			{% endfor %}
 		</table>
+	<center>
+	<br/>	
+					{% load inclusion_tags %}
+				{% pagination req_requests %}
+	</center>
+	
 	{% endif %}
 
-	    <div class="pagination">
-        <span class="step-links">
-            {% if req_requests.has_previous %}
-                <a href="?page={{ req_requests.previous_page_number }}">previous</a>
-            {% endif %}
 
-            <span class="current">
-      Page {{ req_requests.number }} of {{ req_requests.paginator.num_pages }}.
-    </span>
 
-            {% if req_requests.has_next %}
-                <a href="?page={{ req_requests.next_page_number }}">next</a>
-            {% endif %}
-        </span>
-    </div>
+
 
 {% endblock %}
