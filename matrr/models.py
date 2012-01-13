@@ -289,8 +289,6 @@ class Monkey(models.Model):
 										help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
 	mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
 
-	mky_notes = models.CharField('Monkey Notes', null=True, blank=True, max_length=100,)
-
 	def __unicode__(self):
 		return str(self.mky_id)
 
