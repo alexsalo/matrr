@@ -16,6 +16,7 @@ def send_new_request_info(req_request):
 		return
 	req_request = Request.objects.get(pk=req_request.req_request_id)
 	users = Account.objects.users_with_perm('can_receive_pending_reviews_info')
+	from_email = Account.objects.get(username='matrr_admin').email
 	for user in users:
 		email = user.email
 		recipients = list()
@@ -24,6 +25,6 @@ def send_new_request_info(req_request):
 		body = 'More information about this request is available at matrr.com\n'\
 			'Please, do not respond. This is an automated message.\n'
 
-		ret = send_mail(subject, body, email, recipient_list=recipients, fail_silently=False)
+		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 		if ret > 0:
 			print "%s New request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)

@@ -12,6 +12,7 @@ from matrr.models import RequestStatus, Review, Account
 
 def send_pending_reviews_info():
 	users = Account.objects.users_with_perm('can_receive_pending_reviews_info')
+	from_email = Account.objects.get(username='matrr_admin').email
 	for user in users:
 	
 		
@@ -26,7 +27,7 @@ def send_pending_reviews_info():
 			body = 'Information from matrr.com\n You have pending request(s) to be reviewed on your account: %s \n' % user.username + \
 				'Please, do not respond. This is an automated message.\n'
 		
-			ret = send_mail(subject, body, email, recipient_list=recipients, fail_silently=False)
+			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 			if ret > 0:
 				print "%s Pending info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 			

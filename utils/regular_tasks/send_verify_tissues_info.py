@@ -19,6 +19,7 @@ def send_verify_tissues_info():
 	reguests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
 	
 	if len(reguests) > 0:
+		from_email = Account.objects.get(username='matrr_admin').email
 		for user in users:
 			email = user.email
 			recipients = list()
@@ -27,7 +28,7 @@ def send_verify_tissues_info():
 			body = 'Information from matrr.com\n During last 24 hours new request(s) has (have) been submitted. Your account %s can verify tissues. Please, find some time to do so.\n' % user.username + \
 				'Please, do not respond. This is an automated message.\n'
 		
-			ret = send_mail(subject, body, email, recipient_list=recipients, fail_silently=False)
+			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 			if ret > 0:
 				print "%s Verify tissues info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 				

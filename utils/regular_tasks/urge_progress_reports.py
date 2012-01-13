@@ -6,7 +6,7 @@ import settings
 setup_environ(settings)
 from datetime import datetime
 from django.core.mail import send_mail
-from matrr.models import Shipment, Request
+from matrr.models import Shipment, Request, Account
 from datetime import date, timedelta
 from django.contrib.auth.models import User
 
@@ -20,6 +20,7 @@ def urge_progress_reports():
 
 
 	for shipment in ship_to_report_req:
+		from_email = Account.objects.get(username='matrr_admin').email
 		email = User.objects.get(id= shipment['user']).email
 
 		recipients = list()
@@ -33,7 +34,7 @@ def urge_progress_reports():
 			"\nYours sincerely,\n\nMatrr team\n\n" + \
 			'This is an automated message.\n'
 
-		ret = send_mail(subject, body, email, recipient_list=recipients, fail_silently=False)
+		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 		req.req_report_asked = True
 		req.save()
 		if ret > 0:
