@@ -1,6 +1,7 @@
 __author__ = 'soltau'
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic import DetailView, ListView
+from django.contrib.auth.decorators import user_passes_test
 from matrr.views import *
 import settings
 
@@ -58,7 +59,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^cohort/$',     cohorts_view_all, name='cohorts'),
 	url(r'^assay/$',     cohorts_view_assay, name='assay'),
 
-	url(r'cohort/(?P<pk>\d+)/$', 		cohort_details, name='cohort-details'),
+	url(r'^cohort/(?P<pk>\d+)/$', 		cohort_details, name='cohort-details'),
 
 	url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey-detail'),
 	url(r'^cohort/(?P<cohort_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list, name='tissue-category'),
@@ -112,6 +113,10 @@ urlpatterns += patterns('matrr.views',
 	url(r'^verification/(?P<req_request_id>\d+)/export$', tissue_verification_export, name='verification-list-export'),
 	url(r'^verification/(?P<req_request_id>\d+)/(?P<tiv_id>\d+)/$', tissue_verification_detail, name='verification-detail'),
 
+	url(r'^inventory/cohort/(?P<coh_id>\d+)/$', inventory_cohort, name="inventory-cohort"),
+	url(r'^inventory/$', user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')(ListView.as_view(
+							model=Cohort,template_name="matrr/inventory/inventory.html")), name='inventory'),
+	
 	# VIP tools
 	url(r'^vip/$', vip_tools, name='vip-tools'),
 	url(r'^vip/graphs$', vip_graphs, name='vip-graphs'),

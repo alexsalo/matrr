@@ -37,6 +37,13 @@
 			{% endif %}
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 			&nbsp;View {% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohorts</a>
+			{% if perms.matrr.browse_inventory %}
+			<br/>
+			<a href="{% url inventory-cohort cohort.coh_cohort_id %}">
+
+			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+			&nbsp;Browse Cohort Inventory</a>
+			{% endif %}
 		</div>
 
 		<div style='float: right;'>
