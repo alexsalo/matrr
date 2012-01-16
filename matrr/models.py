@@ -905,6 +905,18 @@ class TissueType(models.Model):
 				return True
 		return False
 
+	def get_directly_in_stock_available_monkey_ids(self):
+		tss = TissueSample.objects.filter(tissue_type=self).filter(Q(tss_sample_quantity__gt = 0)|Q(tss_sample_quantity = None))
+		monkey_ids = tss.values_list('monkey', flat=True)
+		
+		return monkey_ids
+	
+	def get_monkey_from_coh_upcoming_availability(self, monkey):
+		if self.tst_sex_relevant != TissueTypeSexRelevant.Both:
+			if monkey.mky_gender != self.tst_sex_relevant:
+				return Availability.Unavailable
+		return Availability.Available
+	
 	def get_monkey_availability(self, monkey):
 		if self.tst_sex_relevant != TissueTypeSexRelevant.Both:
 			if monkey.mky_gender != self.tst_sex_relevant:
@@ -934,6 +946,9 @@ class TissueType(models.Model):
 	class Meta:
 		db_table = 'tst_tissue_types'
 		unique_together = (('tst_tissue_name', 'category'),)
+		permissions = (
+			('browse_inventory', 'Can browse inventory'),
+			)
 		
 class RequestManager(models.Manager):
 	def processed(self):

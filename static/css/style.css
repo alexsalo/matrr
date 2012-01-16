@@ -791,6 +791,16 @@ a.tool-tip:hover span {
 	color: orange;
 }
 
+td#avail0 {
+	background-color: #AFE9AF;
+}
+td#avail1 {
+	background-color: #AFE9AF;
+}
+td#avail2 {
+	background-color: #FFAAAA;
+}
+
 .current {
     padding-left: 5px;
     padding-right: 5px;

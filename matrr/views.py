@@ -1371,6 +1371,39 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 	tivform = TissueInventoryVerificationForm(initial=tiv_initial)
 	return render_to_response('matrr/verification/verification_detail.html', {"tivform": tivform, "req_id": req_request_id}, context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')
+def inventory_cohort(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
+	tsts = TissueType.objects.all()
+	monkeys = cohort.monkey_set.all()
+	availability_matrix = list()
+#	y tst, x monkey
+
+	if cohort.coh_upcoming:
+		messages.warning(request, "This cohort is upcoming, green color indicates future possible availability, however this tissues are NOT is stock.")
+		for tst in tsts:
+			tst_row = dict()
+			tst_row['row'] = list()
+			tst_row['title'] = tst.tst_tissue_name
+			for mky in monkeys:
+				tst_row['row'].append(tst.get_monkey_from_coh_upcoming_availability(mky))
+			availability_matrix.append(tst_row)
+	else:
+		for tst in tsts:
+			tst_row = dict()
+			tst_row['row'] = list()
+			tst_row['title'] = tst.tst_tissue_name
+			in_stock_mky_ids = tst.get_directly_in_stock_available_monkey_ids()
+			for mky in monkeys:
+				if mky.mky_id in in_stock_mky_ids:
+					tst_row['row'].append(Availability.In_Stock)
+				else:
+					tst_row['row'].append(Availability.Unavailable)
+			availability_matrix.append(tst_row)	
+	return render_to_response('matrr/inventory/inventory_cohort.html', {"cohort": cohort, "monkeys": monkeys, "matrix": availability_matrix}, context_instance=RequestContext(request))
+
+
+
 
 ####################
 #  VIP tools  #
