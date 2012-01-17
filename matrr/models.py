@@ -1548,8 +1548,26 @@ class Publication(models.Model):
 	abstract = models.TextField('Abstract', null=True)
 	keywords = models.TextField('Keywords', null=True)
 
+	pub_date = models.DateField("Publication Date", null=True, blank=True)
+
+	def _populate_pub_date(self):
+		if not self.pub_date:
+			if self.published_month and self.published_year:
+				date_string = "%s %s" % (self.published_month, self.published_year)
+				pub_date = datetime.strptime(date_string, "%b %Y")
+			elif not self.published_month and self.published_year:
+				date_string = self.published_year
+				pub_date = datetime.strptime(date_string, "%Y")
+			else:
+				pub_date = None
+			self.pub_date = pub_date
+			self.save()
+
 	def __unicode__(self):
-		return str(self.pmid)
+		if self.title:
+			return str(self.title.encode('ascii', 'ignore'))
+		else:
+			return str(self.pmid)
 
 	class Meta:
 		db_table = 'pub_publications'
