@@ -19,7 +19,9 @@ elif path == '/web/www/matrr-dev':
 else:
 	DEVELOPMENT = True
 
-if PRODUCTION or GLEEK:
+#if PRODUCTION or GLEEK:
+import getpass
+if getpass.getuser().lower() == 'root':
 	os.environ['HOME'] = "/web/www/html"
 
 DATABASES = {

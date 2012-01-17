@@ -20,7 +20,7 @@ def urge_progress_reports():
 
 
 	for shipment in ship_to_report_req:
-		from_email = Account.objects.get(username='matrr_admin').email
+		from_email = Account.objects.get(user__username='matrr_admin').email
 		email = User.objects.get(id= shipment['user']).email
 
 		recipients = list()
