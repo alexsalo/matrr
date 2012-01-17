@@ -1,6 +1,7 @@
 __author__ = 'soltau'
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic import DetailView, ListView
+from django.contrib.auth.decorators import user_passes_test
 from matrr.views import *
 import settings
 
@@ -58,7 +59,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^cohort/$',     cohorts_view_all, name='cohorts'),
 	url(r'^assay/$',     cohorts_view_assay, name='assay'),
 
-	url(r'cohort/(?P<pk>\d+)/$', 		cohort_details, name='cohort-details'),
+	url(r'^cohort/(?P<pk>\d+)/$', 		cohort_details, name='cohort-details'),
 
 	url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey-detail'),
 	url(r'^cohort/(?P<cohort_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list, name='tissue-category'),
@@ -75,8 +76,14 @@ urlpatterns += patterns('matrr.views',
 	#  Ordering process views
 	url(r'^orders/$',                                           orders_list, name='order-list'),
 	url(r'^orders/(?P<req_request_id>\d+)/$', 					order_detail, name='order-detail'),
-	url(r'^orders/(?P<req_request_id>\d+)/delete/?$', 			order_delete, name='order-delete'),
-	url(r'^experimental_plans/(?P<plan>\S+)/?$', 				experimental_plan_view),
+	url(r'^orders/(?P<req_request_id>\d+)/delete/$', 			order_delete, name='order-delete'),
+	url(r'^orders/(?P<req_request_id>\d+)/revise/$', 			order_revise, name='order-revise'),
+	url(r'^orders/(?P<req_request_id>\d+)/duplicate/$', 		order_duplicate, name='order-duplicate'),
+	url(r'^orders/(?P<req_request_id>\d+)/edit/$',	 			order_edit, name='order-edit'),
+	url(r'^orders/(?P<req_request_id>\d+)/checkout/$',	 		order_checkout, name='order-checkout'),
+	url(r'^orders/edit-tissue/(?P<req_rtt_id>\d+)/$', 			order_edit_tissue, name='orders-edit-tissue'),
+	url(r'^orders/delete-tissue/(?P<req_rtt_id>\d+)/$', 		order_delete_tissue, name='orders-delete-tissue'),	
+#	url(r'^experimental_plans/(?P<plan>\S+)/?$', 				experimental_plan_view),
 	url(r'^shipping_overview/$',								shipping_overview, name='shipping-overview'),
 	url(r'^shipping/build/(?P<req_request_id>\d+)/$', 			build_shipment, name='build-shipment'),
 	url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$', 	make_shipping_manifest_latex, name='manifest'),
@@ -101,15 +108,22 @@ urlpatterns += patterns('matrr.views',
 	url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
-	url(r'^verification/$', tissue_verification_list, name='verification'),
-	url(r'^verification/(?P<req_request_id>\d+)/$', tissue_verification, name='verification-detail'),
-	url(r'^verification/(?P<req_request_id>\d+)/export$', tissue_verification_export, name='verification-detail-export'),
+	url(r'^verification/$', tissue_verification, name='verification'),
+	url(r'^verification/(?P<req_request_id>\d+)/$', tissue_verification_list, name='verification-list'),
+	url(r'^verification/(?P<req_request_id>\d+)/export$', tissue_verification_export, name='verification-list-export'),
+	url(r'^verification/(?P<req_request_id>\d+)/(?P<tiv_id>\d+)/$', tissue_verification_detail, name='verification-detail'),
 
+	url(r'^inventory/cohort/(?P<coh_id>\d+)/$', inventory_cohort, name="inventory-cohort"),
+	url(r'^inventory/$', user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')(ListView.as_view(
+							model=Cohort,template_name="matrr/inventory/inventory.html")), name='inventory'),
+	
 	# VIP tools
 	url(r'^vip/$', vip_tools, name='vip-tools'),
 	url(r'^vip/graphs$', vip_graphs, name='vip-graphs'),
 	url(r'^vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
 	url(r'^vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
+
+	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 
 	)
 

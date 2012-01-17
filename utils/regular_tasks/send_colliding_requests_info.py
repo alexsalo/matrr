@@ -12,10 +12,9 @@ from matrr.models import RequestStatus, Request, Account
 
 def send_colliding_requests_info():
 	
-	submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
 	time_now = datetime.now()
 	time_yesterday = time_now - timedelta(days=1)
-	requests = Request.objects.filter(request_status=submitted, req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now)
+	requests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
 	
 	collisions = list()
 	
@@ -48,17 +47,17 @@ def send_colliding_requests_info():
 				collision_text + \
 				'Please, do not respond. This is an automated message.\n'
 		
+		from_email = Account.objects.get(username='matrr_admin').email
 		for user in users:
-		
 			email = user.email
 			recipients = list()
 			recipients.append(email)
 			
 		
-			ret = send_mail(subject, body, email, recipient_list=recipients, fail_silently=False)
+			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 			if ret > 0:
 				print "%s Colliding requests info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 			
 	
-
-send_colliding_requests_info()
+if settings.PRODUCTION:
+	send_colliding_requests_info()

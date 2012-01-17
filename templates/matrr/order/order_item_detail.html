@@ -1,3 +1,10 @@
+{% if edit %}
+<a href='{% url orders-edit-tissue item.rtt_tissue_request_id %}' class='blockLinkCheckoutButton' style='float: right'>Edit</a>
+	<form action="{% url orders-delete-tissue item.rtt_tissue_request_id %}" method="post">
+	{% csrf_token %}
+	<button type='submit' name='submit' value="delete" class='blockLinkDeleteButton' style='float: right'>Delete</button>
+	</form>
+{% endif %}
 <table class='common_small'>
   <tr>
     {% for datum in item.get_data %}
@@ -11,8 +18,9 @@
   {% endif %}
 </table>
 
+	
 <table class='monkey_table common_center'>
-  {% if order.request_status|lower != 'partially accepted' %}
+  {% if order.req_status != RequestStatus.Partially %}
     <tr>
       <th colspan='6'>Monkeys</th>
     </tr>
@@ -31,7 +39,7 @@
       {% if item.get_accepted == Acceptance.Rejected %}
         <th colspan='6' style='color: red;'>This tissue request was rejected.</th>
       {% else %}
-        <th colspan='6' style='color: blue;'>This tissue request was partially accepted.</th>
+        <th colspan='6' style='color: orange;'>This tissue request was partially accepted.</th>
       {% endif %}
     {% endif %}
     {% if item.get_accepted != Acceptance.Partially_Accepted %}

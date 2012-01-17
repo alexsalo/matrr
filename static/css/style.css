@@ -61,7 +61,7 @@ body {
     color: #FAF9ED;
     padding: .2em .8em;
     text-decoration: none;
-    float: left;
+    float: center;
 }
 
 #nav a:hover,
@@ -85,7 +85,7 @@ body {
 
 .nav ul:hover .drop-down {
     display: block;
-    min-width: 100%;
+    width: 100%;
     /*position: absolute;*/
 }
 
@@ -214,6 +214,10 @@ table.common {
 }
 
 table.common th {
+    background: #D8D8CB;
+    color: #4E4E4E;
+}
+table.common_center th {
     background: #D8D8CB;
     color: #4E4E4E;
 }
@@ -397,7 +401,7 @@ table.clear tr {
     border-width: 2px;
     -moz-box-shadow: 1px #999;
     -webkit-box-shadow: 1px #999;
-    position: relative;
+  /*  position: relative; */
     cursor: pointer;
 }
 
@@ -461,7 +465,7 @@ table.clear tr {
 	color: #CF27FF;
 }
 
-.messages div {
+.messages div{
     border: 1px solid;
     margin: 10px 0px;
     padding: 15px 10px 15px 50px;
@@ -692,6 +696,7 @@ table.reviews_table .tissue_info {
     color: #9F6000;
     background-color: #FEEFB3;
     background-image: url('images/warning-24.png');
+    background-repeat: no-repeat;
 }
 
 .error {
@@ -764,7 +769,7 @@ a.tool-tip:hover span {
 
 /* Jon added below */
 .unverified {
-	border: solid red;
+	border: solid #FFBABA;
 }
 .insufficient {
 	border: solid #ff8c00;
@@ -772,3 +777,32 @@ a.tool-tip:hover span {
 .sufficient {
 	border: solid green;
 }
+
+#ac {
+	color: green;
+}
+#pa {
+	color: green;
+}
+#rj {
+	color: red;
+}
+#sh {
+	color: orange;
+}
+
+td#avail0 {
+	background-color: #AFE9AF;
+}
+td#avail1 {
+	background-color: #AFE9AF;
+}
+td#avail2 {
+	background-color: #FFAAAA;
+}
+
+.current {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+

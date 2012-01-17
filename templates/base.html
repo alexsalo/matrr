@@ -104,6 +104,13 @@
 					<ul>
 						<li class='top'><a href="/admin/">Admin</a></li>
 						<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
+						{% if perms.matrr.browse_inventory %}
+						<li class='drop-down'><a href="{% url inventory %}">Browse Inventory</a></li>
+						{% endif %}
+						{% if perms.auth.upload_raw_data %}
+							<li class='drop-down'><a href='{% url raw-upload %}'>Upload</a></li>
+						{% endif %}
+						
 					</ul>
 				{% endif %}
 
@@ -127,18 +134,18 @@
 	<div class='sidebar clearfix'>
 		{% block sidebar %}
 			{% block login %}
-				<div class='sidebar-block'>
-					{% if not user.is_authenticated %}
+				{% if not user.is_authenticated %}
+					<div class='sidebar-block'>
 						<div class='headline'>
 							Login
 						</div>
 						{% include 'login.form' %}
 						<a href="{% url registration_register %}">Create an Account</a>
-					{% else %}
+{% comment %}					{% else %}
 						Welcome {{ user.username }}
-
-					{% endif %}
-				</div>
+{% endcomment %}
+					</div>
+				{% endif %}
 			{% endblock %}
 
 			{% block cart %}

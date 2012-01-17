@@ -8,14 +8,19 @@
 {% endblock %}
 
 {% block content %}
-	{% if not cart_exists or cart_num_items == 0 %}
+	
+		{% if not cart_exists or cart_num_items == 0 %}
 		<div class="messages">
 			<div class="error">You cannot submit a tissue request with no requested tissues.</div>
 		</div>
+	
+		
 		{% else %}
+		
 		<div id='large-headline'>
 			Finalize Tissue Request
 		</div>
+		{% if not edit %}
 		<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_5.png" width='700' height='25'
 			 alt='order timeline'/>
 		<br/>
@@ -26,8 +31,8 @@
 
 		<div id="headline">Checkout Form</div>
 		<br/>
-
-		<form action='{% url cart-checkout %}' enctype="multipart/form-data" method='POST'>
+		{% endif %}
+		<form action='' enctype="multipart/form-data" method='POST'>
 			{% csrf_token %}
 			{% for field in form.hidden_fields %}
 				{{ field }}
@@ -122,8 +127,8 @@
 				<button type='submit' name='submit' value='checkout' class="blockLinkCheckoutButton">Submit Request</button>
 			</div>
 			<div style='padding:3px; float: right;'>
-				<a href='{% url cart %}'>
-					<div class="blockLinkDeleteButton">Cancel Request</div>
+				<a href='{% if edit %}{% url order-edit form.instance.req_request_id %}{% else %}{% url cart %}{% endif %}'>
+					<div class="blockLinkDeleteButton">Cancel {%if edit %}Checkout{% else %}Request{% endif %}</div>
 				</a>
 			</div>
 		</form>

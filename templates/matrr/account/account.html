@@ -144,7 +144,7 @@
 	<!--
  This section displays the status of requests
  -->
-	<div class='headline'>Requests Status</div>
+	<div class='headline'>Submitted Requests Status (<a href="{% url order-list %}">All orders are here</a>)</div>
 	{% if order_list %}
 		<table class="common">
 			<tr>
@@ -158,21 +158,10 @@
 				<tr>
 					<td class='text-center-common-td'>{{ order.cohort }}</td>
 					<td class='text-center-common-td'>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
-					{% if order.request_status|lower == 'rejected' %}
-						<td class='text-center-common-td'><font color='red'>{{ order.request_status }}</font></td>
-						{% else %}
-						{% if order.request_status|lower == 'shipped' %}
-							<td class='text-center-common-td'><font color='orange'>{{ order.request_status }}</font></td>
-							{% else %}
-							{% if order.request_status|lower == 'submitted' %}
-								<td class='text-center-common-td'>{{ order.request_status }}</td>
-							{% else %}
-								<td class='text-center-common-td'><font color='green'>{{ order.request_status }}</font></td>
-							{% endif %}
-						{% endif %}
+					
+						<td class='text-center-common-td' id={{ order.req_status|lower }}>{{ order.get_req_status_display }}</td>
+						
 
-
-					{% endif %}
 
 					{% if not order.req_experimental_plan %}
 						<td class='text-center-common-td'>none</td>

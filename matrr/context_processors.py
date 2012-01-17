@@ -5,11 +5,10 @@ from settings import PRODUCTION
 
 def cart(request):
 	# get the cart for the user in the request
-	cart_status = RequestStatus.objects.get(rqs_status_name='Cart')
 	context = {}
 	if request.user.is_authenticated():
-		if Request.objects.filter(user=request.user.id, request_status=cart_status.rqs_status_id).count() == 1:
-			cart = Request.objects.get(user=request.user.id, request_status=cart_status.rqs_status_id)
+		if Request.objects.cart().filter(user=request.user.id).count() == 1:
+			cart = Request.objects.cart().get(user=request.user.id)
 			cart_items = TissueRequest.objects.filter(req_request=cart).all()
 			cart_num_items = len(cart_items)
 			context['cart_exists'] = True
@@ -19,7 +18,7 @@ def cart(request):
 		else:
 			context['cart_exists'] = False
 	else:
-		context['cart_exists'] = False
+			context['cart_exists'] = False
 	return context
 
 
