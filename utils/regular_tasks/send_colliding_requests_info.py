@@ -47,7 +47,7 @@ def send_colliding_requests_info():
 				collision_text + \
 				'Please, do not respond. This is an automated message.\n'
 		
-		from_email = Account.objects.get(username='matrr_admin').email
+		from_email = Account.objects.get(user__username='matrr_admin').email
 		for user in users:
 			email = user.email
 			recipients = list()

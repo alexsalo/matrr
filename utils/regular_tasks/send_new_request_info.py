@@ -16,7 +16,7 @@ def send_new_request_info(req_request):
 		return
 	req_request = Request.objects.get(pk=req_request.req_request_id)
 	users = Account.objects.users_with_perm('can_receive_pending_reviews_info')
-	from_email = Account.objects.get(username='matrr_admin').email
+	from_email = Account.objects.get(user__username='matrr_admin').email
 	for user in users:
 		email = user.email
 		recipients = list()
