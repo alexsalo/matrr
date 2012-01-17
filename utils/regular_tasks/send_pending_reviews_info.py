@@ -12,7 +12,7 @@ from matrr.models import RequestStatus, Review, Account
 
 def send_pending_reviews_info():
 	users = Account.objects.users_with_perm('can_receive_pending_reviews_info')
-	from_email = Account.objects.get(username='matrr_admin').email
+	from_email = Account.objects.get(user__username='matrr_admin').email
 	for user in users:
 	
 		

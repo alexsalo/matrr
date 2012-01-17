@@ -19,7 +19,7 @@ def send_verify_tissues_info():
 	reguests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
 	
 	if len(reguests) > 0:
-		from_email = Account.objects.get(username='matrr_admin').email
+		from_email = Account.objects.get(user__username='matrr_admin').email
 		for user in users:
 			email = user.email
 			recipients = list()
