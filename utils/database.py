@@ -344,6 +344,67 @@ def load_initial_inventory(file, output_file, load_tissue_types=False,  delete_n
 			unknown_monkeys.writerow(row)
 		#raise Exception('Just testing') #uncomment for testing purposes
 
+def load_cohort_6a_inventory(input_file):
+	unmatched_output_file = input_file + "-unmatched-output.csv"
+
+	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+	unmatched_output = csv.writer(open(unmatched_output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+
+	columns = input_data.next()
+	unmatched_output.writerow(columns)
+
+	print "Loading Inventory..."
+	for row in input_data:
+		mky_id 		= row[0]
+		real_id	 	= row[1]
+		excel_date	= row[2] #ignored
+		txt_date 	= row[3] #ignored
+		tissue_type	= row[4].strip()
+		req_by		= row[5] #ignored
+		freezer 	= row[6]
+		shelf		= "shelf=%s" % row[7]
+		flag		= row[8] #ignored
+
+		if real_id == '0':
+				continue
+		try:
+				monkey = Monkey.objects.get(pk=mky_id)
+		except Monkey.DoesNotExist:
+				error = "Error: Monkey not found:  " + str(mky_id)
+				row.append(error)
+				unmatched_output.writerow(row)
+				print error
+				continue
+		if monkey.mky_real_id != int(real_id):
+			error = "Error: mky_real_id %s does not match mky_id %s" % (str(real_id), str(mky_id))
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
+			continue
+
+
+		tst = TissueType.objects.filter(tst_tissue_name__iexact=tissue_type)
+		if not tst:
+			error = "Error: Unknown tissue type"
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
+			continue
+		elif tst.count() == 1:
+			tss = TissueSample.objects.filter(monkey=monkey, tissue_type=tst[0])
+			if tss.count() == 1:
+				tss = tss[0]
+			else:
+				break
+			tss.tss_freezer = freezer
+			tss.tss_location = shelf
+			tss.tss_sample_quantity = 1
+			tss.save()
+		else:
+			error = "Error:  Too many TissueType matches."
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
 
 def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_duplicates=False, create_tissue_samples=False):
 	if load_tissue_types:
