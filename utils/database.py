@@ -749,13 +749,14 @@ def load_TissueCategories():
 # Creates ALL tissue samples in the database, for every monkey:tissuetype combination.
 def create_TissueSamples(tissue_type=None):
 	for monkey in Monkey.objects.all():
-		if tissue_type:
-			tissuetypes = [tissue_type]
-		else:
+		if not tissue_type:
 			tissuetypes = TissueType.objects.all()
-		# Only create the "be specific" tissue samples for upcoming cohorts
-		if not monkey.cohort.coh_upcoming:
-			tissuetypes = tissuetypes.exclude(tst_tissue_name__icontains="Be specific")
+			# Only create the "be specific" tissue samples for upcoming cohorts
+			if not monkey.cohort.coh_upcoming:
+				tissuetypes = tissuetypes.exclude(tst_tissue_name__icontains="Be specific")
+		else:
+			tissuetypes = [tissue_type]
+
 		for tt in tissuetypes:
 			sample, is_new = TissueSample.objects.get_or_create(monkey=monkey, tissue_type=tt)
 			if is_new:
