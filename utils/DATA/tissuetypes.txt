@@ -20,6 +20,7 @@ Area 46
 Brainstem
 Caudate
 Cerebellum (Anterior lobe)
+Cerebellum (lt, rt)
 Cerebellum (Posterior lobe)
 Cerebellum (Vermis)
 Cerebrospinal fluid
@@ -71,6 +72,7 @@ Blood
 Bone (Femur)
 Bone (Be specific)
 Bone Marrow (From Femur)
+Cheek
 Colon
 Duodenum
 Esophagus
