@@ -70,7 +70,7 @@ def cohorts_view_all(request):
 	return __cohorts_view(request, cohorts, template_name)
 
 def cohorts_view_assay(request):
-	return redirect(reverse('tissue-shop-landing', args =[Cohort.objects.get(coh_cohort_name__icontains="assay").pk,]))
+	return redirect(reverse('tissue-shop-landing', args =[Cohort.objects.get(coh_cohort_name__iexact="Assay Development").pk,]))
 
 def matrr_handler500(request):
 	from django.core.context_processors import static
@@ -855,7 +855,7 @@ def order_edit_tissue(request, req_rtt_id):
 
 def tissue_shop_landing_view(request,  cohort_id):
 	context = dict()
-	assay = Cohort.objects.get(coh_cohort_name__icontains="assay")
+	assay = Cohort.objects.get(coh_cohort_name__iexact="Assay Development")
 	cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
 	context['cohort'] = cohort
 	if cohort != assay:
