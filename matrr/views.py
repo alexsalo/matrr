@@ -1374,7 +1374,7 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 @user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')
 def inventory_cohort(request, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
-	tsts = TissueType.objects.all()
+	tsts = TissueType.objects.all().order_by('tst_tissue_name')
 	monkeys = cohort.monkey_set.all()
 	availability_matrix = list()
 #	y tst, x monkey
