@@ -2,6 +2,7 @@
 import Image
 import os, ast
 from django.core.files.base import File
+from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User, Group, Permission
@@ -12,6 +13,8 @@ from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
+from matrr.process_latex import process_latex
+import settings
 
 def percentage_validator(value):
 	MinValueValidator(0).__call__(value)
@@ -390,8 +393,10 @@ class Account(models.Model):
 	class Meta:
 		db_table = 'act_account'
 		permissions = ([
-					('view_other_accounts', 'Can view accounts of other users'),
-					
+						('view_other_accounts', 'Can view accounts of other users'),
+						('bcc_request_email', 'Will receive BCC of processed request emails'),
+						('po_manifest_email', 'Will receive Purchase Order shipping manifest email'),
+
 					])
 
 
@@ -1012,6 +1017,8 @@ class Request(models.Model, DiffingMixin):
 	req_notes = models.TextField('Request Notes', null=True, blank=True)
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
 
+	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
+
 	def __unicode__(self):
 		return 'User: ' + self.user.username +\
 			   ' Cohort: ' + self.cohort.coh_cohort_name +\
@@ -1158,7 +1165,8 @@ class Request(models.Model, DiffingMixin):
 		return False
 	def can_be_shipped(self):
 		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
-			return True
+			if self.req_purchase_order:
+				return True
 		return False
 
 
@@ -1750,6 +1758,22 @@ def request_post_save(**kwargs):
 																monkey=monkey,
 																tissue_request=None)
 				tv.save()
+		if not settings.DEVELOPMENT:
+			perm = Permission.objects.get(codename='po_manifest_email')
+			to_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm) ).distinct().values_list('email', flat=True)
+			filename = 'manifest-%s-%s.pdf' % (str(req_request.user), str(req_request.pk))
+			outfile = open('/tmp/%s' % filename, 'wb')
+			subject = "Shipping Manifest for MATRR request %s." % str(req_request.pk)
+			body = "A MATRR request has been shipped.  Attached is the shipping manifest for this request, with the customer's Purchase Order number.  Please contact a MATRR admin if there are any issues or missing information."
+			email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, to_list)
+
+			process_latex('latex/shipping_manifest.tex',{'req_request': req_request,
+																			 'account': req_request.user.account,
+																			 'time': datetime.today(),
+																			 }, outfile=outfile)
+			outfile.close()
+			email.attach_file(outfile.name)
+			email.send()
 
 	req_request._previous_status = None
 

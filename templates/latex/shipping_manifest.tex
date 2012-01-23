@@ -23,7 +23,8 @@ Manifest Created On: {{ time }} }
 {{ account.act_country }}
 
 \vspace{0.1in}
-\noindent Fedex Number: {{ account.act_fedex }}
+\noindent Fedex Number: {{ account.act_fedex }} \\
+\noindent Purchase Order: {{ req_request.req_purchase_order }}
 
 \section*{Requested Tissues}
 
@@ -44,21 +45,7 @@ Manifest Created On: {{ time }} }
   \noindent
   \begin{longtable}{|c|c|c|}
   \hline
-  {% for monkey in tissue_request.accepted_monkeys.all %}
-  Monkey: & {{ monkey.mky_id }} & \ \\* \nopagebreak \hline
-  {% with samples=tissue_request.get_tissue|get_stock:monkey %}
-    {% if samples.count %}
-      {% for sample in samples.all %}
-        Sample Location: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_location }} } \\* \hline
-        Last Updated: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_modified }} }
-        {% if forloop.last %}\\{% else %}\\{% endif %} \hline
-      {% endfor %}
-    {% else %}
-      \multicolumn{3}{|p{6in}|}{There are no samples for this tissue and monkey in the inventory.
-      The tissue is either not harvested yet or it needs to be extracted from another item} \\ \hline
-    {% endif %}
-  {% endwith %}
-  {% endfor %}
+  Monkey: &{% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}, {% endfor %}\ \\* \nopagebreak \hline
   \end{longtable}
    \hline
   {% else %}

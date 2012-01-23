@@ -1,4 +1,5 @@
 # Create your views here.
+from django.core.mail.message import EmailMessage
 from django.forms.models import modelformset_factory
 from django.forms.models import formset_factory
 from django.template import RequestContext
@@ -749,7 +750,16 @@ def order_detail(request, req_request_id, edit=False):
 #		raise Http404('This page does not exist.')
 	
 	eval = req_request.is_evaluated()
-	
+	po_form = ''
+	if not req_request.req_status == 'SH' and not req_request.req_status == 'RJ':
+		po_form = PurchaseOrderForm(instance=req_request)
+		if request.method == 'POST':
+			po_form = PurchaseOrderForm(instance=req_request, data=request.POST)
+			if po_form.is_valid():
+				po_form.save()
+			else:
+				messages.error(request, "Purchase Order form invalid, please try again.  Please notify a MATRR admin if this message is erroneous.")
+
 	return render_to_response('matrr/order/order_detail.html',
 			{'order': req_request,
 			 'Acceptance': Acceptance,
@@ -757,6 +767,7 @@ def order_detail(request, req_request_id, edit=False):
 			 'shipped': req_request.is_shipped(),
 			 'after_submitted': eval,
 			 'edit': edit,
+			 'po_form': po_form,
 			 },
 							  context_instance=RequestContext(request))
 
@@ -917,8 +928,8 @@ def tissue_list(request, tissue_category=None, cohort_id=None):
 							  context_instance=RequestContext(request))
 
 
-def remove_values_from_list(the_list, other_list):
-	return [value for value in the_list if value not in other_list]
+def remove_values_from_list(base_list, removal_list):
+	return [value for value in base_list if value not in removal_list]
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
@@ -967,9 +978,19 @@ def request_review_process(request, req_request_id):
 				# Email subject *must not* contain newlines
 				subject = ''.join(form.cleaned_data['subject'].splitlines())
 				if not settings.DEVELOPMENT:
-					send_mail(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email])
-				messages.success(request, str(
-					req_request.user.username) + " was sent an email informing him/her that the request was accepted.")
+					perm = Permission.objects.get(codename='bcc_request_email')
+					bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm) ).distinct().values_list('email', flat=True)
+					email = EmailMessage(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
+					if status != RequestStatus.Rejected:
+						outfile = open('/tmp/%s.pdf' % str(request.pk), 'wb')
+						process_latex('latex/shipping_manifest.tex',{'req_request': req_request,
+																					 'account': req_request.user.account,
+																					 'time': datetime.today(),
+																					 }, outfile=outfile)
+						outfile.close()
+						email.attach_file(outfile.name)
+					email.send()
+				messages.success(request, str(req_request.user.username) + " was sent an email informing him/her that the request was accepted.")
 				return redirect(reverse('review-overview-list'))
 			else:
 				return render_to_response('matrr/review/process.html',
@@ -1114,8 +1135,10 @@ def build_shipment(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	# do a sanity check
 	if not req_request.can_be_shipped():
-		raise Exception(
-			'You cannot create a shipment for a request that has not been accepted (or has already been shipped.')
+#		raise Exception(
+		messages.warning(request,
+			"A request may only be shipped if the request has been accepted, user has submitted a Purchase Order number, and the request hasn't already been shipped.")
+		return redirect('shipping-overview')
 
 	if Shipment.objects.filter(req_request=req_request).count():
 		shipment = req_request.shipment
@@ -1145,7 +1168,7 @@ def make_shipping_manifest_latex(request, req_request_id):
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=manifest-' +\
 									  str(req_request.user) + '-' +\
-									  str(req_request.cohort) + '.pdf'
+									  str(req_request.pk) + '.pdf'
 	account = req_request.user.account
 
 	return process_latex('latex/shipping_manifest.tex',

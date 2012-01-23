@@ -187,6 +187,12 @@ class CartCheckoutForm(ModelForm):
 		widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
 
 
+class PurchaseOrderForm(ModelForm):
+	class Meta:
+		model = Request
+		fields = ('req_purchase_order',)
+
+
 class ReviewForm(ModelForm):
 	def __init__(self, *args, **kwargs):
 		TissueRequestReviewFormSet = inlineformset_factory(Review,
