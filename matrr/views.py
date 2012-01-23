@@ -70,7 +70,7 @@ def cohorts_view_all(request):
 	return __cohorts_view(request, cohorts, template_name)
 
 def cohorts_view_assay(request):
-	return redirect(reverse('tissue-shop-landing', args =[Cohort.objects.get(coh_cohort_name__icontains="assay").pk,]))
+	return redirect(reverse('tissue-shop-landing', args =[Cohort.objects.get(coh_cohort_name__iexact="Assay Development").pk,]))
 
 def matrr_handler500(request):
 	from django.core.context_processors import static
@@ -855,7 +855,7 @@ def order_edit_tissue(request, req_rtt_id):
 
 def tissue_shop_landing_view(request,  cohort_id):
 	context = dict()
-	assay = Cohort.objects.get(coh_cohort_name__icontains="assay")
+	assay = Cohort.objects.get(coh_cohort_name__iexact="Assay Development")
 	cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
 	context['cohort'] = cohort
 	if cohort != assay:
@@ -1374,7 +1374,7 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 @user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')
 def inventory_cohort(request, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
-	tsts = TissueType.objects.all()
+	tsts = TissueType.objects.all().order_by('tst_tissue_name')
 	monkeys = cohort.monkey_set.all()
 	availability_matrix = list()
 #	y tst, x monkey

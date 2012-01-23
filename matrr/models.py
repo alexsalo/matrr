@@ -1530,23 +1530,23 @@ class TissueSample(models.Model):
 
 class Publication(models.Model):
 	id = models.AutoField(primary_key=True)
-	authors = models.TextField('Authors', null=True)
-	title = models.CharField('Title', max_length=200, null=True)
-	journal = models.CharField('Journal', max_length=200, null=True)
+	authors = models.TextField('Authors', null=True, blank=True)
+	title = models.CharField('Title', max_length=200, null=True, blank=True)
+	journal = models.CharField('Journal', max_length=200, null=True, blank=True)
 	cohorts = models.ManyToManyField(Cohort, db_table='ptc_publications_to_cohorts',
 									 verbose_name='Cohorts',
 									 related_name='publication_set',
 									 help_text='The cohorts involved in this publication.',
-									 null=True)
-	published_year = models.CharField('Year Published', max_length=10, null=True)
-	published_month = models.CharField('Month Published', max_length=10, null=True)
-	issue = models.CharField('Issue Number', max_length=20, null=True)
-	volume = models.CharField('Volume', max_length=20, null=True)
-	pmid = models.IntegerField('PubMed ID', unique=True, null=True)
-	pmcid = models.CharField('PubMed Central ID', max_length=20, null=True)
-	isbn = models.IntegerField('ISBN', null=True)
-	abstract = models.TextField('Abstract', null=True)
-	keywords = models.TextField('Keywords', null=True)
+									 null=True, blank=True)
+	published_year = models.CharField('Year Published', max_length=10, null=True, blank=True)
+	published_month = models.CharField('Month Published', max_length=10, null=True, blank=True)
+	issue = models.CharField('Issue Number', max_length=20, null=True, blank=True)
+	volume = models.CharField('Volume', max_length=20, null=True, blank=True)
+	pmid = models.IntegerField('PubMed ID', unique=True, null=True, blank=True)
+	pmcid = models.CharField('PubMed Central ID', max_length=20, null=True, blank=True)
+	isbn = models.IntegerField('ISBN', null=True, blank=True)
+	abstract = models.TextField('Abstract', null=True, blank=True)
+	keywords = models.TextField('Keywords', null=True, blank=True)
 
 	pub_date = models.DateField("Publication Date", null=True, blank=True)
 
