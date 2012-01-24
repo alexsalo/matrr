@@ -25,8 +25,8 @@
 {{ datum.0 }}: {{ datum.1 }}{% endfor %}
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}
-{% trans "Requested Monkeys:" %}{% for monkey in tissue_request.monkeys.all %}{% if monkey not in tissue_request.accepted_monkeys.all %}
-{{ monkey.mky_id }}
-{% endif %}{% endfor %}{% endif %}{% endfor %}
+{% trans "Requested Monkeys:" %}
+{% for monkey in tissue_request.monkeys.all %}{% if monkey not in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}{% endif %}{% endfor %}
+{% endif %}{% endfor %}
 
 {% trans "You can view your request at " %}https://gleek.ecs.baylor.edu{{ request_url }}{% trans ".  From here you can revise and resubmit your request for further review." %}
