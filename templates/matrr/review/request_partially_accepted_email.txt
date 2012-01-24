@@ -13,20 +13,19 @@
 {% if tissue_request.get_accepted != Acceptance.Rejected %}
 {% for datum in tissue_request.get_data %}
 {{ datum.0 }}: {{ datum.1 }}{% endfor %}
+{% trans "Requested Monkeys: " %}{% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}  {% endfor %}
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}
-{% trans "Requested Monkeys:" %}
-{% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}  {% endfor %}
 {% endif %}{% endfor %}
 
 {% trans "Rejected requests:" %}
 {% for tissue_request in req_request.get_requested_tissues %}
-{% if tissue_request.get_accepted != Acceptance.Accepted %}{% for datum in tissue_request.get_data %}
-{% if datum.0 != "Estimated Cost" %}{{ datum.0 }}: {{ datum.1 }}{ %endif %}{% endfor %}
+{% if tissue_request.get_accepted != Acceptance.Accepted %}
+{% for datum in tissue_request.get_data %}{% if datum.0 != "Estimated Cost" %}
+{{ datum.0 }}: {{ datum.1 }}{% endif %}{% endfor %}
+{% trans "Requested Monkeys: " %}{% for monkey in tissue_request.monkeys.all %}{% if monkey not in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }} {% endif %}{% endfor %}
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}
-{% trans "Requested Monkeys:" %}
-{% for monkey in tissue_request.monkeys.all %}{% if monkey not in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }} {% endif %}{% endfor %}
 {% endif %}{% endfor %}
 
 {% trans "You can view your request at " %}https://gleek.ecs.baylor.edu{{ request_url }}{% trans ".  From here you can revise and resubmit your request for further review." %}
