@@ -1140,13 +1140,13 @@ def build_shipment(request, req_request_id):
 		if 'shipped' in request.POST:
 			if not req_request.can_be_shipped(): # do a sanity check
 				messages.warning(request, "A request may only be shipped if the request has been accepted, user has submitted a Purchase Order number, and the request hasn't already been shipped.")
-				return redirect('shipping-overview')
-
-			shipment.shp_shipment_date = datetime.today()
-			shipment.user = request.user
-			shipment.save()
-			req_request.ship_request()
-			req_request.save()
+#				return redirect('shipping-overview')
+			else:
+				shipment.shp_shipment_date = datetime.today()
+				shipment.user = request.user
+				shipment.save()
+				req_request.ship_request()
+				req_request.save()
 	else:
 		# create the shipment
 		shipment = Shipment(user=req_request.user, req_request=req_request)
