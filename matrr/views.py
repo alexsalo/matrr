@@ -1139,7 +1139,7 @@ def build_shipment(request, req_request_id):
 		shipment = req_request.shipment
 		if 'shipped' in request.POST:
 			if not req_request.can_be_shipped(): # do a sanity check
-				messages.warning(request, "A request may only be shipped if the request has been accepted, user has submitted a Purchase Order number, and the request hasn't already been shipped.")
+				messages.warning(request, "A request can only be shipped if all of the following are true: 1) the request has been accepted and not yet shipped, 2) the user has provided a FedEx number, 3) user has submitted a Purchase Order number.")
 #				return redirect('shipping-overview')
 			else:
 				shipment.shp_shipment_date = datetime.today()
@@ -1161,21 +1161,13 @@ def build_shipment(request, req_request_id):
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def make_shipping_manifest_latex(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
-	if not req_request.can_be_shipped() and not req_request.is_shipped():
-		raise Http404('Page does not exist.')
-	#Create the HttpResponse object with the appropriate PDF headers.
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=manifest-' +\
 									  str(req_request.user) + '-' +\
 									  str(req_request.pk) + '.pdf'
 	account = req_request.user.account
 
-	return process_latex('latex/shipping_manifest.tex',
-														{'req_request': req_request,
-														'account': account,
-														'time': datetime.today(),
-														},
-														outfile=response)
+	return process_latex('latex/shipping_manifest.tex',{'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
 
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_delete(request, req_request_id):

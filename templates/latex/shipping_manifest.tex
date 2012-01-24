@@ -9,8 +9,8 @@
 \begin{document}
 
 \begin{center}
-\Large{ \textbf{Shipping Manifest for:\\ User: {{ req_request.user }} Cohort: {{ req_request.cohort }}
- } } \\
+\Large{ Shipping Manifest for:\\ User: \verb|{{ req_request.user }}| Cohort: {{ req_request.cohort }}
+ }  \\
 \normalsize{Requested On: {{ req_request.req_request_date }} \\
 Manifest Created On: {{ time }} }
 \end{center}
@@ -62,6 +62,8 @@ Manifest Created On: {{ time }} }
   \pagebreak[3]
   {% endif %}
 {% endfor %}
+\vspace{0.5in}
+\noindent \Large{Total Cost:\verb| ${{ req_request.get_total_estimated_cost }}| }
 
 \end{document}
 

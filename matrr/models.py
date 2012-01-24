@@ -1165,7 +1165,7 @@ class Request(models.Model, DiffingMixin):
 		return False
 	def can_be_shipped(self):
 		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
-			if self.req_purchase_order:
+			if self.req_purchase_order and self.user.account.act_fedex:
 				return True
 		return False
 
