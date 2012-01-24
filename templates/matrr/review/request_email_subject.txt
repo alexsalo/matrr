@@ -1,8 +1,8 @@
 {% load i18n %}
-{% if status == 'Accepted' %}
+{% if status == 2 %}
 {% trans "Your tissue request has been accepted." %}
 {% else %}
-{% if status == 'Partially Accepted' %}
+{% if status == 1 %}
 {% trans "Your tissue request has been partially accepted." %}
 {% else %}
 {% trans "Your tissue request has been rejected." %}
