@@ -1070,9 +1070,21 @@ def shipping_overview(request):
 	# get the tissue requests that have been shipped
 	shipped_requests = Request.objects.shipped()
 
+	shipment_ready = {} # currently unused --jf 1/24/2012
+	for req in accepted_requests:
+		has_fedex = True if req.user.account.act_fedex else False
+		has_po = True if req.req_purchase_order else False
+		if has_fedex and has_po:
+			shipment_ready[req.pk] = 1
+		elif has_fedex or has_po:
+			shipment_ready[req.pk] = 0
+		else:
+			shipment_ready[req.pk] = -1
+
 	return render_to_response('matrr/shipping/shipping_overview.html',
 			{'accepted_requests': accepted_requests,
-			 'shipped_requests': shipped_requests},
+			 'shipped_requests': shipped_requests,
+			 'shipment_ready': shipment_ready},
 							  context_instance=RequestContext(request))
 
 

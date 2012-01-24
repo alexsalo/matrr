@@ -1,59 +1,73 @@
 {% extends 'base.html' %}
 
-{%  block title %}
-Shipping Overview
+{% block title %}
+	Shipping Overview
 {% endblock %}
 
 {% block content %}
 
-<div class='large-headline'>
-Pending Shipments
-</div>
+	<div class='large-headline'>
+		Pending Shipments
+	</div>
 
 
-<div>
-{% if accepted_requests %}  
-  <table class="common_center" cellpadding='4'>
-  <tr><th>User</th><th>Cohort</th><th>Request Date</th></tr>
-    {% for request in accepted_requests %}
-      <tr><td><a href="{% url account-reviewer-view request.user.id %}">{{ request.user }}</a></td><td>{{ request.cohort.coh_cohort_name }}</td>
-        <td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
-        <td><a href='{% url order-detail request.req_request_id %}'>Details</a></td>
-        <td><a class='blockLinkButton' href='{% url build-shipment request.req_request_id %}'>Build Shipment</a></td>
-      </tr>
-    {% endfor %}
-  </table>
-{% else %}
-  <div class="messages">
-    <div class="info">
-      You currently have no Pending Shipments.
-    </div>
-  </div>
-{% endif %}
-</div>
+	<div>
+		{% if accepted_requests %}
+			<table class="common_center" cellpadding='4'>
+				<tr>
+					<th>User</th>
+					<th>Cohort</th>
+					<th>Request Date</th>
+				</tr>
+				{% for request in accepted_requests %}
+					<tr>
+						<td><a href="{% url account-reviewer-view request.user.id %}">{{ request.user }}</a></td>
+						<td>{{ request.cohort.coh_cohort_name }}</td>
+						<td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+						<td><a href='{% url order-detail request.req_request_id %}'>Details</a></td>
+						<td><a class='blockLinkButton' href='{% url build-shipment request.req_request_id %}'>Build Shipment</a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			<div class="messages">
+				<div class="info">
+					You currently have no Pending Shipments.
+				</div>
+			</div>
+		{% endif %}
+	</div>
 
-<br>
-<div class='large-headline'>
-Shipped Requests
-</div>
+	<br>
+	<div class='large-headline'>
+		Shipped Requests
+	</div>
 
-<div>
-{% if shipped_requests %}  
-  <table class="common_center" cellpadding='4' cellspacing='2'>
-  <tr><th>User</th><th>Cohort</th><th>Request Date</th><th>Shipped Date</th></tr>
-    {% for request in shipped_requests %}
-      <tr><td><a href="{% url account-reviewer-view request.user.id %}">{{ request.user }}</a></td><td>{{ request.cohort.coh_cohort_name }}</td>
-        <td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
-        <td>{{ request.shipment.shp_shipment_date|date:"m/d/Y" }}</td>
-      <td><a href='{% url order-detail request.req_request_id %}'>Details</a></td></tr>
-    {% endfor %}
-  </table>
-{% else %}
-  <div class="messages">
-    <div class="info">
-      You currently have no Active Shipments.
-    </div>
-  </div>  
-{% endif %}  
-</div>
+	<div>
+		{% if shipped_requests %}
+			<table class="common_center" cellpadding='4' cellspacing='2'>
+				<tr>
+					<th>User</th>
+					<th>Cohort</th>
+					<th>Request Date</th>
+					<th>Shipped Date</th>
+				</tr>
+				{% for request in shipped_requests %}
+					<tr>
+						<td><a href="{% url account-reviewer-view request.user.id %}">{{ request.user }}</a></td>
+						<td>{{ request.cohort.coh_cohort_name }}</td>
+						<td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+						<td>{{ request.shipment.shp_shipment_date|date:"m/d/Y" }}</td>
+						<td><a href='{% url order-detail request.req_request_id %}'>Details</a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			<div class="messages">
+				<div class="info">
+					You currently have no Active Shipments.
+				</div>
+			</div>
+		{% endif %}
+	</div>
 {% endblock %}
