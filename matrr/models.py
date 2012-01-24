@@ -1310,7 +1310,10 @@ class TissueRequest(models.Model):
 		else:
 			monkey_cost += (brain + peripheral)*.5
 
-		estimated_cost = monkey_cost * self.monkeys.count()
+		if self.accepted_monkeys.all():
+			estimated_cost = monkey_cost * self.accepted_monkeys.count()
+		else:
+			estimated_cost = monkey_cost * self.monkeys.count()
 		return estimated_cost
 
 	def get_tiv_collisions(self):
