@@ -1133,16 +1133,14 @@ def search(request):
 def build_shipment(request, req_request_id):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
-	# do a sanity check
-	if not req_request.can_be_shipped():
-#		raise Exception(
-		messages.warning(request,
-			"A request may only be shipped if the request has been accepted, user has submitted a Purchase Order number, and the request hasn't already been shipped.")
-		return redirect('shipping-overview')
 
 	if Shipment.objects.filter(req_request=req_request).count():
 		shipment = req_request.shipment
 		if 'shipped' in request.POST:
+			if not req_request.can_be_shipped(): # do a sanity check
+				messages.warning(request, "A request may only be shipped if the request has been accepted, user has submitted a Purchase Order number, and the request hasn't already been shipped.")
+				return redirect('shipping-overview')
+
 			shipment.shp_shipment_date = datetime.today()
 			shipment.user = request.user
 			shipment.save()
