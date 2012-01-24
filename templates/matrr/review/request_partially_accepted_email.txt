@@ -22,7 +22,7 @@
 {% trans "Rejected requests:" %}
 {% for tissue_request in req_request.get_requested_tissues %}
 {% if tissue_request.get_accepted != Acceptance.Accepted %}{% for datum in tissue_request.get_data %}
-{{ datum.0 }}: {{ datum.1 }}{% endfor %}
+{% if datum.0 != "Estimated Cost" %}{{ datum.0 }}: {{ datum.1 }}{ %endif %}{% endfor %}
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}
 {% trans "Requested Monkeys:" %}
