@@ -1,7 +1,7 @@
 {% load i18n %}
 {% trans "Your tissue request has been accepted.  You will be contacted in order to fill out a material transfer agreement.  This agreement must be signed and returned before your order can be shipped." %}
 
-{% trans "You must also submit a Purchase Order number for this request before your order can be shipped.  You can submit this on the Order Detail page, linked below." %}
+{% trans "You must also submit a Purchase Order number for this request before it can be shipped.  You can submit this on the Order Detail page, linked below." %}
 
 {% trans "You will be expected to provide updates on your research 6 months after you receive your order." %}
 
