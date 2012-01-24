@@ -982,7 +982,7 @@ def request_review_process(request, req_request_id):
 					bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm) ).distinct().values_list('email', flat=True)
 					email = EmailMessage(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
 					if status != RequestStatus.Rejected:
-						outfile = open('/tmp/%s.pdf' % str(request.pk), 'wb')
+						outfile = open('/tmp/%s.pdf' % str(req_request.pk), 'wb')
 						process_latex('latex/shipping_manifest.tex',{'req_request': req_request,
 																					 'account': req_request.user.account,
 																					 'time': datetime.today(),
