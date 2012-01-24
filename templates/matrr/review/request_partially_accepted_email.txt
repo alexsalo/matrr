@@ -1,5 +1,9 @@
 {% load i18n %}
-{% trans "Your tissue request has been partially accepted.  You will be contacted in order to fill out a material transfer agreement.  After the agreement is signed and returned, and when the tissues are prepared, your order will be shipped.  You will be expected to provide updates on your research 6 months after you receive your order." %}
+{% trans "Your tissue request has been partially accepted.  You will be contacted in order to fill out a material transfer agreement.  This agreement must be signed and returned before your order can be shipped." %}
+
+{% trans "You must also submit a Purchase Order number for this request before your order can be shipped.  You can submit this on the Order Detail page, linked below." %}
+
+{% trans "You will be expected to provide updates on your research 6 months after you receive your order." %}
 
 {% trans "The tissues you requested are from cohort " %}{{ req_request.cohort }}.
 
@@ -25,4 +29,4 @@
 {{ monkey.mky_id }}
 {% endif %}{% endfor %}{% endif %}{% endfor %}
 
-{% trans "You can view your request at: " %}https://gleek.ecs.baylor.edu{{ request_url }}
+{% trans "You can view your request at " %}https://gleek.ecs.baylor.edu{{ request_url }}{% trans ".  From here you can revise and resubmit your request for further review." %}
