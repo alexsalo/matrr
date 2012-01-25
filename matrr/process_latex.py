@@ -62,4 +62,5 @@ def pdflatex(file, type='pdf'):
 							'-output-format', type,
 							#'-fmt', "/web/www/pdflatex/pdflatex",
 							file],
-			  cwd=dirname(file), stdout=PIPE, stderr=PIPE)
+#			  cwd=dirname(file), stdout=PIPE, stderr=PIPE)
+			  cwd=dirname(file))

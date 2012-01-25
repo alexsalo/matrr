@@ -59,3 +59,8 @@ def monkey_images(monkey, test_dir):
 			images[test_dir] = image_dirs[test_dir]
 
 	return images
+
+@register.filter_function
+def order_by(queryset, args):
+	args = [x.strip() for x in args.split(',')]
+	return queryset.order_by(*args)

@@ -9,8 +9,8 @@
 \begin{document}
 
 \begin{center}
-\Large{ \textbf{Shipping Manifest for:\\ User: {{ req_request.user }} Cohort: {{ req_request.cohort }}
- } } \\
+\Large{ Shipping Manifest for:\\ User: \verb|{{ req_request.user }}| Cohort: {{ req_request.cohort }}
+ }  \\
 \normalsize{Requested On: {{ req_request.req_request_date }} \\
 Manifest Created On: {{ time }} }
 \end{center}
@@ -23,7 +23,8 @@ Manifest Created On: {{ time }} }
 {{ account.act_country }}
 
 \vspace{0.1in}
-\noindent Fedex Number: {{ account.act_fedex }}
+\noindent Fedex Number: {{ account.act_fedex }} \\
+\noindent Purchase Order: {{ req_request.req_purchase_order }}
 
 \section*{Requested Tissues}
 
@@ -39,32 +40,18 @@ Manifest Created On: {{ time }} }
 
   \vspace{0.05in}
   {% if tissue_request.get_tissue %}
-  \subsubsection*{Requested Monkeys}
+  \subsubsection*{Accepted Monkeys}
   \nopagebreak[3]
   \noindent
   \begin{longtable}{|c|c|c|}
   \hline
-  {% for monkey in tissue_request.accepted_monkeys.all %}
-  Monkey: & {{ monkey.mky_id }} & \ \\* \nopagebreak \hline
-  {% with samples=tissue_request.get_tissue|get_stock:monkey %}
-    {% if samples.count %}
-      {% for sample in samples.all %}
-        Sample Location: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_location }} } \\* \hline
-        Last Updated: & \multicolumn{2}{|p{4in}|}{ {{ sample.get_modified }} }
-        {% if forloop.last %}\\{% else %}\\{% endif %} \hline
-      {% endfor %}
-    {% else %}
-      \multicolumn{3}{|p{6in}|}{There are no samples for this tissue and monkey in the inventory.
-      The tissue is either not harvested yet or it needs to be extracted from another item} \\ \hline
-    {% endif %}
-  {% endwith %}
-  {% endfor %}
+  Monkey: &{% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}, {% endfor %}\ \\* \nopagebreak \hline
   \end{longtable}
    \hline
   {% else %}
   \noindent This is a custom request, so there is no inventory data available.
   \nopagebreak
-  \subsubsection*{Requested Monkeys}
+  \subsubsection*{Accepted Monkeys}
   \begin{longtable}{|c|c|c|}
   \hline
   {% for monkey in tissue_request.accepted_monkeys.all %}
@@ -75,6 +62,8 @@ Manifest Created On: {{ time }} }
   \pagebreak[3]
   {% endif %}
 {% endfor %}
+\vspace{0.5in}
+\noindent \Large{Total Cost:\verb| ${{ req_request.get_total_estimated_cost }}| }
 
 \end{document}
 

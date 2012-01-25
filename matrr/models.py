@@ -2,6 +2,7 @@
 import Image
 import os, ast
 from django.core.files.base import File
+from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User, Group, Permission
@@ -12,6 +13,8 @@ from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
+from matrr.process_latex import process_latex
+import settings
 
 def percentage_validator(value):
 	MinValueValidator(0).__call__(value)
@@ -63,7 +66,17 @@ class Enumeration(object):
 
 InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
 
-Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
+#Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
+#LatexUnits = {
+#			'ul': '$\mu l$',
+#			'ug': '$\mu g$',
+#			'whole': '$whole$',
+#			'mg': '$mg$',
+#			'ml': '$ml$',
+#			'g': '$g$',
+#			}
+
+Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'), ('mm', 'mm'), ('cm', 'cm'))
 LatexUnits = {
 			'ul': '$\mu l$',
 			'ug': '$\mu g$',
@@ -71,7 +84,11 @@ LatexUnits = {
 			'mg': '$mg$',
 			'ml': '$ml$',
 			'g': '$g$',
+			'cm': '$cm$',
+			'mm': '$mm$',
 			}
+
+
 ExperimentEventType = Enumeration([
 								('D', 'Drink', 'Drink event'),
 								('T', 'Time', 'Time event'),
@@ -288,6 +305,7 @@ class Monkey(models.Model):
 										max_length=30,
 										help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
 	mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
+	mky_notes = models.CharField('Monkey Notes', null=True, blank=True, max_length=1000,)
 
 	def __unicode__(self):
 		return str(self.mky_id)
@@ -389,8 +407,10 @@ class Account(models.Model):
 	class Meta:
 		db_table = 'act_account'
 		permissions = ([
-					('view_other_accounts', 'Can view accounts of other users'),
-					
+						('view_other_accounts', 'Can view accounts of other users'),
+						('bcc_request_email', 'Will receive BCC of processed request emails'),
+						('po_manifest_email', 'Will receive Purchase Order shipping manifest email'),
+
 					])
 
 
@@ -1011,6 +1031,8 @@ class Request(models.Model, DiffingMixin):
 	req_notes = models.TextField('Request Notes', null=True, blank=True)
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
 
+	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
+
 	def __unicode__(self):
 		return 'User: ' + self.user.username +\
 			   ' Cohort: ' + self.cohort.coh_cohort_name +\
@@ -1157,7 +1179,8 @@ class Request(models.Model, DiffingMixin):
 		return False
 	def can_be_shipped(self):
 		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
-			return True
+			if self.req_purchase_order and self.user.account.act_fedex:
+				return True
 		return False
 
 
@@ -1306,7 +1329,10 @@ class TissueRequest(models.Model):
 		else:
 			monkey_cost += (brain + peripheral)*.5
 
-		estimated_cost = monkey_cost * self.monkeys.count()
+		if self.accepted_monkeys.all():
+			estimated_cost = monkey_cost * self.accepted_monkeys.count()
+		else:
+			estimated_cost = monkey_cost * self.monkeys.count()
 		return estimated_cost
 
 	def get_tiv_collisions(self):
@@ -1540,26 +1566,44 @@ class TissueSample(models.Model):
 
 class Publication(models.Model):
 	id = models.AutoField(primary_key=True)
-	authors = models.TextField('Authors', null=True)
-	title = models.CharField('Title', max_length=200, null=True)
-	journal = models.CharField('Journal', max_length=200, null=True)
+	authors = models.TextField('Authors', null=True, blank=True)
+	title = models.CharField('Title', max_length=200, null=True, blank=True)
+	journal = models.CharField('Journal', max_length=200, null=True, blank=True)
 	cohorts = models.ManyToManyField(Cohort, db_table='ptc_publications_to_cohorts',
 									 verbose_name='Cohorts',
 									 related_name='publication_set',
 									 help_text='The cohorts involved in this publication.',
-									 null=True)
-	published_year = models.CharField('Year Published', max_length=10, null=True)
-	published_month = models.CharField('Month Published', max_length=10, null=True)
-	issue = models.CharField('Issue Number', max_length=20, null=True)
-	volume = models.CharField('Volume', max_length=20, null=True)
-	pmid = models.IntegerField('PubMed ID', unique=True, null=True)
-	pmcid = models.CharField('PubMed Central ID', max_length=20, null=True)
-	isbn = models.IntegerField('ISBN', null=True)
-	abstract = models.TextField('Abstract', null=True)
-	keywords = models.TextField('Keywords', null=True)
+									 null=True, blank=True)
+	published_year = models.CharField('Year Published', max_length=10, null=True, blank=True)
+	published_month = models.CharField('Month Published', max_length=10, null=True, blank=True)
+	issue = models.CharField('Issue Number', max_length=20, null=True, blank=True)
+	volume = models.CharField('Volume', max_length=20, null=True, blank=True)
+	pmid = models.IntegerField('PubMed ID', unique=True, null=True, blank=True)
+	pmcid = models.CharField('PubMed Central ID', max_length=20, null=True, blank=True)
+	isbn = models.IntegerField('ISBN', null=True, blank=True)
+	abstract = models.TextField('Abstract', null=True, blank=True)
+	keywords = models.TextField('Keywords', null=True, blank=True)
+
+	pub_date = models.DateField("Publication Date", null=True, blank=True)
+
+	def _populate_pub_date(self):
+		if not self.pub_date:
+			if self.published_month and self.published_year:
+				date_string = "%s %s" % (self.published_month, self.published_year)
+				pub_date = datetime.strptime(date_string, "%b %Y")
+			elif not self.published_month and self.published_year:
+				date_string = self.published_year
+				pub_date = datetime.strptime(date_string, "%Y")
+			else:
+				pub_date = None
+			self.pub_date = pub_date
+			self.save()
 
 	def __unicode__(self):
-		return str(self.pmid)
+		if self.title:
+			return str(self.title.encode('ascii', 'ignore'))
+		else:
+			return str(self.pmid)
 
 	class Meta:
 		db_table = 'pub_publications'
@@ -1741,6 +1785,22 @@ def request_post_save(**kwargs):
 																monkey=monkey,
 																tissue_request=None)
 				tv.save()
+		if not settings.DEVELOPMENT:
+			perm = Permission.objects.get(codename='po_manifest_email')
+			to_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm) ).distinct().values_list('email', flat=True)
+			filename = 'manifest-%s-%s.pdf' % (str(req_request.user), str(req_request.pk))
+			outfile = open('/tmp/%s' % filename, 'wb')
+			subject = "Shipping Manifest for MATRR request %s." % str(req_request.pk)
+			body = "A MATRR request has been shipped.  Attached is the shipping manifest for this request, with the customer's Purchase Order number.  Please contact a MATRR admin if there are any issues or missing information."
+			email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, to_list)
+
+			process_latex('latex/shipping_manifest.tex',{'req_request': req_request,
+																			 'account': req_request.user.account,
+																			 'time': datetime.today(),
+																			 }, outfile=outfile)
+			outfile.close()
+			email.attach_file(outfile.name)
+			email.send()
 
 	req_request._previous_status = None
 

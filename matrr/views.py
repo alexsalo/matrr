@@ -1,4 +1,5 @@
 # Create your views here.
+from django.core.mail.message import EmailMessage
 from django.forms.models import modelformset_factory
 from django.forms.models import formset_factory
 from django.template import RequestContext
@@ -70,7 +71,7 @@ def cohorts_view_all(request):
 	return __cohorts_view(request, cohorts, template_name)
 
 def cohorts_view_assay(request):
-	return redirect(reverse('tissue-shop-landing', args =[Cohort.objects.get(coh_cohort_name__icontains="assay").pk,]))
+	return redirect(reverse('tissue-shop-landing', args =[Cohort.objects.get(coh_cohort_name__iexact="Assay Development").pk,]))
 
 def matrr_handler500(request):
 	from django.core.context_processors import static
@@ -749,7 +750,17 @@ def order_detail(request, req_request_id, edit=False):
 #		raise Http404('This page does not exist.')
 	
 	eval = req_request.is_evaluated()
-	
+	po_form = ''
+	if not req_request.req_status == 'SH' and not req_request.req_status == 'RJ':
+		po_form = PurchaseOrderForm(instance=req_request)
+		if request.method == 'POST':
+			po_form = PurchaseOrderForm(instance=req_request, data=request.POST)
+			if po_form.is_valid():
+				po_form.save()
+				messages.info(request, "Purchase Order number has been saved.")
+			else:
+				messages.error(request, "Purchase Order form invalid, please try again.  Please notify a MATRR admin if this message is erroneous.")
+
 	return render_to_response('matrr/order/order_detail.html',
 			{'order': req_request,
 			 'Acceptance': Acceptance,
@@ -757,6 +768,7 @@ def order_detail(request, req_request_id, edit=False):
 			 'shipped': req_request.is_shipped(),
 			 'after_submitted': eval,
 			 'edit': edit,
+			 'po_form': po_form,
 			 },
 							  context_instance=RequestContext(request))
 
@@ -855,7 +867,7 @@ def order_edit_tissue(request, req_rtt_id):
 
 def tissue_shop_landing_view(request,  cohort_id):
 	context = dict()
-	assay = Cohort.objects.get(coh_cohort_name__icontains="assay")
+	assay = Cohort.objects.get(coh_cohort_name__iexact="Assay Development")
 	cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
 	context['cohort'] = cohort
 	if cohort != assay:
@@ -917,8 +929,8 @@ def tissue_list(request, tissue_category=None, cohort_id=None):
 							  context_instance=RequestContext(request))
 
 
-def remove_values_from_list(the_list, other_list):
-	return [value for value in the_list if value not in other_list]
+def remove_values_from_list(base_list, removal_list):
+	return [value for value in base_list if value not in removal_list]
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
@@ -967,9 +979,19 @@ def request_review_process(request, req_request_id):
 				# Email subject *must not* contain newlines
 				subject = ''.join(form.cleaned_data['subject'].splitlines())
 				if not settings.DEVELOPMENT:
-					send_mail(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email])
-				messages.success(request, str(
-					req_request.user.username) + " was sent an email informing him/her that the request was accepted.")
+					perm = Permission.objects.get(codename='bcc_request_email')
+					bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm) ).distinct().values_list('email', flat=True)
+					email = EmailMessage(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
+					if status != RequestStatus.Rejected:
+						outfile = open('/tmp/%s.pdf' % str(req_request.pk), 'wb')
+						process_latex('latex/shipping_manifest.tex',{'req_request': req_request,
+																					 'account': req_request.user.account,
+																					 'time': datetime.today(),
+																					 }, outfile=outfile)
+						outfile.close()
+						email.attach_file(outfile.name)
+					email.send()
+				messages.success(request, str(req_request.user.username) + " was sent an email informing him/her that the request was accepted.")
 				return redirect(reverse('review-overview-list'))
 			else:
 				return render_to_response('matrr/review/process.html',
@@ -1048,9 +1070,21 @@ def shipping_overview(request):
 	# get the tissue requests that have been shipped
 	shipped_requests = Request.objects.shipped()
 
+	shipment_ready = {} # currently unused --jf 1/24/2012
+	for req in accepted_requests:
+		has_fedex = True if req.user.account.act_fedex else False
+		has_po = True if req.req_purchase_order else False
+		if has_fedex and has_po:
+			shipment_ready[req.pk] = 1
+		elif has_fedex or has_po:
+			shipment_ready[req.pk] = 0
+		else:
+			shipment_ready[req.pk] = -1
+
 	return render_to_response('matrr/shipping/shipping_overview.html',
 			{'accepted_requests': accepted_requests,
-			 'shipped_requests': shipped_requests},
+			 'shipped_requests': shipped_requests,
+			 'shipment_ready': shipment_ready},
 							  context_instance=RequestContext(request))
 
 
@@ -1112,19 +1146,19 @@ def search(request):
 def build_shipment(request, req_request_id):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
-	# do a sanity check
-	if not req_request.can_be_shipped():
-		raise Exception(
-			'You cannot create a shipment for a request that has not been accepted (or has already been shipped.')
 
 	if Shipment.objects.filter(req_request=req_request).count():
 		shipment = req_request.shipment
 		if 'shipped' in request.POST:
-			shipment.shp_shipment_date = datetime.today()
-			shipment.user = request.user
-			shipment.save()
-			req_request.ship_request()
-			req_request.save()
+			if not req_request.can_be_shipped(): # do a sanity check
+				messages.warning(request, "A request can only be shipped if all of the following are true: 1) the request has been accepted and not yet shipped, 2) the user has provided a FedEx number, 3) user has submitted a Purchase Order number.")
+#				return redirect('shipping-overview')
+			else:
+				shipment.shp_shipment_date = datetime.today()
+				shipment.user = request.user
+				shipment.save()
+				req_request.ship_request()
+				req_request.save()
 	else:
 		# create the shipment
 		shipment = Shipment(user=req_request.user, req_request=req_request)
@@ -1139,21 +1173,13 @@ def build_shipment(request, req_request_id):
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def make_shipping_manifest_latex(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
-	if not req_request.can_be_shipped() and not req_request.is_shipped():
-		raise Http404('Page does not exist.')
-	#Create the HttpResponse object with the appropriate PDF headers.
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=manifest-' +\
 									  str(req_request.user) + '-' +\
-									  str(req_request.cohort) + '.pdf'
+									  str(req_request.pk) + '.pdf'
 	account = req_request.user.account
 
-	return process_latex('latex/shipping_manifest.tex',
-														{'req_request': req_request,
-														'account': account,
-														'time': datetime.today(),
-														},
-														outfile=response)
+	return process_latex('latex/shipping_manifest.tex',{'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
 
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_delete(request, req_request_id):
@@ -1374,7 +1400,7 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 @user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')
 def inventory_cohort(request, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
-	tsts = TissueType.objects.all()
+	tsts = TissueType.objects.all().order_by('tst_tissue_name')
 	monkeys = cohort.monkey_set.all()
 	availability_matrix = list()
 #	y tst, x monkey

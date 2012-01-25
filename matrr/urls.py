@@ -1,3 +1,5 @@
+from django.db.models.aggregates import Count
+
 __author__ = 'soltau'
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic import DetailView, ListView
@@ -38,7 +40,7 @@ urlpatterns = patterns('matrr.views',
 
 	url(r'^publications/$',
 		ListView.as_view(
-			queryset=Publication.objects.all(),
+			queryset=Publication.objects.all().annotate(non_date=Count('pub_date')).order_by('-non_date', '-pub_date'),
 			context_object_name='publications',
 			template_name='matrr/all_publications.html',
 			paginate_by=15,
