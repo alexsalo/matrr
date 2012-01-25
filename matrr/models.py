@@ -66,7 +66,17 @@ class Enumeration(object):
 
 InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
 
-Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
+#Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
+#LatexUnits = {
+#			'ul': '$\mu l$',
+#			'ug': '$\mu g$',
+#			'whole': '$whole$',
+#			'mg': '$mg$',
+#			'ml': '$ml$',
+#			'g': '$g$',
+#			}
+
+Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'), ('mm', 'mm'), ('cm', 'cm'))
 LatexUnits = {
 			'ul': '$\mu l$',
 			'ug': '$\mu g$',
@@ -74,7 +84,11 @@ LatexUnits = {
 			'mg': '$mg$',
 			'ml': '$ml$',
 			'g': '$g$',
+			'cm': '$cm$',
+			'mm': '$mm$',
 			}
+
+
 ExperimentEventType = Enumeration([
 								('D', 'Drink', 'Drink event'),
 								('T', 'Time', 'Time event'),
