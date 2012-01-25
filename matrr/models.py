@@ -1225,6 +1225,11 @@ class TissueRequest(models.Model):
 											  verbose_name='Accepted Monkeys',
 											  related_name='accepted_tissue_request_set',
 											  help_text='The accepted monkeys for this request.')
+	
+	previously_accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_previously_accepted_monkeys_to_tissue_requests', blank=True, null=True,
+											  verbose_name='Previously Accepted Monkeys',
+											  related_name='previously_accepted_tissue_request_set',
+											  help_text='The accepted monkeys for the original of this request (applicable only if created as revised).')
 	def is_partially_accepted(self):
 		return self.accepted_monkeys.count() != 0
 	
@@ -1327,13 +1332,18 @@ class TissueRequest(models.Model):
 			if field.name != 'rtt_tissue_request_id': # do not duplicate the primary key
 				duplicate.__setattr__(field.name, self.__getattribute__(field.name))
 
+		
+
 		# Update the request FK with the new revised request
 		duplicate.req_request = revised_request
 		# And duplicate the requested and accepted monkeys
 		duplicate.save() # Must have a PK before doing m2m stuff
 		
 		
-		duplicate.accepted_monkeys = self.accepted_monkeys.all()
+		for a in self.accepted_monkeys.all():
+			duplicate.previously_accepted_monkeys.add(a)
+		duplicate.accepted_monkeys.clear()
+#		duplicate.accepted_monkeys = self.accepted_monkeys.all()
 		if self.is_partially_accepted():
 			monk = list()
 			for m in self.monkeys.all():
