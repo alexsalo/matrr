@@ -1294,3 +1294,65 @@ def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
 			dex = dexs[0]	
 			print "Loading %s..." % file_name
 			load_eev_one_file(file_name, dex, create_mtd)
+
+
+def load_necrospy_summary(filename):
+	"""
+		This function will load a csv file in the format
+		row[0]	= matrr_number
+		row[1]	= cohort_broad_title 	# unused
+		row[2]	= species 				# unused
+		row[3]	= cohort_number 		# unused
+		row[4]	= sex 					# unused
+		row[5]	= birth_date (string, in format '%m/%d/%y' = 1/1/01)
+		row[6]	= necropsy_date (string, in format '%m/%d/%y' = 1/1/01)
+		row[7]	= age_at_necropsy
+		row[8]	= date_of_etoh_onset (string, in format '%m/%d/%y' = 1/1/01)
+		row[9]	= age_onset_etoh
+		row[10]	= etoh_4%_ind
+		row[11]	= etoh_4%_22hr
+		row[12]	= lifetime_etoh_4%_mls
+		row[13]	= lifetime etoh grams
+		row[14]	= sum_g/kg_ind
+		row[15]	= sum_g/kg_22hr
+		row[16]	= lifetime_sum_g/kg
+		row[17]	= 6 mos start (string, in format '%m/%d/%y' = 1/1/01)
+		row[18]	= 6 mos end (string, in format '%m/%d/%y' = 1/1/01)
+		row[19]	= 12 mos end (string, in format '%m/%d/%y' = 1/1/01)
+		row[20]	= 22hr_6mos_avg_g/kg
+		row[21]	= 22hr_12mos_avg_g/kg
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	for row in csv_infile:
+		if row[0]:
+			try:
+				monkey = Monkey.objects.get(pk=row[0])
+			except Monkey.DoesNotExist:
+				raise Exception("No such monkey:  %s" % str(row[0]))
+			try:
+				nec_sum = monkey.necropsy_summary
+			except NecropsySummary.DoesNotExist:
+				nec_sum = NecropsySummary(monkey=monkey)
+
+			monkey.mky_birthdate 			= datetime.datetime.strptime(row[5], '%m/%d/%y')
+			monkey.mky_necropsy_start_date 	= datetime.datetime.strptime(row[6], '%m/%d/%y')
+			monkey.mky_age_at_necropsy 		= row[7]
+			monkey.save()
+
+			nec_sum.ncm_etoh_onset 				= datetime.datetime.strptime(row[8], '%m/%d/%y')
+			nec_sum.ncm_age_onset_etoh 			= row[9]
+			nec_sum.ncm_etoh_4pct_induction 	= row[10] if row[10] != "control" else 0
+			nec_sum.ncm_etoh_4pct_22hr			= row[11] if row[11] != "control" else 0
+			nec_sum.ncm_etoh_lifetime_4pct		= row[12] if row[12] != "control" else 0
+			nec_sum.ncm_etoh_lifetime_g			= row[13] if row[13] != "control" else 0
+			nec_sum.ncm_sum_g_per_kg_induction	= row[14] if row[14] != "control" else 0
+			nec_sum.ncm_sum_g_per_kg_22hr		= row[15] if row[15] != "control" else 0
+			nec_sum.ncm_sum_g_per_kg_lifetime	= row[16] if row[16] != "control" else 0
+			nec_sum.ncm_6_mo_start 				= datetime.datetime.strptime(row[17], '%m/%d/%y')
+			nec_sum.ncm_6_mo_end 				= datetime.datetime.strptime(row[18], '%m/%d/%y')
+			nec_sum.ncm_12_mo_end 				= datetime.datetime.strptime(row[19], '%m/%d/%y')
+			nec_sum.ncm_22hr_6mo_avg_g_per_kg	= row[20] if row[20] != "control" else 0
+			nec_sum.ncm_22hr_12mo_avg_g_per_kg	= row[21] if row[21] != "control" else 0
+			nec_sum.save()
+		

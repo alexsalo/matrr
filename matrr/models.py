@@ -617,6 +617,29 @@ class ExperimentEvent(models.Model):
 		db_table = 'eev_experiment_events'
 
 
+class NecropsySummary(models.Model):
+	ncm_id = models.AutoField(primary_key=True)
+	monkey = models.OneToOneField(Monkey, null=False, db_column='ebt_id', related_name='necropsy_summary')
+	ncm_etoh_onset = models.DateTimeField("Date of Ethanol Onset", blank=True, null=True)
+	ncm_age_onset_etoh = models.CharField("Age at Ethanol Onset", max_length=100, blank=True, null=True)
+	ncm_etoh_4pct_induction = models.FloatField("Induction Ethanol Intake", blank=True, null=True)
+	ncm_etoh_4pct_22hr = models.FloatField("22hr Free Access Ethanol Intake", blank=True, null=True)
+	ncm_etoh_lifetime_4pct = models.FloatField("Lifetime Ethanol Intake (in 4% ml)", blank=True, null=True)
+	ncm_etoh_lifetime_g = models.FloatField("Lifetime Etanol Intake (in grams)", blank=True, null=True)
+	ncm_sum_g_per_kg_induction = models.FloatField("Induction Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+	ncm_sum_g_per_kg_22hr = models.FloatField("22hr Free Access Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+	ncm_sum_g_per_kg_lifetime = models.FloatField("Lifetime Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+	ncm_6_mo_start = models.DateField('6 Month Start', blank=True, null=True)
+	ncm_6_mo_end = models.DateField('6 Month End', blank=True, null=True)
+	ncm_12_mo_end = models.DateField('12 Month End', blank=True, null=True)
+	ncm_22hr_6mo_avg_g_per_kg = models.FloatField("22hr 6mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+	ncm_22hr_12mo_avg_g_per_kg = models.FloatField("22hr 12mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+
+	class Meta:
+		db_table = 'ncm_necropsy_summary'
+
+
+
 class VIPQuerySet(models.query.QuerySet):
 	def vip_filter(self, user):
 		if user.has_perm('view_vip_images'):
