@@ -991,7 +991,7 @@ def request_review_process(request, req_request_id):
 						outfile.close()
 						email.attach_file(outfile.name)
 					email.send()
-				messages.success(request, str(req_request.user.username) + " was sent an email informing him/her that the request was accepted.")
+					messages.info(request, str(req_request.user.username) + " was sent an email informing him/her that the request was processed.")
 				return redirect(reverse('review-overview-list'))
 			else:
 				return render_to_response('matrr/review/process.html',
