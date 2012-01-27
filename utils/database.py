@@ -1344,8 +1344,8 @@ def load_necrospy_summary(filename):
 			nec_sum.ncm_age_onset_etoh 			= row[9]
 			nec_sum.ncm_etoh_4pct_induction 	= row[10] if row[10] != "control" else 0
 			nec_sum.ncm_etoh_4pct_22hr			= row[11] if row[11] != "control" else 0
-			nec_sum.ncm_etoh_lifetime_4pct		= row[12] if row[12] != "control" else 0
-			nec_sum.ncm_etoh_lifetime_g			= row[13] if row[13] != "control" else 0
+			nec_sum.ncm_etoh_4pct_lifetime		= row[12] if row[12] != "control" else 0
+			nec_sum.ncm_etoh_g_lifetime			= row[13] if row[13] != "control" else 0
 			nec_sum.ncm_sum_g_per_kg_induction	= row[14] if row[14] != "control" else 0
 			nec_sum.ncm_sum_g_per_kg_22hr		= row[15] if row[15] != "control" else 0
 			nec_sum.ncm_sum_g_per_kg_lifetime	= row[16] if row[16] != "control" else 0
