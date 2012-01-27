@@ -1296,7 +1296,7 @@ def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
 			load_eev_one_file(file_name, dex, create_mtd)
 
 
-def load_necrospy_summary(filename):
+def load_necropsy_summary(filename):
 	"""
 		This function will load a csv file in the format
 		row[0]	= matrr_number
