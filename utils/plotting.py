@@ -365,79 +365,7 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 	return formatted_monkeys
 
 
-def cohort_22hr_intake_g_per_kg(cohort, monkey=None):
-	from matrr.models import Cohort
-	if not isinstance(cohort, Cohort):
-		try:
-			cohort = Cohort.objects.get(pk=cohort)
-		except Cohort.DoesNotExist:
-			print("That's not a valid cohort.")
-			return False, 'NO MAP'
-
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-	ax1 = fig.add_subplot(111)
-	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
-	ax1.set_axisbelow(True)
-	title = "Monkey %s" % str(monkey.pk) if monkey else "Cohort %s" % str(cohort)
-	ax1.set_title('Average Ethanol Intake for %s during 22 Hour Free Access Phase' % title)
-	ax1.set_ylabel("Monkey")
-	ax1.set_xlabel("Ethanol Intake (in g/kg)")
-
-	bar_colors =  ['green', 'blue']
-
-	summaries = []
-	raw_labels = []
-	for mky in cohort.monkey_set.all().order_by("necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
-		if monkey and mky == monkey:
-			continue
-		else:
-			try:
-				summaries.append(mky.necropsy_summary)
-				raw_labels.append(str(mky.pk))
-			except:
-				continue
-
-	if len(summaries) == 0 or (monkey and not monkey.necropsy_summary):
-		print("Cohort or Monkey doesn't have any necropsy summary rows")
-		return False, 'NO MAP'
-	else:
-		idx = numpy.arange(len(summaries))
-		width = 0.4
-
-	avg_6_months = [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries]
-	rects1 = ax1.barh(idx, avg_6_months, width, color=bar_colors[0])
-	avg_12_months = [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries]
-	rects2 = ax1.barh(idx+width, avg_12_months, width, color=bar_colors[1])
-
-	def autolabel(rects):
-		for rect in rects:
-			width = rect.get_width()
-			xloc = width + .15
-			clr = 'black'
-			align = 'right'
-			yloc = rect.get_y()+rect.get_height()/2.0
-			if width > 0:
-				ax1.text(xloc, yloc, width, horizontalalignment=align, verticalalignment='center', color=clr)
-	ax1.legend( (rects2[0], rects1[0]), ('12 Month Average', '6 Month Average'), loc=4 )
-	autolabel(rects1)
-	autolabel(rects2)
-	#monkey stuff
-	if monkey:
-		monkey_colors =  ['orange', 'yellow']
-		monkey_bar1 = ax1.barh(max(idx)+1, monkey.necropsy_summary.ncm_22hr_6mo_avg_g_per_kg, width, color=monkey_colors[0])
-		monkey_bar2 = ax1.barh(max(idx)+1+width, monkey.necropsy_summary.ncm_22hr_12mo_avg_g_per_kg, width, color=monkey_colors[1])
-		autolabel(monkey_bar1)
-		autolabel(monkey_bar2)
-		idx = numpy.arange(len(summaries)+1)
-		raw_labels.append(str(monkey.pk))
-		ax1.legend( (rects2[0], rects1[0], monkey_bar2, monkey_bar1), ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk)), loc=4)
-
-	ax1.set_yticks(idx+width)
-	ax1.set_yticklabels(raw_labels)
-	return fig, 'NO MAP'
-
 COHORT_PLOTS = {
-				"cohort_22hr_intake_g_per_kg": (cohort_22hr_intake_g_per_kg, "Cohort Ethanol Intake, 22hr Average "),
 				"cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2de_month_etoh_intake, 'Cohort Ethanol Intake, by month'),
 				"cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 'Cohort Water Intake, by month'),
 				"cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 'Cohort Pellets, by month'),
@@ -988,22 +916,31 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 
 
 def monkey_necropsy_avg_22hr_g_per_kg(monkey):
-	graph_title = 'Average Ethanol Intake for Monkey %s during 22 Hour Free Access Phase' % str(monkey.pk)
-	x_label = "Ethanol Intake (in g/kg)"
-	legend_labels = ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk))
-	return monkey_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
+	if monkey.necropsy_summary:
+		graph_title = 'Average Ethanol Intake for Monkey %s during 22 Hour Free Access Phase' % str(monkey.pk)
+		x_label = "Ethanol Intake (in g/kg)"
+		legend_labels = ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk))
+		return monkey_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
+	else:
+		return False, "NO MAP"
 
 def monkey_necropsy_etoh_4pct(monkey):
-	graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
-	x_label = "Ethanol Intake (in 4% ml)"
-	legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
-	return monkey_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, monkey)
+	if monkey.necropsy_summary:
+		graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
+		x_label = "Ethanol Intake (in 4% ml)"
+		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
+		return monkey_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, monkey)
+	else:
+		return False, "NO MAP"
 
 def monkey_necropsy_sum_g_per_kg(monkey):
-	graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
-	x_label = "Ethanol Intake (in g/kg)"
-	legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
-	return monkey_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, monkey)
+	if monkey.necropsy_summary:
+		graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
+		x_label = "Ethanol Intake (in g/kg)"
+		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
+		return monkey_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, monkey)
+	else:
+		return False, "NO MAP"
 
 def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, monkey, cohort=None):
 	from matrr.models import Monkey, Cohort
