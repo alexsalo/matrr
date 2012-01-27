@@ -7,6 +7,7 @@
 {% block content %}
 <div class='headline'>Inventory Status for Cohort <a href="{% url cohort-details cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a></div>
 
+<div class=left>
 <a href="{% url inventory %}">
 
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
@@ -16,8 +17,18 @@
 
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 			&nbsp;View Cohort Details</a>
-			
-<table class='common_center'>
+</div>
+<div class=right>
+	<table class='common_center' style='padding: 0'>
+		<tr>
+			<td id="avail0">Available</td>
+		</tr>
+		<tr>
+			<td id="avail2">Unavailable</td>
+		</tr>
+	</table>
+</div>
+<table class='common_center' style='padding: 0'>
 	<tr>
 		<th>Tissue Type \ Monkey</th>
 		{% for mky in monkeys %}
