@@ -1437,7 +1437,7 @@ def inventory_cohort(request, coh_id):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_tools(request):
-	return render_to_response('VIP/vip_index.html', {}, context_instance=RequestContext(request))
+	return render_to_response('matrr/VIP/vip_index.html', {}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_graphs(request):
@@ -1468,7 +1468,7 @@ def vip_graphs(request):
 		coh_keys.sort()
 		context['mky_keys'] = mky_keys
 		context['coh_keys'] = coh_keys
-		return render_to_response('VIP/vip_graphs.html', context, context_instance=RequestContext(request))
+		return render_to_response('matrr/VIP/vip_graphs.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_mtd_graph(request, mtd_id):
@@ -1479,7 +1479,7 @@ def vip_mtd_graph(request, mtd_id):
 						   	method='monkey_bouts_drinks_intraday',
 						   	title="Drinks on %s for monkey %s" % (str(mtd.drinking_experiment.dex_date), str(mtd.monkey))
 							)
-		return render_to_response('VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
+		return render_to_response('matrr/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
@@ -1527,7 +1527,7 @@ def vip_graph_builder(request, method_name):
 		else:
 			subject_form = VIPGraphForm_cohorts()
 	# only reachable if NOT request.POST
-	return render_to_response('VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}, context_instance=RequestContext(request))
+	return render_to_response('matrr/VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}, context_instance=RequestContext(request))
 
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
@@ -1562,7 +1562,7 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 			messages.info(request, "No drinking experiments for the given date range for this monkey")
 
 	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges, 'matrr_image': matrr_image}
-	return render_to_response('VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
@@ -1597,7 +1597,7 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 			context['matrr_image'] = matrr_image
 		else:
 			messages.info(request, "No drinking experiments for the given date range for this cohort")
-	return render_to_response('VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
 ###############
 ### End VIP ###
