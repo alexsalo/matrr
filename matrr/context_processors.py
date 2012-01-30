@@ -31,7 +31,7 @@ def login_form(request):
 def group_membership(request):
 	#context = {}
 	# cheezy, should be somewhere else
-	context = {'PRODUCTION': PRODUCTION}
+	context = {'PRODUCTION': PRODUCTION} # no, really, this should be moved.
 	if request.user.is_authenticated():
 		# if the user is logged in, get the groups the user is a member of
 		groups = request.user.groups.all()
