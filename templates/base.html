@@ -7,7 +7,7 @@
 <!--		<meta http-equiv='Content-Type' content='text/html; charset=utf-8'/> -->
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/layout.css"/>
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/style.css"/>
-	{% if plot_gallery %}
+	{% if plot_gallery or unsupported_browser or 1 %}
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
 
 		<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.colorbox.js"></script>
@@ -24,6 +24,13 @@
 </head>
 
 <body>
+{% if unsupported_browser %}
+<script>
+	jQuery(document).ready(function () {
+                jQuery().colorbox({href:'/static/unsupported_browser.html', opacity:0.8, maxHeight:'100%', maxWidth:'50%', fixed:true, initialWidth:'100%', initialHeight:'100%'});
+            });
+</script>
+{% endif %}
 <!-- Header div -->
 {% if PRODUCTION %}
 <div class='header'>
