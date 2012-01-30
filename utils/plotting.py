@@ -43,6 +43,8 @@ def validate_dates(**kwargs):
 			print("Invalid parameter, from_date")
 			return False, 'NO MAP'
 
+
+### Specific Callables ###
 def etoh_intake(queryset):
 	return queryset.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
 
@@ -87,27 +89,54 @@ def necropsy_summary_sum_g_per_kg(queryset):
 		except: # really only catching mky.necropsy_summary == None
 			continue
 	return [summary.ncm_sum_g_per_kg_22hr for summary in summaries], [summary.ncm_sum_g_per_kg_lifetime for summary in summaries], raw_labels
-
+### End Specific Callables ###
 
 
 
 def cohort_necropsy_avg_22hr_g_per_kg(cohort):
-	graph_title = 'Average Ethanol Intake for cohort %s during 22 Hour Free Access Phase' % str(cohort)
-	x_label = "Ethanol Intake (in g/kg)"
-	legend_labels = ('12 Month Average', '6 Month Average')
-	return cohort_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
+	nec_sums = []
+	for monkey in cohort.monkey_set.all():
+		try:
+			nec_sums.append(monkey.necropsy_summary)
+		except NecropsySummary.DoesNotExist:
+			continue
+	if nec_sums:
+		graph_title = 'Average Ethanol Intake for cohort %s during 22 Hour Free Access Phase' % str(cohort)
+		x_label = "Ethanol Intake (in g/kg)"
+		legend_labels = ('12 Month Average', '6 Month Average')
+		return cohort_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
+	else:
+		return False, 'NO MAP'
 
 def cohort_necropsy_etoh_4pct(cohort):
-	graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
-	x_label = "Ethanol Intake (in 4% ml)"
-	legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
-	return cohort_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
+	nec_sums = []
+	for monkey in cohort.monkey_set.all():
+		try:
+			nec_sums.append(monkey.necropsy_summary)
+		except NecropsySummary.DoesNotExist:
+			continue
+	if nec_sums:
+		graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
+		x_label = "Ethanol Intake (in 4% ml)"
+		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
+		return cohort_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
+	else:
+		return False, 'NO MAP'
 
 def cohort_necropsy_sum_g_per_kg(cohort):
-	graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
-	x_label = "Ethanol Intake (in g/kg)"
-	legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
-	return cohort_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
+	nec_sums = []
+	for monkey in cohort.monkey_set.all():
+		try:
+			nec_sums.append(monkey.necropsy_summary)
+		except NecropsySummary.DoesNotExist:
+			continue
+	if nec_sums:
+		graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
+		x_label = "Ethanol Intake (in g/kg)"
+		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
+		return cohort_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
+	else:
+		return False, 'NO MAP'
 
 def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
 	from matrr.models import Cohort
@@ -916,30 +945,33 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 
 
 def monkey_necropsy_avg_22hr_g_per_kg(monkey):
-	if monkey.necropsy_summary:
+	try:
+		nec_sum = monkey.necropsy_summary
 		graph_title = 'Average Ethanol Intake for Monkey %s during 22 Hour Free Access Phase' % str(monkey.pk)
 		x_label = "Ethanol Intake (in g/kg)"
 		legend_labels = ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk))
 		return monkey_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
-	else:
+	except NecropsySummary.DoesNotExist:
 		return False, "NO MAP"
 
 def monkey_necropsy_etoh_4pct(monkey):
-	if monkey.necropsy_summary:
+	try:
+		nec_sum = monkey.necropsy_summary
 		graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
 		x_label = "Ethanol Intake (in 4% ml)"
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
 		return monkey_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, monkey)
-	else:
+	except NecropsySummary.DoesNotExist:
 		return False, "NO MAP"
 
 def monkey_necropsy_sum_g_per_kg(monkey):
-	if monkey.necropsy_summary:
+	try:
+		nec_sum = monkey.necropsy_summary
 		graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
 		x_label = "Ethanol Intake (in g/kg)"
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
 		return monkey_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, monkey)
-	else:
+	except NecropsySummary.DoesNotExist:
 		return False, "NO MAP"
 
 def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, monkey, cohort=None):
@@ -1035,14 +1067,14 @@ MONKEY_PLOTS = {
 				'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake Pattern'),
 				'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
 				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg, "Average Monkey Ethanol Intake, 22hr"),
-				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, "Total Monkey Ethanol Intake (in 4% ml)"),
-				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, "Total Monkey Ethanol Intake (in g/kg)"),
+				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, "Total Monkey Ethanol Intake, in 4percent ml"),
+				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, "Total Monkey Ethanol Intake, in g per kg"),
 }
 
 def create_plots():
 	from matrr.models import MonkeyImage, Monkey
 	MonkeyImage.objects.all().delete()
-	for monkey in Monkey.objects.filter(mtd_set__gt=0).distinct():
+	for monkey in Monkey.objects.all():
 		for key in MONKEY_PLOTS:
 			if 'intraday' in key:
 				continue
@@ -1052,7 +1084,7 @@ def create_plots():
 
 	from matrr.models import CohortImage, Cohort
 	CohortImage.objects.all().delete()
-	for cohort in Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct():
+	for cohort in Cohort.objects.all():
 		for key in COHORT_PLOTS:
 			graph = key
 			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[key][1])
