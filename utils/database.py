@@ -7,224 +7,6 @@ import string
 import datetime
 import csv, re
 
-## Old, might be useful in the future, but kept for reference
-## Corrected improper birthday formatting.  match.group(0) = full string, not first group.  group.(1) is the first group.
-@transaction.commit_on_success
-def load_experiments(file):
-	"""
-	  This function will assume that the monkeys and cohorts are already entered into the database.
-	  Assumes the columns are in the following order:
-		0 - Date
-		1 - Cohort - this is ignored.  we look at the monkey's cohort instead
-		2 - Experiment Type
-		3 - Monkey ID
-		4 - EtOH Intake
-		5 - Veh Intake
-		6 - EtOH g/kg
-		7 - Total Pellets Consumed
-		8 - Weight
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	# get the column headers
-	columns = input.next()
-
-	for row in input:
-		# get the monkey
-		monkey = Monkey.objects.get(mky_real_id=row[3])
-		# create the drinking_experiment if it does not already exist
-		if DrinkingExperiment.objects.filter(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2]).count() == 0:
-			drinking_experiment = DrinkingExperiment(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2])
-			drinking_experiment.save()
-		# saving the drinking_experiment will also create the MonkeyToExperiment objects
-		else:
-			# otherwise get the existing experiment
-			drinking_experiment = DrinkingExperiment.objects.get(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2])
-
-		# get the MonkeyToDrinkingExperiment object for this row
-		mtd = MonkeyToDrinkingExperiment(monkey=Monkey.objects.get(mky_real_id=row[3]), drinking_experiment=drinking_experiment)
-
-		# add the data to the MonkeyToExperiment object
-		if row[4]:
-			mtd.mtd_etoh_intake = row[4]
-		else:
-			mtd.mtd_etoh_intake = 0
-		mtd.mtd_veh_intake = row[5]
-		mtd.mtd_total_pellets = row[7]
-		mtd.mtd_weight = row[8]
-
-		# save the data
-		mtd.save()
-
-
-## Old, might be useful in the future, but kept for reference
-@transaction.commit_on_success
-def load_monkeys(file):
-	"""
-	  This function will load monkeys from a csv file.
-	  It assumes that the cohorts have already been created.
-	  It also assumes the columns are in the following order:
-		0 - DoB
-		1 - Old ID (ignored)
-		2 - Name (ignored)
-		3 - New ID (ignored)
-		4 - Birth Estimate (bool, "x"=true)
-		5 - Animal #
-		6 - Name (all == "INIA")
-		7 - Alt Name (ignored)
-		8 - Cohort (ignored)
-		9 - Sub-Cohort (ignore)
-		10 - Full Cohort ref (renamed to match matrr)
-		11 - Species
-		12 - SEX  (not gender, damnit, sex)
-		13 - non-drinking ("control", "practice", "housing ctrl")
-		14 - Name (None == "NULL")
-		15 - Necropsy date
-		16 - Incomplete study
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',')
-	# get the column headers
-	columns = input.next()
-
-	for row in input:
-		cohort = Cohort.objects.get(coh_cohort_name=row[10])
-		monkey_id = int(row[5])
-		sex = row[12]
-		drinking = True
-		housing_control = False
-		if row[13]:
-			drinking = False
-			if row[13] == 'housing ctrl':
-				housing_control = True
-
-		name = None
-		if row[14] != 'NULL':
-			name = row[14]
-
-		# convert the birthdatedate from mm/dd/yy to ISO format
-		if row[0]:
-			match = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2})', row[0])
-			if int(match.group(3)) < 50:
-				millennium = '20'
-			else:
-				millennium = '19'
-			birthdate = millennium + match.group(3) + "-" + match.group(1) + "-" + match.group(2)
-		else:
-			birthdate = None
-		# convert the necropsy date from mm/dd/yy to ISO format
-		# this assumes all necropsy were after 2000.
-		match = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2})', row[15])
-		necropsy = '20' + match.group(3) + "-" + match.group(1) + "-" + match.group(2)
-		if not len(necropsy):
-			necropsy = None
-
-		complete_study = True
-		if len(row[16]) != 0 or necropsy is None:
-			complete_study = False
-
-		# check if the monkey already exists
-		if Monkey.objects.filter(mky_real_id=monkey_id).count():
-			# Update the monkey
-			monkey = Monkey.objects.get(mky_real_id=monkey_id)
-			monkey.mky_birthdate = birthdate
-			monkey.mky_gender = sex
-			monkey.mky_drinking = drinking
-			monkey.mky_name = name
-			monkey.mky_necropsy_start_date = necropsy
-			monkey.mky_housing_control = housing_control
-			monkey.mky_study_complete = complete_study
-			monkey.save()
-			print monkey
-		else:
-			# Create the monkey and save it
-			monkey = Monkey(cohort=cohort,
-				   mky_real_id=monkey_id,
-				   mky_birthdate=birthdate,
-				   mky_gender=sex,
-				   mky_drinking=drinking,
-				   mky_name=name,
-				   mky_necropsy_start_date=necropsy,
-				   mky_housing_control=housing_control,
-				   mky_study_complete=complete_study).save()
-			print monkey
-
-
-## Old, might be useful in the future, but kept for reference
-@transaction.commit_on_success
-def load_timelines(file):
-	"""
-	  This function will load monkeys from a csv file.
-	  It assumes that the cohorts have already been created.
-	  The first row should be table headers and the first
-	  column should be cohort names.
-	  If a column header has "Name" in it, it is not added as an
-	  event and the following column is given the contents of the cell as
-	  the info field.
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	# get the column headers
-	columns = input.next()
-	name_columns = list()
-	for i, header in enumerate(columns):
-		if re.match(r'.*Name.*', header) is not None:
-			name_columns.append(i)
-		elif i != 0:
-			# if the event type does not exist, create it
-			if EventType.objects.filter(evt_name=header).count() == 0:
-				EventType(evt_name=header).save()
-
-	for row in input:
-		cohort = None
-		info = None
-		next_info = None
-		for i, value in enumerate(row):
-			if i == 0:
-				cohort = Cohort.objects.get(coh_cohort_name=value)
-			elif i in name_columns and len(value) != 0:
-				info = value
-			elif len(value) != 0:
-				# skip empty cells
-
-				#convert the date to ISO format
-				date = re.sub(r'(\d+)/(\d+)/(\d+)',
-							  r'\3-\1-\2',
-							  value)
-				CohortEvent(cohort=cohort,
-							event=EventType.objects.get(evt_name=columns[i]),
-							cev_date=date,
-							cev_info=info).save()
-
-				info = None
-
-
-## Old, might be useful in the future, but kept for reference
-@transaction.commit_on_success
-def load_cohorts(file):
-	"""
-	  This function will load cohorts from a csv file.
-	  It assumes the first column of every row (except the first row),
-	  contains the cohort name and that the second column contains the species of monkey.
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	# get the column headers
-	columns = input.next()
-
-	placeholder_name = 'Placeholder Institution'
-	# check if a placeholder institution exists
-	if not Institution.objects.filter(ins_institution_name=placeholder_name).count():
-		# add a dummy institution
-		placeholder = Institution(ins_institution_name=placeholder_name)
-		placeholder.save()
-	else:
-		# get the dummy institution
-		placeholder = Institution.objects.get(ins_institution_name=placeholder_name)
-
-	for row in input:
-		# Create the cohort and save it
-		Cohort(coh_cohort_name=row[0],
-			   coh_upcoming=False,
-			   institution=placeholder,
-			   coh_species=row[1]).save()
-
 # This was _not_ built to be used often.  In fact, if it ever needs to be used again, you'll probably have to rewrite it.
 # Like I just did.
 # -jf
@@ -469,42 +251,6 @@ def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_dup
 			unmatched_output.writerow(row)
 			print error
 
-
-## Wrote this to correct birthdate string formats which load_experiments had slaughtered.
-## This still saves birthdays as a string, not a datetime.
-## It is highly unlikely this will be needed again in the future
-## -jf
-def load_birthdates(file):
-	"""
-		This function will load a csv file in the format
-		row[0] = Birthdate
-		row[1] = Alt Birthdate format
-		row[2] = Monkey Name
-		row[3] = mky_real_id
-	"""
-	csv_infile = csv.reader(open(file, 'rU'), delimiter=",")
-	csv_outfile = csv.writer(open("LostMonkeys-" + file, 'w'), delimiter=',')
-	columns = csv_infile.next()
-	csv_outfile.writerow(columns)
-	for row in csv_infile:
-		try:
-			mon = Monkey.objects.get(mky_real_id=row[3])
-		except Monkey.DoesNotExist:
-			csv_outfile.writerow(row)
-			continue
-		if row[0] is not None:
-			match = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2})', row[0])
-			if int(match.group(3)) < 20:
-				year_prefix = '20'
-			else:
-				year_prefix = '19'
-			new_bd = match.group(1).zfill(2) + "/" + match.group(2).zfill(2) + "/" + year_prefix + match.group(3).zfill(2)
-			old_bd = mon.mky_birthdate
-			if new_bd != old_bd:
-				mon.mky_birthdate = new_bd
-				mon.save()
-
-
 ## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
 ## -jf
 def dump_all_TissueSample(output_file):
@@ -557,7 +303,6 @@ def dump_all_TissueSample(output_file):
 		output.writerow(row)
 	print "Success"
 
-
 ## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
 ## -jf
 def dump_distinct_TissueType(output_file):
@@ -578,7 +323,6 @@ def dump_distinct_TissueType(output_file):
 		row[len(row):] = [str(TT.tst_tissue_name)]
 		output.writerow(row)
 	print "Success."
-
 
 def dump_monkey_data(output_file):
 	output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
@@ -638,55 +382,6 @@ def load_monkey_data(input_file):
 		monkey.mky_age_at_necropsy = row[15]
 		monkey.save()
 	print "Success"
-
-
-
-## Wrote this, ended up not using it.  May still need it, necropsy dates in the DB are different than in the spreadsheet I was given.
-## -jf
-def load_necropsy_dates(file):
-	"""
-	  This function will load monkeys from a csv file.
-	  It assumes that the cohorts have already been created.
-	  It also assumes the columns are in the following order:
-		0 - Monkey ID
-		1 - Monkey Species
-		2 - Sex
-		3 - Date of Birth
-		4 - birth_estimated ("t" if True)
-		5 - Monkey's Name
-		6 - Necropsy Date
-		7 - Cohort Broad Title ("INIA")
-		8 - Cohort Species
-		9 - Cohort Number
-		10- Role ("control" or "")
-		11- Sub_type  (ignored in this function, 'housing' is stored in Monkey)
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',')
-	# get the column headers
-	columns = input.next()
-
-	for row in input:
-		real_id = row[0].replace(" ", '')
-		necropsy = row[6].replace(" ", '')
-		name = row[5].strip()
-		if name == '':
-			name = None
-
-		# the necropsy date was given in string yyyy/mm/dd format
-		if len(necropsy):
-			necropsy = necropsy.split('-')
-			necropsy = datetime.date(int(necropsy[0]), int(necropsy[1]), int(necropsy[2]))
-		else:
-			necropsy = None
-
-		# check if the monkey already exists
-		if Monkey.objects.filter(mky_real_id=real_id).count():
-			monkey = Monkey.objects.get(mky_real_id=real_id)
-			# Update the monkey
-			monkey.mky_name = name
-			monkey.mky_necropsy_start_date = necropsy
-			monkey.save()
-
 
 # Creates Tissue Types from following format:
 # each tissue on a separate line
@@ -771,7 +466,6 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 		print "Creating tissue samples"
 		create_TissueSamples()
 
-
 # Creates TissueCategories consistent with format agreed on 8/30/2011
 # No parent categories yet.
 # -jf
@@ -811,7 +505,6 @@ def create_TissueSamples(tissue_type=None):
 				sample.tss_location = "<new record, no data>"
 				# Can be incredibly spammy
 				print "New tissue sample: " + sample.__unicode__()
-
 
 @transaction.commit_on_success
 def create_Assay_Development_tree():
@@ -1126,7 +819,6 @@ def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 		print "Loading %s..." % drink
 		load_edr_one_file(drink, dex)
 				
-
 def convert_excel_time_to_datetime(time_string):
 	DATE_BASE = dt(day=1, month=1, year=1904)
 	SECONDS_BASE = 24*60*60
@@ -1280,7 +972,6 @@ def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
 			dex = dexs[0]	
 			print "Loading %s..." % file_name
 			load_eev_one_file(file_name, dex, create_mtd)
-
 
 def load_necropsy_summary(filename):
 	"""
