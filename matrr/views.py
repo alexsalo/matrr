@@ -1006,7 +1006,7 @@ def request_review_process(request, req_request_id):
 	else:
 		# get the subject
 		subject = render_to_string('matrr/review/request_email_subject.txt',
-				{'status': status})
+				{'status': status, 'cohort': req_request.cohort})
 		# Email subject *must not* contain newlines
 		subject = ''.join(subject.splitlines())
 		request_url = reverse('order-detail', args=[req_request.req_request_id])

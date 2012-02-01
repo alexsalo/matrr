@@ -1782,21 +1782,14 @@ def request_post_save(**kwargs):
 				# This makes a lab tech re-verify the freezer for other submitted orders
 				if tiv.monkey in tissue_request.accepted_monkeys.all():
 					tiv.invalidate_collisions()
-				# Disassociate the tissue request. This leaves unverified TIVs to have their
-				# inventory checked and deletes verified TIVs
-				tiv.tissue_request=None
-				tiv.save()
+				tiv.delete()
 
 	# For Rejected Requests
 	if previous_status == RequestStatus.Submitted\
 	and current_status == RequestStatus.Rejected:
 		for tissue_request in tissue_requests:
-			# Disassociate the tissue request. This leaves unverified TIVs to have their
-			# inventory checked and deletes verified TIVs
-			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
-			for tiv in tivs:
-				tiv.tissue_request=None
-				tiv.save()
+			# Delete the rejected tissues' TIVs
+			TissueInventoryVerification.objects.filter(tissue_request=tissue_request).delete()
 
 	# For Shipped Requests
 	if (previous_status == RequestStatus.Accepted or previous_status == RequestStatus.Partially) \
