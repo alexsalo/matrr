@@ -1032,4 +1032,124 @@ def load_necropsy_summary(filename):
 			nec_sum.ncm_22hr_6mo_avg_g_per_kg	= row[20] if row[20] != "control" else 0
 			nec_sum.ncm_22hr_12mo_avg_g_per_kg	= row[21] if row[21] != "control" else 0
 			nec_sum.save()
-		
+
+def load_proteins(filename):
+	"""
+		This function will load a csv file in the format
+		row[0]	= Biochemical
+		row[1]	= Super_Pathway
+		row[2]	= Sub_Pathway
+		row[3]	= Comp_ID
+		row[4]	= Platform
+		row[5]	= RI
+		row[6]	= Mass
+		row[7]	= CAS
+		row[8]	= KEGG
+		row[9]	= HMDB_ID
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	for row in csv_infile:
+		pro_dict = {}
+		if row[0]:
+			pro_dict['pro_biochemical'] 	= row[0]
+			pro_dict['pro_super_pathway'] 	= row[1]
+			pro_dict['pro_sub_pathway'] 	= row[2]
+			pro_dict['pro_comp_id'] 		= row[3]
+			pro_dict['pro_platform'] 		= row[4]
+			pro_dict['pro_ri'] 				= row[5]
+			pro_dict['pro_mass'] 			= row[6]
+			pro_dict['pro_cas'] 			= row[7]
+			pro_dict['pro_kegg'] 			= row[8]
+			pro_dict['pro_hmdb_id'] 		= row[9]
+
+			protein, isnew = Protein.objects.get_or_create(**pro_dict)
+			if isnew:
+				protein.save()
+
+def load_monkey_proteins(filename, values_normalized):
+	"""
+	Alright so, the format of the file they gave me is gonna be tough to parse through.  Scientists _love_ inverting axes in their spreadsheets.
+
+	The first 8 rows of Column0 describe the monkey and the protein sample scenario.  They are:
+	col0row0 = SAMPLE_NAME			# columns 1-30 hold 'OHSU-000001' , 'OHSU-000002', etc.
+	col0row1 = SAMPLE_ID			# columns 1-30 hold unique, incrementing 6-digit integers
+	col0row2 = CLIENT_INDENTIFIER	# columns 1-30 hold "1-<number>" where <number> == mky_real_id == row 6
+	col0row3 = GROUP				# columns 1-30 hold a single digit integer which increments based on GROUP_ID.  1 == baseline, 2 = 6 months EtOH, etc
+	col0row4 = DATE					# date the sample was taken
+	col0row5 = TREATMENT			# rephrasing of GROUP_ID. Group_id's 'baseline' value is stored as 'ethanol naive' in these cells.
+	col0row6 = SUBJECT ID			# mky_real_id
+	col0row7 = GROUP_ID 			# described above -.-
+	---
+	For rows 8 thru *, the col0 value stored is the protein name (Protein.pro_biochemical).  The value stored in col1 - col30 is the protein value.
+
+	Lets figure out how to parse this -.-
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	monkey_datas = {}
+	monkey_protein_datas = {}
+	for row in csv_infile:
+		if row[0]:
+			if row[0] == 'SAMPLE_NAME':
+				for idx, cell in enumerate(row[1:]):
+					ts_dict = {'mpr_sample_name': cell}
+					monkey_datas[idx] = ts_dict
+			elif row[0] == 'SAMPLE_ID':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mpr_sample_id'] = cell
+			elif row[0] == 'CLIENT_IDENTIFIER':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mpr_client_identifier'] = cell
+			elif row[0] == 'GROUP':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mpr_group'] = cell
+			elif row[0] == 'DATE':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mpr_date'] = datetime.datetime.strptime(cell, '%m/%d/%y')
+			elif row[0] == 'TREATMENT':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mpr_treatment'] = cell
+			elif row[0] == 'SUBJECT_ID':
+				for idx, cell in enumerate(row[1:]):
+					monkey = Monkey.objects.get(mky_real_id=cell)
+					monkey_datas[idx]['monkey'] = monkey
+					monkey_datas[idx]['mpr_subject_id'] = cell
+			elif row[0] == 'GROUP_ID':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mpr_group_id'] = cell
+			else:
+				protein = Protein.objects.get(pro_biochemical=row[0])
+				protein_row = []
+				for idx, cell in enumerate(row[1:]):
+					protein_row.append((monkey_datas[idx], protein, cell))
+				monkey_protein_datas[row[0]] = protein_row
+
+	for index in monkey_protein_datas:
+		for protein_row in monkey_protein_datas[index]:
+			monkey_data 	= protein_row[0]
+			protein 		= protein_row[1]
+			protein_value 	= protein_row[2] if protein_row[2] else None
+			normalized		= True if values_normalized is True else False
+			monkey_protein, isnew = MonkeyProtein.objects.get_or_create(protein=protein, mpr_protein_value=protein_value, mpr_is_normalized=normalized, **monkey_data)
+			if isnew:
+				monkey_protein.save()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
