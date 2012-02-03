@@ -1,0 +1,103 @@
+<form action='' method='post'>
+	{% csrf_token %}
+	{{ graph_form.as_p }}
+	<hr>
+	<div class=clearfix></div>
+	<table class="left" style='max-width: 48%'>
+		{% for field in filter_form %}
+			{% if 'Num' in field.name %}
+				{% if "Choice" in field.name %}
+					</table>
+					<table class="left" style='max-width: 48%'>
+				{% endif %}
+				<tr>
+					<td>
+						{{ field.label }}
+						{% if field.errors %}
+								{{ field.errors }}
+						{% endif %}
+					</td>
+					<td width="1px">{{ field }}</td>
+				<tr>
+			{% endif %}
+		{% endfor %}
+	</table>
+	<div class=clearfix></div>
+	<table class="left" style='max-width: 48%'>
+		{% for field in filter_form %}
+			{% if 'Char' in field.name %}
+				{% if "Choice" in field.name %}
+					</table>
+					<table class="left" style='max-width: 48%'>
+				{% endif %}
+				<tr>
+					<td>
+						{{ field.label }}
+						{% if field.errors %}
+								{{ field.errors }}
+						{% endif %}
+					</td>
+					<td width="1px">{{ field }}</td>
+				<tr>
+			{% endif %}
+		{% endfor %}
+	</table>
+	<div class=clearfix></div>
+	<table class="left" style='max-width: 48%'>
+		{% for field in filter_form %}
+			{% if 'Discrete' in field.name %}
+				<tr>
+					<td>
+						{{ field.label }}
+						{% if field.errors %}
+								{{ field.errors }}
+						{% endif %}
+					</td>
+					<td width="1px">{{ field }}</td>
+				<tr>
+			{% endif %}
+		{% endfor %}
+	</table>
+	<div class=clearfix></div>
+	<table class="left" style='max-width: 48%'>
+		{% for field in filter_form %}
+			{% if 'Bool' in field.name %}
+				{% if "Choice" in field.name %}
+					</table>
+					<table class="left" style='max-width: 48%'>
+				{% endif %}
+				<tr>
+					<td>
+						{{ field.label }}
+						{% if field.errors %}
+								{{ field.errors }}
+						{% endif %}
+					</td>
+					<td width="1px">{{ field }}</td>
+				<tr>
+			{% endif %}
+		{% endfor %}
+	</table>
+	<div class=clearfix></div>
+	<table class="left" style='max-width: 48%'>
+		{% for field in filter_form %}
+			{% if 'Related' in field.name %}
+				{% if "Value" in field.name %}
+					</table>
+					<table class="left" style='max-width: 48%'>
+				{% endif %}
+				<tr>
+					<td style='width: 180px'>
+						{{ field.label }}
+						{% if field.errors %}
+								{{ field.errors }}
+						{% endif %}
+					</td>
+					<td style='width: 180px'>{{ field }}</td>
+				<tr>
+			{% endif %}
+		{% endfor %}
+	</table>
+	<div class=clearfix></div>
+	<button type='submit' value='Submit'>All glory to the hypnoTOAD</button>
+</form>
