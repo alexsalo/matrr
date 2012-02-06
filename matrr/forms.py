@@ -361,21 +361,22 @@ class VIPGraphForm_monkeys(Form):
 
 class FilterForm(Form):
 	"""
-	This form creates 3 fields for every model field passed into it.  This allows the user to choose which field to filter, which operator to filter
-	with, and value to filter.  FilterForm.build_Q() will create and return a Q object from the filled out form fields.  In the view you pass
+	This form creates 3(ish) fields for every model field passed into it.  This allows the user to choose which field to filter, which operator to filter
+	with, and value to filter.  FilterForm.get_q_object() will create and return a Q object from the filled out form fields.  In the view you pass
 	this into the chosen model's filter method.
 
 	eg:
 	filter_form=FilterForm(Monkey._meta.fields)
 	<user input>
-	Monkey.objects.filter(filter_form.build_Q())
+	filter_form=FilterForm(Monkey._meta.fields, data=request.POST)
+	Monkey.objects.filter(filter_form.get_q_object())
 	"""
 	NUMERIC_OPERATORS = (
-		("", "equal to"),
 		("__gte", "greater than or equal to"),
 		("__lte", "less than or equal to"),
 		("__gt", "greater than"),
 		("__lt", "less than"),
+		("", "equal to"),
 	)
 	CHAR_OPERATORS = (
 		("__iexact", "is"),
