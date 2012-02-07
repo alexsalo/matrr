@@ -116,6 +116,7 @@ RequestStatus =  Enumeration([
 					])
 
 
+# These are the method names which ONLY VIP members can _see_
 VIP_IMAGES_LIST = (
 					'monkey_bouts_drinks',
 					'monkey_bouts_drinks_intraday',

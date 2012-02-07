@@ -1,8 +1,7 @@
 from matplotlib import pyplot
-import numpy
+import numpy, dateutil, copy
 from pylab import *
 from matrr.models import *
-import dateutil
 
 ###############  matplotlibrc settings
 mpl.rcParams['figure.subplot.left'] 	= 0.1	# the left side of the subplots of the figure
@@ -393,12 +392,18 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 		formatted_monkeys[monkey] = [ convert_timedelta(event_dates[key]) for key in sorted(event_dates.keys()) ]
 	return formatted_monkeys
 
-
-COHORT_PLOTS = {
+# Dictionary of cohort plots VIPs can customize
+# NOT the same as matrr.models.VIP_IMAGES_LIST!
+VIP_COHORT_PLOTS = {
 				"cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2de_month_etoh_intake, 'Cohort Ethanol Intake, by month'),
 				"cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 'Cohort Water Intake, by month'),
 				"cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 'Cohort Pellets, by month'),
 				"cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 'Cohort Weight, by month'),
+}
+
+# Dictionary of all cohort plots
+COHORT_PLOTS = copy.copy(VIP_COHORT_PLOTS)
+COHORT_PLOTS.update({
 				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake in grams per kilogram'),
 				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, "Total Ethanol Intake in ml"),
 				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake in grams per kilogram"),
@@ -406,7 +411,7 @@ COHORT_PLOTS = {
 #				 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
 #				 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
 #				 "cohort_boxplot_m2de_mtd_weight":cohort_boxplot_m2de_mtd_weight,
-}
+})
 
 
 def monkey_boxplot_etoh(monkey=None):
@@ -822,6 +827,7 @@ def monkey_bouts_drinks_intraday(mtd=None):
 		print("No bouts data available for this monkey drinking experiment.")
 		return False, 'NO MAP'
 
+
 def monkey_errorbox_etoh(monkey=None, **kwargs):
 	return monkey_errorbox_general(etoh_intake, 'Ethanol Intake (in ml)', monkey, **kwargs)
 
@@ -1052,24 +1058,31 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 	ax1.set_yticklabels(cohort_labels)
 	return fig, 'map'
 
+# Dictionary of plots VIPs can customize
+# NOT the same as matrr.models.VIP_IMAGES_LIST!
+VIP_MONKEY_PLOTS = {
+	'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
+	'monkey_errorbox_veh': (monkey_errorbox_veh, 'Monkey Water Intake'),
+	'monkey_errorbox_pellets': (monkey_errorbox_pellets, 'Monkey Pellets'),
+	'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
 
-MONKEY_PLOTS = {
+	'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake Pattern'),
+	'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
+
+}
+
+# Dictionary of all monkey plots
+MONKEY_PLOTS = copy.copy(VIP_MONKEY_PLOTS)
+MONKEY_PLOTS.update({
 #				'monkey_boxplot_etoh': monkey_boxplot_etoh,
 #				'monkey_boxplot_veh': monkey_boxplot_veh,
 #				'monkey_boxplot_pellets': monkey_boxplot_pellets,
 #				'monkey_boxplot_weight': monkey_boxplot_weight,
 
-				'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
-				'monkey_errorbox_veh': (monkey_errorbox_veh, 'Monkey Water Intake'),
-				'monkey_errorbox_pellets': (monkey_errorbox_pellets, 'Monkey Pellets'),
-				'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
-
-				'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake Pattern'),
-				'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
 				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg, "Average Monkey Ethanol Intake, 22hr"),
 				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, "Total Monkey Ethanol Intake, in 4percent ml"),
 				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, "Total Monkey Ethanol Intake, in g per kg"),
-}
+})
 
 def create_plots():
 	from matrr.models import MonkeyImage, Monkey

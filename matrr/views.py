@@ -1442,10 +1442,10 @@ def vip_tools(request):
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_graphs(request):
 	if request.POST:
-		for key in plotting.MONKEY_PLOTS:
+		for key in plotting.VIP_MONKEY_PLOTS:
 			if key in request.POST:
 				return redirect(reverse('vip-graph-builder', args = [key]))
-		for key in plotting.COHORT_PLOTS:
+		for key in plotting.VIP_COHORT_PLOTS:
 			if key in request.POST:
 				return redirect(reverse('vip-graph-builder', args = [key]))
 		return reverse(vip_graphs) #  this should never be hit.  I dunno how it could be.
@@ -1453,8 +1453,8 @@ def vip_graphs(request):
 		context = {}
 		mky_keys = []
 		coh_keys = []
-		mky_plots = plotting.MONKEY_PLOTS
-		coh_plots = plotting.COHORT_PLOTS
+		mky_plots = plotting.VIP_MONKEY_PLOTS
+		coh_plots = plotting.VIP_COHORT_PLOTS
 		for key in mky_plots:
 			migs = MonkeyImage.objects.filter(method=key)
 			if migs:
