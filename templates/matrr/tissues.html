@@ -1,5 +1,9 @@
 {% extends 'matrr/tissue_shopping.html' %}	
 {% load tissue_filters %}
+{% block extra_js %}
+	{{ block.super }}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
+{% endblock %}
 
 
 
@@ -54,9 +58,9 @@
 			<div class='mini-headline'>Brain Blocks</div>
 			<div class="image_container">
 				<div class="image_thumbnail left">
-					<center>Brain Block 1</center>
-					<a rel="plot_gallery" title="Brain Block 1" href="{{ STATIC_URL }}images/brain_blocks/brain_block_1.html" target="_blank">
-						<img src="{{ STATIC_URL }}images/brain_blocks/brain_block_1-thumb.jpg">
+					<center>Brain Blocks</center>
+					<a rel="plot_gallery" title="Brain Blocks" href="{{ STATIC_URL }}images/brain_blocks/brain_block_2.html" target="_blank">
+						<img src="{{ STATIC_URL }}images/brain_blocks/brain_block_2-thumb.jpg">
 					</a>
 				</div>
 		</div>

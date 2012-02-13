@@ -1,5 +1,5 @@
 from matplotlib import pyplot
-import numpy, dateutil, copy
+import numpy, dateutil
 from pylab import *
 from matrr.models import *
 
@@ -402,6 +402,7 @@ VIP_COHORT_PLOTS = {
 }
 
 # Dictionary of all cohort plots
+import copy # for some reason this errors if i put it up top -jf 2/13/2012
 COHORT_PLOTS = copy.copy(VIP_COHORT_PLOTS)
 COHORT_PLOTS.update({
 				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake in grams per kilogram'),
