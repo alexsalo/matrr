@@ -1725,74 +1725,8 @@ class TissueInventoryVerification(models.Model):
 					)
 
 
-class Metabolite(models.Model):
-	met_id = models.AutoField(primary_key=True)
-	met_biochemical = models.CharField(null=False, max_length=200)
-	met_super_pathway = models.CharField(null=False, max_length=200)
-	met_sub_pathway = models.CharField(null=False, max_length=200)
-	met_comp_id = models.IntegerField()
-	met_platform = models.CharField(null=False, max_length=200)
-
-	met_ri = models.FloatField()
-	met_mass = models.FloatField()
-
-	met_cas = models.CharField(null=False, blank=True, max_length=200)
-	met_kegg = models.CharField(null=False, blank=True, max_length=200, help_text='http://www.genome.jp/dbget-bin/www_bget?cpd+<value>')
-	met_hmdb_id = models.CharField(null=False, blank=True, max_length=200, help_text='http://www.hmdb.ca/metabolites/<value>')
-
-	def __unicode__(self):
-		return str(self.met_biochemical)
-
-	class Meta:
-		db_table = 'met_metabolite'
-
-
-class MonkeyMetabolite(models.Model):
-	mmb_id = models.AutoField(primary_key=True)
-	monkey = models.ForeignKey(Monkey, null=False, related_name='metabolite_set', db_column='mky_id', editable=False)
-	metabolite = models.ForeignKey(Metabolite, null=False, related_name='monkey_set', db_column='met_id', editable=False)
-	mmb_sample_name = models.CharField(null=False, max_length=50)
-	mmb_sample_id = models.IntegerField()
-	mmb_client_identifier = models.CharField("1-mky_real_id", null=False, max_length=50)
-	mmb_group = models.IntegerField()
-	mmb_date = models.DateTimeField(editable=False)
-	mmb_treatment = models.CharField(null=False, max_length=50)
-	mmb_subject_id = models.IntegerField("mky_real_id")
-	mmb_group_id = models.CharField(null=False, max_length=50)
-	mmb_value = models.FloatField(null=True)
-	mmb_is_normalized = models.BooleanField(null=False, blank=False, default=False)
-
-	def __unicode__(self):
-		return "%s | %s | %s" % (str(self.monkey), str(self.metabolite), str(self.mmb_date))
-
-	class Meta:
-		db_table = 'mmb_monkey_metabolite'
-
-
-class Protein(models.Model):
-	pro_id = models.AutoField(primary_key=True)
-	pro_name = models.CharField('Protein Name', null=False, blank=False, max_length=250)
-	pro_abbrev = models.CharField('Protein Abbreviation', null=False, blank=False, max_length=250)
-	pro_units = models.CharField('Concentration Units', choices=ProteinUnits, null=False, max_length=20)
-
-	def __unicode__(self):
-		return "%s" % str(self.pro_name)
-
-	class Meta:
-		db_table = 'pro_protein'
-
-class MonkeyProtein(models.Model):
-	mpn_id = models.AutoField(primary_key=True)
-	monkey = models.ForeignKey(Monkey, null=False, related_name='protein_set', db_column='mky_id', editable=False)
-	protein = models.ForeignKey(Protein, null=False, related_name='monkey_set', db_column='pro_id', editable=False)
-	mpn_date = models.DateTimeField("Date Collected", editable=False)
-	mpn_value = models.FloatField(null=True)
-
-	def __unicode__(self):
-		return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
-
-	class Meta:
-		db_table = 'mpn_monkey_protein'
+### HOLD UP!  YOU SHOULD NOT HAVE THIS FILE ###
+### Talk to Jon ###
 
 
 
