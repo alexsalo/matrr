@@ -617,12 +617,12 @@ def review_overview_list(request):
 
 	req_requests = Request.objects.submitted()
 	# get a list of all reviewers
-	reviewers = Account.objects.users_with_perm('change_review')
+	overviewers = Account.objects.users_with_perm('view_review_overview')
 	for req_request in req_requests:
 		req_request.complete = list()
-		for reviewer in reviewers:
+		for reviewer in overviewers:
 			for review in req_request.review_set.all():
-				if reviewer == review.user and review.user in [Group.objects.get(name='Uberuser').user_set.all()]:
+				if reviewer == review.user:
 					if review.is_finished():
 						req_request.complete.append("complete")
 					else:
@@ -630,7 +630,7 @@ def review_overview_list(request):
 
 	return render_to_response('matrr/review/reviews_overviews.html',
 			{'req_requests': req_requests,
-			 'reviewers': reviewers,
+			 'reviewers': overviewers,
 			 },
 							  context_instance=RequestContext(request))
 
