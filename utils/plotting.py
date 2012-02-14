@@ -405,9 +405,9 @@ VIP_COHORT_PLOTS = {
 import copy # for some reason this errors if i put it up top -jf 2/13/2012
 COHORT_PLOTS = copy.copy(VIP_COHORT_PLOTS)
 COHORT_PLOTS.update({
-				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake in grams per kilogram'),
-				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, "Total Ethanol Intake in ml"),
-				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake in grams per kilogram"),
+				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 	'Average Ethanol Intake, g per kg'),
+				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake in ml"),
+				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, 				"Total Ethanol Intake, g per kg"),
 #				 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
 #				 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
 #				 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
