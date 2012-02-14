@@ -1081,8 +1081,8 @@ MONKEY_PLOTS.update({
 #				'monkey_boxplot_weight': monkey_boxplot_weight,
 
 				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg, "Average Monkey Ethanol Intake, 22hr"),
-				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, "Total Monkey Ethanol Intake, in 4percent ml"),
-				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, "Total Monkey Ethanol Intake, in g per kg"),
+				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 "Total Monkey Ethanol Intake, 4pct ml"),
+				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 "Total Monkey Ethanol Intake, g per kg"),
 })
 
 def create_plots():
