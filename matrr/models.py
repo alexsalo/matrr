@@ -77,6 +77,9 @@ InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('
 #			}
 
 Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'), ('mm', 'mm'), ('cm', 'cm'))
+
+ProteinUnits = (('mg/mL', 'mg/mL'), ('ng/mL', 'ng/mL'), ('ug/mL', 'μg/mL'), ('pg/mL', 'pg/mL'), ('uIU/mL', 'μIU/mL'), ('nmol/L', 'nmol/L'))
+
 LatexUnits = {
 			'ul': '$\mu l$',
 			'ug': '$\mu g$',
@@ -87,6 +90,7 @@ LatexUnits = {
 			'cm': '$cm$',
 			'mm': '$mm$',
 			}
+
 
 
 ExperimentEventType = Enumeration([
@@ -1759,10 +1763,37 @@ class MonkeyMetabolite(models.Model):
 	mmb_is_normalized = models.BooleanField(null=False, blank=False, default=False)
 
 	def __unicode__(self):
-		return "%s | %s = %s" % (str(self.monkey), str(self.metabolite), str(self.mmb_value))
+		return "%s | %s | %s" % (str(self.monkey), str(self.metabolite), str(self.mmb_date))
 
 	class Meta:
 		db_table = 'mmb_monkey_metabolite'
+
+
+class Protein(models.Model):
+	pro_id = models.AutoField(primary_key=True)
+	pro_name = models.CharField('Protein Name', null=False, blank=False, max_length=250)
+	pro_abbrev = models.CharField('Protein Abbreviation', null=False, blank=False, max_length=250)
+	pro_units = models.CharField('Concentration Units', choices=ProteinUnits, null=False, max_length=20)
+
+	def __unicode__(self):
+		return "%s" % str(self.pro_name)
+
+	class Meta:
+		db_table = 'pro_protein'
+
+class MonkeyProtein(models.Model):
+	mpn_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='protein_set', db_column='mky_id', editable=False)
+	protein = models.ForeignKey(Protein, null=False, related_name='monkey_set', db_column='pro_id', editable=False)
+	mpn_date = models.DateTimeField("Date Collected", editable=False)
+	mpn_value = models.FloatField(null=True)
+
+	def __unicode__(self):
+		return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
+
+	class Meta:
+		db_table = 'mpn_monkey_protein'
+
 
 
 

@@ -1134,6 +1134,59 @@ def load_monkey_metabolites(filename, values_normalized):
 			if isnew:
 				monkey_metabolite.save()
 
+def load_proteins(filename):
+	"""
+		This function will load a csv file in the format
+		row[0]	= protein abbreviation (pro_abbrev)
+		row[1]	= full protein name (pro_name)
+		row[2]	= concentration units (pro_units)
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	for row in csv_infile:
+		pro_dict = {}
+		if row[0]:
+			pro_dict['pro_abbrev'] 	= row[0]
+			pro_dict['pro_name'] 	= row[1]
+			pro_dict['pro_units'] 	= row[2]
+
+			protein, isnew = Protein.objects.get_or_create(**pro_dict)
+			if isnew:
+				protein.save()
+
+def load_monkey_proteins(filename):
+	"""
+		row[0] = mky_real_id (monkey.mky_real_id)
+		row[1] = date collected (mpn_date)
+			the rest of the columns are proteins, header label is Protein.pro_abbrev
+	"""
+	filename = 'utils/DATA/cohort1-MonkeyProteins.csv'
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	junk = columns.pop(0) # take out the monkey column label
+	junk = columns.pop(0) # take out the date column label
+
+	proteins = []
+	for column in columns:
+		proteins.append(Protein.objects.get(pro_abbrev=column))
+
+	monkey_protein_datas = []
+	for row in csv_infile:
+		if row[0]:
+			monkey = Monkey.objects.get(mky_real_id=row.pop(0))
+			mpn_date = datetime.datetime.strptime(row.pop(0), '%m/%d/%y')
+			for index, value in enumerate(row):
+				monkey_protein = {}
+				monkey_protein['monkey'] = monkey
+				monkey_protein['mpn_date'] = mpn_date
+				monkey_protein['protein'] = proteins[index]
+				monkey_protein['mpn_value'] = value
+				monkey_protein_datas.append(monkey_protein)
+
+	for mpn in monkey_protein_datas:
+		monkey_protein, isnew = MonkeyProtein.objects.get_or_create(**mpn)
+		if isnew:
+			monkey_protein.save()
 
 
 
