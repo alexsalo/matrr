@@ -622,7 +622,7 @@ def review_overview_list(request):
 		req_request.complete = list()
 		for reviewer in reviewers:
 			for review in req_request.review_set.all():
-				if reviewer == review.user:
+				if reviewer == review.user and review.user in [Group.objects.get(name='Uberuser').user_set.all()]:
 					if review.is_finished():
 						req_request.complete.append("complete")
 					else:

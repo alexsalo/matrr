@@ -1721,48 +1721,48 @@ class TissueInventoryVerification(models.Model):
 					)
 
 
-class Protein(models.Model):
-	pro_id = models.AutoField(primary_key=True)
-	pro_biochemical = models.CharField(null=False, max_length=200)
-	pro_super_pathway = models.CharField(null=False, max_length=200)
-	pro_sub_pathway = models.CharField(null=False, max_length=200)
-	pro_comp_id = models.IntegerField()
-	pro_platform = models.CharField(null=False, max_length=200)
+class Metabolite(models.Model):
+	met_id = models.AutoField(primary_key=True)
+	met_biochemical = models.CharField(null=False, max_length=200)
+	met_super_pathway = models.CharField(null=False, max_length=200)
+	met_sub_pathway = models.CharField(null=False, max_length=200)
+	met_comp_id = models.IntegerField()
+	met_platform = models.CharField(null=False, max_length=200)
 
-	pro_ri = models.FloatField()
-	pro_mass = models.FloatField()
+	met_ri = models.FloatField()
+	met_mass = models.FloatField()
 
-	pro_cas = models.CharField(null=False, blank=True, max_length=200)
-	pro_kegg = models.CharField(null=False, blank=True, max_length=200, help_text='http://www.genome.jp/dbget-bin/www_bget?cpd+<value>')
-	pro_hmdb_id = models.CharField(null=False, blank=True, max_length=200, help_text='http://www.hmdb.ca/metabolites/<value>')
-
-	def __unicode__(self):
-		return str(self.pro_biochemical)
-
-	class Meta:
-		db_table = 'pro_protein'
-
-
-class MonkeyProtein(models.Model):
-	mpr_id = models.AutoField(primary_key=True)
-	monkey = models.ForeignKey(Monkey, null=False, related_name='protein_set', db_column='mky_id', editable=False)
-	protein = models.ForeignKey(Protein, null=False, related_name='monkey_set', db_column='pro_id', editable=False)
-	mpr_sample_name = models.CharField(null=False, max_length=50)
-	mpr_sample_id = models.IntegerField()
-	mpr_client_identifier = models.CharField("1-mky_real_id", null=False, max_length=50)
-	mpr_group = models.IntegerField()
-	mpr_date = models.DateTimeField(editable=False)
-	mpr_treatment = models.CharField(null=False, max_length=50)
-	mpr_subject_id = models.IntegerField("mky_real_id")
-	mpr_group_id = models.CharField(null=False, max_length=50)
-	mpr_protein_value = models.FloatField(null=True)
-	mpr_is_normalized = models.BooleanField(null=False, blank=False, default=False)
+	met_cas = models.CharField(null=False, blank=True, max_length=200)
+	met_kegg = models.CharField(null=False, blank=True, max_length=200, help_text='http://www.genome.jp/dbget-bin/www_bget?cpd+<value>')
+	met_hmdb_id = models.CharField(null=False, blank=True, max_length=200, help_text='http://www.hmdb.ca/metabolites/<value>')
 
 	def __unicode__(self):
-		return "%s | %s = %s" % (str(self.monkey), str(self.protein), str(self.mpr_protein_value))
+		return str(self.met_biochemical)
 
 	class Meta:
-		db_table = 'mpr_monkey_protein'
+		db_table = 'met_metabolite'
+
+
+class MonkeyMetabolite(models.Model):
+	mmb_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='metabolite_set', db_column='mky_id', editable=False)
+	metabolite = models.ForeignKey(Metabolite, null=False, related_name='monkey_set', db_column='met_id', editable=False)
+	mmb_sample_name = models.CharField(null=False, max_length=50)
+	mmb_sample_id = models.IntegerField()
+	mmb_client_identifier = models.CharField("1-mky_real_id", null=False, max_length=50)
+	mmb_group = models.IntegerField()
+	mmb_date = models.DateTimeField(editable=False)
+	mmb_treatment = models.CharField(null=False, max_length=50)
+	mmb_subject_id = models.IntegerField("mky_real_id")
+	mmb_group_id = models.CharField(null=False, max_length=50)
+	mmb_value = models.FloatField(null=True)
+	mmb_is_normalized = models.BooleanField(null=False, blank=False, default=False)
+
+	def __unicode__(self):
+		return "%s | %s = %s" % (str(self.monkey), str(self.metabolite), str(self.mmb_value))
+
+	class Meta:
+		db_table = 'mmb_monkey_metabolite'
 
 
 

@@ -33,10 +33,11 @@
 					{% for item in req_request.complete %}
 						{% if item == "pending" %}
 							<td style="color: red" align="center">{{ item }}</td>
-						{% else %}
+						{% else %}{% if item == 'complete' %}
 							<td style="color: green" align="center">{{ item }}</td>
-						{% endif %}
-
+						{% else %}
+							<td style="color: green" align="center"> .</td>
+						{% endif %}{% endif %}
 					{% endfor %}
 
 					<td><a href='{% url review-overview req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>
