@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<div class=large-headline>Protein Tools: Cohort {{ cohort }}</div>
+	<div class=large-headline>Cohort Protein Tools</div>
 	{% if graphs %}
 		{% for graph in graphs %}
 			<div class="image_container">
@@ -14,15 +14,19 @@
 			</div>
 		{% endfor %}
 		
-	{% else %}
+	{% endif %}
+	<div class=clearfix></div>
 	<form action='' method='post'>
 		{% csrf_token %}
+		<div class=headline>{{ subject_select_form.subject.label }}</div>
+		<div class=small>{{ subject_select_form.subject.help_text }}</div>
+		{{ subject_select_form.subject }}
+		<br><br>
 		<div class=headline>{{ protein_form.proteins.label }}</div>
 		<div class=small>{{ protein_form.proteins.help_text }}</div>
 		{{ protein_form.proteins }}
 		<br><button type='submit' value='Submit'>Submit</button>
 	</form>
-	{% endif %}
 
 
 

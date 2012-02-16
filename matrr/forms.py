@@ -605,10 +605,11 @@ class FilterForm(Form):
 
 
 class CohortSelectForm(Form):
-	def __init__(self, cohort_queryset=None, *args, **kwargs):
+	def __init__(self, cohort_queryset=None, horizontal=False, *args, **kwargs):
 		super(CohortSelectForm, self).__init__(*args, **kwargs)
 		queryset = cohort_queryset if cohort_queryset else Cohort.objects.all()
-		self.fields['subject'] = ModelChoiceField(queryset=queryset, widget=RadioSelect(), initial=queryset[0])
+		widget = forms.RadioSelect(renderer=HorizRadioRenderer) if horizontal else RadioSelect()
+		self.fields['subject'] = ModelChoiceField(queryset=queryset, widget=widget, initial=queryset[0])
 		self.fields['subject'].label = "Cohort"
 		self.fields['subject'].help_text = "Select a cohort"
 
@@ -632,9 +633,11 @@ class ProteinSelectForm(Form):
 		self.fields['proteins'].help_text = "Select proteins to display"
 
 
-class ToolSelectForm(Form):
+class DataSelectForm(Form):
 	dataset_choices = (('protein', 'Access protein-associated data tools'), ('etoh', 'Access ethanol-associated data tools'))
-	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'))
-
 	dataset = ChoiceField(choices=dataset_choices, label='Data Set', help_text="Choose what data to analyze", widget=RadioSelect, initial=dataset_choices[0][0])
+
+
+class SubjectSelectForm(Form):
+	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'))
 	subject = ChoiceField(choices=subject_choices, label='Subject', help_text="Choose what scope of subjects to analyze", widget=RadioSelect, initial=subject_choices[0][0])

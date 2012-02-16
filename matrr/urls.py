@@ -119,11 +119,13 @@ urlpatterns += patterns('matrr.views',
 	
 	# Tools
 	url(r'^tools/$', tools_landing, name='tools-landing'),
+	url(r'^tools/protein/$', tools_protein, name='tools-protein'),
 
-	url(r'^tools/cohort/protein/$', tools_cohort_protein, name='tools-cohort-protein'),
-	url(r'^tools/cohort/protein/(?P<cohort_id>\d+)/$', tools_cohort_protein_graphs, name='tools-cohort-protein-graphs'),
-	url(r'^tools/monkey/protein/$', tools_monkey_protein, name='tools-monkey-protein'),
-	url(r'^tools/monkey/protein/(?P<monkey_id>\d+)/$', tools_monkey_protein_graphs, name='tools-monkey-protein-graphs'),
+	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/$', tools_cohort_protein, name='tools-cohort-protein'),
+	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_protein_graphs, name='tools-cohort-protein-graphs'),
+
+	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/monkey/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
+	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
 
 	url(r'^tools/etoh/$', tools_etoh, name='tools-etoh'),
 

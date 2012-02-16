@@ -1452,35 +1452,28 @@ def __gather_cohort_protein_images(cohort, proteins):
 
 def tools_landing(request):
 	if request.method == "POST":
-		tool_select_form = ToolSelectForm(data=request.POST)
+		tool_select_form = DataSelectForm(data=request.POST)
 		if tool_select_form.is_valid():
-			subject = tool_select_form.cleaned_data['subject']
 			dataset = tool_select_form.cleaned_data['dataset']
 
 			if dataset == 'etoh':
 				if request.user.has_perm('matrr.view_vip_images'):
-					if subject == 'monkey':
-						return redirect('tools-monkey-etoh')
-					else: # assumes subject == 'cohort'
-						return redirect('tools-cohort-etoh')
+					return redirect('tools-etoh')
 				else:
 					return redirect('/denied/')
 			elif dataset == 'protein':
-				if subject == 'monkey':
-					return redirect('tools-monkey-protein')
-				else: # assumes subject == 'cohort'
-					return redirect('tools-cohort-protein')
+				return redirect('tools-protein')
 		else:
 			messages.error(request, "Form submission was invalid.  Please try again.")
-	return render_to_response('matrr/tools/landing.html', {'tool_select_form': ToolSelectForm()}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/landing.html', {'tool_select_form': DataSelectForm()}, context_instance=RequestContext(request))
 
 
-def tools_cohort_protein(request):
+def tools_protein(request): # pick a cohort
 	if request.method == 'POST':
 		cohort_form = CohortSelectForm(data=request.POST)
 		if cohort_form.is_valid():
 			cohort = cohort_form.cleaned_data['subject']
-			return redirect(tools_cohort_protein_graphs, cohort.pk)
+			return redirect('tools-cohort-protein', cohort.pk)
 	else:
 		cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
 		cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
@@ -1488,37 +1481,49 @@ def tools_cohort_protein(request):
 	return render_to_response('matrr/tools/protein.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 
+def tools_cohort_protein(request, cohort_id):
+	if request.method == 'POST':
+		subject_select_form = SubjectSelectForm(data=request.POST)
+		if subject_select_form.is_valid():
+			subject = subject_select_form.cleaned_data['subject']
+			if subject == 'monkey':
+				return redirect('tools-monkey-protein', cohort_id)
+			else: # assumes subject == 'cohort'
+				return redirect('tools-cohort-protein-graphs', cohort_id)
+
+	return render_to_response('matrr/tools/protein.html', {'subject_select_form': SubjectSelectForm()}, context_instance=RequestContext(request))
+
+
 def tools_cohort_protein_graphs(request, cohort_id):
+	proteins = None
+	old_post = request.session.get('_old_post')
 	cohort = Cohort.objects.get(pk=cohort_id)
 	context = {'cohort': cohort}
-	if request.method == "POST":
-		protein_form = ProteinSelectForm(data=request.POST)
-		if protein_form.is_valid():
+	if request.method == "POST" or old_post:
+		post = request.POST if request.POST else old_post
+		protein_form = ProteinSelectForm(data=post)
+		subject_select_form = CohortSelectForm(data=post)
+		if protein_form.is_valid() and subject_select_form.is_valid():
+			if int(cohort_id) != subject_select_form.cleaned_data['subject'].pk:
+				request.session['_old_post'] = request.POST
+				return redirect(tools_cohort_protein_graphs, subject_select_form.cleaned_data['subject'].pk)
 			proteins = protein_form.cleaned_data['proteins']
 			graphs = __gather_cohort_protein_images(cohort, proteins)
 			context['graphs'] = graphs
-	else:
-		context['protein_form'] = ProteinSelectForm()
+
+	cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
+	cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
+
+	context['subject_select_form'] = CohortSelectForm(cohort_queryset=cohorts_with_protein_data, horizontal=True, initial={'subject': cohort_id})
+	context['protein_form'] = ProteinSelectForm(initial={'proteins': proteins})
 	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
 
 
-def tools_monkey_protein(request):
-	if request.method == 'POST':
-		monkey_form = MonkeySelectForm(data=request.POST)
-		if monkey_form.is_valid():
-			monkey = monkey_form.cleaned_data['subject']
-			return redirect(tools_monkey_protein_graphs, monkey.pk)
-	else:
-		monkeys_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__pk', flat=True).distinct() # for some reason this only returns the pk int
-		monkeys_with_protein_data = Monkey.objects.filter(pk__in=monkeys_with_protein_data) # so get the queryset of cohorts
-		monkey_form = MonkeySelectForm(monkey_queryset=monkeys_with_protein_data)
-	return render_to_response('matrr/tools/protein.html', {'subject_select_form': monkey_form}, context_instance=RequestContext(request))
-
-
-def tools_monkey_protein_graphs(request, monkey_id):
+def tools_monkey_protein_graphs(request, cohort_id, monkey_id=0):
 	old_post = request.session.get('_old_post')
-	monkey = Monkey.objects.get(pk=monkey_id)
-	context = {'monkey': monkey}
+	monkey = Monkey.objects.get(pk=monkey_id) if monkey_id else None
+	cohort = Cohort.objects.get(pk=cohort_id)
+	context = {'monkey': monkey, 'cohort': cohort}
 	if request.method == "POST" or old_post:
 		post = request.POST if request.POST else old_post
 		protein_form = ProteinSelectForm(data=post)
@@ -1526,11 +1531,13 @@ def tools_monkey_protein_graphs(request, monkey_id):
 		if protein_form.is_valid() and subject_select_form.is_valid():
 			if int(monkey_id) != subject_select_form.cleaned_data['subject'].pk:
 				request.session['_old_post'] = request.POST
-				return redirect(tools_monkey_protein_graphs, subject_select_form.cleaned_data['subject'].pk)
+				return redirect(tools_monkey_protein_graphs, cohort_id, subject_select_form.cleaned_data['subject'].pk)
+			elif request.session.has_key('_old_post'):
+				request.session.pop('_old_post')
 			proteins = protein_form.cleaned_data['proteins']
 			graph_url = monkey_protein(monkey, proteins, request.user.username)
 			context['graphs'] = [graph_url]
-	monkeys_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__pk', flat=True).distinct() # for some reason this only returns the pk int
+	monkeys_with_protein_data = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey__pk', flat=True).distinct() # for some reason this only returns the pk int
 	monkeys_with_protein_data = Monkey.objects.filter(pk__in=monkeys_with_protein_data) # so get the queryset of cohorts
 
 	context['subject_select_form'] = MonkeySelectForm(monkey_queryset=monkeys_with_protein_data, horizontal=True, initial={'subject': monkey_id})
