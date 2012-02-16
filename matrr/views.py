@@ -1452,20 +1452,17 @@ def __gather_cohort_protein_images(cohort, proteins):
 
 def tools_landing(request):
 	if request.method == "POST":
-		tool_select_form = DataSelectForm(data=request.POST)
-		if tool_select_form.is_valid():
-			dataset = tool_select_form.cleaned_data['dataset']
-
-			if dataset == 'etoh':
-				if request.user.has_perm('matrr.view_vip_images'):
-					return redirect('tools-etoh')
-				else:
-					return redirect('/denied/')
-			elif dataset == 'protein':
-				return redirect('tools-protein')
+		dataset = request.POST.get('dataset')
+		if dataset == 'etoh':
+			if request.user.has_perm('matrr.view_vip_images'):
+				return redirect('tools-etoh')
+			else:
+				return redirect('/denied/')
+		elif dataset == 'protein':
+			return redirect('tools-protein')
 		else:
 			messages.error(request, "Form submission was invalid.  Please try again.")
-	return render_to_response('matrr/tools/landing.html', {'tool_select_form': DataSelectForm()}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/landing.html', {}, context_instance=RequestContext(request))
 
 
 def tools_protein(request): # pick a cohort
