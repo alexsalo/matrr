@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class=large-headline>Protein Tools</div>
+	<form action='' method='post'>
+		{% csrf_token %}
+		<div class=headline>{{ subject_select_form.subject.label }}</div>
+		<div class=small>{{ subject_select_form.subject.help_text }}</div>
+		{{ subject_select_form.subject }}
+		<br><button type='submit' value='Submit'>Submit</button>
+	</form>
+{% endblock %}

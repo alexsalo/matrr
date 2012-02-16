@@ -73,6 +73,12 @@
 					<ul>
 						<li class='top'><a href="{% url account-view %}">My Account</a></li>
 						<li class='drop-down'><a href="{% url order-list %}">My Orders</a></li>
+					</ul>
+				{% endif %}
+
+				{% if user.is_authenticated and user_is_verified %}
+					<ul>
+						<li class='top'><a href="{% url tools-landing %}">Tools</a></li>
 						{% if perms.matrr.view_vip_images %}
 							<li class='drop-down'><a href="{% url vip-tools %}">VIP Tools</a></li>
 						{% endif %}

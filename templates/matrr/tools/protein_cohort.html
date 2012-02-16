@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class=large-headline>Protein Tools: Cohort {{ cohort }}</div>
+	{% if graphs %}
+		{% for graph in graphs %}
+			<div class="image_container">
+				<div class="image_thumbnail left">
+					<center>{{ graph.title }}</center>
+					<a rel="plot_gallery" title="{{ graph.title }}" href="{% if graph.html_fragment %}{{ graph.html_fragment.url }}{% else %}{{ graph.image.url }}{% endif %}" target="_blank">
+						<img src="{{ graph.thumbnail.url }}">
+					</a>
+				</div>
+			</div>
+		{% endfor %}
+		
+	{% else %}
+	<form action='' method='post'>
+		{% csrf_token %}
+		<div class=headline>{{ protein_form.proteins.label }}</div>
+		<div class=small>{{ protein_form.proteins.help_text }}</div>
+		{{ protein_form.proteins }}
+		<br><button type='submit' value='Submit'>Submit</button>
+	</form>
+	{% endif %}
+
+
+
+{% endblock %}

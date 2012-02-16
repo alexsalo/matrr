@@ -24,15 +24,20 @@ from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from utils import plotting
 from matrr.decorators import user_owner_test
+from utils.plotting import monkey_protein
 
 def registration(request):
 	from registration.views import register
+
 	return register(request, form_class=MatrrRegistrationForm)
+
 
 def logout(request, next_page=None):
 	from django.contrib.auth import logout as auth_logout
+
 	auth_logout(request)
 	return HttpResponseRedirect(next_page or "/")
+
 
 def index_view(request):
 	index_context = {'event_list': Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name')[:5],
@@ -60,26 +65,34 @@ def cohorts_view_available(request):
 	template_name = 'matrr/available_cohorts.html'
 	return __cohorts_view(request, cohorts, template_name)
 
+
 def cohorts_view_upcoming(request):
 	cohorts = Cohort.objects.filter(coh_upcoming=True).order_by('coh_cohort_name')
 	template_name = 'matrr/upcoming_cohorts.html'
 	return __cohorts_view(request, cohorts, template_name)
+
 
 def cohorts_view_all(request):
 	cohorts = Cohort.objects.order_by('coh_cohort_name')
 	template_name = 'matrr/cohorts.html'
 	return __cohorts_view(request, cohorts, template_name)
 
+
 def cohorts_view_assay(request):
-	return redirect(reverse('tissue-shop-landing', args =[Cohort.objects.get(coh_cohort_name__iexact="Assay Development").pk,]))
+	return redirect(reverse('tissue-shop-landing', args=[Cohort.objects.get(coh_cohort_name__iexact="Assay Development").pk, ]))
+
 
 def matrr_handler500(request):
 	from django.core.context_processors import static
-	return render_to_response('500.html', static(request),context_instance=RequestContext(request)
-							  )
+
+	return render_to_response('500.html', static(request), context_instance=RequestContext(request)
+	)
+
+
 def __set_images(cohort, user):
 	cohort.images = cohort.image_set.vip_filter(user)
 	return cohort
+
 
 def __cohorts_view(request, cohorts, template_name):
 	cohorts = [__set_images(cohort, request.user) for cohort in cohorts]
@@ -103,6 +116,7 @@ def __cohorts_view(request, cohorts, template_name):
 	return render_to_response(template_name, {'cohort_list': cohort_list},
 							  context_instance=RequestContext(request))
 
+
 def cohort_details(request, **kwargs):
 	# Handle the displaying of cohort details
 	if kwargs.has_key('pk'):
@@ -111,7 +125,8 @@ def cohort_details(request, **kwargs):
 		images = CohortImage.objects.filter(cohort=cohort).vip_filter(request.user)
 	else:
 		return redirect(reverse('cohorts'))
-	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'images': images, 'coh_data': coh_data, 'plot_gallery': True }, context_instance=RequestContext(request))
+	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'images': images, 'coh_data': coh_data, 'plot_gallery': True}, context_instance=RequestContext(request))
+
 
 def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 	try:
@@ -125,7 +140,7 @@ def monkey_cohort_detail_view(request, cohort_id, monkey_id):
 					  {'verbose_name': Monkey._meta.verbose_name})
 
 	images = MonkeyImage.objects.filter(monkey=monkey).vip_filter(request.user)
-	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery':True},
+	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
 
 
@@ -194,7 +209,7 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 	# get the current tissue
 	current_tissue = TissueType.objects.get(tst_type_id=tissue_id)
 	instance = TissueRequest(tissue_type=current_tissue, req_request=cart_request)
-	
+
 	if request.method != 'POST':
 		# now we need to create the form for the tissue type
 		tissue_request_form = TissueRequestForm(req_request=cart_request, tissue=current_tissue, instance=instance,
@@ -211,7 +226,7 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 												tissue=current_tissue,
 												instance=instance)
 		if tissue_request_form.is_valid():
-			url = reverse('tissue-shop-landing', args=[cart_request.cohort.coh_cohort_id,])
+			url = reverse('tissue-shop-landing', args=[cart_request.cohort.coh_cohort_id, ])
 			try:
 				tissue_request_form.save()
 			except:
@@ -350,7 +365,7 @@ def cart_checkout(request):
 			cart_request.req_request_date = datetime.now
 			cart_request.submit_request()
 			cart_request.save()
-			
+
 			messages.success(request, 'Tissue Request Submitted.')
 			return redirect('/')
 		else:
@@ -394,6 +409,7 @@ def mta_upload(request):
 		},
 							  context_instance=RequestContext(request))
 
+
 def rud_upload(request):
 	if request.method == 'POST':
 		form = RudForm(request.user, request.POST, request.FILES)
@@ -407,8 +423,9 @@ def rud_upload(request):
 		form = RudForm(request.user)
 	return render_to_response('matrr/upload_forms/rud_upload_form.html',
 			{'form': form,
-		},
+			 },
 							  context_instance=RequestContext(request))
+
 
 @user_passes_test(lambda u: u.has_perm('matrr.add_cohortdata'), login_url='/denied/')
 def cod_upload(request, coh_id=1):
@@ -422,7 +439,8 @@ def cod_upload(request, coh_id=1):
 	else:
 		cohort = Cohort.objects.get(pk=coh_id)
 		form = CodForm(cohort=cohort)
-	return render_to_response('matrr/upload_forms/cod_upload_form.html', {'form': form,}, context_instance=RequestContext(request))
+	return render_to_response('matrr/upload_forms/cod_upload_form.html', {'form': form, }, context_instance=RequestContext(request))
+
 
 @staff_member_required
 def account_verify(request, user_id):
@@ -430,21 +448,22 @@ def account_verify(request, user_id):
 	if not account.verified:
 		account.verified = True
 		account.save()
-#		send email
+		#		send email
 		subject = "Account on www.matrr.com has been verified"
-		body = "Your account on www.matrr.com has been verified\n" + \
-				"\t username: %s\n" % account.user.username + \
-				"From now on, you can access pages on www.matrr.com.\n" + \
-				"This is an automated message, please, do not respond.\n"
-		
+		body = "Your account on www.matrr.com has been verified\n" +\
+			   "\t username: %s\n" % account.user.username +\
+			   "From now on, you can access pages on www.matrr.com.\n" +\
+			   "This is an automated message, please, do not respond.\n"
+
 		from_e = account.user.email
 		to_e = list()
 		to_e.append(from_e)
 		send_mail(subject, body, from_e, to_e, fail_silently=True)
 		messages.success(request, "Account %s was successfully verified." % account.user.username)
 	else:
-		messages.info(request, "Account %s is already verified."  % account.user.username)
+		messages.info(request, "Account %s is already verified." % account.user.username)
 	return render_to_response('base.html', {}, context_instance=RequestContext(request))
+
 
 def account_info(request):
 	# make address form if one does not exist
@@ -464,6 +483,7 @@ def account_info(request):
 		},
 							  context_instance=RequestContext(request))
 
+
 def account_address(request):
 	# make address form if one does not exist
 	if request.method == 'POST':
@@ -481,6 +501,7 @@ def account_address(request):
 			 'user': request.user
 		},
 							  context_instance=RequestContext(request))
+
 
 def account_shipping(request):
 	# make address form if one does not exist
@@ -504,24 +525,25 @@ def account_shipping(request):
 def account_view(request):
 	return account_detail_view(request=request, user_id=request.user.id)
 
+
 def account_detail_view(request, user_id):
 	if request.user.id == user_id:
 		edit = True
 	else:
 		edit = False
 	# get information from the act_account relation
-	
+
 	account_info = get_object_or_404(Account, pk=user_id)
 	mta_info = Mta.objects.filter(user__id=user_id)
 	display_rud_from = date.today() - timedelta(days=30)
 	urge_rud_from = date.today() - timedelta(days=90)
-	pending_rud = Shipment.objects.filter(req_request__user=user_id,shp_shipment_date__lte=display_rud_from,
-										shp_shipment_date__gte=urge_rud_from, req_request__rud_set=None)
-	urged_rud = Shipment.objects.filter(req_request__user=user_id,shp_shipment_date__lte=urge_rud_from,
-									req_request__rud_set=None)
-	
+	pending_rud = Shipment.objects.filter(req_request__user=user_id, shp_shipment_date__lte=display_rud_from,
+										  shp_shipment_date__gte=urge_rud_from, req_request__rud_set=None)
+	urged_rud = Shipment.objects.filter(req_request__user=user_id, shp_shipment_date__lte=urge_rud_from,
+										req_request__rud_set=None)
+
 	rud_info = ResearchUpdate.objects.filter(request__user=user_id)
-	
+
 	if pending_rud or urged_rud or rud_info:
 		rud_on = True
 	else:
@@ -533,7 +555,7 @@ def account_detail_view(request, user_id):
 			{'account_info': account_info,
 			 'mta_info': mta_info,
 			 'rud_info': rud_info,
-			 'rud_on' : rud_on,
+			 'rud_on': rud_on,
 			 'pending_rud': pending_rud,
 			 'urged_rud': urged_rud,
 			 'order_list': order_list,
@@ -579,14 +601,14 @@ def review_detail(request, review_id):
 			 },
 							  context_instance=RequestContext(request))
 
+
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_history_list(request):
-
 	req_requests = Request.objects.evaluated().order_by('-req_modified_date')
 	req_requests = req_requests.distinct()
 
 	reviewers = Account.objects.users_with_perm('change_review').order_by('-username')
-	
+
 	paginator = Paginator(req_requests, 20) # Show 25 contacts per page
 
 	if request.GET and 'page' in request.GET:
@@ -603,13 +625,12 @@ def review_history_list(request):
 		# If page is out of range (e.g. 9999), deliver last page of results.
 		verified_requests = paginator.page(paginator.num_pages)
 
-	
-					
 	return render_to_response('matrr/review/reviews_history.html',
 			{'req_requests': verified_requests,
 			 'reviewers': reviewers,
 			 },
 							  context_instance=RequestContext(request))
+
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_overview_list(request):
@@ -651,7 +672,7 @@ def review_overview(request, req_request_id):
 	# get the request being reviewed
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	no_monkeys = False
-	
+
 	if req_request.is_evaluated():
 		no_monkeys = True
 	if  'HTTP_REFERER' in request.META:
@@ -685,8 +706,8 @@ def review_overview(request, req_request_id):
 					 'tissue_requests': tissue_request_forms,
 					 'Availability': Availability,
 					 'back_url': back_url,
-					 'no_monkeys' : no_monkeys
-					 },
+					 'no_monkeys': no_monkeys
+				},
 									  context_instance=RequestContext(request))
 
 	else:
@@ -698,7 +719,7 @@ def review_overview(request, req_request_id):
 			for monkey in form.instance.monkeys.all():
 				if monkey not in form.instance.accepted_monkeys.all():
 					form.instance.not_accepted_monkeys.append(monkey)
-		
+
 		# get the reviews for the request
 		reviews = list(req_request.review_set.all())
 		reviews.sort(key=lambda x: x.user.username)
@@ -710,9 +731,9 @@ def review_overview(request, req_request_id):
 				 'req_request': req_request,
 				 'tissue_requests': tissue_request_forms,
 				 'Availability': Availability,
-				  'back_url': back_url,
-				  'no_monkeys' : no_monkeys
-				 },
+				 'back_url': back_url,
+				 'no_monkeys': no_monkeys
+			},
 								  context_instance=RequestContext(request))
 
 
@@ -730,25 +751,25 @@ def orders_list(request):
 		page = 1
 	# If page request (9999) is out of range, deliver last page of results.
 	try:
-		order_list = paginator.page(page)	
+		order_list = paginator.page(page)
 	except (EmptyPage, InvalidPage):
 		order_list = paginator.page(paginator.num_pages)
-		
 
 	return render_to_response('matrr/order/orders.html',
-			{'order_list': order_list, 'revised':revised,
+			{'order_list': order_list, 'revised': revised,
 			 },
 							  context_instance=RequestContext(request))
+
 
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user or u.has_perm('change_shipment'), arg_name='req_request_id', redirect_url='/denied/')
 def order_detail(request, req_request_id, edit=False):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	# check that the request belongs to this user
-#	if req_request.user != request.user and Group.objects.get(name='Committee') not in request.user.groups.all():
-#		# if the request does not belong to the user, return a 404 error (alternately, we could give a permission denied message)
-#		raise Http404('This page does not exist.')
-	
+	#	if req_request.user != request.user and Group.objects.get(name='Committee') not in request.user.groups.all():
+	#		# if the request does not belong to the user, return a 404 error (alternately, we could give a permission denied message)
+	#		raise Http404('This page does not exist.')
+
 	eval = req_request.is_evaluated()
 	po_form = ''
 	if not req_request.req_status == 'SH' and not req_request.req_status == 'RJ':
@@ -772,13 +793,15 @@ def order_detail(request, req_request_id, edit=False):
 			 },
 							  context_instance=RequestContext(request))
 
+
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_revise(request, req_request_id):
 	req = Request.objects.get(req_request_id=req_request_id)
 	if not req.can_be_revised():
 		raise Http404('This page does not exist.')
-	return render_to_response('matrr/order/order_revise.html', {'req_id': req_request_id},context_instance=RequestContext(request))
-	
+	return render_to_response('matrr/order/order_revise.html', {'req_id': req_request_id}, context_instance=RequestContext(request))
+
+
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_duplicate(request, req_request_id):
 	req = Request.objects.get(req_request_id=req_request_id)
@@ -788,13 +811,15 @@ def order_duplicate(request, req_request_id):
 	messages.success(request, 'A new editable copy has been created. You can find it under Revised Orders.')
 	return redirect(reverse('order-list'))
 
+
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_edit(request, req_request_id):
 	req = Request.objects.get(req_request_id=req_request_id)
 	if not req.can_be_edited():
 		raise Http404('This page does not exist.')
-	
+
 	return order_detail(request, req_request_id=req_request_id, edit=True)
+
 
 @user_owner_test(lambda u, rtt_id: u == TissueRequest.objects.get(rtt_tissue_request_id=rtt_id).req_request.user, arg_name='req_rtt_id', redirect_url='/denied/')
 def order_delete_tissue(request, req_rtt_id):
@@ -803,7 +828,8 @@ def order_delete_tissue(request, req_rtt_id):
 		raise Http404('This page does not exist.')
 	rtt.delete()
 	messages.success(request, 'Tissue request deleted.')
-	return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id,]))
+	return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id, ]))
+
 
 @user_owner_test(lambda u, rtt_id: u == TissueRequest.objects.get(rtt_tissue_request_id=rtt_id).req_request.user, arg_name='req_rtt_id', redirect_url='/denied/')
 def order_edit_tissue(request, req_rtt_id):
@@ -817,14 +843,14 @@ def order_edit_tissue(request, req_rtt_id):
 												req_request=rtt.req_request,
 												tissue=rtt.get_tissue())
 		return render_to_response('matrr/order/orders_tissue_edit.html', {'form': tissue_request_form,
-																'cohort': rtt.req_request.cohort,
-																'tissue': rtt.get_tissue(),
-																'cart_item': rtt, },
-								 context_instance=RequestContext(request))
+																		  'cohort': rtt.req_request.cohort,
+																		  'tissue': rtt.get_tissue(),
+																		  'cart_item': rtt, },
+								  context_instance=RequestContext(request))
 	else:
 		if request.POST['submit'] == 'cancel':
 			messages.info(request, 'No changes were made.')
-			return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id,]))
+			return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id, ]))
 		elif request.POST['submit'] == 'delete':
 			return order_delete_tissue(request, req_rtt_id=req_rtt_id) # order_delete_tissue's decorator looks for this as a kwarg, not an arg.  The URL passes the function a kwarg.
 		else:
@@ -837,14 +863,14 @@ def order_edit_tissue(request, req_rtt_id):
 				# the form is valid, so update the tissue request
 				tissue_request_form.save()
 				messages.success(request, 'Tissue request updated.')
-				return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id,]))
+				return redirect(reverse('order-edit', args=[rtt.req_request.req_request_id, ]))
 			else:
 				return render_to_response('matrr/order/orders_tissue_edit.html', {'form': tissue_request_form,
-																		'cohort': rtt.req_request.cohort,
-																		'tissue_type': rtt.get_tissue(),
-																		'cart_item': rtt, },
+																				  'cohort': rtt.req_request.cohort,
+																				  'tissue_type': rtt.get_tissue(),
+																				  'cart_item': rtt, },
 										  context_instance=RequestContext(request))
-				
+
 # this should be no more necessary, if we find some place, where this is being used, we should replace it be sendfile view
 #def experimental_plan_view(request, plan):
 #	# create the response
@@ -865,7 +891,7 @@ def order_edit_tissue(request, req_rtt_id):
 #	raise Http404('This page does not exist.')
 
 
-def tissue_shop_landing_view(request,  cohort_id):
+def tissue_shop_landing_view(request, cohort_id):
 	context = dict()
 	assay = Cohort.objects.get(coh_cohort_name__iexact="Assay Development")
 	cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
@@ -925,7 +951,7 @@ def tissue_list(request, tissue_category=None, cohort_id=None):
 													 'tissues_unavailable': unavailable,
 													 'title': tissue_category,
 													 'cohort': cohort,
-													 'plot_gallery': True,},
+													 'plot_gallery': True, },
 							  context_instance=RequestContext(request))
 
 
@@ -980,14 +1006,14 @@ def request_review_process(request, req_request_id):
 				subject = ''.join(form.cleaned_data['subject'].splitlines())
 				if not settings.DEVELOPMENT:
 					perm = Permission.objects.get(codename='bcc_request_email')
-					bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm) ).distinct().values_list('email', flat=True)
+					bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
 					email = EmailMessage(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
 					if status != RequestStatus.Rejected:
 						outfile = open('/tmp/%s.pdf' % str(req_request.pk), 'wb')
-						process_latex('latex/shipping_manifest.tex',{'req_request': req_request,
-																					 'account': req_request.user.account,
-																					 'time': datetime.today(),
-																					 }, outfile=outfile)
+						process_latex('latex/shipping_manifest.tex', {'req_request': req_request,
+																	  'account': req_request.user.account,
+																	  'time': datetime.today(),
+																	  }, outfile=outfile)
 						outfile.close()
 						email.attach_file(outfile.name)
 					email.send()
@@ -1097,11 +1123,8 @@ def search_index(terms, index, model):
 	results = search.query(terms)
 	final_results = list()
 
-	
 	for result in results:
 		final_results.append(model.objects.get(pk=result['id']))
-
-
 
 	return final_results
 
@@ -1151,8 +1174,9 @@ def build_shipment(request, req_request_id):
 		shipment = req_request.shipment
 		if 'shipped' in request.POST:
 			if not req_request.can_be_shipped(): # do a sanity check
-				messages.warning(request, "A request can only be shipped if all of the following are true: 1) the request has been accepted and not yet shipped, 2) the user has provided a FedEx number, 3) user has submitted a Purchase Order number.")
-#				return redirect('shipping-overview')
+				messages.warning(request,
+								 "A request can only be shipped if all of the following are true: 1) the request has been accepted and not yet shipped, 2) the user has provided a FedEx number, 3) user has submitted a Purchase Order number.")
+			#				return redirect('shipping-overview')
 			else:
 				shipment.shp_shipment_date = datetime.today()
 				shipment.user = request.user
@@ -1179,15 +1203,16 @@ def make_shipping_manifest_latex(request, req_request_id):
 									  str(req_request.pk) + '.pdf'
 	account = req_request.user.account
 
-	return process_latex('latex/shipping_manifest.tex',{'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
+	return process_latex('latex/shipping_manifest.tex', {'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
+
 
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_delete(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
-#	if req_request.user != request.user:
-#		# tissue requests can only be deleted by the
-#		# user who made the tissue request.
-#		raise Http404('This page does not exist.')
+	#	if req_request.user != request.user:
+	#		# tissue requests can only be deleted by the
+	#		# user who made the tissue request.
+	#		raise Http404('This page does not exist.')
 
 	if req_request.is_evaluated():
 		messages.error(request, "You cannot delete an order which has been accepted/rejected.")
@@ -1208,20 +1233,21 @@ def order_delete(request, req_request_id):
 		return render_to_response('matrr/order/order_delete.html',
 				{'order': req_request,
 				 'Acceptance': Acceptance,
-				 'edit': edit },
+				 'edit': edit},
 								  context_instance=RequestContext(request))
-		
+
+
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_checkout(request, req_request_id):
 	# get the context (because it loads the cart as well)
 	req = Request.objects.get(req_request_id=req_request_id)
 	if not req.can_be_edited():
 		raise Http404('This page does not exist.')
-	
+
 	if request.method != 'POST':
 		checkout_form = CartCheckoutForm(instance=req)
-		
-		return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form,  'edit':True, 'cart_exists':True, 'cart_num_items':1},
+
+		return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form, 'edit': True, 'cart_exists': True, 'cart_num_items': 1},
 								  context_instance=RequestContext(request))
 	else:
 		data = request.POST.copy()
@@ -1239,22 +1265,24 @@ def order_checkout(request, req_request_id):
 			messages.success(request, 'Tissue Request Submitted.')
 			return redirect('order-list')
 		else:
-			return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form, 'edit':True, 'cart_exists':True,'cart_num_items':1},
+			return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form, 'edit': True, 'cart_exists': True, 'cart_num_items': 1},
 									  context_instance=RequestContext(request))
+
 
 def tissue_verification(request):
 	request_ids = TissueInventoryVerification.objects.values_list('tissue_request__req_request')
-#	print request_ids
+	#	print request_ids
 	requests = Request.objects.filter(req_request_id__in=request_ids).order_by('req_request_date')
-#	print requests
+	#	print requests
 	requestless_count = TissueInventoryVerification.objects.filter(tissue_request=None).count()
 	return render_to_response('matrr/verification/verification_request_list.html',
-							{
-							'requests': requests,
-							'requestless_count': requestless_count,
-							},
-							context_instance=RequestContext(request))
-	
+			{
+			'requests': requests,
+			'requestless_count': requestless_count,
+			},
+							  context_instance=RequestContext(request))
+
+
 def tissue_verification_export(request, req_request_id):
 	if req_request_id:
 		tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('inventory').order_by("monkey")
@@ -1264,8 +1292,7 @@ def tissue_verification_export(request, req_request_id):
 	#Create the HttpResponse object with the appropriate PDF headers.
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
-	return process_latex('latex/tissue_verification.tex',
-														{'tiv_list': tiv_list,
+	return process_latex('latex/tissue_verification.tex',{'tiv_list': tiv_list,
 														 'user': request.user,
 														 'date': datetime.today()},
 														 outfile=response)
@@ -1303,13 +1330,13 @@ def tissue_verification_list(request, req_request_id):
 	except:
 	# If page is not an integer, deliver first page.
 		p_tiv_list = paginator.page(1)
-	
+
 	for tiv in p_tiv_list.object_list:
 		try:
 			amount = tiv.tissue_request.get_amount()
 			req_request = tiv.tissue_request.req_request\
-						  if tiv.tissue_request.req_request.get_acc_req_collisions_for_tissuetype_monkey(tiv.tissue_type, tiv.monkey) \
-						  else False
+			if tiv.tissue_request.req_request.get_acc_req_collisions_for_tissuetype_monkey(tiv.tissue_type, tiv.monkey)\
+			else False
 		except AttributeError: # tissue_request == None
 			req_request = False
 			amount = "None"
@@ -1321,11 +1348,12 @@ def tissue_verification_list(request, req_request_id):
 					   'tissue': tiv.tissue_type,
 					   'notes': tiv.tiv_notes,
 					   'amount': amount,
-					   'req_request': req_request,}
+					   'req_request': req_request, }
 		initial[len(initial):] = [tiv_initial]
-		
-	formset = TissueVerificationFormSet(initial=initial)	
+
+	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification/verification_list.html', {"formset": formset, "req_id": req_request_id, "paginator": p_tiv_list}, context_instance=RequestContext(request))
+
 
 def tissue_verification_detail(request, req_request_id, tiv_id):
 	tiv = TissueInventoryVerification.objects.get(pk=tiv_id)
@@ -1358,8 +1386,8 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 	try:
 		amount = tiv.tissue_request.get_amount()
 		req_request = tiv.tissue_request.req_request\
-					  if tiv.tissue_request.req_request.get_acc_req_collisions_for_tissuetype_monkey(tiv.tissue_type, tiv.monkey) \
-					  else False
+		if tiv.tissue_request.req_request.get_acc_req_collisions_for_tissuetype_monkey(tiv.tissue_type, tiv.monkey)\
+		else False
 	except AttributeError: # tissue_request == None
 		req_request = False
 		amount = "None"
@@ -1379,13 +1407,14 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 	tivform = TissueInventoryVerificationDetailForm(initial=tiv_initial)
 	return render_to_response('matrr/verification/verification_detail.html', {"tivform": tivform, "req_id": req_request_id}, context_instance=RequestContext(request))
 
+
 @user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')
 def inventory_cohort(request, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
 	tsts = TissueType.objects.all().order_by('tst_tissue_name')
 	monkeys = cohort.monkey_set.all()
 	availability_matrix = list()
-#	y tst, x monkey
+	#	y tst, x monkey
 
 	if cohort.coh_upcoming:
 		messages.warning(request, "This cohort is upcoming, green color indicates future possible availability, however this tissues are NOT is stock.")
@@ -1407,29 +1436,127 @@ def inventory_cohort(request, coh_id):
 					tst_row['row'].append(Availability.In_Stock)
 				else:
 					tst_row['row'].append(Availability.Unavailable)
-			availability_matrix.append(tst_row)	
+			availability_matrix.append(tst_row)
 	return render_to_response('matrr/inventory/inventory_cohort.html', {"cohort": cohort, "monkeys": monkeys, "matrix": availability_matrix}, context_instance=RequestContext(request))
 
 
+### Tools
+def __gather_cohort_protein_images(cohort, proteins):
+	images = []
+	for protein in proteins:
+		pcimage, isnew = CohortProteinImage.objects.get_or_create(protein=protein, cohort=cohort)
+		if isnew:
+			pcimage.save()
+		images.append(pcimage)
+	return images
+
+def tools_landing(request):
+	if request.method == "POST":
+		tool_select_form = ToolSelectForm(data=request.POST)
+		if tool_select_form.is_valid():
+			subject = tool_select_form.cleaned_data['subject']
+			dataset = tool_select_form.cleaned_data['dataset']
+
+			if dataset == 'etoh':
+				if request.user.has_perm('matrr.view_vip_images'):
+					if subject == 'monkey':
+						return redirect('tools-monkey-etoh')
+					else: # assumes subject == 'cohort'
+						return redirect('tools-cohort-etoh')
+				else:
+					return redirect('/denied/')
+			elif dataset == 'protein':
+				if subject == 'monkey':
+					return redirect('tools-monkey-protein')
+				else: # assumes subject == 'cohort'
+					return redirect('tools-cohort-protein')
+		else:
+			messages.error(request, "Form submission was invalid.  Please try again.")
+	return render_to_response('matrr/tools/landing.html', {'tool_select_form': ToolSelectForm()}, context_instance=RequestContext(request))
 
 
-####################
-#  VIP tools  #
-####################
+def tools_cohort_protein(request):
+	if request.method == 'POST':
+		cohort_form = CohortSelectForm(data=request.POST)
+		if cohort_form.is_valid():
+			cohort = cohort_form.cleaned_data['subject']
+			return redirect(tools_cohort_protein_graphs, cohort.pk)
+	else:
+		cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
+		cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
+		cohort_form = CohortSelectForm(cohort_queryset=cohorts_with_protein_data)
+	return render_to_response('matrr/tools/protein.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
+
+
+def tools_cohort_protein_graphs(request, cohort_id):
+	cohort = Cohort.objects.get(pk=cohort_id)
+	context = {'cohort': cohort}
+	if request.method == "POST":
+		protein_form = ProteinSelectForm(data=request.POST)
+		if protein_form.is_valid():
+			proteins = protein_form.cleaned_data['proteins']
+			graphs = __gather_cohort_protein_images(cohort, proteins)
+			context['graphs'] = graphs
+	else:
+		context['protein_form'] = ProteinSelectForm()
+	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
+
+
+def tools_monkey_protein(request):
+	if request.method == 'POST':
+		monkey_form = MonkeySelectForm(data=request.POST)
+		if monkey_form.is_valid():
+			monkey = monkey_form.cleaned_data['subject']
+			return redirect(tools_monkey_protein_graphs, monkey.pk)
+	else:
+		monkeys_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__pk', flat=True).distinct() # for some reason this only returns the pk int
+		monkeys_with_protein_data = Monkey.objects.filter(pk__in=monkeys_with_protein_data) # so get the queryset of cohorts
+		monkey_form = MonkeySelectForm(monkey_queryset=monkeys_with_protein_data)
+	return render_to_response('matrr/tools/protein.html', {'subject_select_form': monkey_form}, context_instance=RequestContext(request))
+
+
+def tools_monkey_protein_graphs(request, monkey_id):
+	old_post = request.session.get('_old_post')
+	monkey = Monkey.objects.get(pk=monkey_id)
+	context = {'monkey': monkey}
+	if request.method == "POST" or old_post:
+		post = request.POST if request.POST else old_post
+		protein_form = ProteinSelectForm(data=post)
+		subject_select_form = MonkeySelectForm(data=post)
+		if protein_form.is_valid() and subject_select_form.is_valid():
+			if int(monkey_id) != subject_select_form.cleaned_data['subject'].pk:
+				request.session['_old_post'] = request.POST
+				return redirect(tools_monkey_protein_graphs, subject_select_form.cleaned_data['subject'].pk)
+			proteins = protein_form.cleaned_data['proteins']
+			graph_url = monkey_protein(monkey, proteins, request.user.username)
+			context['graphs'] = [graph_url]
+	monkeys_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__pk', flat=True).distinct() # for some reason this only returns the pk int
+	monkeys_with_protein_data = Monkey.objects.filter(pk__in=monkeys_with_protein_data) # so get the queryset of cohorts
+
+	context['subject_select_form'] = MonkeySelectForm(monkey_queryset=monkeys_with_protein_data, horizontal=True, initial={'subject': monkey_id})
+	context['protein_form'] = ProteinSelectForm()
+	return render_to_response('matrr/tools/protein_monkey.html', context, context_instance=RequestContext(request))
+
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
+def tools_etoh(request):
+	return 0
+
+#  VIP tools
+@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_tools(request):
-	return render_to_response('matrr/VIP/vip_index.html', {}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/VIP/vip_index.html', {}, context_instance=RequestContext(request))
+
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_graphs(request):
 	if request.POST:
 		for key in plotting.VIP_MONKEY_PLOTS:
 			if key in request.POST:
-				return redirect(reverse('vip-graph-builder', args = [key]))
+				return redirect(reverse('vip-graph-builder', args=[key]))
 		for key in plotting.VIP_COHORT_PLOTS:
 			if key in request.POST:
-				return redirect(reverse('vip-graph-builder', args = [key]))
+				return redirect(reverse('vip-graph-builder', args=[key]))
 		return reverse(vip_graphs) #  this should never be hit.  I dunno how it could be.
 	else:
 		context = {}
@@ -1450,18 +1577,19 @@ def vip_graphs(request):
 		coh_keys.sort()
 		context['mky_keys'] = mky_keys
 		context['coh_keys'] = coh_keys
-		return render_to_response('matrr/VIP/vip_graphs.html', context, context_instance=RequestContext(request))
+		return render_to_response('matrr/tools/VIP/vip_graphs.html', context, context_instance=RequestContext(request))
+
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_mtd_graph(request, mtd_id):
 	if MonkeyToDrinkingExperiment.objects.filter(pk=mtd_id).count():
 		mtd = MonkeyToDrinkingExperiment.objects.get(pk=mtd_id)
 		mtd_image, is_new = MTDImage.objects.get_or_create(
-							monkey_to_drinking_experiment=mtd,
-						   	method='monkey_bouts_drinks_intraday',
-						   	title="Drinks on %s for monkey %s" % (str(mtd.drinking_experiment.dex_date), str(mtd.monkey))
-							)
-		return render_to_response('matrr/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
+			monkey_to_drinking_experiment=mtd,
+			method='monkey_bouts_drinks_intraday',
+			title="Drinks on %s for monkey %s" % (str(mtd.drinking_experiment.dex_date), str(mtd.monkey))
+		)
+		return render_to_response('matrr/tools/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
@@ -1493,27 +1621,28 @@ def vip_graph_builder(request, method_name):
 			if coh_max > all_max:
 				all_max = coh_max
 
-
 	min_date = date_to_padded_int(all_min)
 	max_date = date_to_padded_int(all_max)
-	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
+	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
 
 	if 'monkey' in method_name:
 		if request.POST:
 			return monkey_graph_builder(request, method_name, date_ranges, min_date, max_date)
 		else:
-			subject_form = VIPGraphForm_monkeys()
+			subject_form = MonkeySelectForm(monkey_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
 	else:
 		if request.POST:
 			return cohort_graph_builder(request, method_name, date_ranges, min_date, max_date)
 		else:
-			subject_form = VIPGraphForm_cohorts()
+			subject_form = CohortSelectForm(cohort_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
 	# only reachable if NOT request.POST
-	return render_to_response('matrr/VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges},
+							  context_instance=RequestContext(request))
+
 
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
-	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
-	subject_form = VIPGraphForm_monkeys(data=request.POST)
+	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
+	subject_form = MonkeySelectForm(data=request.POST)
 	matrr_image = ''
 
 	if date_form.is_valid() and subject_form.is_valid():
@@ -1535,6 +1664,7 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 
 		if m2de.count():
 			from utils.plotting import MONKEY_PLOTS
+
 			title = "%s for monkey %s" % (MONKEY_PLOTS[method_name][1], subject)
 			parameters = str(parameters)
 			matrr_image, is_new = MonkeyImage.objects.get_or_create(monkey=subject, method=method_name, title=title, parameters=parameters)
@@ -1543,14 +1673,15 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 		else:
 			messages.info(request, "No drinking experiments for the given date range for this monkey")
 
-	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges, 'matrr_image': matrr_image}
-	return render_to_response('matrr/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
+	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges, 'matrr_image': matrr_image}
+	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
+
 
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
-	date_form = VIPGraphForm_dates(min_date=min_date, max_date=max_date, data=request.POST)
+	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = VIPGraphForm_cohorts(data=request.POST)
 
-	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges' : date_ranges}
+	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges}
 
 	if date_form.is_valid() and subject_form.is_valid():
 		date_data = date_form.cleaned_data
@@ -1570,6 +1701,7 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 
 		if m2de.count():
 			from utils.plotting import COHORT_PLOTS
+
 			title = "%s for cohort %s" % (COHORT_PLOTS[method_name][1], subject)
 			parameters = str(parameters)
 			matrr_image, is_new = CohortImage.objects.get_or_create(cohort=subject, method=method_name, title=title, parameters=parameters)
@@ -1579,22 +1711,21 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 			context['matrr_image'] = matrr_image
 		else:
 			messages.info(request, "No drinking experiments for the given date range for this cohort")
-	return render_to_response('matrr/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
-###############
-### End VIP ###
-###############
-
+#	End VIP
+### End tools
 
 # Permission-restricted media file hosting
 from settings import MEDIA_ROOT
 import os
 import mimetypes
+
 def sendfile(request, id):
 	files = list()
 
-#	append all possible files
-	r = Request.objects.filter(req_experimental_plan=id)	
+	#	append all possible files
+	r = Request.objects.filter(req_experimental_plan=id)
 	files.append((r, 'req_experimental_plan'))
 	r = Mta.objects.filter(mta_file=id)
 	files.append((r, 'mta_file'))
@@ -1621,36 +1752,36 @@ def sendfile(request, id):
 	r = MTDImage.objects.filter(html_fragment=id)
 	files.append((r, 'html_fragment'))
 
-#	this will work for all listed files
+	#	this will work for all listed files
 	file = None
-	for r,f in files:
+	for r, f in files:
 		if len(r) > 0:
 			if r[0].verify_user_access_to_file(request.user):
-				file = getattr(r[0], f) 
+				file = getattr(r[0], f)
 			break
 	if not file:
 		raise Http404()
-	
+
 	if file.url.count('/media') > 0:
 		file_url = file.url.replace('/media/', '')
 	else:
 		file_url = file.url.replace('/', '', 1)
-	
-	response = HttpResponse()
-	response['X-Sendfile'] =  os.path.join(MEDIA_ROOT, file_url)
 
-	
+	response = HttpResponse()
+	response['X-Sendfile'] = os.path.join(MEDIA_ROOT, file_url)
+
 	content_type, encoding = mimetypes.guess_type(file_url)
 	if not content_type:
-			content_type = 'application/octet-stream'
-	response['Content-Type'] = content_type 
-	response['Content-Disposition'] = 'attachment; filename="%s"' %  os.path.basename(file_url)
+		content_type = 'application/octet-stream'
+	response['Content-Type'] = content_type
+	response['Content-Disposition'] = 'attachment; filename="%s"' % os.path.basename(file_url)
 	return response
+
 
 def test_view(request):
 	monkeys = ''
-#	field_names = ['mky_drinking', 'cohort', 'mky_name', 'mky_id', 'mky_real_id', ]
-#	fields = [Monkey._meta.get_field(field) for field in field_names]
+	#	field_names = ['mky_drinking', 'cohort', 'mky_name', 'mky_id', 'mky_real_id', ]
+	#	fields = [Monkey._meta.get_field(field) for field in field_names]
 	fields = Monkey._meta.fields
 	if request.POST:
 		spiffy_form = FilterForm(fields, data=request.POST, number_of_fields=1)
@@ -1664,11 +1795,10 @@ def test_view(request):
 		spiffy_form = FilterForm(fields, number_of_fields=1)
 	return render_to_response('test.html', {'spiffy_form': spiffy_form, 'monkeys': monkeys}, context_instance=RequestContext(request))
 
+
 @user_passes_test(lambda u: u.has_perm('auth.upload_raw_data'), login_url='/denied/')
 def raw_data_upload(request):
-
 	if request.method == 'POST':
-
 		form = RawDataUploadForm(request.POST, request.FILES)
 		if form.is_valid():
 			f = request.FILES['data']
@@ -1678,7 +1808,7 @@ def raw_data_upload(request):
 			for chunk in f.chunks():
 				destination.write(chunk)
 			destination.close()
-			return render_to_response('upload_forms/raw_data_upload.html', {'form': RawDataUploadForm(), 'success' : True}, context_instance=RequestContext(request))
+			return render_to_response('upload_forms/raw_data_upload.html', {'form': RawDataUploadForm(), 'success': True}, context_instance=RequestContext(request))
 	else:
 		form = RawDataUploadForm()
 	return render_to_response('upload_forms/raw_data_upload.html', {'form': form}, context_instance=RequestContext(request))

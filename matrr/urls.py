@@ -1,9 +1,6 @@
 from django.db.models.aggregates import Count
-
-__author__ = 'soltau'
-from django.conf.urls.defaults import patterns, include, url
+from django.conf.urls.defaults import patterns, url
 from django.views.generic import DetailView, ListView
-from django.contrib.auth.decorators import user_passes_test
 from matrr.views import *
 import settings
 
@@ -85,6 +82,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^orders/(?P<req_request_id>\d+)/checkout/$',	 		order_checkout, name='order-checkout'),
 	url(r'^orders/edit-tissue/(?P<req_rtt_id>\d+)/$', 			order_edit_tissue, name='orders-edit-tissue'),
 	url(r'^orders/delete-tissue/(?P<req_rtt_id>\d+)/$', 		order_delete_tissue, name='orders-delete-tissue'),	
+
 #	url(r'^experimental_plans/(?P<plan>\S+)/?$', 				experimental_plan_view),
 	url(r'^shipping_overview/$',								shipping_overview, name='shipping-overview'),
 	url(r'^shipping/build/(?P<req_request_id>\d+)/$', 			build_shipment, name='build-shipment'),
@@ -119,11 +117,20 @@ urlpatterns += patterns('matrr.views',
 	url(r'^inventory/$', user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')(ListView.as_view(
 							model=Cohort,template_name="matrr/inventory/inventory.html")), name='inventory'),
 	
-	# VIP tools
-	url(r'^vip/$', vip_tools, name='vip-tools'),
-	url(r'^vip/graphs$', vip_graphs, name='vip-graphs'),
-	url(r'^vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
-	url(r'^vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
+	# Tools
+	url(r'^tools/$', tools_landing, name='tools-landing'),
+
+	url(r'^tools/cohort/protein/$', tools_cohort_protein, name='tools-cohort-protein'),
+	url(r'^tools/cohort/protein/(?P<cohort_id>\d+)/$', tools_cohort_protein_graphs, name='tools-cohort-protein-graphs'),
+	url(r'^tools/monkey/protein/$', tools_monkey_protein, name='tools-monkey-protein'),
+	url(r'^tools/monkey/protein/(?P<monkey_id>\d+)/$', tools_monkey_protein_graphs, name='tools-monkey-protein-graphs'),
+
+	url(r'^tools/etoh/$', tools_etoh, name='tools-etoh'),
+
+	url(r'^tools/vip/$', vip_tools, name='vip-tools'),
+	url(r'^tools/vip/graphs$', vip_graphs, name='vip-graphs'),
+	url(r'^tools/vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
+	url(r'^tools/vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
 
 	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 

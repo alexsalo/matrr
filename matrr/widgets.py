@@ -263,7 +263,8 @@ class DateTimeWidget(forms.widgets.TextInput):
 		default_attrs = {'min_date': '20000101', 'max_date': '20120101'}
 		if attrs:
 			default_attrs.update(attrs)
-		super(forms.widgets.TextInput, self).__init__(default_attrs)
+		#super(forms.widgets.TextInput, self).__init__(default_attrs) # This worked.  Seems an arbitrary change
+		super(DateTimeWidget, self).__init__(default_attrs)
 
 	class Media:
 		css = {
