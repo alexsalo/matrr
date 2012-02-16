@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, pre_delete
+from django.core.urlresolvers import reverse
 from django.dispatch import receiver
 from datetime import datetime
 from string import lower, replace
@@ -1218,6 +1219,12 @@ class Request(models.Model, DiffingMixin):
 	def ship_request(self):
 		self.req_status = RequestStatus.Shipped
 
+	def get_inventory_verification_status(self):
+		for rtt in self.tissue_request_set.all():
+			if rtt.get_inventory_verification_status() == "Unverified":
+				return 'Incomplete'
+		return "Complete"
+
 	class Meta:
 		db_table = 'req_requests'
 		permissions = (
@@ -1377,6 +1384,13 @@ class TissueRequest(models.Model):
 		other_rtts = TissueRequest.objects.exclude(pk=self.pk)
 		rtt_collisions = other_rtts.filter(tissue_type=self.tissue_type, monkeys__in=self.monkeys.all())
 		return rtt_collisions
+
+	def get_inventory_verification_status(self):
+		tivs = TissueInventoryVerification.objects.filter(tissue_request=self)
+		for tiv in tivs:
+			if tiv.tiv_inventory == "Unverified":
+				return 'Incomplete'
+		return "Complete"
 
 	def create_revised_duplicate(self, revised_request):
 		
@@ -1930,4 +1944,14 @@ def cohortimage_pre_delete(**kwargs):
 		os.remove(cig.thumbnail.path)
 	if cig.html_fragment and os.path.exists(cig.html_fragment.path):
 		os.remove(cig.html_fragment.path)
+
+@receiver(post_save, sender=TissueInventoryVerification)
+def tiv_post_save(**kwargs):
+	# see if all the TIVs for the request have been verified
+	tiv = kwargs['instance']
+	req_request = tiv.tissue_request.req_request
+	verification_status = req_request.get_inventory_verification_status()
+	if verification_status == "Complete":
+		from utils.regular_tasks.send_verification_complete_notification import send_verification_complete_notification
+		send_verification_complete_notification(req_request)
 
