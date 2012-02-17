@@ -1292,7 +1292,8 @@ def tissue_verification_export(request, req_request_id):
 	#Create the HttpResponse object with the appropriate PDF headers.
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
-	return process_latex('latex/tissue_verification.tex',{'tiv_list': tiv_list,
+	return process_latex('latex/tissue_verification.tex',
+														{'tiv_list': tiv_list,
 														 'user': request.user,
 														 'date': datetime.today()},
 														 outfile=response)
