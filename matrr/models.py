@@ -1824,7 +1824,10 @@ class Protein(models.Model):
 	pro_units = models.CharField('Concentration Units', choices=ProteinUnits, null=False, max_length=20)
 
 	def __unicode__(self):
-		return "%s" % str(self.pro_name)
+		name = self.pro_name
+		if len(name) >= 32:
+			name = self.pro_abbrev
+		return "%s" % name
 
 	class Meta:
 		db_table = 'pro_protein'
