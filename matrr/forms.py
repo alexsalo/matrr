@@ -332,12 +332,15 @@ class TissueRequestProcessForm(ModelForm):
 
 class TissueInventoryVerificationForm(Form):
 	primarykey = IntegerField(widget=HiddenInput(), required=False)
+	inventory = ChoiceField(choices=InventoryStatus, required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer))
+
+
+class TissueInventoryVerificationDetailForm(TissueInventoryVerificationForm):
 	freezer = CharField(max_length=100, required=False)
 	location = CharField(max_length=100, required=False)
 	quantity = FloatField(required=False)
 	units = ChoiceField(choices=Units, required=False)
 	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
-	inventory = ChoiceField(choices=InventoryStatus, required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer))
 
 
 class VIPGraphForm_dates(Form):

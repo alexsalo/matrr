@@ -13,5 +13,5 @@ def send_verification_complete_notification(req_request):
 		   "Please check https://gleek.ecs.baylor.edu%s to see if this request is ready for processing.\n" % reverse('review-overview', args=[req_request.pk,]) + \
 		   "Please, do not respond. This is an automated message.\n"
 
-	if settings.PRODUCTION:
+	if not settings.PRODUCTION:
 		send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)

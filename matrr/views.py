@@ -1269,6 +1269,7 @@ def tissue_verification_export(request, req_request_id):
 														 'user': request.user,
 														 'date': datetime.today()},
 														 outfile=response)
+
 def tissue_verification_list(request, req_request_id):
 	TissueVerificationFormSet = formset_factory(TissueInventoryVerificationForm, extra=0)
 	if request.method == "POST":
@@ -1277,23 +1278,9 @@ def tissue_verification_list(request, req_request_id):
 			for tivform in formset:
 				data = tivform.cleaned_data
 				tiv = TissueInventoryVerification.objects.get(pk=data['primarykey'])
-				tss = tiv.tissue_sample
-				tss.tss_location = data['location']
-				tss.tss_freezer = data['freezer']
-				tss.tss_details = data['details']
-				tss.user = request.user # who last modified the tissue sample
-				if data['quantity'] != -1:
-					tss.tss_sample_quantity = data['quantity']
-				if data['units']:
-					tss.tss_units = data['units']
-				if data['inventory']:
+				if data['inventory'] != tiv.tiv_inventory:
 					tiv.tiv_inventory = data['inventory']
-				if tiv.tissue_request is None and data['quantity'] >= 0:
-					tiv.tiv_inventory = "Verified" # this will cause the TIV to delete itself.
-				tiv.save()
-				if not 'Do not edit' in tiv.tiv_notes: # see TissueInventoryVerification.save() for details
-					tss.save()
-
+					tiv.save()
 			messages.success(request, message="This page of tissues has been successfully updated.")
 		else:
 			messages.error(request, formset.errors)
@@ -1329,12 +1316,7 @@ def tissue_verification_list(request, req_request_id):
 		tss = tiv.tissue_sample
 		quantity = -1 if tiv.tissue_request is None else tss.tss_sample_quantity
 		tiv_initial = {'primarykey': tiv.tiv_id,
-					   'freezer': tss.tss_freezer,
-					   'location': tss.tss_location,
-					   'quantity': quantity,
 					   'inventory': tiv.tiv_inventory,
-					   'units': tss.tss_units,
-					   'details': tss.tss_details,
 					   'monkey': tiv.monkey,
 					   'tissue': tiv.tissue_type,
 					   'notes': tiv.tiv_notes,
@@ -1348,7 +1330,7 @@ def tissue_verification_list(request, req_request_id):
 def tissue_verification_detail(request, req_request_id, tiv_id):
 	tiv = TissueInventoryVerification.objects.get(pk=tiv_id)
 	if request.method == "POST":
-		tivform = TissueInventoryVerificationForm(data=request.POST)
+		tivform = TissueInventoryVerificationDetailForm(data=request.POST)
 		if tivform.is_valid():
 			data = tivform.cleaned_data
 			tiv = TissueInventoryVerification.objects.get(pk=tiv_id)
@@ -1394,7 +1376,7 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 				   'notes': tiv.tiv_notes,
 				   'amount': amount,
 				   'req_request': req_request,}
-	tivform = TissueInventoryVerificationForm(initial=tiv_initial)
+	tivform = TissueInventoryVerificationDetailForm(initial=tiv_initial)
 	return render_to_response('matrr/verification/verification_detail.html', {"tivform": tivform, "req_id": req_request_id}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')

@@ -119,6 +119,10 @@ RequestStatus =  Enumeration([
 						('PA', 'Partially', 'Partially accepted'),
 						('SH', 'Shipped', 'Shipped'),
 					])
+VerificationStatus =  Enumeration([
+						('CP', 'Complete', 'Complete'),
+						('IC', 'Incomplete', 'Incomplete'),
+					])
 
 
 # These are the method names which ONLY VIP members can _see_
@@ -1221,9 +1225,9 @@ class Request(models.Model, DiffingMixin):
 
 	def get_inventory_verification_status(self):
 		for rtt in self.tissue_request_set.all():
-			if rtt.get_inventory_verification_status() == "Unverified":
-				return 'Incomplete'
-		return "Complete"
+			if rtt.get_inventory_verification_status() == VerificationStatus.Incomplete:
+				return VerificationStatus.Incomplete
+		return VerificationStatus.Complete
 
 	class Meta:
 		db_table = 'req_requests'
@@ -1389,8 +1393,8 @@ class TissueRequest(models.Model):
 		tivs = TissueInventoryVerification.objects.filter(tissue_request=self)
 		for tiv in tivs:
 			if tiv.tiv_inventory == "Unverified":
-				return 'Incomplete'
-		return "Complete"
+				return VerificationStatus.Incomplete
+		return VerificationStatus.Complete
 
 	def create_revised_duplicate(self, revised_request):
 		
@@ -1949,9 +1953,10 @@ def cohortimage_pre_delete(**kwargs):
 def tiv_post_save(**kwargs):
 	# see if all the TIVs for the request have been verified
 	tiv = kwargs['instance']
-	req_request = tiv.tissue_request.req_request
-	verification_status = req_request.get_inventory_verification_status()
-	if verification_status == "Complete":
-		from utils.regular_tasks.send_verification_complete_notification import send_verification_complete_notification
-		send_verification_complete_notification(req_request)
+	if tiv.tiv_inventory != "Unverified":
+		req_request = tiv.tissue_request.req_request
+		verification_status = req_request.get_inventory_verification_status()
+		if verification_status == VerificationStatus.Complete:
+			from utils.regular_tasks.send_verification_complete_notification import send_verification_complete_notification
+			send_verification_complete_notification(req_request)
 
