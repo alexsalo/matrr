@@ -1140,6 +1140,7 @@ def monkey_protein(monkey, proteins, username):
 	ax1.set_xlabel("Date of sample")
 	ax1.set_ylabel("Percent difference from cohort mean")
 
+	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
 	lines = []
 	line_labels = []
 	for index, protein in enumerate(proteins):
@@ -1162,6 +1163,9 @@ def monkey_protein(monkey, proteins, username):
 	y_min = min(oldylims[0], -1 * oldylims[1])
 	y_max = max(oldylims[1], -1 * oldylims[0])
 	pyplot.ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
+
+	# rotate the xaxis labels
+	pyplot.xticks(dates, [str(date.date()) for date in dates], rotation=45)
 
 	# Shink current axis by 20%
 	box = ax1.get_position()
