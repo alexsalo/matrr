@@ -1163,6 +1163,13 @@ def monkey_protein(monkey, proteins, username):
 	y_max = max(oldylims[1], -1 * oldylims[0])
 	pyplot.ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
 
+	# Shink current axis by 20%
+	box = ax1.get_position()
+	ax1.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+	# Put a legend to the right of the current axis
+	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
+
 	base_path = settings.MEDIA_ROOT
 	path_append = '/mpn/'
 	os_path = base_path + path_append

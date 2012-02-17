@@ -1518,6 +1518,7 @@ def tools_cohort_protein_graphs(request, cohort_id):
 
 
 def tools_monkey_protein_graphs(request, cohort_id, monkey_id=0):
+	proteins = None
 	old_post = request.session.get('_old_post')
 	monkey = Monkey.objects.get(pk=monkey_id) if monkey_id else None
 	cohort = Cohort.objects.get(pk=cohort_id)
@@ -1539,7 +1540,7 @@ def tools_monkey_protein_graphs(request, cohort_id, monkey_id=0):
 	monkeys_with_protein_data = Monkey.objects.filter(pk__in=monkeys_with_protein_data) # so get the queryset of cohorts
 
 	context['subject_select_form'] = MonkeySelectForm(monkey_queryset=monkeys_with_protein_data, horizontal=True, initial={'subject': monkey_id})
-	context['protein_form'] = ProteinSelectForm()
+	context['protein_form'] = ProteinSelectForm(initial={'proteins': proteins})
 	return render_to_response('matrr/tools/protein_monkey.html', context, context_instance=RequestContext(request))
 
 
