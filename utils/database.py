@@ -324,33 +324,16 @@ def dump_distinct_TissueType(output_file):
 		output.writerow(row)
 	print "Success."
 
-def dump_monkey_data(output_file):
-	output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	columns = ['mky_id', 'cohort', 'mky_real_id', 'mky_name', 'mky_gender', 'mky_birthdate', 'mky_weight', 'mky_drinking', 'mky_housing_control',
-			   'mky_necropsy_start_date', 'mky_necropsy_start_date_comments', 'mky_necropsy_end_date', 'mky_necropsy_end_date_comments',
-			   'mky_study_complete', 'mky_stress_model', 'mky_age_at_necropsy',]
-	output.writerow(columns)
-	for cohort in Cohort.objects.all():
-		for monkey in cohort.monkey_set.all():
-			row = []
-			row.append(monkey.mky_id)
-			row.append(cohort)
-			row.append(monkey.mky_real_id)
-			row.append(monkey.mky_name)
-			row.append(monkey.mky_gender)
-			row.append(monkey.mky_birthdate)
-			row.append(monkey.mky_weight)
-			row.append(monkey.mky_drinking)
-			row.append(monkey.mky_housing_control)
-			row.append(monkey.mky_necropsy_start_date)
-			row.append(monkey.mky_necropsy_start_date_comments)
-			row.append(monkey.mky_necropsy_end_date)
-			row.append(monkey.mky_necropsy_end_date_comments)
-			row.append(monkey.mky_study_complete)
-			row.append(monkey.mky_stress_model)
-			row.append(monkey.mky_age_at_necropsy)
-			output.writerow(row)
-		print "Cohort %s Success" % cohort.coh_cohort_name
+def dump_monkey_protein_data(queryset, output_file):
+	if isinstance(queryset, QuerySet) and isinstance(queryset[0], MonkeyProtein):
+		output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+		columns = ['monkey', 'protein', 'mpn_date', 'mpn_value']
+		output.writerow(columns)
+		for mpn in queryset:
+			output.writerow([mpn.monkey, "%s" % mpn.protein.pro_name, mpn.mpn_date, mpn.mpn_value])
+		return output
+	else:
+		raise Exception("queryset kwarg can only be a QuerySet of MonkeyProteins.")
 
 def load_monkey_data(input_file):
 	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')

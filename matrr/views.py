@@ -535,6 +535,7 @@ def account_detail_view(request, user_id):
 
 	account_info = get_object_or_404(Account, pk=user_id)
 	mta_info = Mta.objects.filter(user__id=user_id)
+	data_files = DataFile.objects.filter(account__user=user_id)
 	display_rud_from = date.today() - timedelta(days=30)
 	urge_rud_from = date.today() - timedelta(days=90)
 	pending_rud = Shipment.objects.filter(req_request__user=user_id, shp_shipment_date__lte=display_rud_from,
@@ -554,6 +555,7 @@ def account_detail_view(request, user_id):
 	return render_to_response('matrr/account/account.html',
 			{'account_info': account_info,
 			 'mta_info': mta_info,
+			 'data_files': data_files,
 			 'rud_info': rud_info,
 			 'rud_on': rud_on,
 			 'pending_rud': pending_rud,
@@ -1486,9 +1488,23 @@ def tools_cohort_protein(request, cohort_id):
 			subject = subject_select_form.cleaned_data['subject']
 			if subject == 'monkey':
 				return redirect('tools-monkey-protein', cohort_id)
-			else: # assumes subject == 'cohort'
+			elif subject == 'cohort':
 				return redirect('tools-cohort-protein-graphs', cohort_id)
+			else: # assumes subject == 'cohort'
+				account = request.user.account
+				cohort = Cohort.objects.get(pk=cohort_id)
+				monkey_proteins = MonkeyProtein.objects.filter(monkey__in=cohort.monkey_set.all()[:3])
 
+				datafile, isnew = DataFile.objects.get_or_create(account=account, dat_title="%s Protein data" % str(cohort))
+				if isnew:
+					from utils.database import dump_monkey_protein_data
+					f = dump_monkey_protein_data(monkey_proteins, '/tmp/%s.csv' % str(datafile))
+
+					datafile.dat_data_file = File(open('/tmp/%s.csv' % str(datafile), 'r'))
+					datafile.save()
+					messages.info(request, "Your data file has been saved and is available for download on your account page.")
+				else:
+					messages.warning(request, "This data file has already been created for you.  It is available to download on your account page.")
 	return render_to_response('matrr/tools/protein.html', {'subject_select_form': SubjectSelectForm()}, context_instance=RequestContext(request))
 
 
@@ -1757,6 +1773,8 @@ def sendfile(request, id):
 	files.append((r, 'image'))
 	r = MTDImage.objects.filter(html_fragment=id)
 	files.append((r, 'html_fragment'))
+	r = DataFile.objects.filter(dat_data_file=id)
+	files.append((r, 'dat_data_file'))
 
 	#	this will work for all listed files
 	file = None

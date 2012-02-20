@@ -639,7 +639,7 @@ class DataSelectForm(Form):
 
 
 class SubjectSelectForm(Form):
-	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'))
+	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
 	subject = ChoiceField(choices=subject_choices,
 						  label='Subject',
 						  help_text="Choose what scope of subjects to analyze",
