@@ -416,6 +416,7 @@ class Account(models.Model):
 		db_table = 'act_account'
 		permissions = ([
 			('view_other_accounts', 'Can view accounts of other users'),
+			('view_etoh_data', 'Can view ethanol data'),
 			('bcc_request_email', 'Will receive BCC of processed request emails'),
 			('po_manifest_email', 'Will receive Purchase Order shipping manifest email'),
 

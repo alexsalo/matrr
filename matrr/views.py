@@ -1455,7 +1455,7 @@ def tools_landing(request):
 	if request.method == "POST":
 		dataset = request.POST.get('dataset')
 		if dataset == 'etoh':
-			if request.user.has_perm('matrr.view_vip_images'):
+			if request.user.has_perm('matrr.view_etoh_data'):
 				return redirect('tools-etoh')
 			else:
 				return redirect('/denied/')
