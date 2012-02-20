@@ -185,8 +185,8 @@ Permission._meta.permissions = ([
 
 
 class Institution(models.Model):
-	ins_institution_id = models.AutoField('ID', primary_key=True)
-	ins_institution_name = models.CharField('Institution', max_length=100, unique=True, null=False,
+	ins_institution_id = models.AutoField('ins_id', primary_key=True)
+	ins_institution_name = models.CharField('Institution', max_length=500, unique=True, null=False,
 											help_text='Please enter the name of the institution.')
 
 	def __unicode__(self):

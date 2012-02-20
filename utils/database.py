@@ -1188,6 +1188,13 @@ def load_monkey_proteins(filename):
 		if isnew:
 			monkey_protein.save()
 
+def load_institutions(file_name):
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line in read_data:
+			institution, isnew = Institution.objects.get_or_create(ins_institution_name=line)
+			if isnew:
+				institution.save()
 
 
 
