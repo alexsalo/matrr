@@ -70,13 +70,11 @@
 					<th>Shipped to:</th>
 					<td>{{ account.act_shipping_name }}</td>
 					<th>MTA:</th>
-					<td>
-						{% if req_request.user.mta_set.count %}
-							The user has submitted at least one MTA.
-						{% else %}
-							The user has not submitted an MTA.
-						{% endif %}
-					</td>
+					{% if req_request.user.account.has_mta %}
+						<td>The user has a valid MTA</td>
+					{% else %}
+						<td style='background-color: red; color:white'>No Valid MTA</td>
+					{% endif %}
 				</tr>
 				<tr>
 					<th>Address:</th>

@@ -1177,8 +1177,11 @@ def build_shipment(request, req_request_id):
 		if 'shipped' in request.POST:
 			if not req_request.can_be_shipped(): # do a sanity check
 				messages.warning(request,
-								 "A request can only be shipped if all of the following are true: 1) the request has been accepted and not yet shipped, 2) the user has provided a FedEx number, 3) user has submitted a Purchase Order number.")
-			#				return redirect('shipping-overview')
+				 	"A request can only be shipped if all of the following are true:\
+				 	 1) the request has been accepted and not yet shipped, \
+				 	 2) the user has provided a FedEx number, \
+				 	 3) user has submitted a Purchase Order number, \
+				 	 4) User has submitted a valid MTA.")
 			else:
 				shipment.shp_shipment_date = datetime.today()
 				shipment.user = request.user

@@ -406,7 +406,7 @@ class Account(models.Model):
 	act_real_zip = models.CharField('ZIP', max_length=10, null=True, blank=False)
 	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
 
-	act_mta = models.CharField("MTA", max_lenght=500, null=True, blank=True)
+	act_mta = models.CharField("MTA", max_length=500, null=True, blank=True)
 
 	objects = AccountManager()
 
@@ -1280,7 +1280,7 @@ class Request(models.Model, DiffingMixin):
 
 	def can_be_shipped(self):
 		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
-			if self.req_purchase_order and self.user.account.act_fedex:
+			if self.req_purchase_order and self.user.account.act_fedex and self.user.account.has_mta():
 				return True
 		return False
 
