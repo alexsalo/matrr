@@ -13,52 +13,74 @@
 			Monkey: {{ monkey.mky_id }}
 		{% endblock %}
 	</div>
-	<br>
+	<div class='clearfix'>
+		<div style='float: left;'>
+			<!--link back to cohort detail-->
+			<a href="{% url cohort-details monkey.cohort.pk %}">
+				<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+				&nbsp;Cohort Details</a>
+			<!--endlink back to cohort list-->
+			{% if monkey.has_protein_data %}
+				<br>
+				<a href="{% url tools-monkey-protein monkey.cohort.pk monkey.pk %}">
+					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+					&nbsp;View Protein Tools
+				</a>
+			{% endif %}
+			{% if perms.matrr.browse_inventory %}
+				<br/>
+				<a href="{% url inventory-cohort monkey.cohort.pk %}">
+					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+					&nbsp;Browse Cohort Inventory
+				</a>
+			{% endif %}
+		</div>
 
-	<table class="overview">
-		{% if perms.matrr.monkey_view_confidential %}
+		<div style='float: right;'>
+			<a class='blockLinkButton' href='{% url tissue-shop-landing monkey.cohort.pk %}'>Request Tissues from this Cohort</a>
+		</div>
+
+	</div>
+	<div>
+		<table class='common_center'>
 			<tr>
-				<th>Name:</th>
-				<td>{{ monkey.mky_name }}</td>
+				{% if perms.matrr.monkey_view_confidential %}
+					<th>Real Name</th>{% endif %}
+				<th>Sex</th>
+				<th>Birthdate</th>
+				<th>Necropsy Start Date</th>
+				<th>Weight</th>
+				<th>Test Group</th>
+				<th>Stress Model</th>
+				<th>Study Complete</th>
+				<th>Notes:</th>
 			</tr>
-		{% endif %}
-		<tr>
-			<th>Assignment:</th>
-			<td>
-				{% if monkey.mky_drinking %}
-					Ethanol
-					{% else %}{% if monkey.mky_housing_control %}
-						Housing Control
-					{% else %}
-						Control
-					{% endif %}{% endif %}
-			</td>
-		</tr>
-		<tr>
-			<th>Sex:</th>
-			<td>{{ monkey.mky_gender }}</td>
-		</tr>
-		<tr>
-			<th>Birthday:</th>
-			<td>{{ monkey.mky_birthdate|date:"m/d/Y"  }}</td>
-		</tr>
-		<tr>
-			<th>Necropsy Date:</th>
-			<td>{% if monkey.mky_necropsy_start_date %}{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}{% else %}No Necropsy Yet{% endif %}</td>
-		</tr>
-		<tr>
-			<th>Weight:</th>
-			<td>{{ monkey.mky_weight }}</td>
-		</tr>
-		<tr>
-			<th>Stress Model:</th>
-			<td>{{ monkey.mky_stress_model }}</td>
-		</tr>
-		<tr>
-			<th>Notes:</th>
-			<td>{{ monkey.mky_notes }}</td>
-		</tr>
-	</table>
+				<tr>
+					{% if perms.matrr.monkey_view_confidential %}
+						<td>{{ monkey.mky_name }}</td>
+					{% endif %}
+					<td>{{ monkey.mky_gender }}</td>
+					<td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
+					<td>{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}</td>
+					<td>{{ monkey.mky_weight }}</td>
+					<td>
+						{% if monkey.mky_drinking %}
+							Ethanol
+						{% else %}
+							{% if monkey.mky_housing_control %}
+								Housing Control
+							{% else %}
+								Control
+							{% endif %}
+						{% endif %}
+					</td>
+					<td>{{ monkey.mky_stress_model }}</td>
+					<td>{% if monkey.mky_study_complete %}<font color=Green>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
+					<td>{{ monkey.mky_notes }}</td>
+
+				</tr>
+		</table>
+	</div>
 	<br>
 	<div class="clearfix">
 	{% if images %}

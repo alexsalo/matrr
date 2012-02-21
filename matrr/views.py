@@ -1490,21 +1490,24 @@ def tools_cohort_protein(request, cohort_id):
 				return redirect('tools-monkey-protein', cohort_id)
 			elif subject == 'cohort':
 				return redirect('tools-cohort-protein-graphs', cohort_id)
-			else: # assumes subject == 'cohort'
+			else: # assumes subject == 'download'
 				account = request.user.account
-				cohort = Cohort.objects.get(pk=cohort_id)
-				monkey_proteins = MonkeyProtein.objects.filter(monkey__in=cohort.monkey_set.all()[:3])
+				if account.has_mta():
+					cohort = Cohort.objects.get(pk=cohort_id)
+					monkey_proteins = MonkeyProtein.objects.filter(monkey__in=cohort.monkey_set.all())
 
-				datafile, isnew = DataFile.objects.get_or_create(account=account, dat_title="%s Protein data" % str(cohort))
-				if isnew:
-					from utils.database import dump_monkey_protein_data
-					f = dump_monkey_protein_data(monkey_proteins, '/tmp/%s.csv' % str(datafile))
+					datafile, isnew = DataFile.objects.get_or_create(account=account, dat_title="%s Protein data" % str(cohort))
+					if isnew:
+						from utils.database import dump_monkey_protein_data
+						f = dump_monkey_protein_data(monkey_proteins, '/tmp/%s.csv' % str(datafile))
 
-					datafile.dat_data_file = File(open('/tmp/%s.csv' % str(datafile), 'r'))
-					datafile.save()
-					messages.info(request, "Your data file has been saved and is available for download on your account page.")
+						datafile.dat_data_file = File(open('/tmp/%s.csv' % str(datafile), 'r'))
+						datafile.save()
+						messages.info(request, "Your data file has been saved and is available for download on your account page.")
+					else:
+						messages.warning(request, "This data file has already been created for you.  It is available to download on your account page.")
 				else:
-					messages.warning(request, "This data file has already been created for you.  It is available to download on your account page.")
+					messages.warning(request, "You must have a valid MTA on record to download data.  MTA information can be updated on your account page.")
 	return render_to_response('matrr/tools/protein.html', {'subject_select_form': SubjectSelectForm()}, context_instance=RequestContext(request))
 
 

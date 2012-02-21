@@ -12,45 +12,44 @@
 
 
 {% block content %}
-	<div id='large-headline'>{% if cohort.coh_upcoming %}
-		Upcoming
-	{% else %}
-		Available
-	{% endif %}
-		Cohort: {{ cohort.coh_cohort_name }}</div>
+	<div id='large-headline'>
+		{% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohort: {{ cohort.coh_cohort_name }}
+	</div>
 
 	<div class='clearfix'>
 
 		<div style='float: left;'>
 
 			<a href="{% url cohort-timeline cohort.coh_cohort_id %}">
-
-				<a href="{% url cohort-timeline cohort.coh_cohort_id %}">
-
-					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
-					&nbsp;View Cohort Timeline</a>
+				<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+				&nbsp;View Cohort Timeline
+			</a>
+			{% if cohort.has_protein_data %}
 				<br>
-				{% if cohort.has_protein_data %}
-					<a href="{% url tools-cohort-protein cohort.pk %}">
-						<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
-						&nbsp;View Protein Tools
-					</a>
-				{% endif %}
-				{% if cohort.coh_upcoming %}
-					<br>
-					<a href="{% url upcoming %}">
-				{% else %}
-					<a href="{% url available %}">
-				{% endif %}
+				<a href="{% url tools-cohort-protein cohort.pk %}">
+					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+					&nbsp;View Protein Tools
+				</a>
+			{% endif %}
+
+			<!--link back to cohort list-->
+			{% if cohort.coh_upcoming %}
+				<br>
+				<a href="{% url upcoming %}">
+			{% else %}
+				<br>
+				<a href="{% url available %}">
+			{% endif %}
 				<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 				&nbsp;View {% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohorts</a>
-				{% if perms.matrr.browse_inventory %}
-					<br/>
-					<a href="{% url inventory-cohort cohort.coh_cohort_id %}">
-
-						<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
-						&nbsp;Browse Cohort Inventory</a>
-				{% endif %}
+			<!--endlink back to cohort list-->
+			{% if perms.matrr.browse_inventory %}
+				<br/>
+				<a href="{% url inventory-cohort cohort.coh_cohort_id %}">
+					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+					&nbsp;Browse Cohort Inventory
+				</a>
+			{% endif %}
 		</div>
 
 		<div style='float: right;'>

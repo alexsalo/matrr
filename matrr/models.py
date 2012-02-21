@@ -237,6 +237,7 @@ class Cohort(models.Model):
 			if MonkeyProtein.objects.filter(monkey=monkey):
 				return True
 		return False
+
 	class Meta:
 		db_table = 'coh_cohorts'
 
@@ -322,6 +323,11 @@ class Monkey(models.Model):
 	def __unicode__(self):
 		return str(self.mky_id)
 
+	def has_protein_data(self):
+		if MonkeyProtein.objects.filter(monkey=self):
+			return True
+		return False
+
 	class Meta:
 		db_table = 'mky_monkeys'
 		permissions = ([
@@ -399,6 +405,9 @@ class Account(models.Model):
 	act_real_state = models.CharField('State', max_length=2, null=True, blank=False)
 	act_real_zip = models.CharField('ZIP', max_length=10, null=True, blank=False)
 	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
+
+	act_mta = models.CharField("MTA", max_lenght=500, null=True, blank=True)
+
 	objects = AccountManager()
 
 	username = ''
@@ -416,6 +425,15 @@ class Account(models.Model):
 
 	def __unicode__(self):
 		return str(self.user.username) + ": " + self.user.first_name + " " + self.user.last_name
+
+	def has_mta(self):
+		if self.act_mta:
+			if self.act_mta == "Uploaded MTA is Valid": # if the user has uploaded a VALID and VERIFIED mta
+				return True # then call my MTA valid
+			elif Institution.objects.filter(ins_institution_name=self.act_mta): # if my MTA is in the Institution table, which was pulled from the UBMTA
+				return True # then call my MTA valid
+		# in all other cases, user has no valid MTA
+		return False
 
 	class Meta:
 		db_table = 'act_account'
