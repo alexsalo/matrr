@@ -4,9 +4,12 @@
 	<div class=large-headline>Protein Tools</div>
 	<form action='' method='post'>
 		{% csrf_token %}
+		<br>
 		<div class=headline>{{ subject_select_form.subject.label }}</div>
 		<div class=small>{{ subject_select_form.subject.help_text }}</div>
+		<br>
 		{{ subject_select_form.subject }}
-		<br><button type='submit' value='Submit'>Submit</button>
+		<br>
+		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
 	</form>
 {% endblock %}

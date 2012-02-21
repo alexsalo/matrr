@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<div class=large-headline>{% if monkey %}Monkey Protein Tools: Monkey {{ monkey }}{% else %}Monkey Protein Tools:{% endif %}</div><br>
+	<div class=large-headline>{% if monkey %}Monkey Protein Tools: Monkey {{ monkey }}{% else %}Monkey Protein Tools:{% endif %}</div>
 	{% if graphs %}
 		{% for graph in graphs %}
 			<div class="image_container">
@@ -14,16 +14,18 @@
 		{% endfor %}
 		<div class=clearfix></div>
 	{% endif %}
+	<br>
 	<form action='' method='post'>
 		{% csrf_token %}
-		<div class=headline>Cohort: {{ cohort }}<div class=right><a href="{% url tools-protein  %}">Choose another cohort</a></div></div>
+		<div class=headline>Cohort: {{ cohort }}<div class=right><a href="{% url tools-protein  %}"><img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>&nbsp;Choose another cohort</a></div></div>
 		<div class=small>{{ subject_select_form.subject.help_text }}</div>
 		{{ subject_select_form.subject }}
 		<br><br>
 		<div class=headline>{{ protein_form.proteins.label }}</div>
 		<div class=small>{{ protein_form.proteins.help_text }}</div>
 		{{ protein_form.proteins }}
-		<button type='submit' value='Submit'>Submit</button>
+		<br>
+		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
 	</form>
 
 

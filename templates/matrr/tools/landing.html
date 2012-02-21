@@ -3,12 +3,14 @@
 	<div class=large-headline>Tools</div>
 	<form action='' method='post'>
 		{% csrf_token %}
-		<div class=headline>Data Set</div>
 		<div class=small>Choose what type of data to analyze</div>
+		<br>
 		<input type="radio" name="dataset" value="protein" checked="checked">Access protein-associated data tools<br>
 		{% if perms.matrr.view_vip_images %}
 			<input type="radio" name="dataset" value="etoh">Access ethanol-associated data tools
 		{% endif %}
-		<br><button type='submit' value='Submit'>Submit</button>
+		<br>
+		<br>
+		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
 	</form>
 {% endblock %}
