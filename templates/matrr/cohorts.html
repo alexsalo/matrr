@@ -63,6 +63,7 @@ All Cohorts
 					
 					<a href="{% url cohort-details cohort.coh_cohort_id %}">Cohort Details</a><br/>
 					<a href="{% url cohort-timeline cohort.coh_cohort_id %}">Cohort Timeline</a><br/>
+					{% if cohort.has_protein_data %}<a href="{% url tools-cohort-protein cohort.coh_cohort_id %}">Protein Tools</a><br/>{% endif %}
 					<a href="{% url cohort-publications cohort.coh_cohort_id %}">Publications</a><br/>
 					
 					{% if perms.matrr.browse_inventory %}

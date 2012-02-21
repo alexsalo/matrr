@@ -232,6 +232,11 @@ class Cohort(models.Model):
 		url += '/' + str(self.coh_cohort_id) + '/'
 		return url
 
+	def has_protein_data(self):
+		for monkey in self.monkey_set.all():
+			if MonkeyProtein.objects.filter(monkey=monkey):
+				return True
+		return False
 	class Meta:
 		db_table = 'coh_cohorts'
 
