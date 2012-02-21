@@ -55,30 +55,30 @@
 				<th>Study Complete</th>
 				<th>Notes:</th>
 			</tr>
-				<tr>
-					{% if perms.matrr.monkey_view_confidential %}
-						<td>{{ monkey.mky_name }}</td>
-					{% endif %}
-					<td>{{ monkey.mky_gender }}</td>
-					<td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
-					<td>{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}</td>
-					<td>{{ monkey.mky_weight }}</td>
-					<td>
-						{% if monkey.mky_drinking %}
-							Ethanol
+			<tr>
+				{% if perms.matrr.monkey_view_confidential %}
+					<td>{{ monkey.mky_name }}</td>
+				{% endif %}
+				<td>{{ monkey.mky_gender }}</td>
+				<td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
+				<td>{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}</td>
+				<td>{{ monkey.mky_weight }}</td>
+				<td>
+					{% if monkey.mky_drinking %}
+						Ethanol
+					{% else %}
+						{% if monkey.mky_housing_control %}
+							Housing Control
 						{% else %}
-							{% if monkey.mky_housing_control %}
-								Housing Control
-							{% else %}
-								Control
-							{% endif %}
+							Control
 						{% endif %}
-					</td>
-					<td>{{ monkey.mky_stress_model }}</td>
-					<td>{% if monkey.mky_study_complete %}<font color=Green>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
-					<td>{{ monkey.mky_notes }}</td>
+					{% endif %}
+				</td>
+				<td>{{ monkey.mky_stress_model }}</td>
+				<td>{% if monkey.mky_study_complete %}<font color=Green>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
+				<td>{{ monkey.mky_notes }}</td>
 
-				</tr>
+			</tr>
 		</table>
 	</div>
 	<br>

@@ -120,9 +120,9 @@
 			{% for datum in tissue_request.get_data %}
 				{% if forloop.counter == 1 %}
 					<div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
-					<div style='float:left;'>{% include 'matrr/shipping/item_inventory.html' %}</div>
+					<div style='float:left; width: 69%'>{% include 'matrr/shipping/item_inventory.html' %}</div>
 				{% else %}
-					<div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
+					<div style="float: right; max-width: 30%; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
 					<br/>
 				{% endif %}
 			{% endfor %}

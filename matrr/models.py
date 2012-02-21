@@ -1662,10 +1662,30 @@ class TissueSample(models.Model):
 			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.get_tss_units_display() + ')'
 
 	def get_location(self):
-		return self.tss_freezer + ': ' + self.tss_location
+		if self.monkey.cohort.coh_upcoming:
+			return "Upcoming Cohort"
+
+		if  self.tss_freezer and self.tss_location:
+			location = "%s : %s" % (self.tss_freezer, self.tss_location)
+		elif  self.tss_freezer:
+			location =  self.tss_freezer
+		else:
+			location = 'unknown'
+		return location
 
 	def get_quantity(self):
 		return self.tss_sample_quantity
+
+	def get_quantity_display(self):
+		if self.monkey.cohort.coh_upcoming:
+			return "Upcoming Cohort"
+
+		samp_q = "%s %s" % (str(self.tss_sample_quantity), self.tss_units)
+		if self.tss_sample_quantity is 0:
+			samp_q = '0'
+		if self.tss_sample_quantity is None:
+			samp_q = 'unknown'
+		return samp_q
 
 	def save(self, *args, **kwargs):
 		if self.monkey.mky_real_id == 0:
