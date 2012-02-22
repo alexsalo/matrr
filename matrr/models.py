@@ -1281,10 +1281,9 @@ class Request(models.Model, DiffingMixin):
 
 	def can_be_shipped(self):
 		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
-			if self.req_purchase_order and self.user.account.act_fedex and self.user.account.has_mta():
+			if self.req_purchase_order and self.user.account.has_mta():
 				return True
 		return False
-
 
 	def submit_request(self):
 		self.req_status = RequestStatus.Submitted
