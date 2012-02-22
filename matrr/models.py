@@ -14,6 +14,7 @@ from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
+import numpy
 from matrr.process_latex import process_latex
 import settings
 
@@ -1901,9 +1902,21 @@ class MonkeyProtein(models.Model):
 	protein = models.ForeignKey(Protein, null=False, related_name='monkey_set', db_column='pro_id', editable=False)
 	mpn_date = models.DateTimeField("Date Collected", editable=False)
 	mpn_value = models.FloatField(null=True)
+	mpn_stdev = models.FloatField("Standard Deviation from Cohort mean", null=True)
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
+
+	def populate_stdev(self, recalculate=False):
+		if self.mpn_stdev is None or recalculate:
+			cohort_proteins = MonkeyProtein.objects.filter(protein=self.protein, mpn_date=self.mpn_date, monkey__in=self.monkey.cohort.monkey_set.all().exclude(mky_id=self.monkey.pk))
+			cp_values = numpy.array(cohort_proteins.values_list('mpn_value', flat=True))
+			stdev = cp_values.std()
+			mean = cp_values.mean()
+			diff = self.mpn_value - mean
+			self.mpn_stdev = diff / stdev
+			self.save()
+
 
 	class Meta:
 		db_table = 'mpn_monkey_protein'

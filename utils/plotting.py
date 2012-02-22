@@ -1138,21 +1138,17 @@ def monkey_protein(monkey, proteins, username):
 		protein_title += "..." # and tell people we chopped it
 	ax1.set_title('Monkey %s: %s' % (str(monkey.pk), protein_title))
 	ax1.set_xlabel("Date of sample")
-	ax1.set_ylabel("Percent difference from cohort mean")
+	ax1.set_ylabel("Standard deviation from cohort mean")
 
 	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
 	lines = []
 	line_labels = []
 	for index, protein in enumerate(proteins):
 		dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
-		cohort_proteins = MonkeyProtein.objects.filter(monkey__in=monkey.cohort.monkey_set.all().exclude(pk=monkey.pk), protein=protein)
 		y_values = []
 		for date in dates:
-			protein_mean = numpy.mean(cohort_proteins.filter(mpn_date=date).values_list('mpn_value', flat=True))
 			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
-			diff = monkey_protein.mpn_value - protein_mean
-			pct_diff = diff / protein_mean
-			y_values.append(pct_diff)
+			y_values.append(monkey_protein.mpn_stdev)
 
 		color_map = pyplot.get_cmap('gist_rainbow')
 		color = color_map(1.*index/len(proteins))
