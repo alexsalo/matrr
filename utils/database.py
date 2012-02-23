@@ -7,229 +7,11 @@ import string
 import datetime
 import csv, re
 
-## Old, might be useful in the future, but kept for reference
-## Corrected improper birthday formatting.  match.group(0) = full string, not first group.  group.(1) is the first group.
-@transaction.commit_on_success
-def load_experiments(file):
-	"""
-	  This function will assume that the monkeys and cohorts are already entered into the database.
-	  Assumes the columns are in the following order:
-		0 - Date
-		1 - Cohort - this is ignored.  we look at the monkey's cohort instead
-		2 - Experiment Type
-		3 - Monkey ID
-		4 - EtOH Intake
-		5 - Veh Intake
-		6 - EtOH g/kg
-		7 - Total Pellets Consumed
-		8 - Weight
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	# get the column headers
-	columns = input.next()
-
-	for row in input:
-		# get the monkey
-		monkey = Monkey.objects.get(mky_real_id=row[3])
-		# create the drinking_experiment if it does not already exist
-		if DrinkingExperiment.objects.filter(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2]).count() == 0:
-			drinking_experiment = DrinkingExperiment(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2])
-			drinking_experiment.save()
-		# saving the drinking_experiment will also create the MonkeyToExperiment objects
-		else:
-			# otherwise get the existing experiment
-			drinking_experiment = DrinkingExperiment.objects.get(dex_date=row[0], cohort=monkey.cohort, dex_type=row[2])
-
-		# get the MonkeyToDrinkingExperiment object for this row
-		mtd = MonkeyToDrinkingExperiment(monkey=Monkey.objects.get(mky_real_id=row[3]), drinking_experiment=drinking_experiment)
-
-		# add the data to the MonkeyToExperiment object
-		if row[4]:
-			mtd.mtd_etoh_intake = row[4]
-		else:
-			mtd.mtd_etoh_intake = 0
-		mtd.mtd_veh_intake = row[5]
-		mtd.mtd_total_pellets = row[7]
-		mtd.mtd_weight = row[8]
-
-		# save the data
-		mtd.save()
-
-
-## Old, might be useful in the future, but kept for reference
-@transaction.commit_on_success
-def load_monkeys(file):
-	"""
-	  This function will load monkeys from a csv file.
-	  It assumes that the cohorts have already been created.
-	  It also assumes the columns are in the following order:
-		0 - DoB
-		1 - Old ID (ignored)
-		2 - Name (ignored)
-		3 - New ID (ignored)
-		4 - Birth Estimate (bool, "x"=true)
-		5 - Animal #
-		6 - Name (all == "INIA")
-		7 - Alt Name (ignored)
-		8 - Cohort (ignored)
-		9 - Sub-Cohort (ignore)
-		10 - Full Cohort ref (renamed to match matrr)
-		11 - Species
-		12 - SEX  (not gender, damnit, sex)
-		13 - non-drinking ("control", "practice", "housing ctrl")
-		14 - Name (None == "NULL")
-		15 - Necropsy date
-		16 - Incomplete study
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',')
-	# get the column headers
-	columns = input.next()
-
-	for row in input:
-		cohort = Cohort.objects.get(coh_cohort_name=row[10])
-		monkey_id = int(row[5])
-		sex = row[12]
-		drinking = True
-		housing_control = False
-		if row[13]:
-			drinking = False
-			if row[13] == 'housing ctrl':
-				housing_control = True
-
-		name = None
-		if row[14] != 'NULL':
-			name = row[14]
-
-		# convert the birthdatedate from mm/dd/yy to ISO format
-		if row[0]:
-			match = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2})', row[0])
-			if int(match.group(3)) < 50:
-				millennium = '20'
-			else:
-				millennium = '19'
-			birthdate = millennium + match.group(3) + "-" + match.group(1) + "-" + match.group(2)
-		else:
-			birthdate = None
-		# convert the necropsy date from mm/dd/yy to ISO format
-		# this assumes all necropsy were after 2000.
-		match = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2})', row[15])
-		necropsy = '20' + match.group(3) + "-" + match.group(1) + "-" + match.group(2)
-		if not len(necropsy):
-			necropsy = None
-
-		complete_study = True
-		if len(row[16]) != 0 or necropsy is None:
-			complete_study = False
-
-		# check if the monkey already exists
-		if Monkey.objects.filter(mky_real_id=monkey_id).count():
-			# Update the monkey
-			monkey = Monkey.objects.get(mky_real_id=monkey_id)
-			monkey.mky_birthdate = birthdate
-			monkey.mky_gender = sex
-			monkey.mky_drinking = drinking
-			monkey.mky_name = name
-			monkey.mky_necropsy_start_date = necropsy
-			monkey.mky_housing_control = housing_control
-			monkey.mky_study_complete = complete_study
-			monkey.save()
-			print monkey
-		else:
-			# Create the monkey and save it
-			monkey = Monkey(cohort=cohort,
-				   mky_real_id=monkey_id,
-				   mky_birthdate=birthdate,
-				   mky_gender=sex,
-				   mky_drinking=drinking,
-				   mky_name=name,
-				   mky_necropsy_start_date=necropsy,
-				   mky_housing_control=housing_control,
-				   mky_study_complete=complete_study).save()
-			print monkey
-
-
-## Old, might be useful in the future, but kept for reference
-@transaction.commit_on_success
-def load_timelines(file):
-	"""
-	  This function will load monkeys from a csv file.
-	  It assumes that the cohorts have already been created.
-	  The first row should be table headers and the first
-	  column should be cohort names.
-	  If a column header has "Name" in it, it is not added as an
-	  event and the following column is given the contents of the cell as
-	  the info field.
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	# get the column headers
-	columns = input.next()
-	name_columns = list()
-	for i, header in enumerate(columns):
-		if re.match(r'.*Name.*', header) is not None:
-			name_columns.append(i)
-		elif i != 0:
-			# if the event type does not exist, create it
-			if EventType.objects.filter(evt_name=header).count() == 0:
-				EventType(evt_name=header).save()
-
-	for row in input:
-		cohort = None
-		info = None
-		next_info = None
-		for i, value in enumerate(row):
-			if i == 0:
-				cohort = Cohort.objects.get(coh_cohort_name=value)
-			elif i in name_columns and len(value) != 0:
-				info = value
-			elif len(value) != 0:
-				# skip empty cells
-
-				#convert the date to ISO format
-				date = re.sub(r'(\d+)/(\d+)/(\d+)',
-							  r'\3-\1-\2',
-							  value)
-				CohortEvent(cohort=cohort,
-							event=EventType.objects.get(evt_name=columns[i]),
-							cev_date=date,
-							cev_info=info).save()
-
-				info = None
-
-
-## Old, might be useful in the future, but kept for reference
-@transaction.commit_on_success
-def load_cohorts(file):
-	"""
-	  This function will load cohorts from a csv file.
-	  It assumes the first column of every row (except the first row),
-	  contains the cohort name and that the second column contains the species of monkey.
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	# get the column headers
-	columns = input.next()
-
-	placeholder_name = 'Placeholder Institution'
-	# check if a placeholder institution exists
-	if not Institution.objects.filter(ins_institution_name=placeholder_name).count():
-		# add a dummy institution
-		placeholder = Institution(ins_institution_name=placeholder_name)
-		placeholder.save()
-	else:
-		# get the dummy institution
-		placeholder = Institution.objects.get(ins_institution_name=placeholder_name)
-
-	for row in input:
-		# Create the cohort and save it
-		Cohort(coh_cohort_name=row[0],
-			   coh_upcoming=False,
-			   institution=placeholder,
-			   coh_species=row[1]).save()
-
 # This was _not_ built to be used often.  In fact, if it ever needs to be used again, you'll probably have to rewrite it.
 # Like I just did.
 # -jf
 @transaction.commit_on_success
-def load_inventory(file, output_file, load_tissue_types=False,  delete_name_duplicates=False, create_tissue_samples=False):
+def load_initial_inventory(file, output_file, load_tissue_types=False,  delete_name_duplicates=False, create_tissue_samples=False):
 	"""
 	  This function will load freezer inventories from a csv file.
 	  !!!!! It will only load monkeys that are already in the database !!!!!
@@ -249,7 +31,7 @@ def load_inventory(file, output_file, load_tissue_types=False,  delete_name_dupl
 		10 - Freezer
 	  """
 	if load_tissue_types:
-		load_TissueTypes('tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
+		load_TissueTypes('utils/DATA/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
 	input = csv.reader(open(file, 'rU'), delimiter=',')
 	output = csv.writer(open(output_file, 'w'), delimiter=',')
 	unknown_monkeys = csv.writer(open('unknown_monkeys.csv', 'w'), delimiter=',')
@@ -259,7 +41,7 @@ def load_inventory(file, output_file, load_tissue_types=False,  delete_name_dupl
 	output.writerow(columns)
 	unknown_monkeys.writerow(columns)
 	monkeys = []
-	units = Unit.objects.get(unt_unit_name="whole")
+	units = "whole"
 	for row in input:
 		# Empty monkey cell
 		if row[1] is '' or row[1] is None:
@@ -344,41 +126,130 @@ def load_inventory(file, output_file, load_tissue_types=False,  delete_name_dupl
 			unknown_monkeys.writerow(row)
 		#raise Exception('Just testing') #uncomment for testing purposes
 
+def load_cohort_6a_inventory(input_file):
+	unmatched_output_file = input_file + "-unmatched-output.csv"
 
-## Wrote this to correct birthdate string formats which load_experiments had slaughtered.
-## This still saves birthdays as a string, not a datetime.
-## It is highly unlikely this will be needed again in the future
-## -jf
-def load_birthdates(file):
-	"""
-		This function will load a csv file in the format
-		row[0] = Birthdate
-		row[1] = Alt Birthdate format
-		row[2] = Monkey Name
-		row[3] = mky_real_id
-	"""
-	csv_infile = csv.reader(open(file, 'rU'), delimiter=",")
-	csv_outfile = csv.writer(open("LostMonkeys-" + file, 'w'), delimiter=',')
-	columns = csv_infile.next()
-	csv_outfile.writerow(columns)
-	for row in csv_infile:
+	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+	unmatched_output = csv.writer(open(unmatched_output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+
+	columns = input_data.next()
+	unmatched_output.writerow(columns)
+
+	print "Loading Inventory..."
+	for row in input_data:
+		mky_id 		= row[0]
+		real_id	 	= row[1]
+		excel_date	= row[2] #ignored
+		txt_date 	= row[3] #ignored
+		tissue_type	= row[4].strip()
+		req_by		= row[5] #ignored
+		freezer 	= row[6]
+		shelf		= "shelf=%s" % row[7]
+		flag		= row[8] #ignored
+
+		if real_id == '0':
+				continue
 		try:
-			mon = Monkey.objects.get(mky_real_id=row[3])
+				monkey = Monkey.objects.get(pk=mky_id)
 		except Monkey.DoesNotExist:
-			csv_outfile.writerow(row)
+				error = "Error: Monkey not found:  " + str(mky_id)
+				row.append(error)
+				unmatched_output.writerow(row)
+				print error
+				continue
+		if monkey.mky_real_id != int(real_id):
+			error = "Error: mky_real_id %s does not match mky_id %s" % (str(real_id), str(mky_id))
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
 			continue
-		if row[0] is not None:
-			match = re.match(r'(\d{1,2})/(\d{1,2})/(\d{2})', row[0])
-			if int(match.group(3)) < 20:
-				year_prefix = '20'
-			else:
-				year_prefix = '19'
-			new_bd = match.group(1).zfill(2) + "/" + match.group(2).zfill(2) + "/" + year_prefix + match.group(3).zfill(2)
-			old_bd = mon.mky_birthdate
-			if new_bd != old_bd:
-				mon.mky_birthdate = new_bd
-				mon.save()
 
+
+		tst = TissueType.objects.filter(tst_tissue_name__iexact=tissue_type)
+		if not tst:
+			error = "Error: Unknown tissue type"
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
+			continue
+		elif tst.count() == 1:
+			tss = TissueSample.objects.filter(monkey=monkey, tissue_type=tst[0])
+			if tss.count() == 1:
+				tss = tss[0]
+			else:
+				break
+			tss.tss_freezer = freezer
+			tss.tss_location = shelf
+			tss.tss_sample_quantity = 1
+			tss.save()
+		else:
+			error = "Error:  Too many TissueType matches."
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
+
+def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_duplicates=False, create_tissue_samples=False):
+	if load_tissue_types:
+		load_TissueTypes('utils/DATA/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
+	unmatched_output_file = input_file + "-unmatched-output.csv"
+
+	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+	unmatched_output = csv.writer(open(unmatched_output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+
+	columns = input_data.next()
+	unmatched_output.writerow(columns)
+
+	print "Loading Inventory..."
+	for row in input_data:
+		tissue 		= row[0]
+		name	 	= row[1]
+		realid 		= row[2]
+		freezer 	= row[3]
+		location 	= row[4]
+		details 	= row[5] #ignored
+		quantity 	= row[6] #ignored
+		units		= row[7] #ignored
+
+		if realid == '0':
+				continue
+		try:
+				monkey = Monkey.objects.get(mky_real_id=realid)
+		except Monkey.DoesNotExist:
+				error = "Error: Monkey not found:  " + str(realid)
+				row.append(error)
+				unmatched_output.writerow(row)
+				print error
+				continue
+
+		tsts = TissueType.objects.filter(tst_tissue_name__iexact=tissue)
+		if not tsts:
+			if tissue == "Heart":
+				heart_tsts = TissueType.objects.filter(tst_tissue_name__contains=tissue)
+				for tst in heart_tsts:
+					tss = TissueSample.objects.get(monkey=monkey, tissue_type=tst)
+					tss.tss_freezer = freezer
+					tss.tss_location = location
+					tss.tss_sample_quantity = 1
+					tss.save()
+				print "Found a Heart.  Updated each quadrant's inventory."
+				continue
+			else:
+				error = "Error: Unknown tissue type"
+				row.append(error)
+				unmatched_output.writerow(row)
+				print error
+				continue
+		elif tsts.count() == 1:
+			tss = TissueSample.objects.get(monkey=monkey, tissue_type=tsts[0])
+			tss.tss_freezer = freezer
+			tss.tss_location = location
+			tss.tss_sample_quantity = 1
+			tss.save()
+		else:
+			error = "Error:  Too many TissueType matches."
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
 
 ## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
 ## -jf
@@ -432,7 +303,6 @@ def dump_all_TissueSample(output_file):
 		output.writerow(row)
 	print "Success"
 
-
 ## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
 ## -jf
 def dump_distinct_TissueType(output_file):
@@ -454,82 +324,47 @@ def dump_distinct_TissueType(output_file):
 		output.writerow(row)
 	print "Success."
 
+def dump_monkey_protein_data(queryset, output_file):
+	if isinstance(queryset, QuerySet) and isinstance(queryset[0], MonkeyProtein):
+		output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+		columns = ['monkey', 'protein', 'mpn_date', 'mpn_value']
+		output.writerow(columns)
+		for mpn in queryset:
+			output.writerow([mpn.monkey, "%s" % mpn.protein.pro_name, mpn.mpn_date, mpn.mpn_value])
+		return output
+	else:
+		raise Exception("queryset kwarg can only be a QuerySet of MonkeyProteins.")
 
-def dump_monkey_data(output_file):
-	output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	columns = ['mky_id', 'cohort', 'mky_real_id', 'mky_name', 'mky_gender', 'mky_birthdate', 'mky_weight', 'mky_drinking', 'mky_housing_control',
-			   'mky_necropsy_start_date', 'mky_necropsy_start_date_comments', 'mky_necropsy_end_date', 'mky_necropsy_end_date_comments',
-			   'mky_study_complete', 'mky_stress_model', 'mky_age_at_necropsy',]
-	output.writerow(columns)
-	for cohort in Cohort.objects.all():
-		for monkey in cohort.monkey_set.all():
-			row = []
-			row.append(monkey.mky_id)
-			row.append(cohort)
-			row.append(monkey.mky_real_id)
-			row.append(monkey.mky_name)
-			row.append(monkey.mky_gender)
-			row.append(monkey.mky_birthdate)
-			row.append(monkey.mky_weight)
-			row.append(monkey.mky_drinking)
-			row.append(monkey.mky_housing_control)
-			row.append(monkey.mky_necropsy_start_date)
-			row.append(monkey.mky_necropsy_start_date_comments)
-			row.append(monkey.mky_necropsy_end_date)
-			row.append(monkey.mky_necropsy_end_date_comments)
-			row.append(monkey.mky_study_complete)
-			row.append(monkey.mky_stress_model)
-			row.append(monkey.mky_age_at_necropsy)
-			output.writerow(row)
-		print "Success"
+def load_monkey_data(input_file):
+	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+	columns = input_data.next()
 
-
-## Wrote this, ended up not using it.  May still need it, necropsy dates in the DB are different than in the spreadsheet I was given.
-## -jf
-def load_necropsy_dates(file):
-	"""
-	  This function will load monkeys from a csv file.
-	  It assumes that the cohorts have already been created.
-	  It also assumes the columns are in the following order:
-		0 - Monkey ID
-		1 - Monkey Species
-		2 - Sex
-		3 - Date of Birth
-		4 - birth_estimated ("t" if True)
-		5 - Monkey's Name
-		6 - Necropsy Date
-		7 - Cohort Broad Title ("INIA")
-		8 - Cohort Species
-		9 - Cohort Number
-		10- Role ("control" or "")
-		11- Sub_type  (ignored in this function, 'housing' is stored in Monkey)
-	  """
-	input = csv.reader(open(file, 'rU'), delimiter=',')
-	# get the column headers
-	columns = input.next()
-
-	for row in input:
-		real_id = row[0].replace(" ", '')
-		necropsy = row[6].replace(" ", '')
-		name = row[5].strip()
-		if name == '':
-			name = None
-
-		# the necropsy date was given in string yyyy/mm/dd format
-		if len(necropsy):
-			necropsy = necropsy.split('-')
-			necropsy = datetime.date(int(necropsy[0]), int(necropsy[1]), int(necropsy[2]))
-		else:
-			necropsy = None
-
-		# check if the monkey already exists
-		if Monkey.objects.filter(mky_real_id=real_id).count():
-			monkey = Monkey.objects.get(mky_real_id=real_id)
-			# Update the monkey
-			monkey.mky_name = name
-			monkey.mky_necropsy_start_date = necropsy
-			monkey.save()
-
+	for row in input_data:
+		if row[2] == '0':
+				continue
+		try:
+				monkey = Monkey.objects.get(mky_real_id=row[2])
+		except Monkey.DoesNotExist:
+				print "Monkey not found:  " + str(row[2])
+				continue 
+		monkey.mky_name = str(row[3])
+		monkey.mky_gender = str(row[4])
+		year = int(row[5].split('/')[2])
+		year = year + 2000 if year < 12 else year + 1900
+		monkey.mky_birthdate = datetime.datetime(year, int(row[5].split('/')[0]), int(row[5].split('/')[1]))
+		if row[6]:
+			monkey.mky_weight = float(row[6])
+		monkey.mky_drinking = row[7] == 'TRUE'
+		monkey.mky_housing_control = row[8] == 'TRUE'
+		if row[9]:
+			year = int(row[9].split('/')[2])
+			year = year + 2000 if year < 12 else year + 1900
+			monkey.mky_necropsy_start_date = datetime.datetime(year, int(row[9].split('/')[0]), int(row[9].split('/')[1]))
+		monkey.mky_study_complete = row[13] == 'TRUE'
+		monkey.mky_stress_model = row[14]
+		monkey.mky_age_at_necropsy = row[15]
+		monkey.save()
+	print "Success"
 
 # Creates Tissue Types from following format:
 # each tissue on a separate line
@@ -553,24 +388,36 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 		print "TissueTypes not added, missing Tissue Categories. Following categories are necessary: "
 		for cat in categories.itervalues():
 			print cat
-
+	
+	from matrr.models import TissueTypeSexRelevant
 	category_iter = categs.__iter__()
 	current_category = category_iter.next()
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line in read_data:
-			line = line.rstrip()
-			if line == "":
+			line = line.rsplit('%')
+			tst_name = line[0].rstrip()
+			if len(line) > 1:
+				tissueSexRelevant = line[1].strip()
+				if tissueSexRelevant not in TissueTypeSexRelevant.enum_dict.values():
+					tissueSexRelevant = TissueTypeSexRelevant.Both
+			else:
+				tissueSexRelevant = TissueTypeSexRelevant.Both
+			if tst_name == "":
 				current_category = category_iter.next()
 				continue
-			duplicates = TissueType.objects.filter(tst_tissue_name=line)
+			duplicates = TissueType.objects.filter(tst_tissue_name=tst_name)
 			existing = list()
+			wrong_sr = list()
 			name_duplicates_ids = list()
 			name_duplicates = list()
 			if len(duplicates) > 0:
 				for duplicate in duplicates:
 					if duplicate.category == current_category:
-						existing.append(duplicate.tst_type_id)
+						if duplicate.tst_sex_relevant == tissueSexRelevant:
+							existing.append(duplicate.tst_type_id)
+						else:
+							wrong_sr.append(duplicate)
 					else:
 						name_duplicates_ids.append(duplicate.tst_type_id)
 						name_duplicates.append(duplicate)
@@ -578,23 +425,29 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 				if delete_name_duplicates:
 					for name_duplicate in name_duplicates:
 						name_duplicate.delete()
-					print "Deleting name duplicates for tissue type " + line + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
+					print "Deleting name duplicates for tissue type " + tst_name + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
 				else:
-					print "Found name duplicates for tissue type " + line + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
+					print "Found name duplicates for tissue type " + tst_name + " (with wrong category). Duplicate ids = " + `name_duplicates_ids`
 
 			if len(existing) > 0:
-				print "Tissue type " + line + " already exists with correct category. Duplicate ids = " + `existing`
+				print "Tissue type " + tst_name + " already exists with correct category and sex relevant field. Duplicate ids = " + `existing`
 				continue
-
+			if len(wrong_sr) > 0:
+				for wsr in wrong_sr:
+					wsr.tst_sex_relevant = tissueSexRelevant
+					wsr.save()
+					print "Tissue type " + tst_name + " already exists with correct category but with wrong sex relevant field. Updating that filed for id = " + `wsr.tst_type_id`
+				continue
+			
 			tt = TissueType()
-			tt.tst_tissue_name = line
+			tt.tst_tissue_name = tst_name
+			tt.tst_sex_relevant = tissueSexRelevant
 			tt.category = current_category
 			tt.save()
 
 	if create_tissue_samples:
 		print "Creating tissue samples"
 		create_TissueSamples()
-
 
 # Creates TissueCategories consistent with format agreed on 8/30/2011
 # No parent categories yet.
@@ -616,28 +469,18 @@ def load_TissueCategories():
 		tc.save()
 
 
-# Creates InventoryStatus'
-# -jf
-#def create_InventoryStatus():
-####				 Status Name  		Description
-#	statuses = {"Unverified": "TissueSample inventory unverified",
-#				"Sufficient": "TissueSample inventory verified sufficient for this TissueRequest",
-#				"Insufficient": "TissueSample inventory verified insufficient for this TissueRequest.",
-#				}
-#	for key in statuses:
-#		inv, is_new = InventoryStatus.objects.get_or_create(inv_status=key)
-#		inv.inv_description = statuses[key]
-#		inv.save()
-
-
 @transaction.commit_on_success
 # Creates ALL tissue samples in the database, for every monkey:tissuetype combination.
-def create_TissueSamples():
+def create_TissueSamples(tissue_type=None):
 	for monkey in Monkey.objects.all():
-		tissuetypes = TissueType.objects.all()
-		# Only create the "be specific" tissue samples for upcoming cohorts
-		if not monkey.cohort.coh_upcoming:
-			tissuetypes = tissuetypes.exclude(tst_tissue_name__icontains="Be specific")
+		if not tissue_type:
+			tissuetypes = TissueType.objects.all()
+			# Only create the "be specific" tissue samples for upcoming cohorts
+			if not monkey.cohort.coh_upcoming:
+				tissuetypes = tissuetypes.exclude(tst_tissue_name__icontains="Be specific")
+		else:
+			tissuetypes = [tissue_type]
+
 		for tt in tissuetypes:
 			sample, is_new = TissueSample.objects.get_or_create(monkey=monkey, tissue_type=tt)
 			if is_new:
@@ -645,7 +488,6 @@ def create_TissueSamples():
 				sample.tss_location = "<new record, no data>"
 				# Can be incredibly spammy
 				print "New tissue sample: " + sample.__unicode__()
-
 
 @transaction.commit_on_success
 def create_Assay_Development_tree():
@@ -810,6 +652,8 @@ def load_ebt_one_file(file_name, dex, create_mtd=False):
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data[1:], start=1):
 			data = line.split("\t")
+			if data[MONKEY_DATA_INDEX] == '28479':
+				continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
 			except:
@@ -870,6 +714,8 @@ def load_edr_one_file(file_name, dex):
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data[1:], start=1):
 			data = line.split("\t")
+			if data[MONKEY_DATA_INDEX] == '28479':
+				continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
 			except:
@@ -956,7 +802,6 @@ def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 		print "Loading %s..." % drink
 		load_edr_one_file(drink, dex)
 				
-
 def convert_excel_time_to_datetime(time_string):
 	DATE_BASE = dt(day=1, month=1, year=1904)
 	SECONDS_BASE = 24*60*60
@@ -1022,6 +867,8 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data[1:], start=1):
 			data = line.split("\t")
+			if data[MONKEY_DATA_INDEX] == '28479':
+				continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
 			except:
@@ -1108,3 +955,306 @@ def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
 			dex = dexs[0]	
 			print "Loading %s..." % file_name
 			load_eev_one_file(file_name, dex, create_mtd)
+
+def load_necropsy_summary(filename):
+	"""
+		This function will load a csv file in the format
+		row[0]	= matrr_number
+		row[1]	= cohort_broad_title 	# unused
+		row[2]	= species 				# unused
+		row[3]	= cohort_number 		# unused
+		row[4]	= sex 					# unused
+		row[5]	= birth_date (string, in format '%m/%d/%y' = 1/1/01)
+		row[6]	= necropsy_date (string, in format '%m/%d/%y' = 1/1/01)
+		row[7]	= age_at_necropsy
+		row[8]	= date_of_etoh_onset (string, in format '%m/%d/%y' = 1/1/01)
+		row[9]	= age_onset_etoh
+		row[10]	= etoh_4%_ind
+		row[11]	= etoh_4%_22hr
+		row[12]	= lifetime_etoh_4%_mls
+		row[13]	= lifetime etoh grams
+		row[14]	= sum_g/kg_ind
+		row[15]	= sum_g/kg_22hr
+		row[16]	= lifetime_sum_g/kg
+		row[17]	= 6 mos start (string, in format '%m/%d/%y' = 1/1/01)
+		row[18]	= 6 mos end (string, in format '%m/%d/%y' = 1/1/01)
+		row[19]	= 12 mos end (string, in format '%m/%d/%y' = 1/1/01)
+		row[20]	= 22hr_6mos_avg_g/kg
+		row[21]	= 22hr_12mos_avg_g/kg
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	for row in csv_infile:
+		if row[0]:
+			try:
+				monkey = Monkey.objects.get(pk=row[0])
+			except Monkey.DoesNotExist:
+				raise Exception("No such monkey:  %s" % str(row[0]))
+			try:
+				nec_sum = monkey.necropsy_summary
+			except NecropsySummary.DoesNotExist:
+				nec_sum = NecropsySummary(monkey=monkey)
+
+			monkey.mky_birthdate 			= datetime.datetime.strptime(row[5], '%m/%d/%y')
+			monkey.mky_necropsy_start_date 	= datetime.datetime.strptime(row[6], '%m/%d/%y')
+			monkey.mky_age_at_necropsy 		= row[7]
+			monkey.save()
+
+			nec_sum.ncm_etoh_onset 				= datetime.datetime.strptime(row[8], '%m/%d/%y')
+			nec_sum.ncm_age_onset_etoh 			= row[9]
+			nec_sum.ncm_etoh_4pct_induction 	= row[10] if row[10] != "control" else 0
+			nec_sum.ncm_etoh_4pct_22hr			= row[11] if row[11] != "control" else 0
+			nec_sum.ncm_etoh_4pct_lifetime		= row[12] if row[12] != "control" else 0
+			nec_sum.ncm_etoh_g_lifetime			= row[13] if row[13] != "control" else 0
+			nec_sum.ncm_sum_g_per_kg_induction	= row[14] if row[14] != "control" else 0
+			nec_sum.ncm_sum_g_per_kg_22hr		= row[15] if row[15] != "control" else 0
+			nec_sum.ncm_sum_g_per_kg_lifetime	= row[16] if row[16] != "control" else 0
+			nec_sum.ncm_6_mo_start 				= datetime.datetime.strptime(row[17], '%m/%d/%y')
+			nec_sum.ncm_6_mo_end 				= datetime.datetime.strptime(row[18], '%m/%d/%y')
+			nec_sum.ncm_12_mo_end 				= datetime.datetime.strptime(row[19], '%m/%d/%y')
+			nec_sum.ncm_22hr_6mo_avg_g_per_kg	= row[20] if row[20] != "control" else 0
+			nec_sum.ncm_22hr_12mo_avg_g_per_kg	= row[21] if row[21] != "control" else 0
+			nec_sum.save()
+
+def load_metabolites(filename):
+	"""
+		This function will load a csv file in the format
+		row[0]	= Biochemical
+		row[1]	= Super_Pathway
+		row[2]	= Sub_Pathway
+		row[3]	= Comp_ID
+		row[4]	= Platform
+		row[5]	= RI
+		row[6]	= Mass
+		row[7]	= CAS
+		row[8]	= KEGG
+		row[9]	= HMDB_ID
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	for row in csv_infile:
+		met_dict = {}
+		if row[0]:
+			met_dict['met_biochemical'] 	= row[0]
+			met_dict['met_super_pathway'] 	= row[1]
+			met_dict['met_sub_pathway'] 	= row[2]
+			met_dict['met_comp_id'] 		= row[3]
+			met_dict['met_platform'] 		= row[4]
+			met_dict['met_ri'] 				= row[5]
+			met_dict['met_mass'] 			= row[6]
+			met_dict['met_cas'] 			= row[7]
+			met_dict['met_kegg'] 			= row[8]
+			met_dict['met_hmdb_id'] 		= row[9]
+
+			metabolite, isnew = Metabolite.objects.get_or_create(**met_dict)
+			if isnew:
+				metabolite.save()
+
+def load_monkey_metabolites(filename, values_normalized):
+	"""
+	Alright so, the format of the file they gave me is gonna be tough to parse through.  Scientists _love_ inverting axes in their spreadsheets.
+
+	The first 8 rows of Column0 describe the monkey and the metabolite sample scenario.  They are:
+	col0row0 = SAMPLE_NAME			# columns 1-30 hold 'OHSU-000001' , 'OHSU-000002', etc.
+	col0row1 = SAMPLE_ID			# columns 1-30 hold unique, incrementing 6-digit integers
+	col0row2 = CLIENT_INDENTIFIER	# columns 1-30 hold "1-<number>" where <number> == mky_real_id == row 6
+	col0row3 = GROUP				# columns 1-30 hold a single digit integer which increments based on GROUP_ID.  1 == baseline, 2 = 6 months EtOH, etc
+	col0row4 = DATE					# date the sample was taken
+	col0row5 = TREATMENT			# rephrasing of GROUP_ID. Group_id's 'baseline' value is stored as 'ethanol naive' in these cells.
+	col0row6 = SUBJECT ID			# mky_real_id
+	col0row7 = GROUP_ID 			# described above -.-
+	---
+	For rows 8 thru *, the col0 value stored is the metabolite name (Metabolite.met_biochemical).  The value stored in col1 - col30 is the metabolite value.
+
+	Lets figure out how to parse this -.-
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	monkey_datas = {}
+	monkey_metabolite_datas = {}
+	for row in csv_infile:
+		if row[0]:
+			if row[0] == 'SAMPLE_NAME':
+				for idx, cell in enumerate(row[1:]):
+					ts_dict = {'mmb_sample_name': cell}
+					monkey_datas[idx] = ts_dict
+			elif row[0] == 'SAMPLE_ID':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mmb_sample_id'] = cell
+			elif row[0] == 'CLIENT_IDENTIFIER':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mmb_client_identifier'] = cell
+			elif row[0] == 'GROUP':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mmb_group'] = cell
+			elif row[0] == 'DATE':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mmb_date'] = datetime.datetime.strptime(cell, '%m/%d/%y')
+			elif row[0] == 'TREATMENT':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mmb_treatment'] = cell
+			elif row[0] == 'SUBJECT_ID':
+				for idx, cell in enumerate(row[1:]):
+					monkey = Monkey.objects.get(mky_real_id=cell)
+					monkey_datas[idx]['monkey'] = monkey
+					monkey_datas[idx]['mmb_subject_id'] = cell
+			elif row[0] == 'GROUP_ID':
+				for idx, cell in enumerate(row[1:]):
+					monkey_datas[idx]['mmb_group_id'] = cell
+			else:
+				metabolite = Metabolite.objects.get(met_biochemical=row[0])
+				metabolite_row = []
+				for idx, cell in enumerate(row[1:]):
+					metabolite_row.append((monkey_datas[idx], metabolite, cell))
+				monkey_metabolite_datas[row[0]] = metabolite_row
+
+	for index in monkey_metabolite_datas:
+		for metabolite_row in monkey_metabolite_datas[index]:
+			monkey_data 	= metabolite_row[0]
+			metabolite 		= metabolite_row[1]
+			met_value 		= metabolite_row[2] if metabolite_row[2] else None
+			normalized		= True if values_normalized is True else False
+			monkey_metabolite, isnew = MonkeyMetabolite.objects.get_or_create(metabolite=metabolite, mmb_value=met_value, mmb_is_normalized=normalized, **monkey_data)
+			if isnew:
+				monkey_metabolite.save()
+
+def load_proteins(filename):
+	"""
+		This function will load a csv file in the format
+		row[0]	= protein abbreviation (pro_abbrev)
+		row[1]	= full protein name (pro_name)
+		row[2]	= concentration units (pro_units)
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	for row in csv_infile:
+		pro_dict = {}
+		if row[0]:
+			pro_dict['pro_abbrev'] 	= row[0]
+			pro_dict['pro_name'] 	= row[1]
+			pro_dict['pro_units'] 	= row[2]
+
+			protein, isnew = Protein.objects.get_or_create(**pro_dict)
+			if isnew:
+				protein.save()
+
+def load_monkey_proteins(filename):
+	"""
+		row[0] = mky_real_id (monkey.mky_real_id)
+		row[1] = date collected (mpn_date)
+			the rest of the columns are proteins, header label is Protein.pro_abbrev
+	"""
+	filename = 'utils/DATA/cohort1-MonkeyProteins.csv'
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	junk = columns.pop(0) # take out the monkey column label
+	junk = columns.pop(0) # take out the date column label
+
+	proteins = []
+	for column in columns:
+		proteins.append(Protein.objects.get(pro_abbrev=column))
+
+	monkey_protein_datas = []
+	for row in csv_infile:
+		if row[0]:
+			monkey = Monkey.objects.get(mky_real_id=row.pop(0))
+			mpn_date = datetime.datetime.strptime(row.pop(0), '%m/%d/%y')
+			for index, value in enumerate(row):
+				monkey_protein = {}
+				monkey_protein['monkey'] = monkey
+				monkey_protein['mpn_date'] = mpn_date
+				monkey_protein['protein'] = proteins[index]
+				monkey_protein['mpn_value'] = value
+				monkey_protein_datas.append(monkey_protein)
+
+	for mpn in monkey_protein_datas:
+		monkey_protein, isnew = MonkeyProtein.objects.get_or_create(**mpn)
+		if isnew:
+			monkey_protein.save()
+
+def load_institutions(file_name):
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line in read_data:
+			institution, isnew = Institution.objects.get_or_create(ins_institution_name=line.rstrip())
+			if isnew:
+				institution.save()
+		institution, isnew = Institution.objects.get_or_create(ins_institution_name="Non-UBMTA Institution") # required to exist for MTA operations
+		if isnew:
+			institution.save()
+
+
+def assign_cohort_institutions():
+	wfu = Institution.objects.get(ins_institution_name='Wake Forest University')
+	ohsu = Institution.objects.get(ins_institution_name='Oregon Health Sciences University, Technology Management')
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 1')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 3')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 8')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 1')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 2')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Vervet 1')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Vervet 2')
+	cohort.institution = wfu
+	cohort.save()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

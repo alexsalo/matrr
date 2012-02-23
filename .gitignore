@@ -8,3 +8,6 @@
 /*.komodoproject
 /local_settings.py
 /sroot
+/utils/hokus.py
+/media
+/matrr/migrations

@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<form action='' method='post'>
+		{% csrf_token %}
+		<div class=clearfix></div>
+		<div class=headline>Numeric Fields</div>
+		<table class="left" style='width: 48%'> 
+			{% for field in spiffy_form %}
+				{% if 'Num' in field.name %}
+					{% if "Choice" in field.name %}
+						</table>
+						<table class="left" style='width: 48%'> 
+					{% endif %}
+					<tr>
+						<td>
+							{{ field.label }}
+							{% if field.errors %}
+									{{ field.errors }}
+							{% endif %}
+						</td>
+						<td width="1px">{{ field }}</td>
+					<tr>
+				{% endif %}
+			{% endfor %}
+		</table>
+		<div class=clearfix></div>
+		<div class=headline>Character Fields</div>
+		<table class="left" style='width: 48%'>
+			{% for field in spiffy_form %}
+				{% if 'Char' in field.name %}
+					{% if "Choice" in field.name %}
+						</table>
+						<table class="left" style='width: 48%'>
+					{% endif %}
+					<tr>
+						<td>
+							{{ field.label }}
+							{% if field.errors %}
+									{{ field.errors }}
+							{% endif %}
+						</td>
+						<td width="1px">{{ field }}</td>
+					<tr>
+				{% endif %}
+			{% endfor %}
+		</table>
+		<div class=clearfix></div>
+		<div class=headline>Discrete Fields</div>
+		<table class="left" style='width: 48%'>
+			{% for field in spiffy_form %}
+				{% if 'Discrete' in field.name %}
+					<tr>
+						<td>
+							{{ field.label }}
+							{% if field.errors %}
+									{{ field.errors }}
+							{% endif %}
+						</td>
+						<td width="1px">{{ field }}</td>
+					<tr>
+				{% endif %}
+			{% endfor %}
+		</table>
+		<div class=clearfix></div>
+		<div class=headline>Boolean Fields</div>
+		<table class="left" style='width: 48%'> 
+			{% for field in spiffy_form %}
+				{% if 'Bool' in field.name %}
+					{% if "Choice" in field.name %}
+						</table>
+						<table class="left" style='width: 48%'> 
+					{% endif %}
+					<tr>
+						<td>
+							{{ field.label }}
+							{% if field.errors %}
+									{{ field.errors }}
+							{% endif %}
+						</td>
+						<td width="1px">{{ field }}</td>
+					<tr>
+				{% endif %}
+			{% endfor %}
+		</table>
+		<div class=clearfix></div>
+		<div class=headline>Related Fields</div>
+		<table class="left" style='width: 48%'> 
+			{% for field in spiffy_form %}
+				{% if 'Related' in field.name %}
+					{% if "Choice" in field.name %}
+						</table>
+						<table class="left" style='width: 48%'> 
+					{% endif %}
+					<tr>
+						<td>
+							{{ field.label }}
+							{% if field.errors %}
+									{{ field.errors }}
+							{% endif %}
+						</td>
+						<td width="1px">{{ field }}</td>
+					<tr>
+				{% endif %}
+			{% endfor %}
+		</table>
+		<div class=clearfix></div>
+		<div class=headline>Submit</div>
+		<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Sweeeet' style='float: left;'/>
+
+	</form>
+
+	{% if monkeys %}
+		<div class=clearfix></div>
+		<div class=headline>Results: {{ monkeys.count }}</div>
+		{% for monkey in monkeys %}
+			{{ monkey }}
+		{% endfor %}
+	{% endif %}
+
+{% endblock %}

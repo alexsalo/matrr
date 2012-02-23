@@ -16,6 +16,12 @@ All Cohorts
 	<div id="headline">{% block content_title %}All Cohorts{% endblock %}</div>
 
 	{% if cohort_list %}
+				<br/>
+			<center>
+				{% load inclusion_tags %}
+				{% pagination cohort_list %}
+			</center>
+	
 		{% for cohort in cohort_list.object_list %}
 			<br/>
 			<div class="mini-headline">{{ cohort.coh_cohort_name }}</div>
@@ -24,7 +30,7 @@ All Cohorts
 					<table class="common">
 						<tr>
 							<th>Monkey ID</th>
-							{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
+							{% if perms.matrr.monkey_view_confidential %}
 								<th>Monkey Name</th>
 							{% endif %}
 							<th>Sex</th>
@@ -32,8 +38,8 @@ All Cohorts
 							<th>Birthdate</th></tr>
 						{% for monkey in cohort.monkey_set.all|dictsortreversed:"mky_drinking" %}
 							<tr>
-								<td class='text-center-common-td'><a href='{% url monkey-detail cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_real_id }}<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
-								{% if user_is_member_of_tech_user or user_is_member_of_uberuser or user_is_member_of_committee %}
+								<td class='text-center-common-td'><a href='{% url monkey-detail cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
+								{% if perms.matrr.monkey_view_confidential %}
 									<td class='text-center-common-td'>{{ monkey.mky_name }}</td>
 								{% endif %}
 								<td class='text-center-common-td'>{{ monkey.mky_gender }}</td>
@@ -57,13 +63,18 @@ All Cohorts
 					
 					<a href="{% url cohort-details cohort.coh_cohort_id %}">Cohort Details</a><br/>
 					<a href="{% url cohort-timeline cohort.coh_cohort_id %}">Cohort Timeline</a><br/>
+					{% if cohort.has_protein_data %}<a href="{% url tools-cohort-protein cohort.coh_cohort_id %}">Protein Tools</a><br/>{% endif %}
 					<a href="{% url cohort-publications cohort.coh_cohort_id %}">Publications</a><br/>
+					
+					{% if perms.matrr.browse_inventory %}
+					<a href="{% url inventory-cohort cohort.coh_cohort_id %}">Browse Cohort Inventory</a><br/>
+					{% endif %}
 					<a href="{% url tissue-shop-landing cohort.coh_cohort_id %}">Request Tissue from {{ cohort.coh_cohort_name }}</a>
-					{% with images=cohort|cohort_images:"etoh" %}
+					{% with images=cohort.images %}
 						{% if images %}
 							<div class="image_container">
 								<a href="{% url cohort-details cohort.coh_cohort_id %}">
-									<img src="{{ STATIC_URL }}/images/etoh/{{ cohort.coh_cohort_name}}-thumb.jpg"/>
+									<img src="{{ images.0.thumbnail.url }}"/>
 								</a>
 							</div>
 						{% endif %}
@@ -72,21 +83,8 @@ All Cohorts
 			</div>
 		{% endfor %}
 			<center>
-				<div class="pagination">
-					<span class="step-links">
-						{% if cohort_list.has_previous %}
-							<a href="?page={{ cohort_list.previous_page_number }}">previous</a>
-						{% endif %}
-
-						<span class="current">
-					Page {{ cohort_list.number }} of {{ cohort_list.paginator.num_pages }}.
-				</span>
-
-						{% if cohort_list.has_next %}
-							<a href="?page={{ cohort_list.next_page_number }}">next</a>
-						{% endif %}
-					</span>
-				</div>
+				{% load inclusion_tags %}
+				{% pagination cohort_list %}
 			</center>
 		{% else %}
 		<div class='messages clearfix'>

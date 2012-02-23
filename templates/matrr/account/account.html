@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}
+	MATRR Account
+{% endblock %}
+
+
+{% block content %}
+	<div class='large-headline'>{% if edit %}My{% else %}{{ account_info.user.username }}'s{% endif %} Account</div>
+
+	<div class='headline'>Account Information</div>
+	<table class="common">
+		<tr>
+			<td class="text-right-common-td">Username:</td>
+			<td>{{ account_info.user.username }}</td>
+			{% if edit %}
+				<td class="text-right-common-td">Password:</td>
+				<td><a href="{% url auth_password_change %}">Change
+					Password</a></td></tr>{% endif %}
+		<tr>
+			<td class="text-right-common-td">Name:</td>
+			<td>{{ account_info.user.first_name }} {{ account_info.user.last_name }}</td>
+
+			<td class="text-right-common-td">Member Since:</td>
+			<td>{{ account_info.user.date_joined|date:"m/d/Y, g:i a" }}</td>
+		</tr>
+		<tr>
+			<td class="text-right-common-td">Email:</td>
+			<td>{{ account_info.user.email }}</td>
+			<td class="text-right-common-td">Last Logged In:</td>
+			<td>{{ account_info.user.last_login|date:"m/d/Y, g:i a" }}</td>
+		</tr>
+		<tr>
+			<td class="text-right-common-td">Phone number:</td>
+			<td>{{ account_info.phone_number }}</td>
+		</tr>
+		<tr>
+			<td class="text-right-common-td">Institution:</td>
+			<td>{{ account_info.institution }}</td>
+		</tr>
+	</table>
+	{% if edit %}
+		<div class="text-right"><a href="{% url account-info %}" class='blockLinkButton'>
+			<!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45' alt='update button'/>-->
+			Update
+		</a>
+		</div>
+	{% endif %}
+	<div class='headline'>Address</div>
+	<table class="common">
+		<col style="width:15%"/>
+		<col style="width:35%"/>
+		<col style="width:7%"/>
+		<col style="width:43%"/>
+
+		<tr>
+			<td class="text-right-common-td">Street Address:</td>
+			<td>{{ account_info.act_real_address1 }}</td>
+			<td class="text-right-common-td">City:</td>
+			<td>{{ account_info.act_real_city }}{% if account_info.act_real_city and account_info.act_real_state %},{% endif %} {{ account_info.act_real_state }}</td>
+		</tr>
+		<tr>
+			<td class="text-right-common-td">&nbsp;</td>
+			<td>{{ account_info.act_real_address2 }}</td>
+			<td class="text-right-common-td">&nbsp;</td>
+			<td>{{ account_info.act_real_zip }}{% if account_info.act_real_zip and account_info.act_real_country %},{% endif %} {{ account_info.act_real_country }}</td>
+		</tr>
+
+	</table>
+	{% if edit %}
+		<div class="text-right"><a href="{% url account-address %}" class='blockLinkButton'>
+			<!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45' alt='update button'/>-->
+			Update
+		</a>
+		</div>
+	{% endif %}
+	<div class='headline'>Shipping Information</div>
+	<table class="common">
+		<col style="width:15%"/>
+		<col style="width:35%"/>
+		<col style="width:7%"/>
+		<col style="width:43%"/>
+		<tr>
+			<td class="text-right-common-td">Shipping Name:</td>
+			<td>{{ account_info.act_shipping_name }}</td>
+			<td class="text-right-common-td">&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="text-right-common-td">Street Address:</td>
+			<td>{{ account_info.act_address1 }}</td>
+			<td class="text-right-common-td">City:</td>
+			<td>{{ account_info.act_city }}{% if account_info.act_city and account_info.act_state %},{% endif %} {{ account_info.act_state }}</td>
+		</tr>
+		<tr>
+			<td class="text-right-common-td">&nbsp;</td>
+			<td>{{ account_info.act_address2 }}</td>
+			<td class="text-right-common-td">&nbsp;</td>
+			<td>{{ account_info.act_zip }}{% if account_info.act_zip and account_info.act_country %},{% endif %} {{ account_info.act_country }}</td>
+		</tr>
+		<tr>
+			<td class="text-right-common-td">
+				<img src="{{ STATIC_URL }}images/fedex-logo-470.jpg" height='12' width='36' alt='fedex logo'/></td>
+			<td>{{ account_info.act_fedex }}</td>
+		</tr>
+	</table>
+	{% if edit %}
+		<div class="text-right"><a href="{% url account-shipping %}" class='blockLinkButton'>
+			<!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45' alt='update button'/>-->
+			Update
+		</a>
+		</div>
+	{% endif %}
+
+	<!-- This section is for the material transfer agreement -->
+	<div class='headline'>Material Transfer Agreements</div>
+	{% if account_info.act_mta and account_info.act_mta != "Non-UBMTA Institution" %}
+		<table class="common">
+			<tr><!--<th>MTA ID</th>-->
+				<th>UBMTA Institution</th>
+			</tr>
+			<tr>
+				<td class='text-center-common-td'>{{ account_info.act_mta }}</td>
+			</tr>
+		</table>
+	{% else %}{% if mta_info %}
+		<table class="common">
+			{% for mta in mta_info.all %}
+				{% if forloop.counter == 1 %}
+					<tr><!--<th>MTA ID</th>-->
+						<th>Date Uploaded</th>
+						<th>Title</th>
+						<th>&nbsp;</th>
+					</tr>
+				{% endif %}
+				<tr>
+					<!--<td class='text-center-common-td'>{{ mta.mta_id }}</td> -->
+					<td class='text-center-common-td'>{{ mta.mta_date|date:"m/d/Y" }}</td>
+					<td class='text-center-common-td'>{{ mta.mta_title }}</td>
+					<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{mta.mta_file }}'>View MTA File</a></td>
+				</tr>
+				{% endfor %}
+		</table>
+	{% else %}
+		<div class="messages">
+			<div class="info">
+				{% if edit %}You do{% else %}{{ account_info.user.username }} does{% endif %} not have any MTAs.
+			</div>
+		</div>
+	{% endif %}{% endif %}
+
+	{% if edit %}
+		<div class="text-right"><a href="{% url account-mta %}" class='blockLinkButton'>
+			<!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45'/>-->
+			Update
+		</a>
+		</div>
+	{% endif %}
+
+	<!--This section displays the status of requests-->
+	<div class='headline'>Submitted Requests Status (<a href="{% url order-list %}">All orders are here</a>)</div>
+	{% if order_list %}
+		<table class="common">
+			<tr>
+				<th>Cohort</th>
+				<th>Date Placed</th>
+				<th>Status</th>
+				<th>Protocol</th>
+				<th>&nbsp;</th>
+			</tr>
+			{% for order in order_list.all %}
+				<tr>
+					<td class='text-center-common-td'>{{ order.cohort }}</td>
+					<td class='text-center-common-td'>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
+
+					<td class='text-center-common-td' id={{ order.req_status|lower }}>{{ order.get_req_status_display }}</td>
+
+
+
+					{% if not order.req_experimental_plan %}
+						<td class='text-center-common-td'>none</td>
+					{% else %}
+						<td class='text-center-common-td'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>View Protocol</a></td>
+					{% endif %}
+					<td class='text-center-common-td'><a href='{% url order-detail order.req_request_id %}'>Details</a></td>
+
+				</tr>
+			{% endfor %}
+		</table>
+	{% else %}
+		<div class="messages">
+			<div class="info">
+				{% if edit %}You do{% else %}{{ account_info.user.username }} does{% endif %} not have any pending requests.
+			</div>
+		</div>
+	{% endif %}
+
+	<!--This section displays the datafiles the user has created -->
+	<div class='headline'>Data Files</div>
+	{% if data_files %}
+		<table class="common">
+			<tr><!--<th>MTA ID</th>-->
+				<th>Date Uploaded</th>
+				<th>Title</th>
+				<th>&nbsp;</th>
+				{% for datafile in data_files %}
+					<tr>
+						<td class='text-center-common-td'>{{ datafile.dat_modified|date:"m/d/Y" }}</td>
+						<td class='text-center-common-td'>{{ datafile.dat_title }}</td>
+						<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{datafile.dat_data_file }}'>View Data File</a></td>
+					</tr>
+				{% endfor %}
+		</table>
+	{% else %}
+		<div class="messages">
+			<div class="info">
+				{% if edit %}You do{% else %}{{ account_info.user.username }} does{% endif %} not have any data files.
+			</div>
+		</div>
+	{% endif %}
+
+	{% if rud_on %}
+		<div class='headline'>Research Updates</div>
+		{% if rud_info %}
+			<table class="common">
+				<tr>
+					<!--<th>ID</th>-->
+					<th>Date Uploaded</th>
+					<th>Title</th>
+					<th>Request: Date Placed</th>
+					<th>&nbsp;</th>
+					{% for rud in rud_info %}
+						<tr>
+							<!--<td class='text-center-common-td'>{{ rud.rud_id }}</td>-->
+							<td class='text-center-common-td'>{{ rud.rud_date|date:"m/d/Y" }}</td>
+							<td class='text-center-common-td'>{{ rud.rud_title }}</td>
+							<td class='text-center-common-td'>{{ rud.request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+							<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{rud.rud_file }}'>View Research Update</a></td>
+						</tr>
+					{% endfor %}
+			</table>
+		{% endif %}
+		{% if pending_rud %}
+			<div class="messages">
+				<div class="info">
+					{% if edit %}You had{% else %}{{ account_info.user.username }} had{% endif %} an order shipped more than 30 days ago. Research update is requested.
+				</div>
+			</div>
+		{% endif %}
+		{% if urged_rud %}
+			<div class="messages">
+				<div class="warning">
+					{% if edit %}You have{% else %}{{ account_info.user.username }} has{% endif %} orders shipped more than 90 days ago with no uploaded research updates.
+				</div>
+			</div>
+		{% endif %}
+
+		<div class="text-right"><a href="{% url rud-upload %}" class='blockLinkButton'>
+			Update
+		</a>
+		</div>
+	{% endif %}
+
+
+{% endblock %}

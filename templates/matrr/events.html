@@ -3,6 +3,7 @@
 {% block content %}
 <div class='headline'>{% block title %}Events{% endblock %}</div>
 <div>
+{% if event_list %}
   {% for event in event_list %}
     <div style='margin-top:10px; margin-bottom:5px;'>
       <div class='mini-headline'>{{ event.name }} ({{ event.date }})</div>
@@ -10,19 +11,13 @@
     </div>
   {% endfor %}
 </div>
-<div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ page_obj.number }} of {{ paginator.num_pages }}.
-        </span>
-
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-        {% endif %}
-    </span>
+				{% load inclusion_tags %}
+				{% pagination page_obj %}
+{% else %}
+<div class="messages">
+	<div class="info">
+		There are currently no events.
+	</div>
 </div>
+{% endif %}
 {% endblock %}

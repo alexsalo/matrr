@@ -7,17 +7,16 @@ setup_environ(settings)
 from datetime import datetime
 
 from django.core.mail import send_mail
-from matrr.models import RequestStatus, Review
-from django.contrib.auth.models import Group
+from matrr.models import RequestStatus, Review, Account
 
 
 def send_pending_reviews_info():
-	g = Group.objects.get(name='Committee')
-	users = g.user_set.all()
+	users = Account.objects.users_with_perm('can_receive_pending_reviews_info')
+	from_email = Account.objects.get(user__username='matrr_admin').email
 	for user in users:
 	
-		submitted = RequestStatus.objects.get(rqs_status_name='Submitted')
-		reviews = Review.objects.filter(user=user.id).filter(req_request__request_status=submitted)
+		
+		reviews = Review.objects.filter(user=user.id).filter(req_request__req_status=RequestStatus.Submitted).exclude(req_request__user__username='matrr_admin')
 		unfinished_reviews = [review for review in reviews if not review.is_finished()]
 		if len(unfinished_reviews) > 0:
 		
@@ -28,10 +27,11 @@ def send_pending_reviews_info():
 			body = 'Information from matrr.com\n You have pending request(s) to be reviewed on your account: %s \n' % user.username + \
 				'Please, do not respond. This is an automated message.\n'
 		
-			ret = send_mail(subject, body, email, recipient_list=recipients, fail_silently=False)
+			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 			if ret > 0:
 				print "%s Pending info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 			
 	
 
-send_pending_reviews_info()
+if settings.PRODUCTION:
+	send_pending_reviews_info()

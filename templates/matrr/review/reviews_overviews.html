@@ -12,7 +12,7 @@
 		</div>
 		{% else %}
 
-		<table class='common'>
+		<table class='common_center' cellpadding='4' cellspacing='2'>
 			<tr>
 				<th>Cohort</th>
 				<th>User</th>
@@ -36,7 +36,6 @@
 						{% else %}
 							<td style="color: green" align="center">{{ item }}</td>
 						{% endif %}
-
 					{% endfor %}
 
 					<td><a href='{% url review-overview req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>

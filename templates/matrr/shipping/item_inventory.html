@@ -1,30 +1,37 @@
 {% load tissue_filters %}
 
 {% if tissue_request.get_tissue %}
-  <div >
-    <a onclick="javascript:toggle_visibility('inventory_{{ tissue_request.get_html_label }}');">
-      Check Inventory
-    </a>
-    <table id='inventory_{{ tissue_request.get_html_label }}' class='hidden'>
-    {% for monkey in tissue_request.accepted_monkeys.all %}
-      <tbody>
-      <tr><th>Monkey:</th><td>{{ monkey.mky_real_id }}</td><td>{{ monkey.mky_name }}</td></tr>
-      {% with samples=tissue_request.get_tissue|get_stock:monkey %}
-        {% if samples.count %}
-          {% for sample in samples.all %}
-            <tr><th>Sample Location:</th><td colspan="2">{{ sample.get_location }}</td></tr>
-            <tr><th>Last Updated:</th><td colspan="2">{{ sample.get_modified|date:"m/d/Y, g:i a" }}</td></tr>
-            <tr><th>Quantity: </th><td colspan="2">{{ sample.tss_sample_quantity|floatformat }} {{ sample.units.unt_unit_name }}</td></tr>
-            
-          {% endfor %}
-        {% else %}
-          <tr><td colspan="3">There are no samples for this tissue and monkey in the inventory.</td></tr>
-        {% endif %}
-      {% endwith %}
-      </tbody>
-    {% endfor %}
-    </table>
-  </div>
+	<div>
+		<a onclick="javascript:toggle_visibility('inventory_{{ tissue_request.get_html_label }}');">
+			Check Inventory
+		</a>
+		<table id='inventory_{{ tissue_request.get_html_label }}' class='hidden' style='text-align: center;width:100%'>
+			<tr>
+				<th>Monkey</th>
+				<th>Sample Location</th>
+				<th>Quantity</th>
+				<th>Last Updated</th>
+			</tr>
+			{% for monkey in tissue_request.accepted_monkeys.all %}
+				{% with samples=tissue_request.get_tissue|get_stock:monkey %}
+					{% if samples.count %}
+						{% for sample in samples.all %}
+							<tr>
+								<td>{{ monkey.mky_id }}</td>
+								<td>{{ sample.get_location }}</td>
+								<td>{{ sample.get_quantity_display }}</td>
+								<td>{{ sample.get_modified|date:"m/d/Y" }}</td>
+							</tr>
+						{% endfor %}
+					{% else %}
+						<tr>
+							<td colspan="3">There are no samples for this tissue and monkey in the inventory.</td>
+						</tr>
+					{% endif %}
+				{% endwith %}
+			{% endfor %}
+		</table>
+	</div>
 {% else %}
-  <div style='float: left;'>No inventory data is available for custom tissue requests.</div>
+	<div style='float: left;'>No inventory data is available for custom tissue requests.</div>
 {% endif %}

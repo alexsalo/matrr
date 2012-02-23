@@ -1,15 +1,22 @@
 #encoding=utf-8
+import Image
 import os, ast
+from django.core.files.base import File
+from django.core.mail.message import EmailMessage
 from django.db import models
-from django.contrib.auth.models import User, Group
+from django.db.models import Q
+from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
+from django.core.urlresolvers import reverse
 from django.dispatch import receiver
 from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
-from utils import plotting
 from django.core.exceptions import ValidationError
+import numpy
+from matrr.process_latex import process_latex
+import settings
 
 def percentage_validator(value):
 	MinValueValidator(0).__call__(value)
@@ -17,60 +24,111 @@ def percentage_validator(value):
 
 
 class Enumeration(object):
-    """
-    A small helper class for more readable enumerations,
-    and compatible with Django's choice convention.
-    You may just pass the instance of this class as the choices
-    argument of model/form fields.
+	"""
+		A small helper class for more readable enumerations,
+		and compatible with Django's choice convention.
+		You may just pass the instance of this class as the choices
+		argument of model/form fields.
 
-    Example:
-        MY_ENUM = Enumeration([
-            (100, 'MY_NAME', 'My verbose name'),
-            (200, 'MY_AGE', 'My verbose age'),
-        ])
-        assert MY_ENUM.MY_AGE == 100
-        assert MY_ENUM[1] == (200, 'My verbose age')
-    """
+		Example:
+			MY_ENUM = Enumeration([
+				(100, 'MY_NAME', 'My verbose name'),
+				(200, 'MY_AGE', 'My verbose age'),
+			])
+			assert MY_ENUM.MY_AGE == 100
+			assert MY_ENUM[1] == (200, 'My verbose age')
+		"""
 
-    def __init__(self, enum_list):
-        self.enum_list = [(item[0], item[2]) for item in enum_list]
-        self.enum_dict = {}
-        for item in enum_list:
-            self.enum_dict[item[1]] = item[0]
+	def __init__(self, enum_list):
+		self.enum_list = [(item[0], item[2]) for item in enum_list]
+		self.enum_dict = {}
+		for item in enum_list:
+			self.enum_dict[item[1]] = item[0]
 
-    def __contains__(self, v):
-        return (v in self.enum_list)
+	def __contains__(self, v):
+		return (v in self.enum_list)
 
-    def __len__(self):
-        return len(self.enum_list)
+	def __len__(self):
+		return len(self.enum_list)
 
-    def __getitem__(self, v):
-        if isinstance(v, basestring):
-            return self.enum_dict[v]
-        elif isinstance(v, int):
-            return self.enum_list[v]
+	def __getitem__(self, v):
+		if isinstance(v, basestring):
+			return self.enum_dict[v]
+		elif isinstance(v, int):
+			return self.enum_list[v]
 
-    def __getattr__(self, name):
-        return self.enum_dict[name]
+	def __getattr__(self, name):
+		return self.enum_dict[name]
 
-    def __iter__(self):
-        return self.enum_list.__iter__()
-
-
+	def __iter__(self):
+		return self.enum_list.__iter__()
 
 
-InventoryStatus =  (('Unverified','Unverified'), ('Sufficient','Sufficient'), ('Insufficient','Insufficient'))
+InventoryStatus = (('Unverified', 'Unverified'), ('Sufficient', 'Sufficient'), ('Insufficient', 'Insufficient'))
+
+#Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
+#LatexUnits = {
+#			'ul': '$\mu l$',
+#			'ug': '$\mu g$',
+#			'whole': '$whole$',
+#			'mg': '$mg$',
+#			'ml': '$ml$',
+#			'g': '$g$',
+#			}
+
+Units = (('ul', 'μl'), ('ug', 'μg'), ('whole', 'whole'), ('mg', 'mg'), ('ml', 'ml'), ('g', 'g'), ('mm', 'mm'), ('cm', 'cm'))
+
+ProteinUnits = (('mg/mL', 'mg/mL'), ('ng/mL', 'ng/mL'), ('ug/mL', 'μg/mL'), ('pg/mL', 'pg/mL'), ('uIU/mL', 'μIU/mL'), ('nmol/L', 'nmol/L'))
+
+LatexUnits = {
+	'ul': '$\mu l$',
+	'ug': '$\mu g$',
+	'whole': '$whole$',
+	'mg': '$mg$',
+	'ml': '$ml$',
+	'g': '$g$',
+	'cm': '$cm$',
+	'mm': '$mm$',
+	}
 
 ExperimentEventType = Enumeration([
-								('D', 'Drink', 'Drink event'),
-								('T', 'Time', 'Time event'),
-								('P', 'Pellet', 'Pellet event'),
-								])
+	('D', 'Drink', 'Drink event'),
+	('T', 'Time', 'Time event'),
+	('P', 'Pellet', 'Pellet event'),
+])
 
 LeftRight = Enumeration([
 						('L', 'Left', 'Left side'),
 						('R', 'Right', 'Right side'),
 						])
+
+TissueTypeSexRelevant =  Enumeration([
+						('F', 'Female', 'Female relevant tissue type'),
+						('M', 'Male', 'Male relevant tissue type'),
+						('B', 'Both', 'Sex independent tissue type'),
+					])
+RequestStatus =  Enumeration([
+						('CA', 'Cart', 'Cart'),
+						('RV', 'Revised', 'Revised'),
+						('SB', 'Submitted', 'Submitted'),
+						('RJ', 'Rejected', 'Rejected'),
+						('AC', 'Accepted', 'Accepted'),
+						('PA', 'Partially', 'Partially accepted'),
+						('SH', 'Shipped', 'Shipped'),
+					])
+VerificationStatus =  Enumeration([
+						('CP', 'Complete', 'Complete'),
+						('IC', 'Incomplete', 'Incomplete'),
+					])
+
+
+# These are the method names which ONLY VIP members can _see_
+VIP_IMAGES_LIST = (
+'monkey_bouts_drinks',
+'monkey_bouts_drinks_intraday',
+)
+
+
 class Availability:
 	'''
 	This class is an enumeration for the availability statuses.
@@ -100,7 +158,8 @@ class DiffingMixin(object):
 		state = dict(self.__dict__)
 		del state['_original_state']
 		self._original_state = state
-		#super(DiffingMixin, self).save()
+
+	#super(DiffingMixin, self).save()
 
 	def is_dirty(self):
 		missing = object()
@@ -117,10 +176,15 @@ class DiffingMixin(object):
 				result[key] = {'old': value, 'new': self.__dict__.get(key, missing)}
 		return result
 
+Permission._meta.permissions = ([
+	('issue_tracker', 'Can view link to issue tracker'),
+	('upload_raw_data', 'Can upload MATRR data to server'),
+])
+
 
 class Institution(models.Model):
-	ins_institution_id = models.AutoField('ID', primary_key=True)
-	ins_institution_name = models.CharField('Institution', max_length=100, unique=True, null=False,
+	ins_institution_id = models.AutoField('ins_id', primary_key=True)
+	ins_institution_name = models.CharField('Institution', max_length=500, unique=True, null=False,
 											help_text='Please enter the name of the institution.')
 
 	def __unicode__(self):
@@ -128,7 +192,7 @@ class Institution(models.Model):
 
 	class Meta:
 		db_table = 'ins_institutions'
-
+		ordering = ['ins_institution_name']
 
 class EventType(models.Model):
 	evt_id = models.AutoField('ID', primary_key=True)
@@ -169,6 +233,12 @@ class Cohort(models.Model):
 		url += '/' + str(self.coh_cohort_id) + '/'
 		return url
 
+	def has_protein_data(self):
+		for monkey in self.monkey_set.all():
+			if MonkeyProtein.objects.filter(monkey=monkey):
+				return True
+		return False
+
 	class Meta:
 		db_table = 'coh_cohorts'
 
@@ -176,11 +246,12 @@ class Cohort(models.Model):
 class CohortData(models.Model):
 	cod_id = models.AutoField(primary_key=True)
 	cohort = models.ForeignKey(Cohort, related_name='cod_set', db_column='coh_cohort_id', null=False, blank=False,
-							help_text='Choose a cohort associated with this file.')
+							   help_text='Choose a cohort associated with this file.')
 	cod_title = models.CharField('Title', blank=True, null=False, max_length=35,
 								 help_text='Brief description of this file.')
 	cod_file = models.FileField('Selected file', upload_to='cod/', default='', null=False, blank=False,
 								help_text='File to Upload')
+
 	def __unicode__(self):
 		return "%s: %s (%s)" % (self.cohort.__unicode__(), self.cod_title, self.cod_file.name)
 
@@ -214,27 +285,24 @@ class CohortEvent(models.Model):
 
 class Monkey(models.Model):
 	SEX_CHOICES = (
-		('M', 'Male'),
-		('F', 'Female'),
-		)
-	mky_id = models.AutoField('Internal ID', primary_key=True)
+	('M', 'Male'),
+	('F', 'Female'),
+	)
+	mky_id = models.AutoField('Monkey ID', primary_key=True)
 	cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', verbose_name='Cohort',
 							   help_text='The cohort this monkey belongs to.')
-	mky_real_id = models.IntegerField('ID', unique=True, null=False,
+	mky_real_id = models.IntegerField('ID', unique=True,
 									  help_text='The ID of the monkey.')
 	mky_name = models.CharField('Name', max_length=100, blank=True, null=True,
 								help_text='The monkey\'s name.')
 	mky_gender = models.CharField('Sex', max_length=1, choices=SEX_CHOICES, blank=True, null=True,
 								  help_text='The sex of the monkey.')
-#	mky_birthdate = models.CharField('Date of Birth', blank=True, null=True,
-#									 max_length=20,
-#									 help_text='Please enter the date the monkey was born on.')
 	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True,
 									 max_length=20,
 									 help_text='Please enter the date the monkey was born on.')
 	mky_weight = models.FloatField('Weight', blank=True, null=True,
-									 help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
-	mky_drinking = models.BooleanField('Drinking', null=False,
+								   help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
+	mky_drinking = models.BooleanField('Is Drinking', null=False,
 									   help_text='Was this monkey given alcohol?')
 	mky_housing_control = models.BooleanField('Housing Control', null=False, default=False,
 											  help_text='Was this monkey part of a housing control group?')
@@ -251,167 +319,21 @@ class Monkey(models.Model):
 										max_length=30,
 										help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
 	mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
+	mky_notes = models.CharField('Monkey Notes', null=True, blank=True, max_length=1000, )
 
 	def __unicode__(self):
-		return str(self.mky_real_id)
+		return str(self.mky_id)
+
+	def has_protein_data(self):
+		if MonkeyProtein.objects.filter(monkey=self):
+			return True
+		return False
 
 	class Meta:
 		db_table = 'mky_monkeys'
-
-VIP_IMAGES_LIST = (
-				'monkey_bouts_drinks',
-				)
-
-class VIPQuerySet(models.query.QuerySet):
-	def vip_filter(self, user):
-		if user.has_perm('view_vip_images'):
-			return self
-		else:
-			return self.exclude(method__in=VIP_IMAGES_LIST)
-	
-class VIPManager(models.Manager):
-	def get_query_set(self):
-		return VIPQuerySet(self.model, using=self._db)
-		
-	def vip_filter(self, user):
-		return self.get_query_set().vip_filter(user)
-
-	
-#  This model breaks MATRR field name scheme
-class MATRRImage(models.Model):
-	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
-	title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this image.')
-	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
-	parameters = models.CharField('Paremeters', blank=True, null=False, max_length=500, default='defaults', help_text="The method's parameters used to generate this image.")
-	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
-	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
-	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
-
-	def _construct_filefields(self, mpl_figure, data_map, *args, **kwargs):
-		from django.core.files.base import File
-
-		# export the image and thumbnail to a temp folder and save them to the self.ImageFields
-		if mpl_figure:
-			image, thumbnail = self._draw_image(mpl_figure)
-			self.image = File(open(image, 'r'))
-			self.thumbnail = File(open(thumbnail, 'r'))
-			self.save()
-
-			# generate the html fragment for the image and save it
-			if data_map != "NO MAP":
-				html_frag_path = self._build_html_fragment(data_map)
-				html_frag = open(html_frag_path, 'r')
-				self.html_fragment = File(html_frag)
-			self.save()
-		else:
-			self.delete()
-
-	def _plot_picker(self):
-		#  This needs to be overridden by subclasses
-		return
-
-	def _draw_image(self, mpl_figure):
-		import Image
-		thumbnail_size = (240,240)
-		DPI =  plotting.DEFAULT_DPI
-
-		filename = '/tmp/' + str(self)
-		image_path = filename + '.png'
-		thumb_path = filename + '-thumb.jpg'
-		mpl_figure.savefig(image_path, dpi=DPI)
-
-		image_file = Image.open(image_path)
-		image_file.thumbnail(thumbnail_size, Image.ANTIALIAS)
-		image_file.save(thumb_path)
-
-		return image_path, thumb_path
-
-	def _build_html_fragment(self, data_map):
-		from django.template.context import Context
-		from django.template.loader import get_template
-
-		fragment_path = '/tmp/%s.html' % str(self)
-
-		t = get_template('image_maps/%s.html' % self.method) # templates will be named identical to the plotting method
-		c = Context({'map': data_map, 'monkeyimage': self, 'bigWidth':self.image.width*1.1, 'bigHeight':self.image.height*1.1 })
-
-		html_fragment = open(fragment_path, 'w+')
-		html_fragment.write(str(t.render(c)))
-		html_fragment.flush()
-		html_fragment.close()
-		return fragment_path
-
-
-	def verify_user_access_to_file(self, user):
-		return user.is_authenticated() and user.account.verified
-
-	def frag(self):
-		return os.path.basename(self.html_fragment.name)
-
-	def __unicode__(self):
-		# You should override this method too
-		return "%s.(%s)" % (self.title, 'MATRRImage')
-
-	class Meta:
-		abstract = True
-		permissions = (
-					('view_vip_images', 'Can view VIP images'),
-					)
-	
-#  This model breaks MATRR field name scheme
-class MonkeyImage(MATRRImage):
-	mig_id = models.AutoField(primary_key=True)
-	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
-	objects = VIPManager()
-	
-	def _construct_filefields(self, *args, **kwargs):
-		# fetch the plotting method and build the figure, map
-		spiffy_method = self._plot_picker()
-		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(monkey=self.monkey)
-		else:
-			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(monkey=self.monkey, **params)
-
-		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
-
-	def _plot_picker(self):
-		PLOTS = plotting.MONKEY_PLOTS
-
-		if not self.method:
-			return "My plot method field has not been populated.  I don't know what I am."
-		if not self.method in PLOTS:
-			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
-
-		return PLOTS[self.method]
-
-	def save(self, *args, **kwargs):
-		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
-		if self.monkey and self.method and self.title:
-			if not self.image:
-				self._construct_filefields()
-
-	def __unicode__(self):
-		return "%s.%s.(%s)" % (self.monkey.__unicode__(), self.title, str(self.pk))
-
-	class Meta:
-		db_table = 'mig_monkey_image'
-
-
-#  This model breaks MATRR field name scheme
-#class CohortImage(MATRRImage):
-#	cig_id = models.AutoField(primary_key=True)
-#	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
-#
-#
-#	def verify_user_access_to_file(self, user):
-#		return user.is_authenticated()
-#
-#	def __unicode__(self):
-#		return "%s.%s.(%s)" % (self.cohort.__unicode__(), self.title, self.image)
-#
-#	class Meta:
-#		db_table = 'cig_cohort_image'
+		permissions = ([
+			('monkey_view_confidential', 'Can view confidential data'),
+		])
 
 
 class Mta(models.Model):
@@ -439,44 +361,62 @@ class Mta(models.Model):
 		if user.has_perm('view_mta_file'):
 			return True
 		return False
-	
+
 
 	class Meta:
 		db_table = 'mta_material_transfer'
 		permissions = (
-					('view_mta_file', 'Can view MTA files of other users'),
-					)
+		('view_mta_file', 'Can view MTA files of other users'),
+		('receive_mta_request', 'Will receive MTA form requests'),
+		)
+
+
+class AccountManager(models.Manager):
+	def users_with_perm(self, perm_string):
+		try:
+			p = Permission.objects.get(codename=perm_string)
+		except:
+			return Permission.objects.filter(codename=perm_string)
+		users = p.user_set.all()
+		groups = p.group_set.all()
+		for group in groups:
+			users |= group.user_set.all()
+		return users.distinct()
 
 
 class Account(models.Model):
 	user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
 								editable=False, blank=True, primary_key=True)
-#	address = models.TextField(blank=False)
-	phone_number = models.CharField(max_length=10,blank=False)
-	institution = models.CharField(max_length=60,blank=False)
+	#	address = models.TextField(blank=False)
+	phone_number = models.CharField(max_length=10, blank=False)
+	institution = models.CharField(max_length=60, blank=False)
 	verified = models.BooleanField(default=False, blank=False, null=False)
 	act_shipping_name = models.CharField(max_length=25, null=True, blank=True,
 										 help_text="If you want to ship to different person, please fill his/her name as shipping name.")
-	act_address1 = models.CharField('Shipping address 1',max_length=50, null=True, blank=True)
-	act_address2 = models.CharField('Shipping address 2',max_length=50, null=True, blank=True)
-	act_city = models.CharField('Shipping city',max_length=25, null=True, blank=True)
+	act_address1 = models.CharField('Shipping address 1', max_length=50, null=True, blank=True)
+	act_address2 = models.CharField('Shipping address 2', max_length=50, null=True, blank=True)
+	act_city = models.CharField('Shipping city', max_length=25, null=True, blank=True)
 	act_state = models.CharField('Shipping state', max_length=2, null=True, blank=True)
 	act_zip = models.CharField('Shipping ZIP', max_length=10, null=True, blank=True)
 	act_country = models.CharField('Shipping country', max_length=25, null=True, blank=True)
 	act_fedex = models.CharField('FedEx', max_length=9, null=True, blank=True,
 								 help_text="Your 9-digit FedEx Account number is required to ship tissues.")
-	act_real_address1 = models.CharField('Address 1',max_length=50, null=True, blank=False)
-	act_real_address2 = models.CharField('Address 2',max_length=50, null=True, blank=True)
-	act_real_city = models.CharField('City',max_length=25, null=True, blank=False)
+	act_real_address1 = models.CharField('Address 1', max_length=50, null=True, blank=False)
+	act_real_address2 = models.CharField('Address 2', max_length=50, null=True, blank=True)
+	act_real_city = models.CharField('City', max_length=25, null=True, blank=False)
 	act_real_state = models.CharField('State', max_length=2, null=True, blank=False)
 	act_real_zip = models.CharField('ZIP', max_length=10, null=True, blank=False)
 	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
-	
+
+	act_mta = models.CharField("MTA", max_length=500, null=True, blank=True)
+
+	objects = AccountManager()
+
 	username = ''
 	first_name = ''
 	last_name = ''
-	email= ''
-	
+	email = ''
+
 	def __init__(self, *args, **kwargs):
 		super(Account, self).__init__(*args, **kwargs)
 		if self.user:
@@ -484,12 +424,29 @@ class Account(models.Model):
 			self.first_name = self.user.first_name
 			self.last_name = self.user.last_name
 			self.email = self.user.email
-	
+
 	def __unicode__(self):
-		return str(self.user.username) + ": " + self.user.first_name + " " + self.user.last_name  
+		return str(self.user.username) + ": " + self.user.first_name + " " + self.user.last_name
+
+	def has_mta(self):
+		if self.act_mta:
+			institution = Institution.objects.filter(ins_institution_name=self.act_mta)
+			if self.act_mta == "Uploaded MTA is Valid": # if the user has uploaded a VALID and VERIFIED mta
+				return True # then call my MTA valid
+			elif institution and institution[0].ins_institution_name != "Non-UBMTA Institution": # if my MTA is in the Institution table, which was pulled from the UBMTA
+				return True # then call my MTA valid
+		# in all other cases, user has no valid MTA
+		return False
 
 	class Meta:
 		db_table = 'act_account'
+		permissions = ([
+			('view_other_accounts', 'Can view accounts of other users'),
+			('view_etoh_data', 'Can view ethanol data'),
+			('bcc_request_email', 'Will receive BCC of processed request emails'),
+			('po_manifest_email', 'Will receive Purchase Order shipping manifest email'),
+
+		])
 
 
 class DrinkingExperiment(models.Model):
@@ -515,7 +472,7 @@ class DrinkingExperiment(models.Model):
 
 class MonkeyToDrinkingExperiment(models.Model):
 	mtd_id = models.AutoField(primary_key=True)
-	monkey = models.ForeignKey(Monkey, null=False, related_name='+', db_column='mky_id', editable=False)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='mtd_set', db_column='mky_id', editable=False)
 	drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
 											editable=False)
 	mtd_etoh_intake = models.FloatField('EtOH Intake', null=False, blank=False,
@@ -528,82 +485,82 @@ class MonkeyToDrinkingExperiment(models.Model):
 								   help_text='Please enter the weight of the monkey.')
 	mtd_notes = models.TextField('Notes', blank=True, null=True,
 								 help_text='Use this space to enter anything about the experiment that does not fit in another field.')
-	mtd_pct_etoh = models.FloatField('EtOH %', blank=True, null=True, validators=[percentage_validator,],
+	mtd_pct_etoh = models.FloatField('EtOH %', blank=True, null=True, validators=[percentage_validator, ],
 									 help_text='EtOH as a percentage of total drinking that day.')
 	mtd_etoh_g_kg = models.FloatField('EtOH g/kg', blank=True, null=True,
-									help_text='EtOH grams per kilogram')
+									  help_text='EtOH grams per kilogram')
 	mtd_etoh_bout = models.IntegerField('EtOH Bout', null=True, blank=True,
-									 help_text='Total etOH bouts (less than 300 seconds between consumption of etOH).')
+										help_text='Total etOH bouts (less than 300 seconds between consumption of etOH).')
 	mtd_etoh_drink_bout = models.FloatField('EtOH Drink/Bout', blank=True, null=True,
-										help_text = 'Average number of drinks (less than 5 seconds between consumption of etOH) per etOH bout')
+											help_text='Average number of drinks (less than 5 seconds between consumption of etOH) per etOH bout')
 	mtd_veh_bout = models.IntegerField('H2O Bout', blank=True, null=True,
-									help_text='Total H20 bouts (less than 300 seconds between consumption of H20)')
+									   help_text='Total H20 bouts (less than 300 seconds between consumption of H20)')
 	mtd_veh_drink_bout = models.FloatField('H2O Drink/Bout', null=True, blank=True,
-										help_text='Average number of drinks (less than 5 seconds between consumption of H20) per H20 bout')
+										   help_text='Average number of drinks (less than 5 seconds between consumption of H20) per H20 bout')
 	mtd_etoh_conc = models.FloatField('EtOH Conc.', null=True, blank=True,
-									help_text='Ethanol concentration.')
+									  help_text='Ethanol concentration.')
 	mtd_etoh_mean_drink_length = models.FloatField('EhOH Mean Drink Length', null=True, blank=True,
-												help_text='Mean length for ethanol drinks (less than 5 seconds between consumption of etOH is a continuous drink).')
+												   help_text='Mean length for ethanol drinks (less than 5 seconds between consumption of etOH is a continuous drink).')
 	mtd_etoh_median_idi = models.FloatField('EtOH Media IDI', blank=True, null=True,
-										help_text='Median time between drinks (always at least 5 seconds because 5 seconds between consumption defines a new drink).')
+											help_text='Median time between drinks (always at least 5 seconds because 5 seconds between consumption defines a new drink).')
 	mtd_etoh_mean_drink_vol = models.FloatField('EtOH Mean Drink Vol', null=True, blank=True,
-											help_text='Mean volume of etOH drinks')
+												help_text='Mean volume of etOH drinks')
 	mtd_etoh_mean_bout_length = models.FloatField('EtOH Mean Bout Length', null=True, blank=True,
-												help_text='Mean length for ethanol bouts (less than 300 seconds between consumption of etOH is a continuous bout)')
+												  help_text='Mean length for ethanol bouts (less than 300 seconds between consumption of etOH is a continuous bout)')
 	mtd_etoh_media_ibi = models.FloatField('EtOH Median IBI', null=True, blank=True,
-										help_text='Median inter-bout interval (always at least 300 seconds, because 300 seconds between consumption defines a new bout)')
+										   help_text='Median inter-bout interval (always at least 300 seconds, because 300 seconds between consumption defines a new bout)')
 	mtd_etoh_mean_bout_vol = models.FloatField('EtOH Mean Bout Vol', null=True, blank=True,
-										help_text='Mean volume of ethanol bouts')
+											   help_text='Mean volume of ethanol bouts')
 	mtd_etoh_st_1 = models.FloatField('EtOH St.1', blank=True, null=True,
-									help_text='Induction data (blank for 22 hour data): ethanol consumed during “State 1”, or the fixed pellet interval portion')
+									  help_text='Induction data (blank for 22 hour data): ethanol consumed during “State 1”, or the fixed pellet interval portion')
 	mtd_etoh_st_2 = models.FloatField('EtOH St.2', blank=True, null=True,
-									help_text='Induction data (blank for 22 hour data):  ethanol consumed during “State 2”, or the pellet time-out between fixed pellet interval portion and the fixed ratio portion')
+									  help_text='Induction data (blank for 22 hour data):  ethanol consumed during “State 2”, or the pellet time-out between fixed pellet interval portion and the fixed ratio portion')
 	mtd_etoh_st_3 = models.FloatField('EtOH St.3', blank=True, null=True,
-									help_text='Induction data (blank for 22 hour data):   ethanol consumed during “State 3”, or the fixed ratio portion, after pellet time out completed')
+									  help_text='Induction data (blank for 22 hour data):   ethanol consumed during “State 3”, or the fixed ratio portion, after pellet time out completed')
 	mtd_veh_st_2 = models.FloatField('H2O St.2', blank=True, null=True,
-									help_text='Induction data (blank for 22 hour data):   H20 consumed during “State 2”, or the pellet time out portion')
+									 help_text='Induction data (blank for 22 hour data):   H20 consumed during “State 2”, or the pellet time out portion')
 	mtd_veh_st_3 = models.FloatField('H2O St.3', blank=True, null=True,
-									help_text='Induction data (blank for 22 hour data):   H20 consumed during “State 3”, or the fixed ratio portion')
+									 help_text='Induction data (blank for 22 hour data):   H20 consumed during “State 3”, or the fixed ratio portion')
 	mtd_pellets_st_1 = models.IntegerField('Pellets St.1', blank=True, null=True,
-										help_text='Induction data (blank for 22 hour data): Pellets delivered during “State 1”')
-	mtd_pellets_st_3 = models.IntegerField('Pellets St.3', blank=True, null=True,	
-										help_text='Induction data (blank for 22 hour data): Pellets delivered during “State 3”')
+										   help_text='Induction data (blank for 22 hour data): Pellets delivered during “State 1”')
+	mtd_pellets_st_3 = models.IntegerField('Pellets St.3', blank=True, null=True,
+										   help_text='Induction data (blank for 22 hour data): Pellets delivered during “State 3”')
 	mtd_length_st_1 = models.IntegerField('Length St.1', blank=True, null=True,
-										help_text='Induction data (blank for 22 hour data): Length of “State 1”')
+										  help_text='Induction data (blank for 22 hour data): Length of “State 1”')
 	mtd_length_st_2 = models.IntegerField('Length St.2', blank=True, null=True,
-										help_text='Induction data (blank for 22 hour data): Length of “State 2”')
+										  help_text='Induction data (blank for 22 hour data): Length of “State 2”')
 	mtd_length_st_3 = models.IntegerField('Length St.3', blank=True, null=True,
-										help_text='Induction data (blank for 22 hour data): Length of “State 3”')		
+										  help_text='Induction data (blank for 22 hour data): Length of “State 3”')
 	mtd_vol_1st_bout = models.FloatField('Vol. 1st Bout', blank=True, null=True,
-										help_text='Volume of the first bout')
-	mtd_pct_etoh_in_1st_bout = models.FloatField('% Etoh in First Bout', blank=True, null=True, validators=[percentage_validator,],
-												help_text='Percentage of the day’s total etOH consumed in the first bout')
+										 help_text='Volume of the first bout')
+	mtd_pct_etoh_in_1st_bout = models.FloatField('% Etoh in First Bout', blank=True, null=True, validators=[percentage_validator, ],
+												 help_text='Percentage of the day’s total etOH consumed in the first bout')
 	mtd_drinks_1st_bout = models.IntegerField('# Drinks 1st Bout', blank=True, null=True,
-											help_text='Number of drinks in the first bout')
+											  help_text='Number of drinks in the first bout')
 	mtd_mean_drink_vol_1st_bout = models.FloatField('Mean Drink Vol 1st Bout', blank=True, null=True,
 													help_text='Mean drink volume of the first bout')
 	mtd_fi_wo_drinking_st_1 = models.IntegerField('FI w/o Drinking St.1', blank=True, null=True,
-												help_text='Induction data (blank for 22 hour data): Number of fixed intervals without drinking in “State 1”')
+												  help_text='Induction data (blank for 22 hour data): Number of fixed intervals without drinking in “State 1”')
 	mtd_pct_fi_with_drinking_st_1 = models.FloatField('% Of FI with Drinking St.1', blank=True, null=True,
-													help_text='Induction data (blank for 22 hour data): Percentage of fixed intervals without drinking in “State 1”')
+													  help_text='Induction data (blank for 22 hour data): Percentage of fixed intervals without drinking in “State 1”')
 	mtd_latency_1st_drink = models.IntegerField('Latency to 1st Drink', blank=True, null=True,
-											help_text='Time from session start to first etOH consumption')
-	mtd_pct_exp_etoh = models.FloatField('Exp. EtOH %', blank=True, null=True, validators=[percentage_validator,],
-										help_text='Experimental etOH percentage (left blank)')
+												help_text='Time from session start to first etOH consumption')
+	mtd_pct_exp_etoh = models.FloatField('Exp. EtOH %', blank=True, null=True, validators=[percentage_validator, ],
+										 help_text='Experimental etOH percentage (left blank)')
 	mtd_st_1_ioc_avg = models.FloatField('St. 1 IOC Avg', blank=True, null=True,
-										help_text='Induction data (blank for 22 hour data):  “State 1” Index of Curvature average')
+										 help_text='Induction data (blank for 22 hour data):  “State 1” Index of Curvature average')
 	mtd_max_bout = models.IntegerField('Max Bout #', blank=True, null=True,
-										help_text='Number of the bout with maximum ethanol consumption')
+									   help_text='Number of the bout with maximum ethanol consumption')
 	mtd_max_bout_start = models.IntegerField('Max Bout Start', blank=True, null=True,
-											help_text='Starting time in seconds of maximum bout (bout with largest ethanol consumption)')
+											 help_text='Starting time in seconds of maximum bout (bout with largest ethanol consumption)')
 	mtd_max_bout_end = models.IntegerField('Max Bout End', blank=True, null=True,
-										help_text='Ending time in seconds of maximum bout (bout with largest ethanol consumption)')
+										   help_text='Ending time in seconds of maximum bout (bout with largest ethanol consumption)')
 	mtd_max_bout_length = models.IntegerField('Max Bout Length', blank=True, null=True,
-											help_text='Length of maximum bout (bout with largest ethanol consumption)')
+											  help_text='Length of maximum bout (bout with largest ethanol consumption)')
 	mtd_max_bout_vol = models.FloatField('Max Bout Volume', blank=True, null=True,
-										help_text='Volume of maximum bout')
+										 help_text='Volume of maximum bout')
 	mtd_pct_max_bout_vol_total_etoh = models.FloatField('Max Bout Volume as % of Total Etoh', blank=True, null=True,
-													help_text='Maximum bout volume as a percentage of total ethanol consumed that day')
+														help_text='Maximum bout volume as a percentage of total ethanol consumed that day')
 
 	def __unicode__(self):
 		return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey)
@@ -614,49 +571,54 @@ class MonkeyToDrinkingExperiment(models.Model):
 	class Meta:
 		db_table = 'mtd_monkeys_to_drinking_experiments'
 
+
 class ExperimentBout(models.Model):
 	ebt_id = models.AutoField(primary_key=True)
 	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='bouts_set')
-	ebt_number = models.PositiveIntegerField('Bout number',blank=False, null=False)
-	ebt_start_time = models.PositiveIntegerField('Start time [s]',blank=False, null=False)
-	ebt_end_time = models.PositiveIntegerField('End time [s]',blank=False, null=False)
-	ebt_length = models.PositiveIntegerField('Bout length [s]',blank=False, null=False)
+	ebt_number = models.PositiveIntegerField('Bout number', blank=False, null=False)
+	ebt_start_time = models.PositiveIntegerField('Start time [s]', blank=False, null=False)
+	ebt_end_time = models.PositiveIntegerField('End time [s]', blank=False, null=False)
+	ebt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
 	ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
-	ebt_volume = models.FloatField('Bout volume [ml]',blank=False, null=False)
-	
+	ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
+
 	def clean(self):
 		if self.ebt_end_time < self.ebt_start_time:
 			raise ValidationError('End time cannot be lower that Start time')
-	
+
 		if self.ebt_end_time - self.ebt_start_time != self.ebt_length or self.ebt_end_time == self.ebt_start_time:
 			#		An isolated bout is given the length of 1 second, despite start time and end time being equal. 
 			if  self.ebt_end_time == self.ebt_start_time and self.ebt_length == 1:
 				return
 			raise ValidationError('Bout length does not correspond the Start and End time. An isolated drink is given the length of 1 second, despite start time and end time being equal.')
+
 	class Meta:
 		db_table = 'ebt_experiment_bouts'
-		
+
+
 class ExperimentDrink(models.Model):
 	edr_id = models.AutoField(primary_key=True)
 	ebt = models.ForeignKey(ExperimentBout, null=False, db_column='ebt_id', related_name='drinks_set')
 	edr_number = models.PositiveIntegerField('Drink number', blank=False, null=False)
-	edr_start_time = models.PositiveIntegerField('Start time [s]',blank=False, null=False)
-	edr_end_time = models.PositiveIntegerField('End time [s]',blank=False, null=False)
-	edr_length = models.PositiveIntegerField('Drink length [s]',blank=False, null=False)
-	edr_idi = models.PositiveIntegerField('Inter-Drink Interval [s]',blank=True, null=True)
-	edr_volume = models.FloatField('Bout volume [ml]',blank=False, null=False)
+	edr_start_time = models.PositiveIntegerField('Start time [s]', blank=False, null=False)
+	edr_end_time = models.PositiveIntegerField('End time [s]', blank=False, null=False)
+	edr_length = models.PositiveIntegerField('Drink length [s]', blank=False, null=False)
+	edr_idi = models.PositiveIntegerField('Inter-Drink Interval [s]', blank=True, null=True)
+	edr_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
 
 	def clean(self):
 		if self.edr_end_time < self.edr_start_time:
 			raise ValidationError('End time cannot be lower that Start time')
-	
+
 		if self.edr_end_time - self.edr_start_time != self.edr_length or self.edr_end_time == self.edr_start_time:
 			#		An isolated drink is given the length of 1 second, despite start time and end time being equal. 
 			if  self.edr_end_time == self.edr_start_time and self.edr_length == 1:
 				return
 			raise ValidationError('Drink length does not correspond to Start and End time. (An isolated drink is given the length of 1 second, despite start time and end time being equal.)')
+
 	class Meta:
 		db_table = 'edr_experiment_drinks'
+
 
 class ExperimentEvent(models.Model):
 	eev_id = models.AutoField(primary_key=True)
@@ -666,8 +628,8 @@ class ExperimentEvent(models.Model):
 	eev_dose = models.FloatField('Dose', blank=False, null=False)
 	eev_panel = models.PositiveIntegerField('Panel', null=False, blank=False)
 	eev_fixed_time = models.PositiveIntegerField('Fixed time [s]', blank=False, null=False)
-	eev_experiment_state = models.IntegerField('Induction experiment state',validators = [MaxValueValidator(3),MinValueValidator(0)],blank=False, null=False)
-	eev_event_type = models.CharField('Event type (Time/Pellet/Drink)', max_length=1, choices=ExperimentEventType,blank=False, null=False)
+	eev_experiment_state = models.IntegerField('Induction experiment state', validators=[MaxValueValidator(3), MinValueValidator(0)], blank=False, null=False)
+	eev_event_type = models.CharField('Event type (Time/Pellet/Drink)', max_length=1, choices=ExperimentEventType, blank=False, null=False)
 	eev_session_time = models.PositiveIntegerField('Session time [s]', blank=False, null=False)
 	eev_segement_time = models.PositiveIntegerField('Segment time [s]', blank=False, null=False)
 	eev_pellet_time = models.PositiveIntegerField('Pellet time [s]', blank=False, null=False)
@@ -677,33 +639,326 @@ class ExperimentEvent(models.Model):
 	eev_etoh_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last etOh drink [s]', blank=True, null=True)
 	eev_veh_side = models.CharField('H20 side (Right/Left)', max_length=1, choices=LeftRight, blank=True, null=True)
 	eev_veh_volume = models.FloatField('H20 volume of most recent drink', blank=True, null=True)
-	eev_veh_total = models.FloatField('H20 total volume',blank=True, null=True)
-	eev_veh_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last H20 drink [s]',blank=True, null=True)
-	eev_scale_string = models.CharField('Original string data from scale', max_length=50,blank=True, null=True)
+	eev_veh_total = models.FloatField('H20 total volume', blank=True, null=True)
+	eev_veh_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last H20 drink [s]', blank=True, null=True)
+	eev_scale_string = models.CharField('Original string data from scale', max_length=50, blank=True, null=True)
 	eev_hand_in_bar = models.BooleanField('Hand in bar', blank=False, null=False)
 	eev_blank = models.IntegerField('This should be blank but I found some values', blank=True, null=True)
 	eev_etoh_bout_number = models.PositiveIntegerField('EtOh bout number', blank=True, null=True)
 	eev_etoh_drink_number = models.PositiveIntegerField('EtOh drink number', blank=True, null=True)
 	eev_veh_bout_number = models.PositiveIntegerField('H20 bout number', blank=True, null=True)
-	eev_veh_drink_number = models.PositiveIntegerField('H20 drink number',blank=True, null=True)
+	eev_veh_drink_number = models.PositiveIntegerField('H20 drink number', blank=True, null=True)
 	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
-	
+
 	class Meta:
 		db_table = 'eev_experiment_events'
 
 
-class RequestStatus(models.Model):
-	rqs_status_id = models.AutoField('ID', primary_key=True)
-	rqs_status_name = models.CharField('Name', max_length=100, unique=True, null=False,
-									   help_text='The name of the status.')
-	rqs_status_description = models.TextField('Description', null=True,
-											  help_text='The description of the status.')
-
-	def __unicode__(self):
-		return self.rqs_status_name
+class NecropsySummary(models.Model):
+	ncm_id = models.AutoField(primary_key=True)
+	monkey = models.OneToOneField(Monkey, null=False, db_column='ebt_id', related_name='necropsy_summary')
+	ncm_age_onset_etoh = models.CharField("Age at Ethanol Onset", max_length=100, blank=True, null=True)
+	ncm_etoh_onset = models.DateTimeField("Date of Ethanol Onset", blank=True, null=True)
+	ncm_6_mo_start = models.DateField('6 Month Start', blank=True, null=True)
+	ncm_6_mo_end = models.DateField('6 Month End', blank=True, null=True)
+	ncm_12_mo_end = models.DateField('12 Month End', blank=True, null=True)
+	ncm_etoh_4pct_induction = models.FloatField("Induction Ethanol Intake", blank=True, null=True)
+	ncm_etoh_4pct_22hr = models.FloatField("22hr Free Access Ethanol Intake", blank=True, null=True)
+	ncm_etoh_4pct_lifetime = models.FloatField("Lifetime Ethanol Intake (in 4% ml)", blank=True, null=True)
+	ncm_etoh_g_lifetime = models.FloatField("Lifetime Etanol Intake (in grams)", blank=True, null=True)
+	ncm_sum_g_per_kg_induction = models.FloatField("Induction Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+	ncm_sum_g_per_kg_22hr = models.FloatField("22hr Free Access Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+	ncm_sum_g_per_kg_lifetime = models.FloatField("Lifetime Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+	ncm_22hr_6mo_avg_g_per_kg = models.FloatField("22hr 6mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+	ncm_22hr_12mo_avg_g_per_kg = models.FloatField("22hr 12mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
 
 	class Meta:
-		db_table = 'rqs_request_statuses'
+		db_table = 'ncm_necropsy_summary'
+
+
+class VIPQuerySet(models.query.QuerySet):
+	def vip_filter(self, user):
+		if user.has_perm('view_vip_images'):
+			return self
+		else:
+			return self.exclude(method__in=VIP_IMAGES_LIST)
+
+
+class VIPManager(models.Manager):
+	def get_query_set(self):
+		return VIPQuerySet(self.model, using=self._db)
+
+	def vip_filter(self, user):
+		return self.get_query_set().vip_filter(user)
+
+
+#  This model breaks MATRR field name scheme
+class MATRRImage(models.Model):
+	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
+	title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this image.')
+	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
+	parameters = models.CharField('Parameters', blank=True, null=False, max_length=1500, editable=False, default='defaults', help_text="The method's parameters used to generate this image.")
+	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
+	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
+	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
+
+	thumbnail_size = (240, 240)
+
+	def _construct_filefields(self, mpl_figure, data_map, *args, **kwargs):
+		# export the image and thumbnail to a temp folder and save them to the self.ImageFields
+		if mpl_figure:
+			image, thumbnail = self._draw_image(mpl_figure)
+			self.image = File(open(image, 'r'))
+			self.thumbnail = File(open(thumbnail, 'r'))
+
+			# generate the html fragment for the image and save it
+			if data_map != "NO MAP":
+				self.save() # must be called before html frag gets built, or else the image paths are still in /tmp
+				html_frag_path = self._build_html_fragment(data_map)
+				html_frag = open(html_frag_path, 'r')
+				self.html_fragment = File(html_frag)
+
+			self.save()
+		else:
+			self.delete()
+
+
+	def _plot_picker(self):
+		#  This needs to be overridden by subclasses
+		return
+
+	def _draw_image(self, mpl_figure):
+		DPI = mpl_figure.get_dpi()
+
+		filename = '/tmp/' + str(self)
+		image_path = filename + '.png'
+		thumb_path = filename + '-thumb.jpg'
+		mpl_figure.savefig(image_path, dpi=DPI)
+
+		image_file = Image.open(image_path)
+		image_file.thumbnail(self.thumbnail_size, Image.ANTIALIAS)
+		image_file.save(thumb_path)
+
+		return image_path, thumb_path
+
+	def _build_html_fragment(self, data_map):
+		from django.template.context import Context
+		from django.template.loader import get_template
+
+		fragment_path = '/tmp/%s.html' % str(self)
+
+		t = get_template('html_fragments/%s.html' % self.method) # templates will be named identical to the plotting method
+		c = Context({'map': data_map, 'image': self, 'bigWidth': self.image.width * 1.1, 'bigHeight': self.image.height * 1.1})
+
+		html_fragment = open(fragment_path, 'w+')
+		html_fragment.write(str(t.render(c)))
+		html_fragment.flush()
+		html_fragment.close()
+		return fragment_path
+
+
+	def verify_user_access_to_file(self, user):
+		if self.method in VIP_IMAGES_LIST:
+			return user.is_authenticated() and user.account.verified and user.has_perm('view_vip_images')
+		return user.is_authenticated() and user.account.verified
+
+	def frag(self):
+		return os.path.basename(self.html_fragment.name)
+
+	def __unicode__(self):
+		# You should override this method too
+		return "%s.(%s)" % (self.title, 'MATRRImage')
+
+	class Meta:
+		abstract = True
+
+
+#  This model breaks MATRR field name scheme
+class MTDImage(MATRRImage):
+	mdi_id = models.AutoField(primary_key=True)
+	monkey_to_drinking_experiment = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, related_name='image_set', editable=False)
+	objects = VIPManager()
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(mtd=self.monkey_to_drinking_experiment)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(mtd=self.monkey_to_drinking_experiment, **params)
+
+		super(MTDImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+
+		PLOTS = plotting.MONKEY_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(MTDImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.monkey_to_drinking_experiment and self.method and self.title:
+			if not self.image:
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "MTDImage.%s.(%s)" % (self.title, str(self.pk))
+
+	class Meta:
+		db_table = 'mdi_mtd_image'
+
+
+#  This model breaks MATRR field name scheme
+class MonkeyImage(MATRRImage):
+	mig_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
+	objects = VIPManager()
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, **params)
+
+		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+
+		PLOTS = plotting.MONKEY_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.monkey and self.method and self.title:
+			if not self.image:
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s.%s.(%s)" % (self.monkey.__unicode__(), self.title, str(self.pk))
+
+	class Meta:
+		permissions = (
+			('view_vip_images', 'Can view VIP images'),
+			)
+		db_table = 'mig_monkey_image'
+
+
+#  This model breaks MATRR field name scheme
+class CohortImage(MATRRImage):
+	cig_id = models.AutoField(primary_key=True)
+	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
+	objects = VIPManager()
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort)
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort, **params)
+
+		super(CohortImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+
+		PLOTS = plotting.COHORT_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(CohortImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.cohort and self.method and self.title:
+			if not self.image:
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s.%s.(%s)" % (self.cohort.__unicode__(), self.title, str(self.pk))
+
+	class Meta:
+		db_table = 'cig_cohort_image'
+
+
+#  This model breaks MATRR field name scheme
+class CohortProteinImage(MATRRImage):
+	cpi_id = models.AutoField(primary_key=True)
+	cohort = models.ForeignKey(Cohort, null=False, related_name='pci_image_set', editable=False)
+	protein = models.ForeignKey("Protein", null=False, related_name='pci_image_set', editable=False)
+	# this model does not use MATRRImage.parameters
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		mpl_figure, data_map = spiffy_method(cohort=self.cohort, protein=self.protein)
+
+		super(CohortProteinImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+
+		PLOTS = plotting.COHORT_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(CohortProteinImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.cohort and self.protein:
+			if not self.image:
+				self.method = 'cohort_protein_boxplot'
+				self.title = '%s : %s' % (str(self.cohort), str(self.protein.pro_abbrev))
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s: %s.%s" % (str(self.pk), str(self.cohort), str(self.protein))
+
+	class Meta:
+		db_table = 'cpi_cohort_protein_image'
+
+
+class DataFile(models.Model):
+	dat_id = models.AutoField(primary_key=True)
+	account = models.ForeignKey(Account, null=True)
+	dat_modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
+	dat_title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this data file.')
+	dat_data_file = models.FileField('Data File', upload_to='data_files/', null=True, blank=False)
+
+	def verify_user_access_to_file(self, user):
+		return user.is_authenticated() and user.account.verified and user.account == self.account
+
+	def __unicode__(self):
+		# You should override this method too
+		return "%s- %s" % (self.account.username, self.dat_title)
+
+	class Meta:
+		db_table = 'dat_data_file'
 
 
 class TissueCategory(models.Model):
@@ -746,6 +1001,7 @@ class TissueType(models.Model):
 											  blank=True,
 											  help_text='The monkeys this tissue type is not available for.')
 	tst_cost = models.FloatField('Cost', default=0.00)
+	tst_sex_relevant = models.CharField('Sex relevant tissue type', max_length=1, choices=TissueTypeSexRelevant, default=TissueTypeSexRelevant.Both)
 
 	def __unicode__(self):
 		return self.tst_tissue_name
@@ -763,112 +1019,89 @@ class TissueType(models.Model):
 				return True
 		return False
 
+	def get_directly_in_stock_available_monkey_ids(self):
+		tss = TissueSample.objects.filter(tissue_type=self).filter(Q(tss_sample_quantity__gt=0) | Q(tss_sample_quantity=None))
+		monkey_ids = tss.values_list('monkey', flat=True)
+
+		return monkey_ids
+
+	def get_monkey_from_coh_upcoming_availability(self, monkey):
+		if self.tst_sex_relevant != TissueTypeSexRelevant.Both:
+			if monkey.mky_gender != self.tst_sex_relevant:
+				return Availability.Unavailable
+		return Availability.Available
+
 	def get_monkey_availability(self, monkey):
+		if self.tst_sex_relevant != TissueTypeSexRelevant.Both:
+			if monkey.mky_gender != self.tst_sex_relevant:
+				return Availability.Unavailable
 
 		if monkey.cohort.coh_upcoming:
-#			just idea: is possible a situation when we know that some tissue of this monkey will never be in stock?
-# 			if yes, we should probably track it somehow and reflect here, but not important right now
+		#			just idea: is possible a situation when we know that some tissue of this monkey will never be in stock?
+		# 			if yes, we should probably track it somehow and reflect here, but not important right now
 			return Availability.Available
 
 		tissue_samples = TissueSample.objects.filter(monkey=monkey, tissue_type=self)
 
 		for tissue_sample in tissue_samples:
 			if tissue_sample.tss_sample_quantity > 0 or tissue_sample.tss_sample_quantity is None:
-#		returns In_stock if any of the samples is present and its amount is positive
-#		does not reflect accepted requests
+			#		returns In_stock if any of the samples is present and its amount is positive
+			#		does not reflect accepted requests
 				return Availability.In_Stock
 
 		return Availability.Unavailable
 
-### 90% sure i just broke this.  -jf, 8/29/2011
-	def get_availability(self, monkey):
-		availability = Availability.Unavailable
-		if monkey in self.unavailable_list.all():
-			return availability
-
-		# get the number of accepted, but not shipped, requests
-		requests = TissueRequest.objects.filter(tissue_type=self,
-												req_request__cohort=monkey.cohort,
-												req_request__request_status=
-												RequestStatus.objects.get(
-													rqs_status_name='Accepted'))
-		monkey_requests = list()
-		for request in requests.all():
-			# keep requests that include this monkey
-			if monkey in request.monkeys.all():
-				monkey_requests.append(request)
-
-		requested = len(monkey_requests)
-
-		if monkey.cohort.coh_upcoming:
-			# if there is a limit to the number of samples,
-			# check if that limit has been reached
-			if self.tst_count_per_monkey and (requested < self.tst_count_per_monkey):
-				availability = Availability.Available
-			elif self.tst_count_per_monkey is None:
-				availability = Availability.Available
-		else:
-			# the tissues have been harvested, so check the inventory
-
-			# get the number of tissues that have been harvested
-			harvested_samples = TissueSample.objects.filter(monkey=monkey,
-															tissue_type=self)
-			if len(harvested_samples) > 0:
-				# tissues have been harvested, so we should use the inventories to determine if
-				# the tissue is available.
-
-				# get the tissues of this type for this monkey
-				available_count = 0
-				for sample in harvested_samples:
-					available_count += sample.get_quantity()
-					# check if the amount of stock exceeds the number of approved requests
-				if requested < available_count:
-					# if it does, the tissue is available (and in stock)
-					availability = Availability.In_Stock
-			elif self.tst_count_per_monkey and (requested < self.tst_count_per_monkey):
-				# otherwise check if the limit has been reached
-				availability = Availability.Available
-			elif self.tst_count_per_monkey is None:
-				availability = Availability.Available
-
-		return availability
-
 	def get_pending_request_count(self, monkey):
-		return self.tissue_request_set.filter(\
-			req_request__request_status=RequestStatus.objects.get(rqs_status_name='Submitted')).count()
+		return self.tissue_request_set.filter(req_request__req_status=RequestStatus.Submitted).count()
 
 	def get_accepted_request_count(self, monkey):
-		return self.tissue_request_set.filter(\
-			req_request__request_status=RequestStatus.objects.get(rqs_status_name='Accepted')).count()
+		return self.tissue_request_set.filter(req_request__req_status=RequestStatus.Accepted).count()
 
 	class Meta:
 		db_table = 'tst_tissue_types'
 		unique_together = (('tst_tissue_name', 'category'),)
+		permissions = (
+		('browse_inventory', 'Can browse inventory'),
+		)
 
 
-class Unit(models.Model):
-	unt_unit_id = models.AutoField('ID', primary_key=True)
-	unt_unit_name = models.CharField('Name', max_length=100, unique=True, null=False,
-									 help_text='The name of the unit type. (ex. ml, mg)')
+class RequestManager(models.Manager):
+	def processed(self):
+		return self.get_query_set().exclude(req_status=RequestStatus.Cart).exclude(req_status=RequestStatus.Revised)
 
-	def __unicode__(self):
-		return self.unt_unit_name
+	def evaluated(self):
+		return self.get_query_set().exclude(req_status=RequestStatus.Cart).exclude(req_status=RequestStatus.Revised).exclude(
+			req_status=RequestStatus.Submitted)
 
-	class Meta:
-		db_table = 'unt_units'
+	def revised(self):
+		return self.get_query_set().filter(req_status=RequestStatus.Revised)
+
+	def submitted(self):
+		return self.get_query_set().filter(req_status=RequestStatus.Submitted)
+
+	def shipped(self):
+		return self.get_query_set().filter(req_status=RequestStatus.Shipped)
+
+	def accepted_and_partially(self):
+		return self.get_query_set().filter(Q(req_status=RequestStatus.Accepted) | Q(req_status=RequestStatus.Partially))
+
+	def cart(self):
+		return self.get_query_set().filter(req_status=RequestStatus.Cart)
 
 
 class Request(models.Model, DiffingMixin):
 	REFERRAL_CHOICES = (
-		('Internet Search', 'Internet Search'),
-		('Publication', 'Publication'),
-		('Professional Meeting', 'Professional Meeting'),
-		('MATRR Staff/Investigator', 'MATRR Staff/Investigator'),
-		('Colleague', 'Colleague'),
-		('other', 'other'),
-		)
+	('Internet Search', 'Internet Search'),
+	('Publication', 'Publication'),
+	('Professional Meeting', 'Professional Meeting'),
+	('MATRR Staff/Investigator', 'MATRR Staff/Investigator'),
+	('Colleague', 'Colleague'),
+	('other', 'other'),
+	)
+	objects = RequestManager()
 	req_request_id = models.AutoField('ID', primary_key=True)
-	request_status = models.ForeignKey(RequestStatus, null=False, db_column='rqs_status_id', )
+	#	request_status = models.ForeignKey(RequestStatus, null=False, db_column='rqs_status_id', )
+	req_status = models.CharField('Request Status', max_length=2, choices=RequestStatus, null=False, blank=False, default=RequestStatus.Cart)
 	cohort = models.ForeignKey(Cohort, null=False, db_column='coh_cohort_id', editable=False, )
 	user = models.ForeignKey(User, null=False, db_column='usr_user_id', editable=False, )
 	req_modified_date = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
@@ -881,6 +1114,8 @@ class Request(models.Model, DiffingMixin):
 										 help_text='The name of the project or proposal these tissues will be used in.')
 	req_reason = models.TextField('Purpose of Tissue Request', null=False, blank=False,
 								  help_text='Please provide a short paragraph describing the hypothesis and methods proposed.')
+	req_funding = models.TextField('Source of Funding', null=True, blank=False,
+								   help_text='Please describe the source of funding which will be used for this request.')
 	req_progress_agreement = models.BooleanField(
 		'I acknowledge that I will be required to submit a 90 day progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.'
 		,
@@ -898,6 +1133,8 @@ class Request(models.Model, DiffingMixin):
 	req_notes = models.TextField('Request Notes', null=True, blank=True)
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
 
+	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
+
 	def __unicode__(self):
 		return 'User: ' + self.user.username +\
 			   ' Cohort: ' + self.cohort.coh_cohort_name +\
@@ -910,9 +1147,10 @@ class Request(models.Model, DiffingMixin):
 			return True
 		return False
 
-	def print_setf_in_detail(self):		
+	def print_setf_in_detail(self):
 		return "Project title: %s\nRequested: %s\nCohort: %s\nRequest reason: %s\nNotes: %s" % (self.req_project_title,
-							str(self.req_request_date), self.cohort.coh_cohort_name, self.req_reason, self.req_notes or "None")
+																								str(self.req_request_date), self.cohort.coh_cohort_name, self.req_reason,
+																								self.req_notes or "None")
 
 	def get_requested_tissue_count(self):
 		return self.tissue_request_set.count()
@@ -959,66 +1197,141 @@ class Request(models.Model, DiffingMixin):
 
 		return collision_requests
 
+	def create_revised_duplicate(self):
+		kwargs = {}
+		# this does not capture m2m fields or other models with FK refs to Request
+		for field in self._meta.fields:
+			if field.name != 'req_request_id': # do not duplicate the primary key
+				kwargs[field.name] = self.__getattribute__(field.name)
+		revised = Request.objects.create(**kwargs)
+		# Don't duplicate some other fields
+		revised.req_modified_date = datetime.now()
+		revised.req_status = RequestStatus.Revised
+		revised.req_report_asked = False
+
+		# Duplicate all TissueRequests
+		revised.save() # save() must be called before the forloop and m2m assignment
+		tr_duplicates = []
+		for tissue_request in self.tissue_request_set.all():
+			if not tissue_request.is_fully_accepted():
+				tr_duplicates.append(tissue_request.create_revised_duplicate(revised))
+		revised.tissue_request_set = tr_duplicates
+
+		revised.save()
+		return revised
+
 	def get_sub_req_collisions_for_monkey(self, monkey):
 		collisions = self.get_tiv_collisions()
-		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'), monkey=monkey)
+		collisions = collisions.filter(tissue_request__req_request__req_status=RequestStatus.Submitted, monkey=monkey)
 		return self.__get_tiv_collision_request(collisions)
 
 	def get_sub_req_collisions(self):
 		collisions = self.get_tiv_collisions()
-		collisions = collisions.filter(tissue_request__req_request__request_status=RequestStatus.objects.filter(rqs_status_name='Submitted'))
+		collisions = collisions.filter(tissue_request__req_request__req_status=RequestStatus.Submitted)
 		return self.__get_tiv_collision_request(collisions)
 
 	def get_acc_req_collisions(self):
 		collisions = self.get_rtt_collisions()
-		collisions = collisions.filter(req_request__request_status__rqs_status_name__contains="Accepted")
+		collisions = collisions.filter(Q(req_request__req_status=RequestStatus.Accepted) | Q(req_request__req_status=RequestStatus.Partially))
 		return self.__get_rtt_collision_request(collisions)
 
 	def get_acc_req_collisions_for_tissuetype_monkey(self, tissue_type, monkey):
 		collisions = self.get_rtt_collisions()
-		collisions = collisions.filter(req_request__request_status__rqs_status_name__contains="Accepted")
+		collisions = collisions.filter(Q(req_request__req_status=RequestStatus.Accepted) | Q(req_request__req_status=RequestStatus.Partially))
 		collisions = collisions.filter(tissue_type=tissue_type, accepted_monkeys__in=[monkey])
 		return self.__get_rtt_collision_request(collisions)
 
 	def save(self, force_insert=False, force_update=False, using=None):
-		if self.request_status.rqs_status_id != self._original_state['request_status_id']\
-		and self._original_state['request_status_id'] == RequestStatus.objects.get(rqs_status_name='Cart').rqs_status_id:
+		if self.req_status != self._original_state['req_status']\
+		and (self._original_state['req_status'] == RequestStatus.Cart or
+			 self._original_state['req_status'] == RequestStatus.Revised):
 			self.req_request_date = datetime.now()
 		self.req_modified_date = datetime.now()
-		self._previous_status_id = self._original_state['request_status_id']
+		self._previous_status = self._original_state['req_status']
 		super(Request, self).save(force_insert, force_update, using)
+
+	def can_be_revised(self):
+		if self.req_status == RequestStatus.Rejected or self.req_status == RequestStatus.Partially:
+			return True
+		return False
+
+	def can_be_edited(self):
+		if self.req_status == RequestStatus.Revised:
+			return True
+		return False
+
+	def is_processed(self):
+		if self.req_status != RequestStatus.Cart and self.req_status != RequestStatus.Revised:
+			return True
+		return False
+
+	def is_evaluated(self):
+		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially\
+		   or self.req_status == RequestStatus.Rejected or self.req_status == RequestStatus.Shipped:
+			return True
+		return False
+
+	def is_shipped(self):
+		if self.req_status == RequestStatus.Shipped:
+			return True
+		return False
+
+	def can_be_evaluated(self):
+		if self.req_status == RequestStatus.Submitted:
+			return True
+		return False
+
+	def can_be_shipped(self):
+		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
+			if self.req_purchase_order and self.user.account.has_mta():
+				return True
+		return False
+
+	def submit_request(self):
+		self.req_status = RequestStatus.Submitted
+
+	def ship_request(self):
+		self.req_status = RequestStatus.Shipped
+
+	def get_inventory_verification_status(self):
+		for rtt in self.tissue_request_set.all():
+			if rtt.get_inventory_verification_status() == VerificationStatus.Incomplete:
+				return VerificationStatus.Incomplete
+		return VerificationStatus.Complete
 
 	class Meta:
 		db_table = 'req_requests'
 		permissions = (
-					('view_experimental_plan', 'Can view experimental plans of other users'),
-					)
+		('view_experimental_plan', 'Can view experimental plans of other users'),
+		('can_receive_colliding_requests_info', 'Can receive colliding requests info'),
+		)
 
 
 class ResearchUpdate(models.Model):
 	rud_id = models.AutoField(primary_key=True)
 	request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False,
-							help_text='Choose a shipped request for which you would like to upload a research update:')
+								help_text='Choose a shipped request for which you would like to upload a research update:')
 	rud_date = models.DateField('Date uploaded', editable=False, blank=True, null=True, auto_now_add=True)
 	rud_title = models.CharField('Title', blank=True, null=False, max_length=25,
 								 help_text='Give your research update a short name to make it easier for you to reference.')
 	rud_file = models.FileField('Selected file', upload_to='rud/', default='', null=False, blank=False,
 								help_text='File to Upload')
+
 	def __unicode__(self):
 		return "%s: %s (%s)" % (self.request.__unicode__(), self.rud_title, self.rud_file.name)
-	
+
 	def verify_user_access_to_file(self, user):
 		if self.request.user == user:
 			return True
 		if user.has_perm('view_rud_file'):
 			return True
 		return False
-	
+
 	class Meta:
 		db_table = 'rud_research_update'
 		permissions = (
-					('view_rud_file', 'Can view research update files of other users'),
-					)
+		('view_rud_file', 'Can view research update files of other users'),
+		)
 
 
 class TissueRequest(models.Model):
@@ -1032,20 +1345,33 @@ class TissueRequest(models.Model):
 	# for a tissue in a single order while allowing multiple custom requests in an order.
 	rtt_custom_increment = models.IntegerField('Custom Increment', default=0, editable=False, null=False)
 	rtt_amount = models.FloatField('Amount', help_text='Please enter the amount of tissue you need.')
-	unit = models.ForeignKey(Unit, null=False, related_name='+', db_column='unt_unit_id',
-							 help_text='Please select the unit of measure.')
+	#	unit = models.ForeignKey(Unit, null=False, related_name='+', db_column='unt_unit_id',
+	#							 help_text='Please select the unit of measure.')
+	rtt_units = models.CharField('Amount units',
+								 choices=Units, null=False, max_length=20, default=Units[0][0])
 	rtt_notes = models.TextField('Tissue Notes', null=True, blank=True,
 								 help_text='Use this field to add any requirements that are not covered by the above form. You may also enter any comments you have on this particular tissue request.')
 	monkeys = models.ManyToManyField(Monkey, db_table='mtr_monkeys_to_tissue_requests',
 									 verbose_name='Requested Monkeys',
 									 help_text='The monkeys this tissue is requested from.')
-	accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_accepted_monkeys_to_tissue_requests',
+	accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_accepted_monkeys_to_tissue_requests', blank=True, null=True,
 											  verbose_name='Accepted Monkeys',
 											  related_name='accepted_tissue_request_set',
 											  help_text='The accepted monkeys for this request.')
 
+	previously_accepted_monkeys = models.ManyToManyField(Monkey, db_table='atr_previously_accepted_monkeys_to_tissue_requests', blank=True, null=True,
+														 verbose_name='Previously Accepted Monkeys',
+														 related_name='previously_accepted_tissue_request_set',
+														 help_text='The accepted monkeys for the original of this request (applicable only if created as revised).')
+
+	def is_partially_accepted(self):
+		return self.accepted_monkeys.count() != 0
+
+	def is_fully_accepted(self):
+		return self.monkeys.count() == self.accepted_monkeys.count()
+
 	def __unicode__(self):
-		return self.tissue_type.tst_tissue_name + ': ' + self.rtt_fix_type
+		return str(self.req_request.user) + ":  " + self.tissue_type.tst_tissue_name + ' - ' + self.rtt_fix_type
 
 	def get_tissue(self):
 		return self.tissue_type
@@ -1060,13 +1386,22 @@ class TissueRequest(models.Model):
 		return self.rtt_fix_type
 
 	def get_amount(self):
-		return str(self.rtt_amount) + ' ' + self.unit.unt_unit_name
+		return str(self.rtt_amount) + ' ' + self.get_rtt_units_display()
+
+	def get_latex_amount(self):
+		return str(self.rtt_amount) + ' ' + LatexUnits[self.rtt_units]
 
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
 			['Fix', self.rtt_fix_type],
 			['Amount', self.get_amount()],
-			['Estimated Cost', "$%.2f"%self.get_estimated_cost()]]
+			['Estimated Cost', "$%.2f" % self.get_estimated_cost()]]
+
+	def get_latex_data(self):
+		return [['Tissue Type', self.tissue_type],
+			['Fix', self.rtt_fix_type],
+			['Amount', self.get_latex_amount()],
+			['Estimated Cost', "$%.2f" % self.get_estimated_cost()]]
 
 	def get_type_url(self):
 		return self.tissue_type.category
@@ -1092,8 +1427,8 @@ class TissueRequest(models.Model):
 		return self.monkeys.exclude(mky_id__in=self.accepted_monkeys.all())
 
 	def get_estimated_cost(self):
-		brain=250		#  Base brain tissue cost
-		peripheral=100	#  Base peripheral tissue cost
+		brain = 250		#  Base brain tissue cost
+		peripheral = 100	#  Base peripheral tissue cost
 		special = 100	#  Cost for special fixation
 
 		monkey_cost = 0
@@ -1104,9 +1439,12 @@ class TissueRequest(models.Model):
 		elif "Peripheral" in self.tissue_type.category.cat_name:
 			monkey_cost += peripheral
 		else:
-			monkey_cost += (brain + peripheral)*.5
+			monkey_cost += (brain + peripheral) * .5
 
-		estimated_cost = monkey_cost * self.monkeys.count()
+		if self.accepted_monkeys.all():
+			estimated_cost = monkey_cost * self.accepted_monkeys.count()
+		else:
+			estimated_cost = monkey_cost * self.monkeys.count()
 		return estimated_cost
 
 	def get_tiv_collisions(self):
@@ -1123,6 +1461,46 @@ class TissueRequest(models.Model):
 		other_rtts = TissueRequest.objects.exclude(pk=self.pk)
 		rtt_collisions = other_rtts.filter(tissue_type=self.tissue_type, monkeys__in=self.monkeys.all())
 		return rtt_collisions
+
+	def get_inventory_verification_status(self):
+		tivs = TissueInventoryVerification.objects.filter(tissue_request=self)
+		for tiv in tivs:
+			if tiv.tiv_inventory == "Unverified":
+				return VerificationStatus.Incomplete
+		return VerificationStatus.Complete
+
+	def create_revised_duplicate(self, revised_request):
+		duplicate = TissueRequest() # I don't know why this worked for TissueRequest but not Request
+		# this does not capture M2M fields or other models with FK refs to TissueRequest
+		for field in self._meta.fields:
+			if field.name != 'rtt_tissue_request_id': # do not duplicate the primary key
+				duplicate.__setattr__(field.name, self.__getattribute__(field.name))
+
+
+
+		# Update the request FK with the new revised request
+		duplicate.req_request = revised_request
+		# And duplicate the requested and accepted monkeys
+		duplicate.save() # Must have a PK before doing m2m stuff
+
+		for a in self.accepted_monkeys.all():
+			duplicate.previously_accepted_monkeys.add(a)
+		duplicate.accepted_monkeys.clear()
+		#		duplicate.accepted_monkeys = self.accepted_monkeys.all()
+		if self.is_partially_accepted():
+			monk = list()
+			for m in self.monkeys.all():
+				if m not in self.accepted_monkeys.all():
+					monk.append(m)
+			duplicate.monkeys = monk
+		else:
+			duplicate.monkeys = self.monkeys.all()
+
+		duplicate.save()
+		return duplicate
+
+	def cart_display(self):
+		return self.tissue_type.tst_tissue_name
 
 	def save(self, *args, **kwargs):
 		super(TissueRequest, self).save(*args, **kwargs)
@@ -1164,6 +1542,10 @@ class Review(models.Model):
 			review=self.rvs_review_id))
 
 	class Meta:
+		permissions = (
+			('can_receive_pending_reviews_info', 'Can receive pending reviews info by e-mail'),
+			('view_review_overview', 'Can view review overview and history overview')
+			)
 		db_table = 'rvs_reviews'
 		unique_together = ('user', 'req_request')
 
@@ -1181,9 +1563,9 @@ class TissueRequestReview(models.Model):
 															(8, 8), (9, 9), (10, 10),),
 															help_text='Enter a number between 0 and 10, with 0 being no merit and 10 being the highest merit.')
 	vtr_quantity = models.CharField('Quantity', null=True, blank=False, max_length=12,
-													choices=(
-													("Too little", "Too little"), ("Appropriate", "Appropriate"), ("Too much", "Too much"),),
-													help_text='Enter a number between 0 and 10, with 0 being the too little, 10 being too much, and 5 being an appropriate amount.')
+									choices=(
+									("Too little", "Too little"), ("Appropriate", "Appropriate"), ("Too much", "Too much"),),
+									help_text='Select a choice which best describes the amount of tissue requested.')
 	vtr_priority = models.PositiveSmallIntegerField('Priority', null=True, blank=False,
 													choices=(
 													(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7),
@@ -1215,7 +1597,7 @@ class TissueRequestReview(models.Model):
 				return 5
 		else:
 			return self.vtr_quantity
-	
+
 	def get_priority(self):
 		return self.vtr_priority
 
@@ -1268,7 +1650,8 @@ class TissueSample(models.Model):
 								   null=True, blank=True,
 								   help_text='Any extras details about this tissue sample.')
 	tss_sample_quantity = models.FloatField('Sample Quantity', null=True, default=0)
-	units = models.ForeignKey(Unit, null=False, default=Unit.objects.get(unt_unit_name="whole").pk)
+	tss_units = models.CharField('Quantity units',
+								 choices=Units, null=False, max_length=20, default=Units[3][0])
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='+', db_column='usr_usr_id', editable=False, null=True)
 
@@ -1278,13 +1661,33 @@ class TissueSample(models.Model):
 
 	def __unicode__(self):
 		return str(self.monkey) + ' ' + str(self.tissue_type) + ' ' + self.tss_freezer\
-			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.units.__unicode__() + ')'
+			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.get_tss_units_display() + ')'
 
 	def get_location(self):
-		return self.tss_freezer + ': ' + self.tss_location
+		if self.monkey.cohort.coh_upcoming:
+			return "Upcoming Cohort"
+
+		if  self.tss_freezer and self.tss_location:
+			location = "%s : %s" % (self.tss_freezer, self.tss_location)
+		elif  self.tss_freezer:
+			location =  self.tss_freezer
+		else:
+			location = 'unknown'
+		return location
 
 	def get_quantity(self):
 		return self.tss_sample_quantity
+
+	def get_quantity_display(self):
+		if self.monkey.cohort.coh_upcoming:
+			return "Upcoming Cohort"
+
+		samp_q = "%s %s" % (str(self.tss_sample_quantity), self.tss_units)
+		if self.tss_sample_quantity is 0:
+			samp_q = '0'
+		if self.tss_sample_quantity is None:
+			samp_q = 'unknown'
+		return samp_q
 
 	def save(self, *args, **kwargs):
 		if self.monkey.mky_real_id == 0:
@@ -1301,26 +1704,44 @@ class TissueSample(models.Model):
 
 class Publication(models.Model):
 	id = models.AutoField(primary_key=True)
-	authors = models.TextField('Authors', null=True)
-	title = models.CharField('Title', max_length=200, null=True)
-	journal = models.CharField('Journal', max_length=200, null=True)
+	authors = models.TextField('Authors', null=True, blank=True)
+	title = models.CharField('Title', max_length=200, null=True, blank=True)
+	journal = models.CharField('Journal', max_length=200, null=True, blank=True)
 	cohorts = models.ManyToManyField(Cohort, db_table='ptc_publications_to_cohorts',
 									 verbose_name='Cohorts',
 									 related_name='publication_set',
 									 help_text='The cohorts involved in this publication.',
-									 null=True)
-	published_year = models.CharField('Year Published', max_length=10, null=True)
-	published_month = models.CharField('Month Published', max_length=10, null=True)
-	issue = models.CharField('Issue Number', max_length=20, null=True)
-	volume = models.CharField('Volume', max_length=20, null=True)
-	pmid = models.IntegerField('PubMed ID', unique=True, null=True)
-	pmcid = models.CharField('PubMed Central ID', max_length=20, null=True)
-	isbn = models.IntegerField('ISBN', null=True)
-	abstract = models.TextField('Abstract', null=True)
-	keywords = models.TextField('Keywords', null=True)
+									 null=True, blank=True)
+	published_year = models.CharField('Year Published', max_length=10, null=True, blank=True)
+	published_month = models.CharField('Month Published', max_length=10, null=True, blank=True)
+	issue = models.CharField('Issue Number', max_length=20, null=True, blank=True)
+	volume = models.CharField('Volume', max_length=20, null=True, blank=True)
+	pmid = models.IntegerField('PubMed ID', unique=True, null=True, blank=True)
+	pmcid = models.CharField('PubMed Central ID', max_length=20, null=True, blank=True)
+	isbn = models.IntegerField('ISBN', null=True, blank=True)
+	abstract = models.TextField('Abstract', null=True, blank=True)
+	keywords = models.TextField('Keywords', null=True, blank=True)
+
+	pub_date = models.DateField("Publication Date", null=True, blank=True)
+
+	def _populate_pub_date(self):
+		if not self.pub_date:
+			if self.published_month and self.published_year:
+				date_string = "%s %s" % (self.published_month, self.published_year)
+				pub_date = datetime.strptime(date_string, "%b %Y")
+			elif not self.published_month and self.published_year:
+				date_string = self.published_year
+				pub_date = datetime.strptime(date_string, "%Y")
+			else:
+				pub_date = None
+			self.pub_date = pub_date
+			self.save()
 
 	def __unicode__(self):
-		return str(self.pmid)
+		if self.title:
+			return str(self.title.encode('ascii', 'ignore'))
+		else:
+			return str(self.pmid)
 
 	class Meta:
 		db_table = 'pub_publications'
@@ -1342,13 +1763,13 @@ class TissueInventoryVerification(models.Model):
 	tiv_id = models.AutoField(primary_key=True)
 
 	tissue_request = models.ForeignKey(TissueRequest, null=True, related_name='tissue_verification_set',
-									   db_column='rtt_tissue_request_id',on_delete=models.SET_NULL)
+									   db_column='rtt_tissue_request_id', on_delete=models.SET_NULL)
 	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_verification_set', db_column='tst_type_id')
 	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')
 	#inventory = models.ForeignKey(InventoryStatus, blank=False, null=False, db_column='inv_id', default=InventoryStatus.objects.get(inv_status="Unverified").pk)
 	tiv_inventory = models.CharField('Is the tissue sample quantity sufficient to fill the indicated request?',
-								 choices=InventoryStatus, null=False, max_length=100, default=InventoryStatus[0][0])
+									 choices=InventoryStatus, null=False, max_length=100, default=InventoryStatus[0][0])
 	tiv_notes = models.TextField('Verification Notes', blank=True,
 								 help_text='Used to articulate database inconsistencies.')
 	tiv_date_modified = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
@@ -1379,11 +1800,11 @@ class TissueInventoryVerification(models.Model):
 		# This will set the tissue_sample field with several database consistency checks
 		if self.tissue_sample is None:
 			try:
-				units = Unit.objects.get(unt_unit_name="whole")
+				units = Units[3][0]
 				self.tissue_sample, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=self.tissue_type,
 																				defaults={'tss_freezer': "No Previous Record",
 																						  'tss_location': "No Previous Record",
-																						  'units': units})
+																						  'tss_units': units})
 				# All tissue samples should have been previously created.
 				# Currently, I don't think a TIV can be created (thru the website) without a tissue sample record already existing
 				if is_new:
@@ -1391,11 +1812,13 @@ class TissueInventoryVerification(models.Model):
 			# There should only be 1 tissue sample for each monkey:tissue_type.
 			# Possibly should make them unique-together
 			except TissueSample.MultipleObjectsReturned:
-				notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin. Do not edit, changes will not be saved." % str(datetime.now().date())
+				notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin. Do not edit, changes will not be saved." % str(
+					datetime.now().date())
 		# tissue_sample should ALWAYS == monkey:tissue_type
 		elif self.tissue_sample.monkey != self.monkey\
 		or   self.tissue_sample.tissue_type != self.tissue_type:
-			notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(datetime.now().date())
+			notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(
+				datetime.now().date())
 
 		if 'Do not edit' in notes:
 			# this doesnt save any other changes
@@ -1409,8 +1832,97 @@ class TissueInventoryVerification(models.Model):
 
 	class Meta:
 		db_table = 'tiv_tissue_verification'
+		permissions = (
+		('can_verify_tissues', 'Can verify tissues'),
+		)
 
-		
+
+class Metabolite(models.Model):
+	met_id = models.AutoField(primary_key=True)
+	met_biochemical = models.CharField(null=False, max_length=200)
+	met_super_pathway = models.CharField(null=False, max_length=200)
+	met_sub_pathway = models.CharField(null=False, max_length=200)
+	met_comp_id = models.IntegerField()
+	met_platform = models.CharField(null=False, max_length=200)
+
+	met_ri = models.FloatField()
+	met_mass = models.FloatField()
+
+	met_cas = models.CharField(null=False, blank=True, max_length=200)
+	met_kegg = models.CharField(null=False, blank=True, max_length=200, help_text='http://www.genome.jp/dbget-bin/www_bget?cpd+<value>')
+	met_hmdb_id = models.CharField(null=False, blank=True, max_length=200, help_text='http://www.hmdb.ca/metabolites/<value>')
+
+	def __unicode__(self):
+		return str(self.met_biochemical)
+
+	class Meta:
+		db_table = 'met_metabolite'
+
+
+class MonkeyMetabolite(models.Model):
+	mmb_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='metabolite_set', db_column='mky_id', editable=False)
+	metabolite = models.ForeignKey(Metabolite, null=False, related_name='monkey_set', db_column='met_id', editable=False)
+	mmb_sample_name = models.CharField(null=False, max_length=50)
+	mmb_sample_id = models.IntegerField()
+	mmb_client_identifier = models.CharField("1-mky_real_id", null=False, max_length=50)
+	mmb_group = models.IntegerField()
+	mmb_date = models.DateTimeField(editable=False)
+	mmb_treatment = models.CharField(null=False, max_length=50)
+	mmb_subject_id = models.IntegerField("mky_real_id")
+	mmb_group_id = models.CharField(null=False, max_length=50)
+	mmb_value = models.FloatField(null=True)
+	mmb_is_normalized = models.BooleanField(null=False, blank=False, default=False)
+
+	def __unicode__(self):
+		return "%s | %s | %s" % (str(self.monkey), str(self.metabolite), str(self.mmb_date))
+
+	class Meta:
+		db_table = 'mmb_monkey_metabolite'
+
+
+class Protein(models.Model):
+	pro_id = models.AutoField(primary_key=True)
+	pro_name = models.CharField('Protein Name', null=False, blank=False, max_length=250)
+	pro_abbrev = models.CharField('Protein Abbreviation', null=False, blank=False, max_length=250)
+	pro_units = models.CharField('Concentration Units', choices=ProteinUnits, null=False, max_length=20)
+
+	def __unicode__(self):
+		name = self.pro_name
+		if len(name) >= 32:
+			name = self.pro_abbrev
+		return "%s" % name
+
+	class Meta:
+		db_table = 'pro_protein'
+
+
+class MonkeyProtein(models.Model):
+	mpn_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='protein_set', db_column='mky_id', editable=False)
+	protein = models.ForeignKey(Protein, null=False, related_name='monkey_set', db_column='pro_id', editable=False)
+	mpn_date = models.DateTimeField("Date Collected", editable=False)
+	mpn_value = models.FloatField(null=True)
+	mpn_stdev = models.FloatField("Standard Deviation from Cohort mean", null=True)
+
+	def __unicode__(self):
+		return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
+
+	def populate_stdev(self, recalculate=False):
+		if self.mpn_stdev is None or recalculate:
+			cohort_proteins = MonkeyProtein.objects.filter(protein=self.protein, mpn_date=self.mpn_date, monkey__in=self.monkey.cohort.monkey_set.all().exclude(mky_id=self.monkey.pk))
+			cp_values = numpy.array(cohort_proteins.values_list('mpn_value', flat=True))
+			stdev = cp_values.std()
+			mean = cp_values.mean()
+			diff = self.mpn_value - mean
+			self.mpn_stdev = diff / stdev
+			self.save()
+
+
+	class Meta:
+		db_table = 'mpn_monkey_protein'
+
+
 # put any signal callbacks down here after the model declarations
 
 # this is a method that should be called after a request is saved.
@@ -1424,21 +1936,26 @@ def request_post_save(**kwargs):
 	# get the Request instance
 	req_request = kwargs['instance']
 	# check if there was a change in the status
-	if req_request._previous_status_id is None or\
-	   req_request.request_status_id == req_request._previous_status_id:
+	if req_request._previous_status is None or\
+	   req_request.req_status == req_request._previous_status:
 		# if there was no change, don't do anything
 		return
 
-	current_status = RequestStatus.objects.get(rqs_status_id=req_request.request_status_id)
-	previous_status = RequestStatus.objects.get(rqs_status_id=req_request._previous_status_id)
+	current_status = req_request.req_status
+	previous_status = req_request._previous_status
 	tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
 
 	# For Submitted Requests
-	if previous_status == RequestStatus.objects.get(rqs_status_name='Cart')\
-	and current_status == RequestStatus.objects.get(rqs_status_name='Submitted'):
+	if (previous_status == RequestStatus.Cart or previous_status == RequestStatus.Revised)\
+	and current_status == RequestStatus.Submitted:
+		from utils.regular_tasks.send_new_request_info import send_new_request_info
+		# Send email notification the request was submitted
+		send_new_request_info(req_request)
 		# start by finding all members of the group 'Committee'
-		committee_group = Group.objects.get(name='Committee')
-		committee_members = committee_group.user_set.all()
+		#committee_group = Group.objects.get(name='Committee')
+		#committee_members = committee_group.user_set.all()
+		#		rather use users that has permission to modify reviews
+		committee_members = Account.objects.users_with_perm('change_review')
 
 		# for each committee member, create a new review for the request
 		for user in committee_members:
@@ -1459,44 +1976,52 @@ def request_post_save(**kwargs):
 				tv.save()
 
 	# For Accepted and Partially accepted Requests
-	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
-	and "Accepted" in current_status.rqs_status_name:
+	if previous_status == RequestStatus.Submitted\
+	and (current_status == RequestStatus.Accepted or current_status == RequestStatus.Partially):
 		for tissue_request in tissue_requests:
-			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
+			tivs = TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
 			for tiv in tivs:
 				# Reset any colliding TIVs of accepted monkeys to 'Unverified'
 				# This makes a lab tech re-verify the freezer for other submitted orders
 				if tiv.monkey in tissue_request.accepted_monkeys.all():
 					tiv.invalidate_collisions()
-				# Disassociate the tissue request. This leaves unverified TIVs to have their
-				# inventory checked and deletes verified TIVs
-				tiv.tissue_request=None
-				tiv.save()
+				tiv.delete()
 
 	# For Rejected Requests
-	if previous_status == RequestStatus.objects.get(rqs_status_name='Submitted')\
-	and current_status == RequestStatus.objects.get(rqs_status_name='Rejected'):
+	if previous_status == RequestStatus.Submitted\
+	and current_status == RequestStatus.Rejected:
 		for tissue_request in tissue_requests:
-			# Disassociate the tissue request. This leaves unverified TIVs to have their
-			# inventory checked and deletes verified TIVs
-			tivs =  TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
-			for tiv in tivs:
-				tiv.tissue_request=None
-				tiv.save()
+			# Delete the rejected tissues' TIVs
+			TissueInventoryVerification.objects.filter(tissue_request=tissue_request).delete()
 
 	# For Shipped Requests
-	if "Accepted" in previous_status.rqs_status_name \
-	and current_status == RequestStatus.objects.get(rqs_status_name='Shipped'):
+	if (previous_status == RequestStatus.Accepted or previous_status == RequestStatus.Partially)\
+	and current_status == RequestStatus.Shipped:
 		# Create new TIVs to update MATRR inventory after a tissue has shipped.
 		for tissue_request in tissue_requests:
-			for monkey in tissue_request.accepted_monkeys.all():
+			for monkey in tissue_request.accepted_monkeys.all().exclude(mky_real_id=0): # dont create tivs for assay monkeys after shipment
 				tv = TissueInventoryVerification.objects.create(tissue_type=tissue_request.tissue_type,
 																monkey=monkey,
 																tissue_request=None)
 				tv.save()
+		if not settings.DEVELOPMENT:
+			perm = Permission.objects.get(codename='po_manifest_email')
+			to_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
+			filename = 'manifest-%s-%s.pdf' % (str(req_request.user), str(req_request.pk))
+			outfile = open('/tmp/%s' % filename, 'wb')
+			subject = "Shipping Manifest for MATRR request %s." % str(req_request.pk)
+			body = "A MATRR request has been shipped.  Attached is the shipping manifest for this request, with the customer's Purchase Order number.  Please contact a MATRR admin if there are any issues or missing information."
+			email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, to_list)
 
-	req_request._previous_status_id = None
+			process_latex('latex/shipping_manifest.tex', {'req_request': req_request,
+														  'account': req_request.user.account,
+														  'time': datetime.today(),
+														  }, outfile=outfile)
+			outfile.close()
+			email.attach_file(outfile.name)
+			email.send()
 
+	req_request._previous_status = None
 
 # This is a method to check to see if a user_id exists that does not have
 # an account attached to it.
@@ -1507,4 +2032,45 @@ def user_post_save(**kwargs):
 	if not Account.objects.filter(user=user).count():
 		account = Account(user=user)
 		account.save()
+
+# This will delete MATRRImage's FileField's files from media before deleting the database entry.
+# Helps keep the media folder pretty.
+@receiver(pre_delete, sender=MonkeyImage)
+def monkeyimage_pre_delete(**kwargs):
+	mig = kwargs['instance']
+	if mig.image and os.path.exists(mig.image.path):
+		os.remove(mig.image.path)
+	if mig.thumbnail and os.path.exists(mig.thumbnail.path):
+		os.remove(mig.thumbnail.path)
+	if mig.html_fragment and os.path.exists(mig.html_fragment.path):
+		os.remove(mig.html_fragment.path)
+
+# This will delete MATRRImage's FileField's files from media before deleting the database entry.
+# Helps keep the media folder pretty.
+@receiver(pre_delete, sender=CohortImage)
+def cohortimage_pre_delete(**kwargs):
+	cig = kwargs['instance']
+	if cig.image and os.path.exists(cig.image.path):
+		os.remove(cig.image.path)
+	if cig.thumbnail and os.path.exists(cig.thumbnail.path):
+		os.remove(cig.thumbnail.path)
+	if cig.html_fragment and os.path.exists(cig.html_fragment.path):
+		os.remove(cig.html_fragment.path)
+
+@receiver(pre_delete, sender=DataFile)
+def datafile_pre_delete(**kwargs):
+	dat = kwargs['instance']
+	if dat.dat_data_file and os.path.exists(dat.dat_data_file.path):
+		os.remove(dat.dat_data_file.path)
+
+@receiver(post_save, sender=TissueInventoryVerification)
+def tiv_post_save(**kwargs):
+	# see if all the TIVs for the request have been verified
+	tiv = kwargs['instance']
+	if tiv.tiv_inventory != "Unverified":
+		req_request = tiv.tissue_request.req_request
+		verification_status = req_request.get_inventory_verification_status()
+		if verification_status == VerificationStatus.Complete:
+			from utils.regular_tasks.send_verification_complete_notification import send_verification_complete_notification
+			send_verification_complete_notification(req_request)
 

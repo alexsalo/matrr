@@ -1,5 +1,147 @@
-{% extends "base.html" %}
+{% spaceless %}
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+			"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
-{% block content %}
-  {% block title %}Whoops.{% endblock %}
-{% endblock %}
+	<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="chrome=1">	
+<!--		<meta http-equiv='Content-Type' content='text/html; charset=utf-8'/> -->
+		<link rel="stylesheet" type="text/css" href="/static/css/layout.css"/>
+		<link rel="stylesheet" type="text/css" href="/static/css/style.css"/>
+		{% if plot_gallery %}
+			<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+			
+			<script type="text/javascript" src="/static/js/jquery.colorbox.js"></script>
+			<script type="text/javascript" src="/static/js/plot_gallery.js"></script>
+			<link rel="stylesheet" type="text/css" href="/static/css/colorbox.css"/>
+		{% endif %}
+
+
+		<script type="text/javascript" src="/static/js/jquery-ui-1.8.11.custom.min.js"></script>
+		<script type="text/javascript" src="/static/js/main.js"></script>
+		{% block extra_js %}{% endblock %}
+
+		<link rel="shortcut icon" href="/static/images/matrr_favicon.ico"/>
+		<title></title>
+
+	</head>
+
+	<body>
+	<!-- Header div -->
+	<div class='header'>
+		<div class='header-content clearfix'>
+			<div class='left'>
+				<a href='/'><img src="/static/images/MATRR_logo.png" alt="MATRR logo"/></a>
+			</div>
+			<div class='right'>
+			</div>
+		</div>
+	</div>
+	<!-- Menu div -->
+	<div class='navigation clearfix'>
+		<div class='navigation-content'>
+			<div class="nav clearfix">
+				{% block nav-list %}
+					<ul>
+						<li class='top'><a href="/">Home</a></li>
+
+					</ul>
+				
+					<ul>
+						<li class='top'>
+							<a href='{% url search %}'>Search</a>
+						</li>
+					</ul>
+				{% endblock %}
+			</div>
+
+		</div>
+	</div>
+	<!-- Body div -->
+	<div class='page-content clearfix'>
+
+
+		<!-- Sidebar div -->
+		<div class='sidebar clearfix'>
+			{% block sidebar %}
+				<div class='sidebar-block'>
+					<div class='headline'>
+						Quick Links
+					</div>
+					<a href="{% url upcoming %}">View Upcoming Cohorts</a><br/>
+					<a href="{% url available %}">View Archival Cohorts</a><br/>
+					<a href="{% url cohorts %}">View All Cohorts</a><br/>
+					{% if user_is_member_of_tech_user %}
+					<a href="{% url assay %}">Request tissues for Assay Development</a><br/>
+					{% endif %}
+					<a href="{% url mta-upload %}">Upload an MTA</a><br/>
+					<a href="{% url account-view %}">Submit Research Updates</a><br/>
+					<a href="{% url publications %}">View Publications</a>
+				</div>
+
+				<div class='sidebar-block'>
+					<div class='headline'>
+						FAQ
+					</div>
+					<a href="/public-faq/">Troubleshooting</a><br>
+					{% if user_is_verified %}
+					<a href="/faq/#SubmitRequest">Submitting requests</a><br/>
+					<a href="/faq/">more...</a><br/>					
+					{% endif %}
+				</div>
+
+				<div class='sidebar-block'>
+					<div class='headline'>
+						Info
+					</div>
+					<a href="/benefits">Account Benefits</a><br/>
+					{% if user_is_verified %}
+					<a href="/fee">Tissue Fee Schedule</a><br/>
+					{% endif %}
+					<a href="/contact_us">Contact Us</a>
+				</div>
+
+				{% block warning %}{% endblock %}
+
+			{% endblock %}
+		</div>
+
+		<!-- Content div -->
+		<div class='content clearfix'>
+
+		<!-- Message div -->
+		<div class='messages clearfix'>
+			{% if unsupported_browser %}
+				<div class="warning">Your browser is not supported by MATRR. <a href="/browser/">Click here for details.</a></div>
+			{% endif %}
+			{% if messages %}
+				{% for message in messages %}
+					<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+				{% endfor %}
+			{% endif %}
+		</div>
+			Server Error: 500
+			<!-- End of content div -->
+		</div>
+
+
+	</div>
+	<!-- Footer div -->
+	<div class='footer clearfix'>
+		{% block footer %}
+
+			<div class='footer-line'></div>
+			<div class='footer clearfix'>
+				The Monkey Alcohol and Tissue Research Resource (MATRR) is supported by <a href="http://www.niaaa.nih.gov">NIAAA</a> as an R24. This site is maintained by <a
+					href="mailto:erich_baker@baylor.edu">Erich Baker</a>. For applicable policies see our <a href="/privacy">privacy</a>, <a href="/data">data sharing</a>, and <a
+					href="/usage">usage</a> documents.
+			</div>
+
+		{% endblock %}
+	</div>
+
+	</body>
+
+	</html>
+
+{% endspaceless %}

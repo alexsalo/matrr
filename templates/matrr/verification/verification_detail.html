@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Tissue Inventory Verification{% endblock %}
+
+
+{% block content %}
+
+	<div class='large-headline'>Tissue Inventory Verification</div>
+	<div class='clearfix'>
+		<a href="{% if request.META.HTTP_REFERER %}{{ request.META.HTTP_REFERER }}{% else %}{% url verification-list req_id %}{% endif %}">
+
+			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+			&nbsp;Verification list for request {{ req_id }}</a>
+		
+		{% if tivform %}
+			<form method="post" action="">
+				{% csrf_token %}
+				<table style="width:70%;margin: auto">
+					<tr></tr>
+					{# hack to remove the color and add a tiny space between this table and the titleblock #}
+					<tr>
+						<td align="center" class='verification_legend unverified'>Unverified</td>
+						<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
+						<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
+					</tr>
+					<tr></tr>
+					{# hack to add a tiny space between this table and the formset #}
+				</table>
+				<center>
+					{{ tivform.primarykey }} {# Important! #}
+					{% if tivform.initial.inventory == "Unverified" %}
+						<div class='verification_border unverified'>
+					{% endif %}
+					{% if tivform.initial.inventory == "Sufficient" %}
+						<div class="verification_border sufficient">
+					{% endif %}
+					{% if tivform.initial.inventory == "Insufficient" %}
+						<div class="verification_border insufficient">
+					{% endif %}
+				{{ tivform.non_field_errors }}
+				{% if tivform.initial.notes %}
+					<div style="background-color: orange;">
+						{{ tivform.initial.notes }}
+					</div>
+				{% endif %}
+				{% if tivform.initial.req_request %}
+					<div class="messages">
+					<div class="warning">
+							<b>Warning:</b> This tissue has been accepted, but not shipped, for another request.  Please take into account the accepted request before verifying this tissue.<br>
+							{% load review_tags %}
+							{% colliding_accepted_requests tivform.initial.req_request tivform.initial.tissue tivform.initial.monkey %}
+					</div>
+					</div>
+				{% endif %}
+
+				<center>
+					<table class='verification_table'>
+						<tr>
+							<th>Monkey: {{ tivform.initial.monkey }}</th>
+							<th>Tissue: {{ tivform.initial.tissue }}</th>
+						</tr>
+						<tr>
+							<td>
+								<label>Freezer: </label>{{ tivform.freezer }}<br>
+								<label>Location:</label>{{ tivform.location }}<br>
+								<label>Quantity:</label>{{ tivform.quantity }}<br>
+								<label>Units:</label>{{ tivform.units }}<br>
+							</td>
+							<td>
+								<label>Tissue Details:</label><br>{{ tivform.details }}<br>
+								Freezer inventory is {{ tivform.inventory }} for request: {{ tivform.initial.amount }}
+
+							</td>
+						</tr>
+					</table>
+					<br>
+					</div>
+				</center>
+				<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Update' style='width:100px;float: left'/>
+			</form>
+		{% endif %}
+	</div>
+
+	<br>
+
+
+{% endblock %}

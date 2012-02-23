@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class='large-headline'>Build Your Own MATRR Graph</div><br>
+	<div class='clearfix'>
+		{% if date_form.non_field_errors %}
+			<div class="messages">
+				<div class="error">
+					{% for error in date_form.non_field_errors %}
+						{{ error }}
+					{% endfor %}
+				</div>
+			</div>
+		{% endif %}
+		{% if subject_form.non_field_errors %}
+			<div class="messages">
+				<div class="error">
+					{% for error in subject_form.non_field_errors %}
+						{{ error }}
+					{% endfor %}
+				</div>
+			</div>
+		{% endif %}
+
+		<form action='' method='post'>
+			{% csrf_token %}
+			<table class="left">
+				{% for field in subject_form %}
+					{% if field.errors %}
+						<tr>
+							<td align=right>Error:</td>
+							<td class='field-error' colspan='3'>{{ field.errors }}</td>
+						</tr>
+					{% endif %}
+					<tr>
+						<td>{{ field.label }}</td>
+						<td>{{ field }}</td>
+					</tr>
+				{% endfor %}
+				{% for field in date_form %}
+					{% if field.errors %}
+						<tr>
+							<td align=right>Error:</td>
+							<td class='field-error' colspan='3'>{{ field.errors }}</td>
+						</tr>
+					{% endif %}
+					<tr>
+						<td>{{ field.label }}</td>
+						<td>{{ field }}</td>
+					</tr>
+				{% endfor %}
+				<tr>
+					<td><input type='submit' name='submit' class='blockLinkCheckoutButton' value='Build Graph' style='float: right;'/></td>
+					<td><input type='submit' name='vip-graphs' class='blockLinkDeleteButton' value='Choose new graph' style='float: right;'/></td>
+				</tr>
+			</table>
+		</form>
+		{% if date_ranges %}
+		<table class='right'>
+			<tr>
+				<th>Subject</th>
+				<th>Data Available From</th>
+				<th>Data Available To</th>
+			</tr>
+			{% for subject, dates in date_ranges.items %}
+			<tr>
+				<td>{{ subject }}</td>
+				<td>{{ dates.0|date:"F d, Y" }}</td>
+				<td>{{ dates.1|date:"F d, Y" }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+		{% endif %}
+	</div>
+
+	{% if matrr_image %}
+		<div class='clearfix'>
+			{% include  matrr_image.frag %}
+		</div>
+	{% endif %}
+
+
+{% endblock %}

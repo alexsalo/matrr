@@ -1,3 +1,4 @@
+#encoding=utf-8
 from subprocess import call, PIPE
 from os import remove
 from os.path import dirname
@@ -36,8 +37,8 @@ def process_latex(template, context={}, type='pdf', outfile=None):
 			  names['dvi'], '-o', names['png']],
 											   cwd=dirname(base), stdout=PIPE, stderr=PIPE)
 
-	remove(names['log'])
-	remove(names['aux'])
+#	remove(names['log'])
+#	remove(names['aux'])
 
 	o = file(output).read()
 	remove(output)
@@ -61,4 +62,5 @@ def pdflatex(file, type='pdf'):
 							'-output-format', type,
 							#'-fmt', "/web/www/pdflatex/pdflatex",
 							file],
-			  cwd=dirname(file), stdout=PIPE, stderr=PIPE)
+#			  cwd=dirname(file), stdout=PIPE, stderr=PIPE)
+			  cwd=dirname(file))

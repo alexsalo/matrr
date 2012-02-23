@@ -1,117 +1,142 @@
 {% extends 'base.html' %}
 
 {% block extra_js %}
-{{ block.super }}
-<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
+	{{ block.super }}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
 {% endblock %}
 
 {% block content %}
-  <div class="headline">{% block title %}Building Shipment for {{ req_request }}{% endblock %}</div>
-  <div class='clearfix'><div class='left'>
-    <a href="{% url shipping-overview %}"><img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>&nbsp;Shipping Overview</a>
-  </div></div>
+	<div class="headline">{% block title %}Building Shipment for {{ req_request }}{% endblock %}</div>
+	<div class='clearfix'>
+		<div class='left'>
+			<a href="{% url shipping-overview %}"><img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>&nbsp;Shipping Overview</a>
+		</div>
+	</div>
 
-  {# show the request details here #}
-  <div>
-    <table class="overview">
-      <tr>
-        <th>Cohort:</th>
-        <td style='min-width: 100px;'><a href='{% url cohort-details req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></td>
-        <th>Requesting User:</th>
-        <td><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></td>
-      </tr>
-      <tr>
-        <th>Requested On:</th><td>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
-        <th>Referred By:</th><td>{{ req_request.req_referred_by }}</td>
-      </tr>
-      <tr>
-		  <th>Progress Agreement:</th><td>{{ req_request.req_progress_agreement }}</td>
-        <th>Experimental Plan:</th>
-        <td>
-          {% if req_request.req_experimental_plan %}
-            <a href='/{{ MEDIA_URL }}/{{ req_request.req_experimental_plan }}'>{{ req_request.get_plan_name }}</a>
-          {% else %}
-            None
-          {% endif %}
-        </td>
-      </tr>
-	  <tr>
-		  <th>Safety Agreement:</th><td>{{ req_request.req_safety_agreement }}</td>
-	  </tr>
-      <tr>
-        <th>Project Title:</th><td colspan='3'>{{ req_request.req_project_title }}</td>
-      </tr>
-      <tr>
-        <th>Motivation:</th><td colspan='3'>{{ req_request.req_reason }}</td>
-      </tr>
-      <tr>
-        <th>Additional Notes:</th>
-        <td colspan='3'>{% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}</td>
-      </tr>
-      {% with account=req_request.user.account %}
-      <tr>
-        <th>Shipped to:</th>
-        <td>{{ account.act_shipping_name }}</td>
-        <th>MTA:</th>
-        <td>
-          {% if req_request.user.mta_set.count %}
-            The user has submitted at least one MTA.
-          {% else %}
-            The user has not submitted an MTA.
-          {% endif %}
-        </td>
-      </tr>
-      <tr>
-        <th>Address:</th>
-        <td>{{ account.act_address1 }}</td>
-      </tr>
-      {% if account.act_address2 %}
-        <tr>
-        <th></th>
-        <td>{{ account.act_address2 }}</td>
-      </tr>
-      {% endif %}
-      <tr>
-        <th></th><td>{{ account.act_city }}, {{ account.act_state }} {{ account.act_zip }}</td>
-      </tr>
-      <tr>
-        <th>Country:</th>
-        <td>{{ account.act_country }}</td>
-      </tr>
-      <tr>
-        <th>FedEx number:</th>
-        <td>{{ account.act_fedex }}</td>
-      </tr>
-      {% endwith %}
-    </table>
-  </div>
-  {# show the requested tissues here and link to pages where the tissue shipments can be set up #}
-  <div class='headline'>Requested Tissues</div>
-  {% for tissue_request in req_request.get_requested_tissues %}
-    {% if tissue_request.get_accepted %}
-      {% for datum in tissue_request.get_data %}
-        {% if forloop.counter == 1 %}
-          <div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
-          <div style='float:left;'>{% include 'matrr/shipping/item_inventory.html' %}</div>
-        {% else %}
-          <div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
-          <br/>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-    <div class='clearfix'></div>
-  {% endfor %}
-  {# have a button at the print the shipping manifest #}
-  <div class='left'>
-    <a href='{% url manifest req_request.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
-  </div>
-  <div class='right'>
-    {% if req_request.shipment.shp_shipment_date %}
-      <div class='sufficient'>Shipped on: {{ req_request.shipment.shp_shipment_date }}</div>
-    {% else %}
-    <form action='' method='post'>
-      {% csrf_token %}
-      <button type='submit' name='shipped' class="blockLinkCheckoutButton">Ship Order</button>
-    </form>
-    {% endif %}
+	{# show the request details here #}
+	<div>
+		<table class="overview">
+			<tr>
+				<th>Cohort:</th>
+				<td style='min-width: 100px;'><a href='{% url cohort-details req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></td>
+				<th>Requesting User:</th>
+				<td><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></td>
+			</tr>
+			<tr>
+				<th>Requested On:</th>
+				<td>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</td>
+				<th>Referred By:</th>
+				<td>{{ req_request.req_referred_by }}</td>
+			</tr>
+			<tr>
+				<th>Progress Agreement:</th>
+				{% if req_request.req_progress_agreement %}
+					<td>{{ req_request.req_progress_agreement }}</td>
+				{% else %}
+					<td style='background-color: red; color:white'>{{ req_request.req_progress_agreement }}</td>
+				{% endif %}
+
+				<th>Experimental Plan:</th>
+				<td>
+					{% if req_request.req_experimental_plan %}
+						<a href='/{{ MEDIA_URL }}/{{ req_request.req_experimental_plan }}'>{{ req_request.get_plan_name }}</a>
+					{% else %}
+						None
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<th>Safety Agreement:</th>
+				{% if req_request.req_safety_agreement %}
+					<td>{{ req_request.req_safety_agreement }}</td>
+				{% else %}
+					<td style='background-color: red; color:white'>{{ req_request.req_safety_agreement }}</td>
+				{% endif %}
+			</tr>
+			<tr>
+				<th>Project Title:</th>
+				<td colspan='3'>{{ req_request.req_project_title }}</td>
+			</tr>
+			<tr>
+				<th>Motivation:</th>
+				<td colspan='3'>{{ req_request.req_reason }}</td>
+			</tr>
+			<tr>
+				<th>Additional Notes:</th>
+				<td colspan='3'>{% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}</td>
+			</tr>
+			{% with account=req_request.user.account %}
+				<tr>
+					<th>Shipped to:</th>
+					<td>{{ account.act_shipping_name }}</td>
+					<th>MTA:</th>
+					{% if req_request.user.account.has_mta %}
+						<td>The user has a valid MTA</td>
+					{% else %}
+						<td style='background-color: red; color:white'>No Valid MTA</td>
+					{% endif %}
+				</tr>
+				<tr>
+					<th>Address:</th>
+					<td>{{ account.act_address1 }}</td>
+				</tr>
+				{% if account.act_address2 %}
+					<tr>
+						<th></th>
+						<td>{{ account.act_address2 }}</td>
+					</tr>
+				{% endif %}
+				<tr>
+					<th></th>
+					<td>{{ account.act_city }}, {{ account.act_state }} {{ account.act_zip }}</td>
+				</tr>
+				<tr>
+					<th>Country:</th>
+					<td>{{ account.act_country }}</td>
+				</tr>
+				<tr>
+					<th>FedEx number:</th>
+					<td>{{ account.act_fedex }}</td>
+				</tr>
+				<tr>
+					<th>Purchase Order number:</th>
+					{% if req_request.req_purchase_order %}
+						<td>{{ req_request.req_purchase_order }}</td>
+					{% else %}
+						<td style='background-color: red; color:white'>{{ req_request.req_purchase_order }}</td>
+					{% endif %}
+				</tr>
+			{% endwith %}
+		</table>
+	</div>
+	{# show the requested tissues here and link to pages where the tissue shipments can be set up #}
+	<div class='headline'>Requested Tissues</div>
+	{% for tissue_request in req_request.get_requested_tissues %}
+		{% if tissue_request.get_accepted %}
+			{% for datum in tissue_request.get_data %}
+				{% if forloop.counter == 1 %}
+					<div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
+					<div style='float:left; width: 69%'>{% include 'matrr/shipping/item_inventory.html' %}</div>
+				{% else %}
+					<div style="float: right; max-width: 30%; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
+					<br/>
+				{% endif %}
+			{% endfor %}
+		{% endif %}
+		<div class='clearfix'></div>
+	{% endfor %}
+	{# have a button at the print the shipping manifest #}
+	<div class='left'>
+		<a href='{% url manifest req_request.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
+	</div>
+	<div class='right'>
+		{% if req_request.shipment.shp_shipment_date %}
+			<div class='sufficient'>Shipped on: {{ req_request.shipment.shp_shipment_date }}</div>
+		{% else %}
+			<form action='' method='post'>
+				{% csrf_token %}
+				<button type='submit' name='shipped' class="blockLinkCheckoutButton">Ship Order</button>
+			</form>
+		{% endif %}
+	</div>
 {% endblock %}

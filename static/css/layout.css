@@ -87,6 +87,11 @@ div{
   clear: both;
 }
 
+#center,
+.center{
+  margin: auto;
+}
+
 #left,
 .left{
   float: left;
@@ -172,6 +177,14 @@ div{
 	margin: 2% auto;
 }
 .image_container img {
+	max-width:100%;
+	max-height:100%;
+}
+.image_container_nomargin {
+	max-width: 96%;
+	max-height: 96%;
+}
+.image_container_nomargin img {
 	max-width:100%;
 	max-height:100%;
 }

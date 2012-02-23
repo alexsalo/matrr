@@ -652,6 +652,13 @@ table#change-history tbody th {
     min-width: 760px;
     padding: 0;
 }
+#container-dev {
+    position: relative;
+    width: 100%;
+    min-width: 760px;
+    padding: 0;
+	background-color: #11cc11
+}
 
 #content {
     margin: 10px 15px;
