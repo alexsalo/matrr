@@ -2057,6 +2057,12 @@ def cohortimage_pre_delete(**kwargs):
 	if cig.html_fragment and os.path.exists(cig.html_fragment.path):
 		os.remove(cig.html_fragment.path)
 
+@receiver(pre_delete, sender=DataFile)
+def datafile_pre_delete(**kwargs):
+	dat = kwargs['instance']
+	if dat.dat_data_file and os.path.exists(dat.dat_data_file.path):
+		os.remove(dat.dat_data_file.path)
+
 @receiver(post_save, sender=TissueInventoryVerification)
 def tiv_post_save(**kwargs):
 	# see if all the TIVs for the request have been verified
