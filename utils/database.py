@@ -1239,7 +1239,6 @@ def assign_cohort_institutions():
 	cohort.institution = wfu
 	cohort.save()
 
-	## POSSIBLY NOT CORRECT
 	cohort = Cohort.objects.get(coh_cohort_name='INIA Vervet 2')
 	cohort.institution = wfu
 	cohort.save()
