@@ -5,6 +5,7 @@
 \usepackage{fullpage}
 \usepackage{multirow}
 \usepackage{longtable}
+\usepackage{setspace}
 
 \begin{document}
 
@@ -62,9 +63,14 @@ Manifest Created On: {{ time }} }
   \pagebreak[3]
   {% endif %}
 {% endfor %}
-\vspace{0.5in}
+\section*{Cost}
 \noindent \Large{Total Cost:\verb| ${{ req_request.get_total_estimated_cost }}| }
-
+\section*{Safety}
+\begin{spacing}{2}
+We have included in this shipment material describing the potential health hazards related to animal tissues.       \hspace{1.5}
+\nopagebreak
+\line(1,0) {200}
+\end{spacing}
 \end{document}
 
 {% endspaceless %}

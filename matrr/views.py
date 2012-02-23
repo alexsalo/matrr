@@ -1058,13 +1058,13 @@ def request_review_process(request, req_request_id):
 				messages.success(request, "The tissue request has been processed.")
 				# Email subject *must not* contain newlines
 				subject = ''.join(form.cleaned_data['subject'].splitlines())
-				if not settings.DEVELOPMENT:
+				if settings.PRODUCTION:
 					perm = Permission.objects.get(codename='bcc_request_email')
 					bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
 					email = EmailMessage(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
 					if status != RequestStatus.Rejected:
 						outfile = open('/tmp/%s.pdf' % str(req_request.pk), 'wb')
-						process_latex('latex/shipping_manifest.tex', {'req_request': req_request,
+						process_latex('latex/invoice.tex', {'req_request': req_request,
 																	  'account': req_request.user.account,
 																	  'time': datetime.today(),
 																	  }, outfile=outfile)
