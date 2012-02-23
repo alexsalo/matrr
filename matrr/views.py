@@ -509,11 +509,11 @@ def account_info(request):
 
 
 def account_mta(request):
+	account = request.user.account
 	if request.method == 'POST':
 		form = AccountMTAForm(data=request.POST)
 		if form.is_valid():
 			institution = form.cleaned_data['institution'].ins_institution_name
-			account = request.user.account
 			account.act_mta = institution
 			account.save()
 
@@ -524,7 +524,11 @@ def account_mta(request):
 				messages.success(request, 'Account Info Saved')
 				return redirect(reverse('account-view'))
 	else:
-		form = AccountMTAForm()
+		try:
+			institution = Institution.objects.get(ins_institution_name=account.act_mta)
+		except Institution.DoesNotExist:
+			institution = Institution.objects.get(ins_institution_name='Non-UBMTA Institution')
+		form = AccountMTAForm(initial={'institution': institution})
 	return render_to_response('matrr/account/account_mta.html',
 			{'form': form,
 			 'user': request.user
