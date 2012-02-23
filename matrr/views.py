@@ -394,6 +394,30 @@ def mta_upload(request):
 	mta_object = Mta(user=request.user)
 	# make a MTA upload form if one does not exist
 	if request.method == 'POST':
+		if 'request_form' in request.POST:
+			if not not settings.PRODUCTION:
+				print "%s - New request email not sent, settings.PRODUCTION = %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), settings.PRODUCTION)
+			else:
+#				users = Account.objects.users_with_perm('receive_mta_request')
+#				from_email = Account.objects.get(user__username='matrr_admin').email
+				users = Account.objects.filter(user__username='jarquet')
+				from_email = 'jarquet@gmail.com'
+				for user in users:
+					account = request.user.account
+					email = account.email
+					recipients = [email]
+					subject = 'User %s has requested an MTA form' % account.user.username
+					body = '%s has indicated he/she is not associated with any of the UBMTA signatories and requested an MTA form.\n' \
+						   'He/she was told instructions would be provided with the MTA form.  '\
+						   'If you cannot contact %s with the information provided below, please notify the MATRR admins.\n' % (account.user.username, account.user.username)
+					body += "\n\nName: %s %s\nEmail: %s\nPhone: %s" % (account.first_name, account.last_name, account.email, account.phone_number)
+					body += "\n\nIn addition to any other steps, please have %s upload the signed MTA form to MATRR using this link: http://gleek.ecs.baylor.edu%s" % (account.user.username, reverse('mta-upload'))
+
+					ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+					if ret > 0:
+						print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+			messages.success(request, 'A MATRR administrator has been notified of your MTA request and will contact you with more information.')
+			return redirect(reverse('account-view'))
 		form = MtaForm(request.POST, request.FILES, instance=mta_object)
 		if form.is_valid():
 			# all the fields in the form are valid, so save the data
@@ -478,6 +502,30 @@ def account_info(request):
 		#create the form for shipping address
 		form = AccountForm(instance=request.user.account)
 	return render_to_response('matrr/account/account_info_form.html',
+			{'form': form,
+			 'user': request.user
+		},
+							  context_instance=RequestContext(request))
+
+
+def account_mta(request):
+	if request.method == 'POST':
+		form = AccountMTAForm(data=request.POST)
+		if form.is_valid():
+			institution = form.cleaned_data['institution'].ins_institution_name
+			account = request.user.account
+			account.act_mta = institution
+			account.save()
+
+			if institution == "Non-UBMTA Institution":
+				return redirect('mta-upload')
+#				messages.info(request, "If your institution is not part of the <acronym>, you must download, sign, scan, and upload a Material Transfer Agreement.  ")
+			else:
+				messages.success(request, 'Account Info Saved')
+				return redirect(reverse('account-view'))
+	else:
+		form = AccountMTAForm()
+	return render_to_response('matrr/account/account_mta.html',
 			{'form': form,
 			 'user': request.user
 		},

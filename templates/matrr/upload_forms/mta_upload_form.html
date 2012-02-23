@@ -6,8 +6,6 @@
 
 	<div class="content-item">
 		<div id="headline">Upload Material Transfer Agreement (MTA)</div>
-
-
 		{% if form.errors %}
 			<div class="messages">
 				<div class="error">
@@ -23,9 +21,23 @@
 				</div></div>
 		{% endif %}
 
+		<div class=clearfix></div>
+		<br>
+		<div class='center-content'>
+			<p>
+				If your institution is not one of the Master UMBTA Agreement Signatories then you must sign and submit MATRRs Material Transfer Agreement before receiving
+				any tissue or data through MATRR.  Clicking "Request MATRR MTA Form" will notify an administrator of your form request, who will contact you within 48 hours
+				with further instructions on how to continue.  You can build and submit requests without an MTA agreement, but we cannot ship tissues to users until an MTA
+				has been collected.
+			</p>
+		</div>
+		<br>
 		<form method="post" action="" enctype="multipart/form-data">{% csrf_token %}
-
 			<div id="table-wrap">
+				<center><button type='submit' name='request_form' class="blockLinkButton">Request MATRR MTA Form</button></center>
+				<br>
+				<div class="mini-headline">Upload Signed MTA</div>
+
 				<div class="table-left text-right">
 					<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ form.mta_title.help_text }}</span></a> MTA Title:
 				</div>
@@ -35,11 +47,10 @@
 				</div>
 				<div class="table-right">{{ form.mta_file }}</div>
 				<div class="table-right">
-					<input type="submit" value="{% trans 'Upload' %}"/>
+					<button type='submit' class="blockLinkCheckoutButton">Upload</button>
 				</div>
 			</div>
 		</form>
-	
 	</div>
 
 

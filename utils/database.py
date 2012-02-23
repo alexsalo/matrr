@@ -1178,6 +1178,10 @@ def load_institutions(file_name):
 			institution, isnew = Institution.objects.get_or_create(ins_institution_name=line.rstrip())
 			if isnew:
 				institution.save()
+		institution, isnew = Institution.objects.get_or_create(ins_institution_name="Non-UBMTA Institution") # required to exist for MTA operations
+		if isnew:
+			institution.save()
+
 
 def assign_cohort_institutions():
 	wfu = Institution.objects.get(ins_institution_name='Wake Forest University')

@@ -101,6 +101,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^account/shipping/$', 		account_shipping, name='account-shipping'),
 	url(r'^account/address/$',         account_address, name='account-address'),
 	url(r'^account/info/$',         account_info, name='account-info'),
+	url(r'^account/mta/$',         account_mta, name='account-mta'),
 	url(r'^account/verify/(?P<user_id>\d+)/$', account_verify, name='account-verify'),
 	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-reviewer-view'),
 

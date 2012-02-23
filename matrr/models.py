@@ -192,7 +192,7 @@ class Institution(models.Model):
 
 	class Meta:
 		db_table = 'ins_institutions'
-
+		ordering = ['ins_institution_name']
 
 class EventType(models.Model):
 	evt_id = models.AutoField('ID', primary_key=True)
@@ -367,6 +367,7 @@ class Mta(models.Model):
 		db_table = 'mta_material_transfer'
 		permissions = (
 		('view_mta_file', 'Can view MTA files of other users'),
+		('receive_mta_request', 'Will receive MTA form requests'),
 		)
 
 
