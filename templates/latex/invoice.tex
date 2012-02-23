@@ -1,0 +1,69 @@
+{% spaceless %}
+{% load tissue_filters %}
+\documentclass{article}[letterpaper]
+
+\usepackage{fullpage}
+\usepackage{multirow}
+\usepackage{longtable}
+
+\begin{document}
+
+\begin{center}
+\Large{ Invoice for:\\ User: \verb|{{ req_request.user }}| Cohort: {{ req_request.cohort }}
+ }  \\
+\normalsize{Requested On: {{ req_request.req_request_date }} \\
+Manifest Created On: {{ time }} }
+\end{center}
+
+\section*{Shipping info}
+
+{{ account.act_shipping_name }} \\
+{{ account.act_address1 }} \\{% if account.act_address2 %}{{ account.act_address2 }} \\{% endif %}
+{{ account.act_city }}, {{ account.act_state }} {{ account.act_zip }} \\
+{{ account.act_country }}
+
+\vspace{0.1in}
+\noindent Fedex Number: {{ account.act_fedex }} \\
+
+\section*{Requested Tissues}
+
+{% for tissue_request in req_request.get_requested_tissues %}
+  {% if tissue_request.get_accepted %}
+  {% for datum in tissue_request.get_latex_data %}
+    {% if forloop.counter == 1 %}
+      \subsection*{ \verb|{{ datum.0 }}: {{ datum.1 }} }
+    {% else %}
+      \noindent \verb|{{ datum.0 }}:| {{ datum.1 }}
+    {% endif %}
+  {% endfor %}
+
+  \vspace{0.05in}
+  {% if tissue_request.get_tissue %}
+  \subsubsection*{Accepted Monkeys}
+  \nopagebreak[3]
+  \noindent
+  \begin{longtable}{|c|c|c|}
+  \hline
+  Monkey: &{% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}, {% endfor %}\ \\* \nopagebreak \hline
+  \end{longtable}
+   \hline
+  {% else %}
+  \noindent This is a custom request, so there is no inventory data available.
+  \nopagebreak
+  \subsubsection*{Accepted Monkeys}
+  \begin{longtable}{|c|c|c|}
+  \hline
+  {% for monkey in tissue_request.accepted_monkeys.all %}
+    Monkey: & {{ monkey.mky_id }} & {{ monkey.mky_name }} \\ \hline
+  {% endfor %}
+  \end{longtable}
+  {% endif %}
+  \pagebreak[3]
+  {% endif %}
+{% endfor %}
+\vspace{0.5in}
+\noindent \Large{Total Cost:\verb| ${{ req_request.get_total_estimated_cost }}| }
+
+\end{document}
+
+{% endspaceless %}
