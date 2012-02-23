@@ -430,9 +430,10 @@ class Account(models.Model):
 
 	def has_mta(self):
 		if self.act_mta:
+			institution = Institution.objects.filter(ins_institution_name=self.act_mta)
 			if self.act_mta == "Uploaded MTA is Valid": # if the user has uploaded a VALID and VERIFIED mta
 				return True # then call my MTA valid
-			elif Institution.objects.filter(ins_institution_name=self.act_mta): # if my MTA is in the Institution table, which was pulled from the UBMTA
+			elif institution and institution[0].ins_institution_name != "Non-UBMTA Institution": # if my MTA is in the Institution table, which was pulled from the UBMTA
 				return True # then call my MTA valid
 		# in all other cases, user has no valid MTA
 		return False
