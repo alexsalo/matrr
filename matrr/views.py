@@ -395,7 +395,7 @@ def mta_upload(request):
 	# make a MTA upload form if one does not exist
 	if request.method == 'POST':
 		if 'request_form' in request.POST:
-			if not not settings.PRODUCTION:
+			if not settings.PRODUCTION:
 				print "%s - New request email not sent, settings.PRODUCTION = %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), settings.PRODUCTION)
 			else:
 #				users = Account.objects.users_with_perm('receive_mta_request')
