@@ -825,7 +825,8 @@ def order_detail(request, req_request_id, edit=False):
 	eval = req_request.is_evaluated()
 	po_form = ''
 	if not req_request.req_status == 'SH' and not req_request.req_status == 'RJ':
-		po_form = PurchaseOrderForm(instance=req_request)
+		if request.user == req_request.user or request.user.is_superuser:
+			po_form = PurchaseOrderForm(instance=req_request)
 		if request.method == 'POST':
 			po_form = PurchaseOrderForm(instance=req_request, data=request.POST)
 			if po_form.is_valid():
