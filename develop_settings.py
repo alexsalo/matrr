@@ -54,6 +54,8 @@ TEMPLATE_DIRS = (
     )
 ## --end jon add
 
+PUBLIC_SEARCH_INDEXES = {'monkey':("d_monkey", 'Monkey'), 'cohort':("d_cohort", 'Cohort'), 'publications': ('d_publications', 'Publication')}
+PRIVATE_SEARCH_INDEXES = {'monkey_auth':("d_monkey_auth", 'Monkey')}
 
 try:
     from local_settings import *

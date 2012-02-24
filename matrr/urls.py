@@ -141,7 +141,6 @@ urlpatterns += patterns('matrr.views',
 
 if settings.DEVELOPMENT:
 #if False:
-	urlpatterns += patterns('matrr.views', url(r'^test/$', test_view))
 	from django.views.static import serve
 
 	_media_url = settings.MEDIA_URL

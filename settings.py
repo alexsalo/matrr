@@ -158,5 +158,8 @@ DEFAULT_FROM_EMAIL = 'matrr_admin@localhost'
 
 LOGIN_REDIRECT_URL = '/'
 
+PUBLIC_SEARCH_INDEXES = {'monkey':("monkey", 'Monkey'), 'cohort':("cohort", 'Cohort'), 'publications': ('publications', 'Publication')}
+PRIVATE_SEARCH_INDEXES = {'monkey_auth':("monkey_auth", 'Monkey')}
+
 if DEVELOPMENT:
 	from develop_settings import *

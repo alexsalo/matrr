@@ -1182,12 +1182,9 @@ def search_index(terms, index, model):
 
 
 def search(request):
-	from settings import SEARCH_INDEXES
-
-	results = None
 	form = FulltextSearchForm()
 	num_results = 0
-	user_auth = False
+	monkey_auth = False
 
 	terms = ''
 	results = dict()
@@ -1196,23 +1193,28 @@ def search(request):
 		if form.is_valid():
 			terms = form.cleaned_data['terms']
 
-			if request.user.has_perm('monkey_view_confidential'):
-				user_auth = True
-				results['monkeys'] = search_index(terms, SEARCH_INDEXES['monkey_auth'], Monkey)
-			else:
-				user_auth = False
-				results['monkeys'] = search_index(terms, SEARCH_INDEXES['monkey'], Monkey)
+			from django.db.models.loading import get_model
+			from settings import PRIVATE_SEARCH_INDEXES, PUBLIC_SEARCH_INDEXES
+			SEARCH_INDEXES = PUBLIC_SEARCH_INDEXES
 
-			results['cohorts'] = search_index(terms, SEARCH_INDEXES['cohort'], Cohort)
+			for key, value in PRIVATE_SEARCH_INDEXES.items():
+				if 'monkey' in key and request.user.has_perm('monkey_view_confidential'):
+					monkey_auth = True
+					SEARCH_INDEXES['monkey'] = value
+#					results['monkeys'] = search_index(terms, SEARCH_INDEXES[key], Monkey)
 
-			num_results = len(results['monkeys'])
-			num_results += len(results['cohorts'])
+			for key, value in SEARCH_INDEXES.items():
+				results[key] = search_index(terms, value[0], get_model('matrr', value[1]))
+
+			num_results = 0
+			for key in results:
+				num_results += len(results[key])
 
 	return render_to_response('matrr/search.html',
 			{'terms': terms,
 			 'results': results,
 			 'num_results': num_results,
-			 'user_auth': user_auth,
+			 'monkey_auth': monkey_auth,
 			 'form': form},
 							  context_instance=RequestContext(request))
 
