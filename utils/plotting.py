@@ -1223,6 +1223,8 @@ def create_plots():
 	CohortImage.objects.all().delete()
 	for cohort in Cohort.objects.all():
 		for key in COHORT_PLOTS:
+			if 'cohort_protein_boxplot' in key:
+				continue
 			graph = key
 			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[key][1])
 			cohortimage.save()
