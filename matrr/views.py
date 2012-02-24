@@ -1618,7 +1618,7 @@ def tools_monkey_protein_graphs(request, cohort_id, monkey_id=0):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def tools_etoh(request):
-	return 0
+	return redirect('/')
 
 #  VIP tools
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
@@ -1851,12 +1851,6 @@ def sendfile(request, id):
 	else:
 		file_url = file.url.replace('/', '', 1)
 
-	if 'mpn' in id:
-		if id.count('/media') > 0:
-			file_url = id.replace('/media/', '')
-		else:
-			file_url = id.replace('/', '', 1)
-
 	response = HttpResponse()
 	response['X-Sendfile'] = os.path.join(MEDIA_ROOT, file_url)
 
@@ -1866,24 +1860,6 @@ def sendfile(request, id):
 	response['Content-Type'] = content_type
 	response['Content-Disposition'] = 'attachment; filename="%s"' % os.path.basename(file_url)
 	return response
-
-
-def test_view(request):
-	monkeys = ''
-	#	field_names = ['mky_drinking', 'cohort', 'mky_name', 'mky_id', 'mky_real_id', ]
-	#	fields = [Monkey._meta.get_field(field) for field in field_names]
-	fields = Monkey._meta.fields
-	if request.POST:
-		spiffy_form = FilterForm(fields, data=request.POST, number_of_fields=1)
-
-
-		#this shit is crazytown
-		if spiffy_form.is_valid(): # hooray, we have a valid form!
-			q_object = spiffy_form.get_q_object()
-			monkeys = Monkey.objects.filter(q_object)
-	else:
-		spiffy_form = FilterForm(fields, number_of_fields=1)
-	return render_to_response('test.html', {'spiffy_form': spiffy_form, 'monkeys': monkeys}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('auth.upload_raw_data'), login_url='/denied/')

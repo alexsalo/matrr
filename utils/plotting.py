@@ -1170,7 +1170,7 @@ def monkey_protein(monkey, proteins, username):
 	# Put a legend to the right of the current axis
 	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
 
-	base_path = settings.MEDIA_ROOT
+	base_path = settings.STATIC_ROOT + '/'
 	path_append = 'mpn/'
 	os_path = base_path + path_append
 	filename = "%s.png" % username
@@ -1178,7 +1178,7 @@ def monkey_protein(monkey, proteins, username):
 		os.makedirs(os_path)
 
 	pyplot.savefig(os_path+filename)
-	return settings.MEDIA_URL + path_append + filename
+	return settings.STATIC_URL + path_append + filename
 
 
 
