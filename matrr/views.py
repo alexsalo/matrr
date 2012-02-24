@@ -398,14 +398,12 @@ def mta_upload(request):
 			if not settings.PRODUCTION:
 				print "%s - New request email not sent, settings.PRODUCTION = %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), settings.PRODUCTION)
 			else:
-#				users = Account.objects.users_with_perm('receive_mta_request')
-#				from_email = Account.objects.get(user__username='matrr_admin').email
-				users = Account.objects.filter(user__username='jarquet')
-				from_email = 'jarquet@gmail.com'
+				account = request.user.account
+				from_email = Account.objects.get(user__username='matrr_admin').email
+
+				users = Account.objects.users_with_perm('receive_mta_request')
 				for user in users:
-					account = request.user.account
-					email = account.email
-					recipients = [email]
+					recipients = [user.email]
 					subject = 'User %s has requested an MTA form' % account.user.username
 					body = '%s has indicated he/she is not associated with any of the UBMTA signatories and requested an MTA form.\n' \
 						   'He/she was told instructions would be provided with the MTA form.  '\
@@ -1833,6 +1831,10 @@ def sendfile(request, id):
 	files.append((r, 'html_fragment'))
 	r = DataFile.objects.filter(dat_data_file=id)
 	files.append((r, 'dat_data_file'))
+	r = CohortProteinImage.objects.filter(cpi_id=id)
+	files.append((r, 'image'))
+	r = CohortProteinImage.objects.filter(cpi_id=id)
+	files.append((r, 'thumbnail'))
 
 	#	this will work for all listed files
 	file = None
