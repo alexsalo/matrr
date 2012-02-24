@@ -1851,6 +1851,9 @@ def sendfile(request, id):
 	else:
 		file_url = file.url.replace('/', '', 1)
 
+	if id.startswith('/media/mpn/'):
+		file_url = id.replace('/media/', '')
+
 	response = HttpResponse()
 	response['X-Sendfile'] = os.path.join(MEDIA_ROOT, file_url)
 

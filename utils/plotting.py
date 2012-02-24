@@ -1171,7 +1171,7 @@ def monkey_protein(monkey, proteins, username):
 	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
 
 	base_path = settings.MEDIA_ROOT
-	path_append = '/mpn/'
+	path_append = 'mpn/'
 	os_path = base_path + path_append
 	filename = "%s.png" % username
 	if not os.path.exists(os_path):
