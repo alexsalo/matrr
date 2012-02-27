@@ -129,11 +129,6 @@ TEMPLATE_DIRS = (
 	"/web/www/MATRR/prod/media/matrr_images/fragments",
 	)
 
-SPHINX_API_VERSION = 0x116
-SPHINX_SERVER = 'localhost'
-SPHINX_PORT = 9312
-SEARCH_INDEXES = {'monkey':"monkey", 'monkey_auth':"monkey_auth", 'cohort':"cohort"}
-
 INSTALLED_APPS = (
 		'django.contrib.auth',
 		'django.contrib.contenttypes',
@@ -158,8 +153,16 @@ DEFAULT_FROM_EMAIL = 'matrr_admin@localhost'
 
 LOGIN_REDIRECT_URL = '/'
 
-PUBLIC_SEARCH_INDEXES = {'monkey':("monkey", 'Monkey'), 'cohort':("cohort", 'Cohort'), 'publications': ('publications', 'Publication')}
+SPHINX_API_VERSION = 0x116
+SPHINX_SERVER = 'localhost'
+SPHINX_PORT = 9312
+
+PUBLIC_SEARCH_INDEXES = {'monkey':("monkey", 'Monkey'),
+						 'cohort':("cohort", 'Cohort'),
+						 'publications': ('publications', 'Publication'),
+						 'monkeyprotein': ('monkeyprotein', 'MonkeyProtein')}
 PRIVATE_SEARCH_INDEXES = {'monkey_auth':("monkey_auth", 'Monkey')}
+
 
 if DEVELOPMENT:
 	from develop_settings import *
