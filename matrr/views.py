@@ -1199,7 +1199,7 @@ def search(request):
 			SEARCH_INDEXES = PUBLIC_SEARCH_INDEXES
 
 			for key, value in PRIVATE_SEARCH_INDEXES.items():
-				if 'monkey' in key and request.user.has_perm('monkey_view_confidential'):
+				if 'monkey_auth' in key and request.user.has_perm('monkey_view_confidential'):
 					monkey_auth = True
 					SEARCH_INDEXES['monkey'] = value
 #					results['monkeys'] = search_index(terms, SEARCH_INDEXES[key], Monkey)

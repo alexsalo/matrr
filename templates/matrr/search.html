@@ -77,6 +77,40 @@
 					{% endfor %}
 				</table>
 			{% endif %}
+			{% if results.monkeyprotein %}
+				<div class="mini-headline">Proteins</div>
+
+				<table class='common_center'>
+					<tr>
+						{% if monkey_auth %}
+							<th>Real Name</th>{% endif %}
+						<th>Monkey ID</th>
+						<th>Cohort name</th>
+						<th>Sex</th>
+						<th>Birthdate</th>
+						<th>Protein</th>
+					</tr>
+					{% for mpn in results.monkeyprotein %}
+						<tr>
+							{% if monkey_auth %}
+								<td>{{ mpn.monkey.mky_name }}</td>
+							{% endif %}
+							<td>
+								<a href="{% url monkey-detail mpn.monkey.cohort.coh_cohort_id mpn.monkey.mky_id%}"target="_blank">
+									{{ mpn.monkey.mky_id }}
+									<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
+								</a>
+							</td>
+							<td>{{ mpn.monkey.cohort.coh_cohort_name }}</td>
+							<td>{{ mpn.monkey.mky_gender }}</td>
+							<td>{{ mpn.monkey.mky_birthdate|date:"m/d/Y" }}</td>
+							<td>
+								{{ mpn.protein }}
+							</td>
+						</tr>
+					{% endfor %}
+				</table>
+			{% endif %}
 			{% if results.cohort %}
 				<div class="mini-headline">Cohorts</div>
 				<div>
