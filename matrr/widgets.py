@@ -301,7 +301,9 @@ class DateTimeWidget(forms.widgets.TextInput):
 		return mark_safe(a)
 
 	def value_from_datadict(self, data, files, name):
-		dtf = forms.fields.DEFAULT_DATETIME_INPUT_FORMATS
+		#### the DEFAULT_DATETIME_INPUT_FORMATS was deprecated, removed in django 1.3.1.
+		#### I don't really want to make a generic solution, so i hardcoded the correct format. -jf
+####	dtf = forms.fields.DEFAULT_DATETIME_INPUT_FORMATS
 		empty_values = forms.fields.EMPTY_VALUES
 
 		value = data.get(name, None)
@@ -311,11 +313,13 @@ class DateTimeWidget(forms.widgets.TextInput):
 			return value
 		if isinstance(value, datetime.date):
 			return datetime.datetime(value.year, value.month, value.day)
-		for format in dtf:
-			try:
-				return datetime.datetime(*time.strptime(value, format)[:6])
-			except ValueError:
-				continue
+####	for format in dtf:
+		try:
+####		return datetime.datetime(*time.strptime(value, format)[:6])
+			return datetime.datetime.strptime(value, '%Y-%m-%d')
+		except ValueError:
+####		continue
+			pass
 		return None
 
 	def _has_changed(self, initial, data):

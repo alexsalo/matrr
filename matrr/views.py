@@ -1723,13 +1723,13 @@ def vip_graph_builder(request, method_name):
 
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
-	subject_form = MonkeySelectForm(data=request.POST)
+	subject_form = MonkeySelectForm(data=request.POST, monkey_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
 	matrr_image = ''
 
 	if date_form.is_valid() and subject_form.is_valid():
 		parameters = {}
 		subject_data = subject_form.cleaned_data
-		subject = subject_data['monkey']
+		subject = subject_data['subject']
 		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey=subject)
 
 		date_data = date_form.cleaned_data
@@ -1760,7 +1760,7 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
-	subject_form = VIPGraphForm_cohorts(data=request.POST)
+	subject_form = CohortSelectForm(data=request.POST, cohort_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
 
 	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges}
 
