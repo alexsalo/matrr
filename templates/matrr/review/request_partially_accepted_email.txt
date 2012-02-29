@@ -1,9 +1,9 @@
 {% load i18n %}
-{% trans "Your tissue request has been partially accepted. You will need to have a Material Transfer Agreement on record before your order can be shipped.  You can find information on how to attach an MTA to your account" %} <a href="{% url account-mta %}">here</a>.
+{% trans "Your tissue request has been partially accepted. You will need to have a Material Transfer Agreement on record before your order can be shipped.  You can find information on how to attach an MTA to your account" %} <a href="https://gleek.ecs.baylor.edu{% url account-mta %}">here</a>.
 
 {% trans "You must also have a Purchase Order associated with this request before it can be shipped. Individuals with existing collaborations may be exempt from MATRR fees.  You can submit this on the"%} <a href="https://gleek.ecs.baylor.edu{{ request_url }}">Order Detail page</a>.
 
-{% trans "We can not ship tissues to individuals who do not have a Fed Ex number associated with their account. You can update your profile "%}<a href="{% url account-view %}">here</a>.
+{% trans "We can not ship tissues to individuals who do not have a Fed Ex number associated with their account. You can update your profile "%}<a href="https://gleek.ecs.baylor.edu{% url account-view %}">here</a>.
 
 {% trans "You will be expected to provide updates on your research 6 months after you receive your order." %}
 

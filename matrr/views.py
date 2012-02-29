@@ -831,7 +831,7 @@ def order_detail(request, req_request_id, edit=False):
 			po_form = PurchaseOrderForm(instance=req_request, data=request.POST)
 			if po_form.is_valid():
 				po_form.save()
-				messages.info(request, "Purchase Order number has been saved.")
+				messages.success(request, "Purchase Order number has been saved.")
 			else:
 				messages.error(request, "Purchase Order form invalid, please try again.  Please notify a MATRR admin if this message is erroneous.")
 

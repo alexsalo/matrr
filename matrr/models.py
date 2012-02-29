@@ -409,6 +409,7 @@ class Account(models.Model):
 	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
 
 	act_mta = models.CharField("MTA", max_length=500, null=True, blank=True)
+	act_mta_is_valid = models.BooleanField('MTA is Valid', null=False, blank=False, default=False)
 
 	objects = AccountManager()
 
@@ -437,6 +438,14 @@ class Account(models.Model):
 				return True # then call my MTA valid
 		# in all other cases, user has no valid MTA
 		return False
+
+	def save(self, *args, **kwargs):
+		super(Account, self).save(*args, **kwargs)
+		mta_status = self.has_mta()
+		if self.act_mta_is_valid != mta_status:
+			self.act_mta_is_valid = mta_status
+			self.save()
+
 
 	class Meta:
 		db_table = 'act_account'
@@ -1106,6 +1115,7 @@ class Request(models.Model, DiffingMixin):
 	user = models.ForeignKey(User, null=False, db_column='usr_user_id', editable=False, )
 	req_modified_date = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
 	req_request_date = models.DateTimeField(editable=False, auto_now_add=True)
+	req_accepted_date = models.DateTimeField(editable=False, blank=True, null=True, default=None)
 	req_experimental_plan = models.FileField('Experimental Plan', upload_to='experimental_plans/',
 											 default='', null=True, blank=True,
 											 help_text='You may upload a detailed description of your research plans for the tissues you are requesting.')
@@ -1978,6 +1988,7 @@ def request_post_save(**kwargs):
 	# For Accepted and Partially accepted Requests
 	if previous_status == RequestStatus.Submitted\
 	and (current_status == RequestStatus.Accepted or current_status == RequestStatus.Partially):
+		req_request.req_accepted_date = datetime.datetime.now()
 		for tissue_request in tissue_requests:
 			tivs = TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
 			for tiv in tivs:
