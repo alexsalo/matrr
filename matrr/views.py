@@ -1871,7 +1871,7 @@ def raw_data_upload(request):
 		form = RawDataUploadForm(request.POST, request.FILES)
 		if form.is_valid():
 			f = request.FILES['data']
-			name = f.name + datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+			name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S") + f.name
 			upload_path = os.path.join(settings.UPLOAD_DIR, name)
 			destination = open(upload_path, 'wb+')
 			for chunk in f.chunks():

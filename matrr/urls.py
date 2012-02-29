@@ -105,6 +105,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^account/verify/(?P<user_id>\d+)/$', account_verify, name='account-verify'),
 	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-reviewer-view'),
 
+	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),
 	url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
@@ -135,7 +136,6 @@ urlpatterns += patterns('matrr.views',
 	url(r'^tools/vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
 	url(r'^tools/vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
 
-	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 
 	)
 
