@@ -44,5 +44,5 @@ def urge_po_mta():
 		if ret > 0:
 			print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
 
-#if settings.PRODUCTION:
-urge_po_mta()
+if settings.PRODUCTION:
+	urge_po_mta()
