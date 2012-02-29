@@ -1115,7 +1115,6 @@ class Request(models.Model, DiffingMixin):
 	user = models.ForeignKey(User, null=False, db_column='usr_user_id', editable=False, )
 	req_modified_date = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
 	req_request_date = models.DateTimeField(editable=False, auto_now_add=True)
-	req_accepted_date = models.DateTimeField(editable=False, blank=True, null=True, default=None)
 	req_experimental_plan = models.FileField('Experimental Plan', upload_to='experimental_plans/',
 											 default='', null=True, blank=True,
 											 help_text='You may upload a detailed description of your research plans for the tissues you are requesting.')
