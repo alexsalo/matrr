@@ -20,7 +20,6 @@ else:
 
 #if PRODUCTION or GLEEK:
 import getpass
-
 if getpass.getuser().lower() == 'root':
 	if PRODUCTION:
 		os.environ['HOME'] = "/web/www/matrr-prod"
@@ -136,7 +135,6 @@ TEMPLATE_DIRS = (
 SPHINX_API_VERSION = 0x116
 SPHINX_SERVER = '10.4.100.2'
 SPHINX_PORT = 9312
-SEARCH_INDEXES = {'monkey':"monkey", 'monkey_auth':"monkey_auth", 'cohort':"cohort"}
 
 INSTALLED_APPS = (
 		'django.contrib.auth',
@@ -160,7 +158,14 @@ ACCOUNT_ACTIVATION_DAYS = 2
 EMAIL_HOST = 'localhost'
 DEFAULT_FROM_EMAIL = 'matrr_admin@localhost'
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/login'
+
+PUBLIC_SEARCH_INDEXES = {'monkey':("monkey", 'Monkey'),
+						 'cohort':("cohort", 'Cohort'),
+						 'publications': ('publications', 'Publication'),
+						 'monkeyprotein': ('monkeyprotein', 'MonkeyProtein')}
+PRIVATE_SEARCH_INDEXES = {'monkey_auth':("monkey_auth", 'Monkey')}
+
 
 if DEVELOPMENT:
 	from develop_settings import *

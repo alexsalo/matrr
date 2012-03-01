@@ -70,13 +70,11 @@
 					<th>Shipped to:</th>
 					<td>{{ account.act_shipping_name }}</td>
 					<th>MTA:</th>
-					<td>
-						{% if req_request.user.mta_set.count %}
-							The user has submitted at least one MTA.
-						{% else %}
-							The user has not submitted an MTA.
-						{% endif %}
-					</td>
+					{% if req_request.user.account.has_mta %}
+						<td>The user has a valid MTA</td>
+					{% else %}
+						<td style='background-color: red; color:white'>No Valid MTA</td>
+					{% endif %}
 				</tr>
 				<tr>
 					<th>Address:</th>
@@ -98,11 +96,7 @@
 				</tr>
 				<tr>
 					<th>FedEx number:</th>
-					{% if account.act_fedex %}
-						<td>{{ account.act_fedex }}</td>
-					{% else %}
-						<td style='background-color: red; color:white'>{{ account.act_fedex }}</td>
-					{% endif %}
+					<td>{{ account.act_fedex }}</td>
 				</tr>
 				<tr>
 					<th>Purchase Order number:</th>
@@ -122,9 +116,9 @@
 			{% for datum in tissue_request.get_data %}
 				{% if forloop.counter == 1 %}
 					<div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
-					<div style='float:left;'>{% include 'matrr/shipping/item_inventory.html' %}</div>
+					<div style='float:left; width: 69%'>{% include 'matrr/shipping/item_inventory.html' %}</div>
 				{% else %}
-					<div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
+					<div style="float: right; max-width: 30%; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
 					<br/>
 				{% endif %}
 			{% endfor %}

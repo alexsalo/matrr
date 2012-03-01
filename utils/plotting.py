@@ -392,6 +392,58 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 		formatted_monkeys[monkey] = [ convert_timedelta(event_dates[key]) for key in sorted(event_dates.keys()) ]
 	return formatted_monkeys
 
+def cohort_protein_boxplot(cohort=None, protein=None):
+	from matrr.models import Cohort, Protein, MonkeyProtein
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print("That's not a valid cohort.")
+			return False, 'NO MAP'
+	if not isinstance(protein, Protein):
+		try:
+			protein = Protein.objects.get(pk=cohort)
+		except Protein.DoesNotExist:
+			print("That's not a valid protein.")
+			return False, 'NO MAP'
+
+	monkey_proteins = MonkeyProtein.objects.filter(monkey__in=cohort.monkey_set.all(), protein=protein).order_by('mpn_date')
+	if monkey_proteins.count() > 0:
+		fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+		ax1 = fig.add_subplot(111)
+		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+		ax1.set_axisbelow(True)
+		ax1.set_title('%s : %s' % (str(cohort), str(protein)))
+		ax1.set_xlabel("Date of sample")
+		ax1.set_ylabel("Sample Value, in %s" % str(protein.pro_units))
+
+		dates = monkey_proteins.dates('mpn_date', 'day')
+		data = dict()
+		for date in dates:
+			data[str(date.date())] = monkey_proteins.filter(mpn_date=date).values_list('mpn_value')
+
+		sorted_keys = [item[0] for item in sorted(data.items())]
+		sorted_values = [item[1] for item in sorted(data.items())]
+		scatter_y = []
+		scatter_x = []
+		for index, dataset in enumerate(sorted_values):
+			for data in dataset:
+				scatter_x.append(index+1)
+				scatter_y.append(data)
+
+		bp = pyplot.boxplot(sorted_values)
+		scat = pyplot.scatter(scatter_x, scatter_y, marker='+', color='purple', s=80)
+		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
+		pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
+		pyplot.setp(bp['fliers'], color='red', marker='o', markersize=10)
+		xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
+		pyplot.setp(xtickNames, rotation=45)
+		return fig, 'NO MAP'
+
+	else:
+		print "No MonkeyProteins for this cohort."
+		return False, 'NO MAP'
+
 # Dictionary of cohort plots VIPs can customize
 # NOT the same as matrr.models.VIP_IMAGES_LIST!
 VIP_COHORT_PLOTS = {
@@ -405,9 +457,10 @@ VIP_COHORT_PLOTS = {
 import copy # for some reason this errors if i put it up top -jf 2/13/2012
 COHORT_PLOTS = copy.copy(VIP_COHORT_PLOTS)
 COHORT_PLOTS.update({
-				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake in grams per kilogram'),
-				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, "Total Ethanol Intake in ml"),
-				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake in grams per kilogram"),
+				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 	'Average Ethanol Intake, 22hr'),
+				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake, 4pct ml"),
+				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, 				"Total Ethanol Intake, g per kg"),
+				"cohort_protein_boxplot": (cohort_protein_boxplot, 							""),
 #				 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
 #				 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
 #				 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
@@ -1059,6 +1112,76 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 	ax1.set_yticklabels(cohort_labels)
 	return fig, 'map'
 
+def monkey_protein(monkey, proteins, username):
+	"""
+		INCOMPATIBILE WITH MATRRImage framework
+	"""
+
+	try: # silly hack to enforce ability to forloop
+		iter(proteins)
+	except TypeError:
+		proteins = [proteins]
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = fig.add_subplot(111)
+	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+	ax1.set_axisbelow(True)
+
+	protein_abbrevs = []
+	for protein in proteins:
+		protein_abbrevs.append(protein.pro_abbrev)
+	protein_title = ", ".join(protein_abbrevs)
+	if len(protein_title) > 30: #  title's too long.  got some work to do
+		title_abbrev = protein_title[:40].split(', ') # first, chop it to a good length and split it into a list
+		title_abbrev.pop(len(title_abbrev)-1) # now, pop off the last value in the list, since its probably a randomly cut string, like "Washi" instead of "Washington"
+		protein_title = ", ".join(title_abbrev) # and join the remainders back together
+		protein_title += "..." # and tell people we chopped it
+	ax1.set_title('Monkey %s: %s' % (str(monkey.pk), protein_title))
+	ax1.set_xlabel("Date of sample")
+	ax1.set_ylabel("Standard deviation from cohort mean")
+
+	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
+	lines = []
+	line_labels = []
+	for index, protein in enumerate(proteins):
+		dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
+		y_values = []
+		for date in dates:
+			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
+			y_values.append(monkey_protein.mpn_stdev)
+
+		color_map = pyplot.get_cmap('gist_rainbow')
+		color = color_map(1.*index/len(proteins))
+		lines.append(ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color))
+		line_labels.append(str(protein.pro_abbrev))
+
+	oldylims = pyplot.ylim()
+	y_min = min(oldylims[0], -1 * oldylims[1])
+	y_max = max(oldylims[1], -1 * oldylims[0])
+	pyplot.ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
+
+	# rotate the xaxis labels
+	pyplot.xticks(dates, [str(date.date()) for date in dates], rotation=45)
+
+	# Shink current axis by 20%
+	box = ax1.get_position()
+	ax1.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+	# Put a legend to the right of the current axis
+	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
+
+	base_path = settings.STATIC_ROOT + '/'
+	path_append = 'mpn/'
+	os_path = base_path + path_append
+	filename = "%s.png" % username
+	if not os.path.exists(os_path):
+		os.makedirs(os_path)
+
+	pyplot.savefig(os_path+filename)
+	return settings.STATIC_URL + path_append + filename
+
+
+
 # Dictionary of plots VIPs can customize
 # NOT the same as matrr.models.VIP_IMAGES_LIST!
 VIP_MONKEY_PLOTS = {
@@ -1081,8 +1204,8 @@ MONKEY_PLOTS.update({
 #				'monkey_boxplot_weight': monkey_boxplot_weight,
 
 				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg, "Average Monkey Ethanol Intake, 22hr"),
-				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, "Total Monkey Ethanol Intake, in 4percent ml"),
-				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, "Total Monkey Ethanol Intake, in g per kg"),
+				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 "Total Monkey Ethanol Intake, 4pct ml"),
+				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 "Total Monkey Ethanol Intake, g per kg"),
 })
 
 def create_plots():
@@ -1100,6 +1223,8 @@ def create_plots():
 	CohortImage.objects.all().delete()
 	for cohort in Cohort.objects.all():
 		for key in COHORT_PLOTS:
+			if 'cohort_protein_boxplot' in key:
+				continue
 			graph = key
 			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[key][1])
 			cohortimage.save()

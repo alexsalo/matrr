@@ -6,7 +6,6 @@ path = os.path.dirname(os.path.realpath(__file__))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
-SEARCH_INDEXES = {'monkey':"d_monkey", 'monkey_auth':"d_monkey_auth", 'cohort':"d_cohort"}
 
 DATABASES = {
 		'default': {
@@ -54,6 +53,11 @@ TEMPLATE_DIRS = (
     )
 ## --end jon add
 
+PUBLIC_SEARCH_INDEXES = {'monkey':("d_monkey", 'Monkey'),
+						 'cohort':("d_cohort", 'Cohort'),
+						 'publications': ('d_publications', 'Publication'),
+						 'monkeyprotein': ('d_monkeyprotein', 'MonkeyProtein')}
+PRIVATE_SEARCH_INDEXES = {'monkey_auth':("d_monkey_auth", 'Monkey')}
 
 try:
     from local_settings import *

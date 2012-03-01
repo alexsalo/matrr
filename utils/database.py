@@ -324,33 +324,16 @@ def dump_distinct_TissueType(output_file):
 		output.writerow(row)
 	print "Success."
 
-def dump_monkey_data(output_file):
-	output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-	columns = ['mky_id', 'cohort', 'mky_real_id', 'mky_name', 'mky_gender', 'mky_birthdate', 'mky_weight', 'mky_drinking', 'mky_housing_control',
-			   'mky_necropsy_start_date', 'mky_necropsy_start_date_comments', 'mky_necropsy_end_date', 'mky_necropsy_end_date_comments',
-			   'mky_study_complete', 'mky_stress_model', 'mky_age_at_necropsy',]
-	output.writerow(columns)
-	for cohort in Cohort.objects.all():
-		for monkey in cohort.monkey_set.all():
-			row = []
-			row.append(monkey.mky_id)
-			row.append(cohort)
-			row.append(monkey.mky_real_id)
-			row.append(monkey.mky_name)
-			row.append(monkey.mky_gender)
-			row.append(monkey.mky_birthdate)
-			row.append(monkey.mky_weight)
-			row.append(monkey.mky_drinking)
-			row.append(monkey.mky_housing_control)
-			row.append(monkey.mky_necropsy_start_date)
-			row.append(monkey.mky_necropsy_start_date_comments)
-			row.append(monkey.mky_necropsy_end_date)
-			row.append(monkey.mky_necropsy_end_date_comments)
-			row.append(monkey.mky_study_complete)
-			row.append(monkey.mky_stress_model)
-			row.append(monkey.mky_age_at_necropsy)
-			output.writerow(row)
-		print "Cohort %s Success" % cohort.coh_cohort_name
+def dump_monkey_protein_data(queryset, output_file):
+	if isinstance(queryset, QuerySet) and isinstance(queryset[0], MonkeyProtein):
+		output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+		columns = ['monkey', 'protein', 'mpn_date', 'mpn_value']
+		output.writerow(columns)
+		for mpn in queryset:
+			output.writerow([mpn.monkey, "%s" % mpn.protein.pro_name, mpn.mpn_date, mpn.mpn_value])
+		return output
+	else:
+		raise Exception("queryset kwarg can only be a QuerySet of MonkeyProteins.")
 
 def load_monkey_data(input_file):
 	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
@@ -1033,7 +1016,7 @@ def load_necropsy_summary(filename):
 			nec_sum.ncm_22hr_12mo_avg_g_per_kg	= row[21] if row[21] != "control" else 0
 			nec_sum.save()
 
-def load_proteins(filename):
+def load_metabolites(filename):
 	"""
 		This function will load a csv file in the format
 		row[0]	= Biochemical
@@ -1050,28 +1033,28 @@ def load_proteins(filename):
 	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
 	columns = csv_infile.next()
 	for row in csv_infile:
-		pro_dict = {}
+		met_dict = {}
 		if row[0]:
-			pro_dict['pro_biochemical'] 	= row[0]
-			pro_dict['pro_super_pathway'] 	= row[1]
-			pro_dict['pro_sub_pathway'] 	= row[2]
-			pro_dict['pro_comp_id'] 		= row[3]
-			pro_dict['pro_platform'] 		= row[4]
-			pro_dict['pro_ri'] 				= row[5]
-			pro_dict['pro_mass'] 			= row[6]
-			pro_dict['pro_cas'] 			= row[7]
-			pro_dict['pro_kegg'] 			= row[8]
-			pro_dict['pro_hmdb_id'] 		= row[9]
+			met_dict['met_biochemical'] 	= row[0]
+			met_dict['met_super_pathway'] 	= row[1]
+			met_dict['met_sub_pathway'] 	= row[2]
+			met_dict['met_comp_id'] 		= row[3]
+			met_dict['met_platform'] 		= row[4]
+			met_dict['met_ri'] 				= row[5]
+			met_dict['met_mass'] 			= row[6]
+			met_dict['met_cas'] 			= row[7]
+			met_dict['met_kegg'] 			= row[8]
+			met_dict['met_hmdb_id'] 		= row[9]
 
-			protein, isnew = Protein.objects.get_or_create(**pro_dict)
+			metabolite, isnew = Metabolite.objects.get_or_create(**met_dict)
 			if isnew:
-				protein.save()
+				metabolite.save()
 
-def load_monkey_proteins(filename, values_normalized):
+def load_monkey_metabolites(filename, values_normalized):
 	"""
 	Alright so, the format of the file they gave me is gonna be tough to parse through.  Scientists _love_ inverting axes in their spreadsheets.
 
-	The first 8 rows of Column0 describe the monkey and the protein sample scenario.  They are:
+	The first 8 rows of Column0 describe the monkey and the metabolite sample scenario.  They are:
 	col0row0 = SAMPLE_NAME			# columns 1-30 hold 'OHSU-000001' , 'OHSU-000002', etc.
 	col0row1 = SAMPLE_ID			# columns 1-30 hold unique, incrementing 6-digit integers
 	col0row2 = CLIENT_INDENTIFIER	# columns 1-30 hold "1-<number>" where <number> == mky_real_id == row 6
@@ -1081,62 +1064,184 @@ def load_monkey_proteins(filename, values_normalized):
 	col0row6 = SUBJECT ID			# mky_real_id
 	col0row7 = GROUP_ID 			# described above -.-
 	---
-	For rows 8 thru *, the col0 value stored is the protein name (Protein.pro_biochemical).  The value stored in col1 - col30 is the protein value.
+	For rows 8 thru *, the col0 value stored is the metabolite name (Metabolite.met_biochemical).  The value stored in col1 - col30 is the metabolite value.
 
 	Lets figure out how to parse this -.-
 	"""
 	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
 	monkey_datas = {}
-	monkey_protein_datas = {}
+	monkey_metabolite_datas = {}
 	for row in csv_infile:
 		if row[0]:
 			if row[0] == 'SAMPLE_NAME':
 				for idx, cell in enumerate(row[1:]):
-					ts_dict = {'mpr_sample_name': cell}
+					ts_dict = {'mmb_sample_name': cell}
 					monkey_datas[idx] = ts_dict
 			elif row[0] == 'SAMPLE_ID':
 				for idx, cell in enumerate(row[1:]):
-					monkey_datas[idx]['mpr_sample_id'] = cell
+					monkey_datas[idx]['mmb_sample_id'] = cell
 			elif row[0] == 'CLIENT_IDENTIFIER':
 				for idx, cell in enumerate(row[1:]):
-					monkey_datas[idx]['mpr_client_identifier'] = cell
+					monkey_datas[idx]['mmb_client_identifier'] = cell
 			elif row[0] == 'GROUP':
 				for idx, cell in enumerate(row[1:]):
-					monkey_datas[idx]['mpr_group'] = cell
+					monkey_datas[idx]['mmb_group'] = cell
 			elif row[0] == 'DATE':
 				for idx, cell in enumerate(row[1:]):
-					monkey_datas[idx]['mpr_date'] = datetime.datetime.strptime(cell, '%m/%d/%y')
+					monkey_datas[idx]['mmb_date'] = datetime.datetime.strptime(cell, '%m/%d/%y')
 			elif row[0] == 'TREATMENT':
 				for idx, cell in enumerate(row[1:]):
-					monkey_datas[idx]['mpr_treatment'] = cell
+					monkey_datas[idx]['mmb_treatment'] = cell
 			elif row[0] == 'SUBJECT_ID':
 				for idx, cell in enumerate(row[1:]):
 					monkey = Monkey.objects.get(mky_real_id=cell)
 					monkey_datas[idx]['monkey'] = monkey
-					monkey_datas[idx]['mpr_subject_id'] = cell
+					monkey_datas[idx]['mmb_subject_id'] = cell
 			elif row[0] == 'GROUP_ID':
 				for idx, cell in enumerate(row[1:]):
-					monkey_datas[idx]['mpr_group_id'] = cell
+					monkey_datas[idx]['mmb_group_id'] = cell
 			else:
-				protein = Protein.objects.get(pro_biochemical=row[0])
-				protein_row = []
+				metabolite = Metabolite.objects.get(met_biochemical=row[0])
+				metabolite_row = []
 				for idx, cell in enumerate(row[1:]):
-					protein_row.append((monkey_datas[idx], protein, cell))
-				monkey_protein_datas[row[0]] = protein_row
+					metabolite_row.append((monkey_datas[idx], metabolite, cell))
+				monkey_metabolite_datas[row[0]] = metabolite_row
 
-	for index in monkey_protein_datas:
-		for protein_row in monkey_protein_datas[index]:
-			monkey_data 	= protein_row[0]
-			protein 		= protein_row[1]
-			protein_value 	= protein_row[2] if protein_row[2] else None
+	for index in monkey_metabolite_datas:
+		for metabolite_row in monkey_metabolite_datas[index]:
+			monkey_data 	= metabolite_row[0]
+			metabolite 		= metabolite_row[1]
+			met_value 		= metabolite_row[2] if metabolite_row[2] else None
 			normalized		= True if values_normalized is True else False
-			monkey_protein, isnew = MonkeyProtein.objects.get_or_create(protein=protein, mpr_protein_value=protein_value, mpr_is_normalized=normalized, **monkey_data)
+			monkey_metabolite, isnew = MonkeyMetabolite.objects.get_or_create(metabolite=metabolite, mmb_value=met_value, mmb_is_normalized=normalized, **monkey_data)
 			if isnew:
-				monkey_protein.save()
+				monkey_metabolite.save()
+
+def load_proteins(filename):
+	"""
+		This function will load a csv file in the format
+		row[0]	= protein abbreviation (pro_abbrev)
+		row[1]	= full protein name (pro_name)
+		row[2]	= concentration units (pro_units)
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	for row in csv_infile:
+		pro_dict = {}
+		if row[0]:
+			pro_dict['pro_abbrev'] 	= row[0]
+			pro_dict['pro_name'] 	= row[1]
+			pro_dict['pro_units'] 	= row[2]
+
+			protein, isnew = Protein.objects.get_or_create(**pro_dict)
+			if isnew:
+				protein.save()
+
+def load_monkey_proteins(filename):
+	"""
+		row[0] = mky_real_id (monkey.mky_real_id)
+		row[1] = date collected (mpn_date)
+			the rest of the columns are proteins, header label is Protein.pro_abbrev
+	"""
+	filename = 'utils/DATA/cohort1-MonkeyProteins.csv'
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next()
+	junk = columns.pop(0) # take out the monkey column label
+	junk = columns.pop(0) # take out the date column label
+
+	proteins = []
+	for column in columns:
+		proteins.append(Protein.objects.get(pro_abbrev=column))
+
+	monkey_protein_datas = []
+	for row in csv_infile:
+		if row[0]:
+			monkey = Monkey.objects.get(mky_real_id=row.pop(0))
+			mpn_date = datetime.datetime.strptime(row.pop(0), '%m/%d/%y')
+			for index, value in enumerate(row):
+				monkey_protein = {}
+				monkey_protein['monkey'] = monkey
+				monkey_protein['mpn_date'] = mpn_date
+				monkey_protein['protein'] = proteins[index]
+				monkey_protein['mpn_value'] = value
+				monkey_protein_datas.append(monkey_protein)
+
+	for mpn in monkey_protein_datas:
+		monkey_protein, isnew = MonkeyProtein.objects.get_or_create(**mpn)
+		if isnew:
+			monkey_protein.save()
+
+def load_institutions(file_name):
+	with open(file_name, 'r') as f:
+		read_data = f.readlines()
+		for line in read_data:
+			institution, isnew = Institution.objects.get_or_create(ins_institution_name=line.rstrip())
+			if isnew:
+				institution.save()
+		institution, isnew = Institution.objects.get_or_create(ins_institution_name="Non-UBMTA Institution") # required to exist for MTA operations
+		if isnew:
+			institution.save()
 
 
+def assign_cohort_institutions():
+	wfu = Institution.objects.get(ins_institution_name='Wake Forest University')
+	ohsu = Institution.objects.get(ins_institution_name='Oregon Health Sciences University, Technology Management')
 
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 1')
+	cohort.institution = wfu
+	cohort.save()
 
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 3')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 8')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 1')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 2')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Vervet 1')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Vervet 2')
+	cohort.institution = wfu
+	cohort.save()
 
 
 

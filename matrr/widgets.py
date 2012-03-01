@@ -263,7 +263,8 @@ class DateTimeWidget(forms.widgets.TextInput):
 		default_attrs = {'min_date': '20000101', 'max_date': '20120101'}
 		if attrs:
 			default_attrs.update(attrs)
-		super(forms.widgets.TextInput, self).__init__(default_attrs)
+		#super(forms.widgets.TextInput, self).__init__(default_attrs) # This worked.  Seems an arbitrary change
+		super(DateTimeWidget, self).__init__(default_attrs)
 
 	class Media:
 		css = {
@@ -300,7 +301,9 @@ class DateTimeWidget(forms.widgets.TextInput):
 		return mark_safe(a)
 
 	def value_from_datadict(self, data, files, name):
-		dtf = forms.fields.DEFAULT_DATETIME_INPUT_FORMATS
+		#### the DEFAULT_DATETIME_INPUT_FORMATS was deprecated, removed in django 1.3.1.
+		#### I don't really want to make a generic solution, so i hardcoded the correct format. -jf
+####	dtf = forms.fields.DEFAULT_DATETIME_INPUT_FORMATS
 		empty_values = forms.fields.EMPTY_VALUES
 
 		value = data.get(name, None)
@@ -310,11 +313,13 @@ class DateTimeWidget(forms.widgets.TextInput):
 			return value
 		if isinstance(value, datetime.date):
 			return datetime.datetime(value.year, value.month, value.day)
-		for format in dtf:
-			try:
-				return datetime.datetime(*time.strptime(value, format)[:6])
-			except ValueError:
-				continue
+####	for format in dtf:
+		try:
+####		return datetime.datetime(*time.strptime(value, format)[:6])
+			return datetime.datetime.strptime(value, '%Y-%m-%d')
+		except ValueError:
+####		continue
+			pass
 		return None
 
 	def _has_changed(self, initial, data):
@@ -343,9 +348,61 @@ class DateTimeWidget(forms.widgets.TextInput):
 
 
 class HorizRadioRenderer(forms.RadioSelect.renderer):
-	""" this overrides widget method to put radio buttons horizontally
+	""" this overrides widget render method to put radio buttons horizontally
 		instead of vertically.
 	"""
 	def render(self):
 			"""Outputs radios"""
 			return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
+
+
+class RadioRenderer_nolist(forms.RadioSelect.renderer):
+	""" this overrides widget render method to separate radio buttons with '%s<br>' instead of '<ul><li>%s</li></ul>'
+	"""
+	def render(self):
+			"""Outputs radios"""
+			radios = [u'%s<br>' % w for w in self]
+			return mark_safe('\n'.join(radios))
+
+
+class CheckboxSelectMultiple_nolist(forms.CheckboxSelectMultiple):
+	""" this widget overrides form's render method to separate chockboxes with '%s<br>' instead of '<ul><li>%s</li></ul>'
+	"""
+	def render(self, *args, **kwargs):
+		output = super(CheckboxSelectMultiple_nolist, self).render(*args,**kwargs)
+		return mark_safe(output.replace(u'<ul>', u'').replace(u'</ul>', u'').replace(u'<li>', u'').replace(u'</li>', u'<br>'))
+
+
+class CheckboxSelectMultiple_columns(forms.CheckboxSelectMultiple):
+	""" this widget creates a table of checkboxes, 1 checkbox per <td>, and n <td>'s per <tr>, where n is the columns kwarg.'
+	"""
+	def __init__(self, columns=3, *args, **kwargs):
+		super(CheckboxSelectMultiple, self).__init__(*args, **kwargs)
+		self.columns = columns
+
+	def render(self, name, value, attrs=None, choices=()):
+		if value is None: value = []
+		has_id = attrs and 'id' in attrs
+		final_attrs = self.build_attrs(attrs, name=name)
+		output = [u'<table style="width=80%"><tr>']
+		# Normalize to strings
+		str_values = set([force_unicode(v) for v in value])
+		for i, (option_value, option_label) in enumerate(chain(self.choices, choices)):
+			if i % self.columns is 0:
+				output.append(u'</tr>')
+				output.append(u'<tr>')
+			# If an ID attribute was given, add a numeric index as a suffix,
+			# so that the checkboxes don't all have the same ID attribute.
+			if has_id:
+				final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
+				label_for = u' for="%s"' % final_attrs['id']
+			else:
+				label_for = ''
+
+			cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
+			option_value = force_unicode(option_value)
+			rendered_cb = cb.render(name, option_value)
+			option_label = conditional_escape(force_unicode(option_label))
+			output.append(u'<td><label%s>%s %s</label></td>' % (label_for, rendered_cb, option_label))
+		output.append(u'</tr></table>')
+		return mark_safe(u'\n'.join(output))

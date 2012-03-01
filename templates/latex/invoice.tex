@@ -5,12 +5,11 @@
 \usepackage{fullpage}
 \usepackage{multirow}
 \usepackage{longtable}
-\usepackage{setspace}
 
 \begin{document}
 
 \begin{center}
-\Large{ Shipping Manifest for:\\ User: \verb|{{ req_request.user }}| Cohort: {{ req_request.cohort }}
+\Large{ Invoice for:\\ User: \verb|{{ req_request.user }}| Cohort: {{ req_request.cohort }}
  }  \\
 \normalsize{Requested On: {{ req_request.req_request_date }} \\
 Manifest Created On: {{ time }} }
@@ -25,7 +24,6 @@ Manifest Created On: {{ time }} }
 
 \vspace{0.1in}
 \noindent Fedex Number: {{ account.act_fedex }} \\
-\noindent Purchase Order: {{ req_request.req_purchase_order }}
 
 \section*{Requested Tissues}
 
@@ -63,14 +61,9 @@ Manifest Created On: {{ time }} }
   \pagebreak[3]
   {% endif %}
 {% endfor %}
-\section*{Cost}
+\vspace{0.5in}
 \noindent \Large{Total Cost:\verb| ${{ req_request.get_total_estimated_cost }}| }
-\section*{Safety}
-\begin{spacing}{2}
-We have included in this shipment material describing the potential health hazards related to animal tissues.       \hspace{1.5}
-\nopagebreak
-\line(1,0) {200}
-\end{spacing}
+
 \end{document}
 
 {% endspaceless %}
