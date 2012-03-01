@@ -389,6 +389,47 @@ def reviews_list_view(request):
 							  context_instance=RequestContext(request))
 
 
+def __notify_mta_uploaded(mta):
+	mta_admins = Account.objects.users_with_perm('mta_upload_notification')
+	from_email = Account.objects.get(user__username='matrr_admin').email
+
+	for admin in mta_admins:
+		recipients = [admin.email]
+		subject = 'User %s has uploaded an MTA form' % mta.user.username
+		body = 	'%s has has uploaded an MTA form.\n' % mta.user.username
+		body += 'This MTA can be downloaded here:  http://gleek.ecs.baylor.edu%s.\n' % mta.mta_file.url
+		body += 'If necessary you can contact %s with the information below.\n\n' % mta.user.username
+		body += "Name: %s %s\nEmail: %s\nPhone: %s \n\n" % (mta.user.first_name, mta.user.last_name, mta.user.email, mta.user.account.phone_number)
+		body += "If this is a valid MTA click here to update MATRR: http://gleek.ecs.baylor.edu%s" % reverse('mta-verify', args=[str(mta.pk)])
+
+		ret = send_mail(subject, body, from_email, recipient_list=recipients)
+		if ret > 0:
+			print "%s MTA verification request sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
+
+	return
+
+
+@user_passes_test(lambda u: u.has_perm('matrr.verify_mta'), login_url='/denied/')
+def mta_verify(request, mta_id):
+	mta = get_object_or_404(Mta, pk=mta_id)
+	account = mta.user.account
+	if not account.act_mta_is_valid:
+		account.act_mta = 'Uploaded MTA is Valid'
+		account.save() # this will update act_mta_is_valid
+		#		send email
+		subject = "Your MTA has been verified"
+		body = "Your Material Transfer Agreement submitted to www.matrr.com has been verified\n" +\
+			   "MATRR can now ship you accepted tissue requests.\n" +\
+			   "This is an automated message, please, do not respond.\n"
+
+		from_e = User.objects.get(username='matrr_admin').email
+		to_e = [account.email]
+		send_mail(subject, body, from_e, to_e, fail_silently=True)
+		messages.success(request, "MTA %s was successfully verified." % str(mta.pk))
+	else:
+		messages.info(request, "MTA %s has already been verified." % str(mta.pk))
+	return render_to_response('base.html', {}, context_instance=RequestContext(request))
+
 def mta_upload(request):
 	# make blank mta instance
 	mta_object = Mta(user=request.user)
@@ -420,6 +461,7 @@ def mta_upload(request):
 		if form.is_valid():
 			# all the fields in the form are valid, so save the data
 			form.save()
+			__notify_mta_uploaded(form.instance)
 			messages.success(request, 'MTA Uploaded Successfully')
 			return redirect(reverse('account-view'))
 	else:

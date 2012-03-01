@@ -368,6 +368,7 @@ class Mta(models.Model):
 		permissions = (
 		('view_mta_file', 'Can view MTA files of other users'),
 		('receive_mta_request', 'Will receive MTA form requests'),
+		('mta_upload_notification', 'Receive emails when MTAs uploaded'),
 		)
 
 
@@ -454,7 +455,7 @@ class Account(models.Model):
 			('view_etoh_data', 'Can view ethanol data'),
 			('bcc_request_email', 'Will receive BCC of processed request emails'),
 			('po_manifest_email', 'Will receive Purchase Order shipping manifest email'),
-
+			('verify_mta', 'Can verify MTA uploads'),
 		])
 
 

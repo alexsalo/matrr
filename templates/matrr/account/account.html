@@ -117,7 +117,7 @@
 	{% if account_info.act_mta and account_info.act_mta != "Non-UBMTA Institution" %}
 		<table class="common">
 			<tr><!--<th>MTA ID</th>-->
-				<th>UBMTA Institution</th>
+				<th>{% if account_info.act_mta == "Uploaded MTA is Valid" %}Custom MTA{% else %}MTA Institution{% endif %}</th>
 			</tr>
 			<tr>
 				<td class='text-center-common-td'>{{ account_info.act_mta }}</td>

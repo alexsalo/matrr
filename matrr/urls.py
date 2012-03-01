@@ -107,6 +107,7 @@ urlpatterns += patterns('matrr.views',
 
 	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),
+	url(r'^upload/mta/verify/(?P<mta_id>\d+)/$', 			mta_verify, name='mta-verify'),
 	url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
