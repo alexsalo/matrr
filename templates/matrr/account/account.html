@@ -207,7 +207,7 @@
 				<tr>
 					<td class='text-center-common-td'>{{ datafile.dat_modified|date:"m/d/Y" }}</td>
 					<td class='text-center-common-td'>{{ datafile.dat_title }}</td>
-					<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{datafile.dat_data_file }}'>View Data File</a></td>
+					<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{datafile.dat_data_file }}'><img src="{{ STATIC_URL }}/images/download.png" height="25" width="25"></a></td>
 				</tr>
 			{% endfor %}
 	</table>
