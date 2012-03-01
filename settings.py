@@ -1,5 +1,4 @@
 import os
-
 path = os.path.dirname(os.path.realpath(__file__))
 
 DEBUG = False
@@ -21,9 +20,14 @@ else:
 
 #if PRODUCTION or GLEEK:
 import getpass
-if getpass.getuser().lower() == 'root':
-	os.environ['HOME'] = "/web/www/html"
 
+if getpass.getuser().lower() == 'root':
+	if PRODUCTION:
+		os.environ['HOME'] = "/web/www/matrr-prod"
+	if DEVELOPMENT:
+		os.environ['HOME'] = "/web/www/matrr-dev"	
+import matplotlib
+matplotlib.use('Agg')
 DATABASES = {
 		'default': {
 			'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -31,7 +35,7 @@ DATABASES = {
 			'NAME': 'matrr_production', # Or path to database file if using sqlite3.
 			'USER': 'matrr_prod', # Not used with sqlite3.
 			'PASSWORD': 'm0nk3y_1s_drUnK', # Not used with sqlite3.
-			'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
+			'HOST': '10.4.100.2', # Set to empty string for localhost. Not used with sqlite3.
 			#'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
 		}
 }
@@ -130,7 +134,7 @@ TEMPLATE_DIRS = (
 	)
 
 SPHINX_API_VERSION = 0x116
-SPHINX_SERVER = 'localhost'
+SPHINX_SERVER = '10.4.100.2'
 SPHINX_PORT = 9312
 SEARCH_INDEXES = {'monkey':"monkey", 'monkey_auth':"monkey_auth", 'cohort':"cohort"}
 
