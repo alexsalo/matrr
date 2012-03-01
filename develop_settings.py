@@ -14,14 +14,14 @@ DATABASES = {
 			'NAME': 'matrr_development', # Or path to database file if using sqlite3.
 			'USER': 'matrr_develop', # Not used with sqlite3.
 			'PASSWORD': 'PsNvAMDt91', # Not used with sqlite3.
-			'HOST': 'localhost', # Set to empty string for localhost. Not used with sqlite3.
+			'HOST': '10.4.100.2', # Set to empty string for localhost. Not used with sqlite3.
 			#'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
 		}
     }
 UPLOAD_DIR = '/web/www/MATRR/dev/upload'
 MEDIA_ROOT = '/web/www/MATRR/dev/media'
 STATIC_ROOT = '/web/www/MATRR/dev/static'
-SPHINX_SERVER = 'localhost'
+SPHINX_SERVER = '10.4.100.2'
 SPHINX_PORT = 9312
 INSTALLED_APPS = (
         'django.contrib.auth',
