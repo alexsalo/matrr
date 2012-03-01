@@ -1988,7 +1988,6 @@ def request_post_save(**kwargs):
 	# For Accepted and Partially accepted Requests
 	if previous_status == RequestStatus.Submitted\
 	and (current_status == RequestStatus.Accepted or current_status == RequestStatus.Partially):
-		req_request.req_accepted_date = datetime.datetime.now()
 		for tissue_request in tissue_requests:
 			tivs = TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
 			for tiv in tivs:
