@@ -195,28 +195,22 @@
 		</div>
 	{% endif %}
 
+	{% if data_files %}
 	<!--This section displays the datafiles the user has created -->
 	<div class='headline'>Data Files</div>
-	{% if data_files %}
-		<table class="common">
-			<tr><!--<th>MTA ID</th>-->
-				<th>Date Uploaded</th>
-				<th>Title</th>
-				<th>&nbsp;</th>
-				{% for datafile in data_files %}
-					<tr>
-						<td class='text-center-common-td'>{{ datafile.dat_modified|date:"m/d/Y" }}</td>
-						<td class='text-center-common-td'>{{ datafile.dat_title }}</td>
-						<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{datafile.dat_data_file }}'>View Data File</a></td>
-					</tr>
-				{% endfor %}
-		</table>
-	{% else %}
-		<div class="messages">
-			<div class="info">
-				{% if edit %}You do{% else %}{{ account_info.user.username }} does{% endif %} not have any data files.
-			</div>
-		</div>
+	<table class="common">
+		<tr><!--<th>MTA ID</th>-->
+			<th>Date Uploaded</th>
+			<th>Title</th>
+			<th>&nbsp;</th>
+			{% for datafile in data_files %}
+				<tr>
+					<td class='text-center-common-td'>{{ datafile.dat_modified|date:"m/d/Y" }}</td>
+					<td class='text-center-common-td'>{{ datafile.dat_title }}</td>
+					<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{datafile.dat_data_file }}'>View Data File</a></td>
+				</tr>
+			{% endfor %}
+	</table>
 	{% endif %}
 
 	{% if rud_on %}
