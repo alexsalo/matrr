@@ -503,10 +503,10 @@ def create_Assay_Development_tree():
 
 
 
-ERROR_OUTPUT = "%d %s # %s"
+ERROR_OUTPUT = "%d %s # %s\n\n"
 
 @transaction.commit_on_success
-def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
+def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8', dump_duplicates=True, has_headers=True):
 	"""
 		0 - date
 		1 - monkey_real_id
@@ -539,7 +539,7 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 		('mtd_etoh_median_idi'),
 		('mtd_etoh_mean_drink_vol'),
 		('mtd_etoh_mean_bout_length'),
-		('mtd_etoh_media_ibi'),
+		('mtd_etoh_media_ibi'),## typo matches model field
 		('mtd_etoh_mean_bout_vol'),
 		('mtd_etoh_st_1'),
 		('mtd_etoh_st_2'),
@@ -574,7 +574,11 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data):
+			if line_number == 0 and has_headers: # cyno 2 had column headers
+				continue
 			data = line.split(',')
+			if data[0] == '0.5' or data[0] == '1' or data[0] == '1.5': # for some damn reason they added a column in cyno 2's induction file.
+				ind_portion = data.pop(0)
 			data_fields = data[2:38]
 			data_fields.extend(data[40:46])
 
@@ -617,7 +621,8 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8'):
 
 			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment=de, monkey=monkey)
 			if mtds.count() != 0:
-				print ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
+				if dump_duplicates:
+					print ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
 				continue
 			mtd = MonkeyToDrinkingExperiment()
 			mtd.monkey = monkey
