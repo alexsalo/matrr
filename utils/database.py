@@ -338,7 +338,7 @@ def dump_monkey_protein_data(queryset, output_file):
 def load_monkey_data(input_file):
 	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
 	columns = input_data.next()
-
+	
 	for row in input_data:
 		if row[2] == '0':
 				continue
@@ -640,6 +640,66 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8', dump
 				continue
 			mtd.save()
 
+
+def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line):
+	fields = (
+		'ebt_number',
+		'',
+		'ebt_start_time',
+		'ebt_end_time',
+		'ebt_length',
+		'ebt_ibi',
+		'ebt_volume'
+		)
+	FIELDS_INDEX = (1,7) #[1,7) => 1,2,3,4,5,6
+	MONKEY_DATA_INDEX = 0
+	BOUT_NUMBER_DATA_INDEX = 1
+	
+	if data_list[MONKEY_DATA_INDEX] == '28479':
+		continue
+	try:
+		monkey = Monkey.objects.get(mky_real_id=data_list[MONKEY_DATA_INDEX])
+	except:
+		print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+		continue
+	
+	mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
+	if mtds.count() == 0:
+		if create_mtd:
+			mtd = MonkeyToDrinkingExperiment(monkey=monkey, drinking_experiment=dex, mtd_etoh_intake=-1, mtd_veh_intake=-1, mtd_total_pellets=-1)
+			mtd.save()
+			mtd = [mtd,]
+			print "%d Creating MTD." % line_number
+		else:
+			print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+			continue
+	if mtds.count() > 1:
+		print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+		continue
+	mtd = mtds[0]
+	
+	ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data_list[BOUT_NUMBER_DATA_INDEX])
+	if ebts.count() != 0:
+		print ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
+		continue
+	
+	ebt = ExperimentBout()
+	ebt.mtd = mtd			
+	data_fields = data_list[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+	
+	for i, field in enumerate(fields):
+		
+		if data_fields[i] != '':
+				setattr(ebt, field, data_fields[i])
+			
+	try:
+		ebt.full_clean()
+		
+	except Exception as e:
+		print ERROR_OUTPUT % (line_number, e, line)
+		continue
+	ebt.save()
+
 def load_ebt_one_file(file_name, dex, create_mtd=False):
 	fields = (
 		'ebt_number',
@@ -700,6 +760,68 @@ def load_ebt_one_file(file_name, dex, create_mtd=False):
 				print ERROR_OUTPUT % (line_number, e, line)
 				continue
 			ebt.save()
+
+def load_edr_one_inst(data_list, dex, line_number, line):
+	fields = (
+		'edr_number',
+		'edr_start_time',
+		'edr_end_time',
+		'edr_length',
+		'edr_idi',
+		'edr_volume'
+		)
+	FIELDS_INDEX = (2,8) #[2,8) => 2,3,4,5,6,7
+	MONKEY_DATA_INDEX = 0
+	BOUT_NUMBER_DATA_INDEX = 1
+	DRINK_NUMBER_DATA_INDEX = 2
+		
+	if data_list[MONKEY_DATA_INDEX] == '28479':
+		continue
+	try:
+		monkey = Monkey.objects.get(mky_real_id=data_list[MONKEY_DATA_INDEX])
+	except:
+		print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+		continue
+	
+	mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
+	if mtds.count() == 0:
+		print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+		continue
+	if mtds.count() > 1:
+		print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+		continue
+	mtd = mtds[0]
+	
+	ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data_list[BOUT_NUMBER_DATA_INDEX])
+	if ebts.count() == 0:
+		print ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
+		continue
+	if ebts.count() > 1:
+		print ERROR_OUTPUT % (line_number, "More than one EBT.", line)
+		continue
+	ebt = ebts[0]
+	
+	edrs = ExperimentDrink.objects.filter(ebt=ebt, edr_number = data_list[DRINK_NUMBER_DATA_INDEX])
+	if edrs.count() != 0:
+		print ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
+		continue
+	
+	edr = ExperimentDrink()
+	edr.ebt = ebt
+			
+	data_fields = data_list[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+	
+	for i, field in enumerate(fields):
+		if data_fields[i] != '':
+			setattr(edr, field, data_fields[i])
+			
+	try:
+		edr.full_clean()
+		
+	except Exception as e:
+		print ERROR_OUTPUT % (line_number, e, line)
+		continue
+	edr.save()	
 			
 def load_edr_one_file(file_name, dex):
 	fields = (
@@ -766,6 +888,37 @@ def load_edr_one_file(file_name, dex):
 				print ERROR_OUTPUT % (line_number, e, line)
 				continue
 			edr.save()	
+
+def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, create_mtd=False):
+	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
+	bouts = list()
+	drinks = list()
+	last_date = None
+	with open(file_name, 'r') as f:
+		for line_number, line in enumerate(f):
+			entry = line.split("\t")
+			date = dt.strptime(entry[1], "%Y_%m_%d")
+			if last_date != date:
+				dexs = DrinkingExperiment.objects.filter(cohort=cohort,dex_type=dex_type,dex_date=date)
+				if dexs.count() == 0:
+					print "DEX does not exist: %s" % entry
+					continue
+				if dexs.count() > 1:
+					print "More than one DEX: %s" % entry
+					continue
+				dex = dexs[0]
+			if entry[10] == 'BoutRec':
+				bouts.append((dex, line_number, line, entry[2:-1]))
+			else:
+				drinks.append((dex, line_number, line, entry[2:-1]))
+			last_date = date
+	print "Loading bouts ..."
+	for (dex, line_number, line, bout) in bouts:
+		load_ebt_one_inst(bout, line_number, create_mtd, dex, line)
+	print "Loading drinks"
+	for (dex, line_number, line, drink) in drinks:
+		load_edr_one_inst(drink, dex, line_number, line)
+
 			
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 
