@@ -402,7 +402,7 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 			return False, 'NO MAP'
 	if not isinstance(protein, Protein):
 		try:
-			protein = Protein.objects.get(pk=cohort)
+			protein = Protein.objects.get(pk=protein)
 		except Protein.DoesNotExist:
 			print("That's not a valid protein.")
 			return False, 'NO MAP'
@@ -460,7 +460,7 @@ COHORT_PLOTS.update({
 				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 	'Average Ethanol Intake, 22hr'),
 				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake, 4pct ml"),
 				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, 				"Total Ethanol Intake, g per kg"),
-				"cohort_protein_boxplot": (cohort_protein_boxplot, 							""),
+				"cohort_protein_boxplot": (cohort_protein_boxplot, 							"Cohort Protein Boxplot"),
 #				 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
 #				 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
 #				 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
@@ -1212,21 +1212,25 @@ MONKEY_PLOTS.update({
 				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 "Total Monkey Ethanol Intake, g per kg"),
 })
 
-def create_plots():
-	from matrr.models import MonkeyImage, Monkey
-	MonkeyImage.objects.all().delete()
-	for monkey in Monkey.objects.all():
-		for key in MONKEY_PLOTS:
-			if 'intraday' in key:
-				continue
-			graph = key
-			monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[key][1])
-			monkeyimage.save()
+def create_plots(cohorts=True, monkeys=True, delete=True):
+	if monkeys:
+		from matrr.models import MonkeyImage, Monkey
+		if delete:
+			MonkeyImage.objects.all().delete()
+		for monkey in Monkey.objects.all():
+			for key in MONKEY_PLOTS:
+				if 'intraday' in key:
+					continue
+				graph = key
+				monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[key][1])
+				monkeyimage.save()
 
-	from matrr.models import CohortImage, Cohort
-	CohortImage.objects.all().delete()
-	for cohort in Cohort.objects.all():
-		for key in COHORT_PLOTS:
-			graph = key
-			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[key][1])
-			cohortimage.save()
+	if cohorts:
+		from matrr.models import CohortImage, Cohort
+		if delete:
+			CohortImage.objects.all().delete()
+		for cohort in Cohort.objects.all():
+			for key in COHORT_PLOTS:
+				graph = key
+				cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[key][1])
+				cohortimage.save()
