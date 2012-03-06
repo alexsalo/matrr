@@ -14,6 +14,7 @@ from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
+import numpy
 from matrr.process_latex import process_latex
 import settings
 
@@ -191,7 +192,7 @@ class Institution(models.Model):
 
 	class Meta:
 		db_table = 'ins_institutions'
-
+		ordering = ['ins_institution_name']
 
 class EventType(models.Model):
 	evt_id = models.AutoField('ID', primary_key=True)
@@ -366,6 +367,8 @@ class Mta(models.Model):
 		db_table = 'mta_material_transfer'
 		permissions = (
 		('view_mta_file', 'Can view MTA files of other users'),
+		('receive_mta_request', 'Will receive MTA form requests'),
+		('mta_upload_notification', 'Receive emails when MTAs uploaded'),
 		)
 
 
@@ -407,6 +410,7 @@ class Account(models.Model):
 	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
 
 	act_mta = models.CharField("MTA", max_length=500, null=True, blank=True)
+	act_mta_is_valid = models.BooleanField('MTA is Valid', null=False, blank=False, default=False)
 
 	objects = AccountManager()
 
@@ -428,12 +432,21 @@ class Account(models.Model):
 
 	def has_mta(self):
 		if self.act_mta:
+			institution = Institution.objects.filter(ins_institution_name=self.act_mta)
 			if self.act_mta == "Uploaded MTA is Valid": # if the user has uploaded a VALID and VERIFIED mta
 				return True # then call my MTA valid
-			elif Institution.objects.filter(ins_institution_name=self.act_mta): # if my MTA is in the Institution table, which was pulled from the UBMTA
+			elif institution and institution[0].ins_institution_name != "Non-UBMTA Institution": # if my MTA is in the Institution table, which was pulled from the UBMTA
 				return True # then call my MTA valid
 		# in all other cases, user has no valid MTA
 		return False
+
+	def save(self, *args, **kwargs):
+		super(Account, self).save(*args, **kwargs)
+		mta_status = self.has_mta()
+		if self.act_mta_is_valid != mta_status:
+			self.act_mta_is_valid = mta_status
+			self.save()
+
 
 	class Meta:
 		db_table = 'act_account'
@@ -442,7 +455,7 @@ class Account(models.Model):
 			('view_etoh_data', 'Can view ethanol data'),
 			('bcc_request_email', 'Will receive BCC of processed request emails'),
 			('po_manifest_email', 'Will receive Purchase Order shipping manifest email'),
-
+			('verify_mta', 'Can verify MTA uploads'),
 		])
 
 
@@ -1280,10 +1293,9 @@ class Request(models.Model, DiffingMixin):
 
 	def can_be_shipped(self):
 		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
-			if self.req_purchase_order and self.user.account.act_fedex and self.user.account.has_mta():
+			if self.req_purchase_order and self.user.account.has_mta():
 				return True
 		return False
-
 
 	def submit_request(self):
 		self.req_status = RequestStatus.Submitted
@@ -1901,9 +1913,21 @@ class MonkeyProtein(models.Model):
 	protein = models.ForeignKey(Protein, null=False, related_name='monkey_set', db_column='pro_id', editable=False)
 	mpn_date = models.DateTimeField("Date Collected", editable=False)
 	mpn_value = models.FloatField(null=True)
+	mpn_stdev = models.FloatField("Standard Deviation from Cohort mean", null=True)
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
+
+	def populate_stdev(self, recalculate=False):
+		if self.mpn_stdev is None or recalculate:
+			cohort_proteins = MonkeyProtein.objects.filter(protein=self.protein, mpn_date=self.mpn_date, monkey__in=self.monkey.cohort.monkey_set.all().exclude(mky_id=self.monkey.pk))
+			cp_values = numpy.array(cohort_proteins.values_list('mpn_value', flat=True))
+			stdev = cp_values.std()
+			mean = cp_values.mean()
+			diff = self.mpn_value - mean
+			self.mpn_stdev = diff / stdev
+			self.save()
+
 
 	class Meta:
 		db_table = 'mpn_monkey_protein'
@@ -2042,6 +2066,12 @@ def cohortimage_pre_delete(**kwargs):
 		os.remove(cig.thumbnail.path)
 	if cig.html_fragment and os.path.exists(cig.html_fragment.path):
 		os.remove(cig.html_fragment.path)
+
+@receiver(pre_delete, sender=DataFile)
+def datafile_pre_delete(**kwargs):
+	dat = kwargs['instance']
+	if dat.dat_data_file and os.path.exists(dat.dat_data_file.path):
+		os.remove(dat.dat_data_file.path)
 
 @receiver(post_save, sender=TissueInventoryVerification)
 def tiv_post_save(**kwargs):

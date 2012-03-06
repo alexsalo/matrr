@@ -389,15 +389,79 @@ def reviews_list_view(request):
 							  context_instance=RequestContext(request))
 
 
+def __notify_mta_uploaded(mta):
+	mta_admins = Account.objects.users_with_perm('mta_upload_notification')
+	from_email = Account.objects.get(user__username='matrr_admin').email
+
+	for admin in mta_admins:
+		recipients = [admin.email]
+		subject = 'User %s has uploaded an MTA form' % mta.user.username
+		body = 	'%s has has uploaded an MTA form.\n' % mta.user.username
+		body += 'This MTA can be downloaded here:  http://gleek.ecs.baylor.edu%s.\n' % mta.mta_file.url
+		body += 'If necessary you can contact %s with the information below.\n\n' % mta.user.username
+		body += "Name: %s %s\nEmail: %s\nPhone: %s \n\n" % (mta.user.first_name, mta.user.last_name, mta.user.email, mta.user.account.phone_number)
+		body += "If this is a valid MTA click here to update MATRR: http://gleek.ecs.baylor.edu%s" % reverse('mta-verify', args=[str(mta.pk)])
+
+		ret = send_mail(subject, body, from_email, recipient_list=recipients)
+		if ret > 0:
+			print "%s MTA verification request sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
+
+	return
+
+
+@user_passes_test(lambda u: u.has_perm('matrr.verify_mta'), login_url='/denied/')
+def mta_verify(request, mta_id):
+	mta = get_object_or_404(Mta, pk=mta_id)
+	account = mta.user.account
+	if not account.act_mta_is_valid:
+		account.act_mta = 'Uploaded MTA is Valid'
+		account.save() # this will update act_mta_is_valid
+		#		send email
+		subject = "Your MTA has been verified"
+		body = "Your Material Transfer Agreement submitted to www.matrr.com has been verified\n" +\
+			   "MATRR can now ship you accepted tissue requests.\n" +\
+			   "This is an automated message, please, do not respond.\n"
+
+		from_e = User.objects.get(username='matrr_admin').email
+		to_e = [account.email]
+		send_mail(subject, body, from_e, to_e, fail_silently=True)
+		messages.success(request, "MTA %s was successfully verified." % str(mta.pk))
+	else:
+		messages.info(request, "MTA %s has already been verified." % str(mta.pk))
+	return render_to_response('base.html', {}, context_instance=RequestContext(request))
+
 def mta_upload(request):
 	# make blank mta instance
 	mta_object = Mta(user=request.user)
 	# make a MTA upload form if one does not exist
 	if request.method == 'POST':
+		if 'request_form' in request.POST:
+			if not settings.PRODUCTION:
+				print "%s - New request email not sent, settings.PRODUCTION = %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), settings.PRODUCTION)
+			else:
+				account = request.user.account
+				from_email = Account.objects.get(user__username='matrr_admin').email
+
+				users = Account.objects.users_with_perm('receive_mta_request')
+				for user in users:
+					recipients = [user.email]
+					subject = 'User %s has requested an MTA form' % account.user.username
+					body = '%s has indicated he/she is not associated with any of the UBMTA signatories and requested an MTA form.\n' \
+						   'He/she was told instructions would be provided with the MTA form.  '\
+						   'If you cannot contact %s with the information provided below, please notify the MATRR admins.\n' % (account.user.username, account.user.username)
+					body += "\n\nName: %s %s\nEmail: %s\nPhone: %s" % (account.first_name, account.last_name, account.email, account.phone_number)
+					body += "\n\nIn addition to any other steps, please have %s upload the signed MTA form to MATRR using this link: http://gleek.ecs.baylor.edu%s" % (account.user.username, reverse('mta-upload'))
+
+					ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+					if ret > 0:
+						print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+			messages.success(request, 'A MATRR administrator has been notified of your MTA request and will contact you with more information.')
+			return redirect(reverse('account-view'))
 		form = MtaForm(request.POST, request.FILES, instance=mta_object)
 		if form.is_valid():
 			# all the fields in the form are valid, so save the data
 			form.save()
+			__notify_mta_uploaded(form.instance)
 			messages.success(request, 'MTA Uploaded Successfully')
 			return redirect(reverse('account-view'))
 	else:
@@ -478,6 +542,34 @@ def account_info(request):
 		#create the form for shipping address
 		form = AccountForm(instance=request.user.account)
 	return render_to_response('matrr/account/account_info_form.html',
+			{'form': form,
+			 'user': request.user
+		},
+							  context_instance=RequestContext(request))
+
+
+def account_mta(request):
+	account = request.user.account
+	if request.method == 'POST':
+		form = AccountMTAForm(data=request.POST)
+		if form.is_valid():
+			institution = form.cleaned_data['institution'].ins_institution_name
+			account.act_mta = institution
+			account.save()
+
+			if institution == "Non-UBMTA Institution":
+				return redirect('mta-upload')
+#				messages.info(request, "If your institution is not part of the <acronym>, you must download, sign, scan, and upload a Material Transfer Agreement.  ")
+			else:
+				messages.success(request, 'Account Info Saved')
+				return redirect(reverse('account-view'))
+	else:
+		try:
+			institution = Institution.objects.get(ins_institution_name=account.act_mta)
+		except Institution.DoesNotExist:
+			institution = Institution.objects.get(ins_institution_name='Non-UBMTA Institution')
+		form = AccountMTAForm(initial={'institution': institution})
+	return render_to_response('matrr/account/account_mta.html',
 			{'form': form,
 			 'user': request.user
 		},
@@ -775,12 +867,13 @@ def order_detail(request, req_request_id, edit=False):
 	eval = req_request.is_evaluated()
 	po_form = ''
 	if not req_request.req_status == 'SH' and not req_request.req_status == 'RJ':
-		po_form = PurchaseOrderForm(instance=req_request)
+		if request.user == req_request.user or request.user.is_superuser:
+			po_form = PurchaseOrderForm(instance=req_request)
 		if request.method == 'POST':
 			po_form = PurchaseOrderForm(instance=req_request, data=request.POST)
 			if po_form.is_valid():
 				po_form.save()
-				messages.info(request, "Purchase Order number has been saved.")
+				messages.success(request, "Purchase Order number has been saved.")
 			else:
 				messages.error(request, "Purchase Order form invalid, please try again.  Please notify a MATRR admin if this message is erroneous.")
 
@@ -1006,13 +1099,13 @@ def request_review_process(request, req_request_id):
 				messages.success(request, "The tissue request has been processed.")
 				# Email subject *must not* contain newlines
 				subject = ''.join(form.cleaned_data['subject'].splitlines())
-				if not settings.DEVELOPMENT:
+				if settings.PRODUCTION:
 					perm = Permission.objects.get(codename='bcc_request_email')
 					bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
 					email = EmailMessage(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
 					if status != RequestStatus.Rejected:
 						outfile = open('/tmp/%s.pdf' % str(req_request.pk), 'wb')
-						process_latex('latex/shipping_manifest.tex', {'req_request': req_request,
+						process_latex('latex/invoice.tex', {'req_request': req_request,
 																	  'account': req_request.user.account,
 																	  'time': datetime.today(),
 																	  }, outfile=outfile)
@@ -1132,12 +1225,9 @@ def search_index(terms, index, model):
 
 
 def search(request):
-	from settings import SEARCH_INDEXES
-
-	results = None
 	form = FulltextSearchForm()
 	num_results = 0
-	user_auth = False
+	monkey_auth = False
 
 	terms = ''
 	results = dict()
@@ -1146,23 +1236,28 @@ def search(request):
 		if form.is_valid():
 			terms = form.cleaned_data['terms']
 
-			if request.user.has_perm('monkey_view_confidential'):
-				user_auth = True
-				results['monkeys'] = search_index(terms, SEARCH_INDEXES['monkey_auth'], Monkey)
-			else:
-				user_auth = False
-				results['monkeys'] = search_index(terms, SEARCH_INDEXES['monkey'], Monkey)
+			from django.db.models.loading import get_model
+			from settings import PRIVATE_SEARCH_INDEXES, PUBLIC_SEARCH_INDEXES
+			SEARCH_INDEXES = PUBLIC_SEARCH_INDEXES
 
-			results['cohorts'] = search_index(terms, SEARCH_INDEXES['cohort'], Cohort)
+			for key, value in PRIVATE_SEARCH_INDEXES.items():
+				if 'monkey_auth' in key and request.user.has_perm('monkey_view_confidential'):
+					monkey_auth = True
+					SEARCH_INDEXES['monkey'] = value
+#					results['monkeys'] = search_index(terms, SEARCH_INDEXES[key], Monkey)
 
-			num_results = len(results['monkeys'])
-			num_results += len(results['cohorts'])
+			for key, value in SEARCH_INDEXES.items():
+				results[key] = search_index(terms, value[0], get_model('matrr', value[1]))
+
+			num_results = 0
+			for key in results:
+				num_results += len(results[key])
 
 	return render_to_response('matrr/search.html',
 			{'terms': terms,
 			 'results': results,
 			 'num_results': num_results,
-			 'user_auth': user_auth,
+			 'monkey_auth': monkey_auth,
 			 'form': form},
 							  context_instance=RequestContext(request))
 
@@ -1568,7 +1663,7 @@ def tools_monkey_protein_graphs(request, cohort_id, monkey_id=0):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def tools_etoh(request):
-	return 0
+	return redirect('/')
 
 #  VIP tools
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
@@ -1670,13 +1765,13 @@ def vip_graph_builder(request, method_name):
 
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
-	subject_form = MonkeySelectForm(data=request.POST)
+	subject_form = MonkeySelectForm(data=request.POST, monkey_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
 	matrr_image = ''
 
 	if date_form.is_valid() and subject_form.is_valid():
 		parameters = {}
 		subject_data = subject_form.cleaned_data
-		subject = subject_data['monkey']
+		subject = subject_data['subject']
 		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey=subject)
 
 		date_data = date_form.cleaned_data
@@ -1707,7 +1802,7 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
-	subject_form = VIPGraphForm_cohorts(data=request.POST)
+	subject_form = CohortSelectForm(data=request.POST, cohort_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
 
 	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges}
 
@@ -1781,6 +1876,10 @@ def sendfile(request, id):
 	files.append((r, 'html_fragment'))
 	r = DataFile.objects.filter(dat_data_file=id)
 	files.append((r, 'dat_data_file'))
+	r = CohortProteinImage.objects.filter(image=id)
+	files.append((r, 'image'))
+	r = CohortProteinImage.objects.filter(thumbnail=id)
+	files.append((r, 'thumbnail'))
 
 	#	this will work for all listed files
 	file = None
@@ -1808,31 +1907,13 @@ def sendfile(request, id):
 	return response
 
 
-def test_view(request):
-	monkeys = ''
-	#	field_names = ['mky_drinking', 'cohort', 'mky_name', 'mky_id', 'mky_real_id', ]
-	#	fields = [Monkey._meta.get_field(field) for field in field_names]
-	fields = Monkey._meta.fields
-	if request.POST:
-		spiffy_form = FilterForm(fields, data=request.POST, number_of_fields=1)
-
-
-		#this shit is crazytown
-		if spiffy_form.is_valid(): # hooray, we have a valid form!
-			q_object = spiffy_form.get_q_object()
-			monkeys = Monkey.objects.filter(q_object)
-	else:
-		spiffy_form = FilterForm(fields, number_of_fields=1)
-	return render_to_response('test.html', {'spiffy_form': spiffy_form, 'monkeys': monkeys}, context_instance=RequestContext(request))
-
-
 @user_passes_test(lambda u: u.has_perm('auth.upload_raw_data'), login_url='/denied/')
 def raw_data_upload(request):
 	if request.method == 'POST':
 		form = RawDataUploadForm(request.POST, request.FILES)
 		if form.is_valid():
 			f = request.FILES['data']
-			name = f.name + datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+			name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S") + f.name
 			upload_path = os.path.join(settings.UPLOAD_DIR, name)
 			destination = open(upload_path, 'wb+')
 			for chunk in f.chunks():

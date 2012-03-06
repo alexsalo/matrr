@@ -111,35 +111,46 @@
 		</a>
 		</div>
 	{% endif %}
-	<!--
- This section is for the material transfer agreement
- -->
 
+	<!-- This section is for the material transfer agreement -->
 	<div class='headline'>Material Transfer Agreements</div>
-	{% if mta_info %}
+	{% if account_info.act_mta and account_info.act_mta != "Non-UBMTA Institution" %}
 		<table class="common">
 			<tr><!--<th>MTA ID</th>-->
-				<th>Date Uploaded</th>
-				<th>Title</th>
-				<th>&nbsp;</th>
-				{% for mta in mta_info.all %}
-					<tr>
-						<!--<td class='text-center-common-td'>{{ mta.mta_id }}</td> -->
-						<td class='text-center-common-td'>{{ mta.mta_date|date:"m/d/Y" }}</td>
-						<td class='text-center-common-td'>{{ mta.mta_title }}</td>
-						<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{mta.mta_file }}'>View MTA File</a></td>
+				<th>{% if account_info.act_mta == "Uploaded MTA is Valid" %}Custom MTA{% else %}MTA Institution{% endif %}</th>
+			</tr>
+			<tr>
+				<td class='text-center-common-td'>{{ account_info.act_mta }}</td>
+			</tr>
+		</table>
+	{% else %}{% if mta_info %}
+		<table class="common">
+			{% for mta in mta_info.all %}
+				{% if forloop.counter == 1 %}
+					<tr><!--<th>MTA ID</th>-->
+						<th>Date Uploaded</th>
+						<th>Title</th>
+						<th>&nbsp;</th>
 					</tr>
+				{% endif %}
+				<tr>
+					<!--<td class='text-center-common-td'>{{ mta.mta_id }}</td> -->
+					<td class='text-center-common-td'>{{ mta.mta_date|date:"m/d/Y" }}</td>
+					<td class='text-center-common-td'>{{ mta.mta_title }}</td>
+					<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{mta.mta_file }}'>View MTA File</a></td>
+				</tr>
 				{% endfor %}
 		</table>
 	{% else %}
 		<div class="messages">
 			<div class="info">
-				{% if edit %}You do{% else %}{{ account_info.user.username }} does{% endif %} not have any MTA's uploaded.
+				{% if edit %}You do{% else %}{{ account_info.user.username }} does{% endif %} not have any MTAs.
 			</div>
 		</div>
-	{% endif %}
+	{% endif %}{% endif %}
+
 	{% if edit %}
-		<div class="text-right"><a href="{% url mta-upload %}" class='blockLinkButton'>
+		<div class="text-right"><a href="{% url account-mta %}" class='blockLinkButton'>
 			<!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45'/>-->
 			Update
 		</a>
@@ -182,39 +193,23 @@
 				{% if edit %}You do{% else %}{{ account_info.user.username }} does{% endif %} not have any pending requests.
 			</div>
 		</div>
-	{% endif %}
-
+	{% endif %}	{% if data_files %}
 	<!--This section displays the datafiles the user has created -->
 	<div class='headline'>Data Files</div>
-	{% if data_files %}
-		<table class="common">
-			<tr><!--<th>MTA ID</th>-->
-				<th>Date Uploaded</th>
-				<th>Title</th>
-				<th>&nbsp;</th>
-				{% for datafile in data_files %}
-					<tr>
-						<td class='text-center-common-td'>{{ datafile.dat_modified|date:"m/d/Y" }}</td>
-						<td class='text-center-common-td'>{{ datafile.dat_title }}</td>
-						<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{datafile.dat_data_file }}'>View Data File</a></td>
-					</tr>
-				{% endfor %}
-		</table>
-	{% else %}
-		<div class="messages">
-			<div class="info">
-				{% if edit %}You do{% else %}{{ account_info.user.username }} does{% endif %} not have any data files.
-			</div>
-		</div>
+	<table class="common">
+		<tr><!--<th>MTA ID</th>-->
+			<th>Date Uploaded</th>
+			<th>Title</th>
+			<th>&nbsp;</th>
+			{% for datafile in data_files %}
+				<tr>
+					<td class='text-center-common-td'>{{ datafile.dat_modified|date:"m/d/Y" }}</td>
+					<td class='text-center-common-td'>{{ datafile.dat_title }}</td>
+					<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{datafile.dat_data_file }}'><img src="{{ STATIC_URL }}/images/download.png" height="25" width="25"></a></td>
+				</tr>
+			{% endfor %}
+	</table>
 	{% endif %}
-	{% if edit %}
-		<div class="text-right"><a href="{% url mta-upload %}" class='blockLinkButton'>
-			<!--<img src="{{ STATIC_URL }}images/update-button.png" border='0' height='20' width='45'/>-->
-			Update
-		</a>
-		</div>
-	{% endif %}
-
 
 	{% if rud_on %}
 		<div class='headline'>Research Updates</div>

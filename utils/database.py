@@ -1175,11 +1175,73 @@ def load_institutions(file_name):
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line in read_data:
-			institution, isnew = Institution.objects.get_or_create(ins_institution_name=line)
+			institution, isnew = Institution.objects.get_or_create(ins_institution_name=line.rstrip())
 			if isnew:
 				institution.save()
+		institution, isnew = Institution.objects.get_or_create(ins_institution_name="Non-UBMTA Institution") # required to exist for MTA operations
+		if isnew:
+			institution.save()
 
 
+def assign_cohort_institutions():
+	wfu = Institution.objects.get(ins_institution_name='Wake Forest University')
+	ohsu = Institution.objects.get(ins_institution_name='Oregon Health Sciences University, Technology Management')
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 1')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 3')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 8')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 1')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 2')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
+	cohort.institution = ohsu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Vervet 1')
+	cohort.institution = wfu
+	cohort.save()
+
+	cohort = Cohort.objects.get(coh_cohort_name='INIA Vervet 2')
+	cohort.institution = wfu
+	cohort.save()
 
 
 

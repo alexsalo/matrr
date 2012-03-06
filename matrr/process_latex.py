@@ -51,10 +51,12 @@ def process_latex(template, context={}, type='pdf', outfile=None):
 
 
 def pdflatex(file, type='pdf'):
+	import os
+	path = os.path.dirname(os.path.realpath(__file__))
 	if PRODUCTION:
 		call(['pdflatex', 	'-interaction=nonstopmode',
 							'-output-format', type,
-							'-fmt', "/web/www/pdflatex/pdflatex",
+							'-fmt', path + "/pdflatex",
 							file],
 			  cwd=dirname(file), stdout=PIPE, stderr=PIPE)
 	else:

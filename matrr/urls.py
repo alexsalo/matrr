@@ -101,10 +101,13 @@ urlpatterns += patterns('matrr.views',
 	url(r'^account/shipping/$', 		account_shipping, name='account-shipping'),
 	url(r'^account/address/$',         account_address, name='account-address'),
 	url(r'^account/info/$',         account_info, name='account-info'),
+	url(r'^account/mta/$',         account_mta, name='account-mta'),
 	url(r'^account/verify/(?P<user_id>\d+)/$', account_verify, name='account-verify'),
 	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-reviewer-view'),
 
+	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),
+	url(r'^upload/mta/verify/(?P<mta_id>\d+)/$', 			mta_verify, name='mta-verify'),
 	url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
@@ -134,13 +137,11 @@ urlpatterns += patterns('matrr.views',
 	url(r'^tools/vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
 	url(r'^tools/vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
 
-	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 
 	)
 
 if settings.DEVELOPMENT:
 #if False:
-	urlpatterns += patterns('matrr.views', url(r'^test/$', test_view))
 	from django.views.static import serve
 
 	_media_url = settings.MEDIA_URL
