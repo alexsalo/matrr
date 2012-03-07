@@ -12,8 +12,8 @@ def send_shipment_ready_notification(req_request):
 	if not isinstance(req_request, Request):
 		req_request = Request.objects.get(pk=req_request.req_request_id)
 
-#	users = User.objects.filter(is_staff=True).exclude(username='garyjmurray')
-	users = User.objects.filter(username='jarquet')
+	users = User.objects.filter(is_staff=True).exclude(username='garyjmurray')
+#	users = User.objects.filter(username='jarquet')
 	from_email = User.objects.get(username='matrr_admin').email
 	for user in users:
 		email = user.email
@@ -26,4 +26,4 @@ def send_shipment_ready_notification(req_request):
 
 		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 		if ret > 0:
-			print "%s New request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+			print "%s Shipment info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
