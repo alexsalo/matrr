@@ -870,10 +870,14 @@ def order_detail(request, req_request_id, edit=False):
 		if request.user == req_request.user or request.user.is_superuser:
 			po_form = PurchaseOrderForm(instance=req_request)
 		if request.method == 'POST':
+			_prev_shippable = req_request.can_be_shipped()
 			po_form = PurchaseOrderForm(instance=req_request, data=request.POST)
 			if po_form.is_valid():
 				po_form.save()
 				messages.success(request, "Purchase Order number has been saved.")
+				if not _prev_shippable and req_request.can_be_shipped():  # couldn't be shipped, but now can
+					from matrr.emails import send_shipment_ready_notification
+					send_shipment_ready_notification(req_request)
 			else:
 				messages.error(request, "Purchase Order form invalid, please try again.  Please notify a MATRR admin if this message is erroneous.")
 
