@@ -1,14 +1,14 @@
 import re
 import sys, os
-from django.core.urlresolvers import reverse
-from django.db.models.query_utils import Q
-from django.template.loader import render_to_string
-
 project =  os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(project)
 from django.core.management import setup_environ
 import settings
 setup_environ(settings)
+
+from django.core.urlresolvers import reverse
+from django.db.models.query_utils import Q
+from django.template.loader import render_to_string
 from datetime import datetime
 from django.core.mail import send_mail
 from matrr.models import RequestStatus, Request, Account, Acceptance
@@ -33,6 +33,7 @@ def urge_po_mta():
 		elif req.req_status == RequestStatus.Partially:
 			email_template = 'matrr/review/request_partially_accepted_email.txt'
 		else:
+			print "How did you get here?!"
 			raise Exception('How did you get here?!')
 
 		request_url = reverse('order-detail', args=[req.req_request_id])
