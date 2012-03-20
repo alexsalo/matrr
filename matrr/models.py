@@ -2014,7 +2014,7 @@ def request_post_save(**kwargs):
 																monkey=monkey,
 																tissue_request=None)
 				tv.save()
-		if not settings.DEVELOPMENT:
+		if settings.PRODUCTION:
 			perm = Permission.objects.get(codename='po_manifest_email')
 			to_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
 			filename = 'manifest-%s-%s.pdf' % (str(req_request.user), str(req_request.pk))

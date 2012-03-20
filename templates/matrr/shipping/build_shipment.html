@@ -133,10 +133,17 @@
 		{% if req_request.shipment.shp_shipment_date %}
 			<div class='sufficient'>Shipped on: {{ req_request.shipment.shp_shipment_date }}</div>
 		{% else %}
-			<form action='' method='post'>
-				{% csrf_token %}
-				<button type='submit' name='shipped' class="blockLinkCheckoutButton">Ship Order</button>
-			</form>
+			{% if confirm_ship %}
+				<form action='' method='post'>
+					{% csrf_token %}
+					<button type='submit' name='confirm_ship' class="blockLinkCheckoutButton">Ship Order, for serious.</button>
+				</form>
+			{% else %}
+				<form action='' method='post'>
+					{% csrf_token %}
+					<button type='submit' name='ship' class="blockLinkCheckoutButton">Ship Order</button>
+				</form>
+			{% endif %}
 		{% endif %}
 	</div>
 {% endblock %}

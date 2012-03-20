@@ -1268,12 +1268,13 @@ def search(request):
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def build_shipment(request, req_request_id):
+	confirm_ship = False
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
 
 	if Shipment.objects.filter(req_request=req_request).count():
 		shipment = req_request.shipment
-		if 'shipped' in request.POST:
+		if 'ship' in request.POST:
 			if not req_request.can_be_shipped(): # do a sanity check
 				messages.warning(request,
 				 	"A request can only be shipped if all of the following are true:\
@@ -1282,6 +1283,18 @@ def build_shipment(request, req_request_id):
 				 	 3) user has submitted a Purchase Order number, \
 				 	 4) User has submitted a valid MTA.")
 			else:
+				confirm_ship = True
+				messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
+				An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
+		if 'confirm_ship' in request.POST:
+			if not req_request.can_be_shipped(): # do a sanity check
+				messages.warning(request,
+				 	"A request can only be shipped if all of the following are true:\
+				 	 1) the request has been accepted and not yet shipped, \
+				 	 2) user has submitted a Purchase Order number, \
+				 	 3) User has submitted a valid MTA.")
+			else:
+				messages.success(request, "Request #%d for user %s has been shipped." % (req_request.pk, req_request.user.username))
 				shipment.shp_shipment_date = datetime.today()
 				shipment.user = request.user
 				shipment.save()
@@ -1292,10 +1305,9 @@ def build_shipment(request, req_request_id):
 		shipment = Shipment(user=req_request.user, req_request=req_request)
 		shipment.save()
 
-	return render_to_response('matrr/shipping/build_shipment.html',
-			{'req_request': req_request,
-			 'shipment': shipment, },
-							  context_instance=RequestContext(request))
+	return render_to_response('matrr/shipping/build_shipment.html', {'req_request': req_request,
+																	 'shipment': shipment,
+																	 'confirm_ship': confirm_ship}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
