@@ -1319,7 +1319,6 @@ def load_monkey_proteins(filename):
 		row[1] = date collected (mpn_date)
 			the rest of the columns are proteins, header label is Protein.pro_abbrev
 	"""
-	filename = 'utils/DATA/cohort1-MonkeyProteins.csv'
 	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
 	columns = csv_infile.next()
 	junk = columns.pop(0) # take out the monkey column label
@@ -1358,6 +1357,46 @@ def load_institutions(file_name):
 		if isnew:
 			institution.save()
 
+def load_cohort_timelines(filename, delete_replaced_cvts=False):
+	"""
+		rows 0, 1 and 4 are ignored
+		row[2] = cohort number
+		row[3] = cohort species
+			the rest of the columns are events, cells are dates of that event for the cohort described in rows 2/3, in format '%m/%d/%y'
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+	columns = csv_infile.next() # empty row, row[0] warning of date format
+	columns = csv_infile.next() # column names
+
+	for column in columns:
+		evt, is_new = EventType.objects.get_or_create(evt_name=column)
+		if is_new:
+			evt.save()
+			print "New Event Type: %s" % evt.evt_name
+
+	for row in csv_infile:
+		cohort = Cohort.objects.filter(coh_cohort_name__icontains=row[2]).filter(coh_cohort_name__icontains=row[3])
+		if cohort.count() == 1:
+			cohort = cohort[0]
+		else:
+			raise Exception("Improper cohort filter count!")
+
+		if delete_replaced_cvts:
+			cvts = CohortEvent.objects.filter(cohort=cohort)
+			count = cvts.count()
+			cvts.delete()
+			print "%d CohortEvents DELETED!" % count
+
+		for idx, event in enumerate(columns):
+			if idx <= 4:
+				continue
+			if row[idx]:
+				event_type = EventType.objects.get(evt_name__contains=event)
+				cev_date = datetime.datetime.strptime(row[idx], '%m/%d/%y')
+				cev, is_new = CohortEvent.objects.get_or_create(cohort=cohort, event=event_type, cev_date=cev_date)
+				if is_new:
+					cev.save()
+					print "New CohortEvent: %s" % str(cev)
 
 def assign_cohort_institutions():
 	wfu = Institution.objects.get(ins_institution_name='Wake Forest University')
