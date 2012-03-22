@@ -1368,7 +1368,9 @@ def load_cohort_timelines(filename, delete_replaced_cvts=False):
 	columns = csv_infile.next() # empty row, row[0] warning of date format
 	columns = csv_infile.next() # column names
 
-	for column in columns:
+	for idx, column in enumerate(columns):
+		if idx <= 4:
+			continue
 		evt, is_new = EventType.objects.get_or_create(evt_name=column)
 		if is_new:
 			evt.save()
@@ -1390,7 +1392,7 @@ def load_cohort_timelines(filename, delete_replaced_cvts=False):
 		for idx, event in enumerate(columns):
 			if idx <= 4:
 				continue
-			if row[idx]:
+			elif row[idx]:
 				event_type = EventType.objects.get(evt_name__contains=event)
 				cev_date = datetime.datetime.strptime(row[idx], '%m/%d/%y')
 				cev, is_new = CohortEvent.objects.get_or_create(cohort=cohort, event=event_type, cev_date=cev_date)
@@ -1403,7 +1405,7 @@ def assign_cohort_institutions():
 	ohsu = Institution.objects.get(ins_institution_name='Oregon Health Sciences University, Technology Management')
 
 	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 1')
-	cohort.institution = wfu
+	cohort.institution = ohsu
 	cohort.save()
 
 	cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
