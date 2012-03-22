@@ -1188,31 +1188,6 @@ def contact_us(request):
 								  context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
-def shipping_overview(request):
-	# get the tissue requests that have been accepted
-	accepted_requests = Request.objects.accepted_and_partially()
-	# get the tissue requests that have been shipped
-	shipped_requests = Request.objects.shipped()
-
-	shipment_ready = {} # currently unused --jf 1/24/2012
-	for req in accepted_requests:
-		has_fedex = True if req.user.account.act_fedex else False
-		has_po = True if req.req_purchase_order else False
-		if has_fedex and has_po:
-			shipment_ready[req.pk] = 1
-		elif has_fedex or has_po:
-			shipment_ready[req.pk] = 0
-		else:
-			shipment_ready[req.pk] = -1
-
-	return render_to_response('matrr/shipping/shipping_overview.html',
-			{'accepted_requests': accepted_requests,
-			 'shipped_requests': shipped_requests,
-			 'shipment_ready': shipment_ready},
-							  context_instance=RequestContext(request))
-
-
 def search_index(terms, index, model):
 	search = SphinxQuerySet(
 		index=index,
@@ -1267,7 +1242,32 @@ def search(request):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
-def build_shipment(request, req_request_id):
+def shipping_overview(request):
+	# get the tissue requests that have been accepted
+	accepted_requests = Request.objects.accepted_and_partially()
+	# get the tissue requests that have been shipped
+	shipped_requests = Request.objects.shipped()
+
+	shipment_ready = {} # currently unused --jf 1/24/2012
+	for req in accepted_requests:
+		has_fedex = True if req.user.account.act_fedex else False
+		has_po = True if req.req_purchase_order else False
+		if has_fedex and has_po:
+			shipment_ready[req.pk] = 1
+		elif has_fedex or has_po:
+			shipment_ready[req.pk] = 0
+		else:
+			shipment_ready[req.pk] = -1
+
+	return render_to_response('matrr/shipping/shipping_overview.html',
+			{'accepted_requests': accepted_requests,
+			 'shipped_requests': shipped_requests,
+			 'shipment_ready': shipment_ready},
+							  context_instance=RequestContext(request))
+
+
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+def shipping_details(request, req_request_id):
 	confirm_ship = False
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -1305,13 +1305,13 @@ def build_shipment(request, req_request_id):
 		shipment = Shipment(user=req_request.user, req_request=req_request)
 		shipment.save()
 
-	return render_to_response('matrr/shipping/build_shipment.html', {'req_request': req_request,
+	return render_to_response('matrr/shipping/shipping_details.html', {'req_request': req_request,
 																	 'shipment': shipment,
 																	 'confirm_ship': confirm_ship}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
-def make_shipping_manifest_latex(request, req_request_id):
+def shipping_manifest_latex(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=manifest-' +\
