@@ -84,9 +84,10 @@ urlpatterns += patterns('matrr.views',
 	url(r'^orders/delete-tissue/(?P<req_rtt_id>\d+)/$', 		order_delete_tissue, name='orders-delete-tissue'),	
 
 #	url(r'^experimental_plans/(?P<plan>\S+)/?$', 				experimental_plan_view),
-	url(r'^shipping_overview/$',								shipping_overview, name='shipping-overview'),
-	url(r'^shipping/build/(?P<req_request_id>\d+)/$', 			shipping_details, name='build-shipment'),
-	url(r'^shipping/build/(?P<req_request_id>\d+)/manifest/$', 	shipping_manifest_latex, name='manifest'),
+	url(r'^shipping/overview/$',								shipping_overview, name='shipping-overview'),
+	url(r'^shipping/creator/(?P<req_request_id>\d+)/$', 		shipment_creator, name='shipment-creator'),
+	url(r'^shipping/details/(?P<shipment_id>\d+)/$', 			shipment_details, name='shipment-details'),
+	url(r'^shipping/details/(?P<shipment_id>\d+)/manifest/$', 	shipment_manifest_latex, name='manifest'),
 
 	#  Order review views
 	url(r'^reviews/$', 						reviews_list_view, name='review-list'),

@@ -1267,13 +1267,23 @@ def shipping_overview(request):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
-def shipping_details(request, req_request_id):
+def shipment_creator(request, req_request_id):
+	if request.method == 'POST':
+		print "Do stuff here  create a shipment object from a form"
+	else:
+		print 'create the form'
+	return
+
+
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+def shipment_details(request, shipment_id):
 	confirm_ship = False
 	# get the request
-	req_request = Request.objects.get(req_request_id=req_request_id)
+	shipment = Shipment.objects.get(pk=shipment_id)
+#	req_request = Request.objects.get(req_request_id=req_request_id)
 
 	if Shipment.objects.filter(req_request=req_request).count():
-		shipment = req_request.shipment
+#		shipment = req_request.shipment
 		if 'ship' in request.POST:
 			if not req_request.can_be_shipped(): # do a sanity check
 				messages.warning(request,
@@ -1311,15 +1321,15 @@ def shipping_details(request, req_request_id):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
-def shipping_manifest_latex(request, req_request_id):
+def shipment_manifest_latex(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
 	response = HttpResponse(mimetype='application/pdf')
-	response['Content-Disposition'] = 'attachment; filename=manifest-' +\
+	response['Content-Disposition'] = 'attachment; filename=shipment_manifest-' +\
 									  str(req_request.user) + '-' +\
 									  str(req_request.pk) + '.pdf'
 	account = req_request.user.account
 
-	return process_latex('latex/shipping_manifest.tex', {'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
+	return process_latex('latex/shipment_manifest.tex', {'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
 
 
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
