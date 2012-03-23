@@ -42,9 +42,10 @@ def logout(request, next_page=None):
 def index_view(request):
 	index_context = {'event_list': Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name')[:5],
 					 'pub_list': Publication.objects.all().exclude(published_year=None).order_by('-published_year',
-																								 '-published_month')[:4]
+																								 '-published_month')[:2]
 		,
 					 'search_form': FulltextSearchForm(),
+					 'plot_gallery': True,
 					 }
 
 	return render_to_response('matrr/index.html', index_context, context_instance=RequestContext(request))
