@@ -125,25 +125,15 @@
 		{% endif %}
 		<div class='clearfix'></div>
 	{% endfor %}
-	{# have a button at the print the shipping manifest #}
-	<div class='left'>
-		<a href='{% url shipment-manifest req_request.req_request_id %}' class='blockLinkButton'>Download Shipping Manifest</a>
-	</div>
-	<div class='right'>
-		{% if req_request.shipment.shp_shipment_date %}
-			<div class='sufficient'>Shipped on: {{ req_request.shipment.shp_shipment_date }}</div>
-		{% else %}
-			{% if confirm_ship %}
-				<form action='' method='post'>
-					{% csrf_token %}
-					<button type='submit' name='confirm_ship' class="blockLinkCheckoutButton">Ship Order, for serious.</button>
-				</form>
-			{% else %}
-				<form action='' method='post'>
-					{% csrf_token %}
-					<button type='submit' name='ship' class="blockLinkCheckoutButton">Ship Order</button>
-				</form>
-			{% endif %}
-		{% endif %}
-	</div>
+
+	<form action='' method='post'>
+		{% csrf_token %}
+		<div class=headline>{{ tissue_shipment_form.tissue_requests.label }}</div>
+		<div class=small>{{ tissue_shipment_form.tissue_requests.help_text }}</div>
+		{{ tissue_shipment_form.tissue_requests }}
+		<br>
+		<button type='submit' name='submit' class="blockLinkCheckoutButton">Build Shipment</button>
+	</form>
+
+
 {% endblock %}

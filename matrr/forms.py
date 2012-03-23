@@ -649,3 +649,10 @@ class SubjectSelectForm(Form):
 						  help_text="Choose what scope of subjects to analyze",
 						  widget=RadioSelect(renderer=RadioRenderer_nolist),
 						  initial=subject_choices[0][0])
+
+class TissueShipmentForm(Form):
+	def __init__(self, tissue_request_queryset, *args, **kwargs):
+		super(TissueShipmentForm, self).__init__(*args, **kwargs)
+		self.fields['tissue_requests'] = ModelMultipleChoiceField(queryset=tissue_request_queryset, widget=CheckboxSelectMultiple_columns(columns=2))
+		self.fields['tissue_requests'].label = "Shipment"
+		self.fields['tissue_requests'].help_text = "Select which tissue requests are included in this shipment"

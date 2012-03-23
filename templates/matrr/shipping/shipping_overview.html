@@ -7,10 +7,8 @@
 {% block content %}
 
 	<div class='large-headline'>
-		Pending Shipments
+		Requests Pending Shipment
 	</div>
-
-
 	<div>
 		{% if accepted_requests %}
 			<table class="common_center" cellpadding='3px'>
@@ -28,16 +26,46 @@
 						<td><a href="{% url account-reviewer-view request.user.id %}">{{ request.user }}</a></td>
 						<td>{{ request.cohort.coh_cohort_name }}</td>
 						<td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
-						{% if request.req_purchase_order %}<td style='background-color: #006400; color:white'>Yes</td>{% else %}<td style='background-color: red; color:white'>No</td>{% endif %}
-						{% if request.user.account.has_mta %}<td style='background-color: #006400; color:white'>Yes</td>{% else %}<td style='background-color: red; color:white'>No</td>{% endif %}
-						<td><a class='blockLinkButton' href='{% url build-shipment request.req_request_id %}'>Build Shipment</a></td>
+						{% if request.req_purchase_order %}<td style='color: #006400;'><b>Yes</b></td>{% else %}<td style='color: red;'><b>No</b></td>{% endif %}
+						{% if request.user.account.has_mta %}<td style='color: #006400;'><b>Yes</b></td>{% else %}<td style='color: red;'><b>No</b></td>{% endif %}
+						<td><a class='blockLinkButton' href='{% url shipment-creator request.req_request_id %}'>Build Shipment</a></td>
 					</tr>
 				{% endfor %}
 			</table>
 		{% else %}
 			<div class="messages">
 				<div class="info">
-					You currently have no Pending Shipments.
+					You currently have no Requests without shipments.
+				</div>
+			</div>
+		{% endif %}
+	</div>
+
+	<br>
+	<div class='large-headline'>
+		Pending Shipments
+	</div>
+	<div>
+		{% if pending_shipments %}
+			<table class="common_center" cellpadding='4' cellspacing='2'>
+				<tr>
+					<th>Request</th>
+					<th>User</th>
+					<th>Cohort</th>
+				</tr>
+				{% for shipment in pending_shipments %}
+					<tr>
+						<td><a href='{% url order-detail shipment.req_request.req_request_id %}'>{{ shipment.req_request.pk }}</a></td>
+						<td><a href="{% url account-reviewer-view shipment.req_request.user.id %}">{{ shipment.req_request.user }}</a></td>
+						<td>{{ shipment.req_request.cohort.coh_cohort_name }}</td>
+						<td><a class='blockLinkButton' href='{% url shipment-detail shipment.pk %}'>Ship</a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			<div class="messages">
+				<div class="info">
+					You currently have no Active Shipments.
 				</div>
 			</div>
 		{% endif %}
@@ -47,7 +75,6 @@
 	<div class='large-headline'>
 		Shipped Requests
 	</div>
-
 	<div>
 		{% if shipped_requests %}
 			<table class="common_center" cellpadding='4' cellspacing='2'>

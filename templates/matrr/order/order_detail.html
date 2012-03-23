@@ -103,7 +103,7 @@
 	{% endif %}
 	{% if shipped %}
 		<div class='left'>
-			<a href='{% url shipping-manifest order.req_request_id %}' style="float:left" class='blockLinkButton'>Download Shipping Manifest</a>
+			<a href='{% url shipment-manifest order.req_request_id %}' style="float:left" class='blockLinkButton'>Download Shipping Manifest</a>
 		</div>
 	{% else %}
 		{% if not after_submitted %}

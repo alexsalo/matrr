@@ -1286,6 +1286,12 @@ class Request(models.Model, DiffingMixin):
 			return True
 		return False
 
+	def has_pending_shipment(self):
+		for rtt in self.tissue_request_set.exclude(accepted_monkeys=None):
+			if not rtt.shipment:
+				return True
+		return False
+
 	def can_be_evaluated(self):
 		if self.req_status == RequestStatus.Submitted:
 			return True
@@ -1301,7 +1307,15 @@ class Request(models.Model, DiffingMixin):
 		self.req_status = RequestStatus.Submitted
 
 	def ship_request(self):
-		self.req_status = RequestStatus.Shipped
+		fully_shipped = True
+		for tr in self.tissue_request_set.all():
+			if tr.shipment is None or tr.shipment.shp_shipment_date is None:
+				fully_shipped = False
+				break
+
+		if fully_shipped:
+			self.req_status = RequestStatus.Shipped
+			self.save()
 
 	def get_inventory_verification_status(self):
 		for rtt in self.tissue_request_set.all():
@@ -1315,6 +1329,27 @@ class Request(models.Model, DiffingMixin):
 		('view_experimental_plan', 'Can view experimental plans of other users'),
 		('can_receive_colliding_requests_info', 'Can receive colliding requests info'),
 		)
+
+
+class Shipment(models.Model):
+	shp_shipment_id = models.AutoField(primary_key=True)
+	user = models.ForeignKey(User, null=False,
+							 related_name='shipment_set')
+	req_request = models.ForeignKey(Request, null=False,
+									   related_name='shipments')
+	shp_tracking = models.CharField('Tracking Number', null=True, blank=True,
+									max_length=100,
+									help_text='Please enter the tracking number for this shipment.')
+	shp_shipment_date = models.DateField('Shipped Date',
+										 blank=True,
+										 null=True,
+										 help_text='The date these tissues were shipped.')
+
+	def get_tissue_requests(self):
+		return TissueRequest.objects.filter(shipment=self)
+
+	class Meta:
+		db_table = 'shp_shipments'
 
 
 class ResearchUpdate(models.Model):
@@ -1374,6 +1409,9 @@ class TissueRequest(models.Model):
 														 related_name='previously_accepted_tissue_request_set',
 														 help_text='The accepted monkeys for the original of this request (applicable only if created as revised).')
 
+	shipment = models.ForeignKey(Shipment, null=True, blank=True, related_name='tissue_request_set', db_column='shp_shipment_id')
+
+
 	def is_partially_accepted(self):
 		return self.accepted_monkeys.count() != 0
 
@@ -1381,7 +1419,7 @@ class TissueRequest(models.Model):
 		return self.monkeys.count() == self.accepted_monkeys.count()
 
 	def __unicode__(self):
-		return str(self.req_request.user) + ":  " + self.tissue_type.tst_tissue_name + ' - ' + self.rtt_fix_type
+		return "%s - %s - %s" % (str(self.req_request.cohort), self.tissue_type.tst_tissue_name, self.rtt_fix_type)
 
 	def get_tissue(self):
 		return self.tissue_type
@@ -1620,24 +1658,6 @@ class TissueRequestReview(models.Model):
 	class Meta:
 		db_table = 'vtr_reviews_to_tissue_requests'
 		unique_together = ('review', 'tissue_request')
-
-
-class Shipment(models.Model):
-	shp_shipment_id = models.AutoField(primary_key=True)
-	user = models.ForeignKey(User, null=False,
-							 related_name='shipment_set')
-	req_request = models.OneToOneField(Request, null=False,
-									   related_name='shipment')
-	shp_tracking = models.CharField('Tracking Number', null=True, blank=True,
-									max_length=100,
-									help_text='Please enter the tracking number for this shipment.')
-	shp_shipment_date = models.DateField('Shipped Date',
-										 blank=True,
-										 null=True,
-										 help_text='Please enter the date these tissues were shipped.')
-
-	class Meta:
-		db_table = 'shp_shipments'
 
 
 class TissueSample(models.Model):

@@ -1243,79 +1243,83 @@ def search(request):
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_overview(request):
-	# get the tissue requests that have been accepted
-	accepted_requests = Request.objects.accepted_and_partially()
-	# get the tissue requests that have been shipped
-	shipped_requests = Request.objects.shipped()
+#	Requests Pending Shipment
+	accepted_requests = Request.objects.none()
+	for req_request in Request.objects.accepted_and_partially():
+		if req_request.has_pending_shipment():
+			accepted_requests |= Request.objects.filter(pk=req_request.pk)
 
-	shipment_ready = {} # currently unused --jf 1/24/2012
-	for req in accepted_requests:
-		has_fedex = True if req.user.account.act_fedex else False
-		has_po = True if req.req_purchase_order else False
-		if has_fedex and has_po:
-			shipment_ready[req.pk] = 1
-		elif has_fedex or has_po:
-			shipment_ready[req.pk] = 0
-		else:
-			shipment_ready[req.pk] = -1
+#	Pending Shipments
+	pending_shipments = Shipment.objects.filter(shp_shipment_date=None)
+
+#	Shipped Requests
+	shipped_requests = Request.objects.shipped()
 
 	return render_to_response('matrr/shipping/shipping_overview.html',
 			{'accepted_requests': accepted_requests,
-			 'shipped_requests': shipped_requests,
-			 'shipment_ready': shipment_ready},
+			 'pending_shipments': pending_shipments,
+			 'shipped_requests': shipped_requests,},
 							  context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipment_creator(request, req_request_id):
+	req_request = get_object_or_404(Request, pk=req_request_id)
+	acc_rtt_wo_shipment = req_request.tissue_request_set.filter(shipment=None).exclude(accepted_monkeys=None)
+
 	if request.method == 'POST':
-		print "Do stuff here  create a shipment object from a form"
-	else:
-		print 'create the form'
-	return
+		tissue_shipment_form = TissueShipmentForm(acc_rtt_wo_shipment, data=request.POST)
+		if tissue_shipment_form.is_valid():
+			shipment = Shipment()
+			shipment.user = request.user
+			shipment.req_request = req_request
+			shipment.save()
+			for rtt in tissue_shipment_form.cleaned_data['tissue_requests']:
+				rtt.shipment = shipment
+				rtt.save()
+			return redirect(reverse('shipment-detail', args=[shipment.pk]))
+		else:
+			messages.error(request, "There was an error processing this form.  If this continues to occur please notify a MATRR admin.")
+
+	tissue_shipment_form = TissueShipmentForm(acc_rtt_wo_shipment)
+	return render_to_response('matrr/shipping/shipment_creator.html',
+								{'req_request': req_request,
+								 'tissue_shipment_form': tissue_shipment_form},
+								context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
-def shipment_details(request, shipment_id):
+def shipment_detail(request, shipment_id):
 	confirm_ship = False
-	# get the request
-	shipment = Shipment.objects.get(pk=shipment_id)
-#	req_request = Request.objects.get(req_request_id=req_request_id)
 
-	if Shipment.objects.filter(req_request=req_request).count():
-#		shipment = req_request.shipment
-		if 'ship' in request.POST:
-			if not req_request.can_be_shipped(): # do a sanity check
-				messages.warning(request,
-				 	"A request can only be shipped if all of the following are true:\
-				 	 1) the request has been accepted and not yet shipped, \
-				 	 2) the user has provided a FedEx number, \
-				 	 3) user has submitted a Purchase Order number, \
-				 	 4) User has submitted a valid MTA.")
-			else:
-				confirm_ship = True
-				messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
-				An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
-		if 'confirm_ship' in request.POST:
-			if not req_request.can_be_shipped(): # do a sanity check
-				messages.warning(request,
-				 	"A request can only be shipped if all of the following are true:\
-				 	 1) the request has been accepted and not yet shipped, \
-				 	 2) user has submitted a Purchase Order number, \
-				 	 3) User has submitted a valid MTA.")
-			else:
-				messages.success(request, "Request #%d for user %s has been shipped." % (req_request.pk, req_request.user.username))
-				shipment.shp_shipment_date = datetime.today()
-				shipment.user = request.user
-				shipment.save()
-				req_request.ship_request()
-				req_request.save()
-	else:
-		# create the shipment
-		shipment = Shipment(user=req_request.user, req_request=req_request)
-		shipment.save()
+	shipment = get_object_or_404(Shipment, pk=shipment_id)
+	req_request = shipment.req_request
+	if 'ship' in request.POST:
+		if not req_request.can_be_shipped(): # do a sanity check
+			messages.warning(request,
+				"A request can only be shipped if all of the following are true:\
+				 1) the request has been accepted and not yet shipped, \
+				 2) user has submitted a Purchase Order number, \
+				 3) User has submitted a valid MTA.")
+		else:
+			confirm_ship = True
+			messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
+			An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
+	if 'confirm_ship' in request.POST:
+		if not req_request.can_be_shipped(): # do a sanity check
+			messages.warning(request,
+				"A request can only be shipped if all of the following are true:\
+				 1) the request has been accepted and not yet shipped, \
+				 2) user has submitted a Purchase Order number, \
+				 3) User has submitted a valid MTA.")
+		else:
+			messages.success(request, "Shipment #%d for user %s has been shipped." % (shipment.pk, req_request.user.username))
+			shipment.shp_shipment_date = datetime.today()
+			shipment.user = request.user
+			shipment.save()
+			req_request.ship_request()
 
-	return render_to_response('matrr/shipping/shipping_details.html', {'req_request': req_request,
+	return render_to_response('matrr/shipping/shipment_details.html', {'req_request': req_request,
 																	 'shipment': shipment,
 																	 'confirm_ship': confirm_ship}, context_instance=RequestContext(request))
 
