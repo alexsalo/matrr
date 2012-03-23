@@ -1325,15 +1325,16 @@ def shipment_detail(request, shipment_id):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
-def shipment_manifest_latex(request, req_request_id):
-	req_request = Request.objects.get(req_request_id=req_request_id)
+def shipment_manifest_latex(request, shipment_id):
+	shipment = get_object_or_404(Shipment, pk=shipment_id)
+	req_request = shipment.req_request
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=shipment_manifest-' +\
 									  str(req_request.user) + '-' +\
 									  str(req_request.pk) + '.pdf'
 	account = req_request.user.account
 
-	return process_latex('latex/shipment_manifest.tex', {'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
+	return process_latex('latex/shipment_manifest.tex', {'shipment': shipment, 'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
 
 
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
