@@ -1295,33 +1295,42 @@ def shipment_detail(request, shipment_id):
 
 	shipment = get_object_or_404(Shipment, pk=shipment_id)
 	req_request = shipment.req_request
-	if 'ship' in request.POST:
-		if not req_request.can_be_shipped(): # do a sanity check
-			messages.warning(request,
-				"A request can only be shipped if all of the following are true:\
-				 1) the request has been accepted and not yet shipped, \
-				 2) user has submitted a Purchase Order number, \
-				 3) User has submitted a valid MTA.")
-		else:
-			confirm_ship = True
-			messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
-			An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
-	if 'confirm_ship' in request.POST:
-		if not req_request.can_be_shipped(): # do a sanity check
-			messages.warning(request,
-				"A request can only be shipped if all of the following are true:\
-				 1) the request has been accepted and not yet shipped, \
-				 2) user has submitted a Purchase Order number, \
-				 3) User has submitted a valid MTA.")
-		else:
-			messages.success(request, "Shipment #%d for user %s has been shipped." % (shipment.pk, req_request.user.username))
-			shipment.shp_shipment_date = datetime.today()
-			shipment.user = request.user
-			shipment.save()
-			req_request.ship_request()
+	tracking_form = TrackingNumberForm(instance=shipment)
+	if request.method == 'POST':
+		if 'tracking' in request.POST:
+			tracking_form = TrackingNumberForm(instance=shipment, data=request.POST)
+			if tracking_form.is_valid():
+				tracking_form.save()
+				messages.success(request, "Tracking number has been saved.")
+
+		if 'ship' in request.POST:
+			if not req_request.can_be_shipped(): # do a sanity check
+				messages.warning(request,
+					"A request can only be shipped if all of the following are true:\
+					 1) the request has been accepted and not yet shipped, \
+					 2) user has submitted a Purchase Order number, \
+					 3) User has submitted a valid MTA.")
+			else:
+				confirm_ship = True
+				messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
+				An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
+		if 'confirm_ship' in request.POST:
+			if not req_request.can_be_shipped(): # do a sanity check
+				messages.warning(request,
+					"A request can only be shipped if all of the following are true:\
+					 1) the request has been accepted and not yet shipped, \
+					 2) user has submitted a Purchase Order number, \
+					 3) User has submitted a valid MTA.")
+			else:
+				messages.success(request, "Shipment #%d for user %s has been shipped." % (shipment.pk, req_request.user.username))
+				shipment.shp_shipment_date = datetime.today()
+				shipment.user = request.user
+				shipment.save()
+				req_request.ship_request()
 
 	return render_to_response('matrr/shipping/shipment_details.html', {'req_request': req_request,
 																	 'shipment': shipment,
+																	 'tracking_form': tracking_form,
 																	 'confirm_ship': confirm_ship}, context_instance=RequestContext(request))
 
 

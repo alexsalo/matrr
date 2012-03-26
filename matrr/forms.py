@@ -193,6 +193,12 @@ class PurchaseOrderForm(ModelForm):
 		fields = ('req_purchase_order',)
 
 
+class TrackingNumberForm(ModelForm):
+	class Meta:
+		model = Shipment
+		fields = ('shp_tracking',)
+
+
 class ReviewForm(ModelForm):
 	def __init__(self, *args, **kwargs):
 		TissueRequestReviewFormSet = inlineformset_factory(Review,
