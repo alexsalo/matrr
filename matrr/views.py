@@ -865,6 +865,7 @@ def order_detail(request, req_request_id, edit=False):
 	#		# if the request does not belong to the user, return a 404 error (alternately, we could give a permission denied message)
 	#		raise Http404('This page does not exist.')
 
+	shipments = req_request.get_shipments()
 	eval = req_request.is_evaluated()
 	po_form = ''
 	if not req_request.req_status == 'SH' and not req_request.req_status == 'RJ':
@@ -887,6 +888,7 @@ def order_detail(request, req_request_id, edit=False):
 			 'Acceptance': Acceptance,
 			 'RequestStatus': RequestStatus,
 			 'shipped': req_request.is_shipped(),
+			 'shipments': shipments,
 			 'after_submitted': eval,
 			 'edit': edit,
 			 'po_form': po_form,

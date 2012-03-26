@@ -1171,6 +1171,9 @@ class Request(models.Model, DiffingMixin):
 																								str(self.req_request_date), self.cohort.coh_cohort_name, self.req_reason,
 																								self.req_notes or "None")
 
+	def get_shipments(self):
+		return Shipment.objects.filter(req_request=self)
+
 	def get_requested_tissue_count(self):
 		return self.tissue_request_set.count()
 

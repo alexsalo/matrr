@@ -21,9 +21,10 @@ def send_shipment_ready_notification(req_request):
 		recipients.append(email)
 		subject = 'Request is ready to ship for user %s' % req_request.user
 		body =  'Click here to see request details, download shipping manifest and update MATRR once shipped.\n'
-		body += 'http://gleek.ecs.baylor.edu%s\n' % reverse('build-shipment', args=[req_request.pk])
+		body += 'http://gleek.ecs.baylor.edu%s\n' % reverse('shipment-creator', args=[req_request.pk])
 		body += 'Please, do not respond. This is an automated message.\n'
 
-		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-		if ret > 0:
-			print "%s Shipment info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+		if settings.PRODUCTION:
+			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+			if ret > 0:
+				print "%s Shipment info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
