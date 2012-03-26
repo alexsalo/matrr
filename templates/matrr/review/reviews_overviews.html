@@ -20,6 +20,7 @@
 				{% for reviewer in reviewers %}
 					<th>{{ reviewer }}</th>
 				{% endfor %}
+				<th>Has Collision</th>
 			</tr>
 			{% for req_request in req_requests %}
 				<tr>
@@ -37,6 +38,7 @@
 							<td style="color: green" align="center">{{ item }}</td>
 						{% endif %}
 					{% endfor %}
+					<td style="color:orange;">{% if req_request.has_collisions %}Yes{% endif %}</td>
 
 					<td><a href='{% url review-overview req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>
 				</tr>

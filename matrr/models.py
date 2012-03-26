@@ -1286,6 +1286,13 @@ class Request(models.Model, DiffingMixin):
 			return True
 		return False
 
+	def has_collisions(self):
+		acc_collisions = self.get_acc_req_collisions()
+		sub_collisions = self.get_sub_req_collisions()
+		if acc_collisions or sub_collisions:
+			return True
+		return False
+
 	def has_pending_shipment(self):
 		for rtt in self.tissue_request_set.exclude(accepted_monkeys=None):
 			if not rtt.shipment:
