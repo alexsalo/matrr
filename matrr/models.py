@@ -337,6 +337,10 @@ class Monkey(models.Model):
 
 
 class Mta(models.Model):
+	########  BIG IMPORTANT WARNING  #######
+	# If you're adding new fields to this model
+	# Don't forget to exclude them from any applicable Form
+	########
 	mta_id = models.AutoField(primary_key=True)
 	user = models.ForeignKey(User, related_name='mta_set', db_column='usr_id', editable=False, blank=True)
 	mta_date = models.DateField('Date Uploaded', editable=False, blank=True, null=True,
@@ -1100,6 +1104,11 @@ class RequestManager(models.Manager):
 
 
 class Request(models.Model, DiffingMixin):
+	########  BIG IMPORTANT WARNING  #######
+	# If you're adding new fields to this model
+	# Don't forget to exclude them from any applicable Form
+	########
+
 	REFERRAL_CHOICES = (
 	('Internet Search', 'Internet Search'),
 	('Publication', 'Publication'),
@@ -1387,6 +1396,10 @@ class ResearchUpdate(models.Model):
 
 
 class TissueRequest(models.Model):
+	########  BIG IMPORTANT WARNING  #######
+	# If you're adding new fields to this model
+	# Don't forget to exclude them from any applicable Form
+	########
 	rtt_tissue_request_id = models.AutoField(primary_key=True)
 	req_request = models.ForeignKey(Request, null=False, related_name='tissue_request_set', db_column='req_request_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_request_set', db_column='tst_type_id')

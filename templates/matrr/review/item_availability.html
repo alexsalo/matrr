@@ -21,7 +21,8 @@
 		<th>Status</th>
 		{% if spacing %}
 			<th class='spacing'></th>{% endif %}
-		<th>Request collisions</th>
+		<th>Submitted collisions</th>
+		<th>Accepted collisions</th>
 		<!-- <th>Accepted Requests</th>
   {% if spacing %}<th class='spacing'></th>{% endif %}
   <th>Pending Requests</th></tr> -->
@@ -62,6 +63,10 @@
 					<td>
 						{% load review_tags %}
 						{% colliding_submitted_requests req_request monkey %}
+					</td>
+					<td>
+						{% load review_tags %}
+						{% colliding_accepted_requests req_request tissue_request.tissue_type monkey %}
 					</td>
 					<!--    <td>
         {{ tissue_request.get_tissue|accepted_requests:monkey }}
