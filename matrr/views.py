@@ -211,6 +211,15 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 	current_tissue = TissueType.objects.get(tst_type_id=tissue_id)
 	instance = TissueRequest(tissue_type=current_tissue, req_request=cart_request)
 
+	# Upcoming cohort warning
+	if current_cohort.coh_upcoming:
+		import datetime
+		today = datetime.date.today()
+		necropsy_date = current_cohort.cohort_event_set.filter(event__evt_name="Necropsy Start")[0].cev_date
+		days_to_necropsy = (necropsy_date - today).days
+		if days_to_necropsy >= 6*60:
+			messages.warning(request, "Warning:  Because this cohort has not yet gone to necropsy, we cannot guarantee all tissue from all monkeys will be available for request, due to uncontrollable events (illness, accidental death, etc).  If a requested tissue was approved but is not available after necropsy the user will be notified and the request and its cost will be corrected.  Thank you for your understanding regarding this uncertainty.")
+
 	if request.method != 'POST':
 		# now we need to create the form for the tissue type
 		tissue_request_form = TissueRequestForm(req_request=cart_request, tissue=current_tissue, instance=instance,
