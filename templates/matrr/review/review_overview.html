@@ -162,7 +162,7 @@
 			{% endfor %}
 			<br>
 			<div>
-				{% if req_request.user.mta_set.all.count == 0 %}
+				{% if not req_request.user.account.has_mta %}
 					<div class='messages clearfix'>
 						<div class="error">User has not uploaded any MTAs</div>
 					</div>
