@@ -2057,22 +2057,6 @@ def request_post_save(**kwargs):
 																monkey=monkey,
 																tissue_request=None)
 				tv.save()
-		if settings.PRODUCTION:
-			perm = Permission.objects.get(codename='po_manifest_email')
-			to_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
-			filename = 'manifest-%s-%s.pdf' % (str(req_request.user), str(req_request.pk))
-			outfile = open('/tmp/%s' % filename, 'wb')
-			subject = "Shipping Manifest for MATRR request %s." % str(req_request.pk)
-			body = "A MATRR request has been shipped.  Attached is the shipping manifest for this request, with the customer's Purchase Order number.  Please contact a MATRR admin if there are any issues or missing information."
-			email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, to_list)
-
-			process_latex('latex/shipping_manifest.tex', {'req_request': req_request,
-														  'account': req_request.user.account,
-														  'time': datetime.today(),
-														  }, outfile=outfile)
-			outfile.close()
-			email.attach_file(outfile.name)
-			email.send()
 
 	req_request._previous_status = None
 

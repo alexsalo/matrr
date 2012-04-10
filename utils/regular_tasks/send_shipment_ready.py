@@ -15,7 +15,7 @@ def shipments_ready():
 	accepted = Request.objects.filter(accepted)
 	for req in accepted:
 		if req.can_be_shipped():
-			#send_shipment_ready_notification(req)
+			send_shipment_ready_notification(req)
 
 if settings.PRODUCTION:
 	shipments_ready()
