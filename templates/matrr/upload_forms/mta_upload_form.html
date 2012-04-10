@@ -34,7 +34,8 @@
 		<br>
 		<form method="post" action="" enctype="multipart/form-data">{% csrf_token %}
 			<div id="table-wrap">
-				<center><button type='submit' name='request_form' class="blockLinkButton">Request MATRR MTA Form</button></center>
+				<center><button type='submit' name='request_form' class="blockLinkButton">Request MATRR MTA Form</button><a class="blockLinkButton" href="{{ STATIC_URL }}docs/ubmta.doc">Download UBMTA form</a>
+							</p></center>
 				<br>
 				<div class="mini-headline">Upload Signed MTA</div>
 

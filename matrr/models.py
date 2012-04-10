@@ -392,7 +392,7 @@ class AccountManager(models.Manager):
 class Account(models.Model):
 	user = models.OneToOneField(User, related_name='account', db_column='usr_usr_id',
 								editable=False, blank=True, primary_key=True)
-	#	address = models.TextField(blank=False)
+
 	phone_number = models.CharField(max_length=10, blank=False)
 	institution = models.CharField(max_length=60, blank=False)
 	verified = models.BooleanField(default=False, blank=False, null=False)
