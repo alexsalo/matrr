@@ -43,7 +43,7 @@ def send_po_manifest_upon_shipment(shp_shipment):
 
 	filename = 'manifest_user-%s_shipment-%s.pdf' % (str(req_request.user), str(shp_shipment.pk))
 	outfile = open('/tmp/%s' % filename, 'wb')
-	process_latex('latex/shipping_manifest.tex', {'req_request': req_request,
+	process_latex('latex/shipment_manifest.tex', {'req_request': req_request,
 												  'account': req_request.user.account,
 												  'time': datetime.today(),
 												  }, outfile=outfile)
