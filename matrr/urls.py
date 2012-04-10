@@ -83,7 +83,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^orders/edit-tissue/(?P<req_rtt_id>\d+)/$', 			order_edit_tissue, name='orders-edit-tissue'),
 	url(r'^orders/delete-tissue/(?P<req_rtt_id>\d+)/$', 		order_delete_tissue, name='orders-delete-tissue'),	
 
-#	url(r'^experimental_plans/(?P<plan>\S+)/?$', 				experimental_plan_view),
+	url(r'^shipping/history/$',									shipping_history, name='shipping-history'),
 	url(r'^shipping/overview/$',								shipping_overview, name='shipping-overview'),
 	url(r'^shipping/creator/(?P<req_request_id>\d+)/$', 		shipment_creator, name='shipment-creator'),
 	url(r'^shipping/detail/(?P<shipment_id>\d+)/$', 			shipment_detail, name='shipment-detail'),

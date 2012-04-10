@@ -1254,6 +1254,15 @@ def search(request):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+def shipping_history(request):
+#	Shipped Requests
+	shipped_requests = Request.objects.shipped()
+
+	return render_to_response('matrr/shipping/shipping_history.html',
+			{'shipped_requests': shipped_requests,},
+							  context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_overview(request):
 #	Requests Pending Shipment
 	accepted_requests = Request.objects.none()
@@ -1264,13 +1273,14 @@ def shipping_overview(request):
 #	Pending Shipments
 	pending_shipments = Shipment.objects.filter(shp_shipment_date=None)
 
-#	Shipped Requests
-	shipped_requests = Request.objects.shipped()
+#	Shipped Shipments
+	shipped_shipments = Shipment.objects.exclude(shp_shipment_date=None).exclude(req_request__req_status=RequestStatus.Shipped)
+
 
 	return render_to_response('matrr/shipping/shipping_overview.html',
 			{'accepted_requests': accepted_requests,
 			 'pending_shipments': pending_shipments,
-			 'shipped_requests': shipped_requests,},
+			 'shipped_shipments': shipped_shipments,},
 							  context_instance=RequestContext(request))
 
 
