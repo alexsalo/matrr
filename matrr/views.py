@@ -1338,8 +1338,9 @@ def shipment_detail(request, shipment_id):
 				shipment.user = request.user
 				shipment.save()
 				if settings.PRODUCTION:
-					from matrr.emails import send_po_manifest_upon_shipment
+					from matrr.emails import send_po_manifest_upon_shipment, notify_user_upon_shipment
 					send_po_manifest_upon_shipment(shipment)
+					notify_user_upon_shipment(shipment)
 				req_request.ship_request()
 
 	return render_to_response('matrr/shipping/shipment_details.html', {'req_request': req_request,

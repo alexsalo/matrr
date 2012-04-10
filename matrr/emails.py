@@ -50,3 +50,26 @@ def send_po_manifest_upon_shipment(shp_shipment):
 	outfile.close()
 	email.attach_file(outfile.name)
 	email.send()
+
+def notify_user_upon_shipment(shp_shipment):
+	if not isinstance(shp_shipment, Shipment):
+		shp_shipment = Shipment.objects.get(pk=shp_shipment)
+
+	req_request = shp_shipment.req_request
+	to_list = [req_request.user.email]
+
+	subject = "MATRR has shipped tissue to %s." % str(req_request.user.username)
+	body = "A MATRR shipment has been shipped.  Attached is the shipping manifest for this request.\n"
+	body += "\nFedEx Tracking Number:  %s\n" % str(shp_shipment.shp_tracking)
+	body += 'Please, do not respond. This is an automated message.\n'
+
+	email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, to_list)
+	filename = 'manifest_user-%s_shipment-%s.pdf' % (str(req_request.user), str(shp_shipment.pk))
+	outfile = open('/tmp/%s' % filename, 'wb')
+	process_latex('latex/shipment_manifest.tex', {'req_request': req_request,
+												  'account': req_request.user.account,
+												  'time': datetime.today(),
+												  }, outfile=outfile)
+	outfile.close()
+	email.attach_file(outfile.name)
+	email.send()
