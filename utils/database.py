@@ -2,7 +2,7 @@ from matrr.models import *
 from django.db import transaction
 from datetime import datetime as dt
 #from datetime import date
-from datetime import timedelta
+from datetime import timedelta, time
 import string
 import datetime
 import csv, re
@@ -10,6 +10,33 @@ import csv, re
 # This was _not_ built to be used often.  In fact, if it ever needs to be used again, you'll probably have to rewrite it.
 # Like I just did.
 # -jf
+
+def convert_dates_to_correct_datetimes():
+	
+	dates = (
+			(2002,4,15),
+			(2003,3,5),
+			(2003,4,28),
+			(2003,4,30),
+			(2003,12,19),
+			(2004,8,2),
+			)
+	times = (
+			(12,0),
+			(17,30),
+			(12,0),
+			(17,30),
+			(7,0),
+			(12,0),
+			)
+	for d,t in zip(dates, times):
+		old_datetime = dt(*d)
+		monkeys = MonkeyProtein.objects.filter(mpn_date=old_datetime)
+		new_datetime = old_datetime.combine(old_datetime.date(), time(*t))
+		monkeys.update(mpn_date = new_datetime)
+	
+	
+	
 @transaction.commit_on_success
 def load_initial_inventory(file, output_file, load_tissue_types=False,  delete_name_duplicates=False, create_tissue_samples=False):
 	"""
