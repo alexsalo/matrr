@@ -957,6 +957,50 @@ class CohortProteinImage(MATRRImage):
 		db_table = 'cpi_cohort_protein_image'
 
 
+#  This model breaks MATRR field name scheme
+class MonkeyProteinImage(MATRRImage):
+	cpi_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='mpi_image_set', editable=False)
+	proteins = models.ManyToManyField('Protein', null=False, related_name='mpi_image_set', editable=False)
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort, proteins=self.proteins.all())
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort, proteins=self.proteins.all(), **params)
+
+		super(MonkeyProteinImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+
+		PLOTS = plotting.MONKEY_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(MonkeyProteinImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.monkey and self.proteins:
+			if not self.image:
+				self.title = '%s : %s' % (str(self.monkey), ", ".join(self.proteins.all().values_list('pro_abbr',flat=True)))
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s: %s.%s" % (str(self.pk), str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbr',flat=True)))
+
+	class Meta:
+		db_table = 'mpi_monkey_protein_image'
+
+
 class DataFile(models.Model):
 	dat_id = models.AutoField(primary_key=True)
 	account = models.ForeignKey(Account, null=True)
