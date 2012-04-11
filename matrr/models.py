@@ -1609,6 +1609,10 @@ class Review(models.Model):
 		return 'Review of request: <' + str(self.req_request) + '> by: ' + str(self.user)
 
 	def is_finished(self):
+		if 'assay' in self.req_request.cohort.coh_cohort_name.lower():
+			if self.user.username != 'jdaunais':
+				return True
+
 		return all(tissue_request.is_finished() for tissue_request in TissueRequestReview.objects.filter(
 			review=self.rvs_review_id))
 

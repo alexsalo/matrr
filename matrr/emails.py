@@ -13,7 +13,10 @@ def send_shipment_ready_notification(req_request):
 	if not isinstance(req_request, Request):
 		req_request = Request.objects.get(pk=req_request)
 
-	users = User.objects.filter(is_staff=True).exclude(username='garyjmurray')
+	if 'assay' in req_request.cohort.coh_cohort_name.lower():
+		users = [User.objects.get(username='jdaunais'), User.objects.get(username='adaven')]
+	else:
+		users = User.objects.filter(is_staff=True).exclude(username='garyjmurray')
 	from_email = User.objects.get(username='matrr_admin').email
 	for user in users:
 		email = user.email
