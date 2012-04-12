@@ -1267,7 +1267,7 @@ def shipping_overview(request):
 #	Requests Pending Shipment
 	accepted_requests = Request.objects.none()
 	for req_request in Request.objects.accepted_and_partially():
-		if req_request.has_pending_shipment():
+		if req_request.is_missing_shipments():
 			accepted_requests |= Request.objects.filter(pk=req_request.pk)
 
 #	Pending Shipments
@@ -1313,6 +1313,7 @@ def shipment_creator(request, req_request_id):
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipment_detail(request, shipment_id):
 	confirm_ship = False
+	confirm_delete_shipment = False
 
 	shipment = get_object_or_404(Shipment, pk=shipment_id)
 	req_request = shipment.req_request
@@ -1353,10 +1354,19 @@ def shipment_detail(request, shipment_id):
 					notify_user_upon_shipment(shipment)
 				req_request.ship_request()
 
+		if 'delete_shipment' in request.POST:
+			messages.warning(request, "Are you sure you want to delete this shipment?  You will have to recreate it before shipping the tissue.")
+			confirm_delete_shipment = True
+			messages.info(request, "If you are certain you want to delete this shipment, click the delete button again to confirm.")
+		if 'confirm_delete_shipment' in request.POST:
+			shipment.delete()
+			return redirect(reverse('shipping-overview'))
+
 	return render_to_response('matrr/shipping/shipment_details.html', {'req_request': req_request,
 																	 'shipment': shipment,
 																	 'tracking_form': tracking_form,
-																	 'confirm_ship': confirm_ship}, context_instance=RequestContext(request))
+																	 'confirm_ship': confirm_ship,
+																	 'confirm_delete_shipment': confirm_delete_shipment}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
