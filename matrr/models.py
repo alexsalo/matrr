@@ -968,10 +968,10 @@ class MonkeyProteinImage(MATRRImage):
 		spiffy_method = self._plot_picker()
 
 		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(cohort=self.cohort, proteins=self.proteins.all())
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all())
 		else:
 			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(cohort=self.cohort, proteins=self.proteins.all(), **params)
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all(), **params)
 
 		super(MonkeyProteinImage, self)._construct_filefields(mpl_figure, data_map)
 
@@ -989,9 +989,9 @@ class MonkeyProteinImage(MATRRImage):
 
 	def save(self, *args, **kwargs):
 		super(MonkeyProteinImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
-		if self.monkey and self.proteins:
-			if not self.image:
-				self.title = '%s : %s' % (str(self.monkey), ", ".join(self.proteins.all().values_list('pro_abbr',flat=True)))
+		if self.monkey and self.proteins.all().count():
+			if self.method and not self.image:
+				self.title = '%s : %s' % (str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbr',flat=True)))
 				self._construct_filefields()
 
 	def __unicode__(self):
@@ -2146,6 +2146,18 @@ def monkeyimage_pre_delete(**kwargs):
 		os.remove(mig.thumbnail.path)
 	if mig.html_fragment and os.path.exists(mig.html_fragment.path):
 		os.remove(mig.html_fragment.path)
+
+# This will delete MATRRImage's FileField's files from media before deleting the database entry.
+# Helps keep the media folder pretty.
+@receiver(pre_delete, sender=MonkeyProteinImage)
+def monkeyproteinimage_pre_delete(**kwargs):
+	mpi = kwargs['instance']
+	if mpi.image and os.path.exists(mpi.image.path):
+		os.remove(mpi.image.path)
+	if mpi.thumbnail and os.path.exists(mpi.thumbnail.path):
+		os.remove(mpi.thumbnail.path)
+	if mpi.html_fragment and os.path.exists(mpi.html_fragment.path):
+		os.remove(mpi.html_fragment.path)
 
 # This will delete MATRRImage's FileField's files from media before deleting the database entry.
 # Helps keep the media folder pretty.
