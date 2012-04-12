@@ -17,14 +17,12 @@
 					<th>User</th>
 					<th>Cohort</th>
 					<th>Request Date</th>
-					<th>Shipped Date</th>
 				</tr>
 				{% for request in shipped_requests %}
 					<tr>
 						<td><a href="{% url account-reviewer-view request.user.id %}">{{ request.user }}</a></td>
 						<td>{{ request.cohort.coh_cohort_name }}</td>
 						<td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
-						<td>{{ request.shipment.shp_shipment_date|date:"m/d/Y" }}</td>
 						<td><a href='{% url order-detail request.req_request_id %}'>Details</a></td>
 					</tr>
 				{% endfor %}
