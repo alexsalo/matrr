@@ -1311,6 +1311,12 @@ class Request(models.Model, DiffingMixin):
 				return True
 		return False
 
+	def is_missing_shipments(self):
+		for rtt in self.tissue_request_set.exclude(accepted_monkeys=None):
+			if not rtt.shipment:
+				return True
+		return False
+
 	def can_be_evaluated(self):
 		if self.req_status == RequestStatus.Submitted:
 			return True
@@ -1432,8 +1438,8 @@ class TissueRequest(models.Model):
 														 related_name='previously_accepted_tissue_request_set',
 														 help_text='The accepted monkeys for the original of this request (applicable only if created as revised).')
 
-	shipment = models.ForeignKey(Shipment, null=True, blank=True, related_name='tissue_request_set', db_column='shp_shipment_id')
-
+	shipment = models.ForeignKey(Shipment, null=True, blank=True, on_delete=models.SET_NULL, related_name='tissue_request_set', db_column='shp_shipment_id')
+	# IMPORTANT: shipment's on_delete needs to == models.SET_NULL.  If not, when you delete a shipment on the web page, you delete the tissue request with it (muy no bueno).
 
 	def is_partially_accepted(self):
 		return self.accepted_monkeys.count() != 0

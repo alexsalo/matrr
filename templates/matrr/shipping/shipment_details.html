@@ -111,7 +111,17 @@
 	<br>
 	{# have a button at the print the shipping manifest #}
 	<div class='left'>
-		<a href='{% url shipment-manifest shipment.pk %}' class='blockLinkButton'>Download Shipping Manifest</a>
+		{% if confirm_delete_shipment %}
+			<form action='' method='post'>
+				{% csrf_token %}
+				<button type='submit' name='confirm_delete_shipment' class='blockLinkDeleteButton'>Delete, for serious</button>
+			</form>
+		{% else %}
+			<form action='' method='post'>
+				{% csrf_token %}
+				<button type='submit' name='delete_shipment' class='blockLinkDeleteButton'>Delete</button>
+			</form>
+		{% endif %}
 	</div>
 	<div class='right'>
 		{% if shipment.shp_shipment_date %}
@@ -129,5 +139,8 @@
 				</form>
 			{% endif %}
 		{% endif %}
+	</div>
+	<div class='right'>
+		<a href='{% url shipment-manifest shipment.pk %}' class='blockLinkButton'>Download Shipping Manifest</a>
 	</div>
 {% endblock %}
