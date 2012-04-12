@@ -2022,6 +2022,7 @@ class MonkeyProtein(models.Model):
 	mpn_date = models.DateTimeField("Date Collected", editable=False)
 	mpn_value = models.FloatField(null=True)
 	mpn_stdev = models.FloatField("Standard Deviation from Cohort mean", null=True)
+	mpn_pctdev = models.FloatField("Percent Deviation from Cohort mean", null=True)
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
@@ -2034,6 +2035,16 @@ class MonkeyProtein(models.Model):
 			mean = cp_values.mean()
 			diff = self.mpn_value - mean
 			self.mpn_stdev = diff / stdev
+			self.save()
+
+
+	def populate_pctdev(self, recalculate=False):
+		if self.mpn_pctdev is None or recalculate:
+			cohort_proteins = MonkeyProtein.objects.filter(protein=self.protein, mpn_date=self.mpn_date, monkey__in=self.monkey.cohort.monkey_set.all().exclude(mky_id=self.monkey.pk))
+			cp_values = numpy.array(cohort_proteins.values_list('mpn_value', flat=True))
+			mean = cp_values.mean()
+			diff = self.mpn_value - mean
+			self.mpn_pctdev = diff / mean * 100
 			self.save()
 
 
