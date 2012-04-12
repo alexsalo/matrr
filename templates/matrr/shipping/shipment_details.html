@@ -75,10 +75,14 @@
 					{% if tracking_form %}
 						<tr>
 							<th>Tracking Number:</th>
-							<form action='' method='post'>
-								{% csrf_token %}
-								<td colspan='3'>{{ tracking_form.shp_tracking }} <button class='blockLinkCheckoutButton' type='submit' name='tracking'>Save</button> </td>
-							</form>
+							{% if edit %}
+								<form action='' method='post'>
+									{% csrf_token %}
+									<td colspan='3'>{{ tracking_form.shp_tracking }} <button class='blockLinkCheckoutButton' type='submit' name='tracking'>Save</button> </td>
+								</form>
+							{% else %}
+								<td colspan='3'>{{ tracking_number }}</td>
+							{% endif %}
 						<tr>
 					{% endif %}
 
@@ -110,19 +114,21 @@
 
 	<br>
 	{# have a button at the print the shipping manifest #}
-	<div class='left'>
-		{% if confirm_delete_shipment %}
-			<form action='' method='post'>
-				{% csrf_token %}
-				<button type='submit' name='confirm_delete_shipment' class='blockLinkDeleteButton'>Delete, for serious</button>
-			</form>
-		{% else %}
-			<form action='' method='post'>
-				{% csrf_token %}
-				<button type='submit' name='delete_shipment' class='blockLinkDeleteButton'>Delete</button>
-			</form>
-		{% endif %}
-	</div>
+	{% if edit %}
+		<div class='left'>
+			{% if confirm_delete_shipment %}
+				<form action='' method='post'>
+					{% csrf_token %}
+					<button type='submit' name='confirm_delete_shipment' class='blockLinkDeleteButton'>Delete, for serious</button>
+				</form>
+			{% else %}
+				<form action='' method='post'>
+					{% csrf_token %}
+					<button type='submit' name='delete_shipment' class='blockLinkDeleteButton'>Delete</button>
+				</form>
+			{% endif %}
+		</div>
+	{% endif %}
 	<div class='right'>
 		{% if shipment.shp_shipment_date %}
 			<div class='sufficient'>Shipped on: {{ shipment.shp_shipment_date }}</div>
@@ -140,6 +146,7 @@
 			{% endif %}
 		{% endif %}
 	</div>
+
 	<div class='right'>
 		<a href='{% url shipment-manifest shipment.pk %}' class='blockLinkButton'>Download Shipping Manifest</a>
 	</div>

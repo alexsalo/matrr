@@ -14,12 +14,14 @@
 		{% if shipped_requests %}
 			<table class="common_center" cellpadding='4' cellspacing='2'>
 				<tr>
+					<th>Request</th>
 					<th>User</th>
 					<th>Cohort</th>
 					<th>Request Date</th>
 				</tr>
 				{% for request in shipped_requests %}
 					<tr>
+						<td><a href='{% url order-detail request.req_request_id %}'>{{ request.pk }}</a></td>
 						<td><a href="{% url account-reviewer-view request.user.id %}">{{ request.user }}</a></td>
 						<td>{{ request.cohort.coh_cohort_name }}</td>
 						<td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
