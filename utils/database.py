@@ -917,7 +917,7 @@ def load_edr_one_file(file_name, dex):
 			edr.save()	
 
 def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, create_dex=False, create_mtd=False):
-	""" Input file may not start with header! """
+	""" Input file may start with header, but ONLY if entry[1] == 'Date'! """
 	
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	bouts = list()
@@ -933,6 +933,8 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, creat
 			if not line:
 				continue
 			entry = line.split("\t")
+			if entry[1] == 'Date':
+				continue
 			date = dt.strptime(entry[1], "%Y_%m_%d")
 			if last_date != date:
 				dexs = DrinkingExperiment.objects.filter(cohort=cohort,dex_type=dex_type,dex_date=date)
