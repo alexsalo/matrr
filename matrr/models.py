@@ -957,6 +957,50 @@ class CohortProteinImage(MATRRImage):
 		db_table = 'cpi_cohort_protein_image'
 
 
+#  This model breaks MATRR field name scheme
+class MonkeyProteinImage(MATRRImage):
+	cpi_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='mpi_image_set', editable=False)
+	proteins = models.ManyToManyField('Protein', null=False, related_name='mpi_image_set', editable=False)
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all())
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all(), **params)
+
+		super(MonkeyProteinImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+
+		PLOTS = plotting.MONKEY_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(MonkeyProteinImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.monkey and self.proteins.all().count():
+			if self.method and not self.image:
+				self.title = '%s : %s' % (str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbr',flat=True)))
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s: %s.%s" % (str(self.pk), str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbr',flat=True)))
+
+	class Meta:
+		db_table = 'mpi_monkey_protein_image'
+
+
 class DataFile(models.Model):
 	dat_id = models.AutoField(primary_key=True)
 	account = models.ForeignKey(Account, null=True)
@@ -1961,6 +2005,7 @@ class MonkeyProtein(models.Model):
 	mpn_date = models.DateTimeField("Date Collected", editable=False)
 	mpn_value = models.FloatField(null=True)
 	mpn_stdev = models.FloatField("Standard Deviation from Cohort mean", null=True)
+	mpn_pctdev = models.FloatField("Percent Deviation from Cohort mean", null=True)
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
@@ -1973,6 +2018,16 @@ class MonkeyProtein(models.Model):
 			mean = cp_values.mean()
 			diff = self.mpn_value - mean
 			self.mpn_stdev = diff / stdev
+			self.save()
+
+
+	def populate_pctdev(self, recalculate=False):
+		if self.mpn_pctdev is None or recalculate:
+			cohort_proteins = MonkeyProtein.objects.filter(protein=self.protein, mpn_date=self.mpn_date, monkey__in=self.monkey.cohort.monkey_set.all().exclude(mky_id=self.monkey.pk))
+			cp_values = numpy.array(cohort_proteins.values_list('mpn_value', flat=True))
+			mean = cp_values.mean()
+			diff = self.mpn_value - mean
+			self.mpn_pctdev = diff / mean * 100
 			self.save()
 
 
@@ -2085,6 +2140,18 @@ def monkeyimage_pre_delete(**kwargs):
 		os.remove(mig.thumbnail.path)
 	if mig.html_fragment and os.path.exists(mig.html_fragment.path):
 		os.remove(mig.html_fragment.path)
+
+# This will delete MATRRImage's FileField's files from media before deleting the database entry.
+# Helps keep the media folder pretty.
+@receiver(pre_delete, sender=MonkeyProteinImage)
+def monkeyproteinimage_pre_delete(**kwargs):
+	mpi = kwargs['instance']
+	if mpi.image and os.path.exists(mpi.image.path):
+		os.remove(mpi.image.path)
+	if mpi.thumbnail and os.path.exists(mpi.thumbnail.path):
+		os.remove(mpi.thumbnail.path)
+	if mpi.html_fragment and os.path.exists(mpi.html_fragment.path):
+		os.remove(mpi.html_fragment.path)
 
 # This will delete MATRRImage's FileField's files from media before deleting the database entry.
 # Helps keep the media folder pretty.
