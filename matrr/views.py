@@ -1317,6 +1317,13 @@ def shipment_detail(request, shipment_id):
 
 	shipment = get_object_or_404(Shipment, pk=shipment_id)
 	req_request = shipment.req_request
+
+	if not req_request.req_status == RequestStatus.Shipped or shipment.shp_shipment_date is None:
+		edit = True
+	else:
+		edit = False
+
+	tracking_number = shipment.shp_tracking
 	tracking_form = TrackingNumberForm(instance=shipment)
 	if request.method == 'POST':
 		if 'tracking' in request.POST:
@@ -1353,20 +1360,24 @@ def shipment_detail(request, shipment_id):
 					send_po_manifest_upon_shipment(shipment)
 					notify_user_upon_shipment(shipment)
 				req_request.ship_request()
+				return redirect(reverse('shipping-overview'))
 
 		if 'delete_shipment' in request.POST:
 			messages.warning(request, "Are you sure you want to delete this shipment?  You will have to recreate it before shipping the tissue.")
 			confirm_delete_shipment = True
 			messages.info(request, "If you are certain you want to delete this shipment, click the delete button again to confirm.")
 		if 'confirm_delete_shipment' in request.POST:
-			shipment.delete()
+			messages.success(request, "Shipment %d deleted." % shipment.pk)
+			shipment.delete() # super important that TissueRequest.shipment FK is set to on_delete=SET_NULL
 			return redirect(reverse('shipping-overview'))
 
 	return render_to_response('matrr/shipping/shipment_details.html', {'req_request': req_request,
 																	 'shipment': shipment,
 																	 'tracking_form': tracking_form,
 																	 'confirm_ship': confirm_ship,
-																	 'confirm_delete_shipment': confirm_delete_shipment}, context_instance=RequestContext(request))
+																	 'confirm_delete_shipment': confirm_delete_shipment,
+																	 'edit': edit,
+																	 'tracking_number': tracking_number}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
