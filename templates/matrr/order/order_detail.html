@@ -105,7 +105,7 @@
 					<th>FedEx Tracking Number</th>
 				</tr>
 				<tr>
-					<td>{{ shipment.pk }}</td>
+					<td><a href="{% url shipment-detail shipment.pk %}">{{ shipment.pk }}</a></td>
 					<td>{% if shipment.shp_shipment_date %}{{ shipment.shp_shipment_date }}{% else %}Not yet shipped{% endif %}</td>
 					<td>{% if shipment.shp_tracking %}{{ shipment.shp_tracking }}{% else %}None{% endif %}</td>
 				</tr>
