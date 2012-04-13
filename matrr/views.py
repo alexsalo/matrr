@@ -24,7 +24,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from utils import plotting
 from matrr.decorators import user_owner_test
-from utils.plotting import monkey_protein
+#from utils.plotting import monkey_protein
 
 def registration(request):
 	from registration.views import register
@@ -410,7 +410,7 @@ def __notify_mta_uploaded(mta):
 		body += 'This MTA can be downloaded here:  http://gleek.ecs.baylor.edu%s.\n' % mta.mta_file.url
 		body += 'If necessary you can contact %s with the information below.\n\n' % mta.user.username
 		body += "Name: %s %s\nEmail: %s\nPhone: %s \n\n" % (mta.user.first_name, mta.user.last_name, mta.user.email, mta.user.account.phone_number)
-		body += "If this is a valid MTA click here to update MATRR: http://gleek.ecs.baylor.edu%s" % reverse('mta-verify', args=[str(mta.pk)])
+		body += "If this is a valid MTA click here to update MATRR: http://gleek.ecs.baylor.edu%s" % reverse('mta-list')
 
 		ret = send_mail(subject, body, from_email, recipient_list=recipients)
 		if ret > 0:
@@ -420,25 +420,44 @@ def __notify_mta_uploaded(mta):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.verify_mta'), login_url='/denied/')
-def mta_verify(request, mta_id):
-	mta = get_object_or_404(Mta, pk=mta_id)
-	account = mta.user.account
-	if not account.act_mta_is_valid:
-		account.act_mta = 'Uploaded MTA is Valid'
-		account.save() # this will update act_mta_is_valid
-		#		send email
-		subject = "Your MTA has been verified"
-		body = "Your Material Transfer Agreement submitted to www.matrr.com has been verified\n" +\
-			   "MATRR can now ship you accepted tissue requests.\n" +\
-			   "This is an automated message, please, do not respond.\n"
+def mta_list(request):
+	MTAValidationFormSet = formset_factory(MTAValidationForm, extra=0)
+	if request.method == "POST":
+		formset = MTAValidationFormSet(request.POST)
+		if formset.is_valid():
+			for mtaform in formset:
+				data = mtaform.cleaned_data
+				mta = Mta.objects.get(pk=data['primarykey'])
+				if data['is_valid'] != mta.mta_is_valid:
+					mta.mta_is_valid = data['is_valid']
+					mta.save()
+			messages.success(request, message="This page of MTAs has been successfully updated.")
+		else:
+			messages.error(request, formset.errors)
 
-		from_e = User.objects.get(username='matrr_admin').email
-		to_e = [account.email]
-		send_mail(subject, body, from_e, to_e, fail_silently=True)
-		messages.success(request, "MTA %s was successfully verified." % str(mta.pk))
+	all_mta = Mta.objects.all().order_by('user', 'pk')
+	paginator = Paginator(all_mta, 15)
+
+	if request.GET and 'page' in request.GET:
+		page = request.GET.get('page')
 	else:
-		messages.info(request, "MTA %s has already been verified." % str(mta.pk))
-	return render_to_response('base.html', {}, context_instance=RequestContext(request))
+		page = 1
+	try:
+		mta_list = paginator.page(page)
+	except PageNotAnInteger:
+		# If page is not an integer, deliver first page.
+		mta_list = paginator.page(1)
+	except EmptyPage:
+		# If page is out of range (e.g. 9999), deliver last page of results.
+		mta_list = paginator.page(paginator.num_pages)
+
+	initial = []
+	for mta in mta_list.object_list:
+		mta_initial = {'is_valid': mta.mta_is_valid, 'username': mta.user.username, 'title': mta.mta_title, 'url': mta.mta_file.url, 'primarykey': mta.pk}
+		initial.append(mta_initial)
+
+	formset = MTAValidationFormSet(initial=initial)
+	return render_to_response('matrr/mta_list.html', {'formset': formset, 'mta_list': mta_list}, context_instance=RequestContext(request))
 
 def mta_upload(request):
 	# make blank mta instance
@@ -1537,7 +1556,7 @@ def tissue_verification_list(request, req_request_id):
 					   'notes': tiv.tiv_notes,
 					   'amount': amount,
 					   'req_request': req_request, }
-		initial[len(initial):] = [tiv_initial]
+		initial.append([tiv_initial])
 
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification/verification_list.html', {"formset": formset, "req_id": req_request_id, "paginator": p_tiv_list}, context_instance=RequestContext(request))

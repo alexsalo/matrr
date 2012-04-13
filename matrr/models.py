@@ -349,6 +349,7 @@ class Mta(models.Model):
 								 help_text='Give your uploaded MTA a short unique name to make it easier for you to reference')
 	mta_file = models.FileField(upload_to='mta/', default='', null=False, blank=False,
 								help_text='File to Upload')
+	mta_is_valid = models.BooleanField('MTA is Valid', null=False, blank=False, default=False)
 
 	def __unicode__(self):
 		return str(self.mta_id)
@@ -414,7 +415,6 @@ class Account(models.Model):
 	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
 
 	act_mta = models.CharField("MTA", max_length=500, null=True, blank=True)
-	act_mta_is_valid = models.BooleanField('MTA is Valid', null=False, blank=False, default=False)
 
 	objects = AccountManager()
 
@@ -435,21 +435,22 @@ class Account(models.Model):
 		return str(self.user.username) + ": " + self.user.first_name + " " + self.user.last_name
 
 	def has_mta(self):
+		# User uploaded a valid MTA
+		for mta in self.user.mta_set.all():
+			if mta.mta_is_valid:
+				return True
+
+		# User is member of UBMTA institution
 		if self.act_mta:
 			institution = Institution.objects.filter(ins_institution_name=self.act_mta)
-			if self.act_mta == "Uploaded MTA is Valid": # if the user has uploaded a VALID and VERIFIED mta
-				return True # then call my MTA valid
-			elif institution and institution[0].ins_institution_name != "Non-UBMTA Institution": # if my MTA is in the Institution table, which was pulled from the UBMTA
-				return True # then call my MTA valid
-		# in all other cases, user has no valid MTA
+			if institution and institution[0].ins_institution_name != "Non-UBMTA Institution":
+				return True
+
+		# In all other cases, user has no valid MTA
 		return False
 
 	def save(self, *args, **kwargs):
 		super(Account, self).save(*args, **kwargs)
-		mta_status = self.has_mta()
-		if self.act_mta_is_valid != mta_status:
-			self.act_mta_is_valid = mta_status
-			self.save()
 
 
 	class Meta:
