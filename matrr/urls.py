@@ -100,18 +100,22 @@ urlpatterns += patterns('matrr.views',
 	#  Account stuff
 	url(r'^account/$', 					account_view, name='account-view'),
 	url(r'^account/shipping/$', 		account_shipping, name='account-shipping'),
-	url(r'^account/address/$',         account_address, name='account-address'),
-	url(r'^account/info/$',         account_info, name='account-info'),
-	url(r'^account/mta/$',         account_mta, name='account-mta'),
+	url(r'^account/address/$',			account_address, name='account-address'),
+	url(r'^account/info/$',				account_info, name='account-info'),
+	url(r'^account/mta/$',         		account_mta, name='account-mta'),
 	url(r'^account/verify/(?P<user_id>\d+)/$', account_verify, name='account-verify'),
 	url(r'^account/(?P<user_id>\d+)/$', account_reviewer_view, name='account-reviewer-view'),
 
+	#  MTA pages -.-
+	url(r'^mta/list/$', 					mta_list, name='mta-list'),
+
+	# Upload pages
 	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),
-	url(r'^upload/mta/verify/(?P<mta_id>\d+)/$', 			mta_verify, name='mta-verify'),
 	url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
+	# Inventory Verification pages
 	url(r'^verification/$', tissue_verification, name='verification'),
 	url(r'^verification/(?P<req_request_id>\d+)/$', tissue_verification_list, name='verification-list'),
 	url(r'^verification/(?P<req_request_id>\d+)/export$', tissue_verification_export, name='verification-list-export'),
@@ -124,10 +128,8 @@ urlpatterns += patterns('matrr.views',
 	# Tools
 	url(r'^tools/$', tools_landing, name='tools-landing'),
 	url(r'^tools/protein/$', tools_protein, name='tools-protein'),
-
 	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/$', tools_cohort_protein, name='tools-cohort-protein'),
 	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_protein_graphs, name='tools-cohort-protein-graphs'),
-
 	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/monkey/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
 	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
 

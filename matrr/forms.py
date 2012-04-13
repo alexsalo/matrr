@@ -348,6 +348,11 @@ class TissueInventoryVerificationForm(Form):
 	inventory = ChoiceField(choices=InventoryStatus, required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer))
 
 
+class MTAValidationForm(Form):
+	primarykey = IntegerField(widget=HiddenInput(), required=False)
+	is_valid = BooleanField(required=False)
+
+
 class TissueInventoryVerificationDetailForm(TissueInventoryVerificationForm):
 	freezer = CharField(max_length=100, required=False)
 	location = CharField(max_length=100, required=False)
