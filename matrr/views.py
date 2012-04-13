@@ -1318,7 +1318,7 @@ def shipment_detail(request, shipment_id):
 	shipment = get_object_or_404(Shipment, pk=shipment_id)
 	req_request = shipment.req_request
 
-	if not req_request.req_status == RequestStatus.Shipped or shipment.shp_shipment_date is None:
+	if req_request.req_status != RequestStatus.Shipped or shipment.shp_shipment_date is None:
 		edit = True
 	else:
 		edit = False
