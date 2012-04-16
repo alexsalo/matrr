@@ -1854,7 +1854,7 @@ def tools_monkey_protein_graphs(request, cohort_id):
 						if mpis.count() > 0:
 							mpi = mpis[0]
 						
-					graphs.append(mpi)
+						graphs.append(mpi)
 			context['graphs'] = graphs
 		else:
 			if 'proteins' not in protein_form.data:
