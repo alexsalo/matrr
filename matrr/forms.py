@@ -656,12 +656,12 @@ class ProteinSelectForm(Form):
 		self.fields['proteins'].help_text = "Select proteins to display"
 
 class MonkeyGraphAppearanceForm(Form):
-	y_choices = (('monkey_protein_pctdev', 'Percentage deviation from cohort mean'), ('monkey_protein_stdev',
-				 'Standart deviation from cohort mean'), ('monkey_protein_value', 'Actual value'))
+	y_choices = (('monkey_protein_pctdev', 'Percent deviation from cohort mean'), ('monkey_protein_stdev',
+				 'Standard deviation from cohort mean'), ('monkey_protein_value', 'Actual value'))
 	yaxis_units = ChoiceField(choices = y_choices, label='Y axis', help_text="Select data to display on y axis",
 							initial=y_choices[2][0])
 	filter_choices = (('all', 'All values'), ('morning','Only values collected before noon'), ('afternoon', 'Only values collected after noon'))
-	data_filter = ChoiceField(choices = filter_choices, label="Data filter", help_text="Select data to display due to time of day when they were collected",
+	data_filter = ChoiceField(choices = filter_choices, label="Data filter", help_text="Limit data to display based on time of day collected",
 							initial=filter_choices[0][0])
 	monkeys = CharField(widget=HiddenInput())
 	def __init__(self, monkeys=None, *args, **kwargs):
