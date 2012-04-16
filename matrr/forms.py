@@ -674,13 +674,13 @@ class DataSelectForm(Form):
 	dataset_choices = (('protein', 'Access protein-associated data tools'), ('etoh', 'Access ethanol-associated data tools'))
 	dataset = ChoiceField(choices=dataset_choices, label='Data Set', help_text="Choose what data to analyze", widget=RadioSelect, initial=dataset_choices[0][0])
 
-
+#fiels = document.getElementByID('monkey_fieldset'); fiels.style.display='None';
 class SubjectSelectForm(Form):
 	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
 	subject = ChoiceField(choices=subject_choices,
 						  label='Subject',
 						  help_text="Choose what scope of subjects to analyze",
-						  widget=RadioSelect(renderer=RadioRenderer_nolist),
+						  widget=RadioSelect(renderer=RadioFieldRendererSpecial),
 						  initial=subject_choices[0][0])
 	monkeys = ModelMultipleChoiceField(queryset = Monkey.objects.all(),required=False, widget=CheckboxSelectMultipleSelectAll())
 
