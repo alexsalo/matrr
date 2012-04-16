@@ -19,12 +19,19 @@ from datetime import date, timedelta
 from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
 from process_latex import process_latex
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from utils import plotting
 from matrr.decorators import user_owner_test
 #from utils.plotting import monkey_protein
+import urllib
+
+
+def redirect_with_get(url_name, *args, **kwargs):
+	url = reverse(url_name, args = args)
+	params = urllib.urlencode(kwargs)
+	return HttpResponseRedirect(url + "?%s" % params)
 
 def registration(request):
 	from registration.views import register
@@ -1686,18 +1693,28 @@ def tools_protein(request): # pick a cohort
 
 
 def tools_cohort_protein(request, cohort_id):
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
 	if request.method == 'POST':
-		subject_select_form = SubjectSelectForm(data=request.POST)
+		subject_select_form = SubjectSelectForm(cohort, data=request.POST)
 		if subject_select_form.is_valid():
 			subject = subject_select_form.cleaned_data['subject']
 			if subject == 'monkey':
-				return redirect('tools-monkey-protein', cohort_id)
+				monkeys = subject_select_form.cleaned_data['monkeys']
+				get_m = list()
+				for m in monkeys:
+					get_m.append(`m.mky_id`)
+				get_m = "-".join(get_m)
+				if not monkeys:
+					messages.error(request, "You have to select at least one monkey.")
+					return render_to_response('matrr/tools/protein.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
+
+				return redirect_with_get('tools-monkey-protein', cohort_id, monkeys=get_m)
 			elif subject == 'cohort':
 				return redirect('tools-cohort-protein-graphs', cohort_id)
 			else: # assumes subject == 'download'
 				account = request.user.account
 				if account.has_mta():
-					cohort = Cohort.objects.get(pk=cohort_id)
+					
 					monkey_proteins = MonkeyProtein.objects.filter(monkey__in=cohort.monkey_set.all())
 
 					datafile, isnew = DataFile.objects.get_or_create(account=account, dat_title="%s Protein data" % str(cohort))
@@ -1712,10 +1729,22 @@ def tools_cohort_protein(request, cohort_id):
 						messages.warning(request, "This data file has already been created for you.  It is available to download on your account page.")
 				else:
 					messages.warning(request, "You must have a valid MTA on record to download data.  MTA information can be updated on your account page.")
-	return render_to_response('matrr/tools/protein.html', {'subject_select_form': SubjectSelectForm()}, context_instance=RequestContext(request))
+	
+	return render_to_response('matrr/tools/protein.html', {'subject_select_form': SubjectSelectForm(cohort)}, context_instance=RequestContext(request))
 
+
+def _verify_monkeys(text_monkeys):
+	monkey_keys = text_monkeys.split('-')
+	query_keys = list()
+	if len(monkey_keys) > 0:
+		for mk in monkey_keys:
+			query_keys.append(int(mk))
+		return Monkey.objects.filter(mky_id__in=query_keys)
+	else:
+		return list()
 
 def tools_cohort_protein_graphs(request, cohort_id):
+
 	proteins = None
 	old_post = request.session.get('_old_post')
 	cohort = Cohort.objects.get(pk=cohort_id)
@@ -1740,31 +1769,125 @@ def tools_cohort_protein_graphs(request, cohort_id):
 	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
 
 
-def tools_monkey_protein_graphs(request, cohort_id, monkey_id=0):
+def tools_monkey_protein_graphs(request, cohort_id):
 	proteins = None
-	old_post = request.session.get('_old_post')
-	monkey = Monkey.objects.get(pk=monkey_id) if monkey_id else None
-	cohort = Cohort.objects.get(pk=cohort_id)
-	context = {'monkey': monkey, 'cohort': cohort}
-	if request.method == "POST" or old_post:
-		post = request.POST if request.POST else old_post
-		protein_form = ProteinSelectForm(data=post)
-		subject_select_form = MonkeySelectForm(data=post)
-		if protein_form.is_valid() and subject_select_form.is_valid():
-			if int(monkey_id) != subject_select_form.cleaned_data['subject'].pk:
-				request.session['_old_post'] = request.POST
-				return redirect(tools_monkey_protein_graphs, cohort_id, subject_select_form.cleaned_data['subject'].pk)
-			elif request.session.has_key('_old_post'):
-				request.session.pop('_old_post')
-			proteins = protein_form.cleaned_data['proteins']
-			graph_url = monkey_protein(monkey, proteins, request.user.username)
-			context['graphs'] = [graph_url]
-	monkeys_with_protein_data = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey__pk', flat=True).distinct() # for some reason this only returns the pk int
-	monkeys_with_protein_data = Monkey.objects.filter(pk__in=monkeys_with_protein_data) # so get the queryset of cohorts
+#	old_post = request.session.get('_old_post')
+#	monkey = Monkey.objects.get(pk=monkey_id) if monkey_id else None
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	
+	context = { 'cohort': cohort}
+	
+	
+	if request.method == 'GET' and 'monkeys' in request.GET and request.method!='POST':
+#		print "jej"
+		print request.GET['monkeys']
+		monkeys = _verify_monkeys(request.GET['monkeys'])
+		get_m = list()
+#		print monkeys
+		if monkeys:
+			for m in monkeys.values_list('mky_id', flat=True):
+				get_m.append(`m`)
 
-	context['subject_select_form'] = MonkeySelectForm(monkey_queryset=monkeys_with_protein_data, horizontal=True, initial={'subject': monkey_id})
-	context['protein_form'] = ProteinSelectForm(initial={'proteins': proteins})
+			text_monkeys = "-".join(get_m)
+		else:
+			text_monkeys = ""
+#		print "text"
+#		print text_monkeys
+		context['graph_form'] = MonkeyGraphAppearanceForm(text_monkeys)
+		context['protein_form'] = ProteinSelectForm()
+	
+	elif request.method == 'POST':
+#		post = request.POST if request.POST else old_post
+		protein_form = ProteinSelectForm(data=request.POST)
+		graph_form = MonkeyGraphAppearanceForm(data=request.POST)
+
+		if protein_form.is_valid() and graph_form.is_valid():
+
+			monkeys = _verify_monkeys(graph_form.cleaned_data['monkeys'])
+			yaxis = graph_form.cleaned_data['yaxis_units']
+			data_filter = graph_form.cleaned_data['data_filter']
+			proteins = protein_form.cleaned_data['proteins']
+			graphs = list()
+			if data_filter == "morning":
+				afternoon_reading = False
+			elif data_filter == 'afternoon':
+				afternoon_reading = True
+			else:
+				afternoon_reading = None
+			if yaxis != 'monkey_protein_value':
+				for mon in monkeys:
+
+					mpis = MonkeyProteinImage.objects.filter(monkey = mon,
+						 method = yaxis,
+#						 proteins = proteins,
+						 parameters = `{'afternoon_reading':afternoon_reading}`)
+					mpis = mpis.annotate(count=Count("proteins")).filter(count=len(proteins))
+					for protein in proteins:
+						mpis = mpis.filter(proteins = protein)
+						
+					if len(mpis) == 0:
+
+						mpi = MonkeyProteinImage(monkey = mon,
+					 						method = yaxis,
+					    					parameters = str({'afternoon_reading':afternoon_reading})
+					    					)
+						mpi.save()
+						mpi.proteins.add(*proteins)
+						mpi.save()
+					if len(mpis) > 0:
+						mpi = mpis[0]
+					graphs.append(mpi)
+			else:
+				for protein in proteins:
+					for mon in monkeys:
+						mpis = MonkeyProteinImage.objects.filter(monkey = mon,
+						 									method = yaxis,
+						 						 			proteins__in = [protein,],
+						 						 			parameters = `{'afternoon_reading':afternoon_reading}`)
+						if mpis.count() == 0:
+							mpi = MonkeyProteinImage(monkey = mon,
+						 							method = yaxis,
+						 							parameters = `{'afternoon_reading':afternoon_reading}`)
+							mpi.save()
+							mpi.proteins.add(protein)
+							mpi.save()
+						if mpis.count() > 0:
+							mpi = mpis[0]
+						
+					graphs.append(mpi)
+			context['graphs'] = graphs
+		else:
+			if 'proteins' not in protein_form.data:
+				messages.error(request, "You have to select at least one protein.");
+				
+			if len(graph_form.errors) + len(protein_form.errors) > 1:
+				raise Http404()
+			monkeys = protein_form.data['monkeys']
+	
+		
+		context['monkeys'] = monkeys
+		context['graph_form'] = graph_form
+		context['protein_form'] = protein_form	
+		
+	else:
+		raise Http404()			
+			
 	return render_to_response('matrr/tools/protein_monkey.html', context, context_instance=RequestContext(request))
+	
+			
+#			if int(monkey_id) != subject_select_form.cleaned_data['subject'].pk:
+#				request.session['_old_post'] = request.POST
+#				return redirect(tools_monkey_protein_graphs, cohort_id, subject_select_form.cleaned_data['subject'].pk)
+#			elif request.session.has_key('_old_post'):
+#				request.session.pop('_old_post')
+#			proteins = protein_form.cleaned_data['proteins']
+#			graph_url = monkey_protein(monkey, proteins, request.user.username)
+#			context['graphs'] = [graph_url]
+#	monkeys_with_protein_data = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey__pk', flat=True).distinct() # for some reason this only returns the pk int
+#	monkeys_with_protein_data = Monkey.objects.filter(pk__in=monkeys_with_protein_data) # so get the queryset of cohorts
+
+
+	
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')

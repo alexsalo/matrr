@@ -1238,12 +1238,17 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 
 	return fig, 'NO MAP'
 
-def monkey_protein_value(monkey, protein, afternoon_reading=None):
-	try: # silly hack to enforce 1 protein
-		iter(protein)
-		raise Exception("This method CANNOT be called with multiple proteins.  You must create these images individually.")
-	except TypeError:
-		pass
+def monkey_protein_value(monkey, proteins, afternoon_reading=None):
+#	try: # silly hack to enforce 1 protein
+#		iter(protein)
+#		raise Exception("This method CANNOT be called with multiple proteins.  You must create these images individually.")
+#	except TypeError:
+#		pass
+	
+	protein = proteins[0]
+	print "This method CANNOT be called with multiple proteins.  You must create these images individually."
+#		raise Exception("This method CANNOT be called with multiple proteins.  You must create these images individually.")
+		
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = fig.add_subplot(111)
@@ -1258,7 +1263,7 @@ def monkey_protein_value(monkey, protein, afternoon_reading=None):
 	ax1.set_xlabel("Date of sample")
 	ax1.set_ylabel("Protein Value (in %s)" % protein.pro_units)
 
-	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
+#	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
 
 	lines = []
 	line_labels = []
