@@ -686,7 +686,8 @@ class SubjectSelectForm(Form):
 
 	def __init__(self, cohort, **kwargs):
 		super(SubjectSelectForm, self).__init__(**kwargs)
-		self.fields['monkeys'].queryset = Monkey.objects.filter(cohort=cohort) 
+		monkey_keys = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey__pk', flat=True).distinct()
+		self.fields['monkeys'].queryset = Monkey.objects.filter(pk__in=monkey_keys) 
 
 class TissueShipmentForm(Form):
 	def __init__(self, tissue_request_queryset, *args, **kwargs):
