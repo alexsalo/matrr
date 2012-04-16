@@ -1845,6 +1845,9 @@ class Publication(models.Model):
 			self.pub_date = pub_date
 			self.save()
 
+	def publication_url(self):
+		return "http://www.ncbi.nlm.nih.gov/pubmed?term=%s" % self.pmid
+
 	def __unicode__(self):
 		if self.title:
 			return str(self.title.encode('ascii', 'ignore'))
