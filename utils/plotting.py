@@ -1146,9 +1146,9 @@ def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
 			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
 			if afternoon_reading is None:
 				y_values.append(monkey_protein.mpn_stdev)
-			elif afternoon_reading is True and monkey_protein.mpn_date.hour >= 12:
+			elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
 				y_values.append(monkey_protein.mpn_stdev)
-			elif afternoon_reading is False and monkey_protein.mpn_date.hour < 12:
+			elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
 				y_values.append(monkey_protein.mpn_stdev)
 			else:
 				dates = dates.exclude(mpn_date=date)
@@ -1209,9 +1209,9 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
 			if afternoon_reading is None:
 				y_values.append(monkey_protein.mpn_pctdev)
-			elif afternoon_reading is True and monkey_protein.mpn_date.hour >= 12:
+			elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
 				y_values.append(monkey_protein.mpn_pctdev)
-			elif afternoon_reading is False and monkey_protein.mpn_date.hour < 12:
+			elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
 				y_values.append(monkey_protein.mpn_pctdev)
 			else:
 				dates = dates.exclude(mpn_date=date)
@@ -1274,9 +1274,9 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 		monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
 		if afternoon_reading is None:
 			y_values.append(monkey_protein.mpn_value)
-		elif afternoon_reading is True and monkey_protein.mpn_date.hour >= 12:
+		elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
 			y_values.append(monkey_protein.mpn_value)
-		elif afternoon_reading is False and monkey_protein.mpn_date.hour < 12:
+		elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
 			y_values.append(monkey_protein.mpn_value)
 		else:
 			dates = dates.exclude(mpn_date=date)
