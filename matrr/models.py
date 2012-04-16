@@ -996,7 +996,7 @@ class MonkeyProteinImage(MATRRImage):
 				self._construct_filefields()
 
 	def __unicode__(self):
-		return "%s: %s.%s" % (str(self.pk), str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbrev',flat=True)))
+		return "%s- %s" % (str(self.pk), str(self.monkey))
 
 	class Meta:
 		db_table = 'mpi_monkey_protein_image'

@@ -1274,7 +1274,7 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 		monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
 		if afternoon_reading is None:
 			y_values.append(monkey_protein.mpn_value)
-		elif afternoon_reading is True and monkey_protein.mpnc_date.hour >= 12:
+		elif afternoon_reading is True and monkey_protein.mpn_date.hour >= 12:
 			y_values.append(monkey_protein.mpn_value)
 		elif afternoon_reading is False and monkey_protein.mpn_date.hour < 12:
 			y_values.append(monkey_protein.mpn_value)
@@ -1295,7 +1295,7 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 
 	# Shink current axis by width% to fit the legend
 	box = ax1.get_position()
-	width = 0.8 + ( 10 - len(protein.pro_abbrev))*.015
+	width = 0.8
 	ax1.set_position([box.x0, box.y0, box.width * width, box.height])
 
 	# Put a legend to the right of the current axis
