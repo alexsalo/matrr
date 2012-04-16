@@ -992,11 +992,11 @@ class MonkeyProteinImage(MATRRImage):
 		super(MonkeyProteinImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.monkey and self.proteins.all().count():
 			if self.method and not self.image:
-				self.title = '%s : %s' % (str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbr',flat=True)))
+				self.title = '%s : %s' % (str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbrev',flat=True)))
 				self._construct_filefields()
 
 	def __unicode__(self):
-		return "%s: %s.%s" % (str(self.pk), str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbr',flat=True)))
+		return "%s: %s.%s" % (str(self.pk), str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbrev',flat=True)))
 
 	class Meta:
 		db_table = 'mpi_monkey_protein_image'

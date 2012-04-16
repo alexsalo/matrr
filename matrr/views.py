@@ -25,7 +25,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from utils import plotting
 from matrr.decorators import user_owner_test
 #from utils.plotting import monkey_protein
-<<<<<<< HEAD
 import urllib
 
 
@@ -33,8 +32,6 @@ def redirect_with_get(url_name, *args, **kwargs):
 	url = reverse(url_name, args = args)
 	params = urllib.urlencode(kwargs)
 	return HttpResponseRedirect(url + "?%s" % params)
-=======
->>>>>>> MTA verification list
 
 def registration(request):
 	from registration.views import register
