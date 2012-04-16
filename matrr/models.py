@@ -710,7 +710,7 @@ class VIPManager(models.Manager):
 #  This model breaks MATRR field name scheme
 class MATRRImage(models.Model):
 	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
-	title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this image.')
+	title = models.CharField('Title', blank=True, null=False, max_length=500, help_text='Brief description of this image.')
 	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
 	parameters = models.CharField('Parameters', blank=True, null=False, max_length=1500, editable=False, default='defaults', help_text="The method's parameters used to generate this image.")
 	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
