@@ -130,6 +130,10 @@
 		</div>
 	{% endif %}
 	<div class='right'>
+		<a href='{% url shipment-manifest shipment.pk %}' class='blockLinkButton'>Download Shipping Manifest</a>
+	</div>
+	<div class=clearfix></div>
+	<div class='right'>
 		{% if shipment.shp_shipment_date %}
 			<div class='sufficient'>Shipped on: {{ shipment.shp_shipment_date }}</div>
 		{% else %}
@@ -145,9 +149,5 @@
 				</form>
 			{% endif %}
 		{% endif %}
-	</div>
-
-	<div class='right'>
-		<a href='{% url shipment-manifest shipment.pk %}' class='blockLinkButton'>Download Shipping Manifest</a>
 	</div>
 {% endblock %}

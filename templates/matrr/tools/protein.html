@@ -2,6 +2,7 @@
 
 {% block content %}
 	<div class=large-headline>Protein Tools</div>
+			
 	<form action='' method='post'>
 		{% csrf_token %}
 		<br>
@@ -9,6 +10,8 @@
 		<div class=small>{{ subject_select_form.subject.help_text }}</div>
 		<br>
 		{{ subject_select_form.subject }}
+		<br>
+		{{ subject_select_form.monkeys }}
 		<br>
 		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
 	</form>
