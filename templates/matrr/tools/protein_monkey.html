@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<div class=large-headline>{% if monkey %}Monkey Protein Tools: Monkey {{ monkey }}{% else %}Monkey Protein Tools:{% endif %}</div>
+	<div class=large-headline>{% if monkeys %}Monkey Protein Tools: Monkeys {% for monkey in monkeys %}{{ monkey.pk }} {% endfor %}{% else %}Monkey Protein Tools:{% endif %}</div>
 	{% if graphs %}
 		{% for graph in graphs %}
 			<div class="image_container">
