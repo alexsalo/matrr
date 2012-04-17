@@ -71,8 +71,10 @@
 					<th>Sex</th>
 					<th>Birthdate</th>
 					<th>Weight</th>
+					{% if user.is_authenticated %}
 					<th>Necropsy Start Date</th>
 					<th>Monkey Notes</th>
+					{% endif %}
 				</tr>
 				{% for monkey in cohort.monkey_set.all %}
 					<tr>
@@ -88,8 +90,10 @@
 						<td>{{ monkey.mky_gender }}</td>
 						<td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
 						<td>{{ monkey.mky_weight }}</td>
+						{% if user.is_authenticated %}
 						<td>{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}</td>
 						<td>{{ monkey.mky_notes }}</td>
+						{% endif %}
 					</tr>
 				{% endfor %}
 			{% else %}
@@ -100,8 +104,10 @@
 					<th>Sex</th>
 					<th>Birthdate</th>
 					<th>Weight</th>
+					{% if user.is_authenticated %}
 					<th>Test Group</th>
 					<th>Necropsy Start Date</th>
+					{% endif %}
 					<th>Stress Model</th>
 					<th>Study Complete</th>
 				</tr>
@@ -118,6 +124,7 @@
 						<td>{{ monkey.mky_gender }}</td>
 						<td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
 						<td>{{ monkey.mky_weight }}</td>
+						{% if user.is_authenticated %}
 						<td>
 							{% if monkey.mky_drinking %}
 								Ethanol
@@ -128,6 +135,7 @@
 								{% endif %}{% endif %}
 						</td>
 						<td>{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}</td>
+						{% endif %}
 						<td>{{ monkey.mky_stress_model }}</td>
 						<td>{% if monkey.mky_study_complete %}<font color=Green>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
 					</tr>
@@ -135,6 +143,7 @@
 			{% endif %}
 		</table>
 	</div>
+	{% if user.is_authenticated %}
 	<div class='clearfix'>
 		{% if coh_data %}
 			<div class='mini-headline'>Cohort Data</div>
@@ -171,6 +180,7 @@
 		{% endif %}
 
 	</div>
+	{% endif %}
 
 	<div>
 		<div class='mini-headline'>
