@@ -83,6 +83,7 @@ PUBLIC_URLS = (
 	r'^(privacy|data|usage|browser|public-faq|about|benefits|denied|not-verified)/', # all non-dynamic pages.  Should find a way to pull this from matrr.urls
 	r'^contact_us/$',
 	r'^publications/$',
+	r'^cohort/(?P<cohort_id>\d+)/$',
 	)
 
 # Make this unique, and don't share it with anybody.
