@@ -1577,16 +1577,17 @@ def tissue_verification_post_shipment(request):
 		formset = TissueVerificationShippedFormSet(request.POST)
 		if formset.is_valid():
 			for tivform in formset:
-				save = False
 				data = tivform.cleaned_data
 				tiv = TissueInventoryVerification.objects.get(pk=data['primarykey'])
 				if data['quantity'] != tiv.tissue_sample.tss_sample_quantity:
 					tiv.tissue_sample.tss_sample_quantity = data['quantity']
 					tiv.tissue_sample.save()
+					tiv.tiv_inventory = 'Updated'
 				if data['units'] != tiv.tissue_sample.tss_units:
 					tiv.tissue_sample.tss_units = data['units']
 					tiv.tissue_sample.save()
-
+					tiv.tiv_inventory = 'Updated'
+				tiv.save()
 			messages.success(request, message="This page of tissues has been successfully updated.")
 		else:
 			messages.error(request, formset.errors)
