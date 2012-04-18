@@ -2185,9 +2185,10 @@ def tiv_post_save(**kwargs):
 	# see if all the TIVs for the request have been verified
 	tiv = kwargs['instance']
 	if tiv.tiv_inventory != "Unverified":
-		req_request = tiv.tissue_request.req_request
-		verification_status = req_request.get_inventory_verification_status()
-		if verification_status == VerificationStatus.Complete:
-			from utils.regular_tasks.send_verification_complete_notification import send_verification_complete_notification
-			send_verification_complete_notification(req_request)
+		if not tiv.tissue_request is None:
+			req_request = tiv.tissue_request.req_request
+			verification_status = req_request.get_inventory_verification_status()
+			if verification_status == VerificationStatus.Complete:
+				from utils.regular_tasks.send_verification_complete_notification import send_verification_complete_notification
+				send_verification_complete_notification(req_request)
 
