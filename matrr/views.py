@@ -1579,13 +1579,14 @@ def tissue_verification_post_shipment(request):
 			for tivform in formset:
 				data = tivform.cleaned_data
 				tiv = TissueInventoryVerification.objects.get(pk=data['primarykey'])
-				if data['quantity'] != tiv.tissue_sample.tss_sample_quantity:
-					tiv.tissue_sample.tss_sample_quantity = data['quantity']
-					tiv.tissue_sample.save()
+				tss = tiv.tissue_sample
+				if data['quantity'] != -1:
+					tss.tss_sample_quantity = data['quantity']
+					tss.save()
 					tiv.tiv_inventory = 'Updated'
-				if data['units'] != tiv.tissue_sample.tss_units:
-					tiv.tissue_sample.tss_units = data['units']
-					tiv.tissue_sample.save()
+				if data['units'] != tss.tss_units:
+					tss.tss_units = data['units']
+					tss.save()
 					tiv.tiv_inventory = 'Updated'
 				tiv.save()
 			messages.success(request, message="This page of tissues has been successfully updated.")
@@ -1611,12 +1612,11 @@ def tissue_verification_post_shipment(request):
 	initial = []
 	for tiv in p_tiv_list.object_list:
 		tss = tiv.tissue_sample
-		quantity = -1 if tiv.tissue_request is None else tss.tss_sample_quantity
 		tiv_initial = {'primarykey': tiv.tiv_id,
 					   'monkey': tiv.monkey,
 					   'tissue': tiv.tissue_type,
 					   'notes': tiv.tiv_notes,
-					   'quantity': quantity,
+					   'quantity': -1,
 					   'units' : tss.tss_units,
 					   }
 		initial.append(tiv_initial)
