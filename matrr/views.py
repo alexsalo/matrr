@@ -1580,14 +1580,16 @@ def tissue_verification_post_shipment(request):
 				data = tivform.cleaned_data
 				tiv = TissueInventoryVerification.objects.get(pk=data['primarykey'])
 				tss = tiv.tissue_sample
-				if data['quantity'] != -1:
-					tss.tss_sample_quantity = data['quantity']
-					tss.save()
-					tiv.tiv_inventory = 'Updated'
 				if data['units'] != tss.tss_units:
 					tss.tss_units = data['units']
 					tss.save()
 					tiv.tiv_inventory = 'Updated'
+				if data['quantity'] >= 0:
+					tss.tss_sample_quantity = data['quantity']
+					tss.save()
+					tiv.tiv_inventory = 'Updated'
+				else:
+					tiv.tiv_inventory = 'Unverified'
 				tiv.save()
 			messages.success(request, message="This page of tissues has been successfully updated.")
 		else:
