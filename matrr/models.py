@@ -1937,8 +1937,7 @@ class TissueInventoryVerification(models.Model):
 				notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin. Do not edit, changes will not be saved." % str(
 					datetime.now().date())
 		# tissue_sample should ALWAYS == monkey:tissue_type
-		elif self.tissue_sample.monkey != self.monkey\
-		or   self.tissue_sample.tissue_type != self.tissue_type:
+		elif self.tissue_sample.monkey != self.monkey or self.tissue_sample.tissue_type != self.tissue_type:
 			notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(
 				datetime.now().date())
 
