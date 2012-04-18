@@ -1512,6 +1512,9 @@ def tissue_verification_export(request, req_request_id):
 														 outfile=response)
 
 def tissue_verification_list(request, req_request_id):
+	if int(req_request_id) is 0:
+		return tissue_verification_post_shipment(request)
+
 	TissueVerificationFormSet = formset_factory(TissueInventoryVerificationForm, extra=0)
 	if request.method == "POST":
 		formset = TissueVerificationFormSet(request.POST)
@@ -1528,10 +1531,8 @@ def tissue_verification_list(request, req_request_id):
 	# if request method != post and/or formset isNOT valid
 	# build a new formset
 	initial = []
-	if int(req_request_id): # Page is displaying a specific requests' TIVs
-		tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('monkey', 'tissue_type__tst_tissue_name')
-	else: # Page is displaying the list of TIVs without tissue_requests
-		tiv_list = TissueInventoryVerification.objects.filter(tissue_request=None).order_by('monkey', 'tissue_type__tst_tissue_name')
+
+	tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('monkey', 'tissue_type__tst_tissue_name')
 
 	paginator = Paginator(tiv_list, 30)
 
@@ -1562,11 +1563,65 @@ def tissue_verification_list(request, req_request_id):
 					   'tissue': tiv.tissue_type,
 					   'notes': tiv.tiv_notes,
 					   'amount': amount,
+					   'quantity': quantity,
 					   'req_request': req_request, }
-		initial.append([tiv_initial])
+		initial.append(tiv_initial)
 
 	formset = TissueVerificationFormSet(initial=initial)
 	return render_to_response('matrr/verification/verification_list.html', {"formset": formset, "req_id": req_request_id, "paginator": p_tiv_list}, context_instance=RequestContext(request))
+
+
+def tissue_verification_post_shipment(request):
+	TissueVerificationShippedFormSet = formset_factory(TissueInventoryVerificationShippedForm, extra=0)
+	if request.method == "POST":
+		formset = TissueVerificationShippedFormSet(request.POST)
+		if formset.is_valid():
+			for tivform in formset:
+				save = False
+				data = tivform.cleaned_data
+				tiv = TissueInventoryVerification.objects.get(pk=data['primarykey'])
+				if data['quantity'] != tiv.tissue_sample.tss_sample_quantity:
+					tiv.tissue_sample.tss_sample_quantity = data['quantity']
+					tiv.tissue_sample.save()
+				if data['units'] != tiv.tissue_sample.tss_units:
+					tiv.tissue_sample.tss_units = data['units']
+					tiv.tissue_sample.save()
+
+			messages.success(request, message="This page of tissues has been successfully updated.")
+		else:
+			messages.error(request, formset.errors)
+
+	# if request method != post and/or formset isNOT valid
+	# build a new formset
+	tiv_list = TissueInventoryVerification.objects.filter(tissue_request=None).order_by('monkey', 'tissue_type__tst_tissue_name')
+
+	paginator = Paginator(tiv_list, 30)
+
+	page = request.GET.get('page')
+	try:
+		p_tiv_list = paginator.page(page)
+	except EmptyPage:
+	# If page is out of range (e.g. 9999), deliver last page of results.
+		p_tiv_list = paginator.page(paginator.num_pages)
+	except:
+	# If page is not an integer, deliver first page.
+		p_tiv_list = paginator.page(1)
+
+	initial = []
+	for tiv in p_tiv_list.object_list:
+		tss = tiv.tissue_sample
+		quantity = -1 if tiv.tissue_request is None else tss.tss_sample_quantity
+		tiv_initial = {'primarykey': tiv.tiv_id,
+					   'monkey': tiv.monkey,
+					   'tissue': tiv.tissue_type,
+					   'notes': tiv.tiv_notes,
+					   'quantity': quantity,
+					   'units' : tss.tss_units,
+					   }
+		initial.append(tiv_initial)
+
+	formset = TissueVerificationShippedFormSet(initial=initial)
+	return render_to_response('matrr/verification/verification_shipped_list.html', {"formset": formset, "req_id": 0, "paginator": p_tiv_list}, context_instance=RequestContext(request))
 
 
 def tissue_verification_detail(request, req_request_id, tiv_id):
