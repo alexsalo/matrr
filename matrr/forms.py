@@ -356,9 +356,10 @@ class TissueInventoryVerificationForm(Form):
 	inventory = ChoiceField(choices=InventoryStatus, required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer))
 
 
-class MTAValidationForm(Form):
+class TissueInventoryVerificationShippedForm(Form):
 	primarykey = IntegerField(widget=HiddenInput(), required=False)
-	is_valid = BooleanField(required=False)
+	quantity = FloatField(required=False)
+	units = ChoiceField(choices=Units, required=False)
 
 
 class TissueInventoryVerificationDetailForm(TissueInventoryVerificationForm):
@@ -367,6 +368,11 @@ class TissueInventoryVerificationDetailForm(TissueInventoryVerificationForm):
 	quantity = FloatField(required=False)
 	units = ChoiceField(choices=Units, required=False)
 	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
+
+
+class MTAValidationForm(Form):
+	primarykey = IntegerField(widget=HiddenInput(), required=False)
+	is_valid = BooleanField(required=False)
 
 
 class DateRangeForm(Form):
