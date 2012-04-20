@@ -1238,6 +1238,7 @@ class Request(models.Model, DiffingMixin):
 		total = 0
 		for item in self.tissue_request_set.all():
 			total += item.get_estimated_cost()
+
 		return total
 
 	def get_tiv_collisions(self):
