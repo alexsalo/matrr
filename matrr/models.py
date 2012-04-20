@@ -1024,6 +1024,8 @@ class TissueType(models.Model):
 		return self.tissue_sample_set.filter(monkey=monkey)
 
 	def get_cohort_availability(self, cohort):
+		if 'custom' in self.tst_tissue_name.lower():
+			return True
 		for monkey in cohort.monkey_set.all():
 			status = self.get_monkey_availability(monkey)
 			# if the tissue is available for any monkey,
@@ -1063,6 +1065,8 @@ class TissueType(models.Model):
 			#		does not reflect accepted requests
 				return Availability.In_Stock
 
+		if 'custom' in self.tst_tissue_name.lower():
+			return Availability.Available
 		return Availability.Unavailable
 
 	def get_pending_request_count(self, monkey):
@@ -1522,6 +1526,13 @@ class TissueRequest(models.Model):
 			estimated_cost = monkey_cost * self.accepted_monkeys.count()
 		else:
 			estimated_cost = monkey_cost * self.monkeys.count()
+
+		if self.req_request.pk == 100:
+			return 3600
+		if self.req_request.pk in (169, 170):
+			return 2600
+		if self.req_request.pk in (171, 172):
+			return 1400
 		return estimated_cost
 
 	def get_tiv_collisions(self):
