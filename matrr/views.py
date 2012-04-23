@@ -2171,6 +2171,10 @@ def sendfile(request, id):
 	files.append((r, 'image'))
 	r = CohortProteinImage.objects.filter(thumbnail=id)
 	files.append((r, 'thumbnail'))
+	r = MonkeyProteinImage.objects.filter(image=id)
+	files.append((r, 'image'))
+	r = MonkeyProteinImage.objects.filter(thumbnail=id)
+	files.append((r, 'thumbnail'))
 
 	#	this will work for all listed files
 	file = None
