@@ -1576,7 +1576,7 @@ class TissueRequest(models.Model):
 		if self.req_request.pk == 100:
 			return 3600
 		if self.req_request.pk in (169, 170):
-			return 2600
+			return 2400
 		if self.req_request.pk in (171, 172):
 			return 1400
 		return estimated_cost
