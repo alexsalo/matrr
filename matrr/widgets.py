@@ -6,11 +6,72 @@ from matrr.models import Availability, Monkey
 from django.forms.util import flatatt
 from django.core.urlresolvers import reverse
 from django.forms import *
-from django.forms.widgets import Input, RadioFieldRenderer
+from django.forms.widgets import Input, RadioFieldRenderer, RadioInput
 import re
 
 def date_to_padded_int(date):
 	return str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2)
+
+class RadioInputSpecial(RadioInput):
+	def __init__(self, name, value, attrs, choice, index):
+		super(RadioInputSpecial, self).__init__(name, value, attrs, choice, index)
+		if choice[0] == "monkey":
+			onclick = "javascript:document.getElementById('monkey_fieldset').style.display='block';"
+		else:
+			onclick = "javascript:document.getElementById('monkey_fieldset').style.display='none';"
+		self.attrs['onclick'] = onclick
+
+
+class RadioFieldRendererSpecial(RadioFieldRenderer):
+    def __iter__(self):
+        for i, choice in enumerate(self.choices):
+            yield RadioInputSpecial(self.name, self.value, self.attrs.copy(), choice, i)
+
+    def __getitem__(self, idx):
+        choice = self.choices[idx] # Let the IndexError propogate
+        return RadioInputSpecial(self.name, self.value, self.attrs.copy(), choice, idx)
+
+	def render(self):
+			"""Outputs radios"""
+			radios = [u'%s<br>' % w for w in self]
+			return mark_safe('\n'.join(radios))
+
+class CheckboxSelectMultipleSelectAll(CheckboxSelectMultiple):
+	def __init__(self, attrs=None, choices=()):
+		super(CheckboxSelectMultipleSelectAll, self).__init__(attrs, choices)
+
+	def render(self, name, value, attrs=None, choices=()):
+		if value is None: value = []
+		has_id = attrs and 'id' in attrs
+		final_attrs = self.build_attrs(attrs, name=name)
+		output = [u'<fieldset id="monkey_fieldset" style="display:None;">%s<legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (
+		self.media, attrs['id'], name, attrs['id'])]
+#		output.append(u'<ul>')
+		
+		str_values = set([force_unicode(v) for v in value])
+		for i, (option_value, option_label) in enumerate(chain(self.choices, choices)):
+			# If an ID attribute was given, add a numeric index as a suffix,
+			# so that the checkboxes don't all have the same ID attribute.
+			if has_id:
+				final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
+				label_for = u' for="%s"' % final_attrs['id']
+			else:
+				label_for = ''
+
+			cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
+			option_value = force_unicode(option_value)
+			rendered_cb = cb.render(name, option_value)
+			option_label = conditional_escape(force_unicode(option_label))
+			output.append(u'<label%s>%s %s</label>' % (label_for, rendered_cb, option_label))
+#		output.append(u'</ul>')
+		output.append(u'</fieldset>')
+		return mark_safe(u'\n'.join(output))
+	class Media:
+		js = (
+			'js/toggle-checked.js',
+			)
+
+
 
 #this class is supposed to be abstract
 class CheckboxSelectMultipleLink(CheckboxSelectMultiple):

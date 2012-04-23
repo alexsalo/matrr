@@ -349,6 +349,7 @@ class Mta(models.Model):
 								 help_text='Give your uploaded MTA a short unique name to make it easier for you to reference')
 	mta_file = models.FileField(upload_to='mta/', default='', null=False, blank=False,
 								help_text='File to Upload')
+	mta_is_valid = models.BooleanField('MTA is Valid', null=False, blank=False, default=False)
 
 	def __unicode__(self):
 		return str(self.mta_id)
@@ -414,7 +415,6 @@ class Account(models.Model):
 	act_real_country = models.CharField('Country', max_length=25, null=True, blank=True)
 
 	act_mta = models.CharField("MTA", max_length=500, null=True, blank=True)
-	act_mta_is_valid = models.BooleanField('MTA is Valid', null=False, blank=False, default=False)
 
 	objects = AccountManager()
 
@@ -435,21 +435,22 @@ class Account(models.Model):
 		return str(self.user.username) + ": " + self.user.first_name + " " + self.user.last_name
 
 	def has_mta(self):
+		# User uploaded a valid MTA
+		for mta in self.user.mta_set.all():
+			if mta.mta_is_valid:
+				return True
+
+		# User is member of UBMTA institution
 		if self.act_mta:
 			institution = Institution.objects.filter(ins_institution_name=self.act_mta)
-			if self.act_mta == "Uploaded MTA is Valid": # if the user has uploaded a VALID and VERIFIED mta
-				return True # then call my MTA valid
-			elif institution and institution[0].ins_institution_name != "Non-UBMTA Institution": # if my MTA is in the Institution table, which was pulled from the UBMTA
-				return True # then call my MTA valid
-		# in all other cases, user has no valid MTA
+			if institution and institution[0].ins_institution_name != "Non-UBMTA Institution":
+				return True
+
+		# In all other cases, user has no valid MTA
 		return False
 
 	def save(self, *args, **kwargs):
 		super(Account, self).save(*args, **kwargs)
-		mta_status = self.has_mta()
-		if self.act_mta_is_valid != mta_status:
-			self.act_mta_is_valid = mta_status
-			self.save()
 
 
 	class Meta:
@@ -709,7 +710,7 @@ class VIPManager(models.Manager):
 #  This model breaks MATRR field name scheme
 class MATRRImage(models.Model):
 	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
-	title = models.CharField('Title', blank=True, null=False, max_length=50, help_text='Brief description of this image.')
+	title = models.CharField('Title', blank=True, null=False, max_length=500, help_text='Brief description of this image.')
 	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
 	parameters = models.CharField('Parameters', blank=True, null=False, max_length=1500, editable=False, default='defaults', help_text="The method's parameters used to generate this image.")
 	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
@@ -957,6 +958,50 @@ class CohortProteinImage(MATRRImage):
 		db_table = 'cpi_cohort_protein_image'
 
 
+#  This model breaks MATRR field name scheme
+class MonkeyProteinImage(MATRRImage):
+	cpi_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='mpi_image_set', editable=False)
+	proteins = models.ManyToManyField('Protein', null=False, related_name='mpi_image_set', editable=False)
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+
+		if self.parameters == 'defaults' or self.parameters == '':
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all())
+		else:
+			params = ast.literal_eval(self.parameters)
+			mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all(), **params)
+
+		super(MonkeyProteinImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+
+		PLOTS = plotting.MONKEY_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, *args, **kwargs):
+		super(MonkeyProteinImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.monkey and self.proteins.all().count():
+			if self.method and not self.image:
+				self.title = '%s : %s' % (str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbrev',flat=True)))
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s- %s" % (str(self.pk), str(self.monkey))
+
+	class Meta:
+		db_table = 'mpi_monkey_protein_image'
+
+
 class DataFile(models.Model):
 	dat_id = models.AutoField(primary_key=True)
 	account = models.ForeignKey(Account, null=True)
@@ -1193,6 +1238,7 @@ class Request(models.Model, DiffingMixin):
 		total = 0
 		for item in self.tissue_request_set.all():
 			total += item.get_estimated_cost()
+
 		return total
 
 	def get_tiv_collisions(self):
@@ -1530,7 +1576,7 @@ class TissueRequest(models.Model):
 		if self.req_request.pk == 100:
 			return 3600
 		if self.req_request.pk in (169, 170):
-			return 2600
+			return 2400
 		if self.req_request.pk in (171, 172):
 			return 1400
 		return estimated_cost
@@ -1811,6 +1857,9 @@ class Publication(models.Model):
 			self.pub_date = pub_date
 			self.save()
 
+	def publication_url(self):
+		return "http://www.ncbi.nlm.nih.gov/pubmed?term=%s" % self.pmid
+
 	def __unicode__(self):
 		if self.title:
 			return str(self.title.encode('ascii', 'ignore'))
@@ -1889,8 +1938,7 @@ class TissueInventoryVerification(models.Model):
 				notes = "%s:Database Error:  Multiple TissueSamples exist for this monkey:tissue_type. Please notify a MATRR admin. Do not edit, changes will not be saved." % str(
 					datetime.now().date())
 		# tissue_sample should ALWAYS == monkey:tissue_type
-		elif self.tissue_sample.monkey != self.monkey\
-		or   self.tissue_sample.tissue_type != self.tissue_type:
+		elif self.tissue_sample.monkey != self.monkey or self.tissue_sample.tissue_type != self.tissue_type:
 			notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(
 				datetime.now().date())
 
@@ -1978,6 +2026,7 @@ class MonkeyProtein(models.Model):
 	mpn_date = models.DateTimeField("Date Collected", editable=False)
 	mpn_value = models.FloatField(null=True)
 	mpn_stdev = models.FloatField("Standard Deviation from Cohort mean", null=True)
+	mpn_pctdev = models.FloatField("Percent Deviation from Cohort mean", null=True)
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
@@ -1990,6 +2039,16 @@ class MonkeyProtein(models.Model):
 			mean = cp_values.mean()
 			diff = self.mpn_value - mean
 			self.mpn_stdev = diff / stdev
+			self.save()
+
+
+	def populate_pctdev(self, recalculate=False):
+		if self.mpn_pctdev is None or recalculate:
+			cohort_proteins = MonkeyProtein.objects.filter(protein=self.protein, mpn_date=self.mpn_date, monkey__in=self.monkey.cohort.monkey_set.all().exclude(mky_id=self.monkey.pk))
+			cp_values = numpy.array(cohort_proteins.values_list('mpn_value', flat=True))
+			mean = cp_values.mean()
+			diff = self.mpn_value - mean
+			self.mpn_pctdev = diff / mean * 100
 			self.save()
 
 
@@ -2105,6 +2164,18 @@ def monkeyimage_pre_delete(**kwargs):
 
 # This will delete MATRRImage's FileField's files from media before deleting the database entry.
 # Helps keep the media folder pretty.
+@receiver(pre_delete, sender=MonkeyProteinImage)
+def monkeyproteinimage_pre_delete(**kwargs):
+	mpi = kwargs['instance']
+	if mpi.image and os.path.exists(mpi.image.path):
+		os.remove(mpi.image.path)
+	if mpi.thumbnail and os.path.exists(mpi.thumbnail.path):
+		os.remove(mpi.thumbnail.path)
+	if mpi.html_fragment and os.path.exists(mpi.html_fragment.path):
+		os.remove(mpi.html_fragment.path)
+
+# This will delete MATRRImage's FileField's files from media before deleting the database entry.
+# Helps keep the media folder pretty.
 @receiver(pre_delete, sender=CohortImage)
 def cohortimage_pre_delete(**kwargs):
 	cig = kwargs['instance']
@@ -2126,9 +2197,10 @@ def tiv_post_save(**kwargs):
 	# see if all the TIVs for the request have been verified
 	tiv = kwargs['instance']
 	if tiv.tiv_inventory != "Unverified":
-		req_request = tiv.tissue_request.req_request
-		verification_status = req_request.get_inventory_verification_status()
-		if verification_status == VerificationStatus.Complete:
-			from utils.regular_tasks.send_verification_complete_notification import send_verification_complete_notification
-			send_verification_complete_notification(req_request)
+		if not tiv.tissue_request is None:
+			req_request = tiv.tissue_request.req_request
+			verification_status = req_request.get_inventory_verification_status()
+			if verification_status == VerificationStatus.Complete:
+				from utils.regular_tasks.send_verification_complete_notification import send_verification_complete_notification
+				send_verification_complete_notification(req_request)
 

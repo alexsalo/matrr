@@ -4,7 +4,7 @@
        
         <tr>
             {% if pub.pmid %}
-                <a href="http://www.ncbi.nlm.nih.gov/pubmed?term={{ pub.pmid }}" target='_blank'>
+                <a href="{{ pub.publication_url }}" target='_blank'>
                     {{ pub.title }}
                 </a>
             {% else %}

@@ -23,6 +23,14 @@ FIX_CHOICES = (('', '---------'), ('Flash Frozen', 'Flash Frozen'),
 
 def trim_help_text(text):
 	return re.sub(r' Hold down .*$', '', text)
+#
+#class MonkeySelectForm(Form):
+#	monkeys = ModelMultipleChoiceField(queryset = Monkey.objects.all(),required=True, widget=CheckboxSelectMultipleSelectAll())
+#
+#	def __init__(self, cohort, **kwargs):
+#		super(MonkeySelectForm, self).__init__(**kwargs)
+#		self.monkeys.queryset = Monkey.objects.filter(cohort=cohort) 
+
 
 #from django.forms.util import ErrorList
 # 
@@ -348,12 +356,23 @@ class TissueInventoryVerificationForm(Form):
 	inventory = ChoiceField(choices=InventoryStatus, required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer))
 
 
+class TissueInventoryVerificationShippedForm(Form):
+	primarykey = IntegerField(widget=HiddenInput(), required=False)
+	quantity = FloatField(required=False)
+	units = ChoiceField(choices=Units, required=False)
+
+
 class TissueInventoryVerificationDetailForm(TissueInventoryVerificationForm):
 	freezer = CharField(max_length=100, required=False)
 	location = CharField(max_length=100, required=False)
 	quantity = FloatField(required=False)
 	units = ChoiceField(choices=Units, required=False)
 	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
+
+
+class MTAValidationForm(Form):
+	primarykey = IntegerField(widget=HiddenInput(), required=False)
+	is_valid = BooleanField(required=False)
 
 
 class DateRangeForm(Form):
@@ -642,19 +661,39 @@ class ProteinSelectForm(Form):
 		self.fields['proteins'].label = "Protein"
 		self.fields['proteins'].help_text = "Select proteins to display"
 
+class MonkeyGraphAppearanceForm(Form):
+	y_choices = (('monkey_protein_pctdev', 'Percent deviation from cohort mean'), ('monkey_protein_stdev',
+				 'Standard deviation from cohort mean'), ('monkey_protein_value', 'Actual value'))
+	yaxis_units = ChoiceField(choices = y_choices, label='Y axis', help_text="Select data to display on y axis",
+							initial=y_choices[2][0])
+	filter_choices = (('all', 'All values'), ('morning','Only values collected before noon'), ('afternoon', 'Only values collected after noon'))
+	data_filter = ChoiceField(choices = filter_choices, label="Data filter", help_text="Limit data to display based on time of day collected",
+							initial=filter_choices[0][0])
+	monkeys = CharField(widget=HiddenInput())
+	def __init__(self, monkeys=None, *args, **kwargs):
+		super(MonkeyGraphAppearanceForm, self).__init__(*args, **kwargs)
+		if monkeys:
+			self.fields['monkeys'].initial = monkeys
+
 
 class DataSelectForm(Form):
 	dataset_choices = (('protein', 'Access protein-associated data tools'), ('etoh', 'Access ethanol-associated data tools'))
 	dataset = ChoiceField(choices=dataset_choices, label='Data Set', help_text="Choose what data to analyze", widget=RadioSelect, initial=dataset_choices[0][0])
 
-
+#fiels = document.getElementByID('monkey_fieldset'); fiels.style.display='None';
 class SubjectSelectForm(Form):
 	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
 	subject = ChoiceField(choices=subject_choices,
 						  label='Subject',
 						  help_text="Choose what scope of subjects to analyze",
-						  widget=RadioSelect(renderer=RadioRenderer_nolist),
+						  widget=RadioSelect(renderer=RadioFieldRendererSpecial),
 						  initial=subject_choices[0][0])
+	monkeys = ModelMultipleChoiceField(queryset = Monkey.objects.all(),required=False, widget=CheckboxSelectMultipleSelectAll())
+
+	def __init__(self, cohort, **kwargs):
+		super(SubjectSelectForm, self).__init__(**kwargs)
+		monkey_keys = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey__pk', flat=True).distinct()
+		self.fields['monkeys'].queryset = Monkey.objects.filter(pk__in=monkey_keys) 
 
 class TissueShipmentForm(Form):
 	def __init__(self, tissue_request_queryset, *args, **kwargs):

@@ -1112,11 +1112,7 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 	ax1.set_yticklabels(cohort_labels)
 	return fig, 'map'
 
-def monkey_protein(monkey, proteins, username):
-	"""
-		INCOMPATIBILE WITH MATRRImage framework
-	"""
-
+def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
 	try: # silly hack to enforce ability to forloop
 		iter(proteins)
 	except TypeError:
@@ -1148,11 +1144,18 @@ def monkey_protein(monkey, proteins, username):
 		y_values = []
 		for date in dates:
 			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
-			y_values.append(monkey_protein.mpn_stdev)
+			if afternoon_reading is None:
+				y_values.append(monkey_protein.mpn_stdev)
+			elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
+				y_values.append(monkey_protein.mpn_stdev)
+			elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
+				y_values.append(monkey_protein.mpn_stdev)
+			else:
+				dates = dates.exclude(mpn_date=date)
 
 		color_map = pyplot.get_cmap('gist_rainbow')
 		color = color_map(1.*index/len(proteins))
-		lines.append(ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color))
+		lines.append(ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=8, markeredgecolor=color))
 		line_labels.append(str(protein.pro_abbrev))
 
 	oldylims = pyplot.ylim()
@@ -1170,15 +1173,135 @@ def monkey_protein(monkey, proteins, username):
 	# Put a legend to the right of the current axis
 	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
 
-	base_path = settings.STATIC_ROOT + '/'
-	path_append = 'mpn/'
-	os_path = base_path + path_append
-	filename = "%s.png" % username
-	if not os.path.exists(os_path):
-		os.makedirs(os_path)
+	return fig, 'NO MAP'
 
-	pyplot.savefig(os_path+filename)
-	return settings.STATIC_URL + path_append + filename
+def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
+	try: # silly hack to enforce ability to forloop
+		iter(proteins)
+	except TypeError:
+		proteins = [proteins]
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = fig.add_subplot(111)
+	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+	ax1.set_axisbelow(True)
+
+	protein_abbrevs = []
+	for protein in proteins:
+		protein_abbrevs.append(protein.pro_abbrev)
+	protein_title = ", ".join(protein_abbrevs)
+	if len(protein_title) > 30: #  title's too long.  got some work to do
+		title_abbrev = protein_title[:40].split(', ') # first, chop it to a good length and split it into a list
+		title_abbrev.pop(len(title_abbrev)-1) # now, pop off the last value in the list, since its probably a randomly cut string, like "Washi" instead of "Washington"
+		protein_title = ", ".join(title_abbrev) # and join the remainders back together
+		protein_title += "..." # and tell people we chopped it
+	ax1.set_title('Monkey %s: %s' % (str(monkey.pk), protein_title))
+	ax1.set_xlabel("Date of sample")
+	ax1.set_ylabel("Percent deviation from cohort mean")
+
+	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
+	lines = []
+	line_labels = []
+	for index, protein in enumerate(proteins):
+		dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
+		y_values = []
+		for date in dates:
+			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
+			if afternoon_reading is None:
+				y_values.append(monkey_protein.mpn_pctdev)
+			elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
+				y_values.append(monkey_protein.mpn_pctdev)
+			elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
+				y_values.append(monkey_protein.mpn_pctdev)
+			else:
+				dates = dates.exclude(mpn_date=date)
+
+		color_map = pyplot.get_cmap('gist_rainbow')
+		color = color_map(1.*index/len(proteins))
+		lines.append(ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=8, markeredgecolor=color))
+		line_labels.append(str(protein.pro_abbrev))
+
+	oldylims = pyplot.ylim()
+	y_min = min(oldylims[0], -1 * oldylims[1])
+	y_max = max(oldylims[1], -1 * oldylims[0])
+	pyplot.ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
+
+	# rotate the xaxis labels
+	pyplot.xticks(dates, [str(date.date()) for date in dates], rotation=45)
+
+	# Shink current axis by 20%
+	box = ax1.get_position()
+	ax1.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+	# Put a legend to the right of the current axis
+	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
+
+	return fig, 'NO MAP'
+
+def monkey_protein_value(monkey, proteins, afternoon_reading=None):
+#	try: # silly hack to enforce 1 protein
+#		iter(protein)
+#		raise Exception("This method CANNOT be called with multiple proteins.  You must create these images individually.")
+#	except TypeError:
+#		pass
+	
+	protein = proteins[0]
+	print "This method CANNOT be called with multiple proteins.  You must create these images individually."
+#		raise Exception("This method CANNOT be called with multiple proteins.  You must create these images individually.")
+		
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = fig.add_subplot(111)
+	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+	ax1.set_axisbelow(True)
+
+	protein_title = protein.pro_name
+	if len(protein_title) > 30: #  title's too long.  got some work to do
+		protein_title = protein.pro_abbrev
+
+	ax1.set_title('Monkey %s: %s' % (str(monkey.pk), protein_title))
+	ax1.set_xlabel("Date of sample")
+	ax1.set_ylabel("Protein Value (in %s)" % protein.pro_units)
+
+#	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
+
+	lines = []
+	line_labels = []
+
+	dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
+	y_values = []
+	for date in dates:
+		monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
+		if afternoon_reading is None:
+			y_values.append(monkey_protein.mpn_value)
+		elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
+			y_values.append(monkey_protein.mpn_value)
+		elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
+			y_values.append(monkey_protein.mpn_value)
+		else:
+			dates = dates.exclude(mpn_date=date)
+
+	color = 'black'
+	lines.append(ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=10))
+	line_labels.append(str(protein.pro_abbrev))
+
+	#oldylims = pyplot.ylim()
+	#y_min = min(oldylims[0], -1 * oldylims[1])
+	#y_max = max(oldylims[1], -1 * oldylims[0])
+	#pyplot.ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
+
+	# rotate the xaxis labels
+	pyplot.xticks(dates, [str(date.date()) for date in dates], rotation=45)
+
+	# Shink current axis by width% to fit the legend
+	box = ax1.get_position()
+	width = 0.8
+	ax1.set_position([box.x0, box.y0, box.width * width, box.height])
+
+	# Put a legend to the right of the current axis
+	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
+
+	return fig, 'NO MAP'
 
 
 
@@ -1203,9 +1326,12 @@ MONKEY_PLOTS.update({
 #				'monkey_boxplot_pellets': monkey_boxplot_pellets,
 #				'monkey_boxplot_weight': monkey_boxplot_weight,
 
-				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg, "Average Monkey Ethanol Intake, 22hr"),
-				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 "Total Monkey Ethanol Intake, 4pct ml"),
-				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 "Total Monkey Ethanol Intake, g per kg"),
+				'monkey_protein_stdev': (monkey_protein_stdev, 							 	"Protein Value (standard deviation)"),
+				'monkey_protein_pctdev': (monkey_protein_pctdev, 						 	"Protein Value (percent deviaction)"),
+				'monkey_protein_value': (monkey_protein_value, 							 	"Protein Value (raw value)"),
+				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg,	"Average Monkey Ethanol Intake, 22hr"),
+				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 	"Total Monkey Ethanol Intake, 4pct ml"),
+				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 	"Total Monkey Ethanol Intake, g per kg"),
 })
 
 def create_plots(cohorts=True, monkeys=True, delete=True):
