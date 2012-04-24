@@ -2102,16 +2102,16 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 		subject_data = subject_form.cleaned_data
 		_from = date_data['from_date']
 		_to = date_data['to_date']
-		subject = subject_data['cohort']
+		subject = subject_data['subject']
 
 		parameters = {}
 		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=subject)
 		if _from:
 			m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
-			parameters['from_date:'] = str(_from)
+			parameters['from_date'] = str(_from)
 		if _to:
 			m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
-			parameters['to_date:'] = str(_to)
+			parameters['to_date'] = str(_to)
 
 		if m2de.count():
 			from utils.plotting import COHORT_PLOTS
