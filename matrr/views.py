@@ -798,9 +798,45 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
+def review_overview_price(request, req_request_id):
+	
+	req = get_object_or_404(Request, req_request_id=req_request_id)
+	est_cost = req.get_total_estimated_cost()
+	
+	accepted_or_partial = False
+
+	for tissue_request in req.get_requested_tissues():
+		if tissue_request.get_accepted() != Acceptance.Rejected:
+			accepted_or_partial = True
+			
+	if not accepted_or_partial:
+		req.req_estimated_cost = 0
+		req.save()
+		return redirect(reverse('review-overview-process', args=[req_request_id]))
+	
+	if request.POST:
+		cost_form = EstimatedCost(request.POST)
+		if cost_form.is_valid():
+			req.req_estimated_cost = cost_form.cleaned_data['cost']
+			req.save()
+			return redirect(reverse('review-overview-process', args=[req_request_id]))
+		else:
+			return render_to_response('matrr/review/review_overview_price.html',
+					{'req': req, 'form': cost_form },								
+					context_instance=RequestContext(request))
+	else:
+		cost_form = EstimatedCost()
+		cost_form.fields['cost'].initial = est_cost
+		return render_to_response('matrr/review/review_overview_price.html',
+			{'req': req, 'form': cost_form },								
+			context_instance=RequestContext(request))		
+		
+		
+		
+@user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_overview(request, req_request_id):
 	# get the request being reviewed
-	req_request = Request.objects.get(req_request_id=req_request_id)
+	req_request = Request.objects.get(req_request_id=req_request_id) # get or 404 ?
 	no_monkeys = False
 
 	if req_request.is_evaluated():
@@ -816,7 +852,11 @@ def review_overview(request, req_request_id):
 
 		if tissue_request_forms.is_valid():
 			tissue_request_forms.save()
-			return redirect(reverse('review-overview-process', args=[req_request_id]))
+			#return redirect(reverse('review-overview-process', args=[req_request_id]))
+			# move to price confirmation
+			req_request.req_estimated_cost = 0 # discard the manual price, do not use price from previous unsuccessful process attempts
+			req_request.save()
+			return redirect(reverse('review-overview-price', args=[req_request_id]))
 		else:
 			# get the reviews for the request
 			reviews = list(req_request.review_set.all())

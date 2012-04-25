@@ -1198,6 +1198,7 @@ class Request(models.Model, DiffingMixin):
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
 
 	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
+	req_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
 
 	def __unicode__(self):
 		return 'User: ' + self.user.username +\
@@ -1234,8 +1235,10 @@ class Request(models.Model, DiffingMixin):
 		total = 0
 		for item in self.tissue_request_set.all():
 			total += item.get_estimated_cost()
-
-		return total
+		print self.req_estimated_cost
+		print total
+		print self.req_estimated_cost or total
+		return self.req_estimated_cost or total
 
 	def get_tiv_collisions(self):
 		tissue_requests = self.tissue_request_set.all()
@@ -1284,7 +1287,7 @@ class Request(models.Model, DiffingMixin):
 			if not tissue_request.is_fully_accepted():
 				tr_duplicates.append(tissue_request.create_revised_duplicate(revised))
 		revised.tissue_request_set = tr_duplicates
-
+		revised.req_estimated_cost = 0
 		revised.save()
 		return revised
 
@@ -1518,7 +1521,8 @@ class TissueRequest(models.Model):
 		return [['Tissue Type', self.tissue_type],
 			['Fix', self.rtt_fix_type],
 			['Amount', self.get_amount()],
-			['Estimated Cost', "$%.2f" % self.get_estimated_cost()]]
+			['Estimated Cost', "$%.2f" % self.get_estimated_cost()]
+			]
 
 	def get_latex_data(self):
 		return [['Tissue Type', self.tissue_type],
