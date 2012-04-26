@@ -1238,7 +1238,7 @@ class Request(models.Model, DiffingMixin):
 		print self.req_estimated_cost
 		print total
 		print self.req_estimated_cost or total
-		return self.req_estimated_cost or total
+		return self.req_estimated_cost if self.req_estimated_cost != None else total
 
 	def get_tiv_collisions(self):
 		tissue_requests = self.tissue_request_set.all()
@@ -1287,7 +1287,7 @@ class Request(models.Model, DiffingMixin):
 			if not tissue_request.is_fully_accepted():
 				tr_duplicates.append(tissue_request.create_revised_duplicate(revised))
 		revised.tissue_request_set = tr_duplicates
-		revised.req_estimated_cost = 0
+		revised.req_estimated_cost = None
 		revised.save()
 		return revised
 

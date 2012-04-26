@@ -854,7 +854,7 @@ def review_overview(request, req_request_id):
 			tissue_request_forms.save()
 			#return redirect(reverse('review-overview-process', args=[req_request_id]))
 			# move to price confirmation
-			req_request.req_estimated_cost = 0 # discard the manual price, do not use price from previous unsuccessful process attempts
+			req_request.req_estimated_cost = None # discard the manual price, do not use price from previous unsuccessful process attempts
 			req_request.save()
 			return redirect(reverse('review-overview-price', args=[req_request_id]))
 		else:
