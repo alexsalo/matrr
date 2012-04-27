@@ -191,7 +191,8 @@ class CartCheckoutForm(ModelForm):
 
 	class Meta:
 		model = Request
-		exclude = ('req_status', 'req_report_asked', 'req_purchase_order')
+#		exclude = ('req_status', 'req_report_asked', 'req_purchase_order')
+		fields = ('req_experimental_plan', 'req_project_title', 'req_reason', 'req_funding', 'req_progress_agreement', 'req_safety_agreement', 'req_referred_by', 'req_notes')
 		widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
 
 
