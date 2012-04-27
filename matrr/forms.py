@@ -175,7 +175,7 @@ class TissueRequestForm(ModelForm):
 
 	class Meta:
 		model = TissueRequest
-		exclude = ('req_request', 'tissue_type', 'accepted_monkeys', 'previously_accepted_monkeys', 'shipment')
+		fields = ('rtt_fix_type', 'rtt_amount', 'rtt_units', 'rtt_notes', 'monkeys')
 		widgets = {'rtt_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
 
 
@@ -191,7 +191,8 @@ class CartCheckoutForm(ModelForm):
 
 	class Meta:
 		model = Request
-		exclude = ('req_status', 'req_report_asked', 'req_purchase_order')
+#		exclude = ('req_status', 'req_report_asked', 'req_purchase_order')
+		fields = ('req_experimental_plan', 'req_project_title', 'req_reason', 'req_funding', 'req_progress_agreement', 'req_safety_agreement', 'req_referred_by', 'req_notes')
 		widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
 
 

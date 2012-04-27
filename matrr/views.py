@@ -222,10 +222,14 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 	if current_cohort.coh_upcoming:
 		import datetime
 		today = datetime.date.today()
-		necropsy_date = current_cohort.cohort_event_set.filter(event__evt_name="Necropsy Start")[0].cev_date
-		days_to_necropsy = (necropsy_date - today).days
-		if days_to_necropsy >= 6*60:
+		try:
+			necropsy_date = current_cohort.cohort_event_set.filter(event__evt_name="Necropsy Start")[0].cev_date
+			days_to_necropsy = (necropsy_date - today).days
+			if days_to_necropsy >= 6*60:
+				messages.warning(request, "Warning:  Because this cohort has not yet gone to necropsy, we cannot guarantee all tissue from all monkeys will be available for request, due to uncontrollable events (illness, accidental death, etc).  If a requested tissue was approved but is not available after necropsy the user will be notified and the request and its cost will be corrected.  Thank you for your understanding regarding this uncertainty.")
+		except:
 			messages.warning(request, "Warning:  Because this cohort has not yet gone to necropsy, we cannot guarantee all tissue from all monkeys will be available for request, due to uncontrollable events (illness, accidental death, etc).  If a requested tissue was approved but is not available after necropsy the user will be notified and the request and its cost will be corrected.  Thank you for your understanding regarding this uncertainty.")
+
 
 	if request.method != 'POST':
 		# now we need to create the form for the tissue type
@@ -2032,6 +2036,7 @@ def vip_graphs(request):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_mtd_graph(request, mtd_id):
+	mtd_image = ''
 	if MonkeyToDrinkingExperiment.objects.filter(pk=mtd_id).count():
 		mtd = MonkeyToDrinkingExperiment.objects.get(pk=mtd_id)
 		mtd_image, is_new = MTDImage.objects.get_or_create(
@@ -2039,7 +2044,8 @@ def vip_mtd_graph(request, mtd_id):
 			method='monkey_bouts_drinks_intraday',
 			title="Drinks on %s for monkey %s" % (str(mtd.drinking_experiment.dex_date), str(mtd.monkey))
 		)
-		return render_to_response('matrr/tools/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
+
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
@@ -2138,16 +2144,16 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 		subject_data = subject_form.cleaned_data
 		_from = date_data['from_date']
 		_to = date_data['to_date']
-		subject = subject_data['cohort']
+		subject = subject_data['subject']
 
 		parameters = {}
 		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=subject)
 		if _from:
 			m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
-			parameters['from_date:'] = str(_from)
+			parameters['from_date'] = str(_from)
 		if _to:
 			m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
-			parameters['to_date:'] = str(_to)
+			parameters['to_date'] = str(_to)
 
 		if m2de.count():
 			from utils.plotting import COHORT_PLOTS
@@ -2206,6 +2212,10 @@ def sendfile(request, id):
 	r = CohortProteinImage.objects.filter(image=id)
 	files.append((r, 'image'))
 	r = CohortProteinImage.objects.filter(thumbnail=id)
+	files.append((r, 'thumbnail'))
+	r = MonkeyProteinImage.objects.filter(image=id)
+	files.append((r, 'image'))
+	r = MonkeyProteinImage.objects.filter(thumbnail=id)
 	files.append((r, 'thumbnail'))
 
 	#	this will work for all listed files
