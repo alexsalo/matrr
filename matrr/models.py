@@ -1458,10 +1458,6 @@ class ResearchUpdate(models.Model):
 
 
 class TissueRequest(models.Model):
-	########  BIG IMPORTANT WARNING  #######
-	# If you're adding new fields to this model
-	# Don't forget to exclude them from any applicable Form
-	########
 	rtt_tissue_request_id = models.AutoField(primary_key=True)
 	req_request = models.ForeignKey(Request, null=False, related_name='tissue_request_set', db_column='req_request_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_request_set', db_column='tst_type_id')
@@ -1472,8 +1468,6 @@ class TissueRequest(models.Model):
 	# for a tissue in a single order while allowing multiple custom requests in an order.
 	rtt_custom_increment = models.IntegerField('Custom Increment', default=0, editable=False, null=False)
 	rtt_amount = models.FloatField('Amount', help_text='Please enter the amount of tissue you need.')
-	#	unit = models.ForeignKey(Unit, null=False, related_name='+', db_column='unt_unit_id',
-	#							 help_text='Please select the unit of measure.')
 	rtt_units = models.CharField('Amount units',
 								 choices=Units, null=False, max_length=20, default=Units[0][0])
 	rtt_notes = models.TextField('Tissue Notes', null=True, blank=True,
