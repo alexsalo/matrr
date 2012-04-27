@@ -711,7 +711,7 @@ class VIPManager(models.Manager):
 class MATRRImage(models.Model):
 	modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
 	title = models.CharField('Title', blank=True, null=False, max_length=500, help_text='Brief description of this image.')
-	method = models.CharField('Method', blank=True, null=False, max_length=50, help_text='The method used to generate this image.')
+	method = models.CharField('Method', blank=True, null=False, max_length=150, help_text='The method used to generate this image.')
 	parameters = models.CharField('Parameters', blank=True, null=False, max_length=1500, editable=False, default='defaults', help_text="The method's parameters used to generate this image.")
 	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
 	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
@@ -1069,6 +1069,8 @@ class TissueType(models.Model):
 		return self.tissue_sample_set.filter(monkey=monkey)
 
 	def get_cohort_availability(self, cohort):
+		if 'custom' in self.tst_tissue_name.lower():
+			return True
 		for monkey in cohort.monkey_set.all():
 			status = self.get_monkey_availability(monkey)
 			# if the tissue is available for any monkey,
@@ -1108,6 +1110,8 @@ class TissueType(models.Model):
 			#		does not reflect accepted requests
 				return Availability.In_Stock
 
+		if 'custom' in self.tst_tissue_name.lower():
+			return Availability.Available
 		return Availability.Unavailable
 
 	def get_pending_request_count(self, monkey):
@@ -1198,6 +1202,7 @@ class Request(models.Model, DiffingMixin):
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
 
 	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
+	req_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
 
 	def __unicode__(self):
 		return 'User: ' + self.user.username +\
@@ -1234,7 +1239,10 @@ class Request(models.Model, DiffingMixin):
 		total = 0
 		for item in self.tissue_request_set.all():
 			total += item.get_estimated_cost()
-		return total
+		print self.req_estimated_cost
+		print total
+		print self.req_estimated_cost or total
+		return self.req_estimated_cost if self.req_estimated_cost != None else total
 
 	def get_tiv_collisions(self):
 		tissue_requests = self.tissue_request_set.all()
@@ -1283,7 +1291,7 @@ class Request(models.Model, DiffingMixin):
 			if not tissue_request.is_fully_accepted():
 				tr_duplicates.append(tissue_request.create_revised_duplicate(revised))
 		revised.tissue_request_set = tr_duplicates
-
+		revised.req_estimated_cost = None
 		revised.save()
 		return revised
 
@@ -1517,7 +1525,8 @@ class TissueRequest(models.Model):
 		return [['Tissue Type', self.tissue_type],
 			['Fix', self.rtt_fix_type],
 			['Amount', self.get_amount()],
-			['Estimated Cost', "$%.2f" % self.get_estimated_cost()]]
+			['Estimated Cost', "$%.2f" % self.get_estimated_cost()]
+			]
 
 	def get_latex_data(self):
 		return [['Tissue Type', self.tissue_type],
@@ -1567,6 +1576,13 @@ class TissueRequest(models.Model):
 			estimated_cost = monkey_cost * self.accepted_monkeys.count()
 		else:
 			estimated_cost = monkey_cost * self.monkeys.count()
+
+		if self.req_request.pk == 100:
+			return 3600
+		if self.req_request.pk in (169, 170):
+			return 2400
+		if self.req_request.pk in (171, 172):
+			return 1400
 		return estimated_cost
 
 	def get_tiv_collisions(self):

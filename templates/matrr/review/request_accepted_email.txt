@@ -7,6 +7,9 @@
 
 {% trans "You will be expected to provide updates on your research 6 months after you receive your order." %}
 
+{% trans "Total cost of request $" %}{{ req_request.get_total_estimated_cost }}
+{% trans "(This value applies, note that it might be lower than sum of estimated costs of tissues due to manual reduction.)" %}
+ 
 {% trans "The tissues you requested are from cohort " %}{{ req_request.cohort }}.
 
 {% trans "You requested the following tissues:" %}
