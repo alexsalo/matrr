@@ -1996,6 +1996,7 @@ def vip_graphs(request):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_mtd_graph(request, mtd_id):
+	mtd_image = ''
 	if MonkeyToDrinkingExperiment.objects.filter(pk=mtd_id).count():
 		mtd = MonkeyToDrinkingExperiment.objects.get(pk=mtd_id)
 		mtd_image, is_new = MTDImage.objects.get_or_create(
@@ -2003,7 +2004,8 @@ def vip_mtd_graph(request, mtd_id):
 			method='monkey_bouts_drinks_intraday',
 			title="Drinks on %s for monkey %s" % (str(mtd.drinking_experiment.dex_date), str(mtd.monkey))
 		)
-		return render_to_response('matrr/tools/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
+
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
