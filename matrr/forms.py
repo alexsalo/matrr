@@ -345,6 +345,11 @@ class TissueRequestProcessForm(ModelForm):
 		# change the help text to match the checkboxes
 		self.fields['accepted_monkeys'].help_text = ''
 
+#	def save(self, commit=True):
+#		import pdb
+#		pdb.set_trace()
+#		super(TissueRequestProcessForm, self).save(commit)
+
 
 	class Meta:
 		model = TissueRequest
@@ -369,6 +374,13 @@ class TissueInventoryVerificationDetailForm(TissueInventoryVerificationForm):
 	units = ChoiceField(choices=Units, required=False)
 	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
 
+class EstimatedCost(Form):
+	cost = IntegerField(required=True, label="Estimated cost $")
+	
+#	def __init__(self, cost=None, *args, **kwargs):
+#		super(EstimatedCost, self).__init__(*args, **kwargs)
+#		if cost:
+#			self.fields['cost'].initial = cost
 
 class MTAValidationForm(Form):
 	primarykey = IntegerField(widget=HiddenInput(), required=False)

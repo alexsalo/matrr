@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+	<div class='large-headline'>
+		{% block title %}Processing {{ req.user.username }}'s request{% endblock %} for {{ req.cohort.coh_cohort_name }}
+	</div>
+	
+	<br/>
+	<div class="mini-headline">
+	Possibly modify the total estimated request cost
+	</div>
+	<form action='' method='post'>
+		{% csrf_token %}
+		{{ form.as_p }}
+		<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Accept this price'/>
+		<a href="{% url review-overview req.req_request_id %}" class="blockLinkButton">Back to overview</a>
+	</form>
+	
+{% endblock %}	

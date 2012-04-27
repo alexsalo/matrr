@@ -95,6 +95,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^reviews_overviews/$', 			review_overview_list, name='review-overview-list'),
 	url(r'^reviews_history/$',              review_history_list, name='review-history-list'),
 	url(r'^reviews_overviews/(?P<req_request_id>\d+)/$', 			review_overview, name='review-overview'),
+	url(r'^reviews_overviews/(?P<req_request_id>\d+)/price/$', 		review_overview_price, name='review-overview-price'),
 	url(r'^reviews_overviews/(?P<req_request_id>\d+)/process/?$', 	request_review_process, name='review-overview-process'),
 
 	#  Account stuff
