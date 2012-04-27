@@ -175,7 +175,7 @@ class TissueRequestForm(ModelForm):
 
 	class Meta:
 		model = TissueRequest
-		exclude = ('req_request', 'tissue_type', 'accepted_monkeys', 'previously_accepted_monkeys', 'shipment')
+		fields = ('rtt_fix_type', 'rtt_amount', 'rtt_units', 'rtt_notes', 'monkeys')
 		widgets = {'rtt_fix_type': FixTypeSelection(choices=FIX_CHOICES)}
 
 
