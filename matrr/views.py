@@ -805,34 +805,76 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 def review_overview_price(request, req_request_id):
 	
 	req = get_object_or_404(Request, req_request_id=req_request_id)
-	est_cost = req.get_total_estimated_cost()
+#	est_cost = req.get_total_estimated_cost()
 	
 	accepted_or_partial = False
+	PriceFormset = modelformset_factory(TissueRequest, fields=['rtt_estimated_cost'], extra=0)
 
 	for tissue_request in req.get_requested_tissues():
 		if tissue_request.get_accepted() != Acceptance.Rejected:
 			accepted_or_partial = True
 			
 	if not accepted_or_partial:
-		req.req_estimated_cost = 0
-		req.save()
+		for tr in req.tissue_request_set.all():
+			print "nula neakcepted"
+			tr.rtt_estimated_cost = 0
+			tr.save()
 		return redirect(reverse('review-overview-process', args=[req_request_id]))
 	
 	if request.POST:
-		cost_form = EstimatedCost(request.POST)
-		if cost_form.is_valid():
-			req.req_estimated_cost = cost_form.cleaned_data['cost']
-			req.save()
+		cost_forms = PriceFormset(request.POST)
+		if cost_forms.is_valid():
+			for cost_form in cost_forms:
+#				print cost_form.cleaned_data['rtt_estimated_cost']
+#				print cost_form.instance.get_estimated_cost()
+#				if cost_form.cleaned_data['rtt_estimated_cost'] != cost_form.instance.get_estimated_cost():
+#					tr = get_object_or_404(TissueRequest, pk = cost_form.instance.pk)
+#					tr.rtt_estimated_cost = cost_form.cleaned_data['rtt_estimated_cost']
+#					print "tr"
+#					print tr.rtt_estimated_cost
+#					tr.save()
+				cost_form.save()
+#				print cost_form.instance.pk
+#				print req.get_requested_tissues()[0].pk
+#				rtt_id = cost_form.cleaned_data['rtt']
+#				try:
+#					tr = TissueRequest.objects.get(pk=rtt_id)
+#				except:
+#					raise Http404("This page does not exist")
+#				if tr not in req.tissue_request_set.all():
+#					raise Http404("This page does not exist")
+#				tr.rtt_estimated_cost = cost_form.cleaned_data['cost'] 
+#				tr.save()
+#			print "redirect"
+#			print req.get_requested_tissues()[0].get_estimated_cost()
+#			print "reds"
 			return redirect(reverse('review-overview-process', args=[req_request_id]))
 		else:
 			return render_to_response('matrr/review/review_overview_price.html',
-					{'req': req, 'form': cost_form },								
+					{'req': req, 'forms': cost_form },								
 					context_instance=RequestContext(request))
 	else:
-		cost_form = EstimatedCost()
-		cost_form.fields['cost'].initial = est_cost
+		queryset = req.tissue_request_set.all()
+		accepted_queryset = set()
+		for tr in queryset:
+			if tr.get_accepted() != Acceptance.Rejected:
+				accepted_queryset.add(tr.pk)
+				continue
+		quer = TissueRequest.objects.filter(pk__in=accepted_queryset)
+		for tr in quer:
+			if tr.rtt_estimated_cost == None:
+				tr.rtt_estimated_cost = tr.get_estimated_cost()
+				tr.save()
+		cost_forms = PriceFormset(queryset = quer)
+#		import pdb
+#		pdb.set_trace()
+#		for cost_form in cost_forms.forms:
+#			if cost_form.fields['rtt_estimated_cost'].initial == None:
+#				cost_form.fields['rtt_estimated_cost'].initial = cost_form.instance.get_estimated_cost()
+		
+#		cost_form.fields['cost'].initial = est_cost
 		return render_to_response('matrr/review/review_overview_price.html',
-			{'req': req, 'form': cost_form },								
+			{'req': req, 'forms': cost_forms},								
 			context_instance=RequestContext(request))		
 		
 		
@@ -849,6 +891,11 @@ def review_overview(request, req_request_id):
 		back_url = request.META['HTTP_REFERER']
 	else:
 		back_url = ""
+		
+	for tr in req_request.tissue_request_set.all():
+		tr.rtt_estimated_cost = None
+		tr.save()
+	req_request.save()
 
 	TissueRequestFormSet = modelformset_factory(TissueRequest, form=TissueRequestProcessForm, extra=0)
 	if request.POST:
@@ -858,7 +905,11 @@ def review_overview(request, req_request_id):
 			tissue_request_forms.save()
 			#return redirect(reverse('review-overview-process', args=[req_request_id]))
 			# move to price confirmation
-			req_request.req_estimated_cost = None # discard the manual price, do not use price from previous unsuccessful process attempts
+			
+#			req_request.req_estimated_cost = None # discard the manual price, do not use price from previous unsuccessful process attempts
+			for tr in req_request.tissue_request_set.all():
+				tr.rtt_estimated_cost = None
+				tr.save()
 			req_request.save()
 			return redirect(reverse('review-overview-price', args=[req_request_id]))
 		else:

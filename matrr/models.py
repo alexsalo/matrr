@@ -1202,7 +1202,7 @@ class Request(models.Model, DiffingMixin):
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
 
 	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
-	req_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
+#	req_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
 
 	def __unicode__(self):
 		return 'User: ' + self.user.username +\
@@ -1239,10 +1239,8 @@ class Request(models.Model, DiffingMixin):
 		total = 0
 		for item in self.tissue_request_set.all():
 			total += item.get_estimated_cost()
-		print self.req_estimated_cost
-		print total
-		print self.req_estimated_cost or total
-		return self.req_estimated_cost if self.req_estimated_cost != None else total
+#		return self.req_estimated_cost if self.req_estimated_cost != None else total
+		return total
 
 	def get_tiv_collisions(self):
 		tissue_requests = self.tissue_request_set.all()
@@ -1487,6 +1485,7 @@ class TissueRequest(models.Model):
 
 	shipment = models.ForeignKey(Shipment, null=True, blank=True, on_delete=models.SET_NULL, related_name='tissue_request_set', db_column='shp_shipment_id')
 	# IMPORTANT: shipment's on_delete needs to == models.SET_NULL.  If not, when you delete a shipment on the web page, you delete the tissue request with it (muy no bueno).
+	rtt_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
 
 	def is_partially_accepted(self):
 		return self.accepted_monkeys.count() != 0
@@ -1577,7 +1576,8 @@ class TissueRequest(models.Model):
 			return 2400
 		if self.req_request.pk in (171, 172):
 			return 1400
-		return estimated_cost
+		
+		return self.rtt_estimated_cost if self.rtt_estimated_cost != None else estimated_cost
 
 	def get_tiv_collisions(self):
 		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id).exclude(tissue_request=None)
