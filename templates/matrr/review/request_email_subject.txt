@@ -1,10 +1,10 @@
 {% load i18n %}
 {% if status == "AC" %}
-{% trans "Your tissue request has been accepted." %}  {{ cohort }}
+Your tissue request for {{ cohort }} has been accepted.
 {% else %}
 {% if status == "PA" %}
-{% trans "Your tissue request has been partially accepted." %}  {{ cohort }}
+Your tissue request for {{ cohort }} has been partially accepted.
 {% else %}
-{% trans "Your tissue request has been rejected." %}  {{ cohort }}
+Your tissue request for {{ cohort }} has been processed.
 {% endif %}
 {% endif %}
