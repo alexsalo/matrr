@@ -1,0 +1,17 @@
+<div style='width: {{ bigWidth }}px; margin:auto; padding: 20px'>
+	<center>{{ image.title }}</center>
+	<div style='height: {{ image.image.height }}; width: {{ image.image.width }}'>
+		<center><img src="{{ image.image.url }}"></center><br>
+		<b>Bihourly Ethanol Intake for Cohort {{ image.cohort.coh_cohort_name }}.</b>
+		This treemap plot represents the per-monkey ethanol intake patterns over the titled stage of the experiment.
+		Each full-height column represents a monkey in the cohort.
+		The sections within these columns represent two hours within a day, starting at the beginning of a day's 22 hour open access experiment and moving up.
+		The color indicates the average maximum bout (as percent of total daily intake) within each two-hour section.
+		<br><br>
+		The sizes of these sections indicate the average volume consumed within the two-hour block over the titled stage of the experiment.
+		These sections are sized relative to the other two-hour section of each monkey.
+		This means a monkey who on average drank mostly during the first four hours of the experiment day, the bottom two sections will be larger than the upper nine sections.
+		<br><br>
+		The widths of the columns are also relative.  A monkey who on average drank more than his/her peers will have a wider column.  Control monkeys are not shown on this treemap.
+	</div>
+</div>

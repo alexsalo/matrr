@@ -908,6 +908,8 @@ class CohortImage(MATRRImage):
 		super(CohortImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.cohort and self.method and self.title:
 			if not self.image:
+				if self.method == 'cohort_bihourly_etoh_treemap' and not 'dex_type' in self.parameters:
+					return
 				self._construct_filefields()
 
 	def __unicode__(self):
