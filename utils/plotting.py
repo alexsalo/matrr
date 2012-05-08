@@ -628,7 +628,7 @@ import copy # for some reason this errors if i put it up top -jf 2/13/2012
 COHORT_PLOTS = copy.copy(VIP_COHORT_PLOTS)
 COHORT_PLOTS.update({
 				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 	'Average Ethanol Intake, 22hr'),
-				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake, 4pct ml"),
+				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake, ml"),
 				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, 				"Total Ethanol Intake, g per kg"),
 				"cohort_protein_boxplot": (cohort_protein_boxplot, 							"Cohort Protein Boxplot"),
 #				 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
@@ -1497,10 +1497,10 @@ MONKEY_PLOTS.update({
 #				'monkey_boxplot_weight': monkey_boxplot_weight,
 
 				'monkey_protein_stdev': (monkey_protein_stdev, 							 	"Protein Value (standard deviation)"),
-				'monkey_protein_pctdev': (monkey_protein_pctdev, 						 	"Protein Value (percent deviaction)"),
+				'monkey_protein_pctdev': (monkey_protein_pctdev, 						 	"Protein Value (percent deviation)"),
 				'monkey_protein_value': (monkey_protein_value, 							 	"Protein Value (raw value)"),
 				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg,	"Average Monkey Ethanol Intake, 22hr"),
-				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 	"Total Monkey Ethanol Intake, 4pct ml"),
+				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 	"Total Monkey Ethanol Intake, ml"),
 				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 	"Total Monkey Ethanol Intake, g per kg"),
 })
 
