@@ -953,7 +953,6 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, creat
 				dex = dexs[0]
 
 			if entry[10].strip() == 'BoutRec':
-
 				bouts.append((dex, line_number, line, entry[2:-1]))
 			elif entry[10].strip() == 'DrinkRec':
 				drinks.append((dex, line_number, line, entry[2:-1]))
