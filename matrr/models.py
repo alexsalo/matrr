@@ -1577,7 +1577,7 @@ class TissueRequest(models.Model):
 		if self.req_request.pk in (171, 172):
 			return 1400
 		
-		return self.rtt_estimated_cost if self.rtt_estimated_cost != None else estimated_cost
+		return estimated_cost if self.rtt_estimated_cost is None else self.rtt_estimated_cost
 
 	def get_tiv_collisions(self):
 		other_tivs = TissueInventoryVerification.objects.exclude(tissue_request=self.rtt_tissue_request_id).exclude(tissue_request=None)
@@ -1915,6 +1915,12 @@ class TissueInventoryVerification(models.Model):
 		for tiv in collisions:
 			tiv.tiv_inventory = "Unverified"
 			tiv.save()
+
+	def verify_all_TIVs(self, are_you_sure=False, are_you_double_sure=False, are_you_damn_positive=False):
+		if settings.PRODUCTION is False or (are_you_sure and are_you_double_sure and are_you_damn_positive):
+			for tiv in TissueInventoryVerification.objects.all():
+				tiv.tiv_inventory = 'Verified'
+				tiv.save()
 
 	def save(self, *args, **kwargs):
 		notes = self.tiv_notes
