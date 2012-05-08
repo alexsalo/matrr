@@ -1,5 +1,7 @@
 from matplotlib import pyplot
+from django.db.models.aggregates import Sum
 import numpy, dateutil
+import operator
 from pylab import *
 from matrr.models import *
 
@@ -17,6 +19,84 @@ DEFAULT_CIRCLE_MIN = 20
 DEFAULT_FIG_SIZE = (10,10)
 DEFAULT_DPI = 80
 COLORS = {'monkey' : "#01852F", 'cohort' : 'black'}
+
+
+class Treemap:
+	def __init__(self, node_tree, color_tree, iter_method, size_method, color_method, x_labels=[]):
+		"""create a tree map from tree, using itermethod(node) to walk tree,
+				size_method(node) to get object size and color_method(node) to get its
+				color"""
+
+
+		left, width = 0.02, 0.73
+		bottom, height = 0.05, .85
+		bottom_h = left_h = left+width+0.07
+
+		ax = [left, bottom, width, height]
+		color_ax = [left_h, bottom, 0.08, height]
+
+		self.ax = pyplot.axes(ax)
+		self.ax.set_aspect('equal')
+		self.color_ax = pyplot.axes(color_ax)
+
+		self.ax.set_yticks([])
+
+		self.size_method = size_method
+		self.iter_method = iter_method
+		self.color_method = color_method
+		self.addnode(node_tree, color_tree)
+		if x_labels:
+			self.assign_labels(x_labels)
+		else:
+			self.ax.set_xticks([])
+
+	def addnode(self, node, color, lower=[0,0], upper=[1,1], axis=0):
+		axis %= 2
+		self.draw_rectangle(lower, upper, node, color)
+		width = upper[axis] - lower[axis]
+		try:
+			for child, color in  zip(node, color): # self.iter_method(node):
+				upper[axis] = lower[axis] + (width * float(self.size_method(child))) / self.size_method(node)
+				self.addnode(child, color, list(lower), list(upper), axis + 1)
+				lower[axis] = upper[axis]
+		except TypeError:
+			pass
+
+	def draw_rectangle(self, lower, upper, node, color):
+		c = self.color_method(color)
+		r = Rectangle( lower, upper[0]-lower[0], upper[1] - lower[1],
+					   edgecolor='k',
+					   facecolor=c)
+		self.ax.add_patch(r)
+
+	def sort_patches_by_xcoords(self, patches):
+		sorted_patches = []
+		# This method returns a list of patches sorted by each patch's X coordinate
+		xcoords = sorted([patch.get_x() for patch in patches])
+		for x in xcoords:
+			for patch in patches:
+				if patch.get_x() == x:
+					sorted_patches.append(patch)
+		return sorted_patches
+
+	def assign_labels(self, labels):
+		patches = self.ax.patches
+		# A primary_patch is a Rectangle which takes up the full height of the treemap.  In the cohort treemap implementation, a primary patch is a monkey
+		primary_patches = [patch for patch in patches if patch.get_height() == 1 and patch.get_width() != 1]
+		sorted_patches = self.sort_patches_by_xcoords(primary_patches)
+
+		label_locations = []
+		patch_edge = 0
+		for patch in sorted_patches:
+			width = patch.get_width()
+			_location = patch_edge + (width / 2.)
+			label_locations.append(_location)
+			patch_edge += width
+
+		Axis_Locator = FixedLocator(label_locations)
+		self.ax.xaxis.set_major_locator(Axis_Locator)
+		self.ax.set_xticklabels(labels)
+
 
 ##UNFINISHED
 def validate_dates(**kwargs):
@@ -89,7 +169,6 @@ def necropsy_summary_sum_g_per_kg(queryset):
 			continue
 	return [summary.ncm_sum_g_per_kg_22hr for summary in summaries], [summary.ncm_sum_g_per_kg_lifetime for summary in summaries], raw_labels
 ### End Specific Callables ###
-
 
 
 def cohort_necropsy_avg_22hr_g_per_kg(cohort):
@@ -192,7 +271,6 @@ def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 	ax1.set_yticks(idx+width)
 	ax1.set_yticklabels(cohort_labels)
 	return fig, 'map'
-
 
 
 def cohort_boxplot_m2de_etoh_intake(cohort, days=10):
@@ -443,6 +521,98 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 	else:
 		print "No MonkeyProteins for this cohort."
 		return False, 'NO MAP'
+
+def cohort_etoh_treemap(cohort, dex_type):
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print("That's not a valid cohort.")
+			return False, 'NO MAP'
+
+	size_cache = {}
+	def size(thing):
+		if isinstance(thing, dict):
+			thing = thing['volume']
+		"""sum size of child nodes"""
+		if isinstance(thing, int) or isinstance(thing, float):
+			return thing
+		if thing in size_cache:
+			return size_cache[thing]
+		else:
+			size_cache[thing] = reduce(operator.add, [size(x) for x in thing])
+			print thing
+			return size_cache[thing]
+
+	max_color = 100
+	cmap = cm.PuOr
+	def max_bout_as_pct_of_daily_intake(pct_max_bout):
+		try:
+			pct_of_max = 1. * pct_max_bout / max_color
+			return cmap(pct_of_max)
+		except TypeError:
+			return 'white'
+
+	tree = list()
+	color_tree = list()
+
+	monkeys = cohort.monkey_set.filter(mky_drinking=True)
+	monkey_pks = []
+	for monkey in monkeys:
+		monkey_pks.append(str(monkey.pk))
+		hour_const = 18
+		experiment_len = 22
+
+		block_len = 2
+
+		monkey_exp = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment__dex_type=dex_type)
+
+		monkey_bar = list()
+		color_monkey_bar = list()
+		for hour_start in range(hour_const,hour_const + experiment_len + 1, block_len ):
+
+			hour_end = hour_start + block_len
+
+			fraction_start = (hour_start-hour_const)*60*60
+			fraction_end = (hour_end-hour_const)*60*60
+
+
+
+			bouts_in_fraction = ExperimentBout.objects.filter(mtd__in=monkey_exp, ebt_start_time__gte=fraction_start, ebt_start_time__lte=fraction_end)
+
+			volume_sum = bouts_in_fraction.aggregate(Sum('ebt_volume'))['ebt_volume__sum']
+			max_pct_bout_sum = bouts_in_fraction.aggregate(Sum('mtd__mtd_pct_max_bout_vol_total_etoh'))['mtd__mtd_pct_max_bout_vol_total_etoh__sum']
+			if not volume_sum:
+				volume_sum = 0.1
+			num_days = monkey_exp.values_list('drinking_experiment__dex_date').distinct().count()
+			if (num_days * block_len) == 0:
+				avg_vol_per_hour = 0.01
+			else:
+				avg_vol_per_hour = volume_sum / float(num_days * block_len)
+			if bouts_in_fraction.count() == 0:
+				avg_vol_per_bout = 0
+			else:
+				avg_vol_per_bout = max_pct_bout_sum / float(bouts_in_fraction.count())
+			monkey_bar.append(avg_vol_per_hour)
+			color_monkey_bar.append(avg_vol_per_bout)
+			if avg_vol_per_bout > max_color:
+				max_color = avg_vol_per_bout
+		tree.append(tuple(monkey_bar))
+		color_tree.append(tuple(color_monkey_bar))
+	tree = tuple(tree)
+	color_tree = tuple(color_tree)
+	treemap = Treemap(tree, color_tree, iter, size, max_bout_as_pct_of_daily_intake, x_labels=monkey_pks)
+	treemap.ax.set_title("Bi-hourly distribution of Ethanol Intake")
+	treemap.color_ax.set_title("Max bout as percent\nof total daily intake")
+
+	## Custom Colorbar
+	m = numpy.outer(numpy.arange(1,0,-0.01),numpy.ones(10))
+	treemap.color_ax.imshow(m, cmap=cmap, origin="lower")
+	pyplot.xticks(np.arange(0))
+	pyplot.yticks(np.arange(0,100,25), ['0%', '.25%', '50%', '75%', '100%'])
+
+	fig = treemap.ax.figure
+	return fig, 'NO MAP'
 
 # Dictionary of cohort plots VIPs can customize
 # NOT the same as matrr.models.VIP_IMAGES_LIST!
