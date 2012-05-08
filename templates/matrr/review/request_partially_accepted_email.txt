@@ -1,36 +1,31 @@
-{% load i18n %}
-{% trans "Your tissue request has been partially accepted. You will need to have a Material Transfer Agreement on record before your order can be shipped.  You can find information on how to attach an MTA to your account" %} <a href="https://gleek.ecs.baylor.edu{% url account-mta %}">here</a>.
+Your tissue request has been partially accepted. You will need to have a Material Transfer Agreement on record before your order can be shipped.  You can find information on how to attach an MTA to your account <a href="https://gleek.ecs.baylor.edu{% url account-mta %}">here</a>.
 
-{% trans "You must also have a Purchase Order associated with this request before it can be shipped. Individuals with existing collaborations may be exempt from MATRR fees.  You can submit this on the"%} <a href="https://gleek.ecs.baylor.edu{{ request_url }}">Order Detail page</a>.
+You must also have a Purchase Order associated with this request before it can be shipped. Individuals with existing collaborations may be exempt from MATRR fees.  You can submit this on the <a href="https://gleek.ecs.baylor.edu{% url order-detail req_request.pk %}">Order Detail page</a>.
 
-{% trans "We can not ship tissues to individuals who do not have a Fed Ex number associated with their account. You can update your profile "%}<a href="https://gleek.ecs.baylor.edu{% url account-view %}">here</a>.
+We must have a Fed Ex number associated with your account to ship you tissues. You can update your profile <a href="https://gleek.ecs.baylor.edu{% url account-view %}">here</a>.
 
-{% trans "You will be expected to provide updates on your research 6 months after you receive your order." %}
+You will be expected to provide updates on your research 6 months after you receive your order.
 
-{% trans "Total cost of request $" %}{{ req_request.get_total_estimated_cost }} 
-{% trans "(This value applies, note that it might be lower than sum of estimated costs of tissues due to manual reduction.)" %}
-
-{% trans "The tissues you requested are from cohort " %}{{ req_request.cohort }}.
-
-{% trans "You requested the following tissues:" %}
-{% trans "Accepted requests:" %}
+You requested the following tissues from {{ req_request.cohort }}:
+Accepted requests:
 {% for tissue_request in req_request.get_requested_tissues %}
 {% if tissue_request.get_accepted != Acceptance.Rejected %}
 {% for datum in tissue_request.get_data %}
 {{ datum.0 }}: {{ datum.1 }}{% endfor %}
-{% trans "Requested Monkeys: " %}{% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}  {% endfor %}
+Requested Monkeys: {% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}  {% endfor %}
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}
 {% endif %}{% endfor %}
 
-{% trans "Rejected requests:" %}
+You can make changes to partially accepted and rejected requests and submit for further review.  Click "Revise" on this order's detail page (https://gleek.ecs.baylor.edu{% url order-detail req_request.pk %}) your order history page (https://gleek.ecs.baylor.edu{% url order-list %}) for more details.
+Rejected requests:
 {% for tissue_request in req_request.get_requested_tissues %}
 {% if tissue_request.get_accepted != Acceptance.Accepted %}
 {% for datum in tissue_request.get_data %}{% if datum.0 != "Estimated Cost" %}
 {{ datum.0 }}: {{ datum.1 }}{% endif %}{% endfor %}
-{% trans "Requested Monkeys: " %}{% for monkey in tissue_request.monkeys.all %}{% if monkey not in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }} {% endif %}{% endfor %}
+Requested Monkeys: {% for monkey in tissue_request.monkeys.all %}{% if monkey not in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }} {% endif %}{% endfor %}
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}
 {% endif %}{% endfor %}
 
-{% trans "You can view your request at " %}https://gleek.ecs.baylor.edu{{ request_url }}{% trans ".  From here you can revise and resubmit your request for further review." %}
+Total cost of request ${{ req_request.get_total_estimated_cost }}

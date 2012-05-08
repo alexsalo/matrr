@@ -941,7 +941,7 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, creat
 				if dexs.count() == 0:
 					if create_dex:
 						dex = DrinkingExperiment(cohort=cohort,dex_type=dex_type,dex_date=date)
-#						dex.save()
+						dex.save()
 						dexs = list()
 						dexs.append(dex)
 					else:
@@ -953,7 +953,6 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, creat
 				dex = dexs[0]
 
 			if entry[10].strip() == 'BoutRec':
-
 				bouts.append((dex, line_number, line, entry[2:-1]))
 			elif entry[10].strip() == 'DrinkRec':
 				drinks.append((dex, line_number, line, entry[2:-1]))
@@ -962,7 +961,7 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, creat
 				print line
 				print "---"
 			last_date = date
-	return  bouts, drinks
+#	return  bouts, drinks
 	print "Loading bouts ..."
 	for (dex, line_number, line, bout) in bouts:
 		load_ebt_one_inst(bout, line_number, create_mtd, dex, line)

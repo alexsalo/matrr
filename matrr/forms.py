@@ -374,9 +374,13 @@ class TissueInventoryVerificationDetailForm(TissueInventoryVerificationForm):
 	quantity = FloatField(required=False)
 	units = ChoiceField(choices=Units, required=False)
 	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
-
-class EstimatedCost(Form):
-	cost = IntegerField(required=True, label="Estimated cost $")
+#
+#class EstimatedCost(ModelForm):
+#	fields = ['rtt_estimated_cost']
+#	class Meta:
+#		model=TissueRequest
+#	cost = IntegerField(required=True, label="Estimated cost $")
+#	rtt = IntegerField(required=True, widget=HiddenInput())
 	
 #	def __init__(self, cost=None, *args, **kwargs):
 #		super(EstimatedCost, self).__init__(*args, **kwargs)
