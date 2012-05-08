@@ -816,7 +816,6 @@ def review_overview_price(request, req_request_id):
 			
 	if not accepted_or_partial:
 		for tr in req.tissue_request_set.all():
-			print "nula neakcepted"
 			tr.rtt_estimated_cost = 0
 			tr.save()
 		return redirect(reverse('review-overview-process', args=[req_request_id]))
@@ -824,7 +823,8 @@ def review_overview_price(request, req_request_id):
 	if request.POST:
 		cost_forms = PriceFormset(request.POST)
 		if cost_forms.is_valid():
-			for cost_form in cost_forms:
+			rtts = cost_forms.save()
+#			for cost_form in cost_forms:
 #				print cost_form.cleaned_data['rtt_estimated_cost']
 #				print cost_form.instance.get_estimated_cost()
 #				if cost_form.cleaned_data['rtt_estimated_cost'] != cost_form.instance.get_estimated_cost():
@@ -833,7 +833,7 @@ def review_overview_price(request, req_request_id):
 #					print "tr"
 #					print tr.rtt_estimated_cost
 #					tr.save()
-				cost_form.save()
+#				cost_form.save()
 #				print cost_form.instance.pk
 #				print req.get_requested_tissues()[0].pk
 #				rtt_id = cost_form.cleaned_data['rtt']
@@ -851,7 +851,7 @@ def review_overview_price(request, req_request_id):
 			return redirect(reverse('review-overview-process', args=[req_request_id]))
 		else:
 			return render_to_response('matrr/review/review_overview_price.html',
-					{'req': req, 'forms': cost_form },								
+					{'req': req, 'forms': cost_forms },
 					context_instance=RequestContext(request))
 	else:
 		queryset = req.tissue_request_set.all()
@@ -859,10 +859,10 @@ def review_overview_price(request, req_request_id):
 		for tr in queryset:
 			if tr.get_accepted() != Acceptance.Rejected:
 				accepted_queryset.add(tr.pk)
-				continue
+
 		quer = TissueRequest.objects.filter(pk__in=accepted_queryset)
 		for tr in quer:
-			if tr.rtt_estimated_cost == None:
+			if tr.rtt_estimated_cost is None:
 				tr.rtt_estimated_cost = tr.get_estimated_cost()
 				tr.save()
 		cost_forms = PriceFormset(queryset = quer)
