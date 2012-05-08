@@ -7,9 +7,7 @@ import string
 import datetime
 import csv, re
 
-# This was _not_ built to be used often.  In fact, if it ever needs to be used again, you'll probably have to rewrite it.
-# Like I just did.
-# -jf
+DEX_TYPES = ("Open Access", "Induction")
 
 def convert_dates_to_correct_datetimes():
 	
@@ -34,8 +32,7 @@ def convert_dates_to_correct_datetimes():
 		monkeys = MonkeyProtein.objects.filter(mpn_date=old_datetime)
 		new_datetime = old_datetime.combine(old_datetime.date(), time(*t))
 		monkeys.update(mpn_date = new_datetime)
-	
-	
+
 	
 @transaction.commit_on_success
 def load_initial_inventory(file, output_file, load_tissue_types=False,  delete_name_duplicates=False, create_tissue_samples=False):
@@ -917,8 +914,10 @@ def load_edr_one_file(file_name, dex):
 			edr.save()	
 
 def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, create_dex=False, create_mtd=False):
+	if not dex_type in DEX_TYPES:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
+
 	""" Input file may start with header, but ONLY if entry[1] == 'Date'! """
-	
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	bouts = list()
 	drinks = list()
@@ -971,7 +970,8 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, creat
 
 			
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
-
+	if not dex_type in DEX_TYPES:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	entries = os.listdir(file_dir)
 	bouts = list()
@@ -1137,6 +1137,8 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 			eev.save()	
 			
 def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
+	if not dex_type in DEX_TYPES:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
 
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	entries = os.listdir(file_dir)
