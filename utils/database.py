@@ -530,7 +530,7 @@ def create_Assay_Development_tree():
 ERROR_OUTPUT = "%d %s # %s\n\n"
 
 @transaction.commit_on_success
-def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8', dump_duplicates=True, has_headers=True):
+def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_headers=True):
 	"""
 		0 - date
 		1 - monkey_real_id
