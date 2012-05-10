@@ -879,7 +879,7 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
 	
 	ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data_list[BOUT_NUMBER_DATA_INDEX])
 	if ebts.count() == 0:
-		er = ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
+		err = ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
 		if dump_file:
 			dump_file.write(err + '\n')
 		else:
