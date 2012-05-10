@@ -530,7 +530,7 @@ def create_Assay_Development_tree():
 ERROR_OUTPUT = "%d %s # %s\n\n"
 
 @transaction.commit_on_success
-def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_headers=True):
+def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_headers=True, dump_output=False):
 	"""
 		0 - date
 		1 - monkey_real_id
@@ -593,8 +593,8 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 		('mtd_pct_max_bout_vol_total_etoh'),
 	)
 
+	dump_file = open(file_name + '-output.txt', 'w')
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
-
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data):
@@ -611,7 +611,11 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 				dex_date = dt.strptime(data[0], "%m/%d/%y")
 			#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
 			except Exception as e:
-				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
+				err = ERROR_OUTPUT % (line_number, "Wrong date format", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 			#			if dex_date != dex_check_date:
 			#				print error_output % (line_number, "Date check failed", line)
@@ -624,29 +628,49 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 				elif des.count() == 1:
 					de = des[0]
 				else:
-					print ERROR_OUTPUT % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
+					err = ERROR_OUTPUT % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
+					if dump_output:
+						dump_file.write(err + '\n')
+					else:
+						print err
 					continue
 
 			monkey_real_id = data[1]
 			monkey_real_id_check = data[39]
 			if monkey_real_id != monkey_real_id_check:
-				print ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
+				err = ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
 			except:
-				print ERROR_OUTPUT % (line_number, "Monkey does not exist", line)
+				err = ERROR_OUTPUT % (line_number, "Monkey does not exist", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 
 			bad_data = data[47]
 			if bad_data != '':
-				print ERROR_OUTPUT % (line_number, "Bad data flag", line)
+				err = ERROR_OUTPUT % (line_number, "Bad data flag", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 
 			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment=de, monkey=monkey)
 			if mtds.count() != 0:
-				if dump_duplicates:
-					print ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
+				err = ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					if dump_duplicates:
+						print err
 				continue
 			mtd = MonkeyToDrinkingExperiment()
 			mtd.monkey = monkey
@@ -660,7 +684,11 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			try:
 				mtd.clean_fields()
 			except Exception as e:
-				print ERROR_OUTPUT % (line_number, e, line)
+				err = ERROR_OUTPUT % (line_number, e, line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 			mtd.save()
 
