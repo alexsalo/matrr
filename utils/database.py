@@ -7,9 +7,7 @@ import string
 import datetime
 import csv, re
 
-# This was _not_ built to be used often.  In fact, if it ever needs to be used again, you'll probably have to rewrite it.
-# Like I just did.
-# -jf
+DEX_TYPES = ("Open Access", "Induction")
 
 def convert_dates_to_correct_datetimes():
 	
@@ -34,8 +32,7 @@ def convert_dates_to_correct_datetimes():
 		monkeys = MonkeyProtein.objects.filter(mpn_date=old_datetime)
 		new_datetime = old_datetime.combine(old_datetime.date(), time(*t))
 		monkeys.update(mpn_date = new_datetime)
-	
-	
+
 	
 @transaction.commit_on_success
 def load_initial_inventory(file, output_file, load_tissue_types=False,  delete_name_duplicates=False, create_tissue_samples=False):
@@ -533,7 +530,7 @@ def create_Assay_Development_tree():
 ERROR_OUTPUT = "%d %s # %s\n\n"
 
 @transaction.commit_on_success
-def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8', dump_duplicates=True, has_headers=True):
+def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_headers=True, dump_output=False):
 	"""
 		0 - date
 		1 - monkey_real_id
@@ -596,8 +593,8 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8', dump
 		('mtd_pct_max_bout_vol_total_etoh'),
 	)
 
+	dump_file = open(file_name + '-output.txt', 'w')
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
-
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data):
@@ -614,7 +611,11 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8', dump
 				dex_date = dt.strptime(data[0], "%m/%d/%y")
 			#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
 			except Exception as e:
-				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
+				err = ERROR_OUTPUT % (line_number, "Wrong date format", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 			#			if dex_date != dex_check_date:
 			#				print error_output % (line_number, "Date check failed", line)
@@ -627,29 +628,49 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8', dump
 				elif des.count() == 1:
 					de = des[0]
 				else:
-					print ERROR_OUTPUT % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
+					err = ERROR_OUTPUT % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
+					if dump_output:
+						dump_file.write(err + '\n')
+					else:
+						print err
 					continue
 
 			monkey_real_id = data[1]
 			monkey_real_id_check = data[39]
 			if monkey_real_id != monkey_real_id_check:
-				print ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
+				err = ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
 			except:
-				print ERROR_OUTPUT % (line_number, "Monkey does not exist", line)
+				err = ERROR_OUTPUT % (line_number, "Monkey does not exist", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 
 			bad_data = data[47]
 			if bad_data != '':
-				print ERROR_OUTPUT % (line_number, "Bad data flag", line)
+				err = ERROR_OUTPUT % (line_number, "Bad data flag", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 
 			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment=de, monkey=monkey)
 			if mtds.count() != 0:
-				if dump_duplicates:
-					print ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
+				err = ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					if dump_duplicates:
+						print err
 				continue
 			mtd = MonkeyToDrinkingExperiment()
 			mtd.monkey = monkey
@@ -663,7 +684,11 @@ def load_mtd(file_name, dex_type='Coh8_initial', cohort_name='INIA Cyno 8', dump
 			try:
 				mtd.clean_fields()
 			except Exception as e:
-				print ERROR_OUTPUT % (line_number, e, line)
+				err = ERROR_OUTPUT % (line_number, e, line)
+				if dump_output:
+					dump_file.write(err + '\n')
+				else:
+					print err
 				continue
 			mtd.save()
 
@@ -917,8 +942,10 @@ def load_edr_one_file(file_name, dex):
 			edr.save()	
 
 def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, create_dex=False, create_mtd=False):
+	if not dex_type in DEX_TYPES:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
+
 	""" Input file may start with header, but ONLY if entry[1] == 'Date'! """
-	
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	bouts = list()
 	drinks = list()
@@ -971,7 +998,8 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, creat
 
 			
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
-
+	if not dex_type in DEX_TYPES:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	entries = os.listdir(file_dir)
 	bouts = list()
@@ -1137,6 +1165,8 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 			eev.save()	
 			
 def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
+	if not dex_type in DEX_TYPES:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
 
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	entries = os.listdir(file_dir)

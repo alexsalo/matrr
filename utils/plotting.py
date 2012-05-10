@@ -1,5 +1,5 @@
 from matplotlib import pyplot
-from django.db.models.aggregates import Sum
+from django.db.models.aggregates import Sum, Max
 import numpy, dateutil
 import operator
 from pylab import *
@@ -35,9 +35,16 @@ class Treemap:
 		ax = [left, bottom, width, height]
 		color_ax = [left_h, bottom, 0.08, height]
 
+		fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+
 		self.ax = pyplot.axes(ax)
+		self.ax.figure = fig
 		self.ax.set_aspect('equal')
 		self.color_ax = pyplot.axes(color_ax)
+		self.color_ax.figure = fig
+
+		self.ax.figure.figsize = DEFAULT_FIG_SIZE
+		self.ax.figure.dpi = DEFAULT_DPI
 
 		self.ax.set_yticks([])
 
@@ -522,7 +529,7 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 		print "No MonkeyProteins for this cohort."
 		return False, 'NO MAP'
 
-def cohort_etoh_treemap(cohort, dex_type):
+def cohort_bihourly_etoh_treemap(cohort, dex_type):
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -576,8 +583,6 @@ def cohort_etoh_treemap(cohort, dex_type):
 			fraction_start = (hour_start-hour_const)*60*60
 			fraction_end = (hour_end-hour_const)*60*60
 
-
-
 			bouts_in_fraction = ExperimentBout.objects.filter(mtd__in=monkey_exp, ebt_start_time__gte=fraction_start, ebt_start_time__lte=fraction_end)
 
 			volume_sum = bouts_in_fraction.aggregate(Sum('ebt_volume'))['ebt_volume__sum']
@@ -590,13 +595,13 @@ def cohort_etoh_treemap(cohort, dex_type):
 			else:
 				avg_vol_per_hour = volume_sum / float(num_days * block_len)
 			if bouts_in_fraction.count() == 0:
-				avg_vol_per_bout = 0
+				avg_max_pct_bout = 0
 			else:
-				avg_vol_per_bout = max_pct_bout_sum / float(bouts_in_fraction.count())
+				avg_max_pct_bout = max_pct_bout_sum / float(bouts_in_fraction.count())
 			monkey_bar.append(avg_vol_per_hour)
-			color_monkey_bar.append(avg_vol_per_bout)
-			if avg_vol_per_bout > max_color:
-				max_color = avg_vol_per_bout
+			color_monkey_bar.append(avg_max_pct_bout)
+			if avg_max_pct_bout > max_color:
+				max_color = avg_max_pct_bout
 		tree.append(tuple(monkey_bar))
 		color_tree.append(tuple(color_monkey_bar))
 	tree = tuple(tree)
@@ -609,10 +614,10 @@ def cohort_etoh_treemap(cohort, dex_type):
 	m = numpy.outer(numpy.arange(1,0,-0.01),numpy.ones(10))
 	treemap.color_ax.imshow(m, cmap=cmap, origin="lower")
 	pyplot.xticks(np.arange(0))
-	pyplot.yticks(np.arange(0,100,25), ['0%', '.25%', '50%', '75%', '100%'])
+	pyplot.yticks(np.arange(0,100,25), ['0%', '25%', '50%', '75%', '100%'])
 
 	fig = treemap.ax.figure
-	return fig, 'NO MAP'
+	return fig, 'has_caption'
 
 # Dictionary of cohort plots VIPs can customize
 # NOT the same as matrr.models.VIP_IMAGES_LIST!
@@ -628,9 +633,10 @@ import copy # for some reason this errors if i put it up top -jf 2/13/2012
 COHORT_PLOTS = copy.copy(VIP_COHORT_PLOTS)
 COHORT_PLOTS.update({
 				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 	'Average Ethanol Intake, 22hr'),
-				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake, 4pct ml"),
+				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake, ml"),
 				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, 				"Total Ethanol Intake, g per kg"),
 				"cohort_protein_boxplot": (cohort_protein_boxplot, 							"Cohort Protein Boxplot"),
+				"cohort_bihourly_etoh_treemap": (cohort_bihourly_etoh_treemap, 				"Cohort Bihourly Drinking Pattern")
 #				 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
 #				 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
 #				 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
@@ -1497,10 +1503,10 @@ MONKEY_PLOTS.update({
 #				'monkey_boxplot_weight': monkey_boxplot_weight,
 
 				'monkey_protein_stdev': (monkey_protein_stdev, 							 	"Protein Value (standard deviation)"),
-				'monkey_protein_pctdev': (monkey_protein_pctdev, 						 	"Protein Value (percent deviaction)"),
+				'monkey_protein_pctdev': (monkey_protein_pctdev, 						 	"Protein Value (percent deviation)"),
 				'monkey_protein_value': (monkey_protein_value, 							 	"Protein Value (raw value)"),
 				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg,	"Average Monkey Ethanol Intake, 22hr"),
-				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 	"Total Monkey Ethanol Intake, 4pct ml"),
+				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 	"Total Monkey Ethanol Intake, ml"),
 				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 	"Total Monkey Ethanol Intake, g per kg"),
 })
 
