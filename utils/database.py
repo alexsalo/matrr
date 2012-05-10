@@ -1263,7 +1263,7 @@ def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
 def load_necropsy_summary(filename):
 	"""
 		This function will load a csv file in the format
-		row[0]	= matrr_number
+		row[0]	= matrr_number or mky_real_id
 		row[1]	= cohort_broad_title 	# unused
 		row[2]	= species 				# unused
 		row[3]	= cohort_number 		# unused
@@ -1293,7 +1293,10 @@ def load_necropsy_summary(filename):
 			try:
 				monkey = Monkey.objects.get(pk=row[0])
 			except Monkey.DoesNotExist:
-				raise Exception("No such monkey:  %s" % str(row[0]))
+				try:
+					monkey = Monkey.objects.get(mky_real_id=row[0])
+				except Monkey.DoesNotExist:
+					raise Exception("No such monkey:  %s" % str(row[0]))
 			try:
 				nec_sum = monkey.necropsy_summary
 			except NecropsySummary.DoesNotExist:
