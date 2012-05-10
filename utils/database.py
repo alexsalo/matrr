@@ -1060,7 +1060,7 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, creat
 	for (dex, line_number, line, drink) in drinks:
 		load_edr_one_inst(drink, dex, line_number, line, dump_file=dump_file)
 		dump_file.flush()
-
+	dump_file.close()
 
 			
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
