@@ -1262,8 +1262,9 @@ def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
 
 def load_necropsy_summary(filename):
 	"""
-		This function will load a csv file in the format
+		This function will load a csv file in the format:
 		row[0]	= matrr_number or mky_real_id
+		(( if row[0] is a mky_real_id and row[1] is "primary_cohort" the function will add 2 to all row indexes
 		row[1]	= cohort_broad_title 	# unused
 		row[2]	= species 				# unused
 		row[3]	= cohort_number 		# unused
@@ -1288,13 +1289,20 @@ def load_necropsy_summary(filename):
 	"""
 	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
 	columns = csv_infile.next()
+	columns_offest = 0
+	if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
+		columns_offset = 2
+	else:
+		raise Exception("Unsure of format, investigate further and update this function.")
+
 	for row in csv_infile:
 		if row[0]:
-			try:
+			try: # dont offset these columns, they should always be a monkey number of some sort (hopefully)
 				monkey = Monkey.objects.get(pk=row[0])
 			except Monkey.DoesNotExist:
 				try:
 					monkey = Monkey.objects.get(mky_real_id=row[0])
+					column_offset = 2 #
 				except Monkey.DoesNotExist:
 					raise Exception("No such monkey:  %s" % str(row[0]))
 			try:
@@ -1302,25 +1310,25 @@ def load_necropsy_summary(filename):
 			except NecropsySummary.DoesNotExist:
 				nec_sum = NecropsySummary(monkey=monkey)
 
-			monkey.mky_birthdate 			= datetime.datetime.strptime(row[5], '%m/%d/%y')
-			monkey.mky_necropsy_start_date 	= datetime.datetime.strptime(row[6], '%m/%d/%y')
+			monkey.mky_birthdate 			= datetime.datetime.strptime(row[5+columns_offset], '%m/%d/%y')
+			monkey.mky_necropsy_start_date 	= datetime.datetime.strptime(row[6+columns_offset], '%m/%d/%y')
 			monkey.mky_age_at_necropsy 		= row[7]
 			monkey.save()
 
-			nec_sum.ncm_etoh_onset 				= datetime.datetime.strptime(row[8], '%m/%d/%y')
-			nec_sum.ncm_age_onset_etoh 			= row[9]
-			nec_sum.ncm_etoh_4pct_induction 	= row[10] if row[10] != "control" else 0
-			nec_sum.ncm_etoh_4pct_22hr			= row[11] if row[11] != "control" else 0
-			nec_sum.ncm_etoh_4pct_lifetime		= row[12] if row[12] != "control" else 0
-			nec_sum.ncm_etoh_g_lifetime			= row[13] if row[13] != "control" else 0
-			nec_sum.ncm_sum_g_per_kg_induction	= row[14] if row[14] != "control" else 0
-			nec_sum.ncm_sum_g_per_kg_22hr		= row[15] if row[15] != "control" else 0
-			nec_sum.ncm_sum_g_per_kg_lifetime	= row[16] if row[16] != "control" else 0
-			nec_sum.ncm_6_mo_start 				= datetime.datetime.strptime(row[17], '%m/%d/%y')
-			nec_sum.ncm_6_mo_end 				= datetime.datetime.strptime(row[18], '%m/%d/%y')
-			nec_sum.ncm_12_mo_end 				= datetime.datetime.strptime(row[19], '%m/%d/%y')
-			nec_sum.ncm_22hr_6mo_avg_g_per_kg	= row[20] if row[20] != "control" else 0
-			nec_sum.ncm_22hr_12mo_avg_g_per_kg	= row[21] if row[21] != "control" else 0
+			nec_sum.ncm_etoh_onset 				= datetime.datetime.strptime(row[8+columns_offset], '%m/%d/%y')
+			nec_sum.ncm_age_onset_etoh 			= row[9+columns_offset]
+			nec_sum.ncm_etoh_4pct_induction 	= row[10+columns_offset] if row[10+columns_offset] != "control" else 0
+			nec_sum.ncm_etoh_4pct_22hr			= row[11+columns_offset] if row[11+columns_offset] != "control" else 0
+			nec_sum.ncm_etoh_4pct_lifetime		= row[12+columns_offset] if row[12+columns_offset] != "control" else 0
+			nec_sum.ncm_etoh_g_lifetime			= row[13+columns_offset] if row[13+columns_offset] != "control" else 0
+			nec_sum.ncm_sum_g_per_kg_induction	= row[14+columns_offset] if row[14+columns_offset] != "control" else 0
+			nec_sum.ncm_sum_g_per_kg_22hr		= row[15+columns_offset] if row[15+columns_offset] != "control" else 0
+			nec_sum.ncm_sum_g_per_kg_lifetime	= row[16+columns_offset] if row[16+columns_offset] != "control" else 0
+			nec_sum.ncm_6_mo_start 				= datetime.datetime.strptime(row[17+columns_offset], '%m/%d/%y')
+			nec_sum.ncm_6_mo_end 				= datetime.datetime.strptime(row[18+columns_offset], '%m/%d/%y')
+			nec_sum.ncm_12_mo_end 				= datetime.datetime.strptime(row[19+columns_offset], '%m/%d/%y')
+			nec_sum.ncm_22hr_6mo_avg_g_per_kg	= row[20+columns_offset] if row[20+columns_offset] != "control" else 0
+			nec_sum.ncm_22hr_12mo_avg_g_per_kg	= row[21+columns_offset] if row[21+columns_offset] != "control" else 0
 			nec_sum.save()
 
 def load_metabolites(filename):
