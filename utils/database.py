@@ -530,7 +530,7 @@ def create_Assay_Development_tree():
 ERROR_OUTPUT = "%d %s # %s\n\n"
 
 @transaction.commit_on_success
-def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_headers=True, dump_output=False):
+def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_headers=True, dump_file=False):
 	"""
 		0 - date
 		1 - monkey_real_id
@@ -593,8 +593,10 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 		('mtd_pct_max_bout_vol_total_etoh'),
 	)
 
-	if dump_output:
-		dump_file = open(file_name + '-output.txt', 'w')
+	if dump_file:
+		_filename = file_name.split('/')
+		_filename.reverse()
+		dump_file = open(_filename[0] + '-output.txt', 'w')
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
@@ -997,7 +999,9 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
 
 	""" Input file may start with header, but ONLY if entry[1] == 'Date'! """
 	if dump_file:
-		dump_file = open(file_name + '-output.txt', 'w')
+		_filename = file_name.split('/')
+		_filename.reverse()
+		dump_file = open(_filename[0] + '-output.txt', 'w')
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	bouts = list()
 	drinks = list()
@@ -1230,7 +1234,7 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 				print ERROR_OUTPUT % (line_number, e, line)
 				continue
 			eev.save()	
-			
+
 def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
 	if not dex_type in DEX_TYPES:
 		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
