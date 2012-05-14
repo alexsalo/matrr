@@ -1377,9 +1377,8 @@ class Request(models.Model, DiffingMixin):
 
 	def can_be_shipped(self):
 		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
-			if self.user.account.has_mta():
-				if self.req_purchase_order or self.get_total_estimated_cost() == 0:
-					return True
+			if self.user.account.has_mta() and self.req_purchase_order:
+				return True
 		return False
 
 	def submit_request(self):
