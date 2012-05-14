@@ -598,6 +598,8 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
+		if len(read_data) == 1:
+			read_data = read_data[0].split('\r')
 		for line_number, line in enumerate(read_data):
 			if line_number == 0 and has_headers: # cyno 2 had column headers
 				continue
@@ -692,7 +694,6 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 					print err
 				continue
 			mtd.save()
-
 
 def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=1, dump_file=''):
 	fields = (
