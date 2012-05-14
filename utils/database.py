@@ -542,7 +542,6 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 		47 - bad data flag
 		48 - comment/notes
 
-
 		All data in comma-separated csv format, no caption line at the beginning of file
 		For data with mutiple cohorts, the will have to be computed from monkey real id instead of using a parameter.
 	"""
@@ -617,7 +616,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
 			except Exception as e:
 				err = ERROR_OUTPUT % (line_number, "Wrong date format", line)
-				if dump_output:
+				if dump_file:
 					dump_file.write(err + '\n')
 				else:
 					print err
@@ -634,7 +633,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 					de = des[0]
 				else:
 					err = ERROR_OUTPUT % (line_number, "Too many drinking experiments with type %s, cohort %d and specified date." % (dex_type, cohort.coh_cohort_id), line)
-					if dump_output:
+					if dump_file:
 						dump_file.write(err + '\n')
 					else:
 						print err
@@ -644,7 +643,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			monkey_real_id_check = data[39]
 			if monkey_real_id != monkey_real_id_check:
 				err = ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
-				if dump_output:
+				if dump_file:
 					dump_file.write(err + '\n')
 				else:
 					print err
@@ -653,7 +652,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 				monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
 			except:
 				err = ERROR_OUTPUT % (line_number, "Monkey does not exist", line)
-				if dump_output:
+				if dump_file:
 					dump_file.write(err + '\n')
 				else:
 					print err
@@ -662,7 +661,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			bad_data = data[47]
 			if bad_data != '':
 				err = ERROR_OUTPUT % (line_number, "Bad data flag", line)
-				if dump_output:
+				if dump_file:
 					dump_file.write(err + '\n')
 				else:
 					print err
@@ -671,7 +670,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment=de, monkey=monkey)
 			if mtds.count() != 0:
 				err = ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
-				if dump_output:
+				if dump_file:
 					dump_file.write(err + '\n')
 				else:
 					if dump_duplicates:
@@ -690,7 +689,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 				mtd.clean_fields()
 			except Exception as e:
 				err = ERROR_OUTPUT % (line_number, e, line)
-				if dump_output:
+				if dump_file:
 					dump_file.write(err + '\n')
 				else:
 					print err
@@ -1067,7 +1066,6 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
 		dump_file.flush()
 	dump_file.close()
 
-			
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 	if not dex_type in DEX_TYPES:
 		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
