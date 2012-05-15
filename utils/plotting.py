@@ -529,7 +529,7 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 		print "No MonkeyProteins for this cohort."
 		return False, 'NO MAP'
 
-def cohort_bihourly_etoh_treemap(cohort, dex_type):
+def cohort_bihourly_etoh_treemap(cohort, dex_type='Induction'):
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -564,6 +564,9 @@ def cohort_bihourly_etoh_treemap(cohort, dex_type):
 	color_tree = list()
 
 	monkeys = cohort.monkey_set.filter(mky_drinking=True)
+	mtd_count = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys, drinking_experiment__dex_type=dex_type).count()
+	if not mtd_count:
+		return False, 'NO MAP'
 	monkey_pks = []
 	for monkey in monkeys:
 		monkey_pks.append(str(monkey.pk))
@@ -589,6 +592,8 @@ def cohort_bihourly_etoh_treemap(cohort, dex_type):
 			max_pct_bout_sum = bouts_in_fraction.aggregate(Sum('mtd__mtd_pct_max_bout_vol_total_etoh'))['mtd__mtd_pct_max_bout_vol_total_etoh__sum']
 			if not volume_sum:
 				volume_sum = 0.1
+			if not max_pct_bout_sum:
+				max_pct_bout_sum = 0.0001
 			num_days = monkey_exp.values_list('drinking_experiment__dex_date').distinct().count()
 			if (num_days * block_len) == 0:
 				avg_vol_per_hour = 0.01
@@ -607,7 +612,7 @@ def cohort_bihourly_etoh_treemap(cohort, dex_type):
 	tree = tuple(tree)
 	color_tree = tuple(color_tree)
 	treemap = Treemap(tree, color_tree, iter, size, max_bout_as_pct_of_daily_intake, x_labels=monkey_pks)
-	treemap.ax.set_title("Bi-hourly distribution of Ethanol Intake")
+	treemap.ax.set_title("Bi-hourly distribution of Ethanol Intake during %s" % dex_type)
 	treemap.color_ax.set_title("Max bout as percent\nof total daily intake")
 
 	## Custom Colorbar
@@ -622,10 +627,11 @@ def cohort_bihourly_etoh_treemap(cohort, dex_type):
 # Dictionary of cohort plots VIPs can customize
 # NOT the same as matrr.models.VIP_IMAGES_LIST!
 VIP_COHORT_PLOTS = {
-				"cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2de_month_etoh_intake, 'Cohort Ethanol Intake, by month'),
-				"cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 'Cohort Water Intake, by month'),
-				"cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 'Cohort Pellets, by month'),
-				"cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 'Cohort Weight, by month'),
+				"cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2de_month_etoh_intake, 		'Cohort Ethanol Intake, by month'),
+				"cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 			'Cohort Water Intake, by month'),
+				"cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 	'Cohort Pellets, by month'),
+				"cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 			'Cohort Weight, by month'),
+				"cohort_bihourly_etoh_treemap": (cohort_bihourly_etoh_treemap, 							"Cohort Bihourly Drinking Pattern")
 }
 
 # Dictionary of all cohort plots
@@ -636,11 +642,6 @@ COHORT_PLOTS.update({
 				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake, ml"),
 				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, 				"Total Ethanol Intake, g per kg"),
 				"cohort_protein_boxplot": (cohort_protein_boxplot, 							"Cohort Protein Boxplot"),
-				"cohort_bihourly_etoh_treemap": (cohort_bihourly_etoh_treemap, 				"Cohort Bihourly Drinking Pattern")
-#				 "cohort_boxplot_m2de_etoh_intake": cohort_boxplot_m2de_etoh_intake,
-#				 "cohort_boxplot_m2de_veh_intake": cohort_boxplot_m2de_veh_intake,
-#				 "cohort_boxplot_m2de_total_pellets":cohort_boxplot_m2de_total_pellets,
-#				 "cohort_boxplot_m2de_mtd_weight":cohort_boxplot_m2de_mtd_weight,
 })
 
 
@@ -1497,11 +1498,6 @@ VIP_MONKEY_PLOTS = {
 # Dictionary of all monkey plots
 MONKEY_PLOTS = copy.copy(VIP_MONKEY_PLOTS)
 MONKEY_PLOTS.update({
-#				'monkey_boxplot_etoh': monkey_boxplot_etoh,
-#				'monkey_boxplot_veh': monkey_boxplot_veh,
-#				'monkey_boxplot_pellets': monkey_boxplot_pellets,
-#				'monkey_boxplot_weight': monkey_boxplot_weight,
-
 				'monkey_protein_stdev': (monkey_protein_stdev, 							 	"Protein Value (standard deviation)"),
 				'monkey_protein_pctdev': (monkey_protein_pctdev, 						 	"Protein Value (percent deviation)"),
 				'monkey_protein_value': (monkey_protein_value, 							 	"Protein Value (raw value)"),
@@ -1510,25 +1506,38 @@ MONKEY_PLOTS.update({
 				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 	"Total Monkey Ethanol Intake, g per kg"),
 })
 
-def create_plots(cohorts=True, monkeys=True, delete=True):
+def create_plots(cohorts=True, monkeys=True, delete=False):
 	if monkeys:
+		monkey_plots = ['monkey_errorbox_veh',
+						'monkey_errorbox_pellets',
+						'monkey_errorbox_etoh',
+						'monkey_errorbox_weight',
+						'monkey_necropsy_etoh_4pct',
+						'monkey_necropsy_sum_g_per_kg',
+						'monkey_necropsy_avg_22hr_g_per_kg']
+
 		from matrr.models import MonkeyImage, Monkey
 		if delete:
 			MonkeyImage.objects.all().delete()
 		for monkey in Monkey.objects.all():
-			for key in MONKEY_PLOTS:
-				if 'intraday' in key:
-					continue
-				graph = key
-				monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[key][1])
-				monkeyimage.save()
+			for graph in monkey_plots:
+				monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[graph][1])
 
 	if cohorts:
+		cohort_plots = ['cohort_bihourly_etoh_treemap',
+						'cohort_boxplot_m2de_month_veh_intake',
+						'cohort_boxplot_m2de_month_total_pellets',
+						'cohort_boxplot_m2de_month_mtd_weight',
+						'cohort_boxplot_m2de_month_etoh_intake',
+						'cohort_necropsy_etoh_4pct',
+						'cohort_necropsy_sum_g_per_kg',
+						'cohort_necropsy_avg_22hr_g_per_kg',
+						]
+
 		from matrr.models import CohortImage, Cohort
 		if delete:
 			CohortImage.objects.all().delete()
 		for cohort in Cohort.objects.all():
-			for key in COHORT_PLOTS:
-				graph = key
-				cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[key][1])
-				cohortimage.save()
+			print cohort
+			for graph in cohort_plots:
+				cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[graph][1])
