@@ -705,12 +705,11 @@ class SubjectSelectForm(Form):
 						  help_text="Choose what scope of subjects to analyze",
 						  widget=RadioSelect(renderer=RadioFieldRendererSpecial),
 						  initial=subject_choices[0][0])
-	monkeys = ModelMultipleChoiceField(queryset = Monkey.objects.all(),required=False, widget=CheckboxSelectMultipleSelectAll())
+	monkeys = ModelMultipleChoiceField(queryset=Monkey.objects.all(), required=False, widget=CheckboxSelectMultipleSelectAll())
 
-	def __init__(self, cohort, **kwargs):
+	def __init__(self, monkey_queryset, **kwargs):
 		super(SubjectSelectForm, self).__init__(**kwargs)
-		monkey_keys = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey__pk', flat=True).distinct()
-		self.fields['monkeys'].queryset = Monkey.objects.filter(pk__in=monkey_keys) 
+		self.fields['monkeys'].queryset = monkey_queryset
 
 class TissueShipmentForm(Form):
 	def __init__(self, tissue_request_queryset, *args, **kwargs):
