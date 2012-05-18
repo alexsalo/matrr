@@ -502,7 +502,7 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 		ax1.set_xlabel("Date of sample")
 		ax1.set_ylabel("Sample Value, in %s" % str(protein.pro_units))
 
-		dates = monkey_proteins.dates('mpn_date', 'day')
+		dates = monkey_proteins.values_list('mpn_date', flat=True)
 		data = dict()
 		for date in dates:
 			data[str(date.date())] = monkey_proteins.filter(mpn_date=date).values_list('mpn_value')
