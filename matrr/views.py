@@ -882,7 +882,7 @@ def review_overview_price(request, req_request_id):
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_overview(request, req_request_id):
 	# get the request being reviewed
-	req_request = Request.objects.get(req_request_id=req_request_id) # get or 404 ?
+	req_request = get_object_or_404(Request, pk=req_request_id) # get or 404 ?
 	no_monkeys = False
 
 	if req_request.is_evaluated():

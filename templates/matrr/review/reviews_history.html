@@ -14,6 +14,7 @@
 	
 		<table class='common_center' cellpadding='4' cellspacing='2'>
 			<tr>
+				<th>Request</th>
 				<th>Cohort</th>
 				<th>User</th>
 				<th>Date Modified</th>
@@ -23,6 +24,7 @@
 			</tr>
 			{% for req_request in req_requests.object_list %}
 				<tr>
+					<td><a href='{% url order-detail req_request.pk %}'>{{ req_request.pk }}</a></td>
 					<td nowrap>{{ req_request.cohort.coh_cohort_name }}</td>
 					<td><a href='{% url account-reviewer-view req_request.user.id %}'>
 						{% if req_request.user|lower == 'dummy_user_for_past_requests' %}Generic User
