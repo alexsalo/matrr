@@ -13,7 +13,8 @@ from matrr.models import *
 from matrr.widgets import *
 from registration.forms import RegistrationForm
 
-FIX_CHOICES = (('', '---------'), ('Flash Frozen', 'Flash Frozen'),
+FIX_CHOICES = (('', '---------'),
+			   ('Flash Frozen', 'Flash Frozen'),
 			   ('4% Paraformaldehyde', '4% Paraformaldehyde'),
 			   ('Fresh', 'Fresh'),
 			   ('DNA', 'DNA'),
@@ -374,18 +375,7 @@ class TissueInventoryVerificationDetailForm(TissueInventoryVerificationForm):
 	quantity = FloatField(required=False)
 	units = ChoiceField(choices=Units, required=False)
 	details = CharField(widget=widgets.Textarea(attrs={'cols': 40, 'rows': 2, 'style':"width:100%;",}), required=False)
-#
-#class EstimatedCost(ModelForm):
-#	fields = ['rtt_estimated_cost']
-#	class Meta:
-#		model=TissueRequest
-#	cost = IntegerField(required=True, label="Estimated cost $")
-#	rtt = IntegerField(required=True, widget=HiddenInput())
-	
-#	def __init__(self, cost=None, *args, **kwargs):
-#		super(EstimatedCost, self).__init__(*args, **kwargs)
-#		if cost:
-#			self.fields['cost'].initial = cost
+
 
 class MTAValidationForm(Form):
 	primarykey = IntegerField(widget=HiddenInput(), required=False)
@@ -678,6 +668,7 @@ class ProteinSelectForm(Form):
 		self.fields['proteins'].label = "Protein"
 		self.fields['proteins'].help_text = "Select proteins to display"
 
+
 class MonkeyGraphAppearanceForm(Form):
 	y_choices = (('monkey_protein_pctdev', 'Percent deviation from cohort mean'), ('monkey_protein_stdev',
 				 'Standard deviation from cohort mean'), ('monkey_protein_value', 'Actual value'))
@@ -703,7 +694,7 @@ class SubjectSelectForm(Form):
 	subject = ChoiceField(choices=subject_choices,
 						  label='Subject',
 						  help_text="Choose what scope of subjects to analyze",
-						  widget=RadioSelect(renderer=RadioFieldRendererSpecial),
+						  widget=RadioSelect(renderer=RadioFieldRendererSpecial_monkey),
 						  initial=subject_choices[0][0])
 	monkeys = ModelMultipleChoiceField(queryset=Monkey.objects.all(), required=False, widget=CheckboxSelectMultipleSelectAll())
 
@@ -711,9 +702,32 @@ class SubjectSelectForm(Form):
 		super(SubjectSelectForm, self).__init__(**kwargs)
 		self.fields['monkeys'].queryset = monkey_queryset
 
+
 class TissueShipmentForm(Form):
 	def __init__(self, tissue_request_queryset, *args, **kwargs):
 		super(TissueShipmentForm, self).__init__(*args, **kwargs)
 		self.fields['tissue_requests'] = ModelMultipleChoiceField(queryset=tissue_request_queryset, widget=CheckboxSelectMultiple_columns(columns=2))
 		self.fields['tissue_requests'].label = "Shipment"
 		self.fields['tissue_requests'].help_text = "Select which tissue requests are included in this shipment"
+
+
+class PlotSelectForm(Form):
+	plot_method = ChoiceField(help_text="Choose which plot to generate")
+
+	def __init__(self, plot_choices, **kwargs):
+		super(PlotSelectForm, self).__init__(**kwargs)
+		self.fields['plot_method'].label = "Plot"
+		self.fields['plot_method'].choices = plot_choices
+		self.fields['plot_method'].initial = plot_choices[0][0]
+
+
+class ExperimentRangeForm(Form):
+	range_choices = (('Induction', 'Induction'), ('Open Access', 'Open Access'), ('custom', 'Custom Dates'))
+	range = ChoiceField(choices=range_choices,
+						  label='Experiment Range',
+						  help_text="Choose which dates to analyze",
+						  widget=RadioSelect(renderer=RadioFieldRendererSpecial_dates),
+						  initial=range_choices[0][0])
+	from_date = DateField(widget=DateTimeWidget, required=False)
+	to_date = DateField(widget=DateTimeWidget, required=False)
+

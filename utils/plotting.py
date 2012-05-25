@@ -1,6 +1,7 @@
 from matplotlib import pyplot
 from django.db.models.aggregates import Sum, Max, Avg
 import numpy, dateutil, gc, operator, matplotlib
+from numpy.lib.polynomial import poly1d, polyfit
 from pylab import *
 from matrr.models import *
 
@@ -18,6 +19,26 @@ DEFAULT_CIRCLE_MIN = 20
 DEFAULT_FIG_SIZE = (10,10)
 DEFAULT_DPI = 80
 COLORS = {'monkey' : "#01852F", 'cohort' : 'black'}
+
+def validate_dates(from_date=False, to_date=False):
+	from datetime import datetime, date
+	if from_date and not isinstance(from_date, (datetime, date)):
+		try:
+			#maybe its a str(datetime)
+			from_date = dateutil.parser.parse(from_date)
+		except:
+			#otherwise give up
+			print "Invalid parameter, from_date"
+			from_date = None
+	if to_date and not isinstance(to_date, (datetime, date)):
+		try:
+			#maybe its a str(datetime)
+			to_date = dateutil.parser.parse(to_date)
+		except:
+			#otherwise give up
+			print "Invalid parameter, to_date"
+			to_date = None
+	return from_date, to_date
 
 
 def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None):
@@ -63,38 +84,14 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
 
 		Axis_Locator = FixedLocator(label_locations)
 		ax.xaxis.set_major_locator(Axis_Locator)
-		ax.set_xticklabels(labels)
+		ax.set_xticklabels(labels, rotation=45)
+
 
 	addnode(ax, node_tree, color_tree)
 	if x_labels:
 		assign_x_labels(ax, x_labels)
 	else:
 		ax.set_xticks([])
-
-
-##UNFINISHED
-def validate_dates(**kwargs):
-	from_date = to_date = False
-	if kwargs.has_key('from_date'):
-		from_date = kwargs['from_date']
-	if kwargs.has_key('to_date'):
-		to_date = kwargs['to_date']
-	if from_date and not isinstance(from_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			from_date = dateutil.parser.parse(from_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
-	if from_date and not isinstance(to_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			to_date = dateutil.parser.parse(to_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
 
 
 ### Specific Callables ###
@@ -300,19 +297,19 @@ def cohort_boxplot_m2de_general(specific_callable, y_label, cohort, days=10,):
 		return False, 'NO MAP'
 
 
-def cohort_boxplot_m2de_month_etoh_intake(cohort, from_date=None, to_date=None):
-	return cohort_boxplot_m2de_month_general(etoh_intake, "Ethanol Intake (in ml)",cohort, from_date, to_date)
+def cohort_boxplot_m2de_month_etoh_intake(cohort, from_date=None, to_date=None, dex_type=''):
+	return cohort_boxplot_m2de_month_general(etoh_intake, "Ethanol Intake (in ml)", cohort, from_date, to_date, dex_type)
 
-def cohort_boxplot_m2de_month_veh_intake(cohort, from_date=None, to_date=None):
-	return cohort_boxplot_m2de_month_general(veh_intake , "Veh Intake",cohort, from_date, to_date)
+def cohort_boxplot_m2de_month_veh_intake(cohort, from_date=None, to_date=None, dex_type=''):
+	return cohort_boxplot_m2de_month_general(veh_intake , "Veh Intake", cohort, from_date, to_date, dex_type)
 	
-def cohort_boxplot_m2de_month_total_pellets(cohort,from_date=None, to_date=None):
-	return cohort_boxplot_m2de_month_general(total_pellets,"Total Pellets" ,cohort, from_date, to_date)
+def cohort_boxplot_m2de_month_total_pellets(cohort, from_date=None, to_date=None, dex_type=''):
+	return cohort_boxplot_m2de_month_general(total_pellets,"Total Pellets" , cohort, from_date, to_date, dex_type)
 	
-def cohort_boxplot_m2de_month_mtd_weight(cohort, from_date=None, to_date=None):
-	return cohort_boxplot_m2de_month_general(mtd_weight, "Weight (in kg)",cohort, from_date, to_date)
+def cohort_boxplot_m2de_month_mtd_weight(cohort, from_date=None, to_date=None, dex_type=''):
+	return cohort_boxplot_m2de_month_general(mtd_weight, "Weight (in kg)", cohort, from_date, to_date, dex_type)
 
-def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_date=None, to_date=None):
+def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_date=None, to_date=None, dex_type=''):
 	# Gather drinking monkeys from the cohort
 	from matrr.models import Cohort, MonkeyToDrinkingExperiment
 	if not isinstance(cohort, Cohort):
@@ -324,27 +321,13 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 
-	if from_date and not isinstance(from_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			from_date = dateutil.parser.parse(from_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
-	if to_date and not isinstance(to_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			to_date = dateutil.parser.parse(to_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
-
+	from_date, to_date = validate_dates(from_date, to_date)
 	if from_date:
 		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
 	if to_date:
 		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
 
 	if cohort_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
@@ -365,6 +348,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 		ax1.set_title('MATRR Boxplot')
 		ax1.set_xlabel("Date of Experiment")
 		ax1.set_ylabel(y_label)
+		pyplot.ylim(ymin=0)
 
 		bp = pyplot.boxplot(sorted_values)
 		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
@@ -386,7 +370,6 @@ def convert_timedelta(t):
 def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 	from matrr.models import Cohort, MonkeyToDrinkingExperiment, ExperimentEventType
 	from django.db.models import Min
-	from datetime import date
 
 	if not isinstance(cohort, Cohort):
 		try:
@@ -394,23 +377,9 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
 			return
-	if not isinstance(from_date, date):
-		try:
-			#maybe its a str(datetime)
-			from_date = dateutil.parser.parse(from_date)
-		except:
-			#otherwise give up
-			print("Invalid paremeter, from_date")
-			return
-	if not isinstance(to_date, date):
-		try:
-			#maybe its a str(datetime)
-			to_date = dateutil.parser.parse(to_date)
-		except:
-			#otherwise give up
-			print("Invalid paremeter, from_date")
-			return
+
 	mtds = MonkeyToDrinkingExperiment.objects.all()
+	from_date, to_date = validate_dates(from_date, to_date)
 	if from_date:
 		mtds = mtds.filter(drinking_experiment__dex_date__gte=from_date)
 	if to_date:
@@ -496,7 +465,7 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 		print "No MonkeyProteins for this cohort."
 		return False, 'NO MAP'
 
-def cohort_bihourly_etoh_treemap(cohort, dex_type='Induction'):
+def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=''):
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -530,7 +499,7 @@ def cohort_bihourly_etoh_treemap(cohort, dex_type='Induction'):
 	color_tree = list()
 
 	monkeys = cohort.monkey_set.filter(mky_drinking=True)
-	mtd_count = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys, drinking_experiment__dex_type=dex_type).count()
+	mtd_count = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys).count()
 	if not mtd_count:
 		print 'This cohort has no MTDs'
 		return False, 'NO MAP'
@@ -539,10 +508,17 @@ def cohort_bihourly_etoh_treemap(cohort, dex_type='Induction'):
 		monkey_pks.append(str(monkey.pk))
 		hour_const = 0
 		experiment_len = 22
-
 		block_len = 2
 
-		monkey_exp = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment__dex_type=dex_type)
+		monkey_exp = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+
+		from_date, to_date = validate_dates(from_date, to_date)
+		if from_date:
+			monkey_exp = monkey_exp.filter(drinking_experiment__dex_date__gte=from_date)
+		if to_date:
+			monkey_exp = monkey_exp.filter(drinking_experiment__dex_date__lte=to_date)
+		if dex_type:
+			monkey_exp = monkey_exp.filter(drinking_experiment__dex_type=dex_type)
 
 		monkey_bar = list()
 		color_monkey_bar = list()
@@ -559,6 +535,7 @@ def cohort_bihourly_etoh_treemap(cohort, dex_type='Induction'):
 
 			field_name = 'mtd_pct_max_bout_vol_total_etoh_hour_%d' % (hour_start/2)
 			bout_pct_total = mtds_in_fraction.exclude(**{field_name:None}).values_list(field_name, flat=True)
+			bout_pct_total = numpy.array(bout_pct_total)
 			avg_max_bout_pct_total = numpy.mean(bout_pct_total)
 
 			if not volume_sum:
@@ -592,7 +569,17 @@ def cohort_bihourly_etoh_treemap(cohort, dex_type='Induction'):
 	ax.set_yticks([])
 
 	Treemap(ax, tree, color_tree, size, color_by_pct_of_max_color, x_labels=monkey_pks)
-	ax.set_title("Bi-hourly distribution of Ethanol Intake during %s" % dex_type)
+
+	graph_title = "Bi-hourly distribution of Ethanol Intake"
+	if dex_type:
+		graph_title +=  " during %s" % dex_type
+	elif from_date and to_date:
+		graph_title +=  "\nfrom %s, to %s" % (str(from_date.date()), str(to_date.date()))
+	elif from_date:
+		graph_title +=  " after %s" % str(from_date)
+	elif to_date:
+		graph_title +=  " before %s" % str(to_date)
+	ax.set_title(graph_title)
 
 	## Custom Colorbar
 	color_ax = pyplot.axes([left_h, bottom, 0.08, height])
@@ -605,24 +592,23 @@ def cohort_bihourly_etoh_treemap(cohort, dex_type='Induction'):
 
 	return fig, 'has_caption'
 
-# Dictionary of cohort plots VIPs can customize
-# NOT the same as matrr.models.VIP_IMAGES_LIST!
-VIP_COHORT_PLOTS = {
-				"cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2de_month_etoh_intake, 		'Cohort Ethanol Intake, by month'),
-				"cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 			'Cohort Water Intake, by month'),
-				"cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 	'Cohort Pellets, by month'),
-				"cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 			'Cohort Weight, by month'),
-				"cohort_bihourly_etoh_treemap": (cohort_bihourly_etoh_treemap, 							"Cohort Bihourly Drinking Pattern")
-}
+# Dictionary of ethanol cohort plots VIPs can customize
+COHORT_ETOH_TOOLS_PLOTS = {"cohort_boxplot_m2de_month_etoh_intake": 		(cohort_boxplot_m2de_month_etoh_intake,'Monthly Cohort Ethanol Intake boxplot'),
+						   "cohort_bihourly_etoh_treemap": 					(cohort_bihourly_etoh_treemap, "Cohort Bihourly Drinking Pattern")}
+# Dictionary of protein cohort plots VIPs can customize
+COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}
 
 # Dictionary of all cohort plots
-import copy # for some reason this errors if i put it up top -jf 2/13/2012
-COHORT_PLOTS = copy.copy(VIP_COHORT_PLOTS)
+COHORT_PLOTS = {}
+COHORT_PLOTS.update(COHORT_ETOH_TOOLS_PLOTS)
+COHORT_PLOTS.update(COHORT_PROTEIN_TOOLS_PLOTS)
 COHORT_PLOTS.update({
 				"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 	'Average Ethanol Intake, 22hr'),
 				"cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake, ml"),
 				"cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, 				"Total Ethanol Intake, g per kg"),
-				"cohort_protein_boxplot": (cohort_protein_boxplot, 							"Cohort Protein Boxplot"),
+				"cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 			'Cohort Water Intake, by month'),
+				"cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 	'Cohort Pellets, by month'),
+				"cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 			'Cohort Weight, by month'),
 })
 
 
@@ -882,23 +868,6 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 				print("That's not a valid monkey.")
 				return False, 'NO MAP'
 
-	if from_date and not isinstance(from_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			from_date = dateutil.parser.parse(from_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
-	if from_date and not isinstance(to_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			to_date = dateutil.parser.parse(to_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
-
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
 		circle_min = DEFAULT_CIRCLE_MIN
@@ -909,6 +878,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 			circle_min = DEFAULT_CIRCLE_MIN
 
 	drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+	from_date, to_date = validate_dates(from_date, to_date)
 	if from_date:
 		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
 	if to_date:
@@ -1065,23 +1035,6 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, circle_max=DEFAU
 				print("That's not a valid monkey.")
 				return False, 'NO MAP'
 
-	if from_date and not isinstance(from_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			from_date = dateutil.parser.parse(from_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
-	if from_date and not isinstance(to_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			to_date = dateutil.parser.parse(to_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
-
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
 		circle_min = DEFAULT_CIRCLE_MIN
@@ -1092,6 +1045,7 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, circle_max=DEFAU
 			circle_min = DEFAULT_CIRCLE_MIN
 
 	drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+	from_date, to_date = validate_dates(from_date, to_date)
 	if from_date:
 		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
 	if to_date:
@@ -1169,6 +1123,11 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, circle_max=DEFAU
 	ax2.yaxis.set_major_locator(NullLocator())
 	pyplot.setp(ax2, xticklabels=bout_labels)
 
+#	regression line
+	fit = polyfit(xaxis, g_per_kg_consumed, 3)
+	fit_fn = poly1d(fit) # fit_fn is now a function which takes in x and returns an estimate for y
+	ax1.plot(xaxis, fit_fn(xaxis), '-r', linewidth=3, alpha=.6)
+
 	zipped = np.vstack(zip(xaxis, g_per_kg_consumed))
 	coordinates = ax1.transData.transform(zipped)
 	ids = [de.pk for de in drinking_experiments]
@@ -1214,29 +1173,14 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 		from_date = kwargs['from_date']
 	if kwargs.has_key('to_date'):
 		to_date = kwargs['to_date']
-	if from_date and not isinstance(from_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			from_date = dateutil.parser.parse(from_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
-	if from_date and not isinstance(to_date, datetime):
-		try:
-			#maybe its a str(datetime)
-			to_date = dateutil.parser.parse(to_date)
-		except:
-			#otherwise give up
-			print("Invalid parameter, from_date")
-			return False, 'NO MAP'
-		
+
 	monkey_alpha = .7
 	cohort = monkey.cohort
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
 	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
 
+	from_date, to_date = validate_dates(from_date, to_date)
 	if from_date:
 		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
 		monkey_drinking_experiments = monkey_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
@@ -1602,28 +1546,31 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 
 
 
-# Dictionary of plots VIPs can customize
-# NOT the same as matrr.models.VIP_IMAGES_LIST!
-VIP_MONKEY_PLOTS = {
-	'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
-	'monkey_errorbox_veh': (monkey_errorbox_veh, 'Monkey Water Intake'),
-	'monkey_errorbox_pellets': (monkey_errorbox_pellets, 'Monkey Pellets'),
-	'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
+# Dictionary of ethanol monkey plots VIPs can customize
+MONKEY_ETOH_TOOLS_PLOTS = { 'monkey_errorbox_etoh': 		(monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
+							'monkey_bouts_drinks': 			(monkey_bouts_drinks, 'Deprecated Detailed Ethanol Intake Pattern'),
+							'monkey_bouts_vol': 			(monkey_bouts_vol, 'Detailed Ethanol Intake Pattern'),
+							'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
 
-	'monkey_bouts_drinks': (monkey_bouts_drinks, 'Detailed Ethanol Intake Pattern'),
-	'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
-
+							}
+# Dictionary of protein monkey plots VIPs can customize
+MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': 			(monkey_protein_stdev, "Protein Value (standard deviation)"),
+							  'monkey_protein_pctdev': 			(monkey_protein_pctdev, "Protein Value (percent deviation)"),
+							  'monkey_protein_value': 			(monkey_protein_value, "Protein Value (raw value)"),
 }
 
-# Dictionary of all monkey plots
-MONKEY_PLOTS = copy.copy(VIP_MONKEY_PLOTS)
+# Dictionary of all cohort plots
+MONKEY_PLOTS = {}
+MONKEY_PLOTS.update(MONKEY_ETOH_TOOLS_PLOTS)
+MONKEY_PLOTS.update(MONKEY_PROTEIN_TOOLS_PLOTS)
 MONKEY_PLOTS.update({
-				'monkey_protein_stdev': (monkey_protein_stdev, 							 	"Protein Value (standard deviation)"),
-				'monkey_protein_pctdev': (monkey_protein_pctdev, 						 	"Protein Value (percent deviation)"),
-				'monkey_protein_value': (monkey_protein_value, 							 	"Protein Value (raw value)"),
 				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg,	"Average Monkey Ethanol Intake, 22hr"),
 				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 	"Total Monkey Ethanol Intake, ml"),
 				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 	"Total Monkey Ethanol Intake, g per kg"),
+				'monkey_errorbox_veh': (monkey_errorbox_veh, 'Monkey Water Intake'),
+				'monkey_errorbox_pellets': (monkey_errorbox_pellets, 'Monkey Pellets'),
+				'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
+
 })
 
 def create_plots(cohorts=True, monkeys=True, delete=False):

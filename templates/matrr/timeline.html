@@ -40,26 +40,8 @@ Cohort: {{ cohort.coh_cohort_name }}
 
 
 <br>
-    <div id='headline'>Induction Training</div>
 
-
-<div>
-<table class="common_center">
-  <tr><th>Event</th><th>Date</th><th>Addtional Information</th></tr>
-  {% for event in cohort.cohort_event_set.all|dictsort:'cev_date' %}
-    <tr>
-      <td>{{ event.event }}</td>
-      <td>{{ event.cev_date|date:"m/d/Y" }}</td>
-      <td>
-      {% if event.cev_info %}
-        {{ event.cev_info }}
-      {% endif %}
-      </td>
-    </tr>
-  {% endfor %}
-</table>
-</div>
-
+{% include 'matrr/__timeline.html' %}
 
 
 

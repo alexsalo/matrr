@@ -7,7 +7,7 @@
 	<!--		<meta http-equiv='Content-Type' content='text/html; charset=utf-8'/> -->
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/layout.css"/>
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/style.css"/>
-	{% if plot_gallery or unsupported_browser or 1 %}
+	{% if plot_gallery or unsupported_browser or 1 %} {% comment %} or 1, lol {% endcomment %}
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
 
 		<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.colorbox.js"></script>
@@ -80,11 +80,8 @@
 					<ul>
 						<li class='top'><a href="{% url tools-landing %}">Tools</a></li>
 						<li class='drop-down'><a href="{% url tools-protein %}">Protein</a></li>
-<!--						{% if perms.matrr.view_etoh_data %}
+						{% if perms.matrr.view_etoh_data %}
 							<li class='drop-down'><a href="{% url tools-etoh %}">Ethanol</a></li>
-						{% endif %}-->
-						{% if perms.matrr.view_vip_images %}
-							<li class='drop-down'><a href="{% url vip-graphs %}">Custom Graphs</a></li>
 						{% endif %}
 					</ul>
 				{% endif %}

@@ -26,6 +26,7 @@ from utils import plotting
 from matrr.decorators import user_owner_test
 #from utils.plotting import monkey_protein
 import urllib
+from utils.plotting import COHORT_ETOH_TOOLS_PLOTS
 
 
 def redirect_with_get(url_name, *args, **kwargs):
@@ -1847,8 +1848,11 @@ def tools_protein(request): # pick a cohort
 
 def tools_cohort_protein(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	monkey_keys = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
+	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
+
 	if request.method == 'POST':
-		subject_select_form = SubjectSelectForm(cohort, data=request.POST)
+		subject_select_form = SubjectSelectForm(monkey_queryset, data=request.POST)
 		if subject_select_form.is_valid():
 			subject = subject_select_form.cleaned_data['subject']
 			if subject == 'monkey':
@@ -1882,8 +1886,6 @@ def tools_cohort_protein(request, cohort_id):
 						messages.warning(request, "This data file has already been created for you.  It is available to download on your account page.")
 				else:
 					messages.warning(request, "You must have a valid MTA on record to download data.  MTA information can be updated on your account page.")
-	monkey_keys = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
-	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
 	return render_to_response('matrr/tools/protein.html', {'subject_select_form': SubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
 
@@ -2040,8 +2042,11 @@ def tools_etoh(request): # pick a cohort
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_cohort_etoh(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	monkey_keys = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
+	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
+
 	if request.method == 'POST':
-		subject_select_form = SubjectSelectForm(cohort, data=request.POST)
+		subject_select_form = SubjectSelectForm(monkey_queryset, data=request.POST)
 		if subject_select_form.is_valid():
 			subject = subject_select_form.cleaned_data['subject']
 			if subject == 'monkey':
@@ -2055,72 +2060,57 @@ def tools_cohort_etoh(request, cohort_id):
 					return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 				return redirect_with_get('tools-monkey-ethanol', cohort_id, monkeys=get_m) # TODO: this redirect fails, no view for 'tools-monkey-ethanol' yet
 			elif subject == 'cohort':
-				return redirect('tools-cohort-ethanol-graphs', cohort_id) # TODO: under construction
+				return redirect('tools-cohort-etoh-graphs', cohort_id)
 			else: # assumes subject == 'download'
 				messages.warning(request, "Ethanol data download is currently disabled.")
 	mky_ids = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True)
-	queryset = Monkey.objects.filter(pk__in=mky_ids)
-	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': SubjectSelectForm(cohort, queryset=queryset)}, context_instance=RequestContext(request))
+	monkey_queryset = Monkey.objects.filter(pk__in=mky_ids)
+	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': SubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
 
-# TODO: Totally rewrite this whole view.  Currently a copied mess from tools_cohort_protein_graphs
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_cohort_etoh_graphs(request, cohort_id):
-	old_post = request.session.get('_old_post')
+	plot_method = ''
+	old_post = {}
+	if '_old_post' in request.session:
+		old_post = request.session.pop('_old_post')
+	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in COHORT_ETOH_TOOLS_PLOTS.items()]
 	cohort = Cohort.objects.get(pk=cohort_id)
 	context = {'cohort': cohort}
 	if request.method == "POST" or old_post:
 		post = request.POST if request.POST else old_post
-#		protein_form = ProteinSelectForm(data=post)
+		plot_form = PlotSelectForm(plot_choices, data=post)
 		subject_select_form = CohortSelectForm(data=post)
-		if protein_form.is_valid() and subject_select_form.is_valid():
+		experiment_range_form = ExperimentRangeForm(data=post)
+		if plot_form.is_valid() and subject_select_form.is_valid() and experiment_range_form.is_valid():
 			if int(cohort_id) != subject_select_form.cleaned_data['subject'].pk:
 				request.session['_old_post'] = request.POST
-				return redirect(tools_cohort_protein_graphs, subject_select_form.cleaned_data['subject'].pk)
-			proteins = protein_form.cleaned_data['proteins']
-			graphs = __gather_cohort_protein_images(cohort, proteins)
-			context['graphs'] = graphs
+				return redirect(tools_cohort_etoh_graphs, subject_select_form.cleaned_data['subject'].pk)
 
-	cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
-	cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
+			from_date = to_date = ''
+			range = experiment_range_form.cleaned_data['range']
+			if range == 'custom':
+				from_date = str(experiment_range_form.cleaned_data['from_date'])
+				to_date = str(experiment_range_form.cleaned_data['to_date'])
+				range = None
+			plot_method = plot_form.cleaned_data['plot_method']
 
-	context['subject_select_form'] = CohortSelectForm(cohort_queryset=cohorts_with_protein_data, horizontal=True, initial={'subject': cohort_id})
-	context['protein_form'] = ProteinSelectForm(initial={'proteins': proteins})
-	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
+			params = str({'dex_type': range, 'from_date': from_date, 'to_date': to_date})
+			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=COHORT_ETOH_TOOLS_PLOTS[plot_method][1], parameters=params)
+			context['graph'] = cohort_image
+		else:
+			messages.error(request, plot_form.errors.as_text())
+			messages.error(request, subject_select_form.errors.as_text())
+			messages.error(request, experiment_range_form.errors.as_text())
+	cohorts_with_ethanol_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
+	cohorts_with_ethanol_data = Cohort.objects.filter(pk__in=cohorts_with_ethanol_data) # so get the queryset of cohorts
 
+	context['subject_select_form'] = CohortSelectForm(cohort_queryset=cohorts_with_ethanol_data, horizontal=True, initial={'subject': cohort_id})
+	context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
+	context['experiment_range_form'] = ExperimentRangeForm()
+	return render_to_response('matrr/tools/ethanol_cohort.html', context, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
-def vip_graphs(request):
-	if request.POST:
-		for key in plotting.VIP_MONKEY_PLOTS:
-			if key in request.POST:
-				return redirect(reverse('vip-graph-builder', args=[key]))
-		for key in plotting.VIP_COHORT_PLOTS:
-			if key in request.POST:
-				return redirect(reverse('vip-graph-builder', args=[key]))
-		return reverse(vip_graphs) #  this should never be hit.  I dunno how it could be.
-	else:
-		context = {}
-		mky_keys = []
-		coh_keys = []
-		mky_plots = plotting.VIP_MONKEY_PLOTS
-		coh_plots = plotting.VIP_COHORT_PLOTS
-		for key in mky_plots:
-			migs = MonkeyImage.objects.filter(method=key)
-			if migs:
-				mky_keys.append((key, migs[0], mky_plots[key][1]))
-			#else
-		for key in coh_plots:
-			cigs = CohortImage.objects.filter(method=key)
-			if cigs:
-				coh_keys.append((key, cigs[0], coh_plots[key][1]))
-		mky_keys.sort()
-		coh_keys.sort()
-		context['mky_keys'] = mky_keys
-		context['coh_keys'] = coh_keys
-		return render_to_response('matrr/tools/VIP/vip_graphs.html', context, context_instance=RequestContext(request))
-
-
+# TODO: move this view into ethanol tools
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_mtd_graph(request, mtd_id):
 	mtd_image = ''
@@ -2133,7 +2123,7 @@ def vip_mtd_graph(request, mtd_id):
 		)
 	return render_to_response('matrr/tools/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
 
-
+# TODO: remove this whole view, move into ethanol tools
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_graph_builder(request, method_name):
 	if 'vip-graphs' in request.POST:
@@ -2181,7 +2171,7 @@ def vip_graph_builder(request, method_name):
 	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges},
 							  context_instance=RequestContext(request))
 
-
+# TODO: remove this whole view
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = MonkeySelectForm(data=request.POST, monkey_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
@@ -2218,7 +2208,7 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges, 'matrr_image': matrr_image}
 	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
-
+# TODO: remove this whole view
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = CohortSelectForm(data=request.POST, cohort_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
