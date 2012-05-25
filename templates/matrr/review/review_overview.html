@@ -38,11 +38,13 @@
 						{% endif %}
 					</div>
 				</div>
-			</div>
-			<div class='div-table'>
 				<div>
 					<div>Project Title:</div>
 					<div>{{ req_request.req_project_title }}</div>
+					{% if req_request.parent_request %}
+						<div>Parent:</div>
+						<div><a href='{% url review-overview req_request.parent_request.pk %}'>{{ req_request.parent_request.pk }}</a></div>
+					{% endif %}
 				</div>
 				<div>
 					<div>Purpose of Tissue Request:</div>
@@ -84,9 +86,10 @@
 			{{ tissue_requests.management_form }}
 			{% for form in tissue_requests %}
 				{% include 'matrr/review/review_overview_item.html' %}
+				<br>
 				{% if not no_monkeys %}
 					{{ form }}
-					{% else %}
+				{% else %}
 					{% with tissue_request=form.instance %}
 						<div class="mini-headline">Monkeys accepted for this tissue request:</div>
 						{% if tissue_request.accepted_monkeys.all %}
@@ -105,14 +108,15 @@
 										<td>
 											{% if monkey.mky_drinking %}
 												Ethanol
-												{% else %}
+											{% else %}
 												{% if monkey.mky_housing_control %}
 													Housing Control
 												{% else %}
 													Control
 												{% endif %}
 											{% endif %}
-										</td></tr>
+										</td>
+									</tr>
 								{% endfor %}
 							</table>
 						{% else %}
@@ -120,6 +124,7 @@
 								<div class="info">
 									No monkeys were accepted for this tissue request.
 								</div>
+								<br>
 							</div>
 						{% endif %}
 						<div class="mini-headline">Monkeys rejected for this tissue request:</div>
@@ -139,7 +144,7 @@
 										<td>
 											{% if monkey.mky_drinking %}
 												Ethanol
-												{% else %}
+											{% else %}
 												{% if monkey.mky_housing_control %}
 													Housing Control
 												{% else %}
@@ -147,7 +152,8 @@
 												{% endif %}
 											{% endif %}
 
-										</td></tr>
+										</td>
+									</tr>
 								{% endfor %}
 							</table>
 						{% else %}
@@ -155,12 +161,14 @@
 								<div class="info">
 									No monkeys were rejected for this tissue request.
 								</div>
+								<br>
 							</div>
 						{% endif %}
 					{% endwith %}
 				{% endif %}
 			{% endfor %}
 			<br>
+
 			<div>
 				{% if not req_request.user.account.has_mta %}
 					<div class='messages clearfix'>

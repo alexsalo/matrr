@@ -1168,7 +1168,7 @@ class Request(models.Model, DiffingMixin):
 	)
 	objects = RequestManager()
 	req_request_id = models.AutoField('ID', primary_key=True)
-	#	request_status = models.ForeignKey(RequestStatus, null=False, db_column='rqs_status_id', )
+	parent_request = models.ForeignKey('Request', null=True, editable=False, related_name='revised_request_set')
 	req_status = models.CharField('Request Status', max_length=2, choices=RequestStatus, null=False, blank=False, default=RequestStatus.Cart)
 	cohort = models.ForeignKey(Cohort, null=False, db_column='coh_cohort_id', editable=False, )
 	user = models.ForeignKey(User, null=False, db_column='usr_user_id', editable=False, )
@@ -1281,6 +1281,7 @@ class Request(models.Model, DiffingMixin):
 		revised.req_modified_date = datetime.now()
 		revised.req_status = RequestStatus.Revised
 		revised.req_report_asked = False
+		revised.parent_request = self
 
 		# Duplicate all TissueRequests
 		revised.save() # save() must be called before the forloop and m2m assignment

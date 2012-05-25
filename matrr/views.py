@@ -882,7 +882,7 @@ def review_overview_price(request, req_request_id):
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_overview(request, req_request_id):
 	# get the request being reviewed
-	req_request = Request.objects.get(req_request_id=req_request_id) # get or 404 ?
+	req_request = get_object_or_404(Request, pk=req_request_id) # get or 404 ?
 	no_monkeys = False
 
 	if req_request.is_evaluated():
@@ -1377,11 +1377,18 @@ def search(request):
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_history(request):
 #	Shipped Requests
-	shipped_requests = Request.objects.shipped()
+	shipped_requests = Request.objects.shipped().order_by('-shipments__shp_shipment_date').distinct()
+	recently_shipped = shipped_requests[0:5]
+	users_with_shipments = shipped_requests.values_list('user', flat=True)
+	user_list = User.objects.filter(pk__in=users_with_shipments).order_by('username')
+	user_list = ((user, shipped_requests.filter(user=user).count()) for user in user_list)
+	return render_to_response('matrr/shipping/shipping_history.html', {'recently_shipped': recently_shipped, 'user_list': user_list}, context_instance=RequestContext(request))
 
-	return render_to_response('matrr/shipping/shipping_history.html',
-			{'shipped_requests': shipped_requests,},
-							  context_instance=RequestContext(request))
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+def shipping_history_user(request, user_id):
+	user = get_object_or_404(User, pk=user_id)
+	shipped_requests = Request.objects.shipped().filter(user=user).order_by('-shipments__shp_shipment_date').distinct()
+	return render_to_response('matrr/shipping/shipping_history_user.html', {'user': user, 'shipped_requests': shipped_requests}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_overview(request):

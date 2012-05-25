@@ -7,34 +7,28 @@
 {% block content %}
 	<i>This page will only display fully-shipped requests.  Until all tissues for a request have been shipped, the request (and/or its shipments) will be shown on the shipping overview page</i>
 	<br>
-	<div class='large-headline'>
-		Shipped Requests
-	</div>
 	<div>
-		{% if shipped_requests %}
+		{% if recently_shipped %}
+			<div class='large-headline'>Recently Shipped</div>
+			{% include 'matrr/shipping/shipping_history_table.html' with shipped_requests=recently_shipped %}
+		{% endif %}
+	</div>
+	{% if user_list %}
+		<div>
+			<div class='large-headline'>Shipped Requests</div>
 			<table class="common_center" cellpadding='4' cellspacing='2'>
 				<tr>
-					<th>Request</th>
 					<th>User</th>
-					<th>Cohort</th>
-					<th>Request Date</th>
+					<th>Count</th>
 				</tr>
-				{% for request in shipped_requests %}
+				{% for user, request_count in user_list %}
 					<tr>
-						<td><a href='{% url order-detail request.req_request_id %}'>{{ request.pk }}</a></td>
-						<td><a href="{% url account-reviewer-view request.user.id %}">{{ request.user }}</a></td>
-						<td>{{ request.cohort.coh_cohort_name }}</td>
-						<td>{{ request.req_request_date|date:"m/d/Y, g:i a" }}</td>
-						<td><a href='{% url order-detail request.req_request_id %}'>Details</a></td>
+						<td><a href="{% url account-reviewer-view request.user.id %}">{{ user.username }}</a></td>
+						<td>{{ request_count }}</td>
+						<td><a href="{% url shipping-history-user user.pk %}">Show history</a></td>
 					</tr>
 				{% endfor %}
 			</table>
-		{% else %}
-			<div class="messages">
-				<div class="info">
-					There are no shipped Requests.
-				</div>
-			</div>
-		{% endif %}
-	</div>
+		</div>
+	{% endif %}
 {% endblock %}

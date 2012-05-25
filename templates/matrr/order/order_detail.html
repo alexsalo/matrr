@@ -33,7 +33,11 @@
 		</tr>
 		<tr>
 			<th>Project Title:</th>
-			<td colspan='3'>{{ order.req_project_title }}</td>
+			<td colspan='1'>{{ order.req_project_title }}</td>
+			{% if order.parent_request %}
+				<th>Parent Request:</th>
+				<td><a href='{% url order-detail order.parent_request.pk %}'>{{ order.parent_request.pk }}</a></td>
+			{% endif %}
 		</tr>
 		<tr>
 			<th>Experimental Plan:</th>
