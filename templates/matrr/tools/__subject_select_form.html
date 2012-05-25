@@ -1,0 +1,15 @@
+{% comment %}
+This html snippet can be included when using CohortSelectForms and SubjectSelectForms
+{% endcomment %}
+<form action='' method='post'>
+	{% csrf_token %}
+	<br>
+	<div class=headline>{{ subject_select_form.subject.label }}</div>
+	<div class=small>{{ subject_select_form.subject.help_text }}</div>
+	<br>
+	{{ subject_select_form.subject }}
+	<br>
+	{{ subject_select_form.monkeys }}
+	<br>
+	<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
+</form>
