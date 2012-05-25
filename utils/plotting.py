@@ -843,7 +843,7 @@ def monkey_boxplot_weight(monkey=None):
 	return fig, 'weight'
 
 
-def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
+def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
 		Scatter plot for monkey
 			x axis - dates of monkey experiments in range [from_date, to_date] or all possible
@@ -883,7 +883,8 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, circle_max=DE
 		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
 	if to_date:
 		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
-
+	if dex_type:
+		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
 	drinking_experiments = drinking_experiments.exclude(mtd_etoh_bout=None, mtd_etoh_drink_bout=None)
 
 	if drinking_experiments.count() > 0:
@@ -1009,7 +1010,7 @@ def monkey_bouts_drinks_intraday(mtd=None):
 		return False, 'NO MAP'
 
 
-def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
+def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
 		Scatter plot for monkey
 			x axis - dates of monkey experiments in range [from_date, to_date] or all possible
@@ -1050,6 +1051,8 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, circle_max=DEFAU
 		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
 	if to_date:
 		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
 
 	drinking_experiments = drinking_experiments.exclude(mtd_etoh_bout=None, mtd_etoh_drink_bout=None)
 
@@ -1168,18 +1171,19 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 		print "This monkey isn't drinking:  " + str(monkey)
 		return False, 'NO MAP'
 
-	from_date = to_date = False
-	if kwargs.has_key('from_date'):
-		from_date = kwargs['from_date']
-	if kwargs.has_key('to_date'):
-		to_date = kwargs['to_date']
-
 	monkey_alpha = .7
 	cohort = monkey.cohort
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).exclude(monkey=monkey)
 	monkey_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
 
+	from_date = to_date = dex_type = False
+	if kwargs.has_key('dex_type'):
+		dex_type = kwargs['dex_type']
+	if kwargs.has_key('from_date'):
+		from_date = kwargs['from_date']
+	if kwargs.has_key('to_date'):
+		to_date = kwargs['to_date']
 	from_date, to_date = validate_dates(from_date, to_date)
 	if from_date:
 		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
@@ -1187,6 +1191,9 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 	if to_date:
 		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
 		monkey_drinking_experiments = monkey_drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		cohort_drinking_experiments = cohort_drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
+		monkey_drinking_experiments = monkey_drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
 
 	if monkey_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'month').order_by('-drinking_experiment__dex_date')
@@ -1548,10 +1555,8 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 
 # Dictionary of ethanol monkey plots VIPs can customize
 MONKEY_ETOH_TOOLS_PLOTS = { 'monkey_errorbox_etoh': 		(monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
-							'monkey_bouts_drinks': 			(monkey_bouts_drinks, 'Deprecated Detailed Ethanol Intake Pattern'),
+							'monkey_bouts_drinks': 			(monkey_bouts_drinks, '(Deprecated) Detailed Ethanol Intake Pattern'),
 							'monkey_bouts_vol': 			(monkey_bouts_vol, 'Detailed Ethanol Intake Pattern'),
-							'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
-
 							}
 # Dictionary of protein monkey plots VIPs can customize
 MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': 			(monkey_protein_stdev, "Protein Value (standard deviation)"),
@@ -1567,9 +1572,10 @@ MONKEY_PLOTS.update({
 				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg,	"Average Monkey Ethanol Intake, 22hr"),
 				"monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, 				 	"Total Monkey Ethanol Intake, ml"),
 				"monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, 			 	"Total Monkey Ethanol Intake, g per kg"),
-				'monkey_errorbox_veh': (monkey_errorbox_veh, 'Monkey Water Intake'),
-				'monkey_errorbox_pellets': (monkey_errorbox_pellets, 'Monkey Pellets'),
-				'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
+				'monkey_errorbox_veh': (monkey_errorbox_veh, 								'Monkey Water Intake'),
+				'monkey_errorbox_pellets': (monkey_errorbox_pellets, 						'Monkey Pellets'),
+				'monkey_errorbox_weight': (monkey_errorbox_weight, 							'Monkey Weight'),
+				'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, 				"Intra-day Ethanol Intake"),
 
 })
 

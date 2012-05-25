@@ -26,7 +26,7 @@ from utils import plotting
 from matrr.decorators import user_owner_test
 #from utils.plotting import monkey_protein
 import urllib
-from utils.plotting import COHORT_ETOH_TOOLS_PLOTS
+from utils.plotting import COHORT_ETOH_TOOLS_PLOTS, MONKEY_ETOH_TOOLS_PLOTS
 
 
 def redirect_with_get(url_name, *args, **kwargs):
@@ -1934,11 +1934,8 @@ def tools_monkey_protein_graphs(request, cohort_id):
 	context = {'cohort': cohort}
 
 	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
-	#		print "jej"
-		print request.GET['monkeys']
 		monkeys = _verify_monkeys(request.GET['monkeys'])
 		get_m = list()
-		#		print monkeys
 		if monkeys:
 			for m in monkeys.values_list('mky_id', flat=True):
 				get_m.append(`m`)
@@ -1946,15 +1943,13 @@ def tools_monkey_protein_graphs(request, cohort_id):
 			text_monkeys = "-".join(get_m)
 		else:
 			text_monkeys = ""
-		#		print "text"
-		#		print text_monkeys
-		context['graph_form'] = MonkeyGraphAppearanceForm(text_monkeys)
+		context['graph_form'] = MonkeyProteinGraphAppearanceForm(text_monkeys)
 		context['protein_form'] = ProteinSelectForm()
 
 	elif request.method == 'POST':
 	#		post = request.POST if request.POST else old_post
 		protein_form = ProteinSelectForm(data=request.POST)
-		graph_form = MonkeyGraphAppearanceForm(data=request.POST)
+		graph_form = MonkeyProteinGraphAppearanceForm(data=request.POST)
 
 		if protein_form.is_valid() and graph_form.is_valid():
 			monkeys = _verify_monkeys(graph_form.cleaned_data['monkeys'])
@@ -1968,6 +1963,7 @@ def tools_monkey_protein_graphs(request, cohort_id):
 				afternoon_reading = True
 			else:
 				afternoon_reading = None
+			mpi = ''
 			if yaxis != 'monkey_protein_value':
 				for mon in monkeys:
 					mpis = MonkeyProteinImage.objects.filter(monkey=mon,
@@ -2010,7 +2006,7 @@ def tools_monkey_protein_graphs(request, cohort_id):
 			context['graphs'] = graphs
 		else:
 			if 'proteins' not in protein_form.data:
-				messages.error(request, "You have to select at least one protein.");
+				messages.error(request, "You have to select at least one protein.")
 
 			if len(graph_form.errors) + len(protein_form.errors) > 1:
 				raise Http404()
@@ -2039,6 +2035,7 @@ def tools_etoh(request): # pick a cohort
 		cohort_form = CohortSelectForm(cohort_queryset=cohorts_with_protein_data)
 	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
+
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_cohort_etoh(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
@@ -2058,7 +2055,7 @@ def tools_cohort_etoh(request, cohort_id):
 				if not monkeys:
 					messages.error(request, "You must select at least one monkey.")
 					return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
-				return redirect_with_get('tools-monkey-ethanol', cohort_id, monkeys=get_m) # TODO: this redirect fails, no view for 'tools-monkey-ethanol' yet
+				return redirect_with_get('tools-monkey-etoh', cohort_id, monkeys=get_m)
 			elif subject == 'cohort':
 				return redirect('tools-cohort-etoh-graphs', cohort_id)
 			else: # assumes subject == 'download'
@@ -2088,14 +2085,14 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 				return redirect(tools_cohort_etoh_graphs, subject_select_form.cleaned_data['subject'].pk)
 
 			from_date = to_date = ''
-			range = experiment_range_form.cleaned_data['range']
-			if range == 'custom':
+			experiment_range = experiment_range_form.cleaned_data['range']
+			if experiment_range == 'custom':
 				from_date = str(experiment_range_form.cleaned_data['from_date'])
 				to_date = str(experiment_range_form.cleaned_data['to_date'])
-				range = None
+				experiment_range = None
 			plot_method = plot_form.cleaned_data['plot_method']
 
-			params = str({'dex_type': range, 'from_date': from_date, 'to_date': to_date})
+			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date})
 			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=COHORT_ETOH_TOOLS_PLOTS[plot_method][1], parameters=params)
 			context['graph'] = cohort_image
 		else:
@@ -2109,6 +2106,63 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 	context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
 	context['experiment_range_form'] = ExperimentRangeForm()
 	return render_to_response('matrr/tools/ethanol_cohort.html', context, context_instance=RequestContext(request))
+
+
+def tools_monkey_etoh_graphs(request, cohort_id):
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	context = {'cohort': cohort}
+	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in MONKEY_ETOH_TOOLS_PLOTS.items()]
+	plot_method = ''
+
+	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
+		monkeys = _verify_monkeys(request.GET['monkeys'])
+		get_m = list()
+		if monkeys:
+			for m in monkeys.values_list('mky_id', flat=True):
+				get_m.append(`m`)
+
+			text_monkeys = "-".join(get_m)
+		else:
+			text_monkeys = ""
+		context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
+		context['experiment_range_form'] = ExperimentRangeForm(text_monkeys)
+
+	elif request.method == 'POST':
+		experiment_range_form = ExperimentRangeForm(data=request.POST)
+		plot_form = PlotSelectForm(plot_choices, data=request.POST)
+
+		if experiment_range_form.is_valid() and plot_form.is_valid():
+			from_date = to_date = ''
+			experiment_range = experiment_range_form.cleaned_data['range']
+			if experiment_range == 'custom':
+				from_date = str(experiment_range_form.cleaned_data['from_date'])
+				to_date = str(experiment_range_form.cleaned_data['to_date'])
+				experiment_range = None
+
+			monkeys = _verify_monkeys(experiment_range_form.cleaned_data['monkeys'])
+			plot_method = plot_form.cleaned_data['plot_method']
+			title = MONKEY_ETOH_TOOLS_PLOTS[plot_method][1]
+			params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range}
+			graphs = list()
+			for monkey in monkeys:
+				mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, title=title, method=plot_method, parameters=str(params))
+				if is_new:
+					mig.save()
+				graphs.append(mig)
+			context['graphs'] = graphs
+		else:
+			if len(experiment_range_form.errors) + len(plot_form.errors) > 1:
+				raise Http404()
+			monkeys = experiment_range_form.data['monkeys']
+
+		context['monkeys'] = monkeys
+		context['experiment_range_form'] = experiment_range_form
+		context['plot_select_form'] = plot_form
+	else:
+		raise Http404()
+
+	return render_to_response('matrr/tools/ethanol_monkey.html', context, context_instance=RequestContext(request))
+
 
 # TODO: move this view into ethanol tools
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')

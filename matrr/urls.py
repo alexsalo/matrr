@@ -135,6 +135,8 @@ urlpatterns += patterns('matrr.views',
 	url(r'^tools/etoh/$', tools_etoh, name='tools-etoh'),
 	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/$', tools_cohort_etoh, name='tools-cohort-etoh'),
 	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_etoh_graphs, name='tools-cohort-etoh-graphs'),
+	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/monkey/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
+	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
 
 	url(r'^tools/vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
 	url(r'^tools/vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),

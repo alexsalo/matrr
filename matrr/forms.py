@@ -669,7 +669,7 @@ class ProteinSelectForm(Form):
 		self.fields['proteins'].help_text = "Select proteins to display"
 
 
-class MonkeyGraphAppearanceForm(Form):
+class MonkeyProteinGraphAppearanceForm(Form):
 	y_choices = (('monkey_protein_pctdev', 'Percent deviation from cohort mean'), ('monkey_protein_stdev',
 				 'Standard deviation from cohort mean'), ('monkey_protein_value', 'Actual value'))
 	yaxis_units = ChoiceField(choices = y_choices, label='Y axis', help_text="Select data to display on y axis",
@@ -679,7 +679,7 @@ class MonkeyGraphAppearanceForm(Form):
 							initial=filter_choices[0][0])
 	monkeys = CharField(widget=HiddenInput())
 	def __init__(self, monkeys=None, *args, **kwargs):
-		super(MonkeyGraphAppearanceForm, self).__init__(*args, **kwargs)
+		super(MonkeyProteinGraphAppearanceForm, self).__init__(*args, **kwargs)
 		if monkeys:
 			self.fields['monkeys'].initial = monkeys
 
@@ -730,4 +730,9 @@ class ExperimentRangeForm(Form):
 						  initial=range_choices[0][0])
 	from_date = DateField(widget=DateTimeWidget, required=False)
 	to_date = DateField(widget=DateTimeWidget, required=False)
+	monkeys = CharField(widget=HiddenInput())
+	def __init__(self, monkeys=None, *args, **kwargs):
+		super(ExperimentRangeForm, self).__init__(*args, **kwargs)
+		if monkeys:
+			self.fields['monkeys'].initial = monkeys
 
