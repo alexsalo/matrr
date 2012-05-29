@@ -42,7 +42,7 @@
 					<div>Project Title:</div>
 					<div>{{ req_request.req_project_title }}</div>
 					{% if req_request.parent_request %}
-						<div>Parent:</div>
+						<div>Revision of Request:</div>
 						<div><a href='{% url review-overview req_request.parent_request.pk %}'>{{ req_request.parent_request.pk }}</a></div>
 					{% endif %}
 				</div>
