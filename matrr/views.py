@@ -2132,7 +2132,7 @@ def tools_monkey_etoh_graphs(request, cohort_id):
 		else:
 			text_monkeys = ""
 		context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
-		context['experiment_range_form'] = ExperimentRangeForm(text_monkeys)
+		context['experiment_range_form'] = ExperimentRangeForm_monkeys(text_monkeys)
 
 	elif request.method == 'POST':
 		experiment_range_form = ExperimentRangeForm(data=request.POST)

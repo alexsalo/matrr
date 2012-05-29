@@ -721,7 +721,7 @@ class PlotSelectForm(Form):
 		self.fields['plot_method'].initial = plot_choices[0][0]
 
 
-class ExperimentRangeForm(Form):
+class ExperimentRangeForm_monkeys(Form):
 	range_choices = (('Induction', 'Induction'), ('Open Access', 'Open Access'), ('custom', 'Custom Dates'))
 	range = ChoiceField(choices=range_choices,
 						  label='Experiment Range',
@@ -732,7 +732,18 @@ class ExperimentRangeForm(Form):
 	to_date = DateField(widget=DateTimeWidget, required=False)
 	monkeys = CharField(widget=HiddenInput())
 	def __init__(self, monkeys=None, *args, **kwargs):
-		super(ExperimentRangeForm, self).__init__(*args, **kwargs)
+		super(ExperimentRangeForm_monkeys, self).__init__(*args, **kwargs)
 		if monkeys:
 			self.fields['monkeys'].initial = monkeys
+
+
+class ExperimentRangeForm(Form):
+	range_choices = (('Induction', 'Induction'), ('Open Access', 'Open Access'), ('custom', 'Custom Dates'))
+	range = ChoiceField(choices=range_choices,
+						  label='Experiment Range',
+						  help_text="Choose which dates to analyze",
+						  widget=RadioSelect(renderer=RadioFieldRendererSpecial_dates),
+						  initial=range_choices[0][0])
+	from_date = DateField(widget=DateTimeWidget, required=False)
+	to_date = DateField(widget=DateTimeWidget, required=False)
 
