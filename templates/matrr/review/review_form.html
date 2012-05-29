@@ -24,7 +24,7 @@
 			</tr>
 			{% if req_request.parent_request %}
 				<tr>
-					<th>Parent's Review:</th>
+					<th>Revision of Request:</th>
 					<td><a href='{% url review-overview req_request.parent_request.pk %}'>{{ req_request.parent_request.pk }}</a></td>
 				</tr>
 			{% endif %}
