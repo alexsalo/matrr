@@ -535,8 +535,12 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 
 			field_name = 'mtd_pct_max_bout_vol_total_etoh_hour_%d' % (hour_start/2)
 			bout_pct_total = mtds_in_fraction.exclude(**{field_name:None}).values_list(field_name, flat=True)
-			bout_pct_total = numpy.array(bout_pct_total)
-			avg_max_bout_pct_total = numpy.mean(bout_pct_total)
+
+			if bout_pct_total:
+				bout_pct_total = numpy.array(bout_pct_total)
+				avg_max_bout_pct_total = numpy.mean(bout_pct_total)
+			else:
+				avg_max_bout_pct_total = 0
 
 			if not volume_sum:
 				volume_sum = 0.1
