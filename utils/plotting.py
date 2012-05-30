@@ -1,17 +1,20 @@
 from matplotlib import pyplot
 from django.db.models.aggregates import Sum, Max, Avg
+from matplotlib.patches import Circle
+from matplotlib.ticker import NullLocator
 import numpy, dateutil, gc, operator, matplotlib
 from numpy.lib.polynomial import poly1d, polyfit
-from pylab import *
+#from pylab import *
+from scipy import polyfit, polyval
 from matrr.models import *
 
 ###############  matplotlibrc settings
-mpl.rcParams['figure.subplot.left'] 	= 0.1	# the left side of the subplots of the figure
-mpl.rcParams['figure.subplot.right'] 	= 0.98	# the right side of the subplots of the figure
-mpl.rcParams['figure.subplot.bottom'] 	= 0.12	# the bottom of the subplots of the figure
-mpl.rcParams['figure.subplot.top'] 	= 0.96	# the top of the subplots of the figure
-mpl.rcParams['figure.subplot.wspace'] 	= 0.05	# the amount of width reserved for blank space between subplots
-mpl.rcParams['figure.subplot.hspace'] 	= 0.05	# the amount of height reserved for white space between subplots
+matplotlib.rcParams['figure.subplot.left'] 	= 0.1	# the left side of the subplots of the figure
+matplotlib.rcParams['figure.subplot.right'] 	= 0.98	# the right side of the subplots of the figure
+matplotlib.rcParams['figure.subplot.bottom'] 	= 0.12	# the bottom of the subplots of the figure
+matplotlib.rcParams['figure.subplot.top'] 	= 0.96	# the top of the subplots of the figure
+matplotlib.rcParams['figure.subplot.wspace'] 	= 0.05	# the amount of width reserved for blank space between subplots
+matplotlib.rcParams['figure.subplot.hspace'] 	= 0.05	# the amount of height reserved for white space between subplots
 ############### end
 
 DEFAULT_CIRCLE_MAX = 280
@@ -589,9 +592,9 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 	color_ax = pyplot.axes([left_h, bottom, 0.08, height])
 	m = numpy.outer(numpy.arange(0,1,0.01),numpy.ones(10))
 	color_ax.imshow(m, cmap=cmap, origin="lower")
-	pyplot.xticks(np.arange(0))
+	pyplot.xticks(numpy.arange(0))
 	labels = [str(int((max_color*100./4)*i))+'%' for i in range(5)]
-	pyplot.yticks(np.arange(0,101,25), labels)
+	pyplot.yticks(numpy.arange(0,101,25), labels)
 	color_ax.set_title("Average maximum bout,\nby ethanol intake,\nexpressed as percentage \nof total daily intake\n")
 
 	return fig, 'has_caption'
@@ -903,9 +906,9 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 		bouts.append(de.mtd_etoh_bout)
 		dr_per_bout.append(de.mtd_etoh_drink_bout)
 
-	xaxis = np.array(range(1,len(dr_per_bout)+1))
-	dr_per_bout       = np.array(dr_per_bout)
-	bouts   = np.array(bouts)
+	xaxis = numpy.array(range(1,len(dr_per_bout)+1))
+	dr_per_bout       = numpy.array(dr_per_bout)
+	bouts   = numpy.array(bouts)
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
@@ -939,13 +942,13 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	cb.set_label("Number of bouts")
 
 #    size legend
-	x =np.array(range(1,6))
-	y =np.array([1,1,1,1,1])
+	x =numpy.array(range(1,6))
+	y =numpy.array([1,1,1,1,1])
 
 	size_m = size_scale/(len(y)-1)
 	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
 	size.insert(0,1+size_min)
-	size = np.array(size)
+	size = numpy.array(size)
 
 	m = bouts_max/(len(y)-1)
 	bout_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of bouts
@@ -959,7 +962,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	ax2.yaxis.set_major_locator(NullLocator())
 	pyplot.setp(ax2, xticklabels=bout_labels)
 
-	zipped = np.vstack(zip(xaxis, total_drinks))
+	zipped = numpy.vstack(zip(xaxis, total_drinks))
 	coordinates = ax1.transData.transform(zipped)
 	ids = [de.pk for de in drinking_experiments]
 	xcoords, inv_ycoords = zip(*coordinates)
@@ -1027,8 +1030,8 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	from matrr.models import Monkey
 	from matrr.models import MonkeyToDrinkingExperiment
 
-	mpl.rcParams['figure.subplot.top'] 	= 0.92
-	mpl.rcParams['figure.subplot.bottom'] 	= 0.08
+	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
+	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
 
 	if not isinstance(monkey, Monkey):
 		try:
@@ -1075,9 +1078,9 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 		bouts_volume = de.bouts_set.all().aggregate(Avg('ebt_volume'))['ebt_volume__avg']
 		avg_bout_volumes.append(bouts_volume if bouts_volume else 0) # size
 
-	xaxis = np.array(range(1,len(avg_bout_volumes)+1))
-	avg_bout_volumes = np.array(avg_bout_volumes)
-	bouts   = np.array(bouts)
+	xaxis = numpy.array(range(1,len(avg_bout_volumes)+1))
+	avg_bout_volumes = numpy.array(avg_bout_volumes)
+	bouts   = numpy.array(bouts)
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
@@ -1110,13 +1113,13 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	cb.set_label("Number of bouts")
 
 #    size legend
-	x =np.array(range(1,6))
-	y =np.array([1,1,1,1,1])
+	x =numpy.array(range(1,6))
+	y =numpy.array([1,1,1,1,1])
 
 	size_m = size_scale/(len(y)-1)
 	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
 	size.insert(0,1+size_min)
-	size = np.array(size)
+	size = numpy.array(size)
 
 	m = volume_max/(len(y)-1)
 	bout_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of bouts
@@ -1131,11 +1134,13 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	pyplot.setp(ax2, xticklabels=bout_labels)
 
 #	regression line
-	fit = polyfit(xaxis, g_per_kg_consumed, 3)
-	fit_fn = poly1d(fit) # fit_fn is now a function which takes in x and returns an estimate for y
-	ax1.plot(xaxis, fit_fn(xaxis), '-r', linewidth=3, alpha=.6)
+#	fit = polyfit(xaxis, g_per_kg_consumed, 3)
+#	fit_fn = poly1d(fit) # fit_fn is now a function which takes in x and returns an estimate for y
+	fit = polyfit(xaxis, g_per_kg_consumed ,3)
+	xr=polyval(fit, xaxis)
+	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
-	zipped = np.vstack(zip(xaxis, g_per_kg_consumed))
+	zipped = numpy.vstack(zip(xaxis, g_per_kg_consumed))
 	coordinates = ax1.transData.transform(zipped)
 	ids = [de.pk for de in drinking_experiments]
 	xcoords, inv_ycoords = zip(*coordinates)
