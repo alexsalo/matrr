@@ -862,8 +862,8 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	from matrr.models import Monkey
 	from matrr.models import MonkeyToDrinkingExperiment
 
-	mpl.rcParams['figure.subplot.top'] 	= 0.92
-	mpl.rcParams['figure.subplot.bottom'] 	= 0.08
+	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
+	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
 
 	if not isinstance(monkey, Monkey):
 		try:
