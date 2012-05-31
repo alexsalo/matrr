@@ -1,0 +1,19 @@
+<div style='width: {{ bigWidth }}px; margin:auto; padding: 20px'>
+	<center>{{ image.title }}</center>
+	<div class="image_container">
+		<img src="{{ image.image.url }}" ismap usemap="#{{ image.monkey.pk }}"><br>
+{#		<img src="{{ image.image.url }}"> <br>#}
+		<b>Detailed drinking pattern for {{ image.monkey.mky_id }}.</b> Each dot represents one day of ethanol intake.
+		The color of the dot indicates the number of bouts during that experiment day.
+		The size of the dot indicates the average ethanol intake per bout for that day, in milliliters.
+		The Y axis is the total ethanol intake for that day, measured in grams of ethanol per kilogram of monkey weight.
+		Each dot is linked; click on a dot to view actual ethanol consumption for that day.
+	</div>
+</div>
+{% if map %}
+	<map name='{{ image.monkey.pk }}'>
+	{% for point in map %}
+		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 5' href="{%  url vip-mtd-graph point.0  %}" target='_blank'>
+	{% endfor %}
+	</map>
+{% endif %}

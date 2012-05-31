@@ -33,8 +33,6 @@ urlpatterns = patterns('matrr.views',
 			template_name='matrr/publications.html',
 			), name='cohort-publications'),
 
-	url(r'^cohort(?P<pk>\d+)/timeline$', cohort_timeline, name='cohort-timeline'),
-
 	url(r'^publications/$',
 		ListView.as_view(
 			queryset=Publication.objects.all().annotate(non_date=Count('pub_date')).order_by('-non_date', '-pub_date'),
@@ -58,8 +56,8 @@ urlpatterns += patterns('matrr.views',
 	url(r'^cohort/$',     cohorts_view_all, name='cohorts'),
 	url(r'^assay/$',     cohorts_view_assay, name='assay'),
 
-	url(r'^cohort/(?P<pk>\d+)/$', 		cohort_details, name='cohort-details'),
-
+	url(r'^cohort/(?P<pk>\d+)/$', 			cohort_details, name='cohort-details'),
+	url(r'^cohort/(?P<pk>\d+)/timeline$', 	cohort_timeline, name='cohort-timeline'),
 	url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey-detail'),
 	url(r'^cohort/(?P<cohort_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list, name='tissue-category'),
 	url(r'^cohort/(?P<cohort_id>\d+)/tissues/$', 								tissue_shop_landing_view, name='tissue-shop-landing'),
@@ -83,8 +81,9 @@ urlpatterns += patterns('matrr.views',
 	url(r'^orders/edit-tissue/(?P<req_rtt_id>\d+)/$', 			order_edit_tissue, name='orders-edit-tissue'),
 	url(r'^orders/delete-tissue/(?P<req_rtt_id>\d+)/$', 		order_delete_tissue, name='orders-delete-tissue'),	
 
-	url(r'^shipping/history/$',									shipping_history, name='shipping-history'),
 	url(r'^shipping/overview/$',								shipping_overview, name='shipping-overview'),
+	url(r'^shipping/history/$',									shipping_history, name='shipping-history'),
+	url(r'^shipping/history/(?P<user_id>\d+)/$',				shipping_history_user, name='shipping-history-user'),
 	url(r'^shipping/creator/(?P<req_request_id>\d+)/$', 		shipment_creator, name='shipment-creator'),
 	url(r'^shipping/detail/(?P<shipment_id>\d+)/$', 			shipment_detail, name='shipment-detail'),
 	url(r'^shipping/detail/(?P<shipment_id>\d+)/manifest/$', 	shipment_manifest_latex, name='shipment-manifest'),
@@ -135,9 +134,11 @@ urlpatterns += patterns('matrr.views',
 	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
 
 	url(r'^tools/etoh/$', tools_etoh, name='tools-etoh'),
+	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/$', tools_cohort_etoh, name='tools-cohort-etoh'),
+	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_etoh_graphs, name='tools-cohort-etoh-graphs'),
+	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/monkey/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
+	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
 
-	url(r'^tools/vip/$', vip_tools, name='vip-tools'),
-	url(r'^tools/vip/graphs$', vip_graphs, name='vip-graphs'),
 	url(r'^tools/vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
 	url(r'^tools/vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
 

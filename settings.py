@@ -70,7 +70,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
 	'django.contrib.staticfiles.finders.FileSystemFinder',
 	'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-	'django.contrib.staticfiles.finders.DefaultStorageFinder',
+#	'django.contrib.staticfiles.finders.DefaultStorageFinder',
 	)
 
 # List of regex URLs which do NOT require user to be logged in.

@@ -126,6 +126,8 @@ VerificationStatus =  Enumeration([
 VIP_IMAGES_LIST = (
 'monkey_bouts_drinks',
 'monkey_bouts_drinks_intraday',
+'monkey_bouts_vol',
+'monkey_errorbox_etoh',
 )
 
 
@@ -472,7 +474,7 @@ class DrinkingExperiment(models.Model):
 	dex_date = models.DateField('Date',
 								help_text='The date this experiment was conducted.')
 	dex_type = models.CharField('Experiment Type', max_length=100,
-								help_text='The type of experiment. (ex. 22 hour free access)')
+								help_text='The type of experiment. (ex. "Open Access")')
 	dex_notes = models.TextField('Notes', blank=True, null=True,
 								 help_text='Use this space to enter anything about the experiment that does not fit in another field.')
 	monkeys = models.ManyToManyField(Monkey, through='MonkeyToDrinkingExperiment')
@@ -577,11 +579,49 @@ class MonkeyToDrinkingExperiment(models.Model):
 	mtd_pct_max_bout_vol_total_etoh = models.FloatField('Max Bout Volume as % of Total Etoh', blank=True, null=True,
 														help_text='Maximum bout volume as a percentage of total ethanol consumed that day')
 
+	# It might be ugly but being able to query this will speed up plotting.cohort_bihourly_etoh_treemap() a LOT
+	mtd_pct_max_bout_vol_total_etoh_hour_0  = models.FloatField('Max Bout in 1st hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_1  = models.FloatField('Max Bout in 2nd hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_2  = models.FloatField('Max Bout in 3rd hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_3  = models.FloatField('Max Bout in 4th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_4  = models.FloatField('Max Bout in 5th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_5  = models.FloatField('Max Bout in 6th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_6  = models.FloatField('Max Bout in 7th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_7  = models.FloatField('Max Bout in 8th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_8  = models.FloatField('Max Bout in 9th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_9  = models.FloatField('Max Bout in 10th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+	mtd_pct_max_bout_vol_total_etoh_hour_10 = models.FloatField('Max Bout in 11th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
+
 	def __unicode__(self):
 		return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey)
 
 	def get_etoh_ratio(self):
 		return self.mtd_etoh_intake * 0.4 / self.mtd_weight
+
+	def populate_max_bout_hours(self):
+		hour_const = 0
+		experiment_len = 22
+
+		block_len = 2
+
+		for hour_start in range(hour_const,hour_const + experiment_len, block_len ):
+			hour_end = hour_start + block_len
+			fraction_start = (hour_start-hour_const)*60*60
+			fraction_end = (hour_end-hour_const)*60*60
+
+			bouts_in_fraction = self.bouts_set.filter(ebt_start_time__gte=fraction_start, ebt_start_time__lte=fraction_end)
+
+			if self.mtd_etoh_intake > 0:
+				try:
+					max_bout = 1.* bouts_in_fraction.order_by('-ebt_volume')[0].ebt_volume / self.mtd_etoh_intake
+				except:
+					max_bout = None
+			else:
+				max_bout = None
+			field_name = "mtd_pct_max_bout_vol_total_etoh_hour_%d" % (hour_start/2)
+			self.__setattr__(field_name, max_bout)
+			self.save()
+
 
 	class Meta:
 		db_table = 'mtd_monkeys_to_drinking_experiments'
@@ -596,6 +636,15 @@ class ExperimentBout(models.Model):
 	ebt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
 	ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
 	ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
+
+	ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True, help_text="Bout's volume as a percentage of total ethanol consumed that day")
+
+	def populate_pct_vol_total_etoh(self, recalculate=False):
+		if recalculate or not self.ebt_pct_vol_total_etoh:
+			_pct = self.ebt_volume / self.mtd.mtd_etoh_intake
+			self.ebt_pct_vol_total_etoh = _pct if _pct > 0 else None
+			self.save()
+
 
 	def clean(self):
 		if self.ebt_end_time < self.ebt_start_time:
@@ -908,8 +957,6 @@ class CohortImage(MATRRImage):
 		super(CohortImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.cohort and self.method and self.title:
 			if not self.image:
-				if self.method == 'cohort_bihourly_etoh_treemap' and not 'dex_type' in self.parameters:
-					return
 				self._construct_filefields()
 
 	def __unicode__(self):
@@ -1170,7 +1217,7 @@ class Request(models.Model, DiffingMixin):
 	)
 	objects = RequestManager()
 	req_request_id = models.AutoField('ID', primary_key=True)
-	#	request_status = models.ForeignKey(RequestStatus, null=False, db_column='rqs_status_id', )
+	parent_request = models.ForeignKey('Request', null=True, editable=False, related_name='revised_request_set')
 	req_status = models.CharField('Request Status', max_length=2, choices=RequestStatus, null=False, blank=False, default=RequestStatus.Cart)
 	cohort = models.ForeignKey(Cohort, null=False, db_column='coh_cohort_id', editable=False, )
 	user = models.ForeignKey(User, null=False, db_column='usr_user_id', editable=False, )
@@ -1283,6 +1330,7 @@ class Request(models.Model, DiffingMixin):
 		revised.req_modified_date = datetime.now()
 		revised.req_status = RequestStatus.Revised
 		revised.req_report_asked = False
+		revised.parent_request = self
 
 		# Duplicate all TissueRequests
 		revised.save() # save() must be called before the forloop and m2m assignment

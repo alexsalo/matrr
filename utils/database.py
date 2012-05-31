@@ -1602,7 +1602,10 @@ def assign_cohort_institutions():
 	cohort.institution = wfu
 	cohort.save()
 
-
+def populate_mtd_fields(queryset=None):
+	qs = queryset if queryset else MonkeyToDrinkingExperiment.objects.all()
+	for mtd in qs:
+		mtd.populate_max_bout_hours()
 
 
 

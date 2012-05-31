@@ -26,12 +26,14 @@ from utils import plotting
 from matrr.decorators import user_owner_test
 #from utils.plotting import monkey_protein
 import urllib
+from utils.plotting import COHORT_ETOH_TOOLS_PLOTS, MONKEY_ETOH_TOOLS_PLOTS
 
 
 def redirect_with_get(url_name, *args, **kwargs):
-	url = reverse(url_name, args = args)
+	url = reverse(url_name, args=args)
 	params = urllib.urlencode(kwargs)
 	return HttpResponseRedirect(url + "?%s" % params)
+
 
 def registration(request):
 	from registration.views import register
@@ -165,14 +167,6 @@ def monkey_detail_view(request, monkey_id):
 
 
 def get_or_create_cart(request, cohort):
-	"""
-	 This function will get the cart for the cohort if it exists.
-	 If it does not exist, it will create a new cart for the cohort.
-	 In the case that the user has a cart open for a different cohort,
-	 this function will return None.  (unless the cart was empty, in which
-	 case it will be deleted.)
-	 """
-
 	# get the user's cart if it already exists
 	if Request.objects.cart().filter(user=request.user.id).count():
 		cart_request = Request.objects.cart().get(user=request.user.id)
@@ -221,15 +215,17 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 	# Upcoming cohort warning
 	if current_cohort.coh_upcoming:
 		import datetime
+
 		today = datetime.date.today()
 		try:
 			necropsy_date = current_cohort.cohort_event_set.filter(event__evt_name="Necropsy Start")[0].cev_date
 			days_to_necropsy = (necropsy_date - today).days
-			if days_to_necropsy >= 6*60:
-				messages.warning(request, "Warning:  Because this cohort has not yet gone to necropsy, we cannot guarantee all tissue from all monkeys will be available for request, due to uncontrollable events (illness, accidental death, etc).  If a requested tissue was approved but is not available after necropsy the user will be notified and the request and its cost will be corrected.  Thank you for your understanding regarding this uncertainty.")
+			if days_to_necropsy >= 6 * 60:
+				messages.warning(request,
+								 "Warning:  Because this cohort has not yet gone to necropsy, we cannot guarantee all tissue from all monkeys will be available for request, due to uncontrollable events (illness, accidental death, etc).  If a requested tissue was approved but is not available after necropsy the user will be notified and the request and its cost will be corrected.  Thank you for your understanding regarding this uncertainty.")
 		except:
-			messages.warning(request, "Warning:  Because this cohort has not yet gone to necropsy, we cannot guarantee all tissue from all monkeys will be available for request, due to uncontrollable events (illness, accidental death, etc).  If a requested tissue was approved but is not available after necropsy the user will be notified and the request and its cost will be corrected.  Thank you for your understanding regarding this uncertainty.")
-
+			messages.warning(request,
+							 "Warning:  Because this cohort has not yet gone to necropsy, we cannot guarantee all tissue from all monkeys will be available for request, due to uncontrollable events (illness, accidental death, etc).  If a requested tissue was approved but is not available after necropsy the user will be notified and the request and its cost will be corrected.  Thank you for your understanding regarding this uncertainty.")
 
 	if request.method != 'POST':
 		# now we need to create the form for the tissue type
@@ -417,7 +413,7 @@ def __notify_mta_uploaded(mta):
 	for admin in mta_admins:
 		recipients = [admin.email]
 		subject = 'User %s has uploaded an MTA form' % mta.user.username
-		body = 	'%s has has uploaded an MTA form.\n' % mta.user.username
+		body = '%s has has uploaded an MTA form.\n' % mta.user.username
 		body += 'This MTA can be downloaded here:  http://gleek.ecs.baylor.edu%s.\n' % mta.mta_file.url
 		body += 'If necessary you can contact %s with the information below.\n\n' % mta.user.username
 		body += "Name: %s %s\nEmail: %s\nPhone: %s \n\n" % (mta.user.first_name, mta.user.last_name, mta.user.email, mta.user.account.phone_number)
@@ -470,6 +466,7 @@ def mta_list(request):
 	formset = MTAValidationFormSet(initial=initial)
 	return render_to_response('matrr/mta_list.html', {'formset': formset, 'mta_list': mta_list}, context_instance=RequestContext(request))
 
+
 def mta_upload(request):
 	# make blank mta instance
 	mta_object = Mta(user=request.user)
@@ -486,11 +483,12 @@ def mta_upload(request):
 				for user in users:
 					recipients = [user.email]
 					subject = 'User %s has requested an MTA form' % account.user.username
-					body = '%s has indicated he/she is not associated with any of the UBMTA signatories and requested an MTA form.\n' \
+					body = '%s has indicated he/she is not associated with any of the UBMTA signatories and requested an MTA form.\n'\
 						   'He/she was told instructions would be provided with the MTA form.  '\
 						   'If you cannot contact %s with the information provided below, please notify the MATRR admins.\n' % (account.user.username, account.user.username)
 					body += "\n\nName: %s %s\nEmail: %s\nPhone: %s" % (account.first_name, account.last_name, account.email, account.phone_number)
-					body += "\n\nIn addition to any other steps, please have %s upload the signed MTA form to MATRR using this link: http://gleek.ecs.baylor.edu%s" % (account.user.username, reverse('mta-upload'))
+					body += "\n\nIn addition to any other steps, please have %s upload the signed MTA form to MATRR using this link: http://gleek.ecs.baylor.edu%s" % (
+					account.user.username, reverse('mta-upload'))
 
 					ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 					if ret > 0:
@@ -599,7 +597,7 @@ def account_mta(request):
 
 			if institution == "Non-UBMTA Institution":
 				return redirect('mta-upload')
-#				messages.info(request, "If your institution is not part of the <acronym>, you must download, sign, scan, and upload a Material Transfer Agreement.  ")
+			#				messages.info(request, "If your institution is not part of the <acronym>, you must download, sign, scan, and upload a Material Transfer Agreement.  ")
 			else:
 				messages.success(request, 'Account Info Saved')
 				return redirect(reverse('account-view'))
@@ -803,56 +801,55 @@ def sort_tissues_and_add_quantity_css_value(tissue_requests):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_overview_price(request, req_request_id):
-	
 	req = get_object_or_404(Request, req_request_id=req_request_id)
-#	est_cost = req.get_total_estimated_cost()
-	
+	#	est_cost = req.get_total_estimated_cost()
+
 	accepted_or_partial = False
 	PriceFormset = modelformset_factory(TissueRequest, fields=['rtt_estimated_cost'], extra=0)
 
 	for tissue_request in req.get_requested_tissues():
 		if tissue_request.get_accepted() != Acceptance.Rejected:
 			accepted_or_partial = True
-			
+
 	if not accepted_or_partial:
 		for tr in req.tissue_request_set.all():
 			tr.rtt_estimated_cost = 0
 			tr.save()
 		return redirect(reverse('review-overview-process', args=[req_request_id]))
-	
+
 	if request.POST:
 		cost_forms = PriceFormset(request.POST)
 		if cost_forms.is_valid():
 			rtts = cost_forms.save()
-#			for cost_form in cost_forms:
-#				print cost_form.cleaned_data['rtt_estimated_cost']
-#				print cost_form.instance.get_estimated_cost()
-#				if cost_form.cleaned_data['rtt_estimated_cost'] != cost_form.instance.get_estimated_cost():
-#					tr = get_object_or_404(TissueRequest, pk = cost_form.instance.pk)
-#					tr.rtt_estimated_cost = cost_form.cleaned_data['rtt_estimated_cost']
-#					print "tr"
-#					print tr.rtt_estimated_cost
-#					tr.save()
-#				cost_form.save()
-#				print cost_form.instance.pk
-#				print req.get_requested_tissues()[0].pk
-#				rtt_id = cost_form.cleaned_data['rtt']
-#				try:
-#					tr = TissueRequest.objects.get(pk=rtt_id)
-#				except:
-#					raise Http404("This page does not exist")
-#				if tr not in req.tissue_request_set.all():
-#					raise Http404("This page does not exist")
-#				tr.rtt_estimated_cost = cost_form.cleaned_data['cost'] 
-#				tr.save()
-#			print "redirect"
-#			print req.get_requested_tissues()[0].get_estimated_cost()
-#			print "reds"
+			#			for cost_form in cost_forms:
+			#				print cost_form.cleaned_data['rtt_estimated_cost']
+			#				print cost_form.instance.get_estimated_cost()
+			#				if cost_form.cleaned_data['rtt_estimated_cost'] != cost_form.instance.get_estimated_cost():
+			#					tr = get_object_or_404(TissueRequest, pk = cost_form.instance.pk)
+			#					tr.rtt_estimated_cost = cost_form.cleaned_data['rtt_estimated_cost']
+			#					print "tr"
+			#					print tr.rtt_estimated_cost
+			#					tr.save()
+			#				cost_form.save()
+			#				print cost_form.instance.pk
+			#				print req.get_requested_tissues()[0].pk
+			#				rtt_id = cost_form.cleaned_data['rtt']
+			#				try:
+			#					tr = TissueRequest.objects.get(pk=rtt_id)
+			#				except:
+			#					raise Http404("This page does not exist")
+			#				if tr not in req.tissue_request_set.all():
+			#					raise Http404("This page does not exist")
+			#				tr.rtt_estimated_cost = cost_form.cleaned_data['cost']
+			#				tr.save()
+			#			print "redirect"
+			#			print req.get_requested_tissues()[0].get_estimated_cost()
+			#			print "reds"
 			return redirect(reverse('review-overview-process', args=[req_request_id]))
 		else:
 			return render_to_response('matrr/review/review_overview_price.html',
-					{'req': req, 'forms': cost_forms },
-					context_instance=RequestContext(request))
+					{'req': req, 'forms': cost_forms},
+									  context_instance=RequestContext(request))
 	else:
 		queryset = req.tissue_request_set.all()
 		accepted_queryset = set()
@@ -865,24 +862,23 @@ def review_overview_price(request, req_request_id):
 			if tr.rtt_estimated_cost is None:
 				tr.rtt_estimated_cost = tr.get_estimated_cost()
 				tr.save()
-		cost_forms = PriceFormset(queryset = quer)
-#		import pdb
-#		pdb.set_trace()
-#		for cost_form in cost_forms.forms:
-#			if cost_form.fields['rtt_estimated_cost'].initial == None:
-#				cost_form.fields['rtt_estimated_cost'].initial = cost_form.instance.get_estimated_cost()
-		
-#		cost_form.fields['cost'].initial = est_cost
+		cost_forms = PriceFormset(queryset=quer)
+		#		import pdb
+		#		pdb.set_trace()
+		#		for cost_form in cost_forms.forms:
+		#			if cost_form.fields['rtt_estimated_cost'].initial == None:
+		#				cost_form.fields['rtt_estimated_cost'].initial = cost_form.instance.get_estimated_cost()
+
+		#		cost_form.fields['cost'].initial = est_cost
 		return render_to_response('matrr/review/review_overview_price.html',
-			{'req': req, 'forms': cost_forms},								
-			context_instance=RequestContext(request))		
-		
-		
-		
+				{'req': req, 'forms': cost_forms},
+								  context_instance=RequestContext(request))
+
+
 @user_passes_test(lambda u: u.has_perm('matrr.view_review_overview'), login_url='/denied/')
 def review_overview(request, req_request_id):
 	# get the request being reviewed
-	req_request = Request.objects.get(req_request_id=req_request_id) # get or 404 ?
+	req_request = get_object_or_404(Request, pk=req_request_id) # get or 404 ?
 	no_monkeys = False
 
 	if req_request.is_evaluated():
@@ -891,7 +887,7 @@ def review_overview(request, req_request_id):
 		back_url = request.META['HTTP_REFERER']
 	else:
 		back_url = ""
-		
+
 	for tr in req_request.tissue_request_set.all():
 		tr.rtt_estimated_cost = None
 		tr.save()
@@ -905,8 +901,8 @@ def review_overview(request, req_request_id):
 			tissue_request_forms.save()
 			#return redirect(reverse('review-overview-process', args=[req_request_id]))
 			# move to price confirmation
-			
-#			req_request.req_estimated_cost = None # discard the manual price, do not use price from previous unsuccessful process attempts
+
+			#			req_request.req_estimated_cost = None # discard the manual price, do not use price from previous unsuccessful process attempts
 			for tr in req_request.tissue_request_set.all():
 				tr.rtt_estimated_cost = None
 				tr.save()
@@ -1009,6 +1005,7 @@ def order_detail(request, req_request_id, edit=False):
 				messages.success(request, "Purchase Order number has been saved.")
 				if not _prev_shippable and req_request.can_be_shipped():  # couldn't be shipped, but now can
 					from matrr.emails import send_shipment_ready_notification
+
 					send_shipment_ready_notification(req_request)
 			else:
 				messages.error(request, "Purchase Order form invalid, please try again.  Please notify a MATRR admin if this message is erroneous.")
@@ -1243,9 +1240,9 @@ def request_review_process(request, req_request_id):
 					if status != RequestStatus.Rejected:
 						outfile = open('/tmp/%s.pdf' % str(req_request.pk), 'wb')
 						process_latex('latex/invoice.tex', {'req_request': req_request,
-																	  'account': req_request.user.account,
-																	  'time': datetime.today(),
-																	  }, outfile=outfile)
+															'account': req_request.user.account,
+															'time': datetime.today(),
+															}, outfile=outfile)
 						outfile.close()
 						email.attach_file(outfile.name)
 					email.send()
@@ -1350,13 +1347,14 @@ def search(request):
 
 			from django.db.models.loading import get_model
 			from settings import PRIVATE_SEARCH_INDEXES, PUBLIC_SEARCH_INDEXES
+
 			SEARCH_INDEXES = PUBLIC_SEARCH_INDEXES
 
 			for key, value in PRIVATE_SEARCH_INDEXES.items():
 				if 'monkey_auth' in key and request.user.has_perm('monkey_view_confidential'):
 					monkey_auth = True
 					SEARCH_INDEXES['monkey'] = value
-#					results['monkeys'] = search_index(terms, SEARCH_INDEXES[key], Monkey)
+				#					results['monkeys'] = search_index(terms, SEARCH_INDEXES[key], Monkey)
 
 			for key, value in SEARCH_INDEXES.items():
 				results[key] = search_index(terms, value[0], get_model('matrr', value[1]))
@@ -1377,11 +1375,19 @@ def search(request):
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_history(request):
 #	Shipped Requests
-	shipped_requests = Request.objects.shipped()
+	shipped_requests = Request.objects.shipped().order_by('-shipments__shp_shipment_date').distinct()
+	recently_shipped = shipped_requests[0:5]
+	users_with_shipments = shipped_requests.values_list('user', flat=True)
+	user_list = User.objects.filter(pk__in=users_with_shipments).order_by('username')
+	user_list = ((user, shipped_requests.filter(user=user).count()) for user in user_list)
+	return render_to_response('matrr/shipping/shipping_history.html', {'recently_shipped': recently_shipped, 'user_list': user_list}, context_instance=RequestContext(request))
 
-	return render_to_response('matrr/shipping/shipping_history.html',
-			{'shipped_requests': shipped_requests,},
-							  context_instance=RequestContext(request))
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+def shipping_history_user(request, user_id):
+	user = get_object_or_404(User, pk=user_id)
+	shipped_requests = Request.objects.shipped().filter(user=user).order_by('-shipments__shp_shipment_date').distinct()
+	return render_to_response('matrr/shipping/shipping_history_user.html', {'user': user, 'shipped_requests': shipped_requests}, context_instance=RequestContext(request))
+
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_overview(request):
@@ -1391,17 +1397,16 @@ def shipping_overview(request):
 		if req_request.is_missing_shipments():
 			accepted_requests |= Request.objects.filter(pk=req_request.pk)
 
-#	Pending Shipments
+		#	Pending Shipments
 	pending_shipments = Shipment.objects.filter(shp_shipment_date=None)
 
-#	Shipped Shipments
+	#	Shipped Shipments
 	shipped_shipments = Shipment.objects.exclude(shp_shipment_date=None).exclude(req_request__req_status=RequestStatus.Shipped)
-
 
 	return render_to_response('matrr/shipping/shipping_overview.html',
 			{'accepted_requests': accepted_requests,
 			 'pending_shipments': pending_shipments,
-			 'shipped_shipments': shipped_shipments,},
+			 'shipped_shipments': shipped_shipments, },
 							  context_instance=RequestContext(request))
 
 
@@ -1426,9 +1431,9 @@ def shipment_creator(request, req_request_id):
 
 	tissue_shipment_form = TissueShipmentForm(acc_rtt_wo_shipment)
 	return render_to_response('matrr/shipping/shipment_creator.html',
-								{'req_request': req_request,
-								 'tissue_shipment_form': tissue_shipment_form},
-								context_instance=RequestContext(request))
+			{'req_request': req_request,
+			 'tissue_shipment_form': tissue_shipment_form},
+							  context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
@@ -1456,10 +1461,10 @@ def shipment_detail(request, shipment_id):
 		if 'ship' in request.POST:
 			if not req_request.can_be_shipped(): # do a sanity check
 				messages.warning(request,
-					"A request can only be shipped if all of the following are true:\
-					 1) the request has been accepted and not yet shipped, \
-					 2) user has submitted a Purchase Order number, \
-					 3) User has submitted a valid MTA.")
+								 "A request can only be shipped if all of the following are true:\
+													  1) the request has been accepted and not yet shipped, \
+													  2) user has submitted a Purchase Order number, \
+													  3) User has submitted a valid MTA.")
 			else:
 				confirm_ship = True
 				messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
@@ -1467,10 +1472,10 @@ def shipment_detail(request, shipment_id):
 		if 'confirm_ship' in request.POST:
 			if not req_request.can_be_shipped(): # do a sanity check
 				messages.warning(request,
-					"A request can only be shipped if all of the following are true:\
-					 1) the request has been accepted and not yet shipped, \
-					 2) user has submitted a Purchase Order number, \
-					 3) User has submitted a valid MTA.")
+								 "A request can only be shipped if all of the following are true:\
+													  1) the request has been accepted and not yet shipped, \
+													  2) user has submitted a Purchase Order number, \
+													  3) User has submitted a valid MTA.")
 			else:
 				messages.success(request, "Shipment #%d for user %s has been shipped." % (shipment.pk, req_request.user.username))
 				shipment.shp_shipment_date = datetime.today()
@@ -1478,6 +1483,7 @@ def shipment_detail(request, shipment_id):
 				shipment.save()
 				if settings.PRODUCTION:
 					from matrr.emails import send_po_manifest_upon_shipment, notify_user_upon_shipment
+
 					send_po_manifest_upon_shipment(shipment)
 					notify_user_upon_shipment(shipment)
 				req_request.ship_request()
@@ -1493,12 +1499,12 @@ def shipment_detail(request, shipment_id):
 			return redirect(reverse('shipping-overview'))
 
 	return render_to_response('matrr/shipping/shipment_details.html', {'req_request': req_request,
-																	 'shipment': shipment,
-																	 'tracking_form': tracking_form,
-																	 'confirm_ship': confirm_ship,
-																	 'confirm_delete_shipment': confirm_delete_shipment,
-																	 'edit': edit,
-																	 'tracking_number': tracking_number}, context_instance=RequestContext(request))
+																	   'shipment': shipment,
+																	   'tracking_form': tracking_form,
+																	   'confirm_ship': confirm_ship,
+																	   'confirm_delete_shipment': confirm_delete_shipment,
+																	   'edit': edit,
+																	   'tracking_number': tracking_number}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
@@ -1601,10 +1607,11 @@ def tissue_verification_export(request, req_request_id):
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
 	return process_latex('latex/tissue_verification.tex',
-														{'tiv_list': tiv_list,
-														 'user': request.user,
-														 'date': datetime.today()},
-														 outfile=response)
+			{'tiv_list': tiv_list,
+			 'user': request.user,
+			 'date': datetime.today()},
+						 outfile=response)
+
 
 def tissue_verification_list(request, req_request_id):
 	if int(req_request_id) is 0:
@@ -1714,7 +1721,7 @@ def tissue_verification_post_shipment(request):
 					   'tissue': tiv.tissue_type,
 					   'notes': tiv.tiv_notes,
 					   'quantity': -1,
-					   'units' : tss.tss_units,
+					   'units': tss.tss_units,
 					   }
 		initial.append(tiv_initial)
 
@@ -1770,7 +1777,7 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 				   'tissue': tiv.tissue_type,
 				   'notes': tiv.tiv_notes,
 				   'amount': amount,
-				   'req_request': req_request,}
+				   'req_request': req_request, }
 	tivform = TissueInventoryVerificationDetailForm(initial=tiv_initial)
 	return render_to_response('matrr/verification/verification_detail.html', {"tivform": tivform, "req_id": req_request_id}, context_instance=RequestContext(request))
 
@@ -1817,6 +1824,7 @@ def __gather_cohort_protein_images(cohort, proteins):
 		images.append(pcimage)
 	return images
 
+
 def tools_landing(request):
 	if request.method == "POST":
 		dataset = request.POST.get('dataset')
@@ -1847,8 +1855,11 @@ def tools_protein(request): # pick a cohort
 
 def tools_cohort_protein(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	monkey_keys = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
+	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
+
 	if request.method == 'POST':
-		subject_select_form = SubjectSelectForm(cohort, data=request.POST)
+		subject_select_form = SubjectSelectForm(monkey_queryset, data=request.POST)
 		if subject_select_form.is_valid():
 			subject = subject_select_form.cleaned_data['subject']
 			if subject == 'monkey':
@@ -1867,12 +1878,12 @@ def tools_cohort_protein(request, cohort_id):
 			else: # assumes subject == 'download'
 				account = request.user.account
 				if account.has_mta():
-					
 					monkey_proteins = MonkeyProtein.objects.filter(monkey__in=cohort.monkey_set.all())
 
 					datafile, isnew = DataFile.objects.get_or_create(account=account, dat_title="%s Protein data" % str(cohort))
 					if isnew:
 						from utils.database import dump_monkey_protein_data
+
 						f = dump_monkey_protein_data(monkey_proteins, '/tmp/%s.csv' % str(datafile))
 
 						datafile.dat_data_file = File(open('/tmp/%s.csv' % str(datafile), 'r'))
@@ -1882,8 +1893,7 @@ def tools_cohort_protein(request, cohort_id):
 						messages.warning(request, "This data file has already been created for you.  It is available to download on your account page.")
 				else:
 					messages.warning(request, "You must have a valid MTA on record to download data.  MTA information can be updated on your account page.")
-	
-	return render_to_response('matrr/tools/protein.html', {'subject_select_form': SubjectSelectForm(cohort)}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/protein.html', {'subject_select_form': SubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
 
 def _verify_monkeys(text_monkeys):
@@ -1896,8 +1906,8 @@ def _verify_monkeys(text_monkeys):
 	else:
 		return list()
 
-def tools_cohort_protein_graphs(request, cohort_id):
 
+def tools_cohort_protein_graphs(request, cohort_id):
 	proteins = None
 	old_post = request.session.get('_old_post')
 	cohort = Cohort.objects.get(pk=cohort_id)
@@ -1924,19 +1934,15 @@ def tools_cohort_protein_graphs(request, cohort_id):
 
 def tools_monkey_protein_graphs(request, cohort_id):
 	proteins = None
-#	old_post = request.session.get('_old_post')
-#	monkey = Monkey.objects.get(pk=monkey_id) if monkey_id else None
+	#	old_post = request.session.get('_old_post')
+	#	monkey = Monkey.objects.get(pk=monkey_id) if monkey_id else None
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
-	
-	context = { 'cohort': cohort}
-	
-	
-	if request.method == 'GET' and 'monkeys' in request.GET and request.method!='POST':
-#		print "jej"
-		print request.GET['monkeys']
+
+	context = {'cohort': cohort}
+
+	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
 		monkeys = _verify_monkeys(request.GET['monkeys'])
 		get_m = list()
-#		print monkeys
 		if monkeys:
 			for m in monkeys.values_list('mky_id', flat=True):
 				get_m.append(`m`)
@@ -1944,18 +1950,15 @@ def tools_monkey_protein_graphs(request, cohort_id):
 			text_monkeys = "-".join(get_m)
 		else:
 			text_monkeys = ""
-#		print "text"
-#		print text_monkeys
-		context['graph_form'] = MonkeyGraphAppearanceForm(text_monkeys)
+		context['graph_form'] = MonkeyProteinGraphAppearanceForm(text_monkeys)
 		context['protein_form'] = ProteinSelectForm()
-	
+
 	elif request.method == 'POST':
-#		post = request.POST if request.POST else old_post
+	#		post = request.POST if request.POST else old_post
 		protein_form = ProteinSelectForm(data=request.POST)
-		graph_form = MonkeyGraphAppearanceForm(data=request.POST)
+		graph_form = MonkeyProteinGraphAppearanceForm(data=request.POST)
 
 		if protein_form.is_valid() and graph_form.is_valid():
-
 			monkeys = _verify_monkeys(graph_form.cleaned_data['monkeys'])
 			yaxis = graph_form.cleaned_data['yaxis_units']
 			data_filter = graph_form.cleaned_data['data_filter']
@@ -1967,23 +1970,22 @@ def tools_monkey_protein_graphs(request, cohort_id):
 				afternoon_reading = True
 			else:
 				afternoon_reading = None
+			mpi = ''
 			if yaxis != 'monkey_protein_value':
 				for mon in monkeys:
-
-					mpis = MonkeyProteinImage.objects.filter(monkey = mon,
-						 method = yaxis,
-#						 proteins = proteins,
-						 parameters = `{'afternoon_reading':afternoon_reading}`)
+					mpis = MonkeyProteinImage.objects.filter(monkey=mon,
+															 method=yaxis,
+															 #						 proteins = proteins,
+															 parameters=`{'afternoon_reading': afternoon_reading}`)
 					mpis = mpis.annotate(count=Count("proteins")).filter(count=len(proteins))
 					for protein in proteins:
-						mpis = mpis.filter(proteins = protein)
-						
-					if len(mpis) == 0:
+						mpis = mpis.filter(proteins=protein)
 
-						mpi = MonkeyProteinImage(monkey = mon,
-					 						method = yaxis,
-					    					parameters = str({'afternoon_reading':afternoon_reading})
-					    					)
+					if len(mpis) == 0:
+						mpi = MonkeyProteinImage(monkey=mon,
+												 method=yaxis,
+												 parameters=str({'afternoon_reading': afternoon_reading})
+						)
 						mpi.save()
 						mpi.proteins.add(*proteins)
 						mpi.save()
@@ -1993,98 +1995,183 @@ def tools_monkey_protein_graphs(request, cohort_id):
 			else:
 				for protein in proteins:
 					for mon in monkeys:
-						mpis = MonkeyProteinImage.objects.filter(monkey = mon,
-						 									method = yaxis,
-						 						 			proteins__in = [protein,],
-						 						 			parameters = `{'afternoon_reading':afternoon_reading}`)
+						mpis = MonkeyProteinImage.objects.filter(monkey=mon,
+																 method=yaxis,
+																 proteins__in=[protein, ],
+																 parameters=`{'afternoon_reading': afternoon_reading}`)
 						if mpis.count() == 0:
-							mpi = MonkeyProteinImage(monkey = mon,
-						 							method = yaxis,
-						 							parameters = `{'afternoon_reading':afternoon_reading}`)
+							mpi = MonkeyProteinImage(monkey=mon,
+													 method=yaxis,
+													 parameters=`{'afternoon_reading': afternoon_reading}`)
 							mpi.save()
 							mpi.proteins.add(protein)
 							mpi.save()
 						if mpis.count() > 0:
 							mpi = mpis[0]
-						
+
 						graphs.append(mpi)
 			context['graphs'] = graphs
 		else:
 			if 'proteins' not in protein_form.data:
-				messages.error(request, "You have to select at least one protein.");
-				
+				messages.error(request, "You have to select at least one protein.")
+
 			if len(graph_form.errors) + len(protein_form.errors) > 1:
 				raise Http404()
 			monkeys = protein_form.data['monkeys']
-	
-		
+
 		context['monkeys'] = monkeys
 		context['graph_form'] = graph_form
-		context['protein_form'] = protein_form	
-		
+		context['protein_form'] = protein_form
+
 	else:
-		raise Http404()			
-			
+		raise Http404()
+
 	return render_to_response('matrr/tools/protein_monkey.html', context, context_instance=RequestContext(request))
-	
-			
-#			if int(monkey_id) != subject_select_form.cleaned_data['subject'].pk:
-#				request.session['_old_post'] = request.POST
-#				return redirect(tools_monkey_protein_graphs, cohort_id, subject_select_form.cleaned_data['subject'].pk)
-#			elif request.session.has_key('_old_post'):
-#				request.session.pop('_old_post')
-#			proteins = protein_form.cleaned_data['proteins']
-#			graph_url = monkey_protein(monkey, proteins, request.user.username)
-#			context['graphs'] = [graph_url]
-#	monkeys_with_protein_data = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey__pk', flat=True).distinct() # for some reason this only returns the pk int
-#	monkeys_with_protein_data = Monkey.objects.filter(pk__in=monkeys_with_protein_data) # so get the queryset of cohorts
 
 
-	
-
-
-@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
-def tools_etoh(request):
-	return redirect('/')
-
-#  VIP tools
-@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
-def vip_tools(request):
-	return render_to_response('matrr/tools/VIP/vip_index.html', {}, context_instance=RequestContext(request))
-
-
-@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
-def vip_graphs(request):
-	if request.POST:
-		for key in plotting.VIP_MONKEY_PLOTS:
-			if key in request.POST:
-				return redirect(reverse('vip-graph-builder', args=[key]))
-		for key in plotting.VIP_COHORT_PLOTS:
-			if key in request.POST:
-				return redirect(reverse('vip-graph-builder', args=[key]))
-		return reverse(vip_graphs) #  this should never be hit.  I dunno how it could be.
+@user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
+def tools_etoh(request): # pick a cohort
+	if request.method == 'POST':
+		cohort_form = CohortSelectForm(data=request.POST)
+		if cohort_form.is_valid():
+			cohort = cohort_form.cleaned_data['subject']
+			return redirect('tools-cohort-etoh', cohort.pk)
 	else:
-		context = {}
-		mky_keys = []
-		coh_keys = []
-		mky_plots = plotting.VIP_MONKEY_PLOTS
-		coh_plots = plotting.VIP_COHORT_PLOTS
-		for key in mky_plots:
-			migs = MonkeyImage.objects.filter(method=key)
-			if migs:
-				mky_keys.append((key, migs[0], mky_plots[key][1]))
-			#else
-		for key in coh_plots:
-			cigs = CohortImage.objects.filter(method=key)
-			if cigs:
-				coh_keys.append((key, cigs[0], coh_plots[key][1]))
-		mky_keys.sort()
-		coh_keys.sort()
-		context['mky_keys'] = mky_keys
-		context['coh_keys'] = coh_keys
-		return render_to_response('matrr/tools/VIP/vip_graphs.html', context, context_instance=RequestContext(request))
+		cohorts_with_protein_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
+		cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
+		cohort_form = CohortSelectForm(cohort_queryset=cohorts_with_protein_data)
+	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 
+@user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
+def tools_cohort_etoh(request, cohort_id):
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	monkey_keys = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
+	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
+
+	if request.method == 'POST':
+		subject_select_form = SubjectSelectForm(monkey_queryset, data=request.POST)
+		if subject_select_form.is_valid():
+			subject = subject_select_form.cleaned_data['subject']
+			if subject == 'monkey':
+				monkeys = subject_select_form.cleaned_data['monkeys']
+				get_m = list()
+				for m in monkeys:
+					get_m.append(`m.mky_id`)
+				get_m = "-".join(get_m)
+				if not monkeys:
+					messages.error(request, "You must select at least one monkey.")
+					return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
+				return redirect_with_get('tools-monkey-etoh', cohort_id, monkeys=get_m)
+			elif subject == 'cohort':
+				return redirect('tools-cohort-etoh-graphs', cohort_id)
+			else: # assumes subject == 'download'
+				messages.warning(request, "Ethanol data download is currently disabled.")
+	mky_ids = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True)
+	monkey_queryset = Monkey.objects.filter(pk__in=mky_ids)
+	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': SubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
+
+
+@user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
+def tools_cohort_etoh_graphs(request, cohort_id):
+	plot_method = ''
+	old_post = {}
+	if '_old_post' in request.session:
+		old_post = request.session.pop('_old_post')
+	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in COHORT_ETOH_TOOLS_PLOTS.items()]
+	cohort = Cohort.objects.get(pk=cohort_id)
+	context = {'cohort': cohort}
+	if request.method == "POST" or old_post:
+		post = request.POST if request.POST else old_post
+		plot_form = PlotSelectForm(plot_choices, data=post)
+		subject_select_form = CohortSelectForm(data=post)
+		experiment_range_form = ExperimentRangeForm(data=post)
+		if plot_form.is_valid() and subject_select_form.is_valid() and experiment_range_form.is_valid():
+			if int(cohort_id) != subject_select_form.cleaned_data['subject'].pk:
+				request.session['_old_post'] = request.POST
+				return redirect(tools_cohort_etoh_graphs, subject_select_form.cleaned_data['subject'].pk)
+
+			from_date = to_date = ''
+			experiment_range = experiment_range_form.cleaned_data['range']
+			if experiment_range == 'custom':
+				from_date = str(experiment_range_form.cleaned_data['from_date'])
+				to_date = str(experiment_range_form.cleaned_data['to_date'])
+				experiment_range = None
+			plot_method = plot_form.cleaned_data['plot_method']
+
+			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date})
+			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=COHORT_ETOH_TOOLS_PLOTS[plot_method][1], parameters=params)
+			context['graph'] = cohort_image
+		else:
+			messages.error(request, plot_form.errors.as_text())
+			messages.error(request, subject_select_form.errors.as_text())
+			messages.error(request, experiment_range_form.errors.as_text())
+	cohorts_with_ethanol_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
+	cohorts_with_ethanol_data = Cohort.objects.filter(pk__in=cohorts_with_ethanol_data) # so get the queryset of cohorts
+
+	context['subject_select_form'] = CohortSelectForm(cohort_queryset=cohorts_with_ethanol_data, horizontal=True, initial={'subject': cohort_id})
+	context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
+	context['experiment_range_form'] = ExperimentRangeForm()
+	return render_to_response('matrr/tools/ethanol_cohort.html', context, context_instance=RequestContext(request))
+
+
+def tools_monkey_etoh_graphs(request, cohort_id):
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	context = {'cohort': cohort}
+	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in MONKEY_ETOH_TOOLS_PLOTS.items()]
+	plot_method = ''
+
+	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
+		monkeys = _verify_monkeys(request.GET['monkeys'])
+		get_m = list()
+		if monkeys:
+			for m in monkeys.values_list('mky_id', flat=True):
+				get_m.append(`m`)
+
+			text_monkeys = "-".join(get_m)
+		else:
+			text_monkeys = ""
+		context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
+		context['experiment_range_form'] = ExperimentRangeForm_monkeys(text_monkeys)
+
+	elif request.method == 'POST':
+		experiment_range_form = ExperimentRangeForm_monkeys(data=request.POST)
+		plot_form = PlotSelectForm(plot_choices, data=request.POST)
+
+		if experiment_range_form.is_valid() and plot_form.is_valid():
+			from_date = to_date = ''
+			experiment_range = experiment_range_form.cleaned_data['range']
+			if experiment_range == 'custom':
+				from_date = str(experiment_range_form.cleaned_data['from_date'])
+				to_date = str(experiment_range_form.cleaned_data['to_date'])
+				experiment_range = None
+
+			monkeys = _verify_monkeys(experiment_range_form.cleaned_data['monkeys'])
+			plot_method = plot_form.cleaned_data['plot_method']
+			title = MONKEY_ETOH_TOOLS_PLOTS[plot_method][1]
+			params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range}
+			graphs = list()
+			for monkey in monkeys:
+				mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, title=title, method=plot_method, parameters=str(params))
+				if is_new:
+					mig.save()
+				graphs.append(mig)
+			context['graphs'] = graphs
+		else:
+			if len(experiment_range_form.errors) + len(plot_form.errors) > 1:
+				raise Http404()
+			monkeys = experiment_range_form.data['monkeys']
+
+		context['monkeys'] = monkeys
+		context['experiment_range_form'] = experiment_range_form
+		context['plot_select_form'] = plot_form
+	else:
+		raise Http404()
+
+	return render_to_response('matrr/tools/ethanol_monkey.html', context, context_instance=RequestContext(request))
+
+
+# TODO: move this view into ethanol tools
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_mtd_graph(request, mtd_id):
 	mtd_image = ''
@@ -2097,8 +2184,7 @@ def vip_mtd_graph(request, mtd_id):
 		)
 	return render_to_response('matrr/tools/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
 
-
-
+# TODO: remove this whole view, move into ethanol tools
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
 def vip_graph_builder(request, method_name):
 	if 'vip-graphs' in request.POST:
@@ -2146,7 +2232,7 @@ def vip_graph_builder(request, method_name):
 	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges},
 							  context_instance=RequestContext(request))
 
-
+# TODO: remove this whole view
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = MonkeySelectForm(data=request.POST, monkey_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
@@ -2183,7 +2269,7 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges, 'matrr_image': matrr_image}
 	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
-
+# TODO: remove this whole view
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
 	subject_form = CohortSelectForm(data=request.POST, cohort_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))

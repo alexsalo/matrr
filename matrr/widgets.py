@@ -12,9 +12,9 @@ import re
 def date_to_padded_int(date):
 	return str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2)
 
-class RadioInputSpecial(RadioInput):
+class RadioInputSpecial_monkey(RadioInput):
 	def __init__(self, name, value, attrs, choice, index):
-		super(RadioInputSpecial, self).__init__(name, value, attrs, choice, index)
+		super(RadioInputSpecial_monkey, self).__init__(name, value, attrs, choice, index)
 		if choice[0] == "monkey":
 			onclick = "javascript:document.getElementById('monkey_fieldset').style.display='block';"
 		else:
@@ -22,19 +22,45 @@ class RadioInputSpecial(RadioInput):
 		self.attrs['onclick'] = onclick
 
 
-class RadioFieldRendererSpecial(RadioFieldRenderer):
-    def __iter__(self):
-        for i, choice in enumerate(self.choices):
-            yield RadioInputSpecial(self.name, self.value, self.attrs.copy(), choice, i)
+class RadioInputSpecial_dates(RadioInput):
+	def __init__(self, name, value, attrs, choice, index):
+		super(RadioInputSpecial_dates, self).__init__(name, value, attrs, choice, index)
+		if "custom" in choice[0].lower():
+			onclick = "javascript:document.getElementById('dates').style.display='block';"
+		else:
+			onclick = "javascript:document.getElementById('dates').style.display='none';"
+		self.attrs['onclick'] = onclick
 
-    def __getitem__(self, idx):
-        choice = self.choices[idx] # Let the IndexError propogate
-        return RadioInputSpecial(self.name, self.value, self.attrs.copy(), choice, idx)
+
+class RadioFieldRendererSpecial_monkey(RadioFieldRenderer):
+	def __iter__(self):
+		for i, choice in enumerate(self.choices):
+			yield RadioInputSpecial_monkey(self.name, self.value, self.attrs.copy(), choice, i)
+
+	def __getitem__(self, idx):
+		choice = self.choices[idx] # Let the IndexError propagate
+		return RadioInputSpecial_monkey(self.name, self.value, self.attrs.copy(), choice, idx)
 
 	def render(self):
 			"""Outputs radios"""
 			radios = [u'%s<br>' % w for w in self]
 			return mark_safe('\n'.join(radios))
+
+
+class RadioFieldRendererSpecial_dates(RadioFieldRenderer):
+	def __iter__(self):
+		for i, choice in enumerate(self.choices):
+			yield RadioInputSpecial_dates(self.name, self.value, self.attrs.copy(), choice, i)
+
+	def __getitem__(self, idx):
+		choice = self.choices[idx] # Let the IndexError propagate
+		return RadioInputSpecial_dates(self.name, self.value, self.attrs.copy(), choice, idx)
+
+	def render(self):
+			"""Outputs radios"""
+			radios = [u'%s<br>' % w for w in self]
+			return mark_safe('\n'.join(radios))
+
 
 class CheckboxSelectMultipleSelectAll(CheckboxSelectMultiple):
 	def __init__(self, attrs=None, choices=()):
@@ -47,7 +73,7 @@ class CheckboxSelectMultipleSelectAll(CheckboxSelectMultiple):
 		output = [u'<fieldset id="monkey_fieldset" style="display:None;">%s<legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (
 		self.media, attrs['id'], name, attrs['id'])]
 #		output.append(u'<ul>')
-		
+
 		str_values = set([force_unicode(v) for v in value])
 		for i, (option_value, option_label) in enumerate(chain(self.choices, choices)):
 			# If an ID attribute was given, add a numeric index as a suffix,
@@ -358,7 +384,9 @@ class DateTimeWidget(forms.widgets.TextInput):
 
 		jsdformat = self.dformat #.replace('%', '%%')
 		cal = calbtn % (settings.STATIC_URL, id, id, jsdformat, id, final_attrs['min_date'], final_attrs['max_date'])
-		a = u'<input%s />%s%s' % (forms.util.flatatt(final_attrs), self.media, cal)
+		a = u"<div class='datetime_widget_id'>"
+		a += u'<input%s />%s%s' % (forms.util.flatatt(final_attrs), self.media, cal)
+		a += u'</div>'
 		return mark_safe(a)
 
 	def value_from_datadict(self, data, files, name):
