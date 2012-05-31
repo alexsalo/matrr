@@ -1,11 +1,11 @@
-from matplotlib import pyplot
+from matplotlib import pyplot, cm
 from django.db.models.aggregates import Sum, Max, Avg
-from matplotlib.patches import Circle
-from matplotlib.ticker import NullLocator
+from matplotlib.patches import Circle, Rectangle
+from matplotlib.ticker import NullLocator, FixedLocator
 import numpy, dateutil, gc, operator, matplotlib
 from numpy.lib.polynomial import poly1d, polyfit
 #from pylab import *
-from scipy import polyfit, polyval
+#from scipy import polyfit, polyval
 from matrr.models import *
 
 ###############  matplotlibrc settings
