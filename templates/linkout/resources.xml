@@ -1,0 +1,30 @@
+<!DOCTYPE LinkSet PUBLIC "-//NLM//DTD LinkOut 1.0//EN" "http://www.ncbi.nlm.nih.gov/projects/linkout/doc/LinkOut.dtd"
+[<!ENTITY icon.url "https://gleek.ecs.baylor.edu/static/images/MATRR_logo.png"> <!ENTITY base.url "https://gleek.ecs.baylor.edu/cohort/">]>
+<LinkSet>
+ {% for cohort in cohorts %}
+ <Link>
+ 
+   <LinkId>{{ forloop.counter }}</LinkId>
+   <ProviderId>8248</ProviderId>
+   <ObjectSelector>
+      <Database>pubmed</Database>
+      <ObjectList>
+      	 {% for pub in cohort.publication_set.all %}
+         <ObjId>{{ pub.pmid }}</ObjId>
+         {% endfor %}
+      </ObjectList>
+   </ObjectSelector>
+   
+   <ObjectUrl>
+      <Base>&base.url;</Base>
+      <Rule>{{ cohort.coh_cohort_id }}</Rule>
+      <UrlName>{{ cohort.coh_cohort_name }}</UrlName>
+    
+      <SubjectType>organism-specific</SubjectType>
+   
+   </ObjectUrl>
+   
+ </Link>
+ {% endfor %}
+
+</LinkSet>
