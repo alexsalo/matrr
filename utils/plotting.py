@@ -864,6 +864,13 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 
 	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
 	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
+	matplotlib.rcParams['figure.subplot.right'] 	= 0.8
+
+	import matplotlib.gridspec as gridspec
+
+
+	gs = gridspec.GridSpec(2, 1,height_ratios=[2,1])
+
 
 	if not isinstance(monkey, Monkey):
 		try:
@@ -900,11 +907,16 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 		return None, 'NO MAP'
 	dr_per_bout =list()
 	bouts = list()
+	bar_size = list() # ??
+	bar_color = list() # max_bout_vol / total intake
+
 
 	for date in dates:
 		de = drinking_experiments.get(drinking_experiment__dex_date=date)
 		bouts.append(de.mtd_etoh_bout)
 		dr_per_bout.append(de.mtd_etoh_drink_bout)
+		bar_size.append(de.mtd_pct_max_bout_vol_total_etoh)
+		bar_color.append(de.mtd_max_bout_vol/de.mtd_etoh_intake)
 
 	xaxis = numpy.array(range(1,len(dr_per_bout)+1))
 	dr_per_bout       = numpy.array(dr_per_bout)
@@ -934,11 +946,17 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 	y_max = max(total_drinks)
-	pyplot.ylim(0,y_max + y_max*0.25) # + % to show circles under the size legend instead of behind it
-	pyplot.xlim(0,len(xaxis) + 1)
+	pyplot.ylim(0-((y_max*1.25)/2),y_max + y_max*0.25) # + % to show circles under the size legend instead of behind it
+	pyplot.xlim(0,len(xaxis) + 2)
+	max_y_int = int(round(y_max*1.25))
+	y_tick_int = int(round(max_y_int/5))
+	ax1.set_yticks(range(0, max_y_int, y_tick_int))
+	ax1.yaxis.get_label().set_position((0,0.6))
 
-	cb = pyplot.colorbar(s)
+#	ax1.yaxis.set_minor_locator(matplotlib.ticker.NullLocator())
 
+	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
+	cb = pyplot.colorbar(s, cax=cax)
 	cb.set_label("Number of bouts")
 
 #    size legend
@@ -969,6 +987,37 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
 	datapoint_map = zip(ids, xcoords, ycoords)
 
+#	barplot
+	ax3 = fig.add_subplot(313)
+	
+	ax3.get_yaxis().tick_right()
+	ax3.yaxis.set_label_position('right')
+	ax3.set_ylabel("Max Bout Volume as % of Total Etoh")
+	ax3.set_autoscalex_on(False)
+	
+	import matplotlib.colors as colors
+	import matplotlib.cm as cm
+	
+	# normalize colors to use full range of colormap
+	norm = colors.normalize(min(bar_color), max(bar_color))
+	
+	facecolors = list()
+	
+	for bar, x, color_value in zip(bar_size, xaxis, bar_color):
+		pyplot.bar(x, bar, color=cm.jet(norm(color_value)))
+		facecolors.append(cm.jet(norm(color_value)))
+		
+	ax3.set_xlim(0,len(xaxis) + 2)
+	
+	# create a collection that we will use in colorbox
+	col = matplotlib.collections.Collection(facecolors=facecolors, norm = norm, cmap = cm.jet)
+	col.set_array(bar_color)
+	
+	# colorbor for bar plot
+	cax = fig.add_axes((0.88, 0.09, 0.03, 0.25))
+	cb = pyplot.colorbar(col, cax=cax)
+	cb.set_label("Max Bout Vol / Total Intake")
+	
 	return fig, datapoint_map
 
 def monkey_bouts_drinks_intraday(mtd=None):
@@ -1243,7 +1292,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 		# colors are stored in LineCollections differently, as an RBGA array(list())
 		eb20_colors = errorbar[2][0].get_colors()[0] # get_colors()[0] gets rid of an unneeded list
 		eb20_colors[3] = monkey_alpha
-		errorbar[2][0].set_color(eb20_colors)
+		error[2][0].set_color(eb20_colors)
 
 		pyplot.setp(bp['boxes'], linewidth=3, color='gray')
 		pyplot.setp(bp['whiskers'], linewidth=3, color='gray')
