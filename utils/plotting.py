@@ -1611,8 +1611,7 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 
 
 # Dictionary of ethanol monkey plots VIPs can customize
-MONKEY_ETOH_TOOLS_PLOTS = {	'monkey_bouts_drinks': 			(monkey_bouts_drinks, '(Deprecated) Detailed Ethanol Intake Pattern'),
-							'monkey_bouts_vol': 			(monkey_bouts_vol, 'Detailed Ethanol Intake Pattern'),
+MONKEY_ETOH_TOOLS_PLOTS = { 'monkey_bouts_vol': 			(monkey_bouts_vol, 'Detailed Ethanol Intake Pattern'),
 							}
 # Dictionary of protein monkey plots VIPs can customize
 MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': 			(monkey_protein_stdev, "Protein Value (standard deviation)"),
@@ -1633,7 +1632,7 @@ MONKEY_PLOTS.update({
 				'monkey_errorbox_weight': (monkey_errorbox_weight, 							'Monkey Weight'),
 				'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, 				"Intra-day Ethanol Intake"),
 				'monkey_errorbox_etoh': (monkey_errorbox_etoh, 								'Monkey Ethanol Intake'),
-
+				'monkey_bouts_drinks': (monkey_bouts_drinks, 								'(Deprecated) Detailed Ethanol Intake Pattern'),
 })
 
 def create_plots(cohorts=True, monkeys=True, delete=False):
