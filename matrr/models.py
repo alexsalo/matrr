@@ -763,6 +763,7 @@ class MATRRImage(models.Model):
 	method = models.CharField('Method', blank=True, null=False, max_length=150, help_text='The method used to generate this image.')
 	parameters = models.CharField('Parameters', blank=True, null=False, max_length=1500, editable=False, default='defaults', help_text="The method's parameters used to generate this image.")
 	image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
+	svg_image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
 	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
 	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
 
@@ -771,10 +772,10 @@ class MATRRImage(models.Model):
 	def _construct_filefields(self, mpl_figure, data_map, *args, **kwargs):
 		# export the image and thumbnail to a temp folder and save them to the self.ImageFields
 		if mpl_figure:
-			image, thumbnail = self._draw_image(mpl_figure)
+			image, thumbnail, svg_image_path = self._draw_image(mpl_figure)
 			self.image = File(open(image, 'r'))
 			self.thumbnail = File(open(thumbnail, 'r'))
-
+			self.svg_image = File(open(svg_image_path, 'r'))
 			# generate the html fragment for the image and save it
 			if data_map != "NO MAP":
 				self.save() # must be called before html frag gets built, or else the image paths are still in /tmp
@@ -797,13 +798,15 @@ class MATRRImage(models.Model):
 		filename = '/tmp/' + str(self)
 		image_path = filename + '.png'
 		thumb_path = filename + '-thumb.jpg'
+		svg_image_path = filename + '.svg'
 		mpl_figure.savefig(image_path, dpi=DPI)
+		mpl_figure.savefig(svg_image_path, format='svg', dpi=DPI)
 
 		image_file = Image.open(image_path)
 		image_file.thumbnail(self.thumbnail_size, Image.ANTIALIAS)
 		image_file.save(thumb_path)
 
-		return image_path, thumb_path
+		return image_path, thumb_path, svg_image_path
 
 	def _build_html_fragment(self, data_map):
 		from django.template.context import Context
@@ -813,9 +816,13 @@ class MATRRImage(models.Model):
 
 		t = get_template('html_fragments/%s.html' % self.method) # templates will be named identical to the plotting method
 		c = Context({'map': data_map, 'image': self, 'bigWidth': self.image.width * 1.1, 'bigHeight': self.image.height * 1.1})
-
+#		print self.__class__.name
+		foot_t = get_template('html_fragments/fragment_foot.html')
+		foot_c = Context({'html_fragment': str(self).replace(" ", "_").replace('(', "").replace(")",""), 'class': self.__class__.__name__, 'imageID': self.pk})
+		
 		html_fragment = open(fragment_path, 'w+')
 		html_fragment.write(str(t.render(c)))
+		html_fragment.write(str(foot_t.render(foot_c)))
 		html_fragment.flush()
 		html_fragment.close()
 		return fragment_path
