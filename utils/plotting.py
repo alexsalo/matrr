@@ -3,9 +3,8 @@ from django.db.models.aggregates import Sum, Max, Avg
 from matplotlib.patches import Circle, Rectangle
 from matplotlib.ticker import NullLocator, FixedLocator
 import numpy, dateutil, gc, operator, matplotlib
-from numpy.lib.polynomial import poly1d, polyfit
 #from pylab import *
-#from scipy import polyfit, polyval
+from numpy import polyfit, polyval
 from matrr.models import *
 
 ###############  matplotlibrc settings
@@ -1183,10 +1182,9 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	pyplot.setp(ax2, xticklabels=bout_labels)
 
 #	regression line
-#	fit = polyfit(xaxis, g_per_kg_consumed ,3)
-##	fit_fn = poly1d(fit) # fit_fn is now a function which takes in x and returns an estimate for y
-#	xr=polyval(fit, xaxis)
-#	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
+	fit = polyfit(xaxis, g_per_kg_consumed ,3)
+	xr=polyval(fit, xaxis)
+	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
 	zipped = numpy.vstack(zip(xaxis, g_per_kg_consumed))
 	coordinates = ax1.transData.transform(zipped)
@@ -1611,8 +1609,7 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 
 
 # Dictionary of ethanol monkey plots VIPs can customize
-MONKEY_ETOH_TOOLS_PLOTS = {	'monkey_bouts_drinks': 			(monkey_bouts_drinks, '(Deprecated) Detailed Ethanol Intake Pattern'),
-							'monkey_bouts_vol': 			(monkey_bouts_vol, 'Detailed Ethanol Intake Pattern'),
+MONKEY_ETOH_TOOLS_PLOTS = { 'monkey_bouts_vol': 			(monkey_bouts_vol, 'Detailed Ethanol Intake Pattern'),
 							}
 # Dictionary of protein monkey plots VIPs can customize
 MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': 			(monkey_protein_stdev, "Protein Value (standard deviation)"),
@@ -1633,7 +1630,7 @@ MONKEY_PLOTS.update({
 				'monkey_errorbox_weight': (monkey_errorbox_weight, 							'Monkey Weight'),
 				'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, 				"Intra-day Ethanol Intake"),
 				'monkey_errorbox_etoh': (monkey_errorbox_etoh, 								'Monkey Ethanol Intake'),
-
+				'monkey_bouts_drinks': (monkey_bouts_drinks, 								'(Deprecated) Detailed Ethanol Intake Pattern'),
 })
 
 def create_plots(cohorts=True, monkeys=True, delete=False):
