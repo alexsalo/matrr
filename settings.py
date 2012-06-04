@@ -27,7 +27,7 @@ if getpass.getuser().lower() == 'root':
 	if DEVELOPMENT:
 		os.environ['HOME'] = "/web/www/matrr-dev"	
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Cairo')
 DATABASES = {
 		'default': {
 			'ENGINE': 'django.db.backends.postgresql_psycopg2',

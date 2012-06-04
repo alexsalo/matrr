@@ -1,7 +1,11 @@
-<div style='width: {{ bigWidth }}px; margin:auto; padding: 20px'>
+<div style='width: {{ bigWidth|add:"60" }}px; margin:auto; padding: 20px'>
 	<center>{{ image.title }}</center>
-	<div style='height: {{ image.image.height }}; width: {{ image.image.width }}'>
-		<img src="{{ image.image.url }}"><br>
+</div>
+<div>
+	<center>
+		<img src="{{ image.image.url }}" width="{{ bigWidth }}px"><br>	
+	</center>
+</div>
+<div style='width: {{ bigWidth }}px; margin:auto; margin: 0px 40px 40px 40px'>
 		<b>Water Intake for Monkey {{ image.monkey.mky_id }}.</b> The green line represents the water intake for this individual monkey on the indicated date. The underlying box plot represents the water intake amounts of the comparison cohort for that date.
-	</div>
 </div>
