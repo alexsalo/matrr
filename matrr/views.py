@@ -2429,7 +2429,6 @@ def _fetch_resources(uri, rel):
 		path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
 	elif uri.startswith(settings.STATIC_URL):
 		path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
-	print path
 	return path		
 
 import matrr.models as mmodels
