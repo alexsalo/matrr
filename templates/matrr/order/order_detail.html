@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<div class='large-headline'>
+	<div class='large-headline' xmlns="http://www.w3.org/1999/html">
 		{% block title %}{% if edit %}Edit Order{% else %}Order Detail{% endif %}{% endblock %}
 	</div>
 
@@ -82,13 +82,12 @@
 	{% endif %}
 	{% if edit %}
 		<div class="messages">
-			<div class="info">
-				You cannot add new tissues to a revised order. Instead, create a new order to request additional tissues.
-			</div>
+			<div class="warning">A Revised order is just your draft, <strong>it has to be checked out (submitted).</strong> Only then can the MATRR team process it.</div>
 		</div>
-
 		<div class="messages">
-			<div class="warning">A Revised order is just your draft, <strong>it has to be checked out (submitted).</strong> Only then MATRR team will be able to process it.</div>
+			<div class="info">
+				For instructions on how to revise previous requests, see our <u><a href="/faq/#ReviseRequest">FAQ page.</a></u>
+			</div>
 		</div>
 	{% endif %}
 	<div style='margin-top: 20px;'>
