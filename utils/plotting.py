@@ -1291,7 +1291,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 		# colors are stored in LineCollections differently, as an RBGA array(list())
 		eb20_colors = errorbar[2][0].get_colors()[0] # get_colors()[0] gets rid of an unneeded list
 		eb20_colors[3] = monkey_alpha
-		error[2][0].set_color(eb20_colors)
+		errorbar[2][0].set_color(eb20_colors)
 
 		pyplot.setp(bp['boxes'], linewidth=3, color='gray')
 		pyplot.setp(bp['whiskers'], linewidth=3, color='gray')
