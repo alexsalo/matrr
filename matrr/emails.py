@@ -76,3 +76,24 @@ def notify_user_upon_shipment(shp_shipment):
 	outfile.close()
 	email.attach_file(outfile.name)
 	email.send()
+
+def send_jim_hippocampus_notification(req_request):
+	if not isinstance(req_request, Request):
+		req_request = Request.objects.get(pk=req_request)
+	jim = User.objects.get(username='jdaunais')
+	matrr = User.objects.get(username='matrr_admin')
+
+	subject = 'Yo dude, user %s requested a HIPPOCAMPUS' % req_request.user
+	body =  'Hey Jim,\n'
+	body += "This is just a frendly remainder that sumone rekwested a hippocampus, which in some way requires your attenshun.\n\n"
+	body += 'http://gleek.ecs.baylor.edu%s\n' % reverse('review-overview', args=[req_request.pk])
+	body += 'This message is very, extremely automated.  Have a nice day!\n\n'
+	body += 'Sincerely,\n'
+	body += 'MATRR'
+
+	if settings.PRODUCTION:
+		ret = send_mail(subject, body, matrr.email, recipient_list=[jim,], fail_silently=False)
+		if ret > 0:
+			print "%s Hippocampus notification sent to %s." % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), jim.username)
+
+
