@@ -805,4 +805,6 @@ td#avail2 {
     padding-left: 5px;
     padding-right: 5px;
 }
-
+.fragmentfoot{
+    width: 800.0px; margin:auto; text-align:right;
+}

@@ -2398,4 +2398,45 @@ def raw_data_upload(request):
 		form = RawDataUploadForm()
 	return render_to_response('upload_forms/raw_data_upload.html', {'form': form}, context_instance=RequestContext(request))
 
+import cStringIO as StringIO
+import ho.pisa as pisa
 
+def create_pdf_fragment(request):
+	if request.method == 'GET':
+		fragment_filename = request.GET['html']
+		htmlfile = os.path.join(settings.MEDIA_ROOT, os.path.join('matrr_images/fragments/',fragment_filename))
+		try:
+			with open(htmlfile, 'r') as f:
+				html = f.read()
+		except:
+			raise Http404()
+		result = StringIO.StringIO()
+
+		pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), dest=result, link_callback=_fetch_resources,
+							 )
+		if not pdf.err:
+			
+			resp =  HttpResponse(result.getvalue(), mimetype='application/pdf')
+			resp['Content-Disposition'] = 'attachment; filename=%s' % fragment_filename.replace("html", "pdf")
+			return resp
+		raise Http404()
+	else:
+		raise Http404()
+
+def _fetch_resources(uri, rel):
+
+	if uri.startswith(settings.MEDIA_URL):
+		path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
+	elif uri.startswith(settings.STATIC_URL):
+		path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+	return path		
+
+import matrr.models as mmodels
+def create_svg_fragment(request, klass, imageID):
+	im = get_object_or_404(getattr(mmodels, klass), pk=imageID)
+	if not isinstance(im, MATRRImage):
+		raise Http404()
+	image_data = open(os.path.join(settings.MEDIA_ROOT, im.svg_image.name), "rb").read()
+	resp = HttpResponse(image_data, mimetype="image/svg+xml")
+	resp['Content-Disposition'] = 'attachment; filename=%s' % (str(im) + '.svg')
+	return resp
