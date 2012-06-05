@@ -1,3 +1,4 @@
+from datetime import timedelta
 from matplotlib import pyplot, cm
 from django.db.models.aggregates import Sum, Max, Avg
 from matplotlib.patches import Circle, Rectangle
