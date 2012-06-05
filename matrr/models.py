@@ -787,7 +787,6 @@ class MATRRImage(models.Model):
 		else:
 			self.delete()
 
-
 	def _plot_picker(self):
 		#  This needs to be overridden by subclasses
 		return
@@ -840,6 +839,9 @@ class MATRRImage(models.Model):
 		# You should override this method too
 		return "%s.(%s)" % (self.title, 'MATRRImage')
 
+	def populate_svg(self):
+		return
+
 	class Meta:
 		abstract = True
 
@@ -873,10 +875,10 @@ class MTDImage(MATRRImage):
 
 		return PLOTS[self.method][0]
 
-	def save(self, *args, **kwargs):
+	def save(self, force_render=False, *args, **kwargs):
 		super(MTDImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.monkey_to_drinking_experiment and self.method and self.title:
-			if not self.image:
+			if not self.image or force_render:
 				self._construct_filefields()
 
 	def __unicode__(self):
@@ -915,10 +917,10 @@ class MonkeyImage(MATRRImage):
 
 		return PLOTS[self.method][0]
 
-	def save(self, *args, **kwargs):
+	def save(self, force_render=False, *args, **kwargs):
 		super(MonkeyImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.monkey and self.method and self.title:
-			if not self.image:
+			if not self.image or force_render:
 				self._construct_filefields()
 
 	def __unicode__(self):
@@ -960,10 +962,10 @@ class CohortImage(MATRRImage):
 
 		return PLOTS[self.method][0]
 
-	def save(self, *args, **kwargs):
+	def save(self, force_render=False, *args, **kwargs):
 		super(CohortImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.cohort and self.method and self.title:
-			if not self.image:
+			if not self.image or force_render:
 				self._construct_filefields()
 
 	def __unicode__(self):
@@ -999,10 +1001,10 @@ class CohortProteinImage(MATRRImage):
 
 		return PLOTS[self.method][0]
 
-	def save(self, *args, **kwargs):
+	def save(self, force_render=False, *args, **kwargs):
 		super(CohortProteinImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.cohort and self.protein:
-			if not self.image:
+			if not self.image or force_render:
 				self.method = 'cohort_protein_boxplot'
 				self.title = '%s : %s' % (str(self.cohort), str(self.protein.pro_abbrev))
 				self._construct_filefields()
@@ -1044,10 +1046,10 @@ class MonkeyProteinImage(MATRRImage):
 
 		return PLOTS[self.method][0]
 
-	def save(self, *args, **kwargs):
+	def save(self, force_render=False, *args, **kwargs):
 		super(MonkeyProteinImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
-		if self.monkey and self.proteins.all().count():
-			if self.method and not self.image:
+		if self.monkey and self.proteins.all().count() and self.method:
+			if not self.image or force_render:
 				self.title = '%s : %s' % (str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbrev',flat=True)))
 				self._construct_filefields()
 
