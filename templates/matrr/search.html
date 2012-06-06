@@ -1,12 +1,16 @@
 {% extends 'base.html' %}
 
 {% block title %}
-	Results for: {{ terms }}
+	{% if terms %}
+		Results for: {{ terms }}
+	{% else %}
+		Full Text Search
+	{% endif %}
 {% endblock %}
 
 {% block content %}
 
-	<div class='large-headline'>Advanced Search</div>
+	<div class='large-headline'>Full Text Search</div>
 
 	<div style='margin: auto'>
 		<form action='' method='post'>

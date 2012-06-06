@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}
+	Advanced Search
+{% endblock %}
+{% block extra_js %}
+	<script type="text/javascript" src="/static/js/toggle-visibility.js"></script>
+{% endblock %}
+
+{% block content %}
+
+	<div class='large-headline'>Advanced Search</div>
+
+	<div style='margin: auto'>
+		<form action='' method='post'>
+			{% csrf_token %}
+			<div>
+				<a onclick="javascript:toggle_visibility('proteins');">Proteins</a>
+				<br>
+				<div id='proteins' class=hidden>
+					{{ protein_select_form.proteins }}
+				</div>
+				<div style='width=20%;float:left;'>{{ advanced_form.sex }}</div><div style='width:20%; float:right;'>{{ advanced_form.species }}</div>
+				<div class=clearfix></div>
+				<button type='submit' name='submit' class="blockLinkCheckoutButton">Search</button>
+			</div>
+		</form>
+		<div class=clearfix></div>
+		{% if num_results != None %}
+			<div class='headline'>
+				{{ num_results }} results.
+			</div>
+		{% endif %}
+		<div class='margin'>
+			{% if num_results %}
+				{% include 'matrr/pagination.html' with object_list=results %}
+				<div class="mini-headline">Monkeys</div>
+				<table class='common_center'>
+					<tr>
+						{% if monkey_auth %}
+							<th>Real Name</th>{% endif %}
+						<th>Monkey ID</th>
+						<th>Cohort name</th>
+						<th>Sex</th>
+						<th>Birthdate</th>
+						<th>Weight</th>
+						<th>Test Group</th>
+					</tr>
+					{% for monkey in results.object_list %}
+						<tr>
+							{% if monkey_auth %}
+								<td>{{ monkey.mky_name }}</td>
+							{% endif %}
+							<td>
+								<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id%}"
+								   target="_blank">
+									{{ monkey.mky_id }}
+									<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8'
+										 style="vertical-align: text-top">
+								</a>
+							</td>
+							<td>{{ monkey.cohort.coh_cohort_name }}</td>
+							<td>{{ monkey.mky_gender }}</td>
+							<td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
+							<td>{{ monkey.mky_weight }}</td>
+							<td>
+								{% if monkey.mky_drinking %}
+									Ethanol
+									{% else %}{% if monkey.mky_housing_control %}
+										Housing Control
+									{% else %}
+										Control
+									{% endif %}{% endif %}
+							</td>
+						</tr>
+					{% endfor %}
+				</table>
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}

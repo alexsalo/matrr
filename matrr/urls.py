@@ -49,6 +49,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^(?P<static_page>privacy|data|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', pages_view),  #  These are non-dynamic pages. Mostly text/html.
 	url(r'^contact_us/$', contact_us),
 	url(r'^search/?$', search, name='search'),
+	url(r'^advanced_search/?$', advanced_search, name='advanced-search'),
 
 	#  Monkey/Cohort/Tissue display views
 	url(r'^available/$', 	cohorts_view_available, name='available'),

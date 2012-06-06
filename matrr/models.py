@@ -211,6 +211,7 @@ class EventType(models.Model):
 
 
 class Cohort(models.Model):
+	SPECIES = (('Rhesus', 'Rhesus'), ('Cyno', 'Cynomolgus'), ('Vervet', 'Vervet'))
 	coh_cohort_id = models.AutoField('ID', primary_key=True)
 	coh_cohort_name = models.CharField('Name', max_length=100, unique=True, null=False,
 									   help_text='Please enter the cohort\'s name')

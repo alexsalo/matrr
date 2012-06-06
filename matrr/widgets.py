@@ -32,6 +32,16 @@ class RadioInputSpecial_dates(RadioInput):
 		self.attrs['onclick'] = onclick
 
 
+class RadioInputSpecial_proteins(RadioInput):
+	def __init__(self, name, value, attrs, choice, index):
+		super(RadioInputSpecial_proteins, self).__init__(name, value, attrs, choice, index)
+		if "protein" in choice[0].lower():
+			onclick = "javascript:document.getElementById('proteins').style.display='block';"
+		else:
+			onclick = "javascript:document.getElementById('proteins').style.display='none';"
+		self.attrs['onclick'] = onclick
+
+
 class RadioFieldRendererSpecial_monkey(RadioFieldRenderer):
 	def __iter__(self):
 		for i, choice in enumerate(self.choices):
@@ -55,6 +65,21 @@ class RadioFieldRendererSpecial_dates(RadioFieldRenderer):
 	def __getitem__(self, idx):
 		choice = self.choices[idx] # Let the IndexError propagate
 		return RadioInputSpecial_dates(self.name, self.value, self.attrs.copy(), choice, idx)
+
+	def render(self):
+			"""Outputs radios"""
+			radios = [u'%s<br>' % w for w in self]
+			return mark_safe('\n'.join(radios))
+
+
+class RadioFieldRendererSpecial_proteins(RadioFieldRenderer):
+	def __iter__(self):
+		for i, choice in enumerate(self.choices):
+			yield RadioInputSpecial_proteins(self.name, self.value, self.attrs.copy(), choice, i)
+
+	def __getitem__(self, idx):
+		choice = self.choices[idx] # Let the IndexError propagate
+		return RadioInputSpecial_proteins(self.name, self.value, self.attrs.copy(), choice, idx)
 
 	def render(self):
 			"""Outputs radios"""

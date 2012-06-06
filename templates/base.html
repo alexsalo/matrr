@@ -78,9 +78,9 @@
 				</ul>
 
 				<ul>
-					<li class='top'>
-						<a href='{% url search %}'>Search</a>
-					</li>
+					<li class='top'><a href='{% url search %}'>Search</a></li>
+					<li class='drop-down'><a href='{% url advanced-search %}'>Advanced Search</a></li>
+
 				</ul>
 
 				{% if user.is_authenticated and user_is_verified %}
