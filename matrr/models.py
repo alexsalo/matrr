@@ -817,7 +817,8 @@ class MATRRImage(models.Model):
 		c = Context({'map': data_map, 'image': self, 'bigWidth': self.image.width * 1.1, 'bigHeight': self.image.height * 1.1})
 #		print self.__class__.name
 		foot_t = get_template('html_fragments/fragment_foot.html')
-		foot_c = Context({'html_fragment': str(self).replace(" ", "_").replace('(', "").replace(")",""), 'class': self.__class__.__name__, 'imageID': self.pk})
+		foot_c = Context({'html_fragment': str(self).replace(" ", "_").replace('(', "").replace(")",""),
+						 'class': self.__class__.__name__, 'imageID': self.pk})
 		
 		html_fragment = open(fragment_path, 'w+')
 		html_fragment.write(str(t.render(c)))
@@ -2171,6 +2172,12 @@ def request_post_save(**kwargs):
 																tissue_request=tissue_request)
 				tv.save()
 
+		#  Kathy wants an email sent to Jim whenever someone requests a Hippocampus
+		hippocampus = TissueType.objects.get(tst_tissue_name='Hippocampus').pk
+		tissues = req_request.tissue_request_set.all().values_list('tissue_type', flat=True)
+		if hippocampus in tissues:
+			from matrr.emails import send_jim_hippocampus_notification
+			send_jim_hippocampus_notification(req_request)
 	# For Accepted and Partially accepted Requests
 	if previous_status == RequestStatus.Submitted\
 	and (current_status == RequestStatus.Accepted or current_status == RequestStatus.Partially):
