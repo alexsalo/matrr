@@ -818,7 +818,8 @@ class MATRRImage(models.Model):
 		c = Context({'map': data_map, 'image': self, 'bigWidth': self.image.width * 1.1, 'bigHeight': self.image.height * 1.1})
 #		print self.__class__.name
 		foot_t = get_template('html_fragments/fragment_foot.html')
-		foot_c = Context({'html_fragment': str(self).replace(" ", "_").replace('(', "").replace(")",""), 'class': self.__class__.__name__, 'imageID': self.pk})
+		foot_c = Context({'html_fragment': str(self).replace(" ", "_").replace('(', "").replace(")",""),
+						 'class': self.__class__.__name__, 'imageID': self.pk})
 		
 		html_fragment = open(fragment_path, 'w+')
 		html_fragment.write(str(t.render(c)))
