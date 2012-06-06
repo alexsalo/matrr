@@ -1,3 +1,4 @@
+from datetime import timedelta
 from matplotlib import pyplot, cm
 from django.db.models.aggregates import Sum, Max, Avg
 from matplotlib.patches import Circle, Rectangle
@@ -1182,9 +1183,9 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	pyplot.setp(ax2, xticklabels=bout_labels)
 
 #	regression line
-#	fit = polyfit(xaxis, g_per_kg_consumed ,3)
-#	xr=polyval(fit, xaxis)
-#	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
+	fit = polyfit(xaxis, g_per_kg_consumed ,3)
+	xr=polyval(fit, xaxis)
+	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
 	zipped = numpy.vstack(zip(xaxis, g_per_kg_consumed))
 	coordinates = ax1.transData.transform(zipped)
@@ -1290,7 +1291,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 		# colors are stored in LineCollections differently, as an RBGA array(list())
 		eb20_colors = errorbar[2][0].get_colors()[0] # get_colors()[0] gets rid of an unneeded list
 		eb20_colors[3] = monkey_alpha
-		error[2][0].set_color(eb20_colors)
+		errorbar[2][0].set_color(eb20_colors)
 
 		pyplot.setp(bp['boxes'], linewidth=3, color='gray')
 		pyplot.setp(bp['whiskers'], linewidth=3, color='gray')
