@@ -21,6 +21,7 @@
 	<link rel="shortcut icon" href="{{ STATIC_URL }}images/matrr_favicon.ico"/>
 	<title>{% block title %}{% endblock %}</title>
 
+	{% if PRODUCTION %}
 	<!-- google analytics -->
 	<script type="text/javascript">
 
@@ -35,6 +36,7 @@
 		})();
 	</script>
 	<!-- /google analytics -->
+	{% endif %}
 </head>
 
 <body>
