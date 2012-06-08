@@ -1373,48 +1373,18 @@ def search(request):
 
 
 def advanced_search(request):
-	advanced_form = AdvancedSearchForm()
-	protein_select_form = ProteinSelectForm()
-	num_results = None
 	monkey_auth = request.user.has_perm('monkey_view_confidential')
+	protein_form = ProteinSelectForm(columns=1)
 
-	monkeys = Monkey.objects.none()
-	if request.method == 'POST':
-		advanced_form = AdvancedSearchForm(request.POST)
-		protein_select_form = ProteinSelectForm(data=request.POST)
-		if advanced_form.is_valid():
-			sex = advanced_form.cleaned_data['sex']
-			species = advanced_form.cleaned_data['species']
-			if sex and species:
-				monkeys = Monkey.objects.filter(mky_gender__in=sex, cohort__coh_species__in=species).order_by('cohort')
-			else:
-				q_object = Q(mky_gender__in=sex)
-				q_object |= Q(cohort__coh_species__in=species)
-				monkeys = Monkey.objects.filter(q_object)
-		if protein_select_form.is_valid():
-			proteins = protein_select_form.cleaned_data['proteins']
-			mpis = MonkeyProtein.objects.filter(protein__in=proteins)
-			mpis = mpis.exclude(mpn_stdev__lt=1)
-			mpi_monkeys = mpis.values_list('monkey', flat=True)
-			monkeys = monkeys.filter(mky_id__in=mpi_monkeys)
-
-	num_results = monkeys.count()
-	paginator = Paginator(monkeys, 250)
-	try:
-		page = int(request.GET.get('page', '1'))
-	except ValueError:
-		page = 1
-	try:
-		results = paginator.page(page)
-	except (EmptyPage, InvalidPage):
-		results = paginator.page(paginator.num_pages)
+	results = Monkey.objects.all()
+	mpns = MonkeyProtein.objects.filter(monkey__in=results).exclude(mpn_stdev__lt=1)
+	for mky in results:
+		mky.mpns =  mpns.filter(monkey=mky).values_list('protein__pro_abbrev', flat=True).distinct()
 
 	return render_to_response('matrr/advanced_search.html',
 			{'results': results,
-			 'num_results': num_results,
 			 'monkey_auth': monkey_auth,
-			 'advanced_form': advanced_form,
-			 'protein_select_form': protein_select_form},
+			 'protein_form': protein_form},
 							  context_instance=RequestContext(request))
 
 

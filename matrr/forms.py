@@ -661,12 +661,19 @@ class MonkeySelectForm(Form):
 
 
 class ProteinSelectForm(Form):
-	def __init__(self, protein_queryset=None, *args, **kwargs):
+	def __init__(self, protein_queryset=None, columns=3, *args, **kwargs):
 		super(ProteinSelectForm, self).__init__(*args, **kwargs)
 		queryset = protein_queryset if protein_queryset else Protein.objects.all()
-		self.fields['proteins'] = ModelMultipleChoiceField(queryset=queryset, widget=CheckboxSelectMultiple_columns(columns=3))
+		self.fields['proteins'] = ModelMultipleChoiceField(queryset=queryset, widget=CheckboxSelectMultiple_columns(columns=columns))
 		self.fields['proteins'].label = "Protein"
 		self.fields['proteins'].help_text = "Select proteins to display"
+
+
+class ProteinSelectForm_advSearch(ProteinSelectForm):
+	def __init__(self, protein_queryset=None, columns=3, *args, **kwargs):
+		super(ProteinSelectForm_advSearch, self).__init__(*args, **kwargs)
+		queryset = protein_queryset if protein_queryset else Protein.objects.all()
+		self.fields['proteins'] = ModelMultipleChoiceField(queryset=queryset, widget=CheckboxSelectMultiple_advSearch(columns=columns))
 
 
 class MonkeyProteinGraphAppearanceForm(Form):
