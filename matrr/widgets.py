@@ -537,9 +537,7 @@ class CheckboxSelectMultiple_proteinAdvSearch(forms.CheckboxSelectMultiple):
 		final_attrs = self.build_attrs(attrs, name=name, onclick="javascript:updateTRToShow()")
 		output = [u'<table style="width=80%"><tr>']
 		# Normalize to strings
-#		str_values = set([force_unicode(v) for v in value])
 		for i, protein in enumerate(self.queryset):
-			str_values = [protein.pro_abbrev]
 			option_label = str(protein)
 			if i % self.columns is 0:
 				output.append(u'</tr>')
@@ -552,8 +550,7 @@ class CheckboxSelectMultiple_proteinAdvSearch(forms.CheckboxSelectMultiple):
 			else:
 				label_for = ''
 
-			#<label for="id_species_0"><input onclick="javascript:updateTRToShow()" type="checkbox" name="species" value="Rhesus" id="id_species_0" /> Rhesus</label>
-			cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
+			cb = CheckboxInput(final_attrs, check_test=False)
 			option_value = force_unicode(protein.pro_abbrev)
 			rendered_cb = cb.render(name, option_value)
 			option_label = conditional_escape(force_unicode(option_label))
