@@ -327,6 +327,12 @@ class Monkey(models.Model):
 	def __unicode__(self):
 		return str(self.mky_id)
 
+	def sex(self):
+		if self.mky_gender == 'M':
+			return u'Male'
+		if self.mky_gender == 'F':
+			return u'Female'
+
 	def has_protein_data(self):
 		if MonkeyProtein.objects.filter(monkey=self):
 			return True

@@ -21,8 +21,8 @@
 				<div class=headline><a onclick="javascript:toggle_visibility('sex');">Sex</a></div>
 				<div id='sex' class=''>
 					<ul>
-						<li><label for="id_sex_0"><input onclick="javascript:updateTRToShow()" type="checkbox" name=sex value=M id="id_sex_0" /> Male</label></li>
-						<li><label for="id_sex_1"><input onclick="javascript:updateTRToShow()" type="checkbox" name=sex value=F id="id_sex_1" /> Female</label></li>
+						<li><label for="id_sex_0"><input onclick="javascript:updateTRToShow()" type="checkbox" name=sex value=Male id="id_sex_0" /> Male</label></li>
+						<li><label for="id_sex_1"><input onclick="javascript:updateTRToShow()" type="checkbox" name=sex value=Female id="id_sex_1" /> Female</label></li>
 					</ul>
 				</div>
 				<div class=headline><a onclick="javascript:toggle_visibility('species');">Species</a></div>
@@ -58,7 +58,7 @@
 							<th>Test Group</th>
 						</tr>
 						{% for monkey in results %}
-							<tr id="monkey_{{ monkey.pk }}"  class="_{{ monkey.mky_gender }}_{{ monkey.cohort.coh_species }}{% for pro in monkey.mpns %}_{{ pro }}{% endfor %} hidden">
+							<tr id="monkey_{{ monkey.pk }}"  class="_{{ monkey.sex }}_{{ monkey.cohort.coh_species }}{% for pro in monkey.mpns %}_{{ pro }}{% endfor %} hidden">
 								{% if monkey_auth %}
 									<td>{{ monkey.mky_name }}</td>
 								{% endif %}
