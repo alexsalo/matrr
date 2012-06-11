@@ -2130,7 +2130,7 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 	context['experiment_range_form'] = ExperimentRangeForm()
 	return render_to_response('matrr/tools/ethanol_cohort.html', context, context_instance=RequestContext(request))
 
-
+@user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_monkey_etoh_graphs(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
 	context = {'cohort': cohort}
@@ -2344,6 +2344,8 @@ def sendfile(request, id):
 	files.append((r, 'cod_file'))
 	r = MonkeyImage.objects.filter(thumbnail=id)
 	files.append((r, 'thumbnail'))
+	r = MonkeyImage.objects.filter(svg_image=id)
+#	files.append((r, 'svg_image'))
 	r = MonkeyImage.objects.filter(image=id)
 	files.append((r, 'image'))
 	r = MonkeyImage.objects.filter(html_fragment=id)
@@ -2354,22 +2356,30 @@ def sendfile(request, id):
 	files.append((r, 'image'))
 	r = CohortImage.objects.filter(html_fragment=id)
 	files.append((r, 'html_fragment'))
+	r = CohortImage.objects.filter(svg_image=id)
+#	files.append((r, 'svg_image'))
 	r = MTDImage.objects.filter(thumbnail=id)
 	files.append((r, 'thumbnail'))
 	r = MTDImage.objects.filter(image=id)
 	files.append((r, 'image'))
 	r = MTDImage.objects.filter(html_fragment=id)
 	files.append((r, 'html_fragment'))
+	r = MTDImage.objects.filter(svg_image=id)
+#	files.append((r, 'svg_image'))
 	r = DataFile.objects.filter(dat_data_file=id)
 	files.append((r, 'dat_data_file'))
 	r = CohortProteinImage.objects.filter(image=id)
 	files.append((r, 'image'))
 	r = CohortProteinImage.objects.filter(thumbnail=id)
 	files.append((r, 'thumbnail'))
+	r = CohortProteinImage.objects.filter(svg_image=id)
+#	files.append((r, 'svg_image'))
 	r = MonkeyProteinImage.objects.filter(image=id)
 	files.append((r, 'image'))
 	r = MonkeyProteinImage.objects.filter(thumbnail=id)
 	files.append((r, 'thumbnail'))
+	r = MonkeyProteinImage.objects.filter(svg_image=id)
+#	files.append((r, 'svg_image'))
 
 	#	this will work for all listed files
 	file = None
@@ -2420,7 +2430,15 @@ import ho.pisa as pisa
 def create_pdf_fragment(request):
 	if request.method == 'GET':
 		fragment_filename = request.GET['html']
-		htmlfile = os.path.join(settings.MEDIA_ROOT, os.path.join('matrr_images/fragments/',fragment_filename))
+		htmlfile = os.path.join('matrr_images/fragments/',fragment_filename)
+		
+#		this is ugly, but we do not have to repeat code
+#		if user does not have permissions, send file will raise Http404()
+#		so this is all just about permission check
+		sendfile(request, htmlfile)
+		
+		
+		htmlfile = os.path.join(settings.MEDIA_ROOT,htmlfile)
 		try:
 			with open(htmlfile, 'r') as f:
 				html = f.read()
@@ -2445,12 +2463,15 @@ def _fetch_resources(uri, rel):
 		path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
 	elif uri.startswith(settings.STATIC_URL):
 		path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+
 	return path		
 
 import matrr.models as mmodels
 def create_svg_fragment(request, klass, imageID):
 	im = get_object_or_404(getattr(mmodels, klass), pk=imageID)
 	if not isinstance(im, MATRRImage):
+		raise Http404()
+	if not im.verify_user_access_to_file(request.user):
 		raise Http404()
 	image_data = open(os.path.join(settings.MEDIA_ROOT, im.svg_image.name), "rb").read()
 	resp = HttpResponse(image_data, mimetype="image/svg+xml")
