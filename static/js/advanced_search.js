@@ -37,25 +37,29 @@ function collectTRToShowOrHide(show_or_hide) {
 	var boxes = getSelectedCheckboxes();
 	var sexes = [];
 	var species = [];
+	var proteins = [];
 	for(var cb=0; cb<boxes.length; cb++){
 		if(boxes[cb].name == 'sex')
 			sexes.push("_".concat(boxes[cb].value));
 		if(boxes[cb].name == 'species')
 			species.push("_".concat(boxes[cb].value));
+		if(boxes[cb].name == 'proteins')
+			proteins.push("_".concat(boxes[cb].value));
 	}
 
 	var toShow = [];
 	var toHide = [];
+	var proteins_selected = proteins.length != 0;
 	for(var tr= 0; tr< monkey_trs.length; tr++){
 		var mky = monkey_trs[tr];
 		var display_sex = false;
 		var display_species = false;
+		var display_protein = false;
 		if(sexes.length > 0)
 			for(var s=0; s<sexes.length; s++){
 				if(mky.className.indexOf(sexes[s]) != -1)
 					display_sex = true;
 			}
-
 		if(species.length > 0)
 			for(var i=0; i<species.length; i++){
 				if(mky.className.indexOf(species[i]) != -1)
@@ -63,7 +67,20 @@ function collectTRToShowOrHide(show_or_hide) {
 						display_species = true;
 					}
 			}
+		if(proteins.length > 0)
+
+			for(var p=0; p<proteins.length; p++){
+				if(mky.className.indexOf(proteins[p]) != -1)
+					display_protein = true;
+			}
+
+		var _show = false;
 		if(display_sex && display_species)
+			_show = true;
+		if (proteins_selected)
+			_show = display_protein && _show;
+
+		if(_show)
 			toShow.push(mky.id);
 		else
 			toHide.push(mky.id);

@@ -521,22 +521,26 @@ class CheckboxSelectMultiple_columns(forms.CheckboxSelectMultiple):
 		output.append(u'</tr></table>')
 		return mark_safe(u'\n'.join(output))
 
-class CheckboxSelectMultiple_advSearch(forms.CheckboxSelectMultiple):
+class CheckboxSelectMultiple_proteinAdvSearch(forms.CheckboxSelectMultiple):
 	""" this widget creates a table of checkboxes, 1 checkbox per <td>, and n <td>'s per <tr>, where n is the columns kwarg.'
 		however, it will assign the inputs' value= to the protein's abbrev.
 	"""
-	def __init__(self, columns=3, *args, **kwargs):
+	def __init__(self, columns=3, queryset=None, *args, **kwargs):
 		super(CheckboxSelectMultiple, self).__init__(*args, **kwargs)
 		self.columns = columns
+		self.queryset = queryset
 
 	def render(self, name, value, attrs=None, choices=()):
+		name = 'proteins'
 		if value is None: value = []
 		has_id = attrs and 'id' in attrs
-		final_attrs = self.build_attrs(attrs, name=name)
+		final_attrs = self.build_attrs(attrs, name=name, onclick="javascript:updateTRToShow()")
 		output = [u'<table style="width=80%"><tr>']
 		# Normalize to strings
-		str_values = set([force_unicode(v) for v in value])
-		for i, (option_value, option_label) in enumerate(chain(self.choices, choices)):
+#		str_values = set([force_unicode(v) for v in value])
+		for i, protein in enumerate(self.queryset):
+			str_values = [protein.pro_abbrev]
+			option_label = str(protein)
 			if i % self.columns is 0:
 				output.append(u'</tr>')
 				output.append(u'<tr>')
@@ -548,8 +552,9 @@ class CheckboxSelectMultiple_advSearch(forms.CheckboxSelectMultiple):
 			else:
 				label_for = ''
 
+			#<label for="id_species_0"><input onclick="javascript:updateTRToShow()" type="checkbox" name="species" value="Rhesus" id="id_species_0" /> Rhesus</label>
 			cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
-			option_value = force_unicode(option_value)
+			option_value = force_unicode(protein.pro_abbrev)
 			rendered_cb = cb.render(name, option_value)
 			option_label = conditional_escape(force_unicode(option_label))
 			output.append(u'<td><label%s>%s %s</label></td>' % (label_for, rendered_cb, option_label))

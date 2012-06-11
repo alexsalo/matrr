@@ -1374,7 +1374,7 @@ def search(request):
 
 def advanced_search(request):
 	monkey_auth = request.user.has_perm('monkey_view_confidential')
-	protein_form = ProteinSelectForm(columns=1)
+	protein_form = ProteinSelectForm_advSearch(columns=1)
 
 	results = Monkey.objects.all()
 	mpns = MonkeyProtein.objects.filter(monkey__in=results).exclude(mpn_stdev__lt=1)
