@@ -26,8 +26,9 @@ if getpass.getuser().lower() == 'root':
 		os.environ['HOME'] = "/web/www/matrr-prod"
 	if DEVELOPMENT:
 		os.environ['HOME'] = "/web/www/matrr-dev"	
-import matplotlib
-matplotlib.use('Cairo')
+if GLEEK:
+	import matplotlib
+	matplotlib.use('Cairo')
 DATABASES = {
 		'default': {
 			'ENGINE': 'django.db.backends.postgresql_psycopg2',
