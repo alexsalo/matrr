@@ -17,7 +17,10 @@
 		<form class=left action='' method='post' style='max-width: 25%'>
 			{% csrf_token %}
 				<div class=headline><a onclick="javascript:toggle_visibility('proteins');">Proteins</a></div>
-				<div id='proteins' class="hidden">{{ protein_form.proteins }}</div>
+				<div id='proteins' class="hidden">
+					<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in any of the selected proteins.</div>
+					{{ protein_form.proteins }}
+				</div>
 				<div class=headline><a onclick="javascript:toggle_visibility('sex');">Sex</a></div>
 				<div id='sex' class=''>
 					<ul>
@@ -36,7 +39,7 @@
 				<div class=clearfix></div>
 				<br>
 		</form>
-		<div class="right" style='max-width:75%'>
+		<div class="left" style='max-width:75%'>
 			<div class=clearfix></div>
 			{% if num_results != None %}
 				<div class='headline'>
@@ -51,10 +54,8 @@
 							{% if monkey_auth %}
 								<th>Real Name</th>{% endif %}
 							<th>Monkey ID</th>
-							<th>Cohort name</th>
+							<th>Cohort</th>
 							<th>Sex</th>
-							<th>Birthdate</th>
-							<th>Weight</th>
 							<th>Test Group</th>
 						</tr>
 						{% for monkey in results %}
@@ -63,17 +64,18 @@
 									<td>{{ monkey.mky_name }}</td>
 								{% endif %}
 								<td>
-									<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id%}"
-									   target="_blank">
-										{{ monkey.mky_id }}
-										<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8'
-											 style="vertical-align: text-top">
+									<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id%}" target="_blank">
+									{{ monkey.mky_id }}
+									<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
 									</a>
 								</td>
-								<td>{{ monkey.cohort.coh_cohort_name }}</td>
+								<td>
+									<a href="{% url cohort-details monkey.cohort.pk %}" target='_blank'>
+									{{ monkey.cohort.coh_cohort_name }}
+									<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8'style="vertical-align: text-top">
+									</a>
+								</td>
 								<td>{{ monkey.mky_gender }}</td>
-								<td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
-								<td>{{ monkey.mky_weight }}</td>
 								<td>
 									{% if monkey.mky_drinking %}
 										Ethanol

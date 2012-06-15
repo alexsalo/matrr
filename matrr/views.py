@@ -1376,7 +1376,7 @@ def advanced_search(request):
 	monkey_auth = request.user.has_perm('monkey_view_confidential')
 	protein_form = ProteinSelectForm_advSearch(columns=1)
 
-	results = Monkey.objects.all()
+	results = Monkey.objects.all().order_by('cohort__coh_cohort_name', 'pk')
 	mpns = MonkeyProtein.objects.filter(monkey__in=results).exclude(mpn_stdev__lt=1)
 	for mky in results:
 		mky.mpns =  mpns.filter(monkey=mky).values_list('protein__pro_abbrev', flat=True).distinct()
