@@ -2,32 +2,31 @@
 import os
 path = os.path.dirname(os.path.realpath(__file__))
 
-DEBUG = False
-#DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+TEMPLATE_DEBUG = DEBUG = False
+#TEMPLATE_DEBUG = DEBUG = True
 
 ADMINS = (
-# ('Your Name', 'your_email@example.com'),
+('matrr_admin', 'matrr_gleek@gmail.com'),
 )
 GLEEK = DEVELOPMENT = PRODUCTION = False
 
 if path == '/web/www/matrr-prod':
-	PRODUCTION = True
-	
+	PRODUCTION = GLEEK = True
 elif path == '/web/www/matrr-dev':
 	DEVELOPMENT = GLEEK = True
 else:
 	DEVELOPMENT = True
 
-#if PRODUCTION or GLEEK:
 import getpass
 if getpass.getuser().lower() == 'root':
 	if PRODUCTION:
 		os.environ['HOME'] = "/web/www/matrr-prod"
 	if DEVELOPMENT:
 		os.environ['HOME'] = "/web/www/matrr-dev"	
-import matplotlib
-matplotlib.use('Cairo')
+if GLEEK:
+	import matplotlib
+	matplotlib.use('Cairo')
+
 DATABASES = {
 		'default': {
 			'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -104,10 +103,9 @@ MIDDLEWARE_CLASSES = (
 	'django.contrib.messages.middleware.MessageMiddleware',
 	'django.middleware.transaction.TransactionMiddleware',
 
-#	'matrr.middleware.LoginRequiredMiddleware',
-#	'matrr.middleware.RequireLoginMiddleware'
 	'matrr.middleware.EnforceLoginMiddleware',
 	)
+
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -149,6 +147,7 @@ INSTALLED_APPS = (
 		'django.contrib.admin',
 		# Uncomment the next line to enable admin documentation:
 		'django.contrib.admindocs',
+
 		'matrr',
 		# django-registration installed by EJB - 3.16.11
 		'registration',

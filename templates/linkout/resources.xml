@@ -1,5 +1,5 @@
 <!DOCTYPE LinkSet PUBLIC "-//NLM//DTD LinkOut 1.0//EN" "http://www.ncbi.nlm.nih.gov/projects/linkout/doc/LinkOut.dtd"
-[<!ENTITY icon.url "https://gleek.ecs.baylor.edu/static/images/MATRR_logo.png"> <!ENTITY base.url "https://gleek.ecs.baylor.edu/cohort/">]>
+[<!ENTITY icon.url "http://gleek.ecs.baylor.edu/static/images/MATRR_logo_small.png"> <!ENTITY base.url "https://gleek.ecs.baylor.edu/cohort/">]>
 <LinkSet>
  {% for cohort in cohorts %}
  <Link>

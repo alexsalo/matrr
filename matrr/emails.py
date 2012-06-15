@@ -9,11 +9,8 @@ from django.core.mail import send_mail
 from matrr.models import Request, User, Shipment
 
 
-def send_shipment_ready_notification(req_request):
-	if not isinstance(req_request, Request):
-		req_request = Request.objects.get(pk=req_request)
-
-	if 'assay' in req_request.cohort.coh_cohort_name.lower():
+def send_shipment_ready_notification(assay_ready=False):
+	if assay_ready:
 		users = [User.objects.get(username='jdaunais'), User.objects.get(username='adaven')]
 	else:
 		users = User.objects.filter(is_staff=True).exclude(username='garyjmurray')
@@ -22,9 +19,9 @@ def send_shipment_ready_notification(req_request):
 		email = user.email
 		recipients = list()
 		recipients.append(email)
-		subject = 'Request is ready to ship for user %s' % req_request.user
-		body =  'Click here to see request details, download shipping manifest and update MATRR once shipped.\n'
-		body += 'http://gleek.ecs.baylor.edu%s\n' % reverse('shipment-creator', args=[req_request.pk])
+		subject = 'Request is ready to ship'
+		body =  'Click here to see the shipping overview page.\n'
+		body += 'http://gleek.ecs.baylor.edu%s\n' % reverse('shipping-overview')
 		body += 'Please, do not respond. This is an automated message.\n'
 
 		if settings.PRODUCTION:
