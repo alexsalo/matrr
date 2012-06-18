@@ -657,6 +657,14 @@ table#change-history tbody th {
     width: 100%;
     min-width: 760px;
     padding: 0;
+	background-color: #cc11cc
+}
+
+#container-gleek {
+    position: relative;
+    width: 100%;
+    min-width: 760px;
+    padding: 0;
 	background-color: #11cc11
 }
 

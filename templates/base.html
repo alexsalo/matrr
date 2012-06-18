@@ -51,7 +51,11 @@
 {% if PRODUCTION %}
 	<div class='header'>
 {% else %}
-	<div class='header-dev'>
+	{% if GLEEK %}
+	<div id="container-gleek">
+	{% else %}
+	<div id="container-dev">
+	{% endif %}
 {% endif %}
 <div class='header-content clearfix'>
 	<div class='left'>
