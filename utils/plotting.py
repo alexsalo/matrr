@@ -1787,8 +1787,9 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 
 
 # Dictionary of ethanol monkey plots VIPs can customize
-MONKEY_ETOH_TOOLS_PLOTS = { 'monkey_bouts_vol': 			(monkey_bouts_vol, 'Detailed Ethanol Intake Pattern'),
-							'monkey_first_max_bout': 			(monkey_first_max_bout, 'First Bout and Max Bout Details'),
+MONKEY_ETOH_TOOLS_PLOTS = { 'monkey_bouts_vol': 			(monkey_bouts_vol, 'Ethanol Consumption Pattern'),
+							'monkey_first_max_bout': 		(monkey_first_max_bout, 'First Bout and Max Bout Details'),
+							'monkey_bouts_drinks': 			(monkey_bouts_drinks, 'Detailed Drinking Pattern'),
 }
 # Dictionary of protein monkey plots VIPs can customize
 MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': 			(monkey_protein_stdev, "Protein Value (standard deviation)"),
