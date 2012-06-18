@@ -916,7 +916,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 		bouts.append(de.mtd_etoh_bout)
 		dr_per_bout.append(de.mtd_etoh_drink_bout)
 		bar_size.append(de.mtd_pct_max_bout_vol_total_etoh)
-		bar_color.append(de.mtd_max_bout_vol/de.mtd_etoh_intake)
+		bar_color.append(de.mtd_max_bout_length)
 
 	xaxis = numpy.array(range(1,len(dr_per_bout)+1))
 	dr_per_bout       = numpy.array(dr_per_bout)
@@ -1011,7 +1011,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	# colorbor for bar plot
 	cax = fig.add_axes((0.88, 0.09, 0.03, 0.25))
 	cb = pyplot.colorbar(col, cax=cax)
-	cb.set_label("Max Bout Vol / Total Intake")
+	cb.set_label("Max Bout Length")
 	
 	return fig, datapoint_map
 
