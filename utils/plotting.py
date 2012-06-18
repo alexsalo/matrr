@@ -999,7 +999,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	facecolors = list()
 	
 	for bar, x, color_value in zip(bar_size, xaxis, bar_color):
-		pyplot.bar(x, bar, color=cm.jet(norm(color_value)))
+		pyplot.bar(x, bar, color=cm.jet(norm(color_value)),  edgecolor='none')
 		facecolors.append(cm.jet(norm(color_value)))
 		
 	ax3.set_xlim(0,len(xaxis) + 2)
