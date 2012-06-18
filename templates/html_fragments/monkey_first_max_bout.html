@@ -1,0 +1,25 @@
+<div style='width: {{ bigWidth|add:"60" }}px; margin:auto; padding: 20px'>
+	<center>{{ image.title }}</center>
+</div>
+<div>
+	<center>
+		<img src="{{ image.image.url }}" width="{{ bigWidth }}px" ismap usemap="#{{ image.monkey.pk }}"><br>	
+	</center>
+</div>
+<div style='width: {{ bigWidth }}px; margin:auto; margin: 0px 40px 40px 40px'>
+		<b>Detailed drinking pattern for {{ image.monkey.mky_id }}.</b> Each dot and bar represents one day of ethanol intake.
+		The scatter plot Y axis is the volume of ethanol intake during the maximum bout of the day, in milliliters.
+		The scatter plot color indicates maximum bout's volume as a percentage of the day's total ethanol intake.
+		The scatter plot size indicates the length, in seconds, of the maximum volume bout.
+		The bar plot Y axis is the volume of the first bout of the day, in milliliters.
+		The bar plot color indicates the first bout's volume as a percentage of the day's total ethanol intake.
+		The shaded region, if present, indicates the ethanol induction period.
+</div>
+<!--{% if map %}
+	<map name='{{ image.monkey.pk }}'>
+	{% for point in map %}
+		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 5' href="{%  url vip-mtd-graph point.0  %}" target='_blank'>
+	{% endfor %}
+	</map>
+{% endif %}
+-->

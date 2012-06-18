@@ -1286,7 +1286,7 @@ def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type=''
 	s= ax1.scatter(xaxis, max_bout_vol, c=max_bout_percent, s=rescaled_bouts, alpha=.6)
 
 	y_max = max_bout_vol.max()
-	if len(induction_days) != len(xaxis):
+	if len(induction_days) and len(induction_days) != len(xaxis):
 		ax1.bar(induction_days.min(), y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
 	ax1.set_ylabel("Maximum Bout Volume")
@@ -1788,7 +1788,8 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 
 # Dictionary of ethanol monkey plots VIPs can customize
 MONKEY_ETOH_TOOLS_PLOTS = { 'monkey_bouts_vol': 			(monkey_bouts_vol, 'Detailed Ethanol Intake Pattern'),
-							}
+							'monkey_first_max_bout': 			(monkey_first_max_bout, 'First Bout and Max Bout Details'),
+}
 # Dictionary of protein monkey plots VIPs can customize
 MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': 			(monkey_protein_stdev, "Protein Value (standard deviation)"),
 							  'monkey_protein_pctdev': 			(monkey_protein_pctdev, "Protein Value (percent deviation)"),
@@ -1808,7 +1809,7 @@ MONKEY_PLOTS.update({
 				'monkey_errorbox_weight': (monkey_errorbox_weight, 							'Monkey Weight'),
 				'monkey_bouts_drinks_intraday': (monkey_bouts_drinks_intraday, 				"Intra-day Ethanol Intake"),
 				'monkey_errorbox_etoh': (monkey_errorbox_etoh, 								'Monkey Ethanol Intake'),
-				'monkey_bouts_drinks': (monkey_bouts_drinks, 								'(Deprecated) Detailed Ethanol Intake Pattern'),
+				'monkey_bouts_drinks': (monkey_bouts_drinks, 								'Detailed Drink Pattern'),
 })
 
 def create_plots(cohorts=True, monkeys=True, delete=False):
