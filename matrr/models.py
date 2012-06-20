@@ -126,6 +126,7 @@ VerificationStatus =  Enumeration([
 VIP_IMAGES_LIST = (
 'monkey_bouts_drinks',
 'monkey_bouts_drinks_intraday',
+'monkey_first_max_bout',
 'monkey_bouts_vol',
 'monkey_errorbox_etoh',
 )
