@@ -373,7 +373,7 @@ class Mta(models.Model):
 	def verify_user_access_to_file(self, user):
 		if self.user == user:
 			return True
-		if user.has_perm('view_mta_file'):
+		if user.has_perm('matrr.view_mta_file'):
 			return True
 		return False
 
@@ -750,7 +750,7 @@ class NecropsySummary(models.Model):
 
 class VIPQuerySet(models.query.QuerySet):
 	def vip_filter(self, user):
-		if user.has_perm('view_vip_images'):
+		if user.has_perm('matrr.view_vip_images'):
 			return self
 		else:
 			return self.exclude(method__in=VIP_IMAGES_LIST)
@@ -838,7 +838,7 @@ class MATRRImage(models.Model):
 
 	def verify_user_access_to_file(self, user):
 		if self.method in VIP_IMAGES_LIST:
-			return user.is_authenticated() and user.account.verified and user.has_perm('view_vip_images')
+			return user.is_authenticated() and user.account.verified and user.has_perm('matrr.view_vip_images')
 		return user.is_authenticated() and user.account.verified
 
 	def frag(self):
@@ -1279,7 +1279,7 @@ class Request(models.Model, DiffingMixin):
 	def verify_user_access_to_file(self, user):
 		if self.user == user:
 			return True
-		if user.has_perm('view_experimental_plan'):
+		if user.has_perm('matrr.view_experimental_plan'):
 			return True
 		return False
 
@@ -1512,7 +1512,7 @@ class ResearchUpdate(models.Model):
 	def verify_user_access_to_file(self, user):
 		if self.request.user == user:
 			return True
-		if user.has_perm('view_rud_file'):
+		if user.has_perm('matrr.view_rud_file'):
 			return True
 		return False
 
