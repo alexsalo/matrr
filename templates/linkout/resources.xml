@@ -20,8 +20,6 @@
       <Rule>{{ cohort.coh_cohort_id }}</Rule>
       <UrlName>{{ cohort.coh_cohort_name }}</UrlName>
     
-      <SubjectType>organism-specific</SubjectType>
-   
    </ObjectUrl>
    
  </Link>
