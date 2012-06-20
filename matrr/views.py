@@ -982,7 +982,7 @@ def orders_list(request):
 							  context_instance=RequestContext(request))
 
 
-@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user or u.has_perm('change_shipment'), arg_name='req_request_id', redirect_url='/denied/')
+@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user or u.has_perm('matrr.change_shipment'), arg_name='req_request_id', redirect_url='/denied/')
 def order_detail(request, req_request_id, edit=False):
 	# get the request
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -1351,7 +1351,7 @@ def search(request):
 			SEARCH_INDEXES = PUBLIC_SEARCH_INDEXES
 
 			for key, value in PRIVATE_SEARCH_INDEXES.items():
-				if 'monkey_auth' in key and request.user.has_perm('monkey_view_confidential'):
+				if 'monkey_auth' in key and request.user.has_perm('matrr.monkey_view_confidential'):
 					monkey_auth = True
 					SEARCH_INDEXES['monkey'] = value
 				#					results['monkeys'] = search_index(terms, SEARCH_INDEXES[key], Monkey)
@@ -1373,7 +1373,7 @@ def search(request):
 
 
 def advanced_search(request):
-	monkey_auth = request.user.has_perm('monkey_view_confidential')
+	monkey_auth = request.user.has_perm('matrr.monkey_view_confidential')
 	protein_form = ProteinSelectForm_advSearch(columns=1)
 
 	results = Monkey.objects.all().order_by('cohort__coh_cohort_name', 'pk')
