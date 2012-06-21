@@ -905,14 +905,16 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
 	else:
 		return None, 'NO MAP'
-	dr_per_bout =list()
+
+	induction_days = list()
+	dr_per_bout = list()
 	bouts = list()
 	bar_size = list() # ??
 	bar_color = list() # max_bout_vol / total intake
-
-
-	for date in dates:
+	for index, date in enumerate(dates, 1):
 		de = drinking_experiments.get(drinking_experiment__dex_date=date)
+		if de.drinking_experiment.dex_type == 'Induction':
+			induction_days.append(index)
 		bouts.append(de.mtd_etoh_bout)
 		dr_per_bout.append(de.mtd_etoh_drink_bout)
 		bar_size.append(de.mtd_pct_max_bout_vol_total_etoh)
@@ -921,6 +923,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	xaxis = numpy.array(range(1,len(dr_per_bout)+1))
 	dr_per_bout       = numpy.array(dr_per_bout)
 	bouts   = numpy.array(bouts)
+	induction_days = numpy.array(induction_days)
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
@@ -936,19 +939,26 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 
 	s= ax1.scatter(xaxis, total_drinks, c=bouts, s=rescaled_bouts, alpha=0.4)
 
+	y_max = max(total_drinks)
+	graph_y_max = y_max + y_max*0.25
+	if len(induction_days) and len(induction_days) != len(xaxis):
+		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
+
+#	regression line
+	fit = polyfit(xaxis, total_drinks, 3)
+	xr=polyval(fit, xaxis)
+	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
+
 	ax1.set_ylabel("Total number of drinks =  bouts * drinks per bout")
 	ax1.set_xlabel("Days")
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
-	y_max = max(total_drinks)
-	pyplot.ylim(0-((y_max*1.25)/2),y_max + y_max*0.25) # + % to show circles under the size legend instead of behind it
+	pyplot.ylim(0-((y_max*1.25)/2), graph_y_max) # + % to show circles under the size legend instead of behind it
 	pyplot.xlim(0,len(xaxis) + 2)
 	max_y_int = int(round(y_max*1.25))
 	y_tick_int = int(round(max_y_int/5))
 	ax1.set_yticks(range(0, max_y_int, y_tick_int))
 	ax1.yaxis.get_label().set_position((0,0.6))
-
-#	ax1.yaxis.set_minor_locator(matplotlib.ticker.NullLocator())
 
 	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
 	cb = pyplot.colorbar(s, cax=cax)
@@ -1112,11 +1122,14 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	else:
 		return None, 'NO MAP'
 
+	induction_days = list()
 	avg_bout_volumes = list()
 	g_per_kg_consumed = list()
 	bouts = list()
-	for date in dates:
+	for index, date in enumerate(dates, 1):
 		de = drinking_experiments.get(drinking_experiment__dex_date=date)
+		if de.drinking_experiment.dex_type == 'Induction':
+			induction_days.append(index)
 		g_per_kg_consumed.append(de.mtd_etoh_g_kg) # y-axis
 		bouts.append(de.mtd_etoh_bout) # color
 		bouts_volume = de.bouts_set.all().aggregate(Avg('ebt_volume'))['ebt_volume__avg']
@@ -1125,6 +1138,7 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	xaxis = numpy.array(range(1,len(avg_bout_volumes)+1))
 	avg_bout_volumes = numpy.array(avg_bout_volumes)
 	bouts   = numpy.array(bouts)
+	induction_days = numpy.array(induction_days)
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
@@ -1144,12 +1158,17 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 
 	s= ax1.scatter(xaxis, g_per_kg_consumed, c=bouts, s=rescaled_volumes, alpha=0.4)
 
+	y_max = max(g_per_kg_consumed)
+	graph_y_max = y_max + y_max*0.25
+	if len(induction_days) and len(induction_days) != len(xaxis):
+		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
+
 	ax1.set_ylabel("Daily Ethanol Consumption (in g/kg)")
 	ax1.set_xlabel("Days")
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 	y_max = max(g_per_kg_consumed)
-	pyplot.ylim(0,y_max + y_max*0.25) # + % to show circles under the size legend instead of behind it
+	pyplot.ylim(0, graph_y_max) # + % to show circles under the size legend instead of behind it
 	pyplot.xlim(0,len(xaxis) + 1)
 
 	cb = pyplot.colorbar(s)
@@ -1178,7 +1197,7 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	pyplot.setp(ax2, xticklabels=bout_labels)
 
 #	regression line
-	fit = polyfit(xaxis, g_per_kg_consumed ,3)
+	fit = polyfit(xaxis, g_per_kg_consumed, 3)
 	xr=polyval(fit, xaxis)
 	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
@@ -1280,21 +1299,22 @@ def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type=''
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 
-#    main graph
+#   main graph
 	ax1 = fig.add_subplot(111)
 
 	s= ax1.scatter(xaxis, max_bout_vol, c=max_bout_percent, s=rescaled_bouts, alpha=.6)
 
 	y_max = max_bout_vol.max()
+	graph_y_max = y_max + y_max*0.25
 	if len(induction_days) and len(induction_days) != len(xaxis):
-		ax1.bar(induction_days.min(), y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
+		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
 	ax1.set_ylabel("Maximum Bout Volume")
 	ax1.set_xlabel("Days")
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	pyplot.ylim(0-((y_max*1.25)/2),y_max + y_max*0.25) # + % to show circles under the size legend instead of behind it
+	pyplot.ylim(0-((y_max*1.25)/2), graph_y_max) # + % to show circles under the size legend instead of behind it
 	pyplot.xlim(0,len(xaxis) + 2)
 	max_y_int = int(round(y_max*1.25))
 	y_tick_int = int(round(max_y_int/5))
