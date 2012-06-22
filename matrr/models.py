@@ -1027,7 +1027,7 @@ class CohortProteinImage(MATRRImage):
 
 #  This model breaks MATRR field name scheme
 class MonkeyProteinImage(MATRRImage):
-	mpi_id = models.AutoField(primary_key=True) # this is a copy-paste error.  This should be mpi_id
+	mpi_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='mpi_image_set', editable=False)
 	proteins = models.ManyToManyField('Protein', null=False, related_name='mpi_image_set', editable=False)
 
