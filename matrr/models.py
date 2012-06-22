@@ -880,7 +880,7 @@ class MTDImage(MATRRImage):
 		if not self.method:
 			return "My plot method field has not been populated.  I don't know what I am."
 		if not self.method in PLOTS:
-			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+			return "My method field doesn't match any keys in plotting.MONKEY_PLOTS"
 
 		return PLOTS[self.method][0]
 
@@ -922,7 +922,7 @@ class MonkeyImage(MATRRImage):
 		if not self.method:
 			return "My plot method field has not been populated.  I don't know what I am."
 		if not self.method in PLOTS:
-			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+			return "My method field doesn't match any keys in plotting.MONKEY_PLOTS"
 
 		return PLOTS[self.method][0]
 
@@ -967,7 +967,7 @@ class CohortImage(MATRRImage):
 		if not self.method:
 			return "My plot method field has not been populated.  I don't know what I am."
 		if not self.method in PLOTS:
-			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+			return "My method field doesn't match any keys in plotting.COHORT_PLOTS"
 
 		return PLOTS[self.method][0]
 
@@ -1006,7 +1006,7 @@ class CohortProteinImage(MATRRImage):
 		if not self.method:
 			return "My plot method field has not been populated.  I don't know what I am."
 		if not self.method in PLOTS:
-			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+			return "My method field doesn't match any keys in plotting.COHORT_PLOTS"
 
 		return PLOTS[self.method][0]
 
@@ -1027,7 +1027,7 @@ class CohortProteinImage(MATRRImage):
 
 #  This model breaks MATRR field name scheme
 class MonkeyProteinImage(MATRRImage):
-	cpi_id = models.AutoField(primary_key=True)
+	mpi_id = models.AutoField(primary_key=True) # this is a copy-paste error.  This should be mpi_id
 	monkey = models.ForeignKey(Monkey, null=False, related_name='mpi_image_set', editable=False)
 	proteins = models.ManyToManyField('Protein', null=False, related_name='mpi_image_set', editable=False)
 
@@ -1051,7 +1051,7 @@ class MonkeyProteinImage(MATRRImage):
 		if not self.method:
 			return "My plot method field has not been populated.  I don't know what I am."
 		if not self.method in PLOTS:
-			return "My method field doesn't match any keys in plotting.MonkeyPlots.PLOTS"
+			return "My method field doesn't match any keys in plotting.MONKEY_PLOTS"
 
 		return PLOTS[self.method][0]
 
