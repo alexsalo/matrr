@@ -1607,16 +1607,31 @@ def populate_mtd_fields(queryset=None):
 	for mtd in qs:
 		mtd.populate_max_bout_hours()
 
+def load_brain_monkeyimages(directory):
+	import os
+	for file in os.listdir(directory):
+		if file[-3:].lower() == 'png':
+			filename, extension = file.split('.')
+			mky_number_ish = filename.split('-')[-1]
+			mky_number = mky_number_ish[-5:]
+			try:
+				monkey = Monkey.objects.get(mky_real_id=mky_number)
+			except Monkey.DoesNotExist:
+				print "Monkey does not exist:  " + mky_number
+				continue
 
+			mig = MonkeyImage.objects.create(monkey=monkey, method='__brain_image')
 
+			filename = '/tmp/' + filename
+			thumb_path = filename + '-thumb.jpg'
+			image_file = Image.open(directory+file)
+			image_file.thumbnail((240, 240), Image.ANTIALIAS)
+			image_file.save(thumb_path)
 
-
-
-
-
-
-
-
-
-
-
+			mig.image = File(open(directory+file, 'r'))
+			mig.save()
+			mig.thumbnail = File(open(thumb_path, 'r'))
+			mig.save()
+			html_frag = mig._build_html_fragment('NO MAP', add_footer=False)
+			mig.html_fragment = File(open(html_frag))
+			mig.save()

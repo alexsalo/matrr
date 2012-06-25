@@ -129,6 +129,8 @@ VIP_IMAGES_LIST = (
 'monkey_first_max_bout',
 'monkey_bouts_vol',
 'monkey_errorbox_etoh',
+'__vip',
+'__brain_image',
 )
 
 
@@ -196,6 +198,7 @@ class Institution(models.Model):
 	class Meta:
 		db_table = 'ins_institutions'
 		ordering = ['ins_institution_name']
+
 
 class EventType(models.Model):
 	evt_id = models.AutoField('ID', primary_key=True)
@@ -815,7 +818,7 @@ class MATRRImage(models.Model):
 
 		return image_path, thumb_path, svg_image_path
 
-	def _build_html_fragment(self, data_map):
+	def _build_html_fragment(self, data_map, add_footer=True):
 		from django.template.context import Context
 		from django.template.loader import get_template
 
@@ -830,7 +833,8 @@ class MATRRImage(models.Model):
 		
 		html_fragment = open(fragment_path, 'w+')
 		html_fragment.write(str(t.render(c)))
-		html_fragment.write(str(foot_t.render(foot_c)))
+		if add_footer:
+			html_fragment.write(str(foot_t.render(foot_c)))
 		html_fragment.flush()
 		html_fragment.close()
 		return fragment_path

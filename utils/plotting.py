@@ -1848,12 +1848,11 @@ def create_plots(cohorts=True, monkeys=True, delete=False):
 			MonkeyImage.objects.all().delete()
 		for monkey in Monkey.objects.all():
 			for graph in monkey_plots:
-				gc.collect()
 				monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[graph][1])
+				gc.collect()
 
 	if cohorts:
-		cohort_plots = ['cohort_bihourly_etoh_treemap',
-						'cohort_boxplot_m2de_month_veh_intake',
+		cohort_plots = ['cohort_boxplot_m2de_month_veh_intake',
 						'cohort_boxplot_m2de_month_total_pellets',
 						'cohort_boxplot_m2de_month_mtd_weight',
 						'cohort_boxplot_m2de_month_etoh_intake',
@@ -1870,6 +1869,3 @@ def create_plots(cohorts=True, monkeys=True, delete=False):
 			for graph in cohort_plots:
 				gc.collect()
 				cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[graph][1])
-				if graph == 'cohort_bihourly_etoh_treemap':
-					_para = parameters=str({'dex_type': 'Open Access'})
-					cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[graph][1], parameters=_para)
