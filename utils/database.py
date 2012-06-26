@@ -1288,17 +1288,33 @@ def load_necropsy_summary(filename):
 		row[18]	= 6 mos end (string, in format '%m/%d/%y' = 1/1/01)
 		row[19]	= 12 mos end (string, in format '%m/%d/%y' = 1/1/01)
 		row[20]	= 22hr_6mos_avg_g/kg
+		(row[21] = '22hr_2nd_6mos_avg_g/kg' if present, column_offset += 1 starting from this row)
 		row[21]	= 22hr_12mos_avg_g/kg
 	"""
 	csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
 	columns = csv_infile.next()
-	columns_offest = 0
-	if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
-		columns_offset = 2
+	pre_columns_offset = 0
+	unsure = False
+	try:
+		if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
+			pre_columns_offset = 2
+		else:
+			unsure = True
+	except:
+		csv_infile = csv.reader(open(filename, 'rU'), delimiter="\t")
+		columns = csv_infile.next()
+		if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
+			pre_columns_offset = 2
+	if unsure:
+			raise Exception("Unsure of format, investigate further and update this function.")
+
+	if columns[21+pre_columns_offset] == '22hr_2nd_6mos_avg_g/kg':
+		extra_22hr_column = True
 	else:
-		raise Exception("Unsure of format, investigate further and update this function.")
+		extra_22hr_column = False
 
 	for row in csv_infile:
+		columns_offset = pre_columns_offset
 		if row[0]:
 			try: # dont offset these columns, they should always be a monkey number of some sort (hopefully)
 				monkey = Monkey.objects.get(pk=row[0])
@@ -1331,8 +1347,13 @@ def load_necropsy_summary(filename):
 			nec_sum.ncm_6_mo_end 				= datetime.datetime.strptime(row[18+columns_offset], '%m/%d/%y')
 			nec_sum.ncm_12_mo_end 				= datetime.datetime.strptime(row[19+columns_offset], '%m/%d/%y')
 			nec_sum.ncm_22hr_6mo_avg_g_per_kg	= row[20+columns_offset] if row[20+columns_offset] != "control" else 0
+			if extra_22hr_column:
+				nec_sum.ncm_22hr_2nd_6mos_avg_g_per_kg = row[21+columns_offset] if row[21+columns_offset] != "control" else 0
+				columns_offset += 1
 			nec_sum.ncm_22hr_12mo_avg_g_per_kg	= row[21+columns_offset] if row[21+columns_offset] != "control" else 0
 			nec_sum.save()
+
+
 
 def load_metabolites(filename):
 	"""
