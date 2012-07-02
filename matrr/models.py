@@ -1961,7 +1961,6 @@ class TissueInventoryVerification(models.Model):
 	tissue_sample = models.ForeignKey(TissueSample, null=True, related_name='tissue_verification_set', db_column='tss_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_verification_set', db_column='tst_type_id')
 	monkey = models.ForeignKey(Monkey, null=False, related_name='tissue_verification_set', db_column='mky_id')
-	#inventory = models.ForeignKey(InventoryStatus, blank=False, null=False, db_column='inv_id', default=InventoryStatus.objects.get(inv_status="Unverified").pk)
 	tiv_inventory = models.CharField('Is the tissue sample quantity sufficient to fill the indicated request?',
 									 choices=InventoryStatus, null=False, max_length=100, default=InventoryStatus[0][0])
 	tiv_notes = models.TextField('Verification Notes', blank=True,
@@ -1989,11 +1988,17 @@ class TissueInventoryVerification(models.Model):
 			tiv.tiv_inventory = "Unverified"
 			tiv.save()
 
-	def verify_all_TIVs(self, are_you_sure=False, are_you_double_sure=False, are_you_damn_positive=False):
+	def verify_all_TIVs(self, are_you_sure=False, are_you_double_sure=False, are_you_damn_positive=False, req_request=False):
 		if settings.PRODUCTION is False or (are_you_sure and are_you_double_sure and are_you_damn_positive):
-			for tiv in TissueInventoryVerification.objects.all():
+			if req_request is True:
+				tivs = TissueInventoryVerification.objects.all()
+			else:
+				# this will error with default req_request.  You must set four separate arguments to True to verify every TIV in the db.
+				tivs = TissueInventoryVerification.objects.filter(tissue_request__req_request=int(req_request))
+			for tiv in tivs:
 				tiv.tiv_inventory = 'Verified'
 				tiv.save()
+
 
 	def save(self, *args, **kwargs):
 		notes = self.tiv_notes
