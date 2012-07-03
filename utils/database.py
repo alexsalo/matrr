@@ -496,11 +496,14 @@ def load_TissueCategories():
 @transaction.commit_on_success
 # Creates ALL tissue samples in the database, for every monkey:tissuetype combination.
 def create_TissueSamples(tissue_type=None):
+	units = Units[2][0]
 	for monkey in Monkey.objects.all():
+		quantity = 0
 		if not tissue_type:
 			tissuetypes = TissueType.objects.all()
 			# Only create the "be specific" tissue samples for upcoming cohorts
 			if not monkey.cohort.coh_upcoming:
+				quantity = 1
 				tissuetypes = tissuetypes.exclude(tst_tissue_name__icontains="Be specific")
 		else:
 			tissuetypes = [tissue_type]
@@ -510,6 +513,8 @@ def create_TissueSamples(tissue_type=None):
 			if is_new:
 				sample.tss_freezer = "<new record, no data>"
 				sample.tss_location = "<new record, no data>"
+				sample.tss_units = units
+				sapmle.tss_sample_quantity = quantity
 				# Can be incredibly spammy
 				print "New tissue sample: " + sample.__unicode__()
 
@@ -1660,28 +1665,28 @@ def load_brain_monkeyimages(directory):
 def create_7b_control_monkeys():
 	import datetime
 	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
-	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M',
+	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
 					mky_real_id=1234,
 					mky_birthdate=datetime.date(2005, 3, 13),
 					mky_necropsy_start_date=datetime.date(2012, 7, 23),
 					mky_age_at_necropsy='7 yrs 4 mos 10 days',
 					)
 	monkey.save()
-	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M',
+	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
 					mky_real_id=12345,
 					mky_birthdate=datetime.date(2005, 6, 1),
 					mky_necropsy_start_date=datetime.date(2012, 7, 27),
 					mky_age_at_necropsy='7 yrs 1 mos 26 days',
 					)
 	monkey.save()
-	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M',
+	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
 					mky_real_id=123456,
 					mky_birthdate=datetime.date(2005, 4, 1),
 					mky_necropsy_start_date=datetime.date(2012, 7, 26),
 					mky_age_at_necropsy='7 yrs 3 mos 25 days',
 					)
 	monkey.save()
-	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M',
+	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
 					mky_real_id=1234567,
 					mky_birthdate=datetime.date(2005, 2, 1),
 					mky_necropsy_start_date=datetime.date(2012, 7, 24),
