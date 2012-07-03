@@ -514,7 +514,7 @@ def create_TissueSamples(tissue_type=None):
 				sample.tss_freezer = "<new record, no data>"
 				sample.tss_location = "<new record, no data>"
 				sample.tss_units = units
-				sapmle.tss_sample_quantity = quantity
+				sample.tss_sample_quantity = quantity
 				# Can be incredibly spammy
 				print "New tissue sample: " + sample.__unicode__()
 
