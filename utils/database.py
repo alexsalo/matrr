@@ -502,8 +502,9 @@ def create_TissueSamples(tissue_type=None):
 		if not tissue_type:
 			tissuetypes = TissueType.objects.all()
 			# Only create the "be specific" tissue samples for upcoming cohorts
-			if not monkey.cohort.coh_upcoming:
+			if monkey.cohort.coh_upcoming:
 				quantity = 1
+			else:
 				tissuetypes = tissuetypes.exclude(tst_tissue_name__icontains="Be specific")
 		else:
 			tissuetypes = [tissue_type]
@@ -513,8 +514,9 @@ def create_TissueSamples(tissue_type=None):
 			if is_new:
 				sample.tss_freezer = "<new record, no data>"
 				sample.tss_location = "<new record, no data>"
-				sample.tss_units = units
-				sample.tss_sample_quantity = quantity
+#				sample.tss_units = units
+#				sample.tss_sample_quantity = quantity
+				sample.save()
 				# Can be incredibly spammy
 				print "New tissue sample: " + sample.__unicode__()
 
