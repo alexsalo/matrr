@@ -89,7 +89,7 @@ def send_jim_hippocampus_notification(req_request):
 	body += 'MATRR'
 
 	if settings.PRODUCTION:
-		ret = send_mail(subject, body, matrr.email, recipient_list=[jim,], fail_silently=False)
+		ret = send_mail(subject, body, matrr.email, recipient_list=[jim.email,], fail_silently=False)
 		if ret > 0:
 			print "%s Hippocampus notification sent to %s." % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), jim.username)
 
