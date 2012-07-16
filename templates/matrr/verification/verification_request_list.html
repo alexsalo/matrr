@@ -10,6 +10,8 @@
 	{% if requests.count > 0 or requestless_count > 0%}
 <table class="common_center" cellpadding='4' cellspacing='2'>
   <tr>
+    <th>Request</th>
+    <th>User</th>
     <th>Cohort</th>
     <th>Date Placed</th>
     <th>Status</th>
@@ -18,21 +20,25 @@
 
   {% for req in requests %}
     <tr>
+      <td><a href={% url order-detail req.pk %}>{{ req.pk }}</a></td>
+      <td>{{ req.user }}</td>
       <td>{{ req.cohort }}</td>
-      <td>{{ req.req_request_date|date:"m/d/Y, g:i a" }}</td>
+      <td>{{ req.req_request_date|date:"m/d/Y" }}</td>
       <td id="{{ req.req_status|lower }}">
       {{ req.get_req_status_display }}</td>
     
-      <td><a href='{% url verification-list req.req_request_id %}'>Inventory verification forms</a></td>
+      <td><a href='{% url verification-list req.req_request_id %}'>Verification forms</a></td>
       <td><a href='{% url verification-list-export req.req_request_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a> </td>
     </tr>
   {% endfor %}
    {% if requestless_count %}
 					<tr>
+                                            	<td>N/A</td>
+                                                <td>N/A</td>
 						<td>N/A</td>
 						<td>N/A</td>
 						<td>MATRR Inventory Verification</td>
-						<td><a href='{% url verification-list 0 %}'>Inventory verification forms</a></td>
+						<td><a href='{% url verification-list 0 %}'Verification forms</a></td>
 						<td><a href='{% url verification-list-export 0 %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
 					</tr>
 
