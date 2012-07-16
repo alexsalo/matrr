@@ -2,9 +2,10 @@
 from django.core.mail.message import EmailMessage
 from django.forms.models import modelformset_factory
 from django.forms.models import formset_factory
-from django.template import RequestContext
+from django.template import RequestContext, loader
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import  render_to_response, redirect, get_object_or_404
+from django.template.context import Context
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator, InvalidPage, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
@@ -1622,11 +1623,8 @@ def tissue_verification_export(request, req_request_id):
 	#Create the HttpResponse object with the appropriate PDF headers.
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
-	return process_latex('latex/tissue_verification.tex',
-			{'tiv_list': tiv_list,
-			 'user': request.user,
-			 'date': datetime.today()},
-						 outfile=response)
+	context = {'tiv_list': tiv_list, 'user': request.user, 'date': datetime.today()}
+	return export_template_to_pdf('pdf_templates/tissue_verification.html', context, outfile=response)
 
 
 def tissue_verification_list(request, req_request_id):
@@ -2477,3 +2475,16 @@ def create_svg_fragment(request, klass, imageID):
 	resp = HttpResponse(image_data, mimetype="image/svg+xml")
 	resp['Content-Disposition'] = 'attachment; filename=%s' % (str(im) + '.svg')
 	return resp
+
+def export_template_to_pdf(template, context={}, outfile=None):
+	t = loader.get_template(template)
+	c = Context(context)
+	r = t.render(c)
+
+	result = outfile if outfile else StringIO.StringIO()
+	pdf = pisa.pisaDocument(StringIO.StringIO(r.encode("UTF-8")), dest=result)
+
+	if not pdf.err:
+		return result
+	else:
+		raise Exception(pdf.err)
