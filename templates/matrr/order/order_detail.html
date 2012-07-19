@@ -123,9 +123,6 @@
 	{% if edit %}
 		<a href='{% url order-list %}' class='blockLinkButton' style="float:left">Finish Editing</a>
 	{% endif %}
-	{% if order.req_status == RequestStatus.Accepted or order.req_status == RequestStatus.Partially or order.req_status == RequestStatus.Shipped %}
-		<a href='{% url order-detail order.pk %}?export=True' class='blockLinkButton' style="float:left">Download Invoice</a>
-	{% endif %}
 	{% if shipped %}
 		<div class='left'>
 			<a href='{% url shipment-manifest order.req_request_id %}' style="float:left" class='blockLinkButton'>Download Shipping Manifest</a>
@@ -142,5 +139,8 @@
 	{% endif %}
 	{% if order.can_be_revised and request.user == order.user %}
 		<a href='{% url order-revise order.req_request_id %}' class='blockLinkCheckoutButton' style="float:right">Revise</a>
+	{% endif %}
+	{% if order.req_status == RequestStatus.Accepted or order.req_status == RequestStatus.Partially or order.req_status == RequestStatus.Shipped %}
+		<a href='{% url order-detail order.pk %}?export=True' class='blockLinkButton' style="float:right">Download Invoice</a>
 	{% endif %}
 {% endblock %}
