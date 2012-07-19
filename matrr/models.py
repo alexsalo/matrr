@@ -1582,7 +1582,7 @@ class TissueRequest(models.Model):
 		return self.rtt_fix_type
 
 	def get_amount(self):
-		return str(self.rtt_amount) + ' ' + self.get_rtt_units_display()
+		return str(self.rtt_amount) + ' ' + self.get_rtt_units_display().encode('UTF-8')
 
 	def get_latex_amount(self):
 		return str(self.rtt_amount) + ' ' + LatexUnits[self.rtt_units]

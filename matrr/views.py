@@ -1537,6 +1537,19 @@ def shipment_manifest_latex(request, shipment_id):
 	return process_latex('latex/shipment_manifest.tex', {'shipment': shipment, 'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
 
 
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+def shipment_manifest_export(request, shipment_id):
+	shipment = get_object_or_404(Shipment, pk=shipment_id)
+	req_request = shipment.req_request
+	response = HttpResponse(mimetype='application/pdf')
+	response['Content-Disposition'] = 'attachment; filename=shipment_manifest-' +\
+									  str(req_request.user) + '-' +\
+									  str(req_request.pk) + '.pdf'
+
+	context = {'shipment': shipment, 'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
+	return _export_template_to_pdf('pdf_templates/shipment_manifest.html', context, outfile=response)
+
+
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
 def order_delete(request, req_request_id):
 	req_request = Request.objects.get(req_request_id=req_request_id)
@@ -1624,7 +1637,7 @@ def tissue_verification_export(request, req_request_id):
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
 	context = {'tiv_list': tiv_list, 'user': request.user, 'date': datetime.today()}
-	return export_template_to_pdf('pdf_templates/tissue_verification.html', context, outfile=response)
+	return _export_template_to_pdf('pdf_templates/tissue_verification.html', context, outfile=response)
 
 
 def tissue_verification_list(request, req_request_id):
@@ -2476,7 +2489,7 @@ def create_svg_fragment(request, klass, imageID):
 	resp['Content-Disposition'] = 'attachment; filename=%s' % (str(im) + '.svg')
 	return resp
 
-def export_template_to_pdf(template, context={}, outfile=None):
+def _export_template_to_pdf(template, context={}, outfile=None, return_pisaDocument=False):
 	t = loader.get_template(template)
 	c = Context(context)
 	r = t.render(c)
@@ -2485,6 +2498,9 @@ def export_template_to_pdf(template, context={}, outfile=None):
 	pdf = pisa.pisaDocument(StringIO.StringIO(r.encode("UTF-8")), dest=result)
 
 	if not pdf.err:
-		return result
+		if return_pisaDocument:
+			return pdf
+		else:
+			return result
 	else:
 		raise Exception(pdf.err)

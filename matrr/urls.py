@@ -87,7 +87,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^shipping/history/(?P<user_id>\d+)/$',				shipping_history_user, name='shipping-history-user'),
 	url(r'^shipping/creator/(?P<req_request_id>\d+)/$', 		shipment_creator, name='shipment-creator'),
 	url(r'^shipping/detail/(?P<shipment_id>\d+)/$', 			shipment_detail, name='shipment-detail'),
-	url(r'^shipping/detail/(?P<shipment_id>\d+)/manifest/$', 	shipment_manifest_latex, name='shipment-manifest'),
+	url(r'^shipping/detail/(?P<shipment_id>\d+)/manifest/$', 	shipment_manifest_export, name='shipment-manifest'),
 
 	#  Order review views
 	url(r'^reviews/$', 						reviews_list_view, name='review-list'),
