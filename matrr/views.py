@@ -19,7 +19,6 @@ import math
 from datetime import date, timedelta
 from django.db import DatabaseError
 from djangosphinx.models import SphinxQuerySet
-from process_latex import process_latex
 from django.db.models import Q, Count
 from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
@@ -1010,6 +1009,13 @@ def order_detail(request, req_request_id, edit=False):
 					send_shipment_ready_notification(req_request)
 			else:
 				messages.error(request, "Purchase Order form invalid, please try again.  Please notify a MATRR admin if this message is erroneous.")
+	if request.GET.get('export', False):
+		#Create the HttpResponse object with the appropriate PDF headers.
+		response = HttpResponse(mimetype='application/pdf')
+		response['Content-Disposition'] = 'attachment; filename=Invoice-%d.pdf' % req_request.pk
+		context = {'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
+		_export_template_to_pdf('pdf_templates/invoice.html', context, outfile=response)
+		return response
 
 	return render_to_response('matrr/order/order_detail.html',
 			{'order': req_request,
@@ -1239,11 +1245,9 @@ def request_review_process(request, req_request_id):
 					bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
 					email = EmailMessage(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
 					if status != RequestStatus.Rejected:
-						outfile = open('/tmp/%s.pdf' % str(req_request.pk), 'wb')
-						process_latex('latex/invoice.tex', {'req_request': req_request,
-															'account': req_request.user.account,
-															'time': datetime.today(),
-															}, outfile=outfile)
+						outfile = open('/tmp/MATRR_Invoice-%s.pdf' % str(req_request.pk), 'wb')
+						context = {'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
+						_export_template_to_pdf('pdf_templates/invoice.html', context, outfile=outfile)
 						outfile.close()
 						email.attach_file(outfile.name)
 					email.send()
@@ -1522,19 +1526,6 @@ def shipment_detail(request, shipment_id):
 																	   'confirm_delete_shipment': confirm_delete_shipment,
 																	   'edit': edit,
 																	   'tracking_number': tracking_number}, context_instance=RequestContext(request))
-
-
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
-def shipment_manifest_latex(request, shipment_id):
-	shipment = get_object_or_404(Shipment, pk=shipment_id)
-	req_request = shipment.req_request
-	response = HttpResponse(mimetype='application/pdf')
-	response['Content-Disposition'] = 'attachment; filename=shipment_manifest-' +\
-									  str(req_request.user) + '-' +\
-									  str(req_request.pk) + '.pdf'
-	account = req_request.user.account
-
-	return process_latex('latex/shipment_manifest.tex', {'shipment': shipment, 'req_request': req_request, 'account': account, 'time': datetime.today()}, outfile=response)
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
@@ -2442,13 +2433,13 @@ def create_pdf_fragment(request):
 	if request.method == 'GET':
 		fragment_filename = request.GET['html']
 		htmlfile = os.path.join('matrr_images/fragments/',fragment_filename)
-		
+
 #		this is ugly, but we do not have to repeat code
 #		if user does not have permissions, send file will raise Http404()
 #		so this is all just about permission check
 		sendfile(request, htmlfile)
-		
-		
+
+
 		htmlfile = os.path.join(settings.MEDIA_ROOT,htmlfile)
 		try:
 			with open(htmlfile, 'r') as f:
@@ -2460,7 +2451,7 @@ def create_pdf_fragment(request):
 		pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), dest=result, link_callback=_fetch_resources,
 							 )
 		if not pdf.err:
-			
+
 			resp =  HttpResponse(result.getvalue(), mimetype='application/pdf')
 			resp['Content-Disposition'] = 'attachment; filename=%s' % fragment_filename.replace("html", "pdf")
 			return resp
@@ -2475,7 +2466,7 @@ def _fetch_resources(uri, rel):
 	elif uri.startswith(settings.STATIC_URL):
 		path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
 
-	return path		
+	return path
 
 import matrr.models as mmodels
 def create_svg_fragment(request, klass, imageID):

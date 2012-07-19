@@ -123,6 +123,9 @@
 	{% if edit %}
 		<a href='{% url order-list %}' class='blockLinkButton' style="float:left">Finish Editing</a>
 	{% endif %}
+	{% if order.req_status == RequestStatus.Accepted or order.req_status == RequestStatus.Partially or order.req_status == RequestStatus.Shipped %}
+		<a href='{% url order-detail order.pk %}?export=True' class='blockLinkButton' style="float:left">Download Invoice</a>
+	{% endif %}
 	{% if shipped %}
 		<div class='left'>
 			<a href='{% url shipment-manifest order.req_request_id %}' style="float:left" class='blockLinkButton'>Download Shipping Manifest</a>

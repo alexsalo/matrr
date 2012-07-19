@@ -1,0 +1,45 @@
+{% load tissue_filters %}
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<center>
+	<h2>Invoice for:<br>Request: {{ req_request.pk }} | User: {{ req_request.user }} | Cohort: {{ req_request.cohort }}</h2>
+	Requested: {{ req_request.req_request_date }}<br>
+	Manifest Created: {{ time }}
+</center>
+<br>
+<h3 style="margin: 0;padding: 0">Shipping Information</h3>
+<hr style="margin-bottom: 5px;margin-top: 0">
+<table>
+	<tr><td>{{ account.act_shipping_name }}</td><td>FedEx Number:</td><td>{{ account.act_fedex }}</td></tr>
+	<tr><td>{{ account.act_address1 }}</td><td style='width:80px'>Purchase Order:</td><td>{{ req_erquest.req_purchase_order }}</td></tr>
+	<tr><td>{{ account.act_city }}, {{ account.act_state }} {{ account.act_zip }} </td></tr>
+	<tr><td>{{ account.act_country }}</td></tr>
+</table>
+<br>
+<h3 style="margin: 0;padding: 0">Accepted Tissues</h3>
+{% for tissue_request in req_request.tissue_request_set.all %}
+	{% if tissue_request.accepted_monkeys.all.count %}
+		<hr style="margin-bottom: 5px;margin-top: 0">
+		{% if tissue_request.get_accepted %}
+			<table style='text-align: left; width:500px' align="left">
+				{% for datum in tissue_request.get_data %}
+					<tr>
+						<th style='width:100px; text-align:left'>{{ datum.0 }}:</th><td>{{ datum.1 }}</td>
+					</tr>
+					{% if forloop.last %}
+						<tr>
+							<th style='width:100px; text-align:left'>Accepted Monkeys</th>
+							<td>{% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}{% if not forloop.last %},{% endif %} {% endfor %}</td>
+						</tr>
+					{% endif %}
+				{% endfor %}
+			</table>
+		{% endif %}
+	{% endif %}
+{% endfor %}
+<br>
+<h3 style="margin: 0;padding: 0">Cost</h3>
+Total Cost: ${{ req_request.get_total_estimated_cost }}
+</html>
