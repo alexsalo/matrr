@@ -9,7 +9,7 @@
 </div>
 <h3>Tissues to verify:</h3>
 {% for tiv in tiv_list %}
-	{% if forloop.counter|divisibleby:"8" %}
+	{% if forloop.counter|divisibleby:"7" %}
 		<div>
 		  <pdf:nextpage />
 		</div>
@@ -21,7 +21,17 @@
 		<tr><th style='width:90px; text-align:left'>Location</th><td>{{ tiv.tissue_sample.tss_location }}</td><th style='width:90px; text-align:left'>Units</th><td>micrograms | milligrams | grams | whole</td></tr>
 		<tr><th style='width:90px; text-align:left'>Current Fix</th><td colspan=3>Fresh | Flash Frozen | 4% Paraformaldehyde | Other</td></tr>
 		<tr><th style='width:90px; text-align:left'>Tissue Details</th><td colspan=3>{{ tiv.tissue_sample.tss_notes }}</td></tr>
-		<tr><th style='width:90px; text-align:left'>Inventory is</th><td>Sufficient | Insufficient</td><th colspan=2 style='text-align:left'>to fill a for request {{ tiv.tissue_request.get_amount }}.</th>
+		<tr><td> </td></tr>
+		<tr><td> </td></tr>
+		<tr>
+			<th style='width:90px; text-align:left'>Inventory is</th>
+			<td colspan="2" style="text-align: center">
+				Sufficient
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				Insufficient
+			</td>
+			<th style='text-align:left'>to fill a for request {{ tiv.tissue_request.get_amount }}.</th>
+		</tr>
 	</table>
 {% endfor %}
 </html>
