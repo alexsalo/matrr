@@ -27,6 +27,7 @@
 		<div class=small>{{ experiment_range_form.range.help_text }}</div>
 		{{ experiment_range_form.range }}
 		<div id='dates' style='display:none;'>
+			<div class='small' style="padding: 15px 0 0 30px">Leave blank to plot all available data</div>
 			<div style="float:right"><div class='mini-headline'>{{ cohort }} Timeline</div>{% include 'matrr/__timeline.html' %}</div>
 			From:{{ experiment_range_form.from_date }} <br>
 			To:{{ experiment_range_form.to_date }}
