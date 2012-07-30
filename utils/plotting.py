@@ -985,13 +985,6 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	ax2.yaxis.set_major_locator(NullLocator())
 	pyplot.setp(ax2, xticklabels=bout_labels)
 
-	zipped = numpy.vstack(zip(xaxis, total_drinks))
-	coordinates = ax1.transData.transform(zipped)
-	ids = [de.pk for de in drinking_experiments]
-	xcoords, inv_ycoords = zip(*coordinates)
-	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
-	datapoint_map = zip(ids, xcoords, ycoords)
-
 #	barplot
 	ax3 = fig.add_subplot(313)
 	
@@ -1023,6 +1016,13 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	cb = pyplot.colorbar(col, cax=cax)
 	cb.set_label("Max Bout Length")
 	
+	zipped = numpy.vstack(zip(xaxis, total_drinks))
+	coordinates = ax1.transData.transform(zipped)
+	ids = [de.pk for de in drinking_experiments]
+	xcoords, inv_ycoords = zip(*coordinates)
+	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
+	datapoint_map = zip(ids, xcoords, ycoords)
+
 	return fig, datapoint_map
 
 def monkey_bouts_drinks_intraday(mtd=None):
@@ -1352,13 +1352,6 @@ def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type=''
 	ax2.yaxis.set_major_locator(NullLocator())
 	pyplot.setp(ax2, xticklabels=bout_labels)
 
-	zipped = numpy.vstack(zip(xaxis, max_bout_vol))
-	coordinates = ax1.transData.transform(zipped)
-	ids = [de.pk for de in drinking_experiments]
-	xcoords, inv_ycoords = zip(*coordinates)
-	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
-	datapoint_map = zip(ids, xcoords, ycoords)
-
 #	barplot
 	ax3 = fig.add_subplot(313)
 
@@ -1391,6 +1384,12 @@ def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type=''
 	cb = pyplot.colorbar(col, cax=cax)
 	cb.set_label("First Bout Vol / Total Intake")
 
+	zipped = numpy.vstack(zip(xaxis, max_bout_vol))
+	coordinates = ax1.transData.transform(zipped)
+	ids = [de.pk for de in drinking_experiments]
+	xcoords, inv_ycoords = zip(*coordinates)
+	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
+	datapoint_map = zip(ids, xcoords, ycoords)
 	return fig, datapoint_map
 
 

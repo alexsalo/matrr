@@ -3,7 +3,7 @@
 </div>
 <div>
 	<center>
-		<img src="{{ image.image.url }}" width="{{ bigWidth }}px" ismap usemap="#{{ image.monkey.pk }}"><br>	
+		<img src="{{ image.image.url }}" ismap usemap="#{{ image.monkey.pk }}"><br>
 	</center>
 </div>
 <div style='width: {{ bigWidth }}px; margin:auto; margin: 0px 40px 40px 40px'>
@@ -15,11 +15,10 @@
 		The bar plot color indicates the first bout's volume as a percentage of the day's total ethanol intake.
 		The shaded region, if present, indicates the ethanol induction period.
 </div>
-<!--{% if map %}
+<{% if map %}
 	<map name='{{ image.monkey.pk }}'>
 	{% for point in map %}
 		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 5' href="{%  url vip-mtd-graph point.0  %}" target='_blank'>
 	{% endfor %}
 	</map>
 {% endif %}
--->
