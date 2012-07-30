@@ -1288,8 +1288,8 @@ class Request(models.Model, DiffingMixin):
 			return True
 		return False
 
-	def print_setf_in_detail(self):
-		return "Project title: %s\nRequested: %s\nCohort: %s\nRequest reason: %s\nNotes: %s" % (self.req_project_title,
+	def print_self_in_detail(self):
+		return "Request: %d\nProject title: %s\nRequested: %s\nCohort: %s\nRequest reason: %s\nNotes: %s" % (self.pk, self.req_project_title,
 																								str(self.req_request_date), self.cohort.coh_cohort_name, self.req_reason,
 																								self.req_notes or "None")
 

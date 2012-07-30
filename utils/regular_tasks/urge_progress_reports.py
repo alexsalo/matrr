@@ -30,7 +30,7 @@ def urge_progress_reports():
 		subject = 'Progress report'
 		body = 'Hello, \nthe tissue(s) you requested were shipped on %s. ' % shipment['shp_shipment_date'] + \
 			'Please, submit a 90 day progress report concerning this request on My Account page, section Research Updates.\n' + \
-			"\nRequest overview:\n\n%s\n" % req.print_setf_in_detail() + \
+			"\nRequest overview:\n\n%s\n" % req.print_self_in_detail() + \
 			"\nYours sincerely,\n\nMatrr team\n\n" + \
 			'This is an automated message.\n'
 
