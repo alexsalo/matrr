@@ -2189,9 +2189,8 @@ def tools_monkey_etoh_graphs(request, cohort_id):
 	return render_to_response('matrr/tools/ethanol_monkey.html', context, context_instance=RequestContext(request))
 
 
-# TODO: move this view into ethanol tools
-@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
-def vip_mtd_graph(request, mtd_id):
+@user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
+def tools_etoh_mtd(request, mtd_id):
 	mtd_image = ''
 	if MonkeyToDrinkingExperiment.objects.filter(pk=mtd_id).count():
 		mtd = MonkeyToDrinkingExperiment.objects.get(pk=mtd_id)
@@ -2200,7 +2199,7 @@ def vip_mtd_graph(request, mtd_id):
 			method='monkey_bouts_drinks_intraday',
 			title="Drinks on %s for monkey %s" % (str(mtd.drinking_experiment.dex_date), str(mtd.monkey))
 		)
-	return render_to_response('matrr/tools/VIP/vip_graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
 
 # TODO: remove this whole view, move into ethanol tools
 @user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')

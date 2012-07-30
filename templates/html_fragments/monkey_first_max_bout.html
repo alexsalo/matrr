@@ -18,7 +18,7 @@
 <{% if map %}
 	<map name='{{ image.monkey.pk }}'>
 	{% for point in map %}
-		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 5' href="{%  url vip-mtd-graph point.0  %}" target='_blank'>
+		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 5' href="{%  url tools-etoh-mtd point.0  %}" target='_blank'>
 	{% endfor %}
 	</map>
 {% endif %}
