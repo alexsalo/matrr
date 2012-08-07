@@ -16,19 +16,19 @@
 	<div style='margin: auto'>
 		<form class=left action='' method='post' style='max-width: 25%'>
 			{% csrf_token %}
-				<div class=headline><a onclick="javascript:toggle_visibility('proteins');">Proteins</a></div>
+				<div class=headline><a onclick="javascript:toggle_visibility('proteins');"><img src='{{ STATIC_URL }}images/expand.gif'> Proteins</a></div>
 				<div id='proteins' class="hidden">
 					<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in any of the selected proteins.</div>
 					{{ protein_form.proteins }}
 				</div>
-				<div class=headline><a onclick="javascript:toggle_visibility('sex');">Sex</a></div>
+				<div class=headline><a onclick="javascript:toggle_visibility('sex');"><img src='{{ STATIC_URL }}images/expand.gif'> Sex</a></div>
 				<div id='sex' class=''>
 					<ul>
 						<li><label for="id_sex_0"><input onclick="javascript:updateTRToShow()" type="checkbox" name=sex value=Male id="id_sex_0" /> Male</label></li>
 						<li><label for="id_sex_1"><input onclick="javascript:updateTRToShow()" type="checkbox" name=sex value=Female id="id_sex_1" /> Female</label></li>
 					</ul>
 				</div>
-				<div class=headline><a onclick="javascript:toggle_visibility('species');">Species</a></div>
+				<div class=headline><a onclick="javascript:toggle_visibility('species');"><img src='{{ STATIC_URL }}images/expand.gif'>  Species</a></div>
 				<div id='species' class=''>
 					<ul>
 						<li><label for="id_species_0"><input onclick="javascript:updateTRToShow()" type="checkbox" name="species" value="Rhesus" id="id_species_0" /> Rhesus</label></li>
