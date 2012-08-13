@@ -15,13 +15,16 @@ from matrr.models import RequestStatus, Request, Account, Acceptance
 
 
 def urge_po_mta():
-	accepted = Q(req_status__in=[RequestStatus.Partially, RequestStatus.Accepted]) # Requests that have been accepted
-	incomplete = Q(req_purchase_order="") | Q(req_purchase_order=None) | Q(user__account__act_mta_is_valid=False)
+#	accepted = Q(req_status__in=[RequestStatus.Partially, RequestStatus.Accepted]) # Requests that have been accepted
+	#incomplete = Q(req_purchase_order="") | Q(req_purchase_order=None) # | Q(user__account__act_mta_is_valid=False) <-- not a real field
 
-	incomplete_accepted = Request.objects.filter(accepted & incomplete)
+	accepted = Request.objects.accepted_and_partially()
 
 
-	for req in incomplete_accepted:
+	for req in accepted:
+		if req.req_purchase_order and req.user.account.has_mta():
+			continue
+		
 		from_email = Account.objects.get(user__username='matrr_admin').email
 		to_email = req.user.email
 
