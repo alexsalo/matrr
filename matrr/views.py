@@ -1389,7 +1389,8 @@ def advanced_search(request):
 	return render_to_response('matrr/advanced_search.html',
 			{'results': results,
 			 'monkey_auth': monkey_auth,
-			 'protein_form': protein_form},
+			 'protein_form': protein_form,
+			 'cohorts': Cohort.objects.all()},
 							  context_instance=RequestContext(request))
 
 

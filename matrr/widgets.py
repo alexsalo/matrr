@@ -535,7 +535,7 @@ class CheckboxSelectMultiple_proteinAdvSearch(forms.CheckboxSelectMultiple):
 		if value is None: value = []
 		has_id = attrs and 'id' in attrs
 		final_attrs = self.build_attrs(attrs, name=name, onclick="javascript:updateTRToShow()")
-		output = [u'<table style="width=80%"><tr>']
+		output = [u'<table style="width=80%"><tr><td><label for="select_all_proteins"><input id="select_all_proteins" type="checkbox" name="proteins" onclick="javascript:toggle_named_checkboxes(this)"/> Select All Proteins</label></td>']
 		# Normalize to strings
 		for i, protein in enumerate(self.queryset):
 			option_label = str(protein)
