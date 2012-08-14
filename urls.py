@@ -1,6 +1,7 @@
 from django.conf.urls.defaults import patterns, include, url
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.generic.simple import redirect_to
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -16,14 +17,14 @@ urlpatterns = patterns('',
 					   url(r'^admin/', include(admin.site.urls)),
 					   url(r'accounts/register/$', 'matrr.views.registration'),
 					   url(r'^accounts/', include('registration.urls')),
-
+					   url(r'^favicon\.ico$', redirect_to, {'url': '/static/images/favicon.ico'}),
 					   )
 
 urlpatterns += patterns('',
-#	(r'^static/(?P<path>.*)$', 'django.views.static.serve',
-#		 {'document_root': settings.STATIC_ROOT}),
+						#	(r'^static/(?P<path>.*)$', 'django.views.static.serve',
+						#		 {'document_root': settings.STATIC_ROOT}),
 	(r'^login/?$', authviews.login, {'template_name': 'login.html'}),
-#	(r'^%s' % I18JS_URL, 'django.views.i18n.javascript_catalog')
+						#	(r'^%s' % I18JS_URL, 'django.views.i18n.javascript_catalog')
 )
 
 urlpatterns += staticfiles_urlpatterns()
