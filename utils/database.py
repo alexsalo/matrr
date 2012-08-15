@@ -667,7 +667,10 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 					print err
 				continue
 
-			bad_data = data[47]
+			try:
+				bad_data = data[47]
+			except ValueError:
+				bad_data = ''
 			if bad_data != '':
 				err = ERROR_OUTPUT % (line_number, "Bad data flag", line)
 				if dump_file:
@@ -688,7 +691,12 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			mtd = MonkeyToDrinkingExperiment()
 			mtd.monkey = monkey
 			mtd.drinking_experiment = de
-			mtd.mtd_notes = data[48]
+
+			try:
+				notes = data[48]
+			except ValueError:
+				notes = ''
+			mtd.mtd_notes = notes
 
 			for i, field in enumerate(fields):
 				if data_fields[i] != '':
