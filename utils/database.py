@@ -598,6 +598,8 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 		('mtd_max_bout_vol'),
 		('mtd_pct_max_bout_vol_total_etoh'),
 	)
+	if not dex_type in DEX_TYPES:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
 
 	if dump_file:
 		_filename = file_name.split('/')
