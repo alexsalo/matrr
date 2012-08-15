@@ -669,7 +669,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 
 			try:
 				bad_data = data[47]
-			except ValueError:
+			except IndexError:
 				bad_data = ''
 			if bad_data != '':
 				err = ERROR_OUTPUT % (line_number, "Bad data flag", line)
@@ -694,7 +694,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 
 			try:
 				notes = data[48]
-			except ValueError:
+			except IndexError:
 				notes = ''
 			mtd.mtd_notes = notes
 
