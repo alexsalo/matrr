@@ -614,7 +614,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			if line_number == 0 and has_headers: # cyno 2 had column headers
 				continue
 			data = line.split(',')
-			if data[0] == '0.5' or data[0] == '1' or data[0] == '1.5': # for some damn reason they added a column in cyno 2's induction file.
+			if data[0] == '0.5' or data[0] == '1' or data[0] == '1.5' or data[0] == '1.0': # for some damn reason they added a column in cyno 2's induction file.
 				ind_portion = data.pop(0)
 			data_fields = data[2:38]
 			data_fields.extend(data[40:46])
