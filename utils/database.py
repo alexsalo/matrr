@@ -1077,11 +1077,13 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
 	print "Loading bouts ..."
 	for (dex, line_number, line, bout) in bouts:
 		load_ebt_one_inst(bout, line_number, create_mtd, dex, line, bout_index=bout_index, dump_file=dump_file)
-		dump_file.flush()
+		if dump_file:
+			dump_file.flush()
 	print "Loading drinks ..."
 	for (dex, line_number, line, drink) in drinks:
 		load_edr_one_inst(drink, dex, line_number, line, bout_index=bout_index, drink_index=drink_index, dump_file=dump_file)
-		dump_file.flush()
+		if dump_file:
+			dump_file.flush()
 	dump_file.close()
 
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
