@@ -1071,7 +1071,8 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
 					print err
 				continue
 			last_date = date
-		dump_file.flush()
+		if dump_file:
+			dump_file.flush()
 #	return  bouts, drinks
 	print "Loading bouts ..."
 	for (dex, line_number, line, bout) in bouts:
