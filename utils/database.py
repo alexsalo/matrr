@@ -1084,7 +1084,8 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
 		load_edr_one_inst(drink, dex, line_number, line, bout_index=bout_index, drink_index=drink_index, dump_file=dump_file)
 		if dump_file:
 			dump_file.flush()
-	dump_file.close()
+	if dump_file:
+		dump_file.close()
 
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 	if not dex_type in DEX_TYPES:
