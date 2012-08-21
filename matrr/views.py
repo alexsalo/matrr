@@ -1951,7 +1951,7 @@ def tools_cohort_protein_graphs(request, cohort_id):
 	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
 
 
-def tools_monkey_protein_graphs(request, cohort_id):
+def tools_monkey_protein_graphs(request, cohort_id, monkey_id=None):
 	proteins = None
 	#	old_post = request.session.get('_old_post')
 	#	monkey = Monkey.objects.get(pk=monkey_id) if monkey_id else None
@@ -2043,7 +2043,15 @@ def tools_monkey_protein_graphs(request, cohort_id):
 		context['protein_form'] = protein_form
 
 	else:
-		raise Http404()
+		# function lands here when directed to protein tools from monkey detail page
+		get_m = list()
+		if monkey_id:
+			get_m.append(`monkey_id`)
+			text_monkeys = "-".join(get_m)
+		else:
+			text_monkeys = ""
+		context['graph_form'] = MonkeyProteinGraphAppearanceForm(text_monkeys)
+		context['protein_form'] = ProteinSelectForm()
 
 	return render_to_response('matrr/tools/protein_monkey.html', context, context_instance=RequestContext(request))
 
