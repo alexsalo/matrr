@@ -598,6 +598,8 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 		('mtd_max_bout_vol'),
 		('mtd_pct_max_bout_vol_total_etoh'),
 	)
+	if not dex_type in DEX_TYPES:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
 
 	if dump_file:
 		_filename = file_name.split('/')
@@ -612,7 +614,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			if line_number == 0 and has_headers: # cyno 2 had column headers
 				continue
 			data = line.split(',')
-			if data[0] == '0.5' or data[0] == '1' or data[0] == '1.5': # for some damn reason they added a column in cyno 2's induction file.
+			if data[0] == '0.5' or data[0] == '1' or data[0] == '1.5' or data[0] == '1.0': # for some damn reason they added a column in cyno 2's induction file.
 				ind_portion = data.pop(0)
 			data_fields = data[2:38]
 			data_fields.extend(data[40:46])
@@ -665,7 +667,10 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 					print err
 				continue
 
-			bad_data = data[47]
+			try:
+				bad_data = data[47]
+			except IndexError:
+				bad_data = ''
 			if bad_data != '':
 				err = ERROR_OUTPUT % (line_number, "Bad data flag", line)
 				if dump_file:
@@ -686,7 +691,12 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			mtd = MonkeyToDrinkingExperiment()
 			mtd.monkey = monkey
 			mtd.drinking_experiment = de
-			mtd.mtd_notes = data[48]
+
+			try:
+				notes = data[48]
+			except IndexError:
+				notes = ''
+			mtd.mtd_notes = notes
 
 			for i, field in enumerate(fields):
 				if data_fields[i] != '':
@@ -1061,17 +1071,21 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
 					print err
 				continue
 			last_date = date
-		dump_file.flush()
+		if dump_file:
+			dump_file.flush()
 #	return  bouts, drinks
 	print "Loading bouts ..."
 	for (dex, line_number, line, bout) in bouts:
 		load_ebt_one_inst(bout, line_number, create_mtd, dex, line, bout_index=bout_index, dump_file=dump_file)
-		dump_file.flush()
+		if dump_file:
+			dump_file.flush()
 	print "Loading drinks ..."
 	for (dex, line_number, line, drink) in drinks:
 		load_edr_one_inst(drink, dex, line_number, line, bout_index=bout_index, drink_index=drink_index, dump_file=dump_file)
-		dump_file.flush()
-	dump_file.close()
+		if dump_file:
+			dump_file.flush()
+	if dump_file:
+		dump_file.close()
 
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 	if not dex_type in DEX_TYPES:
