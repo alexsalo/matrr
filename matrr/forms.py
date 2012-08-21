@@ -640,24 +640,31 @@ class FilterForm(Form):
 			return "Invalid Form."
 
 
-class CohortSelectForm(Form):
-	def __init__(self, cohort_queryset=None, horizontal=False, *args, **kwargs):
-		super(CohortSelectForm, self).__init__(*args, **kwargs)
-		queryset = cohort_queryset if cohort_queryset else Cohort.objects.all()
+class SubjectSelectForm(Form):
+	def __init__(self, subject_queryset=None, horizontal=False, *args, **kwargs):
+		super(Form, self).__init__(*args, **kwargs)
+		queryset = subject_queryset if subject_queryset else Cohort.objects.all()
 		widget = forms.RadioSelect(renderer=HorizRadioRenderer) if horizontal else RadioSelect(renderer=RadioRenderer_nolist)
 		self.fields['subject'] = ModelChoiceField(queryset=queryset, widget=widget, initial=queryset[0])
+		self.fields['subject'].label = "Subject"
+		self.fields['subject'].help_text = "Select a Subject"
+
+
+
+class CohortSelectForm(SubjectSelectForm):
+	def __init__(self, *args, **kwargs):
+		super(CohortSelectForm, self).__init__(*args, **kwargs)
 		self.fields['subject'].label = "Cohort"
 		self.fields['subject'].help_text = "Select a cohort"
 
 
-class MonkeySelectForm(Form):
-	def __init__(self, monkey_queryset=None, horizontal=False, *args, **kwargs):
+class MonkeySelectForm(SubjectSelectForm):
+	def __init__(self, 	Mywidget=None, *args, **kwargs):
 		super(MonkeySelectForm, self).__init__(*args, **kwargs)
-		queryset = monkey_queryset if monkey_queryset else Monkey.objects.all()
-		widget = forms.RadioSelect(renderer=HorizRadioRenderer) if horizontal else RadioSelect()
-		self.fields['subject'] = ModelChoiceField(queryset=queryset, widget=widget, initial=queryset[0])
 		self.fields['subject'].label = "Monkey"
 		self.fields['subject'].help_text = "Select a monkey"
+		if Mywidget:
+			self.fields['subject'].widget = Mywidget
 
 
 class ProteinSelectForm(Form):

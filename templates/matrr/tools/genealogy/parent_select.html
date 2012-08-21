@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class=large-headline>Genealogy Tools</div>
+
+	{% include 'matrr/tools/__subject_select_form.html' %}
+	{% include 'matrr/tools/__subject_select_form.html' with subject_select_form=father_form %}
+	{% include 'matrr/tools/__subject_select_form.html' with subject_select_form=mother_form%}
+{% endblock %}

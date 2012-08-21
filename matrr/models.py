@@ -302,6 +302,13 @@ class Monkey(models.Model):
 									  help_text='The ID of the monkey.')
 	mky_name = models.CharField('Name', max_length=100, blank=True, null=True,
 								help_text='The monkey\'s name.')
+	# Legacy note about the mky_gender field
+	# It was decided sometime 2011 that 'gender' is an inaccurate representation of a monkey's sex.
+	# It should (justly) be 'sex'.
+	# This was decided after significant codebase and database population -.-
+	# So, instead of a massively trivial refactoring of a single database field
+	# We changed any public-facing use of this field to read 'sex', primarily in templates.
+	# I have no intention of ever renaming this field.  -JF
 	mky_gender = models.CharField('Sex', max_length=1, choices=SEX_CHOICES, blank=True, null=True,
 								  help_text='The sex of the monkey.')
 	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True,
@@ -2136,6 +2143,42 @@ class MonkeyProtein(models.Model):
 
 	class Meta:
 		db_table = 'mpn_monkey_protein'
+
+
+class FamilyNode(models.Model):
+	monkey = models.OneToOneField(Monkey, null=False, blank=False, related_name='genealogy', primary_key=True)
+	sire = models.ForeignKey('self', null=True, blank=True, related_name='+')
+	dam = models.ForeignKey('self', null=True, blank=True, related_name='+')
+	relationships = models.ManyToManyField('self', symmetrical=False, null=True, blank=True, through='FamilyRelationship', related_name='+')
+
+	def create_parent_relationships(self):
+		if self.sire:
+			fathers_son = FamilyRelationship.objects.get_or_create(me=self, relative=self.sire, fmr_type=FamilyRelationship.RELATIONSHIP.Offspring)[0]
+			sons_father = FamilyRelationship.objects.get_or_create(relative=self, me=self.sire, fmr_type=FamilyRelationship.RELATIONSHIP.Parent)[0]
+		if self.dam:
+			mothers_son = FamilyRelationship.objects.get_or_create(me=self, relative=self.dam, fmr_type=FamilyRelationship.RELATIONSHIP.Offspring)[0]
+			sons_mother = FamilyRelationship.objects.get_or_create(relative=self, me=self.dam, fmr_type=FamilyRelationship.RELATIONSHIP.Parent)[0]
+
+	class Meta:
+		db_table = 'fmn_family_node'
+
+
+class FamilyRelationship(models.Model):
+	RELATIONSHIP = Enumeration([('P', 'Parent', 'Parent'),('O', 'Offspring', 'Offspring')])
+	fmr_id = models.AutoField(primary_key=True)
+	me = models.ForeignKey(FamilyNode, related_name='+', null=False, blank=False)
+	relative = models.ForeignKey(FamilyNode, related_name='relatives', null=False, blank=False)
+	fmr_type = models.CharField('Relationship Type', max_length=2, choices=RELATIONSHIP)
+	fmr_coeff = models.FloatField('Relationship Coefficient', blank=False, null=True, default=None)
+
+
+	#  There are going to be 2 records in this table for each relationship, source <-> target.   The type of relationship gets tricky to define.
+	#  (Grand)Parents are easy to define, but aunts/uncles/cousins/halfcousins/halfsiblings and it continues to get worse.
+	#  Plotting _a_ monkey's lineage should be easy.  Plotting two monkey's relationship to each other is gonna be nuts.
+	class Meta:
+		db_table = 'fmr_family_relationship'
+
+
 
 
 # put any signal callbacks down here after the model declarations

@@ -128,6 +128,7 @@ urlpatterns += patterns('matrr.views',
 	
 	# Tools
 	url(r'^tools/$', tools_landing, name='tools-landing'),
+
 	url(r'^tools/protein/$', tools_protein, name='tools-protein'),
 	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/$', tools_cohort_protein, name='tools-cohort-protein'),
 	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_protein_graphs, name='tools-cohort-protein-graphs'),
@@ -142,6 +143,9 @@ urlpatterns += patterns('matrr.views',
 	url(r'^tool/etoh/mtd-graph/(?P<mtd_id>\d+)$', tools_etoh_mtd, name='tools-etoh-mtd'),
 	url(r'^tools/graph-as-pdf/$', create_pdf_fragment, name='pdf-fragment'),
 	url(r'^tools/graph-as-svg/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', create_svg_fragment, name='svg-fragment'),
+
+	url(r'^tools/genealogy/$', tools_genealogy, name='tools-genealogy'),
+	url(r'^tools/genealogy/(?P<cohort_id>\d+)/$', tools_cohort_genealogy, name='tools-cohort-genealogy'),
 
 #	url(r'^tools/vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
 	url(r'^tools/vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),

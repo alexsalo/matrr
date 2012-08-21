@@ -1868,7 +1868,7 @@ def tools_protein(request): # pick a cohort
 	else:
 		cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
 		cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
-		cohort_form = CohortSelectForm(cohort_queryset=cohorts_with_protein_data)
+		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
 	return render_to_response('matrr/tools/protein.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 
@@ -1946,7 +1946,7 @@ def tools_cohort_protein_graphs(request, cohort_id):
 	cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
 	cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
 
-	context['subject_select_form'] = CohortSelectForm(cohort_queryset=cohorts_with_protein_data, horizontal=True, initial={'subject': cohort_id})
+	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_protein_data, horizontal=True, initial={'subject': cohort_id})
 	context['protein_form'] = ProteinSelectForm(initial={'proteins': proteins})
 	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
 
@@ -2058,7 +2058,7 @@ def tools_etoh(request): # pick a cohort
 	else:
 		cohorts_with_protein_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 		cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
-		cohort_form = CohortSelectForm(cohort_queryset=cohorts_with_protein_data)
+		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
 	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 
@@ -2128,7 +2128,7 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 	cohorts_with_ethanol_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 	cohorts_with_ethanol_data = Cohort.objects.filter(pk__in=cohorts_with_ethanol_data) # so get the queryset of cohorts
 
-	context['subject_select_form'] = CohortSelectForm(cohort_queryset=cohorts_with_ethanol_data, horizontal=True, initial={'subject': cohort_id})
+	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_ethanol_data, horizontal=True, initial={'subject': cohort_id})
 	context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
 	context['experiment_range_form'] = ExperimentRangeForm()
 	return render_to_response('matrr/tools/ethanol_cohort.html', context, context_instance=RequestContext(request))
@@ -2240,12 +2240,12 @@ def vip_graph_builder(request, method_name):
 		if request.POST:
 			return monkey_graph_builder(request, method_name, date_ranges, min_date, max_date)
 		else:
-			subject_form = MonkeySelectForm(monkey_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
+			subject_form = MonkeySelectForm(subject_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
 	else:
 		if request.POST:
 			return cohort_graph_builder(request, method_name, date_ranges, min_date, max_date)
 		else:
-			subject_form = CohortSelectForm(cohort_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
+			subject_form = CohortSelectForm(subject_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
 	# only reachable if NOT request.POST
 	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges},
 							  context_instance=RequestContext(request))
@@ -2253,7 +2253,7 @@ def vip_graph_builder(request, method_name):
 # TODO: remove this whole view
 def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
-	subject_form = MonkeySelectForm(data=request.POST, monkey_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
+	subject_form = MonkeySelectForm(data=request.POST, subject_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
 	matrr_image = ''
 
 	if date_form.is_valid() and subject_form.is_valid():
@@ -2290,7 +2290,7 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 # TODO: remove this whole view
 def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
-	subject_form = CohortSelectForm(data=request.POST, cohort_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
+	subject_form = CohortSelectForm(data=request.POST, subject_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
 
 	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges}
 
@@ -2324,7 +2324,51 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 			messages.info(request, "No drinking experiments for the given date range for this cohort")
 	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
-#	End VIP
+def tools_genealogy(request):
+	if request.method == 'POST':
+		cohort_form = CohortSelectForm(data=request.POST)
+		if cohort_form.is_valid():
+			return HttpResponseRedirect(reverse('tools-cohort-genealogy', args=[cohort_form.cleaned_data['subject'].pk]))
+		else:
+			messages.error(request, "Invalid form submission")
+	return render_to_response('matrr/tools/genealogy/subject_select.html', {'subject_select_form': CohortSelectForm()}, context_instance=RequestContext(request))
+
+def tools_cohort_genealogy(request, cohort_id):
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	cohort_monkeys = cohort.monkey_set.all()
+	fathers = Monkey.objects.filter(mky_gender='M')
+	mothers = Monkey.objects.filter(mky_gender='F')
+
+	subject_select_form = MonkeySelectForm(subject_queryset=cohort_monkeys)
+	father_form = MonkeySelectForm(subject_queryset=fathers, Mywidget=widgets.SelectMultiple)
+	mother_form = MonkeySelectForm(subject_queryset=mothers)
+	if request.method == 'POST':
+		subject_select_form = MonkeySelectForm(subject_queryset=cohort_monkeys, data=request.POST)
+		father_form = MonkeySelectForm(subject_queryset=fathers, data=request.POST)
+		mother_form = MonkeySelectForm(subject_queryset=mothers, data=request.POST)
+		if subject_select_form.is_valid() and father_form.is_valid() and mother_form.is_valid():
+			me = FamilyNode.objects.get(monkey=subject_select_form['subject'])
+			dad = FamilyNode.objects.get(monkey=father_form['subject'])
+			mom = FamilyNode.objects.get(monkey=mother_form['subject'])
+
+			me.sire = dad
+			me.dam = mom
+			me.save()
+
+			messages.success(request, "Parentage for monkey %d saved.")
+			return redirect(reverse('tools-genealogy'))
+		else:
+			messages.error(request, "Invalid form submission")
+
+	context = dict()
+	context['subject_select_form'] = subject_select_form
+	context['father_form'] = father_form
+	context['mother_form'] = mother_form
+	return render_to_response('matrr/tools/genealogy/parent_select.html', context, context_instance=RequestContext(request))
+
+
+
+
 ### End tools
 
 # Permission-restricted media file hosting
