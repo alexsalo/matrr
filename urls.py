@@ -18,6 +18,7 @@ urlpatterns = patterns('',
 					   url(r'accounts/register/$', 'matrr.views.registration'),
 					   url(r'^accounts/', include('registration.urls')),
 					   url(r'^favicon\.ico$', redirect_to, {'url': '/static/images/favicon.ico'}),
+					   url(r'^robots\.txt$', redirect_to, {'url': '/static/images/robots.txt'}),
 					   )
 
 urlpatterns += patterns('',
