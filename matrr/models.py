@@ -2160,6 +2160,10 @@ class FamilyNode(models.Model):
 			sons_mother = FamilyRelationship.objects.get_or_create(relative=self, me=self.dam, fmr_type=FamilyRelationship.RELATIONSHIP.Parent)[0]
 
 	class Meta:
+		permissions = ([
+			('genealogy_tools', 'Can modify monkey genealogy'),
+			('genealogy', 'Can view monkey genealogy'),
+		])
 		db_table = 'fmn_family_node'
 
 

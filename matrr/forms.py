@@ -641,30 +641,44 @@ class FilterForm(Form):
 
 
 class SubjectSelectForm(Form):
-	def __init__(self, subject_queryset=None, horizontal=False, *args, **kwargs):
+	def __init__(self, subject_label='', subject_helptext='', subject_queryset=None, subject_widget=None, horizontal=False, *args, **kwargs):
+		# This was hacked together in a couple stages, so its sorta silly.
+		# The horizontal kwarg will assign subject.widget to horizontally-aligned RadioSelect
+		# The subject_widget kwarg will assign the widget for the subject field to whatever is passed in.
+		# horizontal will completely ignore subject_widget
+		# subject_widget kwarg will override the horizontal kwarg
 		super(Form, self).__init__(*args, **kwargs)
 		queryset = subject_queryset if subject_queryset else Cohort.objects.all()
 		widget = forms.RadioSelect(renderer=HorizRadioRenderer) if horizontal else RadioSelect(renderer=RadioRenderer_nolist)
-		self.fields['subject'] = ModelChoiceField(queryset=queryset, widget=widget, initial=queryset[0])
-		self.fields['subject'].label = "Subject"
-		self.fields['subject'].help_text = "Select a Subject"
+		widget = subject_widget if subject_widget else widget
+		self.fields['subject'] = ModelChoiceField(queryset=queryset.order_by('pk'), widget=widget, initial=queryset[0])
+		self.fields['subject'].label = subject_label if subject_label else "Subject"
+		self.fields['subject'].help_text = subject_helptext if subject_helptext else "Select a Subject"
 
 
 
 class CohortSelectForm(SubjectSelectForm):
 	def __init__(self, *args, **kwargs):
-		super(CohortSelectForm, self).__init__(*args, **kwargs)
-		self.fields['subject'].label = "Cohort"
-		self.fields['subject'].help_text = "Select a cohort"
+		super(CohortSelectForm, self).__init__(subject_label='Cohort', subject_helptext='Select a cohort', *args, **kwargs)
 
 
 class MonkeySelectForm(SubjectSelectForm):
-	def __init__(self, 	Mywidget=None, *args, **kwargs):
-		super(MonkeySelectForm, self).__init__(*args, **kwargs)
-		self.fields['subject'].label = "Monkey"
-		self.fields['subject'].help_text = "Select a monkey"
-		if Mywidget:
-			self.fields['subject'].widget = Mywidget
+	def __init__(self, 	*args, **kwargs):
+		super(MonkeySelectForm, self).__init__(subject_label='Monkey', subject_helptext='Select a monkey', *args, **kwargs)
+
+
+class GenealogyParentsForm(MonkeySelectForm):
+	def __init__(self, *args, **kwargs):
+		super(GenealogyParentsForm, self).__init__(*args, **kwargs)
+		self.fields['father'] = ModelChoiceField(queryset=Monkey.objects.filter(mky_gender='M').order_by('pk'))
+		self.fields['father'].label = "Father"
+		self.fields['father'].help_text = "Select monkey's father"
+
+		self.fields['mother'] = ModelChoiceField(queryset=Monkey.objects.filter(mky_gender='F').order_by('pk'))
+		self.fields['mother'].label = "Mother"
+		self.fields['mother'].help_text = "Select monkey's mother"
+
+
 
 
 class ProteinSelectForm(Form):
@@ -702,7 +716,7 @@ class DataSelectForm(Form):
 	dataset = ChoiceField(choices=dataset_choices, label='Data Set', help_text="Choose what data to analyze", widget=RadioSelect, initial=dataset_choices[0][0])
 
 #fiels = document.getElementByID('monkey_fieldset'); fiels.style.display='None';
-class SubjectSelectForm(Form):
+class GraphSubjectSelectForm(Form):
 	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
 	subject = ChoiceField(choices=subject_choices,
 						  label='Subject',
@@ -712,7 +726,7 @@ class SubjectSelectForm(Form):
 	monkeys = ModelMultipleChoiceField(queryset=Monkey.objects.all(), required=False, widget=CheckboxSelectMultipleSelectAll())
 
 	def __init__(self, monkey_queryset, **kwargs):
-		super(SubjectSelectForm, self).__init__(**kwargs)
+		super(GraphSubjectSelectForm, self).__init__(**kwargs)
 		self.fields['monkeys'].queryset = monkey_queryset
 
 

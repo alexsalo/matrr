@@ -3,7 +3,28 @@
 {% block content %}
 	<div class=large-headline>Genealogy Tools</div>
 
-	{% include 'matrr/tools/__subject_select_form.html' %}
-	{% include 'matrr/tools/__subject_select_form.html' with subject_select_form=father_form %}
-	{% include 'matrr/tools/__subject_select_form.html' with subject_select_form=mother_form%}
+	<form action='' method='post'>
+		{% csrf_token %}
+		<br>
+		<div class=left style='width:30%'>
+			<div class=headline>{{ genealogy_form.subject.label }}</div>
+			<div class=small>{{ genealogy_form.subject.help_text }}</div>
+			<br>
+			{{ genealogy_form.subject }}
+		</div>
+		<div class=left style='width:30%'>
+			<div class=headline>{{ genealogy_form.father.label }}</div>
+			<div class=small>{{ genealogy_form.father.help_text }}</div>
+			<br>
+			{{ genealogy_form.father }}
+		</div>
+		<div class=left style='width:30%'>
+			<div class=headline>{{ genealogy_form.mother.label }}</div>
+			<div class=small>{{ genealogy_form.mother.help_text }}</div>
+			<br>
+			{{ genealogy_form.mother }}
+		</div>
+		<div class='clearfix'></div><br>
+		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
+	</form>
 {% endblock %}

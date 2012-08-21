@@ -1878,7 +1878,7 @@ def tools_cohort_protein(request, cohort_id):
 	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
 
 	if request.method == 'POST':
-		subject_select_form = SubjectSelectForm(monkey_queryset, data=request.POST)
+		subject_select_form = GraphSubjectSelectForm(monkey_queryset, data=request.POST)
 		if subject_select_form.is_valid():
 			subject = subject_select_form.cleaned_data['subject']
 			if subject == 'monkey':
@@ -1912,7 +1912,7 @@ def tools_cohort_protein(request, cohort_id):
 						messages.warning(request, "This data file has already been created for you.  It is available to download on your account page.")
 				else:
 					messages.warning(request, "You must have a valid MTA on record to download data.  MTA information can be updated on your account page.")
-	return render_to_response('matrr/tools/protein.html', {'subject_select_form': SubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/protein.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
 
 def _verify_monkeys(text_monkeys):
@@ -2069,7 +2069,7 @@ def tools_cohort_etoh(request, cohort_id):
 	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
 
 	if request.method == 'POST':
-		subject_select_form = SubjectSelectForm(monkey_queryset, data=request.POST)
+		subject_select_form = GraphSubjectSelectForm(monkey_queryset, data=request.POST)
 		if subject_select_form.is_valid():
 			subject = subject_select_form.cleaned_data['subject']
 			if subject == 'monkey':
@@ -2088,7 +2088,7 @@ def tools_cohort_etoh(request, cohort_id):
 				messages.warning(request, "Ethanol data download is currently disabled.")
 	mky_ids = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True)
 	monkey_queryset = Monkey.objects.filter(pk__in=mky_ids)
-	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': SubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
@@ -2324,6 +2324,7 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 			messages.info(request, "No drinking experiments for the given date range for this cohort")
 	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.genealogy_tools'), login_url='/denied/')
 def tools_genealogy(request):
 	if request.method == 'POST':
 		cohort_form = CohortSelectForm(data=request.POST)
@@ -2333,37 +2334,29 @@ def tools_genealogy(request):
 			messages.error(request, "Invalid form submission")
 	return render_to_response('matrr/tools/genealogy/subject_select.html', {'subject_select_form': CohortSelectForm()}, context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.access_genealogy_tools'), login_url='/denied/')
 def tools_cohort_genealogy(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
 	cohort_monkeys = cohort.monkey_set.all()
-	fathers = Monkey.objects.filter(mky_gender='M')
-	mothers = Monkey.objects.filter(mky_gender='F')
 
-	subject_select_form = MonkeySelectForm(subject_queryset=cohort_monkeys)
-	father_form = MonkeySelectForm(subject_queryset=fathers, Mywidget=widgets.SelectMultiple)
-	mother_form = MonkeySelectForm(subject_queryset=mothers)
 	if request.method == 'POST':
-		subject_select_form = MonkeySelectForm(subject_queryset=cohort_monkeys, data=request.POST)
-		father_form = MonkeySelectForm(subject_queryset=fathers, data=request.POST)
-		mother_form = MonkeySelectForm(subject_queryset=mothers, data=request.POST)
-		if subject_select_form.is_valid() and father_form.is_valid() and mother_form.is_valid():
-			me = FamilyNode.objects.get(monkey=subject_select_form['subject'])
-			dad = FamilyNode.objects.get(monkey=father_form['subject'])
-			mom = FamilyNode.objects.get(monkey=mother_form['subject'])
+		genealogy_form = GenealogyParentsForm(subject_queryset=cohort_monkeys, data=request.POST)
+		if genealogy_form.is_valid():
+			me = FamilyNode.objects.get(monkey=genealogy_form.cleaned_data['subject'])
+			dad = FamilyNode.objects.get(monkey=genealogy_form.cleaned_data['father'])
+			mom = FamilyNode.objects.get(monkey=genealogy_form.cleaned_data['mother'])
 
 			me.sire = dad
 			me.dam = mom
 			me.save()
 
-			messages.success(request, "Parentage for monkey %d saved.")
-			return redirect(reverse('tools-genealogy'))
+			messages.success(request, "Parentage for monkey %d saved." % me.monkey.pk)
+			return redirect(reverse('tools-cohort-genealogy', args=[cohort_id]))
 		else:
 			messages.error(request, "Invalid form submission")
 
 	context = dict()
-	context['subject_select_form'] = subject_select_form
-	context['father_form'] = father_form
-	context['mother_form'] = mother_form
+	context['genealogy_form'] = GenealogyParentsForm(subject_queryset=cohort_monkeys)
 	return render_to_response('matrr/tools/genealogy/parent_select.html', context, context_instance=RequestContext(request))
 
 
