@@ -3,6 +3,7 @@ from django.core.mail.message import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db.models.query_utils import Q
 from matrr.process_latex import process_latex
+from matrr.views import _export_template_to_pdf
 import settings
 from datetime import datetime
 from django.core.mail import send_mail
@@ -33,7 +34,7 @@ def send_po_manifest_upon_shipment(shp_shipment):
 	if not isinstance(shp_shipment, Shipment):
 		shp_shipment = Shipment.objects.get(pk=shp_shipment)
 
-	req_request = shp_shipment.req_request
+	req_request = shp_shipment.req_request	
 	perm = Permission.objects.get(codename='po_manifest_email')
 	to_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
 
@@ -43,10 +44,9 @@ def send_po_manifest_upon_shipment(shp_shipment):
 
 	filename = 'manifest_user-%s_shipment-%s.pdf' % (str(req_request.user), str(shp_shipment.pk))
 	outfile = open('/tmp/%s' % filename, 'wb')
-	process_latex('latex/shipment_manifest.tex', {'req_request': req_request,
-												  'account': req_request.user.account,
-												  'time': datetime.today(),
-												  }, outfile=outfile)
+	context = {'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
+	_export_template_to_pdf('pdf_templates/shipment_manifest.html', context, outfile=outfile)
+
 	outfile.close()
 	email.attach_file(outfile.name)
 	email.send()
@@ -66,10 +66,9 @@ def notify_user_upon_shipment(shp_shipment):
 	email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, to_list)
 	filename = 'manifest_user-%s_shipment-%s.pdf' % (str(req_request.user), str(shp_shipment.pk))
 	outfile = open('/tmp/%s' % filename, 'wb')
-	process_latex('latex/shipment_manifest.tex', {'req_request': req_request,
-												  'account': req_request.user.account,
-												  'time': datetime.today(),
-												  }, outfile=outfile)
+	context = {'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
+	_export_template_to_pdf('pdf_templates/shipment_manifest.html', context, outfile=outfile)
+
 	outfile.close()
 	email.attach_file(outfile.name)
 	email.send()
