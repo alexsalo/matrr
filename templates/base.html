@@ -14,29 +14,26 @@
 		<script type="text/javascript" src="{{ STATIC_URL }}js/plot_gallery.js"></script>
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/colorbox.css"/>
 	{% endif %}
+	{% if PRODUCTION %}
+		<!-- google analytics -->
+		<script type="text/javascript">
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', 'UA-31849116-1']);
+			_gaq.push(['_trackPageview']);
 
+			(function() {
+				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			})();
+		</script>
+		<!-- /google analytics -->
+	{% endif %}
 
 	{% block extra_js %}{% endblock %}
 
 	<link rel="shortcut icon" href="{{ STATIC_URL }}images/matrr_favicon.ico"/>
 	<title>{% block title %}{% endblock %}</title>
-
-	{% if PRODUCTION %}
-	<!-- google analytics -->
-	<script type="text/javascript">
-
-		var _gaq = _gaq || [];
-		_gaq.push(['_setAccount', 'UA-31849116-1']);
-		_gaq.push(['_trackPageview']);
-
-		(function() {
-			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		})();
-	</script>
-	<!-- /google analytics -->
-	{% endif %}
 </head>
 
 <body>
@@ -102,6 +99,9 @@
 						<li class='drop-down'><a href="{% url tools-protein %}">Protein</a></li>
 						{% if perms.matrr.view_etoh_data %}
 							<li class='drop-down'><a href="{% url tools-etoh %}">Ethanol</a></li>
+						{% endif %}
+						{% if user.is_superuser %}
+							<li class='drop-down'><a href="{% url tools-sandbox %}">Sandbox</a></li>
 						{% endif %}
 					</ul>
 				{% endif %}

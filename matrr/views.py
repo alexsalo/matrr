@@ -2368,7 +2368,15 @@ def tools_cohort_genealogy(request, cohort_id):
 	return render_to_response('matrr/tools/genealogy/parent_select.html', context, context_instance=RequestContext(request))
 
 
-
+@user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
+def tools_sandbox(request):
+	import networkx as nx
+	G = nx.path_graph(4)
+#	G=nx.karate_club_graph()
+	s = "".join(nx.generate_graphml(G))
+	s = mark_safe(s)
+	print s
+	return render_to_response('matrr/tools/sandbox.html', {'graph_ML': s}, context_instance=RequestContext(request))
 
 ### End tools
 

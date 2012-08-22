@@ -40,6 +40,8 @@ body,
   visibility: hidden;
 }
 
+/* The Cytoscape Web container must have its dimensions set. */
+#cytoscapeweb { width: 700px; height: 700px; }
 
 #header,
 .header{
