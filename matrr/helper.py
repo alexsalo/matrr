@@ -177,6 +177,8 @@ class ExampleFamilyTree(FamilyTree):
 
 
 def family_tree():
+	import settings
+	from matrr.models import Monkey, Cohort, Institution
 	if not settings.PRODUCTION:
 		import random
 		for monkey in Monkey.objects.all():
