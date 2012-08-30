@@ -175,10 +175,8 @@ class ExampleFamilyTree(FamilyTree):
 		data['edge_width'] = random.randint(4, 12) # passthruMapper
 		return data
 
-	
+
 def family_tree():
-	import settings
-	from models import Monkey, Cohort, Institution
 	if not settings.PRODUCTION:
 		import random
 		for monkey in Monkey.objects.all():
@@ -188,25 +186,25 @@ def family_tree():
 		for monkey in Monkey.objects.all():
 			fmn = FamilyNode.objects.get_or_create(monkey=monkey)[0]
 
-		female_monkeys = Monkey.objects.filter(mky_gender='F')
-		male_monkeys = Monkey.objects.filter(mky_gender='M', cohort=3, mky_drinking=True)
-		parents = Monkey.objects.all()[:5]
-		for monkey in parents:
+		monkeys = Monkey.objects.all()[:5]
+		female_monkeys = Monkey.objects.filter(mky_gender='F').exclude(pk__in=monkeys)
+		male_monkeys = Monkey.objects.filter(mky_gender='M', cohort=3, mky_drinking=True).exclude(pk__in=monkeys)
+		for monkey in monkeys:
 			index = random.randint(0, min(female_monkeys.count()-1, male_monkeys.count()-1))
 			monkey.genealogy.sire = male_monkeys[index].genealogy
 			monkey.genealogy.dam = female_monkeys[index].genealogy
 			monkey.genealogy.save()
 			monkey.genealogy.create_parent_relationships()
 
-		fmns = FamilyNode.objects.filter(monkey__in=parents)
+		fmns = FamilyNode.objects.filter(monkey__in=monkeys)
 		parent_pks = set()
 		for fmn in fmns:
 			parent_pks.add(fmn.sire.monkey.pk)
 			parent_pks.add(fmn.dam.monkey.pk)
 
 		parents = Monkey.objects.filter(pk__in=parent_pks)
-		female_monkeys = Monkey.objects.exclude(pk__in=parents).filter(mky_gender='F', cohort=11)
-		male_monkeys = Monkey.objects.exclude(pk__in=parents).filter(mky_gender='M', cohort=5)
+		female_monkeys = Monkey.objects.exclude(pk__in=parents).exclude(pk__in=monkeys).filter(mky_gender='F', cohort=11)
+		male_monkeys = Monkey.objects.exclude(pk__in=parents).exclude(pk__in=monkeys).filter(mky_gender='M', cohort=5)
 		for monkey in parents:
 			index = random.randint(0, min(female_monkeys.count()-1, male_monkeys.count()-1))
 			monkey.genealogy.sire = male_monkeys[index].genealogy
