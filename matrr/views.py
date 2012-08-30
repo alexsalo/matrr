@@ -2370,13 +2370,27 @@ def tools_cohort_genealogy(request, cohort_id):
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox(request):
-	import networkx as nx
-	G = nx.path_graph(4)
-#	G=nx.karate_club_graph()
-	s = "".join(nx.generate_graphml(G))
-	s = mark_safe(s)
-	print s
-	return render_to_response('matrr/tools/sandbox.html', {'graph_ML': s}, context_instance=RequestContext(request))
+	from matrr.helper import FamilyTree, ExampleFamilyTree
+	def male_female_shape(node):
+		shape = 'circle' if node[1]['shape_input'] == 'F' else 'square'
+		return shape
+
+	me = FamilyNode.objects.exclude(sire=None, dam=None)[0]
+	tree = ExampleFamilyTree(me)
+
+	tree.visual_style.discrete_node_shapes(shape_method=male_female_shape)
+	tree.visual_style.continuous_node_colors('color_input', min_value='blue', max_value='orange')
+	tree.visual_style.passthru_node_borderColors('borderColor_color')
+	tree.visual_style.discrete_node_borderWidth()
+
+	tree.visual_style.passthru_edge_colors()
+	tree.visual_style.passthru_edge_width()
+
+	draw_options = dict()
+	draw_options['network'] = tree.dump_graphml()
+	draw_options['visualStyle'] = tree.visual_style.get_visual_style()
+	draw_options = mark_safe(str(draw_options))
+	return render_to_response('matrr/tools/sandbox.html', {'monkey': me.monkey, 'draw_options': draw_options}, context_instance=RequestContext(request))
 
 ### End tools
 

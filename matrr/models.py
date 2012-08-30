@@ -2146,10 +2146,11 @@ class MonkeyProtein(models.Model):
 
 
 class FamilyNode(models.Model):
-	monkey = models.OneToOneField(Monkey, null=False, blank=False, related_name='genealogy', primary_key=True)
+	fmn_id = models.AutoField(primary_key=True)
+	monkey = models.OneToOneField(Monkey, null=False, blank=False, related_name='genealogy')
 	sire = models.ForeignKey('self', null=True, blank=True, related_name='+')
 	dam = models.ForeignKey('self', null=True, blank=True, related_name='+')
-	relationships = models.ManyToManyField('self', symmetrical=False, null=True, blank=True, through='FamilyRelationship', related_name='+')
+	kin = models.ManyToManyField('self', symmetrical=False, null=True, blank=True, through='FamilyRelationship', related_name='+')
 
 	def create_parent_relationships(self):
 		if self.sire:
@@ -2158,6 +2159,10 @@ class FamilyNode(models.Model):
 		if self.dam:
 			mothers_son = FamilyRelationship.objects.get_or_create(me=self, relative=self.dam, fmr_type=FamilyRelationship.RELATIONSHIP.Offspring)[0]
 			sons_mother = FamilyRelationship.objects.get_or_create(relative=self, me=self.dam, fmr_type=FamilyRelationship.RELATIONSHIP.Parent)[0]
+		return
+
+	def __unicode__(self):
+		return "FMN:%s" % str(self.monkey)
 
 	class Meta:
 		permissions = ([
@@ -2170,15 +2175,20 @@ class FamilyNode(models.Model):
 class FamilyRelationship(models.Model):
 	RELATIONSHIP = Enumeration([('P', 'Parent', 'Parent'),('O', 'Offspring', 'Offspring')])
 	fmr_id = models.AutoField(primary_key=True)
-	me = models.ForeignKey(FamilyNode, related_name='+', null=False, blank=False)
-	relative = models.ForeignKey(FamilyNode, related_name='relatives', null=False, blank=False)
+	me = models.ForeignKey(FamilyNode, related_name='my_relations', null=False, blank=False)
+	relative = models.ForeignKey(FamilyNode, related_name='relations_with_me', null=False, blank=False)
 	fmr_type = models.CharField('Relationship Type', max_length=2, choices=RELATIONSHIP)
 	fmr_coeff = models.FloatField('Relationship Coefficient', blank=False, null=True, default=None)
-
-
 	#  There are going to be 2 records in this table for each relationship, source <-> target.   The type of relationship gets tricky to define.
 	#  (Grand)Parents are easy to define, but aunts/uncles/cousins/halfcousins/halfsiblings and it continues to get worse.
 	#  Plotting _a_ monkey's lineage should be easy.  Plotting two monkey's relationship to each other is gonna be nuts.
+
+	def reverse(self):
+		return FamilyRelationship.objects.get(relative=self.me, me=self.relative)
+
+	def __unicode__(self):
+		return "Relation: %s is %s of %s" % (str(self.me), self.get_fmr_type_display(), str(self.relative))
+
 	class Meta:
 		db_table = 'fmr_family_relationship'
 
