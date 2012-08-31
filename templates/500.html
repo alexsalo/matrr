@@ -71,9 +71,7 @@
 					<a href="{% url upcoming %}">View Upcoming Cohorts</a><br/>
 					<a href="{% url available %}">View Archival Cohorts</a><br/>
 					<a href="{% url cohorts %}">View All Cohorts</a><br/>
-					{% if user_is_member_of_tech_user %}
-						<a href="{% url assay %}">Request tissues for Assay Development</a><br/>
-					{% endif %}
+					<a href="{% url assay %}">Request tissues for Assay Development</a><br/>
 					<a href="{% url mta-upload %}">Upload an MTA</a><br/>
 					<a href="{% url account-view %}">Submit Research Updates</a><br/>
 					<a href="{% url publications %}">View Publications</a>

@@ -1,7 +1,7 @@
 from matrr.models import *
 from django.contrib.auth.views import AuthenticationForm
 from string import lower, replace
-from settings import PRODUCTION, GLEEK, DEVELOPMENT
+from settings import PRODUCTION, GLEEK, DEVELOPMENT, DEBUG
 
 def cart(request):
 	# get the cart for the user in the request
@@ -28,16 +28,11 @@ def login_form(request):
 	return {'login_form': AuthenticationForm()}
 
 
-def group_membership(request):
-	#context = {}
-	# cheezy, should be somewhere else
-	context = {'PRODUCTION': PRODUCTION, 'GLEEK': GLEEK, 'DEVELOPMENT': DEVELOPMENT} # no, really, this should be moved.
+# method name is deprecated
+# should be renamed
+def global_context(request):
+	context = {'PRODUCTION': PRODUCTION, 'GLEEK': GLEEK, 'DEVELOPMENT': DEVELOPMENT, 'DEBUG': DEBUG}
 	if request.user.is_authenticated():
-		# if the user is logged in, get the groups the user is a member of
-		groups = request.user.groups.all()
-		for group in groups:
-			key = 'user_is_member_of_' + replace(lower(group.name), ' ', '_')
-			context[key] = True
 		if request.user.account.verified:
 			context['user_is_verified'] = True
 	return context
