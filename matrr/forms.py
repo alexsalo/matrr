@@ -7,7 +7,6 @@ from django.db import transaction
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from datetime import date, timedelta
 import re
-from matrr.emails import send_verify_new_account_email
 from matrr.models import *
 from matrr.widgets import *
 from registration.forms import RegistrationForm
@@ -93,6 +92,7 @@ class MatrrRegistrationForm(RegistrationForm):
 		account.act_shipping_name = user.first_name + " " + user.last_name
 
 		account.save()
+		from matrr.emails import send_verify_new_account_email
 		send_verify_new_account_email(account)
 		return user
 
