@@ -1284,7 +1284,8 @@ class Request(models.Model, DiffingMixin):
 #	req_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
 
 	def __unicode__(self):
-		return 'User: ' + self.user.username +\
+		return 'Request: %d' % self.pk + \
+			   ' User: ' + self.user.username +\
 			   ' Cohort: ' + self.cohort.coh_cohort_name +\
 			   ' Date: ' + self.req_request_date.strftime("%I:%M%p  %m/%d/%y")
 
