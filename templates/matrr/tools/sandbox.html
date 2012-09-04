@@ -57,19 +57,17 @@
 {% endblock %}
 
 {% block content %}
-	<div>
 	<div class=headline>Monkey {{ monkey }}</div>
-	Legend: <br>
-	Node shape:  Circle == Female, Square == Male<br>
-	Node color:  Gradient color, calculated on the fly given inputs.  For example, lowest lifetime ethanol consumption would be blue, highest lifetime consumption would be orange.  This value _will_ be visible to the public in the page source.<br>
-	Node borderColor: Individually assigned color.  Could be discretized number of days of high ethanol consumption.  This value can be shown to or hidden from public in pagesource.<br>
-	Node borderWidth: Individually assigned width, same options as borderColor.<br>
-	<br>
-	Edge color: Black == Parent relationship, Gray == Offspring relationship.  Currently this is in effect randomly assigned.<br>
-	Edge width: same options as Node borderWidth
-	</div>
-	<br>
 	<div id="cytoscapeweb">
 		Cytoscape Web will replace the contents of this div with your graph.
 	</div>
+	<div>
+		<div class="headline small">Legend:</div>
+		<b>Node shape:</b>  Circle == Female, Square == Male<br>
+		<b>Node color:</b>  Gradient color, calculated on the fly given inputs.  For example, lowest lifetime ethanol consumption would be blue, highest lifetime consumption would be orange.  This value _will_ be visible to the public in the page source.<br>
+		<b>Node borderColor:</b> Individually assigned color.  Could be discretized number of days of high ethanol consumption.  This value can be shown to or hidden from public in pagesource.<br>
+		<b>Node borderWidth:</b> Individually assigned width, same options as borderColor.<br>
+		<b>Edge color:</b> Black == Parent relationship, Gray == Offspring relationship.  Currently this is in effect randomly assigned.<br>
+		<b>Edge width:</b> same options as Node borderWidth
+		</div>
 {% endblock %}
