@@ -7,8 +7,7 @@ from django.db import transaction
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from datetime import date, timedelta
 import re
-from django.core.mail import send_mail
-from django.core.urlresolvers import reverse
+from matrr.emails import send_verify_new_account_email
 from matrr.models import *
 from matrr.widgets import *
 from registration.forms import RegistrationForm
@@ -55,30 +54,6 @@ class OtOAcountForm(ModelForm):
 		model = Account
 
 
-def generate_email_body_new_registration(account):
-	body = "New account was created.\n" +\
-		   "\t username: %s\n" % account.user.username +\
-		   "\t first name: %s\n" % account.user.first_name +\
-		   "\t last name: %s\n" % account.user.last_name +\
-		   "\t e-mail: %s\n" % account.user.email +\
-		   "\t phone number: %s\n" % account.phone_number +\
-		   "\t institution: %s\n" % account.institution +\
-		   "\t first name: %s\n" % account.user.first_name +\
-		   "\t address 1: %s\n" % account.act_real_address1 +\
-		   "\t address 2: %s\n" % account.act_real_address2 +\
-		   "\t city: %s\n" % account.act_real_city +\
-		   "\t ZIP code: %s\n" % account.act_real_zip +\
-		   "\t state: %s\n" % account.act_real_state +\
-		   "\nTo view account in admin, go to:\n" +\
-		   "\t http://gleek.ecs.baylor.edu/admin/matrr/account/%d/\n" % account.user.id +\
-		   "To verify account follow this link:\n" +\
-		   "\t http://gleek.ecs.baylor.edu%s\n" % reverse('account-verify', args=[account.user.id, ]) +\
-		   "To delete account follow this link and confirm deletion of all objects (Yes, I'm sure):\n" +\
-		   "\t http://gleek.ecs.baylor.edu/admin/auth/user/%d/delete/\n" % account.user.id +\
-		   "All the links might require a proper log-in."
-	return body
-
-
 class MatrrRegistrationForm(RegistrationForm):
 	first_name = CharField(label="First name", max_length=30)
 	last_name = CharField(label="Last name", max_length=30)
@@ -118,12 +93,7 @@ class MatrrRegistrationForm(RegistrationForm):
 		account.act_shipping_name = user.first_name + " " + user.last_name
 
 		account.save()
-		subject = "New account on www.matrr.com"
-		body = generate_email_body_new_registration(account)
-		from_e = "Erich_Baker@baylor.edu"
-		to_e = list()
-		to_e.append(from_e)
-		send_mail(subject, body, from_e, to_e, fail_silently=True)
+		send_verify_new_account_email(account)
 		return user
 
 
@@ -299,7 +269,7 @@ class RudForm(ModelForm):
 	def __init__(self, user, *args, **kwargs):
 		super(RudForm, self).__init__(*args, **kwargs)
 		upload_from = date.today() - timedelta(days=30)
-		self.fields['request'].queryset = Request.objects.filter(user=user, req_status=RequestStatus.Shipped, shipment__shp_shipment_date__lte=upload_from)
+		self.fields['request'].queryset = Request.objects.filter(user=user, req_status=RequestStatus.Shipped, tissue_request_set__shipment__shp_shipment_date__lte=upload_from)
 
 	class Meta:
 		model = ResearchUpdate

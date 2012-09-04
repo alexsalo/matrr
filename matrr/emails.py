@@ -2,7 +2,6 @@ from django.contrib.auth.models import Permission
 from django.core.mail.message import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db.models.query_utils import Q
-from matrr.process_latex import process_latex
 from matrr.views import _export_template_to_pdf
 import settings
 from datetime import datetime
@@ -92,4 +91,32 @@ def send_jim_hippocampus_notification(req_request):
 		if ret > 0:
 			print "%s Hippocampus notification sent to %s." % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), jim.username)
 
+def send_verify_new_account_email(account):
+	body = "New account was created.\n" +\
+		   "\t username: %s\n" % account.user.username +\
+		   "\t first name: %s\n" % account.user.first_name +\
+		   "\t last name: %s\n" % account.user.last_name +\
+		   "\t e-mail: %s\n" % account.user.email +\
+		   "\t phone number: %s\n" % account.phone_number +\
+		   "\t institution: %s\n" % account.institution +\
+		   "\t first name: %s\n" % account.user.first_name +\
+		   "\t address 1: %s\n" % account.act_real_address1 +\
+		   "\t address 2: %s\n" % account.act_real_address2 +\
+		   "\t city: %s\n" % account.act_real_city +\
+		   "\t ZIP code: %s\n" % account.act_real_zip +\
+		   "\t state: %s\n" % account.act_real_state +\
+		   "\nTo view account in admin, go to:\n" +\
+		   "\t http://gleek.ecs.baylor.edu/admin/matrr/account/%d/\n" % account.user.id +\
+		   "To verify account follow this link:\n" +\
+		   "\t http://gleek.ecs.baylor.edu%s\n" % reverse('account-verify', args=[account.user.id, ]) +\
+		   "To delete account follow this link and confirm deletion of all objects (Yes, I'm sure):\n" +\
+		   "\t http://gleek.ecs.baylor.edu/admin/auth/user/%d/delete/\n" % account.user.id +\
+		   "All the links might require a proper log-in."
+
+	subject = "New account on www.matrr.com"
+	from_e = "Erich_Baker@baylor.edu"
+	to_e = list()
+	to_e.append(from_e)
+	if settings.PRODUCTION:
+		send_mail(subject, body, from_e, to_e, fail_silently=True)
 

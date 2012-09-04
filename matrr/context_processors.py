@@ -28,8 +28,6 @@ def login_form(request):
 	return {'login_form': AuthenticationForm()}
 
 
-# method name is deprecated
-# should be renamed
 def global_context(request):
 	context = {'PRODUCTION': PRODUCTION, 'GLEEK': GLEEK, 'DEVELOPMENT': DEVELOPMENT, 'DEBUG': DEBUG}
 	if request.user.is_authenticated():

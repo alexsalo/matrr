@@ -513,6 +513,7 @@ def mta_upload(request):
 
 
 def rud_upload(request):
+	from matrr.forms import RudForm
 	if request.method == 'POST':
 		form = RudForm(request.user, request.POST, request.FILES)
 		if form.is_valid():
