@@ -117,7 +117,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 	"django.core.context_processors.request",
 	'matrr.context_processors.cart',
 	'matrr.context_processors.login_form',
-	'matrr.context_processors.group_membership',
+	'matrr.context_processors.global_context',
 	'matrr.context_processors.unsupported_browser',
 
 #	"django.core.context_processors.auth",

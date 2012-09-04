@@ -46,7 +46,11 @@
 {% endif %}
 <!-- Header div -->
 {% if PRODUCTION %}
-	<div class='header'>
+	{% if user.is_superuser and DEBUG %}
+		<div class='header-prod-debug'>
+	{% else %}
+		<div class='header-prod'>
+	{% endif %}
 {% else %}
 	{% if GLEEK %}
 	<div id="header-gleek">

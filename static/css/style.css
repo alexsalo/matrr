@@ -9,8 +9,8 @@ body {
     color: #020100;
 }
 
-#header,
-.header {
+#header-prod,
+.header-prod {
     background-color: #4E4E4E; /*#80898E;*/
     background-image: -moz-linear-gradient(270deg, #7E7E7E, #4E4E4E);
     /*-moz-linear-gradient(-90deg, #C7D4DB,
@@ -20,8 +20,18 @@ body {
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#4E4E4E', endColorstr = '#7E7E7E', GradientType = 0); /* ie */
     text: bold;
     color: #FAF9ED;
+}#header-prod-debug,
+.header-prod-debug {
+    background-color: #4E4E4E; /*#80898E;*/
+    background-image: -moz-linear-gradient(90deg, #7E7E7E, #4E4E4E);
+    /*-moz-linear-gradient(-90deg, #C7D4DB,
+    #80898E);*/
+    background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0.15, rgb(126, 126, 126)), color-stop(0.69, rgb(78, 78, 78)));
+    /* This is untested, if the header looks off in IE, this is probably the cause */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#4E4E4E', endColorstr = '#7E7E7E', GradientType = 0); /* ie */
+    text: bold;
+    color: #FAF9ED;
 }
-
 #header-dev,
 .header-dev {
     background-color: #4Eff4E; /*#80898E;*/
