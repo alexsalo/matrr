@@ -1761,3 +1761,81 @@ def load_hormone_data(file_name, overwrite=False, header=True):
 				continue
 	print "Data load complete."
 
+def load_bec_data(file_name, overwrite=False, header=True):
+	def format_time(unformatted):
+		""" Converts "hh:MM AM" into HH:MM """
+		time, afternoon = unformatted.split(' ')
+		hh, MM = time.split(":")
+		if afternoon.lower() == 'pm':
+			HH = int(hh) + 12
+		else:
+			HH = int(hh)
+		HH = 12 if HH == 24 else HH
+		return "%s:%s" % (str(HH), str(MM))
+
+	fields = (
+		'mky_real_id',			# 0
+		'mky_id',				# 1
+		'bec_collect_date',		# 2
+		'bec_run_date',			# 3
+		'bec_exper',			# 4
+		'bec_exper_day',		# 5
+		'bec_session_start',	# 6
+		'bec_sample',			# 7
+		'bec_weight',			# 8
+		'bec_vol_etoh',			# 9
+		'bec_gkg_etoh',			# 10
+		'bec_daily_gkg_etoh',	# 11
+		'__(bec_gkg_etoh - bec_daily_gkg_etoh)', # 12, this column is ignored
+		'bec_mg_pct',			# 13
+		)
+	FIELDS_INDEX = (4,14) #(4,14) => 4,5,6,7,8,9,10,11,12,13
+	with open(file_name, 'r') as f:
+		read_data = f.read()
+		if '\r' in read_data:
+			read_data = read_data.split('\r')
+		elif '\n' in read_data:
+			read_data = read_data.split('\n')
+		else:
+			raise Exception("WTF Line endings are in this file?")
+		offset = 1 if header else 0
+		for line_number, line in enumerate(read_data[offset:]):
+			data = line.split("\t")
+			try:
+				monkey = Monkey.objects.get(mky_real_id=data[0])
+				assert monkey.pk == int(data[1])
+			except Monkey.DoesNotExist:
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				continue
+
+			try:
+				bec_collect_date = dt.strptime(data[2], "%m/%d/%y")
+				bec_run_date = dt.strptime(data[3], "%m/%d/%y")
+			except:
+				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
+				continue
+
+			bec, is_new = MonkeyBEC.objects.get_or_create(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
+			if not is_new and not overwrite:
+				print ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
+				continue
+
+			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+			model_fields = fields[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+			for i, field in enumerate(model_fields):
+				if model_fields[i].startswith('__'):
+					continue
+				if data_fields[i] != '':
+					if i in (2, 3): # time fields, fields[6] and fields[7]
+						setattr(bec, field, format_time(data_fields[i]))
+					else:
+						setattr(bec, field, data_fields[i])
+
+			try:
+				bec.full_clean()
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, e, line)
+				bec.delete()
+				continue
+	print "Data load complete."
+
