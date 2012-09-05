@@ -2194,6 +2194,24 @@ class FamilyRelationship(models.Model):
 		db_table = 'fmr_family_relationship'
 
 
+class MonkeyHormone(models.Model):
+	mhm_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='hormone_records', db_column='mky_id', editable=False)
+	mhm_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
+	mhm_cort = models.FloatField("Cortisol", null=True, blank=True)
+	mhm_acth = models.FloatField("ACTH", null=True, blank=True)
+	mhm_t = models.FloatField("Testosterone", null=True, blank=True)
+	mhm_doc = models.FloatField("Deoxycorticosterone", null=True, blank=True)
+	mhm_ald = models.FloatField("Aldosterone", null=True, blank=True)
+	mhm_dheas = models.FloatField("DHEAS", null=True, blank=True)
+
+	def __unicode__(self):
+		return "%s | %s" % (str(self.monkey), str(self.mhm_date))
+
+	class Meta:
+		db_table = 'mhm_monkey_hormone'
+
+
 
 
 # put any signal callbacks down here after the model declarations

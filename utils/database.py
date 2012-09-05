@@ -942,7 +942,7 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
 			print err
 		return
 	edr.save()	
-			
+
 def load_edr_one_file(file_name, dex):
 	fields = (
 		'edr_number',
@@ -1709,3 +1709,55 @@ def create_7b_control_monkeys():
 					mky_age_at_necropsy='7 yrs 5 mos 23 days',
 					)
 	monkey.save()
+
+def load_hormone_data(file_name, overwrite=False, header=True):
+	fields = (
+		'mhm_date', # 0
+		'monkey',	# 1
+		'mhm_cort',	# 2
+		'mhm_acth',	# 3
+		'mhm_t',	# 4
+		'mhm_doc',	# 5
+		'mhm_ald',	# 6
+		'mhm_dheas',# 7
+		'__cohort',	# 8 Ignored, not a real data field.
+		)
+	FIELDS_INDEX = (2,8) #(2,8) => 2,3,4,5,6,7
+	with open(file_name, 'r') as f:
+		read_data = f.read()
+		if '\r' in read_data:
+			read_data = read_data.split('\r')
+		elif '\n' in read_data:
+			read_data = read_data.split('\n')
+		else:
+			raise Exception("WTF Line endings are in this file?")
+		offset = 1 if header else 0
+		for line_number, line in enumerate(read_data[offset:]):
+			data = line.split("\t")
+			try:
+				mhm_date = dt.strptime(data[0], "%m/%d/%y")
+				monkey = Monkey.objects.get(mky_real_id=data[1])
+			except Monkey.DoesNotExist:
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				continue
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
+				continue
+			mhm, is_new = MonkeyHormone.objects.get_or_create(monkey=monkey, mhm_date=mhm_date)
+			if not is_new and not overwrite:
+				print ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
+				continue
+
+			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+			model_fields = fields[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+			for i, field in enumerate(model_fields):
+				if data_fields[i] != '':
+					setattr(mhm, field, data_fields[i])
+
+			try:
+				mhm.full_clean()
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, e, line)
+				continue
+	print "Data load complete."
+
