@@ -1272,6 +1272,7 @@ class Request(models.Model, DiffingMixin):
 									   max_length=100)
 	req_notes = models.TextField('Request Notes', null=True, blank=True)
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
+	req_report_asked_count = models.IntegerField('Progress report requested count', default=False)
 
 	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
 #	req_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
