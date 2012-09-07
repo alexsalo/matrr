@@ -117,7 +117,6 @@ urlpatterns += patterns('matrr.views',
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
 	# Research update pages
-	url(r'^rud/$', research_update_landing, name='rud-landing'),
 	url(r'^rud/list$', research_update_list, name='rud-list'),
 	url(r'^rud/overdue$', research_update_overdue, name='rud-overdue'),
 

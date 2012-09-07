@@ -1,10 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<div id="large-headline">Overdue Research Updates</div>
-	<div id="headline">Shipped Requests</div>
-
-
+	<div id="large-headline">Overdue Research Updates<span class="right"><a href="{% url rud-list %}">View research updates</a></span> </div>
+	<div id="small-headline">Shipped Requests</div>
 	<table class='common center'>
 		<tr>
 			<th>Request</th>
