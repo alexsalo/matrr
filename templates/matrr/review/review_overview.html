@@ -176,6 +176,12 @@
 					</div>
 				{% endif %}
 
+				{% if not req_request.user.account.has_overdue_rud %}
+					<div class='messages clearfix'>
+						<div class="error">User has not submitted research updates for past requests.</div>
+					</div>
+				{% endif %}
+
 				{% if req_request.can_be_evaluated %}
 					<input type='submit' class='blockLinkCheckoutButton' value='Process Request'/>
 				{% endif %}

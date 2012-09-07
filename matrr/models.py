@@ -469,6 +469,18 @@ class Account(models.Model):
 		# In all other cases, user has no valid MTA
 		return False
 
+	def has_overdue_rud(self):
+		from datetime import date, timedelta
+		urge_rud_from = date.today() - timedelta(days=90)
+		urged_rud = Shipment.objects.filter(req_request__user=self.user, shp_shipment_date__lte=urge_rud_from,
+											req_request__rud_set=None)
+		if urged_rud:
+			return True
+		else:
+			return False
+
+
+
 	def save(self, *args, **kwargs):
 		super(Account, self).save(*args, **kwargs)
 
@@ -1232,11 +1244,6 @@ class RequestManager(models.Manager):
 
 
 class Request(models.Model, DiffingMixin):
-	########  BIG IMPORTANT WARNING  #######
-	# If you're adding new fields to this model
-	# Don't forget to exclude them from any applicable Form
-	########
-
 	REFERRAL_CHOICES = (
 	('Internet Search', 'Internet Search'),
 	('Publication', 'Publication'),
@@ -1279,6 +1286,11 @@ class Request(models.Model, DiffingMixin):
 									   max_length=100)
 	req_notes = models.TextField('Request Notes', null=True, blank=True)
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
+	req_report_asked_count = models.IntegerField('Progress report requested count', default=0)
+	def _migrate_report_count(self):
+		if not self.req_report_asked_count and self.req_report_asked:
+			self.req_report_asked_count = 1
+			self.save()
 
 	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
 #	req_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
@@ -1456,7 +1468,7 @@ class Request(models.Model, DiffingMixin):
 
 	def can_be_shipped(self):
 		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
-			if self.user.account.has_mta() and self.req_purchase_order:
+			if self.user.account.has_mta() and self.req_purchase_order and not self.user.account.has_overdue_rud():
 				return True
 		return False
 
@@ -1479,6 +1491,20 @@ class Request(models.Model, DiffingMixin):
 			if rtt.get_inventory_verification_status() == VerificationStatus.Incomplete:
 				return VerificationStatus.Incomplete
 		return VerificationStatus.Complete
+
+	def get_max_shipment(self):
+		try:
+			return self.shipments.all().order_by('-shp_shipment_date')[0]
+		except IndexError:
+			return ''
+
+	def get_overdue_rud_color(self):
+		if self.req_report_asked_count >= 3:
+					return 'red'
+		elif self.req_report_asked_count <= 0:
+					return ''
+		else:
+			return 'orange'
 
 	class Meta:
 		db_table = 'req_requests'
@@ -1511,7 +1537,7 @@ class Shipment(models.Model):
 
 class ResearchUpdate(models.Model):
 	rud_id = models.AutoField(primary_key=True)
-	request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False,
+	req_request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False,
 								help_text='Choose a shipped request for which you would like to upload a research update:')
 	rud_date = models.DateField('Date uploaded', editable=False, blank=True, null=True, auto_now_add=True)
 	rud_title = models.CharField('Title', blank=True, null=False, max_length=25,
@@ -1520,10 +1546,10 @@ class ResearchUpdate(models.Model):
 								help_text='File to Upload')
 
 	def __unicode__(self):
-		return "%s: %s (%s)" % (self.request.__unicode__(), self.rud_title, self.rud_file.name)
+		return "%s: %s (%s)" % (self.req_request.__unicode__(), self.rud_title, self.rud_file.name)
 
 	def verify_user_access_to_file(self, user):
-		if self.request.user == user:
+		if self.req_request.user == user:
 			return True
 		if user.has_perm('matrr.view_rud_file'):
 			return True

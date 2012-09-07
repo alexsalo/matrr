@@ -674,7 +674,7 @@ def account_detail_view(request, user_id):
 	urged_rud = Shipment.objects.filter(req_request__user=user_id, shp_shipment_date__lte=urge_rud_from,
 										req_request__rud_set=None)
 
-	rud_info = ResearchUpdate.objects.filter(request__user=user_id)
+	rud_info = ResearchUpdate.objects.filter(req_request__user=user_id)
 
 	if pending_rud or urged_rud or rud_info:
 		rud_on = True
@@ -1487,7 +1487,8 @@ def shipment_detail(request, shipment_id):
 								 "A request can only be shipped if all of the following are true:\
 													  1) the request has been accepted and not yet shipped, \
 													  2) user has submitted a Purchase Order number, \
-													  3) User has submitted a valid MTA.")
+													  3) User has submitted a valid MTA, \
+								 					  4) User has no pending research update requests.")
 			else:
 				confirm_ship = True
 				messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
@@ -1498,7 +1499,8 @@ def shipment_detail(request, shipment_id):
 								 "A request can only be shipped if all of the following are true:\
 													  1) the request has been accepted and not yet shipped, \
 													  2) user has submitted a Purchase Order number, \
-													  3) User has submitted a valid MTA.")
+													  3) User has submitted a valid MTA.\
+								 					  4) User has no pending research update requests.")
 			else:
 				messages.success(request, "Shipment #%d for user %s has been shipped." % (shipment.pk, req_request.user.username))
 				shipment.shp_shipment_date = datetime.today()
@@ -1506,7 +1508,6 @@ def shipment_detail(request, shipment_id):
 				shipment.save()
 				if settings.PRODUCTION:
 					from matrr.emails import send_po_manifest_upon_shipment, notify_user_upon_shipment
-
 					send_po_manifest_upon_shipment(shipment)
 					notify_user_upon_shipment(shipment)
 				req_request.ship_request()
@@ -1832,6 +1833,49 @@ def inventory_cohort(request, coh_id):
 					tst_row['row'].append(Availability.Unavailable)
 			availability_matrix.append(tst_row)
 	return render_to_response('matrr/inventory/inventory_cohort.html', {"cohort": cohort, "monkeys": monkeys, "matrix": availability_matrix}, context_instance=RequestContext(request))
+
+
+@user_passes_test(lambda u: u.has_perm('matrr.view_rud_file'), login_url='/denied/')
+def research_update_landing(request):
+	return render_to_response('matrr/rud_reports/rud_landing.html', {}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('matrr.view_rud_file'), login_url='/denied/')
+def research_update_list(request):
+	pending_ruds = Request.objects.exclude(rud_set=None).order_by('req_request_date')
+	paginator = Paginator(pending_ruds, 20)
+
+	if request.GET and 'page' in request.GET:
+		page = request.GET.get('page')
+	else:
+		page = 1
+	try:
+		rud_list = paginator.page(page)
+	except PageNotAnInteger:
+		# If page is not an integer, deliver first page.
+		rud_list = paginator.page(1)
+	except EmptyPage:
+		# If page is out of range (e.g. 9999), deliver last page of results.
+		rud_list = paginator.page(paginator.num_pages)
+	return render_to_response('matrr/rud_reports/rud_list.html', {'rud_list': rud_list}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('matrr.view_rud_file'), login_url='/denied/')
+def research_update_overdue(request):
+	pending_ruds = Request.objects.shipped().filter(rud_set=None).order_by('-req_report_asked_count', 'req_request_date')
+	paginator = Paginator(pending_ruds, 20)
+
+	if request.GET and 'page' in request.GET:
+		page = request.GET.get('page')
+	else:
+		page = 1
+	try:
+		req_list = paginator.page(page)
+	except PageNotAnInteger:
+		# If page is not an integer, deliver first page.
+		req_list = paginator.page(1)
+	except EmptyPage:
+		# If page is out of range (e.g. 9999), deliver last page of results.
+		req_list = paginator.page(paginator.num_pages)
+	return render_to_response('matrr/rud_reports/req_list.html', {'req_list': req_list}, context_instance=RequestContext(request))
 
 
 ### Tools
