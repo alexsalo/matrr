@@ -1836,10 +1836,6 @@ def inventory_cohort(request, coh_id):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_file'), login_url='/denied/')
-def research_update_landing(request):
-	return render_to_response('matrr/rud_reports/rud_landing.html', {}, context_instance=RequestContext(request))
-
-@user_passes_test(lambda u: u.has_perm('matrr.view_rud_file'), login_url='/denied/')
 def research_update_list(request):
 	pending_ruds = Request.objects.exclude(rud_set=None).order_by('req_request_date')
 	paginator = Paginator(pending_ruds, 20)

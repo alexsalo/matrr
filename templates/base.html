@@ -147,7 +147,7 @@
 							<li class='drop-down'><a href="{% url inventory %}">Browse Inventory</a></li>
 						{% endif %}
 						{% if perms.matrr.view_rud_file %}
-							<li class='drop-down'><a href='{% url rud-landing %}'>Research Updates</a></li>
+							<li class='drop-down'><a href='{% url rud-overdue %}'>Research Updates</a></li>
 						{% endif %}
 						{% if perms.matrr.verify_mta %}
 							<li class='drop-down'><a href='{% url mta-list %}'>Verify MTAs</a></li>
