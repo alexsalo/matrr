@@ -275,6 +275,65 @@ def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_dup
 			unmatched_output.writerow(row)
 			print error
 
+def load_cohort_7b_inventory(input_file):
+	unmatched_output_file = input_file + "-unmatched-output.csv"
+
+	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+	unmatched_output = csv.writer(open(unmatched_output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+
+	columns = input_data.next()
+	unmatched_output.writerow(columns)
+
+	inv_fields = (2, 10)
+	print "Loading Inventory..."
+
+	# ordered by columns 2 thru 11
+	mky_24818 = Monkey.objects.get(mky_real_id=24818)
+	mky_25154 = Monkey.objects.get(mky_real_id=25154)
+	mky_25157 = Monkey.objects.get(mky_real_id=25157)
+	mky_25184 = Monkey.objects.get(mky_real_id=25184)
+	mky_25207 = Monkey.objects.get(mky_real_id=25207)
+	mky_25407 = Monkey.objects.get(mky_real_id=25407)
+	mky_25240 = Monkey.objects.get(mky_real_id=25240)
+	mky_25425 = Monkey.objects.get(mky_real_id=25425)
+	mky_25526 = Monkey.objects.get(mky_real_id=25526)
+	mkys = [mky_24818, mky_25154, mky_25157, mky_25184, mky_25207, mky_25407, mky_25240, mky_25425, mky_25526]
+	for row in input_data:
+		tissue_category		= row[0] #ignored
+		tissue_name		 	= row[1]
+		tissue_type = TissueType.objects.filter(tst_tissue_name__iexact=tissue_name)
+		if not tissue_type:
+			error = "Error: Unknown tissue type"
+			row.append(error)
+			print row
+			unmatched_output.writerow(row)
+			print error
+			continue
+		elif tissue_type.count() == 1:
+			try:
+				for mky, tissue_exists in zip(mkys, row[inv_fields[0]:inv_fields[1]]):
+					tss = TissueSample.objects.filter(monkey=mky, tissue_type=tissue_type)
+					if tss.count() == 1:
+						tss = tss[0]
+					else:
+						error = "Error:  Too many or not enough tissues samples for monkey %s, tissue %s." % (str(mky), str(tissue_type))
+						row.append(error)
+						unmatched_output.writerow(row)
+						print error
+					tss.tss_freezer = "Ask OHSU"
+					tss.tss_location = "Ask OHSU"
+					tss.tss_sample_quantity = 1
+					tss.save()
+			except IndexError:
+				print 'index error\n %s' % str(row)
+		else:
+			error = "Error:  Too many TissueType matches."
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
+
+
+
 ## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
 ## -jf
 def dump_all_TissueSample(output_file):
@@ -1682,28 +1741,28 @@ def create_7b_control_monkeys():
 	import datetime
 	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
 	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
-					mky_real_id=1234,
+					mky_real_id=24818,
 					mky_birthdate=datetime.date(2005, 3, 13),
 					mky_necropsy_start_date=datetime.date(2012, 7, 23),
 					mky_age_at_necropsy='7 yrs 4 mos 10 days',
 					)
 	monkey.save()
 	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
-					mky_real_id=12345,
+					mky_real_id=25207,
 					mky_birthdate=datetime.date(2005, 6, 1),
 					mky_necropsy_start_date=datetime.date(2012, 7, 27),
 					mky_age_at_necropsy='7 yrs 1 mos 26 days',
 					)
 	monkey.save()
 	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
-					mky_real_id=123456,
+					mky_real_id=25407,
 					mky_birthdate=datetime.date(2005, 4, 1),
 					mky_necropsy_start_date=datetime.date(2012, 7, 26),
 					mky_age_at_necropsy='7 yrs 3 mos 25 days',
 					)
 	monkey.save()
 	monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
-					mky_real_id=1234567,
+					mky_real_id=25526,
 					mky_birthdate=datetime.date(2005, 2, 1),
 					mky_necropsy_start_date=datetime.date(2012, 7, 24),
 					mky_age_at_necropsy='7 yrs 5 mos 23 days',
