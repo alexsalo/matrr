@@ -276,10 +276,12 @@ def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_dup
 			print error
 
 def load_cohort_7b_inventory(input_file):
-	unmatched_output_file = input_file + "-unmatched-output.csv"
+	output = input_file.split('/')
+	output.reverse()
+	output_file = output[0] + '-output.txt'
 
 	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
-	unmatched_output = csv.writer(open(unmatched_output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	unmatched_output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
 
 	columns = input_data.next()
 	unmatched_output.writerow(columns)
