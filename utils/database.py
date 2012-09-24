@@ -333,7 +333,6 @@ def load_cohort_7b_inventory(input_file):
 			print error
 
 
-
 ## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
 ## -jf
 def dump_all_TissueSample(output_file):
