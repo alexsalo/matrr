@@ -771,7 +771,7 @@ def review_overview_list(request):
 
 	req_requests = Request.objects.submitted()
 	# get a list of all reviewers
-	overviewers = Account.objects.users_with_perm('view_review_overview')
+	overviewers = Account.objects.users_with_perm('change_review')
 	for req_request in req_requests:
 		req_request.complete = list()
 		for reviewer in overviewers:
