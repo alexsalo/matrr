@@ -275,6 +275,64 @@ def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_dup
 			unmatched_output.writerow(row)
 			print error
 
+def load_cohort_7b_inventory(input_file):
+	unmatched_output_file = input_file + "-unmatched-output.csv"
+
+	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+	unmatched_output = csv.writer(open(unmatched_output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+
+	columns = input_data.next()
+	unmatched_output.writerow(columns)
+
+	inv_fields = (2, 10)
+	print "Loading Inventory..."
+
+	# ordered by columns 2 thru 11
+	mky_24818 = Monkey.objects.get(mky_real_id=24818)
+	mky_25154 = Monkey.objects.get(mky_real_id=25154)
+	mky_25157 = Monkey.objects.get(mky_real_id=25157)
+	mky_25184 = Monkey.objects.get(mky_real_id=25184)
+	mky_25207 = Monkey.objects.get(mky_real_id=25207)
+	mky_25407 = Monkey.objects.get(mky_real_id=25407)
+	mky_25240 = Monkey.objects.get(mky_real_id=25240)
+	mky_25425 = Monkey.objects.get(mky_real_id=25425)
+	mky_25526 = Monkey.objects.get(mky_real_id=25526)
+	mkys = [mky_24818, mky_25154, mky_25157, mky_25184, mky_25207, mky_25407, mky_25240, mky_25425, mky_25526]
+	for row in input_data:
+		tissue_category		= row[0] #ignored
+		tissue_name		 	= row[1]
+		tissue_type = TissueType.objects.filter(tst_tissue_name__iexact=tissue_name)
+		if not tissue_type:
+			error = "Error: Unknown tissue type"
+			row.append(error)
+			print row
+			unmatched_output.writerow(row)
+			print error
+			continue
+		elif tissue_type.count() == 1:
+			try:
+				for mky, tissue_exists in zip(mkys, row[inv_fields[0]:inv_fields[1]]):
+					tss = TissueSample.objects.filter(monkey=mky, tissue_type=tissue_type)
+					if tss.count() == 1:
+						tss = tss[0]
+					else:
+						error = "Error:  Too many or not enough tissues samples for monkey %s, tissue %s." % (str(mky), str(tissue_type))
+						row.append(error)
+						unmatched_output.writerow(row)
+						print error
+					tss.tss_freezer = "Ask OHSU"
+					tss.tss_location = "Ask OHSU"
+					tss.tss_sample_quantity = 1
+					tss.save()
+			except IndexError:
+				print 'index error\n %s' % str(row)
+		else:
+			error = "Error:  Too many TissueType matches."
+			row.append(error)
+			unmatched_output.writerow(row)
+			print error
+
+
 ## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
 ## -jf
 def dump_all_TissueSample(output_file):
