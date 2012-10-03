@@ -155,7 +155,8 @@ urlpatterns += patterns('matrr.views',
 #	url(r'^tools/vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
 	url(r'^tools/vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
 
-
+	# ajax views, should not be visible by themselves
+	url(r'^ajax/advanced_search$', ajax_advanced_search, name='ajax-advanced-search'),
 	)
 
 if settings.DEVELOPMENT:

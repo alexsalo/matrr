@@ -129,10 +129,14 @@ function updateTRToShow() {
 	}
 }
 
-
 function toggle_named_checkboxes(source) {
 	checkboxes = document.getElementsByName(source.name);
 	for (var cb = 0; cb < checkboxes.length; cb++)
 		checkboxes[cb].checked = source.checked;
 	updateTRToShow();
+	post_adv_form();
+}
+
+function post_adv_form(){
+	$.post("ajax/advanced_search", $("#adv_form").serialize());
 }
