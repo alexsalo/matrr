@@ -291,10 +291,9 @@ class CohortEvent(models.Model):
 
 
 class Monkey(models.Model):
-	SEX_CHOICES = (
-	('M', 'Male'),
-	('F', 'Female'),
-	)
+	SEX_CHOICES = ( ('M', 'Male'), ('F', 'Female'))
+	SPECIES = ( ('Rhesus', 'Rhesus'), ('Cyno', 'Cynomolgus'), ('Vervet', 'Vervet'))
+
 	mky_id = models.AutoField('Monkey ID', primary_key=True)
 	cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', verbose_name='Cohort',
 							   help_text='The cohort this monkey belongs to.')
@@ -311,8 +310,7 @@ class Monkey(models.Model):
 	# I have no intention of ever renaming this field.  -JF
 	mky_gender = models.CharField('Sex', max_length=1, choices=SEX_CHOICES, blank=True, null=True,
 								  help_text='The sex of the monkey.')
-	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True,
-									 max_length=20,
+	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True, max_length=20,
 									 help_text='Please enter the date the monkey was born on.')
 	mky_weight = models.FloatField('Weight', blank=True, null=True,
 								   help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
@@ -326,14 +324,13 @@ class Monkey(models.Model):
 	mky_necropsy_end_date = models.DateField('Necropsy End Date', null=True, blank=True,
 											 help_text='Please enter the end date of the necropsy.')
 	mky_necropsy_end_date_comments = models.TextField('Necropsy End Date Comments', null=True, blank=True)
-	mky_study_complete = models.BooleanField('Complete Study Performed', null=False,
-											 default=False,
+	mky_study_complete = models.BooleanField('Complete Study Performed', null=False, default=False,
 											 help_text='Did this monkey complete all stages of the experiment?')
-	mky_stress_model = models.CharField('Stress Model', null=True, blank=True,
-										max_length=30,
+	mky_stress_model = models.CharField('Stress Model', null=True, blank=True, max_length=30,
 										help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
 	mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
 	mky_notes = models.CharField('Monkey Notes', null=True, blank=True, max_length=1000, )
+	mky_species = models.CharField('Species', max_length=30, choices=SPECIES, help_text='Please select the species of the monkey.')
 
 	def __unicode__(self):
 		return str(self.mky_id)

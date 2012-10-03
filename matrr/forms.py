@@ -736,10 +736,14 @@ class ExperimentRangeForm_monkeys(ExperimentRangeForm):
 			self.fields['monkeys'].initial = monkeys
 
 
-class AdvancedSearchForm(Form):
+class AdvancedSearchSelectForm(Form):
 	sex = MultipleChoiceField(choices=Monkey.SEX_CHOICES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
-	species = MultipleChoiceField(choices=Cohort.SPECIES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
+	species = MultipleChoiceField(choices=Monkey.SPECIES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
+
+
+class AdvancedSearchFilterForm(Form):
 	control = BooleanField(required=False, widget=widgets.CheckboxInput(attrs={'onchange': 'post_adv_form()'}))
-	proteins = ModelMultipleChoiceField(queryset=Protein.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
+	proteins = ModelMultipleChoiceField(required=False, queryset=Protein.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
+	cohorts = ModelMultipleChoiceField(required=False, queryset=Cohort.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
 
 

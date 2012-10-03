@@ -1380,7 +1380,8 @@ def search(request):
 
 def advanced_search(request):
 	monkey_auth = request.user.has_perm('matrr.monkey_view_confidential')
-	protein_form = AdvancedSearchForm()
+	select_form = AdvancedSearchSelectForm(prefix='select')
+	filter_form = AdvancedSearchFilterForm(prefix='filter')
 
 #	results = Monkey.objects.all().order_by('cohort__coh_cohort_name', 'pk')
 #	mpns = MonkeyProtein.objects.filter(monkey__in=results).exclude(mpn_stdev__lt=1)
@@ -1390,7 +1391,8 @@ def advanced_search(request):
 	return render_to_response('matrr/advanced_search.html',
 			{'results': [],#results,
 			 'monkey_auth': monkey_auth,
-			 'protein_form': protein_form,
+			 'select_form': select_form,
+			 'filter_form': filter_form,
 			 'cohorts': Cohort.objects.all()},
 							  context_instance=RequestContext(request))
 
@@ -2281,8 +2283,8 @@ def vip_graph_builder(request, method_name):
 			if coh_max > all_max:
 				all_max = coh_max
 
-	min_date = date_to_padded_int(all_min)
-	max_date = date_to_padded_int(all_max)
+	min_date = widgets.date_to_padded_int(all_min)
+	max_date = widgets.date_to_padded_int(all_max)
 	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
 
 	if 'monkey' in method_name:
@@ -2604,7 +2606,31 @@ def _export_template_to_pdf(template, context={}, outfile=None, return_pisaDocum
 import simplejson
 @user_passes_test(lambda u: u.is_authenticated(), login_url='/denied/')
 def ajax_advanced_search(request):
+	monkey_ids = []
 	if request.POST:
-		return HttpResponse(simplejson.dumps([]), mimetype='application/json')
+		select_form = AdvancedSearchSelectForm(data=request.POST, prefix='select')
+		if select_form.is_valid():
+			select_query = Q()
+			filter_query = Q()
+			selects = select_form.cleaned_data
+			if selects['sex']:
+				select_query = Q(mky_gender__in=selects['sex'])
+			if selects['species']:
+				select_query = select_query & Q(mky_species__in=selects['species'])
+
+			filter_form = AdvancedSearchFilterForm(data=request.POST, prefix='filter')
+			if filter_form.is_valid():
+				filters = filter_form.cleaned_data
+				if filters['control']:
+					filter_query = filter_query & (Q(mky_drinking=True) | Q(mky_housing_control=True))
+				if filters['proteins']:
+					filter_query = filter_query & Q(protein_set__mpn_stdev__gte=1, protein_set__protein__in=filters['proteins'])
+				if filters['cohorts']:
+					filter_query = filter_query & Q(cohort__in=filters['cohorts'])
+			monkey_ids = Monkey.objects.filter(select_query & filter_query).values_list('mky_id', flat=True).distinct()
+
+		print monkey_ids.count()
+		return HttpResponse(simplejson.dumps(monkey_ids), mimetype='application/json')
 	else:
 		raise Http404
+
