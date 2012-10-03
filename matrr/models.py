@@ -1533,7 +1533,7 @@ class ResearchUpdate(models.Model):
 	req_request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False,
 								help_text='Choose a shipped request for which you would like to upload a research update:')
 	rud_date = models.DateField('Date uploaded', editable=False, blank=True, null=True, auto_now_add=True)
-	rud_title = models.CharField('Title', blank=True, null=False, max_length=25,
+	rud_title = models.CharField('Title', blank=True, null=False, max_length=250,
 								 help_text='Give your research update a short name to make it easier for you to reference.')
 	rud_file = models.FileField('Selected file', upload_to='rud/', default='', null=False, blank=False,
 								help_text='File to Upload')
