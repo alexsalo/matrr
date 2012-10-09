@@ -7,6 +7,18 @@
 	<script type="text/javascript" src="/static/js/toggle-visibility.js"></script>
 	<script type="text/javascript" src="/static/js/advanced_search.js"></script>
 	<script type="text/javascript" src="/static/js/jquery-1.8.2.js"></script>
+	<script type="text/javascript">function post_adv_form()
+	{	var response = $.ajax
+		    ({
+		        type: "POST",
+		        url: '{% url ajax-advanced-search %}',
+		        dataType: 'json',
+		        async: false,
+		        data: $("#adv_form").serialize()
+		    })
+		parse_json_response(response)
+    }
+	</script>
 {% endblock %}
 
 {% block content %}
@@ -26,13 +38,8 @@
 
 		<div class="left" style='max-width:75%'>
 			<div class=clearfix></div>
-			{% if num_results != None %}
-				<div class='headline'>
-					{{ num_results }} results.
-				</div>
-			{% endif %}
 			<div class='margin'>
-				{% if results %}
+				{% if monkeys %}
 					<div class="mini-headline">Monkeys</div>
 					<table class='common_center'>
 						<tr>
@@ -43,9 +50,8 @@
 							<th>Sex</th>
 							<th>Test Group</th>
 						</tr>
-						{% for monkey in results %}
-							<tr id="monkey_{{ monkey.pk }}" class="_{{ monkey.sex }}_coh{{ monkey.cohort.pk }}_
-									{{ monkey.cohort.coh_species }}{% if not monkey.mky_drinking %}_control{% endif %}{% for pro in monkey.mpns %}_{{ pro }}{% endfor %} hidden">
+						{% for monkey in monkeys %}
+							<tr id="monkey_{{ monkey.pk }}" class=" hidden">
 								{% if monkey_auth %}
 									<td>{{ monkey.mky_name }}</td>
 								{% endif %}

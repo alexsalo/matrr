@@ -137,6 +137,15 @@ function toggle_named_checkboxes(source) {
 	post_adv_form();
 }
 
-function post_adv_form(){
-	$.post("ajax/advanced_search", $("#adv_form").serialize());
+function parse_json_response(response){
+	var json_string = response.responseText;
+	var json = $.parseJSON(json_string);
+	var show_ids = json['show_ids'];
+	var hide_ids = json['hide_ids'];
+	for (var i = 0; i < show_ids.length; i++) {
+		showElementByID('monkey_' + show_ids[i]);
+	}
+	for (var i = 0; i < hide_ids.length; i++) {
+		hideElementByID('monkey_' + hide_ids[i]);
+	}
 }

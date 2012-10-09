@@ -1389,7 +1389,7 @@ def advanced_search(request):
 #		mky.mpns =  mpns.filter(monkey=mky).values_list('protein__pro_abbrev', flat=True).distinct()
 
 	return render_to_response('matrr/advanced_search.html',
-			{'results': [],#results,
+			{'monkeys': Monkey.objects.all(),
 			 'monkey_auth': monkey_auth,
 			 'select_form': select_form,
 			 'filter_form': filter_form,
@@ -2606,7 +2606,7 @@ def _export_template_to_pdf(template, context={}, outfile=None, return_pisaDocum
 import simplejson
 @user_passes_test(lambda u: u.is_authenticated(), login_url='/denied/')
 def ajax_advanced_search(request):
-	monkey_ids = []
+	show_ids = hide_ids = ['blank']
 	if request.POST:
 		select_form = AdvancedSearchSelectForm(data=request.POST, prefix='select')
 		if select_form.is_valid():
@@ -2622,15 +2622,18 @@ def ajax_advanced_search(request):
 			if filter_form.is_valid():
 				filters = filter_form.cleaned_data
 				if filters['control']:
-					filter_query = filter_query & (Q(mky_drinking=True) | Q(mky_housing_control=True))
+					filter_query = filter_query & (Q(mky_drinking=False) | Q(mky_housing_control=True))
 				if filters['proteins']:
 					filter_query = filter_query & Q(protein_set__mpn_stdev__gte=1, protein_set__protein__in=filters['proteins'])
 				if filters['cohorts']:
 					filter_query = filter_query & Q(cohort__in=filters['cohorts'])
-			monkey_ids = Monkey.objects.filter(select_query & filter_query).values_list('mky_id', flat=True).distinct()
 
-		print monkey_ids.count()
-		return HttpResponse(simplejson.dumps(monkey_ids), mimetype='application/json')
+			show_ids = Monkey.objects.filter(select_query & filter_query).values_list('mky_id', flat=True).distinct()
+			show_ids = list(show_ids)
+			hide_ids = Monkey.objects.exclude(pk__in=show_ids).values_list('mky_id', flat=True).distinct()
+			hide_ids = list(hide_ids)
+
+		return HttpResponse(simplejson.dumps({'show_ids': show_ids, 'hide_ids': hide_ids}), mimetype='application/json')
 	else:
 		raise Http404
 
