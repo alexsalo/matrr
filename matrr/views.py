@@ -232,6 +232,7 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 		tissue_request_form = TissueRequestForm(req_request=cart_request, tissue=current_tissue, instance=instance,
 												initial={'monkeys': current_cohort.monkey_set.all()})
 		# create the response
+		tissue_request_form.visible_fields()
 		return render_to_response('matrr/tissue_shopping.html', {'form': tissue_request_form,
 																 'cohort': current_cohort,
 																 'page_title': current_tissue.tst_tissue_name, },
@@ -246,9 +247,9 @@ def tissue_shop_detail_view(request, cohort_id, tissue_id):
 			url = reverse('tissue-shop-landing', args=[cart_request.cohort.coh_cohort_id, ])
 			try:
 				tissue_request_form.save()
-			except:
-				messages.error(request,
-							   'Error adding tissue to cart.  Possible duplicate tissue request already in cart.')
+			except Exception as e:
+				print e
+				messages.error(request, 'Error adding tissue to cart.  Possible duplicate tissue request already in cart.')
 				return redirect(url)
 
 			messages.success(request, 'Item added to cart')
@@ -775,12 +776,11 @@ def review_overview_list(request):
 	for req_request in req_requests:
 		req_request.complete = list()
 		for reviewer in overviewers:
-			for review in req_request.review_set.all():
-				if reviewer == review.user:
-					if review.is_finished():
-						req_request.complete.append("complete")
-					else:
-						req_request.complete.append("pending")
+			for review in req_request.review_set.filter(user=reviewer):
+				if review.is_finished():
+					req_request.complete.append("complete")
+				else:
+					req_request.complete.append("pending")
 
 	return render_to_response('matrr/review/reviews_overviews.html',
 			{'req_requests': req_requests,

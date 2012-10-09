@@ -16,6 +16,8 @@
 			<td align='left' style='white-space: nowrap'>{{ item.tissue_type }}</td>
 			<th align='right' style='width:20%;'>Fix:</th>
 			<td align='left' style='white-space: nowrap'>{{ item.rtt_fix_type }}</td>
+			<th align='right' style='width:20%;'>Prep:</th>
+			<td align='left' style='white-space: nowrap'>{{ item.rtt_prep_type }}</td>
 			<th align='right' style='width:20%;'>Amount:</th>
 			<td align='left' style='white-space: nowrap'>{{ item.get_amount }}</td>
 		</tr>
@@ -25,8 +27,8 @@
 		</tr>
 		{% if item.has_notes %}
 			<tr>
-				<td colspan='3'><b>Notes:</b></td>
-				<td colspan='5' style='font-size:-1;'>{{ item.rtt_notes }}</td>
+				<th align='right' colspan="3"><b>Notes:</b></th>
+				<td align='left' colspan='7' style='font-size:-1;'>{{ item.rtt_notes }}</td>
 			</tr>
 		{% endif %}
 		</tbody>

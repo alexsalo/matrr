@@ -20,9 +20,9 @@
 
 {% block content %}
 	{% block shopping-head %}
-	<div id="large-headline">Tissue Request</div>
-	<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_4.png" width='700' height='25'
-		 alt='order timeline'/>
+		<div id="large-headline">Tissue Request</div>
+		<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL }}/images/order_timeline_4.png" width='700' height='25'
+			 alt='order timeline'/>
 	{% endblock %}
 	<div id="headline">{% block title %}{{ page_title }}{% endblock %}</div>
 	<br/>
@@ -55,37 +55,14 @@
 				</div>
 			{% endif %}
 			<div class='mini-headline'></div>
-			<div style="text-align: left"><font style="font-size:10pt;">If this tissue is being requested for DNA or RNA analysis then MATRR will perform the extraction prior to distribution.</font></div>
+			<div style="text-align: left"><font
+					style="font-size:10pt;">If this tissue is being requested for DNA or RNA analysis then MATRR will perform the extraction prior to distribution.</font></div>
 			<div class='mini-headline'></div>
 			<span style='font-size: 1.25em'><a href="/faq/#TissueQuantities" target='_blank'>Suggested Tissue Quantities</a></span>
 		</div>
 		<table>
 			{% for field in form.visible_fields %}
-				{% if cohort.coh_upcoming %}
-				<tr>
-					<th>
-						<label for='{{ field.html_name }}'>
-							{% if field.label == 'Tissue Notes' and form.tissue.category.cat_name == 'Custom' %}
-								Detailed Description of the Request
-							{% else %}
-								{{ field.label }}
-							{% endif %}
-						</label>
-						{% if field.help_text %}
-							<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/>
-								<span>
-									{% if field.label == 'Notes' and form.tissue.category.cat_name == 'Custom' %}
-										Please provide a detailed description of the tissue you are requesting.
-									{% else %}
-										{{ field.help_text }}
-									{% endif %}
-								</span></a>
-						{% endif %}
-					</th>
-					<td colspan='3'>{{ field }}</td>
-				</tr>
-				{% else %}
-					{% if field.label != "Fixation" %}
+				{% if field %}
 					<tr>
 						<th>
 							<label for='{{ field.html_name }}'>
@@ -97,27 +74,25 @@
 							</label>
 							{% if field.help_text %}
 								<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/>
-									<span>
-										{% if field.label == 'Notes' and form.tissue.category.cat_name == 'Custom' %}
+                                    <span>
+                                        {% if field.label == 'Notes' and form.tissue.category.cat_name == 'Custom' %}
 											Please provide a detailed description of the tissue you are requesting.
 										{% else %}
 											{{ field.help_text }}
 										{% endif %}
-									</span></a>
+                                    </span></a>
 							{% endif %}
 						</th>
 						<td colspan='3'>{{ field }}</td>
 					</tr>
-					{% endif %}
-				{% endif %}
 
-				{% if field.errors %}
-					<tr>
-						<td align=right>Error:</td>
-						<td class='field-error' colspan='3'>{{ field.errors }}</td>
-					</tr>
-				{% endif %}
-
+                    {% if field.errors %}
+                        <tr>
+                            <td align=right>Error:</td>
+                            <td class='field-error' colspan='3'>{{ field.errors }}</td>
+                        </tr>
+                    {% endif %}
+                {% endif %}
 			{% endfor %}
 		</table>
 		{% block buttons %}
