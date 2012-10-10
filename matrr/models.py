@@ -1567,10 +1567,10 @@ class TissueRequest(models.Model):
 	rtt_tissue_request_id = models.AutoField(primary_key=True)
 	req_request = models.ForeignKey(Request, null=False, related_name='tissue_request_set', db_column='req_request_id')
 	tissue_type = models.ForeignKey(TissueType, null=False, related_name='tissue_request_set', db_column='tst_type_id')
-	rtt_fix_type = models.CharField('Fixation', null=False, blank=True,
+	rtt_fix_type = models.CharField('Fixation', null=False, blank=False,
 									max_length=200,
 									help_text='Please select the appropriate fix type.')
-	rtt_prep_type = models.CharField('Preparation', null=False, blank=True,
+	rtt_prep_type = models.CharField('Preparation', null=False, blank=False,
 									max_length=200,
 									help_text='Please select the appropriate prep type.')
 	# the custom increment is here to allow us to have a unique constraint that prevents duplicate requests
@@ -1763,7 +1763,7 @@ class TissueRequest(models.Model):
 
 	class Meta:
 		db_table = 'rtt_requests_to_tissue_types'
-		unique_together = (('req_request', 'tissue_type', 'rtt_prep_type', 'rtt_custom_increment'),)
+		#unique_together = (('req_request', 'tissue_type', 'rtt_prep_type', 'rtt_custom_increment'),)
 
 
 class Event(models.Model):
