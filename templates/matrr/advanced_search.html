@@ -28,11 +28,22 @@
 	<div style='margin: auto'>
 		<form class=left action='' method='post' style='max-width: 25%' id=adv_form>
 			{% csrf_token %}
-			<button type='submit' name='submit' class="blockLinkCheckoutButton" onclick="post_adv_form()">Search</button>
-			<hr>
 			{{ select_form.as_ul }}
-			<hr>
-			{{ filter_form.as_ul }}
+			<hr style='height: 5px; background-color: black;'>
+			<b>Filter Monkeys by:</b>
+			<div class=headline><a onclick="javascript:toggle_visibility('control');"><img src='{{ STATIC_URL }}images/expand.gif'>  Control</a></div>
+			<div id='control' class='hidden'>
+				{{ filter_form.control }}<table><tr>Control</tr></table>
+			</div>
+			<div class=headline><a onclick="javascript:toggle_visibility('cohort');"><img src='{{ STATIC_URL }}images/expand.gif'>  Cohort</a></div>
+			<div id='cohort' class='hidden'>
+				{{ filter_form.cohorts }}
+			</div>
+			<div class=headline><a onclick="javascript:toggle_visibility('proteins');"><img src='{{ STATIC_URL }}images/expand.gif'> Proteins</a></div>
+			<div id='proteins' class="hidden">
+				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in any of the selected proteins.</div>
+				{{ filter_form.proteins }}
+			</div>
 		</form>
 
 

@@ -11,13 +11,18 @@ from matrr.models import *
 from matrr import widgets
 from registration.forms import RegistrationForm
 
-FIX_CHOICES = (('', '---------'),
-			   ('Flash Frozen', 'Flash Frozen'),
-			   ('4% Paraformaldehyde', '4% Paraformaldehyde'),
-			   ('Fresh', 'Fresh'),
+UPCOMING_FIX_CHOICES = (('', '---------'),
+					   ('Flash Frozen', 'Flash Frozen'),
+					   ('4% Paraformaldehyde', '4% Paraformaldehyde'),
+					   ('Fresh', 'Fresh'),
+					   ('other', 'other'))
+AVAILABLE_FIX_CHOICES = (('', '---------'),
+						('Flash Frozen', 'Flash Frozen'),
+						('other', 'other'))
+PREP_CHOICES = (('', '---------'),
 			   ('DNA', 'DNA'),
 			   ('RNA', 'RNA'),
-			   ('other', 'other'))
+			   ('Tissue', 'Tissue'))
 
 
 def trim_help_text(text):
@@ -99,11 +104,19 @@ class MatrrRegistrationForm(RegistrationForm):
 
 class TissueRequestForm(ModelForm):
 	def __init__(self, req_request, tissue, *args, **kwargs):
+		def get_fix_choices(req_request):
+			if req_request.cohort.coh_upcoming:
+				return UPCOMING_FIX_CHOICES
+			return AVAILABLE_FIX_CHOICES
+
+		self.Meta.req_request = req_request
 		self.instance = None
 		self.req_request = req_request
 		self.tissue = tissue
 		super(TissueRequestForm, self).__init__(*args, **kwargs)
-		self.fields['rtt_fix_type'].required = False
+		self.fields['rtt_fix_type'].required = True
+		self.fields['rtt_fix_type'].widget = widgets.FixTypeSelection(choices=get_fix_choices(self.req_request))
+		self.fields['rtt_prep_type'].required = True
 		self.fields['monkeys'].widget = widgets.CheckboxSelectMultipleLinkByTableNoVerification(link_base=self.req_request.cohort.coh_cohort_id,
 																						tissue=self.tissue)
 		# the first time the form is created the instance does not exist
@@ -124,30 +137,26 @@ class TissueRequestForm(ModelForm):
 		super(TissueRequestForm, self).clean()
 		cleaned_data = self.cleaned_data
 
-		if not self.req_request.cohort.coh_upcoming or cleaned_data['rtt_fix_type'] == "":
-			cleaned_data['rtt_fix_type'] = "Flash Frozen"
-		fix_type = cleaned_data.get('rtt_fix_type')
+		prep_type = cleaned_data.get('rtt_prep_type')
 
 		# If a user requests DNA/RNA of bone marrow tissue (maybe never), the units will be forced in micrograms, not microliters.  I think this is correct.
-		if fix_type == 'DNA' or fix_type == 'RNA':
+		if prep_type == 'DNA' or prep_type == 'RNA':
 			if cleaned_data['rtt_units'] != 'ug':
 				raise forms.ValidationError("Units of DNA or RNA must be in micrograms.")
 		elif "marrow" in self.tissue.tst_tissue_name.lower():
 			if cleaned_data['rtt_units'] != 'ul':
 				raise forms.ValidationError("Units of bone marrow must be in microliters.")
 
-		if self.req_request and self.tissue and fix_type\
-		   and (self.instance is None		or		(self.instance.rtt_tissue_request_id is not None and self.instance.rtt_fix_type != fix_type ))\
-		and TissueRequest.objects.filter(req_request=self.req_request, tissue_type=self.tissue, rtt_fix_type=fix_type).count() > 0:
-			raise forms.ValidationError("You already have this tissue and fix in your cart.")
+		if self.req_request and self.tissue and prep_type and TissueRequest.objects.filter(req_request=self.req_request, tissue_type=self.tissue, rtt_prep_type=prep_type).count() > 0:
+			raise forms.ValidationError("You already have this tissue and prep in your cart.")
 
 		# Always return the full collection of cleaned data.
 		return cleaned_data
 
 	class Meta:
 		model = TissueRequest
-		fields = ('rtt_fix_type', 'rtt_amount', 'rtt_units', 'rtt_notes', 'monkeys')
-		widgets = {'rtt_fix_type': widgets.FixTypeSelection(choices=FIX_CHOICES)}
+		fields = ('rtt_fix_type', 'rtt_prep_type', 'rtt_amount', 'rtt_units', 'rtt_notes', 'monkeys')
+		widgets = {'rtt_prep_type': widgets.FixTypeSelection(choices=PREP_CHOICES)}
 
 
 class CartCheckoutForm(ModelForm):
@@ -268,8 +277,7 @@ class CodForm(ModelForm):
 class RudForm(ModelForm):
 	def __init__(self, user, *args, **kwargs):
 		super(RudForm, self).__init__(*args, **kwargs)
-		upload_from = date.today() - timedelta(days=30)
-		self.fields['req_request'].queryset = Request.objects.filter(user=user, req_status=RequestStatus.Shipped, tissue_request_set__shipment__shp_shipment_date__lte=upload_from)
+		self.fields['req_request'].queryset = Request.objects.filter(user=user, req_status=RequestStatus.Shipped)
 
 	class Meta:
 		model = ResearchUpdate
@@ -742,8 +750,8 @@ class AdvancedSearchSelectForm(Form):
 
 
 class AdvancedSearchFilterForm(Form):
-	control = BooleanField(required=False, widget=widgets.CheckboxInput(attrs={'onchange': 'post_adv_form()'}))
-	proteins = ModelMultipleChoiceField(required=False, queryset=Protein.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
-	cohorts = ModelMultipleChoiceField(required=False, queryset=Cohort.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
+	control = BooleanField(label="Control", required=False, widget=widgets.CheckboxInput(attrs={'onchange': 'post_adv_form()'}))
+	proteins = ModelMultipleChoiceField(label="Proteins", required=False, queryset=Protein.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
+	cohorts = ModelMultipleChoiceField(label="Cohorts", required=False, queryset=Cohort.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
 
 

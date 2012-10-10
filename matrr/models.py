@@ -346,6 +346,12 @@ class Monkey(models.Model):
 			return True
 		return False
 
+	def migrate_species(self, choices=SPECIES):
+		for choice in choices:
+			if choice[0] in self.cohort.coh_cohort_name:
+				self.mky_species = choice[0]
+				self.save()
+
 	class Meta:
 		db_table = 'mky_monkeys'
 		permissions = ([
@@ -1284,6 +1290,7 @@ class Request(models.Model, DiffingMixin):
 	req_notes = models.TextField('Request Notes', null=True, blank=True)
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
 	req_report_asked_count = models.IntegerField('Progress report requested count', default=0)
+
 	def _migrate_report_count(self):
 		if not self.req_report_asked_count and self.req_report_asked:
 			self.req_report_asked_count = 1
@@ -1566,6 +1573,9 @@ class TissueRequest(models.Model):
 	rtt_fix_type = models.CharField('Fixation', null=False, blank=False,
 									max_length=200,
 									help_text='Please select the appropriate fix type.')
+	rtt_prep_type = models.CharField('Preparation', null=False, blank=False,
+									max_length=200,
+									help_text='Please select the appropriate prep type.')
 	# the custom increment is here to allow us to have a unique constraint that prevents duplicate requests
 	# for a tissue in a single order while allowing multiple custom requests in an order.
 	rtt_custom_increment = models.IntegerField('Custom Increment', default=0, editable=False, null=False)
@@ -1620,10 +1630,11 @@ class TissueRequest(models.Model):
 
 	def get_data(self):
 		return [['Tissue Type', self.tissue_type],
-			['Fix', self.rtt_fix_type],
-			['Amount', self.get_amount()],
-			['Estimated Cost', "$%.2f" % self.get_estimated_cost()]
-			]
+				['Fix', self.rtt_fix_type],
+				['Prep', self.rtt_prep_type],
+				['Amount', self.get_amount()],
+				['Estimated Cost', "$%.2f" % self.get_estimated_cost()]
+				]
 
 	def get_latex_data(self):
 		return [['Tissue Type', self.tissue_type],
@@ -1738,6 +1749,13 @@ class TissueRequest(models.Model):
 	def cart_display(self):
 		return self.tissue_type.tst_tissue_name
 
+	def _migrate_fix_prep(self):
+		if self.rtt_fix_type == 'RNA':
+			self.rtt_prep_type = u'RNA'
+		else:
+			self.rtt_prep_type = u'Tissue'
+		self.save()
+
 	def save(self, *args, **kwargs):
 		super(TissueRequest, self).save(*args, **kwargs)
 		if self.rtt_tissue_request_id is None and self.tissue_type.category.cat_name == 'Custom':
@@ -1748,7 +1766,7 @@ class TissueRequest(models.Model):
 
 	class Meta:
 		db_table = 'rtt_requests_to_tissue_types'
-		unique_together = (('req_request', 'tissue_type', 'rtt_fix_type', 'rtt_custom_increment'),)
+		#unique_together = (('req_request', 'tissue_type', 'rtt_prep_type', 'rtt_custom_increment'),)
 
 
 class Event(models.Model):
