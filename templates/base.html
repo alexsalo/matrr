@@ -1,15 +1,17 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<meta http-equiv="X-UA-Compatible" content="chrome=1">
-	<!--		<meta http-equiv='Content-Type' content='text/html; charset=utf-8'/> -->
+	<title>{% block title %}{% endblock %}</title>
+	{% block extra_js %}{% endblock %}
+
+	<meta http-equiv="X-UA-Compatible" content="    chrome=1">
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/layout.css"/>
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/style.css"/>
+	<link rel="shortcut icon" href="{{ STATIC_URL }}images/matrr_favicon.ico"/>
+
 	{% if plot_gallery or unsupported_browser or 1 %} {% comment %} or 1, lol {% endcomment %}
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
-
 		<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.colorbox.js"></script>
 		<script type="text/javascript" src="{{ STATIC_URL }}js/plot_gallery.js"></script>
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/colorbox.css"/>
@@ -29,11 +31,6 @@
 		</script>
 		<!-- /google analytics -->
 	{% endif %}
-
-	{% block extra_js %}{% endblock %}
-
-	<link rel="shortcut icon" href="{{ STATIC_URL }}images/matrr_favicon.ico"/>
-	<title>{% block title %}{% endblock %}</title>
 </head>
 
 <body>

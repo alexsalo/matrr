@@ -1899,3 +1899,6 @@ def load_bec_data(file_name, overwrite=False, header=True):
 				continue
 	print "Data load complete."
 
+def populate_mky_species():
+	for coh in Cohort.objects.exclude(coh_cohort_name__icontains='assay'):
+		coh.monkey_set.all().update(mky_species=coh.coh_species)

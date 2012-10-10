@@ -129,10 +129,23 @@ function updateTRToShow() {
 	}
 }
 
-
 function toggle_named_checkboxes(source) {
 	checkboxes = document.getElementsByName(source.name);
 	for (var cb = 0; cb < checkboxes.length; cb++)
 		checkboxes[cb].checked = source.checked;
 	updateTRToShow();
+	post_adv_form();
+}
+
+function parse_json_response(response){
+	var json_string = response.responseText;
+	var json = $.parseJSON(json_string);
+	var show_ids = json['show_ids'];
+	var hide_ids = json['hide_ids'];
+	for (var i = 0; i < show_ids.length; i++) {
+		showElementByID('monkey_' + show_ids[i]);
+	}
+	for (var i = 0; i < hide_ids.length; i++) {
+		hideElementByID('monkey_' + hide_ids[i]);
+	}
 }

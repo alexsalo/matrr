@@ -6,6 +6,19 @@
 {% block extra_js %}
 	<script type="text/javascript" src="/static/js/toggle-visibility.js"></script>
 	<script type="text/javascript" src="/static/js/advanced_search.js"></script>
+	<script type="text/javascript" src="/static/js/jquery-1.8.2.js"></script>
+	<script type="text/javascript">function post_adv_form()
+	{	var response = $.ajax
+		    ({
+		        type: "POST",
+		        url: '{% url ajax-advanced-search %}',
+		        dataType: 'json',
+		        async: false,
+		        data: $("#adv_form").serialize()
+		    })
+		parse_json_response(response)
+    }
+	</script>
 {% endblock %}
 
 {% block content %}
@@ -13,59 +26,31 @@
 	<div class='large-headline'>Advanced Search</div>
 
 	<div style='margin: auto'>
-		<form class=left action='' method='post' style='max-width: 25%'>
+		<form class=left action='' method='post' style='max-width: 25%' id=adv_form>
 			{% csrf_token %}
-			<br>
-			<b>Select Monkeys by:</b><hr>
-			<div class=headline><a onclick="javascript:toggle_visibility('sex');"><img src='{{ STATIC_URL }}images/expand.gif'> Sex</a></div>
-			<div id='sex' class=''>
-				<ul>
-					<li><label for="id_sex_0"><input onclick="javascript:updateTRToShow()" type="checkbox" name=sex value=Male id="id_sex_0" /> Male</label></li>
-					<li><label for="id_sex_1"><input onclick="javascript:updateTRToShow()" type="checkbox" name=sex value=Female id="id_sex_1" /> Female</label></li>
-				</ul>
-			</div>
-			<div class=headline><a onclick="javascript:toggle_visibility('species');"><img src='{{ STATIC_URL }}images/expand.gif'>  Species</a></div>
-			<div id='species' class=''>
-				<ul>
-					<li><label for="id_species_0"><input onclick="javascript:updateTRToShow()" type="checkbox" name="species" value="Rhesus" id="id_species_0" /> Rhesus</label></li>
-					<li><label for="id_species_1"><input onclick="javascript:updateTRToShow()" type="checkbox" name="species" value="Cyno" id="id_species_1" /> Cynomolgus</label></li>
-					<li><label for="id_species_2"><input onclick="javascript:updateTRToShow()" type="checkbox" name="species" value="Vervet" id="id_species_2" /> Vervet</label></li>
-				</ul>
-			</div>
-
-			<br>
-			<b>Filter Monkeys by:</b><hr>
-			<div class=headline><a onclick="javascript:toggle_visibility('proteins');"><img src='{{ STATIC_URL }}images/expand.gif'> Proteins</a></div>
-			<div id='proteins' class="hidden">
-				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in any of the selected proteins.</div>
-				{{ protein_form.proteins }}
-			</div>
+			{{ select_form.as_ul }}
+			<hr style='height: 5px; background-color: black;'>
+			<b>Filter Monkeys by:</b>
 			<div class=headline><a onclick="javascript:toggle_visibility('control');"><img src='{{ STATIC_URL }}images/expand.gif'>  Control</a></div>
 			<div id='control' class='hidden'>
-				<ul>
-					<li><label for="id_control_1"><input onclick="javascript:updateTRToShow()" type="checkbox" name="control" value="control" id="id_control_1" /> Control</label></li>
-				</ul>
+				{{ filter_form.control }}<table><tr>Control</tr></table>
 			</div>
 			<div class=headline><a onclick="javascript:toggle_visibility('cohort');"><img src='{{ STATIC_URL }}images/expand.gif'>  Cohort</a></div>
 			<div id='cohort' class='hidden'>
-				<ul>
-					{% for coh in cohorts %}
-					<li><label for="id_cohort_{{ coh.pk }}"><input onclick="javascript:updateTRToShow()" type="checkbox" name="cohort" value="coh{{ coh.pk }}" id="id_cohort_{{ coh.pk }}" /> {{ coh }}</label></li>
-					{% endfor %}
-				</ul>
+				{{ filter_form.cohorts }}
 			</div>
-				<div class=clearfix></div>
-				<br>
+			<div class=headline><a onclick="javascript:toggle_visibility('proteins');"><img src='{{ STATIC_URL }}images/expand.gif'> Proteins</a></div>
+			<div id='proteins' class="hidden">
+				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in any of the selected proteins.</div>
+				{{ filter_form.proteins }}
+			</div>
 		</form>
+
+
 		<div class="left" style='max-width:75%'>
 			<div class=clearfix></div>
-			{% if num_results != None %}
-				<div class='headline'>
-					{{ num_results }} results.
-				</div>
-			{% endif %}
 			<div class='margin'>
-				{% if results %}
+				{% if monkeys %}
 					<div class="mini-headline">Monkeys</div>
 					<table class='common_center'>
 						<tr>
@@ -76,21 +61,21 @@
 							<th>Sex</th>
 							<th>Test Group</th>
 						</tr>
-						{% for monkey in results %}
-							<tr id="monkey_{{ monkey.pk }}"  class="_{{ monkey.sex }}_coh{{ monkey.cohort.pk }}_{{ monkey.cohort.coh_species }}{% if not monkey.mky_drinking %}_control{% endif %}{% for pro in monkey.mpns %}_{{ pro }}{% endfor %} hidden">
+						{% for monkey in monkeys %}
+							<tr id="monkey_{{ monkey.pk }}" class=" hidden">
 								{% if monkey_auth %}
 									<td>{{ monkey.mky_name }}</td>
 								{% endif %}
 								<td>
-									<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id%}" target="_blank">
-									{{ monkey.mky_id }}
-									<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
+									<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+										{{ monkey.mky_id }}
+										<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
 									</a>
 								</td>
 								<td>
 									<a href="{% url cohort-details monkey.cohort.pk %}" target='_blank'>
-									{{ monkey.cohort.coh_cohort_name }}
-									<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8'style="vertical-align: text-top">
+										{{ monkey.cohort.coh_cohort_name }}
+										<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
 									</a>
 								</td>
 								<td>{{ monkey.mky_gender }}</td>

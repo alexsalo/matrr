@@ -8,7 +8,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from datetime import date, timedelta
 import re
 from matrr.models import *
-from matrr.widgets import *
+from matrr import widgets
 from registration.forms import RegistrationForm
 
 UPCOMING_FIX_CHOICES = (('', '---------'),
@@ -115,9 +115,9 @@ class TissueRequestForm(ModelForm):
 		self.tissue = tissue
 		super(TissueRequestForm, self).__init__(*args, **kwargs)
 		self.fields['rtt_fix_type'].required = True
-		self.fields['rtt_fix_type'].widget = FixTypeSelection(choices=get_fix_choices(self.req_request))
+		self.fields['rtt_fix_type'].widget = widgets.FixTypeSelection(choices=get_fix_choices(self.req_request))
 		self.fields['rtt_prep_type'].required = True
-		self.fields['monkeys'].widget = CheckboxSelectMultipleLinkByTableNoVerification(link_base=self.req_request.cohort.coh_cohort_id,
+		self.fields['monkeys'].widget = widgets.CheckboxSelectMultipleLinkByTableNoVerification(link_base=self.req_request.cohort.coh_cohort_id,
 																						tissue=self.tissue)
 		# the first time the form is created the instance does not exist
 		if self.instance.pk:
@@ -156,7 +156,7 @@ class TissueRequestForm(ModelForm):
 	class Meta:
 		model = TissueRequest
 		fields = ('rtt_fix_type', 'rtt_prep_type', 'rtt_amount', 'rtt_units', 'rtt_notes', 'monkeys')
-		widgets = {'rtt_prep_type': FixTypeSelection(choices=PREP_CHOICES)}
+		widgets = {'rtt_prep_type': widgets.FixTypeSelection(choices=PREP_CHOICES)}
 
 
 class CartCheckoutForm(ModelForm):
@@ -295,7 +295,7 @@ class ReviewResponseForm(Form):
 			if tissue_request.get_tissue():
 				self.fields[str(tissue_request)] = ModelMultipleChoiceField(queryset=tissue_request.monkeys.all(),
 																			required=False,
-																			widget=GroupedCheckboxSelectMultipleMonkeys(
+																			widget=widgets.GroupedCheckboxSelectMultipleMonkeys(
 																				tissue_request=tissue_request)
 				)
 
@@ -317,7 +317,7 @@ class ContactUsForm(Form):
 class TissueRequestProcessForm(ModelForm):
 	def __init__(self, *args, **kwargs):
 		super(ModelForm, self).__init__(*args, **kwargs)
-		self.fields['accepted_monkeys'].widget = CheckboxSelectMultipleLinkByTable(link_base=self.instance.req_request.cohort.coh_cohort_id,
+		self.fields['accepted_monkeys'].widget = widgets.CheckboxSelectMultipleLinkByTable(link_base=self.instance.req_request.cohort.coh_cohort_id,
 																				   tissue=self.instance.get_tissue(),
 																				   tis_request=self.instance)
 		self.fields['accepted_monkeys'].required = False
@@ -338,7 +338,7 @@ class TissueRequestProcessForm(ModelForm):
 
 class TissueInventoryVerificationForm(Form):
 	primarykey = IntegerField(widget=HiddenInput(), required=False)
-	inventory = ChoiceField(choices=InventoryStatus, required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer))
+	inventory = ChoiceField(choices=InventoryStatus, required=False, widget=widgets.RadioSelect(renderer=widgets.HorizRadioRenderer))
 
 
 class TissueInventoryVerificationShippedForm(Form):
@@ -361,8 +361,8 @@ class MTAValidationForm(Form):
 
 
 class DateRangeForm(Form):
-	from_date = DateField(widget=DateTimeWidget, required=False)
-	to_date = DateField(widget=DateTimeWidget, required=False)
+	from_date = DateField(widget=widgets.DateTimeWidget, required=False)
+	to_date = DateField(widget=widgets.DateTimeWidget, required=False)
 
 	def __init__(self, min_date=None, max_date=None, *args, **kwargs):
 		super(DateRangeForm, self).__init__(*args, **kwargs)
@@ -473,7 +473,7 @@ class FilterForm(Form):
 			self.fields[i + ' Num-Int Value'] = CharField(max_length=50, required=False)
 			self.fields[i + ' Num-Int Value'].label = "Integer %s Value" % i
 			self.fields[i + ' Num-Int Value'].help_text = "Enter a whole-number value to filter the chosen field."
-			self.fields[i + ' Num-Int Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+			self.fields[i + ' Num-Int Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=widgets.HorizRadioRenderer,
 																										   choices=(('AND', 'AND'), ('OR', 'OR'))), initial="AND")
 			self.fields[i + ' Num-Int Logical'].label = "Integer %s Combine" % i
 			self.fields[i + ' Num-Int Logical'].help_text = "AND this field with the other or OR them together."
@@ -489,7 +489,7 @@ class FilterForm(Form):
 			self.fields[i + ' Num-Float Value'] = CharField(max_length=50, required=False)
 			self.fields[i + ' Num-Float Value'].label = "Float %s.0 Value" % i
 			self.fields[i + ' Num-Float Value'].help_text = "Enter a float value to filter the chosen field."
-			self.fields[i + ' Num-Float Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+			self.fields[i + ' Num-Float Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=widgets.HorizRadioRenderer,
 																											 choices=(('AND', 'AND'), ('OR', 'OR'))), initial="AND")
 			self.fields[i + ' Num-Float Logical'].label = "Float %s Combine" % i
 			self.fields[i + ' Num-Float Logical'].help_text = "AND this field with the other or OR them together."
@@ -505,7 +505,7 @@ class FilterForm(Form):
 			self.fields[i + ' Char Value'] = CharField(max_length=50, required=False)
 			self.fields[i + ' Char Value'].label = "Char %s Value" % i
 			self.fields[i + ' Char Value'].help_text = "Enter text by which to filter the chosen field."
-			self.fields[i + ' Char Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+			self.fields[i + ' Char Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=widgets.HorizRadioRenderer,
 																										choices=(('AND', 'AND'), ('OR', 'OR'))), initial="AND")
 			self.fields[i + ' Char Logical'].label = "Char %s Combine" % i
 			self.fields[i + ' Char Logical'].help_text = "AND this field with the other or OR them together."
@@ -518,7 +518,7 @@ class FilterForm(Form):
 			self.fields[i + ' Bool Value'] = NullBooleanField(required=False) # NullBoolean is important, otherwise the user _must_ filter the bool field
 			self.fields[i + ' Bool Value'].label = "Bool %s Value" % i
 			self.fields[i + ' Bool Value'].help_text = "Choose how to filter the Boolean field"
-			self.fields[i + ' Bool Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+			self.fields[i + ' Bool Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=widgets.HorizRadioRenderer,
 																										choices=(('AND', 'AND'), ('OR', 'OR'))), initial="AND")
 			self.fields[i + ' Bool Logical'].label = "Bool %s Combine" % i
 			self.fields[i + ' Bool Logical'].help_text = "AND this field with the other or OR them together."
@@ -533,7 +533,7 @@ class FilterForm(Form):
 			self.fields[i + ' Discrete Value'] = ChoiceField(choices=choices, required=False)
 			self.fields[i + ' Discrete Value'].label = "Discrete %s Value" % i
 			self.fields[i + ' Discrete Value'].help_text = "Choose how to filter the Discrete field"
-			self.fields[i + ' Discrete Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+			self.fields[i + ' Discrete Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=widgets.HorizRadioRenderer,
 																											choices=(('AND', 'AND'), ('OR', 'OR'))), initial="AND")
 			self.fields[i + ' Discrete Logical'].label = "Discrete %s Combine" % i
 			self.fields[i + ' Discrete Logical'].help_text = "AND this field with the other or OR them together."
@@ -545,11 +545,11 @@ class FilterForm(Form):
 			self.fields[i + ' Related Value'].label = "Relation: %s" % name
 			self.fields[i + ' Related Value'].help_text = field.help_text
 			self.fields[i + ' Related Value'].field_name = name
-			self.fields[i + ' Related extra-Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+			self.fields[i + ' Related extra-Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=widgets.HorizRadioRenderer,
 																												 choices=(('AND', 'AND'), ('OR', 'OR'))), initial="AND")
 			self.fields[i + ' Related extra-Logical'].label = "Relation %s extra-Combine" % i
 			self.fields[i + ' Related extra-Logical'].help_text = "AND this field with the other fields or OR them together."
-			self.fields[i + ' Related intra-Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=HorizRadioRenderer,
+			self.fields[i + ' Related intra-Logical'] = forms.CharField(required=False, widget=forms.RadioSelect(renderer=widgets.HorizRadioRenderer,
 																												 choices=(('AND', 'AND'), ('OR', 'OR'))), initial="OR")
 			self.fields[i + ' Related intra-Logical'].label = "Relation %s intra-Combine" % i
 			self.fields[i + ' Related intra-Logical'].help_text = "AND each related object together or OR them together."
@@ -627,7 +627,7 @@ class SubjectSelectForm(Form):
 		# subject_widget kwarg will override the horizontal kwarg
 		super(Form, self).__init__(*args, **kwargs)
 		queryset = subject_queryset if subject_queryset else Cohort.objects.all()
-		widget = forms.RadioSelect(renderer=HorizRadioRenderer) if horizontal else RadioSelect(renderer=RadioRenderer_nolist)
+		widget = forms.RadioSelect(renderer=widgets.HorizRadioRenderer) if horizontal else RadioSelect(renderer=widgets.RadioRenderer_nolist)
 		widget = subject_widget if subject_widget else widget
 		self.fields['subject'] = ModelChoiceField(queryset=queryset.order_by('pk'), widget=widget, initial=queryset[0])
 		self.fields['subject'].label = subject_label if subject_label else "Subject"
@@ -663,7 +663,7 @@ class ProteinSelectForm(Form):
 	def __init__(self, protein_queryset=None, columns=3, *args, **kwargs):
 		super(ProteinSelectForm, self).__init__(*args, **kwargs)
 		self.queryset = protein_queryset if protein_queryset else Protein.objects.all()
-		self.fields['proteins'] = ModelMultipleChoiceField(queryset=self.queryset, widget=CheckboxSelectMultiple_columns(columns=columns))
+		self.fields['proteins'] = ModelMultipleChoiceField(queryset=self.queryset, widget=widgets.CheckboxSelectMultiple_columns(columns=columns))
 		self.fields['proteins'].label = "Protein"
 		self.fields['proteins'].help_text = "Select proteins to display"
 
@@ -671,8 +671,7 @@ class ProteinSelectForm(Form):
 class ProteinSelectForm_advSearch(ProteinSelectForm):
 	def __init__(self, columns=1, *args, **kwargs):
 		super(ProteinSelectForm_advSearch, self).__init__(*args, **kwargs)
-		self.fields['proteins'].widget = CheckboxSelectMultiple_proteinAdvSearch(columns=columns, queryset=self.queryset)
-
+		self.fields['proteins'].widget = widgets.CheckboxSelectMultiple_proteinAdvSearch(columns=columns, queryset=self.queryset)
 
 class MonkeyProteinGraphAppearanceForm(Form):
 	y_choices = (('monkey_protein_pctdev', 'Percent deviation from cohort mean'), ('monkey_protein_stdev',
@@ -699,9 +698,9 @@ class GraphSubjectSelectForm(Form):
 	subject = ChoiceField(choices=subject_choices,
 						  label='Subject',
 						  help_text="Choose what scope of subjects to analyze",
-						  widget=RadioSelect(renderer=RadioFieldRendererSpecial_monkey),
+						  widget=RadioSelect(renderer=widgets.RadioFieldRendererSpecial_monkey),
 						  initial=subject_choices[0][0])
-	monkeys = ModelMultipleChoiceField(queryset=Monkey.objects.all(), required=False, widget=CheckboxSelectMultipleSelectAll())
+	monkeys = ModelMultipleChoiceField(queryset=Monkey.objects.all(), required=False, widget=widgets.CheckboxSelectMultipleSelectAll())
 
 	def __init__(self, monkey_queryset, **kwargs):
 		super(GraphSubjectSelectForm, self).__init__(**kwargs)
@@ -711,7 +710,7 @@ class GraphSubjectSelectForm(Form):
 class TissueShipmentForm(Form):
 	def __init__(self, tissue_request_queryset, *args, **kwargs):
 		super(TissueShipmentForm, self).__init__(*args, **kwargs)
-		self.fields['tissue_requests'] = ModelMultipleChoiceField(queryset=tissue_request_queryset, widget=CheckboxSelectMultiple_columns(columns=2))
+		self.fields['tissue_requests'] = ModelMultipleChoiceField(queryset=tissue_request_queryset, widget=widgets.CheckboxSelectMultiple_columns(columns=2))
 		self.fields['tissue_requests'].label = "Shipment"
 		self.fields['tissue_requests'].help_text = "Select which tissue requests are included in this shipment"
 
@@ -731,10 +730,10 @@ class ExperimentRangeForm(Form):
 	range = ChoiceField(choices=range_choices,
 						  label='Experiment Range',
 						  help_text="Choose which dates to analyze",
-						  widget=RadioSelect(renderer=RadioFieldRendererSpecial_dates),
+						  widget=RadioSelect(renderer=widgets.RadioFieldRendererSpecial_dates),
 						  initial=range_choices[0][0])
-	from_date = DateField(widget=DateTimeWidget, required=False)
-	to_date = DateField(widget=DateTimeWidget, required=False)
+	from_date = DateField(widget=widgets.DateTimeWidget, required=False)
+	to_date = DateField(widget=widgets.DateTimeWidget, required=False)
 
 
 class ExperimentRangeForm_monkeys(ExperimentRangeForm):
@@ -745,8 +744,14 @@ class ExperimentRangeForm_monkeys(ExperimentRangeForm):
 			self.fields['monkeys'].initial = monkeys
 
 
-class AdvancedSearchForm(Form):
-	sex = MultipleChoiceField(choices=Monkey.SEX_CHOICES, required=False, widget=CheckboxSelectMultiple())
-	species = MultipleChoiceField(choices=Cohort.SPECIES, required=False, widget=CheckboxSelectMultiple())
+class AdvancedSearchSelectForm(Form):
+	sex = MultipleChoiceField(choices=Monkey.SEX_CHOICES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
+	species = MultipleChoiceField(choices=Monkey.SPECIES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
+
+
+class AdvancedSearchFilterForm(Form):
+	control = BooleanField(label="Control", required=False, widget=widgets.CheckboxInput(attrs={'onchange': 'post_adv_form()'}))
+	proteins = ModelMultipleChoiceField(label="Proteins", required=False, queryset=Protein.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
+	cohorts = ModelMultipleChoiceField(label="Cohorts", required=False, queryset=Cohort.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
 
 
