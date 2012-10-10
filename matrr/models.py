@@ -1763,7 +1763,7 @@ class TissueRequest(models.Model):
 
 	class Meta:
 		db_table = 'rtt_requests_to_tissue_types'
-		unique_together = (('req_request', 'tissue_type', 'rtt_prep_type', 'rtt_custom_increment'),)
+		#unique_together = (('req_request', 'tissue_type', 'rtt_prep_type', 'rtt_custom_increment'),)
 
 
 class Event(models.Model):
