@@ -627,7 +627,7 @@ class SubjectSelectForm(Form):
 		# subject_widget kwarg will override the horizontal kwarg
 		super(Form, self).__init__(*args, **kwargs)
 		queryset = subject_queryset if subject_queryset else Cohort.objects.all()
-		widget = forms.RadioSelect(renderer=widgets.HorizRadioRenderer) if horizontal else RadioSelect(renderer=widgets.RadioRenderer_nolist)
+		widget = widgets.RadioSelect(renderer=widgets.HorizRadioRenderer) if horizontal else RadioSelect(renderer=widgets.RadioRenderer_nolist)
 		widget = subject_widget if subject_widget else widget
 		self.fields['subject'] = ModelChoiceField(queryset=queryset.order_by('pk'), widget=widget, initial=queryset[0])
 		self.fields['subject'].label = subject_label if subject_label else "Subject"
