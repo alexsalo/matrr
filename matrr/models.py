@@ -1671,7 +1671,7 @@ class TissueRequest(models.Model):
 		special = 100	#  Cost for special fixation
 
 		monkey_cost = 0
-		if self.rtt_fix_type != "Flash Frozen":
+		if self.rtt_fix_type != "Flash Frozen" or self.rtt_prep_type != 'Tissue':
 			monkey_cost += special
 		if "Brain" in self.tissue_type.category.cat_name:
 			monkey_cost += brain
@@ -1685,13 +1685,6 @@ class TissueRequest(models.Model):
 		else:
 			estimated_cost = monkey_cost * self.monkeys.count()
 
-		if self.req_request.pk == 100:
-			return 3600
-		if self.req_request.pk in (169, 170):
-			return 2400
-		if self.req_request.pk in (171, 172):
-			return 1400
-		
 		return estimated_cost if self.rtt_estimated_cost is None else self.rtt_estimated_cost
 
 	def get_tiv_collisions(self):
