@@ -2,13 +2,14 @@ from django.contrib.auth.models import Permission
 from django.core.mail.message import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db.models.query_utils import Q
+from django.template.loader import render_to_string
 from matrr.views import _export_template_to_pdf
-import settings
-from datetime import datetime
+import settings, re
+from datetime import datetime, timedelta, date
 from django.core.mail import send_mail
-from matrr.models import Request, User, Shipment
+from matrr.models import Request, User, Shipment, Account, RequestStatus, Acceptance, Group, Review
 
-
+# used in matrr and utils.regular_tasks
 def send_shipment_ready_notification(assay_ready=False):
 	if assay_ready:
 		users = [User.objects.get(username='jdaunais'), User.objects.get(username='adaven')]
@@ -29,6 +30,7 @@ def send_shipment_ready_notification(assay_ready=False):
 			if ret > 0:
 				print "%s Shipment info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 
+# matrr
 def send_po_manifest_upon_shipment(shp_shipment):
 	if not isinstance(shp_shipment, Shipment):
 		shp_shipment = Shipment.objects.get(pk=shp_shipment)
@@ -50,6 +52,7 @@ def send_po_manifest_upon_shipment(shp_shipment):
 	email.attach_file(outfile.name)
 	email.send()
 
+# matrr
 def notify_user_upon_shipment(shp_shipment):
 	if not isinstance(shp_shipment, Shipment):
 		shp_shipment = Shipment.objects.get(pk=shp_shipment)
@@ -72,6 +75,7 @@ def notify_user_upon_shipment(shp_shipment):
 	email.attach_file(outfile.name)
 	email.send()
 
+# matrr
 def send_jim_hippocampus_notification(req_request):
 	if not isinstance(req_request, Request):
 		req_request = Request.objects.get(pk=req_request)
@@ -91,6 +95,7 @@ def send_jim_hippocampus_notification(req_request):
 		if ret > 0:
 			print "%s Hippocampus notification sent to %s." % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), jim.username)
 
+# matrr
 def send_verify_new_account_email(account):
 	body = "New account was created.\n" +\
 		   "\t username: %s\n" % account.user.username +\
@@ -119,4 +124,228 @@ def send_verify_new_account_email(account):
 	to_e.append(from_e)
 	if settings.PRODUCTION:
 		send_mail(subject, body, from_e, to_e, fail_silently=True)
+
+# regular_tasks
+def send_colliding_requests_info():
+
+	time_now = datetime.now()
+	time_yesterday = time_now - timedelta(days=1)
+	requests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
+
+	collisions = list()
+
+	for request in requests:
+		acc_coll =  request.get_acc_req_collisions()
+		sub_coll =  request.get_sub_req_collisions()
+		if acc_coll or sub_coll:
+			collisions.append((request, sub_coll, acc_coll))
+
+
+	if len(collisions) > 0:
+		users = Account.objects.users_with_perm('can_receive_colliding_requests_info')
+		collision_text = ""
+		for req, sub, acc in collisions:
+
+			sub_text = ""
+			if sub:
+				sub_text = "	has collision with following submitted requests:\n"
+				for s in sub:
+					sub_text = sub_text + ("		%s\n" % s)
+			acc_text = ""
+			if acc:
+				acc_text = "	has collision with following accepted requests:\n"
+				for a in acc:
+					acc_text = acc_text + ("		%s\n" % a)
+
+			collision_text = collision_text + ("Request: %s\n" % req) + sub_text + acc_text
+		subject = 'Submitted requests with collisions'
+		body = 'Information from matrr.com\nSome requests submitted during last 24 hours collide with other requests.\n' + \
+				collision_text + \
+				'Please, do not respond. This is an automated message.\n'
+
+		from_email = Account.objects.get(user__username='matrr_admin').email
+		for user in users:
+			email = user.email
+			recipients = list()
+			recipients.append(email)
+
+
+			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+			if ret > 0:
+				print "%s Colliding requests info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+
+# matrr
+def send_new_request_info(req_request):
+	if not settings.PRODUCTION and req_request.user.username != 'matrr_admin':
+		print "%s - New request email not sent, settings.PRODUCTION = %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), settings.PRODUCTION)
+		return
+	req_request = Request.objects.get(pk=req_request.req_request_id)
+	users = Account.objects.users_with_perm('can_receive_pending_reviews_info')
+	from_email = Account.objects.get(user__username='matrr_admin').email
+	for user in users:
+		email = user.email
+		recipients = list()
+		recipients.append(email)
+		subject = 'User %s submitted a request for %s tissues from %s.' % (req_request.user, req_request.get_requested_tissue_count(), req_request.cohort)
+		body = 'More information about this request is available at matrr.com\n'\
+			'Please, do not respond. This is an automated message.\n'
+
+		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+		if ret > 0:
+			print "%s New request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+
+# matrr
+def send_verification_complete_notification(req_request):
+	from_email = Account.objects.get(user__username='matrr_admin').email
+	recipients = [from_email]
+	subject = 'Inventory Verified for request %s'% str(req_request.pk)
+	body = "Information from matrr.com\n The inventory for %s's request from cohort %s has all been verified.\n" % (req_request.user.username, req_request.cohort.coh_cohort_name) + \
+		   "Please check https://gleek.ecs.baylor.edu%s to see if this request is ready for processing.\n" % reverse('review-overview', args=[req_request.pk,]) + \
+		   "Please, do not respond. This is an automated message.\n"
+
+	if settings.PRODUCTION:
+		send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+
+# regular_tasks
+def send_verify_tissues_info():
+
+	users = Account.objects.users_with_perm('can_verify_tissues')
+	time_now = datetime.now()
+	time_yesterday = time_now - timedelta(days=1)
+	requests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now)
+	requests = requests.exclude(user__username='matrr_admin')
+	requests = requests.exclude(cohort__coh_cohort_name__icontains='assay')
+
+	# Send emails to all tissue verifiers for all non-assay requests
+	if len(requests) > 0:
+		from_email = Account.objects.get(user__username='matrr_admin').email
+		for user in users:
+			email = user.email
+			recipients = list()
+			recipients.append(email)
+			subject = 'Tissues to be verified'
+			body = 'Information from matrr.com\n During last 24 hours new request(s) has (have) been submitted. Your account %s can verify tissues. Please, find some time to do so.\n' % user.username + \
+				'Please, do not respond. This is an automated message.\n'
+
+			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+			if ret > 0:
+				print "%s Verify tissues info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+
+
+	# Send emails only to jim and april for assay requests.  Because assay requests are special....
+	assay_requests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now)
+	assay_requests = assay_requests.exclude(user__username='matrr_admin')
+	assay_requests = assay_requests.filter(cohort__coh_cohort_name__icontains='assay')
+
+	if len(assay_requests) > 0:
+		from_email = Account.objects.get(user__username='matrr_admin').email
+		for user in [Account.objects.get(user__username='jdaunais'), Account.objects.get(user__username='adaven')]:
+			email = user.email
+			recipients = list()
+			recipients.append(email)
+			subject = 'Assay Tissues to be verified'
+			body = 'Information from matrr.com\n During last 24 hours new request(s) has (have) been submitted. Your account %s can verify tissues. Please, find some time to do so.\n' % user.username + \
+				'Please, do not respond. This is an automated message.\n'
+
+			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+			if ret > 0:
+				print "%s Verify tissues info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+
+# regular_tasks
+def urge_po_mta():
+#	accepted = Q(req_status__in=[RequestStatus.Partially, RequestStatus.Accepted]) # Requests that have been accepted
+	#incomplete = Q(req_purchase_order="") | Q(req_purchase_order=None) # | Q(user__account__act_mta_is_valid=False) <-- not a real field
+
+	accepted = Request.objects.accepted_and_partially()
+
+
+	for req in accepted:
+		if req.req_purchase_order and req.user.account.has_mta():
+			continue
+
+		from_email = Account.objects.get(user__username='matrr_admin').email
+		to_email = req.user.email
+
+		recipients = list()
+		recipients.append(to_email)
+
+		if req.req_status == RequestStatus.Accepted:
+			email_template = 'matrr/review/request_accepted_email.txt'
+		elif req.req_status == RequestStatus.Partially:
+			email_template = 'matrr/review/request_partially_accepted_email.txt'
+		else:
+			print "How did you get here?!"
+			raise Exception('How did you get here?!')
+
+		request_url = reverse('order-detail', args=[req.req_request_id])
+		body = render_to_string(email_template, {'request_url': request_url, 'req_request': req, 'Acceptance': Acceptance})
+		body = re.sub('(\r?\n){2,}', '\n\n', body)
+		subject = "MATRR needs more information before request %s can be shipped." % str(req.pk)
+
+		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+		if ret > 0:
+			print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
+
+# regular_tasks
+def urge_progress_reports():
+	today = date.today()
+	days90 = timedelta(days = 90)
+	limit_date = today - days90
+	ship_to_report_req = Shipment.objects.filter(shp_shipment_date__lte = limit_date, req_request__rud_set=None)
+
+	for shipment in ship_to_report_req.values('req_request','user','shp_shipment_date'):
+		from_email = Account.objects.get(user__username='matrr_admin').email
+		email = User.objects.get(id= shipment['user']).email
+
+		recipients = list()
+		recipients.append(email)
+		req = Request.objects.get(req_request_id= shipment['req_request'])
+
+		subject = 'Progress Report'
+		body = 'Hello, \nthe tissue(s) you requested were shipped on %s. ' % shipment['shp_shipment_date'] + \
+			'Please, submit a 90 day progress report concerning this request on My Account page, section Research Updates.\n' + \
+			"\nRequest overview:\n\n%s\n" % req.print_self_in_detail() + \
+			"\nYours sincerely,\n\nMatrr team\n\n" + \
+			'This is an automated message.\n'
+
+		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+		req.req_report_asked_count += 1
+		req.save()
+		if ret > 0:
+			print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
+
+	way_overdues = ship_to_report_req.filter(req_request__req_report_asked_count__gte=2)
+	if way_overdues.count() and today.isocalendar()[1] % 2 == 0: # there exist overdue updates, and today is an even week of the year
+		from_email = Account.objects.get(user__username='matrr_admin').email
+		recipients = [user.email for user in Group.objects.get(name='Uberuser').user_set.all()]
+		subject = 'Overdue Progress Report'
+		body = "Yo yo,\n\nWe have some users who haven't given us a research update.  Click the link below to see who's slacking off.\n\n"
+		body += 'http://gleek.ecs.baylor.edu' + reverse('rud-overdue')
+
+		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+		if ret > 0:
+			print "%s Overdue research update notification sent" % datetime.now().strftime("%Y-%m-%d,%H:%M:%S")
+
+# regular_tasks
+def send_pending_reviews_info():
+	users = Account.objects.users_with_perm('can_receive_pending_reviews_info')
+	from_email = Account.objects.get(user__username='matrr_admin').email
+	for user in users:
+
+
+		reviews = Review.objects.filter(user=user.id).filter(req_request__req_status=RequestStatus.Submitted).exclude(req_request__user__username='matrr_admin')
+		unfinished_reviews = [review for review in reviews if not review.is_finished()]
+		if len(unfinished_reviews) > 0:
+
+			email = user.email
+			recipients = list()
+			recipients.append(email)
+			subject = 'Pending requests'
+			body = 'Information from matrr.com\n You have pending request(s) to be reviewed on your account: %s \n' % user.username + \
+				'Please, do not respond. This is an automated message.\n'
+
+			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+			if ret > 0:
+				print "%s Pending info sent for user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+
 
