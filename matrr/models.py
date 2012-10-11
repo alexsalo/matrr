@@ -2303,7 +2303,7 @@ def request_post_save(**kwargs):
 	# For Submitted Requests
 	if (previous_status == RequestStatus.Cart or previous_status == RequestStatus.Revised)\
 	and current_status == RequestStatus.Submitted:
-		from utils.regular_tasks.send_new_request_info import send_new_request_info
+		from matrr.emails import send_new_request_info
 		# Send email notification the request was submitted
 		send_new_request_info(req_request)
 		# start by finding all members of the group 'Committee'
@@ -2429,6 +2429,6 @@ def tiv_post_save(**kwargs):
 			req_request = tiv.tissue_request.req_request
 			verification_status = req_request.get_inventory_verification_status()
 			if verification_status == VerificationStatus.Complete:
-				from utils.regular_tasks.send_verification_complete_notification import send_verification_complete_notification
+				from matrr.emails import send_verification_complete_notification
 				send_verification_complete_notification(req_request)
 
