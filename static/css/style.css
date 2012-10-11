@@ -250,6 +250,10 @@ table.common td {
     font-size: 1;
 }
 
+.request_detail th {
+	width: 140px
+}
+
 .center-content,
 .content-block {
     background-color: #FAF9ED;

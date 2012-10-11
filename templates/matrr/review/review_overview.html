@@ -13,58 +13,9 @@
 	<form action='' method='post'>
 		{% csrf_token %}
 		<div style='margin-top: 10px;'>
-			<div class='div-table'>
-				<div>
-					<div>Cohort:</div>
-					<div><a href='{% url cohort-details req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></div>
-					<div>Requesting User:</div>
-					<div><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></div>
-				</div>
-				<div>
-					<div>Requested On:</div>
-					<div>{{ req_request.req_request_date|date:"m/d/Y, g:i a" }}</div>
-					<div>Referred By:</div>
-					<div>{{ req_request.req_referred_by }}</div>
-				</div>
-				<div>
-					<div>Total Estimated Cost:</div>
-					<div>${{ req_request.get_total_estimated_cost|floatformat:2 }}</div>
-					<div>Experimental Plan:</div>
-					<div>
-						{% if req_request.req_experimental_plan %}
-							<a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a>
-						{% else %}
-							None
-						{% endif %}
-					</div>
-				</div>
-				<div>
-					<div>Project Title:</div>
-					<div>{{ req_request.req_project_title }}</div>
-					{% if req_request.parent_request %}
-						<div>Revision of Request:</div>
-						<div><a href='{% url review-overview req_request.parent_request.pk %}'>{{ req_request.parent_request.pk }}</a></div>
-					{% endif %}
-				</div>
-				<div>
-					<div>Purpose of Tissue Request:</div>
-					<div>{{ req_request.req_reason }}</div>
-				</div>
-				<div>
-					<div>Additional Notes:</div>
-					<div>
-						{% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}
-					</div>
-				</div>
-			</div>
+		    {% include 'matrr/review/__request_detail.html' %}
 			<hr>
 			<table>
-				{% if req_request.req_notes != None and req_request.req_notes != '' %}
-					<tr>
-						<th>Request Notes:</th>
-						<td colspan='9'>{{ req_request.req_notes }}</td>
-					</tr>
-				{% endif %}
 				<tr>
 					<th>Reviewer</th>
 					<th colspan='10'>Reviewer's Notes</th>
