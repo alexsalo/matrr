@@ -15,7 +15,6 @@ from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 import numpy
-from matrr.process_latex import process_latex
 import settings
 
 def percentage_validator(value):
@@ -2164,7 +2163,6 @@ class MonkeyProtein(models.Model):
 			diff = self.mpn_value - mean
 			self.mpn_stdev = diff / stdev
 			self.save()
-
 
 	def populate_pctdev(self, recalculate=False):
 		if self.mpn_pctdev is None or recalculate:
