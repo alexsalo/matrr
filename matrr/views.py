@@ -2628,9 +2628,15 @@ def ajax_advanced_search(request):
 				if filters['cohorts']:
 					filter_query = filter_query & Q(cohort__in=filters['cohorts'])
 
-			show_ids = Monkey.objects.filter(select_query & filter_query).values_list('mky_id', flat=True).distinct()
+			# Counterintuitive note:
+			# Reason: Initially,  all checkboxes are unchecked and all monkeys are hidden.  Once a checkbox is selected, and then unselected
+			# the filter() of empty Q objects will return all monkeys, showing all monkeys when no checkboxes are selected.
+
+			# Workaround:
+			# Gather the monkeys to hide, by filtering the opposite of the search query.  This will return all monkeys when no checkboxes are selected
+			hide_ids = Monkey.objects.filter(~select_query & ~filter_query).values_list('mky_id', flat=True).distinct() # and hide them
+			show_ids = Monkey.objects.exclude(pk__in=hide_ids).values_list('mky_id', flat=True).distinct() # and then show the unhidden monkeys
 			show_ids = list(show_ids)
-			hide_ids = Monkey.objects.exclude(pk__in=show_ids).values_list('mky_id', flat=True).distinct()
 			hide_ids = list(hide_ids)
 
 		return HttpResponse(simplejson.dumps({'show_ids': show_ids, 'hide_ids': hide_ids}), mimetype='application/json')
