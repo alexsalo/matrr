@@ -303,9 +303,9 @@ def urge_progress_reports():
 
 		subject = 'Progress Report'
 		body = 'Hello, \nthe tissue(s) you requested were shipped on %s. ' % shipment['shp_shipment_date'] + \
-			'Please, submit a 90 day progress report concerning this request on My Account page, section Research Updates.\n' + \
+			'Please, submit a 90 day progress report concerning this request using this link: http://gleek.ecs.baylor.edu%s\n' % reverse('rud-upload') + \
 			"\nRequest overview:\n\n%s\n" % req.print_self_in_detail() + \
-			"\nYours sincerely,\n\nMatrr team\n\n" + \
+			"\nYours sincerely,\nMATRR team\n\n" + \
 			'This is an automated message.\n'
 
 		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
