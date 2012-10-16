@@ -233,3 +233,20 @@ def family_tree():
 
 	else:
 		print "this shit creates a publicly visible bogus cohort.  dont use this."
+
+def export_template_to_pdf(template, context={}, outfile=None, return_pisaDocument=False):
+	t = loader.get_template(template)
+	c = Context(context)
+	r = t.render(c)
+
+	result = outfile if outfile else StringIO.StringIO()
+	pdf = pisa.pisaDocument(StringIO.StringIO(r.encode("UTF-8")), dest=result)
+
+	if not pdf.err:
+		if return_pisaDocument:
+			return pdf
+		else:
+			return result
+	else:
+		raise Exception(pdf.err)
+

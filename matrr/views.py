@@ -1,32 +1,28 @@
 # Create your views here.
-from django.core.mail.message import EmailMessage
+from django.db import DatabaseError
+from django.db.models import Q, Count
+from django.core.urlresolvers import reverse
+from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelformset_factory
 from django.forms.models import formset_factory
-from django.template import RequestContext, loader
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import  render_to_response, redirect, get_object_or_404
+from django.template import RequestContext, loader
 from django.template.context import Context
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator, InvalidPage, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
-from django.core.mail import send_mail
-from django.utils.encoding import smart_str
+from djangosphinx.models import SphinxQuerySet
 import settings
+from matrr import helper, emails
 from matrr.forms import *
 from matrr.models import *
 import math
 from datetime import date, timedelta
-from django.db import DatabaseError
-from djangosphinx.models import SphinxQuerySet
-from django.db.models import Q, Count
-from django.core.urlresolvers import reverse
-from django.contrib.admin.views.decorators import staff_member_required
 from utils import plotting
 from matrr.decorators import user_owner_test
-#from utils.plotting import monkey_protein
 import urllib
-from utils.plotting import COHORT_ETOH_TOOLS_PLOTS, MONKEY_ETOH_TOOLS_PLOTS
 
 
 def redirect_with_get(url_name, *args, **kwargs):
@@ -407,26 +403,6 @@ def reviews_list_view(request):
 							  context_instance=RequestContext(request))
 
 
-def __notify_mta_uploaded(mta):
-	mta_admins = Account.objects.users_with_perm('mta_upload_notification')
-	from_email = Account.objects.get(user__username='matrr_admin').email
-
-	for admin in mta_admins:
-		recipients = [admin.email]
-		subject = 'User %s has uploaded an MTA form' % mta.user.username
-		body = '%s has has uploaded an MTA form.\n' % mta.user.username
-		body += 'This MTA can be downloaded here:  http://gleek.ecs.baylor.edu%s.\n' % mta.mta_file.url
-		body += 'If necessary you can contact %s with the information below.\n\n' % mta.user.username
-		body += "Name: %s %s\nEmail: %s\nPhone: %s \n\n" % (mta.user.first_name, mta.user.last_name, mta.user.email, mta.user.account.phone_number)
-		body += "If this is a valid MTA click here to update MATRR: http://gleek.ecs.baylor.edu%s" % reverse('mta-list')
-
-		ret = send_mail(subject, body, from_email, recipient_list=recipients)
-		if ret > 0:
-			print "%s MTA verification request sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
-
-	return
-
-
 @user_passes_test(lambda u: u.has_perm('matrr.verify_mta'), login_url='/denied/')
 def mta_list(request):
 	MTAValidationFormSet = formset_factory(MTAValidationForm, extra=0)
@@ -474,33 +450,18 @@ def mta_upload(request):
 	# make a MTA upload form if one does not exist
 	if request.method == 'POST':
 		if 'request_form' in request.POST:
-			if not settings.PRODUCTION:
-				print "%s - New request email not sent, settings.PRODUCTION = %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), settings.PRODUCTION)
-			else:
+			if settings.PRODUCTION:
 				account = request.user.account
-				from_email = Account.objects.get(user__username='matrr_admin').email
-
-				users = Account.objects.users_with_perm('receive_mta_request')
-				for user in users:
-					recipients = [user.email]
-					subject = 'User %s has requested an MTA form' % account.user.username
-					body = '%s has indicated he/she is not associated with any of the UBMTA signatories and requested an MTA form.\n'\
-						   'He/she was told instructions would be provided with the MTA form.  '\
-						   'If you cannot contact %s with the information provided below, please notify the MATRR admins.\n' % (account.user.username, account.user.username)
-					body += "\n\nName: %s %s\nEmail: %s\nPhone: %s" % (account.first_name, account.last_name, account.email, account.phone_number)
-					body += "\n\nIn addition to any other steps, please have %s upload the signed MTA form to MATRR using this link: http://gleek.ecs.baylor.edu%s" % (
-					account.user.username, reverse('mta-upload'))
-
-					ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-					if ret > 0:
-						print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+				emails.send_mta_uploaded_email(account)
+			else:
+				print "%s - New request email not sent, settings.PRODUCTION = %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), settings.PRODUCTION)
 			messages.success(request, 'A MATRR administrator has been notified of your MTA request and will contact you with more information.')
 			return redirect(reverse('account-view'))
 		form = MtaForm(request.POST, request.FILES, instance=mta_object)
 		if form.is_valid():
 			# all the fields in the form are valid, so save the data
 			form.save()
-			__notify_mta_uploaded(form.instance)
+			emails.notify_mta_uploaded(form.instance)
 			messages.success(request, 'MTA Uploaded Successfully')
 			return redirect(reverse('account-view'))
 	else:
@@ -553,16 +514,7 @@ def account_verify(request, user_id):
 		account.verified = True
 		account.save()
 		#		send email
-		subject = "Account on www.matrr.com has been verified"
-		body = "Your account on www.matrr.com has been verified\n" +\
-			   "\t username: %s\n" % account.user.username +\
-			   "From now on, you can access pages on www.matrr.com.\n" +\
-			   "This is an automated message, please, do not respond.\n"
-
-		from_e = account.user.email
-		to_e = list()
-		to_e.append(from_e)
-		send_mail(subject, body, from_e, to_e, fail_silently=True)
+		emails.send_account_verified_email(account)
 		messages.success(request, "Account %s was successfully verified." % account.user.username)
 	else:
 		messages.info(request, "Account %s is already verified." % account.user.username)
@@ -1015,7 +967,7 @@ def order_detail(request, req_request_id, edit=False):
 		response = HttpResponse(mimetype='application/pdf')
 		response['Content-Disposition'] = 'attachment; filename=Invoice-%d.pdf' % req_request.pk
 		context = {'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
-		_export_template_to_pdf('pdf_templates/invoice.html', context, outfile=response)
+		helper.export_template_to_pdf('pdf_templates/invoice.html', context, outfile=response)
 		return response
 
 	return render_to_response('matrr/order/order_detail.html',
@@ -1239,19 +1191,8 @@ def request_review_process(request, req_request_id):
 				req_request.req_status = status
 				req_request.save()
 				messages.success(request, "The tissue request has been processed.")
-				# Email subject *must not* contain newlines
-				subject = ''.join(form.cleaned_data['subject'].splitlines())
 				if settings.PRODUCTION:
-					perm = Permission.objects.get(codename='bcc_request_email')
-					bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
-					email = EmailMessage(subject, form.cleaned_data['body'], settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
-					if status != RequestStatus.Rejected:
-						outfile = open('/tmp/MATRR_Invoice-%s.pdf' % str(req_request.pk), 'wb')
-						context = {'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
-						_export_template_to_pdf('pdf_templates/invoice.html', context, outfile=outfile)
-						outfile.close()
-						email.attach_file(outfile.name)
-					email.send()
+					emails.send_processed_request_email(form.cleaned_data, req_request)
 					messages.info(request, str(req_request.user.username) + " was sent an email informing him/her that the request was processed.")
 				return redirect(reverse('review-overview-list'))
 			else:
@@ -1292,16 +1233,7 @@ def contact_us(request):
 			# get the submitted form
 			form = ContactUsForm(data=request.POST)
 			if form.is_valid():
-				subject = ''.join(form.cleaned_data['email_subject'].splitlines())
-				subject += '//'
-				try:
-					if request.user.email:
-						subject += request.user.email
-				except:
-				#					Anonymous user does not have email field.
-					pass
-				send_mail(subject, form.cleaned_data['email_body'], form.cleaned_data['email_from'],
-					["Erich_Baker@Baylor.edu"])
+				emails.send_contact_us_email(form.cleaned_data, request.user)
 				messages.success(request, "Your message was sent to the MATRR team. You may expect a response shortly.")
 				return redirect('/')
 			else:
@@ -1509,9 +1441,8 @@ def shipment_detail(request, shipment_id):
 				shipment.user = request.user
 				shipment.save()
 				if settings.PRODUCTION:
-					from matrr.emails import send_po_manifest_upon_shipment, notify_user_upon_shipment
-					send_po_manifest_upon_shipment(shipment)
-					notify_user_upon_shipment(shipment)
+					emails.send_po_manifest_upon_shipment(shipment)
+					emails.notify_user_upon_shipment(shipment)
 				req_request.ship_request()
 				return redirect(reverse('shipping-overview'))
 
@@ -1543,7 +1474,7 @@ def shipment_manifest_export(request, shipment_id):
 									  str(req_request.pk) + '.pdf'
 
 	context = {'shipment': shipment, 'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
-	return _export_template_to_pdf('pdf_templates/shipment_manifest.html', context, outfile=response)
+	return helper.export_template_to_pdf('pdf_templates/shipment_manifest.html', context, outfile=response)
 
 
 @user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user, arg_name='req_request_id', redirect_url='/denied/')
@@ -1633,7 +1564,7 @@ def tissue_verification_export(request, req_request_id):
 	response = HttpResponse(mimetype='application/pdf')
 	response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
 	context = {'tiv_list': tiv_list, 'user': request.user, 'date': datetime.today()}
-	return _export_template_to_pdf('pdf_templates/tissue_verification.html', context, outfile=response)
+	return helper.export_template_to_pdf('pdf_templates/tissue_verification.html', context, outfile=response)
 
 
 def tissue_verification_list(request, req_request_id):
@@ -2148,7 +2079,7 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 	old_post = {}
 	if '_old_post' in request.session:
 		old_post = request.session.pop('_old_post')
-	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in COHORT_ETOH_TOOLS_PLOTS.items()]
+	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in plotting.COHORT_ETOH_TOOLS_PLOTS.items()]
 	cohort = Cohort.objects.get(pk=cohort_id)
 	context = {'cohort': cohort}
 	if request.method == "POST" or old_post:
@@ -2170,7 +2101,7 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 			plot_method = plot_form.cleaned_data['plot_method']
 
 			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date})
-			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=COHORT_ETOH_TOOLS_PLOTS[plot_method][1], parameters=params)
+			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=plotting.COHORT_ETOH_TOOLS_PLOTS[plot_method][1], parameters=params)
 			context['graph'] = cohort_image
 		else:
 			messages.error(request, plot_form.errors.as_text())
@@ -2188,7 +2119,7 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 def tools_monkey_etoh_graphs(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
 	context = {'cohort': cohort}
-	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in MONKEY_ETOH_TOOLS_PLOTS.items()]
+	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in plotting.MONKEY_ETOH_TOOLS_PLOTS.items()]
 	plot_method = ''
 
 	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
@@ -2218,7 +2149,7 @@ def tools_monkey_etoh_graphs(request, cohort_id):
 
 			monkeys = _verify_monkeys(experiment_range_form.cleaned_data['monkeys'])
 			plot_method = plot_form.cleaned_data['plot_method']
-			title = MONKEY_ETOH_TOOLS_PLOTS[plot_method][1]
+			title = plotting.MONKEY_ETOH_TOOLS_PLOTS[plot_method][1]
 			params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range}
 			graphs = list()
 			for monkey in monkeys:
@@ -2325,9 +2256,7 @@ def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
 				parameters['to_date'] = str(_to)
 
 		if m2de.count():
-			from utils.plotting import MONKEY_PLOTS
-
-			title = "%s for monkey %s" % (MONKEY_PLOTS[method_name][1], subject)
+			title = "%s for monkey %s" % (plotting.MONKEY_PLOTS[method_name][1], subject)
 			parameters = str(parameters)
 			matrr_image, is_new = MonkeyImage.objects.get_or_create(monkey=subject, method=method_name, title=title, parameters=parameters)
 			if is_new:
@@ -2362,9 +2291,7 @@ def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
 			parameters['to_date'] = str(_to)
 
 		if m2de.count():
-			from utils.plotting import COHORT_PLOTS
-
-			title = "%s for cohort %s" % (COHORT_PLOTS[method_name][1], subject)
+			title = "%s for cohort %s" % (plotting.COHORT_PLOTS[method_name][1], subject)
 			parameters = str(parameters)
 			matrr_image, is_new = CohortImage.objects.get_or_create(cohort=subject, method=method_name, title=title, parameters=parameters)
 			if is_new:
@@ -2586,22 +2513,6 @@ def create_svg_fragment(request, klass, imageID):
 	resp = HttpResponse(image_data, mimetype="image/svg+xml")
 	resp['Content-Disposition'] = 'attachment; filename=%s' % (str(im) + '.svg')
 	return resp
-
-def _export_template_to_pdf(template, context={}, outfile=None, return_pisaDocument=False):
-	t = loader.get_template(template)
-	c = Context(context)
-	r = t.render(c)
-
-	result = outfile if outfile else StringIO.StringIO()
-	pdf = pisa.pisaDocument(StringIO.StringIO(r.encode("UTF-8")), dest=result)
-
-	if not pdf.err:
-		if return_pisaDocument:
-			return pdf
-		else:
-			return result
-	else:
-		raise Exception(pdf.err)
 
 import simplejson
 @user_passes_test(lambda u: u.is_authenticated(), login_url='/denied/')
