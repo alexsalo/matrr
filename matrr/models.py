@@ -1,6 +1,5 @@
 #encoding=utf-8
-import Image
-import os, ast
+import Image, numpy, dbarray, settings, os, ast
 from django.core.files.base import File
 from django.core.mail.message import EmailMessage
 from django.db import models
@@ -14,8 +13,6 @@ from datetime import datetime
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
-import numpy
-import settings
 
 def percentage_validator(value):
 	MinValueValidator(0).__call__(value)
