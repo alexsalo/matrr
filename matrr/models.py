@@ -1183,6 +1183,8 @@ class TissueType(models.Model):
 		return Availability.Available
 
 	def get_monkey_availability(self, monkey):
+		if 'custom' in self.tst_tissue_name.lower():
+			return Availability.Available
 		if self.tst_sex_relevant != TissueTypeSexRelevant.Both:
 			if monkey.mky_gender != self.tst_sex_relevant:
 				return Availability.Unavailable
@@ -1195,13 +1197,8 @@ class TissueType(models.Model):
 		tissue_samples = TissueSample.objects.filter(monkey=monkey, tissue_type=self)
 
 		for tissue_sample in tissue_samples:
-			if tissue_sample.tss_sample_quantity > 0 or tissue_sample.tss_sample_quantity is None:
-			#		returns In_stock if any of the samples is present and its amount is positive
-			#		does not reflect accepted requests
-				return Availability.In_Stock
+			return tissue_sample.get_availability()
 
-		if 'custom' in self.tst_tissue_name.lower():
-			return Availability.Available
 		return Availability.Unavailable
 
 	def get_pending_request_count(self, monkey):
@@ -1861,26 +1858,15 @@ class TissueRequestReview(models.Model):
 
 class TissueSample(models.Model):
 	tss_id = models.AutoField(primary_key=True)
-	tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id',
-									related_name='tissue_sample_set',
-									blank=False, null=False)
-	monkey = models.ForeignKey(Monkey, db_column='mky_id',
-							   related_name='tissue_sample_set',
-							   blank=False, null=False)
-	tss_freezer = models.CharField('Freezer Name',
-								   max_length=100,
-								   null=False, blank=True,
-								   help_text='Please enter the name of the freezer this sample is in.')
-	tss_location = models.CharField('Location of Sample',
-									max_length=100,
-									null=False, blank=True,
-									help_text='Please enter the location in the freezer where this sample is stored.')
-	tss_details = models.TextField('Details',
-								   null=True, blank=True,
-								   help_text='Any extras details about this tissue sample.')
+	tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id', related_name='tissue_sample_set', blank=False, null=False)
+	monkey = models.ForeignKey(Monkey, db_column='mky_id',related_name='tissue_sample_set', blank=False, null=False)
+	tss_freezer = models.CharField('Freezer Name', max_length=100, null=False, blank=True, help_text='Please enter the name of the freezer this sample is in.')
+	tss_location = models.CharField('Location of Sample', max_length=100, null=False, blank=True, help_text='Please enter the location in the freezer where this sample is stored.')
+	tss_blocks_right = dbarray.NullBoolArrayField(default=None, blank=False, null=True)
+	tss_blocks_left = dbarray.NullBoolArrayField(default=None, blank=False, null=True)
+	tss_details = models.TextField('Details', null=True, blank=True, help_text='Any extras details about this tissue sample.')
 	tss_sample_quantity = models.FloatField('Sample Quantity', null=True, default=0)
-	tss_units = models.CharField('Quantity units',
-								 choices=Units, null=False, max_length=20, default=Units[3][0])
+	tss_units = models.CharField('Quantity units', choices=Units, null=False, max_length=20, default=Units[3][0])
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='+', db_column='usr_usr_id', editable=False, null=True)
 
@@ -1889,8 +1875,7 @@ class TissueSample(models.Model):
 		return self.tss_modified
 
 	def __unicode__(self):
-		return str(self.monkey) + ' ' + str(self.tissue_type) + ' ' + self.tss_freezer\
-			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.get_tss_units_display() + ')'
+		return "%s %s %s:%s" % (str(self.monkey), str(self.tissue_type), self.tss_freezer, self.tss_location)
 
 	def get_location(self):
 		if self.monkey.cohort.coh_upcoming:
@@ -1903,6 +1888,16 @@ class TissueSample(models.Model):
 		else:
 			location = 'unknown'
 		return location
+
+	def get_availability(self):
+		if 'brain' in self.tissue_type.category.cat_name:
+			if any(self.tss_blocks_right) or any(self.tss_blocks_left):
+				return Availability.Available if self.monkey.cohort.coh_upcoming else Availability.In_Stock
+			return Availability.Unavailable # important to return unavail here, since brain tissues could have tss_sample_quantity > 0, which we are ignoring.
+		if self.tss_sample_quantity > 0:
+			return Availability.Available if self.monkey.cohort.coh_upcoming else Availability.In_Stock
+		return Availability.Unavailable
+
 
 	def get_quantity(self):
 		return self.tss_sample_quantity
@@ -2264,6 +2259,23 @@ class MonkeyBEC(models.Model):
 		db_table = 'bec_monkey_bec'
 
 
+class MonkeyBrainBlock(models.Model):
+	mbb_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, blank=False)
+	tissue_types = models.ManyToManyField(TissueType, symmetrical=False, null=True, blank=False, related_name='+')
+	mbb_block_name = models.CharField(max_length=20)
+	mbb_brain_image = models.FileField("Brain Image", upload_to="brain_images/")
+
+
+	def __unicode__(self):
+		return "Brain block %s for monkey %d" % (self.mbb_block_name, self.monkey.pk)
+
+	def save(self, *args, **kwargs):
+		if self.tissue_types.exclude(category__cat_category_name__icontains='brain').count():
+			raise Exception("Cannot add non-brain tissue type to MonkeyBrainBlock.tissue_types")
+		super(MonkeyBrainBlock, self).save(*args, **kwargs)
+
+		db_table = 'mbb_monkey_brain_block'
 
 
 # put any signal callbacks down here after the model declarations

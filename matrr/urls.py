@@ -126,10 +126,11 @@ urlpatterns += patterns('matrr.views',
 	url(r'^verification/(?P<req_request_id>\d+)/export$', tissue_verification_export, name='verification-list-export'),
 	url(r'^verification/(?P<req_request_id>\d+)/(?P<tiv_id>\d+)/$', tissue_verification_detail, name='verification-detail'),
 
-	url(r'^inventory/cohort/(?P<coh_id>\d+)/$', inventory_cohort, name="inventory-cohort"),
 	url(r'^inventory/$', user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')(ListView.as_view(
 							model=Cohort,template_name="matrr/inventory/inventory.html")), name='inventory'),
-	
+	url(r'^inventory/cohort/(?P<coh_id>\d+)/$', inventory_cohort, name="inventory-cohort"),
+	url(r'^inventory/brains/monkey/(?P<mky_id>\d+)/$', inventory_brain_monkey, name="inventory-brain-cohort"),
+
 	# Tools
 	url(r'^tools/$', tools_landing, name='tools-landing'),
 	url(r'^tools/sandbox/$', tools_sandbox, name='tools-sandbox'),

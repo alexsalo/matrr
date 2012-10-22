@@ -745,8 +745,8 @@ class ExperimentRangeForm_monkeys(ExperimentRangeForm):
 
 
 class AdvancedSearchSelectForm(Form):
-	sex = MultipleChoiceField(choices=Monkey.SEX_CHOICES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
-	species = MultipleChoiceField(choices=Monkey.SPECIES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
+	sex = MultipleChoiceField(choices=Monkey.SEX_CHOICES, required=False, widget=widgets.CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
+	species = MultipleChoiceField(choices=Monkey.SPECIES, required=False, widget=widgets.CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
 
 
 class AdvancedSearchFilterForm(Form):
@@ -755,3 +755,10 @@ class AdvancedSearchFilterForm(Form):
 	cohorts = ModelMultipleChoiceField(label="Cohorts", required=False, queryset=Cohort.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
 
 
+class InventoryBrainForm(ModelForm):
+	BLOCKS = tuple((d, "Block%d" % d) for d in range(1,16,1))
+	def __init__(self, *args, **kwargs):
+		raise Exception('shit is broke')
+		super(InventoryBrainForm, self).__init__(*args, **kwargs)
+		self.fields['left_hemisphere'] = MultipleChoiceField(choices=self.BLOCKS, required=False, widget=widgets.SelectMultiple(attrs={'size':16}))
+		self.fields['right_hemisphere'] = MultipleChoiceField(choices=self.BLOCKS, required=False, widget=widgets.SelectMultiple(attrs={'size':16}))

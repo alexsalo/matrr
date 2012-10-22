@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load inclusion_tags %}
+
+{% block title %}Brain Inventory for monkey {{ monkey }}{% endblock %}
+
+
+{% block content %}
+	<div class='headline'>Brain Inventory for Monkey {{ monkey }}</div>
+
+	<div class=left>
+		<a href="{% url inventory %}">
+
+			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+			&nbsp;View Inventory Cohort List</a>
+		<br/>
+	</div>
+	<div class=right>
+        {% pagination samples %}
+	</div>
+
+	<table class="common_center" width=100%>
+	{% for tss in samples.object_list %}
+		<th colspan="3">{{ tss.tissue_type }}</th>
+		<tr>
+            <td><span class="headline">Left Hemisphere</span><br>
+				{{  brain_form.left_hemisphere }}
+ 		    </td>
+            <td><img src='{{ STATIC_URL }}images/500.jpg' width=400></td>
+			<td><span class="headline">Right Hemisphere</span><br>
+                {{  brain_form.right_hemisphere }}
+		    <td>
+        </tr>
+	{% endfor %}
+	</table>
+	<div class='headline'> </div>
+
+	<div class=left>
+		<a href="{% url inventory %}">
+
+			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+			&nbsp;View Inventory Cohort List</a>
+		<br/>
+	</div>
+	<div class=right>
+        {% pagination samples %}
+	</div>
+
+
+
+{% endblock %}

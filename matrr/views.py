@@ -1768,6 +1768,34 @@ def inventory_cohort(request, coh_id):
 	return render_to_response('matrr/inventory/inventory_cohort.html', {"cohort": cohort, "monkeys": monkeys, "matrix": availability_matrix}, context_instance=RequestContext(request))
 
 
+@user_passes_test(lambda u: u.has_perm('matrr.change_tissuesample'), login_url='/denied/')
+def inventory_brain_monkey(request, mky_id):
+	monkey = get_object_or_404(Monkey, pk=mky_id)
+	_samples  = TissueSample.objects.filter(tissue_type__category__cat_name__icontains='brain', monkey=monkey).order_by('tissue_type__tst_tissue_name')
+	## Paginator stuff
+	if len(_samples) > 0:
+		paginator = Paginator(_samples, 1)
+		# Make sure page request is an int. If not, deliver first page.
+		try:
+			page = int(request.GET.get('page', '1'))
+		except ValueError:
+			page = 1
+		# If page request (9999) is out of range, deliver last page of results.
+		try:
+			samples = paginator.page(page)
+		except (EmptyPage, InvalidPage):
+			samples = paginator.page(paginator.num_pages)
+	else:
+		samples = _samples
+
+	tss = samples.object_list[0]
+	initial = dict()
+	initial['left_hemisphere'] = ["Block%d" % d for d in range(1,16,1)]
+	initial['right_hemisphere'] = ["Block%d" % d for d in range(1,16,1)]
+	brain_form = InventoryBrainForm(initial=initial)
+	return render_to_response('matrr/inventory/inventory_brain_monkey.html', {"monkey": monkey, "samples": samples, 'brain_form': brain_form}, context_instance=RequestContext(request))
+
+
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_file'), login_url='/denied/')
 def research_update_list(request):
 	pending_ruds = Request.objects.exclude(rud_set=None).order_by('req_request_date')
