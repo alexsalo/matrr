@@ -2075,13 +2075,12 @@ def tools_cohort_etoh(request, cohort_id):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_cohort_etoh_graphs(request, cohort_id):
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	plot_choices = plotting.fetch_plot_choices('cohort', request.user, cohort)
 	plot_method = ''
-	old_post = {}
-	if '_old_post' in request.session:
-		old_post = request.session.pop('_old_post')
-	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in plotting.COHORT_ETOH_TOOLS_PLOTS.items()]
-	cohort = Cohort.objects.get(pk=cohort_id)
+
 	context = {'cohort': cohort}
+	old_post = request.session.pop('_old_post')	if '_old_post' in request.session else {}
 	if request.method == "POST" or old_post:
 		post = request.POST if request.POST else old_post
 		plot_form = PlotSelectForm(plot_choices, data=post)
@@ -2101,7 +2100,7 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 			plot_method = plot_form.cleaned_data['plot_method']
 
 			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date})
-			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=plotting.COHORT_ETOH_TOOLS_PLOTS[plot_method][1], parameters=params)
+			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=plotting.COHORT_PLOTS[plot_method][1], parameters=params)
 			context['graph'] = cohort_image
 		else:
 			messages.error(request, plot_form.errors.as_text())
@@ -2119,7 +2118,7 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 def tools_monkey_etoh_graphs(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
 	context = {'cohort': cohort}
-	plot_choices = [(plot_key, plot_value[1]) for plot_key, plot_value in plotting.MONKEY_ETOH_TOOLS_PLOTS.items()]
+	plot_choices = plotting.fetch_plot_choices('monkey', request.user, cohort)
 	plot_method = ''
 
 	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
@@ -2149,7 +2148,7 @@ def tools_monkey_etoh_graphs(request, cohort_id):
 
 			monkeys = _verify_monkeys(experiment_range_form.cleaned_data['monkeys'])
 			plot_method = plot_form.cleaned_data['plot_method']
-			title = plotting.MONKEY_ETOH_TOOLS_PLOTS[plot_method][1]
+			title = plotting.MONKEY_PLOTS[plot_method][1]
 			params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range}
 			graphs = list()
 			for monkey in monkeys:
