@@ -1547,8 +1547,8 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	if dex_type:
 		from django.db.models import Max, Min
 		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
-		max_date = drinking_experiments.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date']
-		min_date = drinking_experiments.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date']
+		max_date = drinking_experiments.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
+		min_date = drinking_experiments.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
 		bec_records = bec_records.filter(bec_collect_date__lte=max_date).filter(bec_collect_date__gte=min_date)
 
 	drinking_experiments = drinking_experiments.exclude(mtd_etoh_bout=None, mtd_etoh_drink_bout=None)
