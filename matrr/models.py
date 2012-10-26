@@ -2245,7 +2245,7 @@ class MonkeyBEC(models.Model):
 	bec_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='bec_records', db_column='mky_id', editable=False)
 	bec_collect_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
-	bec_run_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
+	bec_run_date = models.DateTimeField("Date Run", editable=False, null=True, blank=False)
 	bec_exper = models.CharField('Experiment Type', max_length=20, null=True, blank=True)
 	bec_exper_day = models.IntegerField('Experiment Day', editable=False, null=True, blank=False)
 	bec_session_start = models.TimeField("Session Start", editable=False, null=True, blank=False)
@@ -2254,7 +2254,7 @@ class MonkeyBEC(models.Model):
 	bec_vol_etoh = models.FloatField("Etoh consumed at sample time, ml", null=True, blank=True)
 	bec_gkg_etoh = models.FloatField("Etoh consumed at sample time, g/kg", null=True, blank=True)
 	bec_daily_gkg_etoh = models.FloatField("Etoh consumed, entire day, g/kg", null=True, blank=True)
-	bec_mg_pct = models.FloatField("Blood Ethanol Concentration, mg %", null=True, blank=True)
+	bec_mg_pct = models.FloatField("Blood Ethanol Concentration, mg %", null=False, blank=False)
 
 
 	def __unicode__(self):

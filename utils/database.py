@@ -1893,10 +1893,15 @@ def load_bec_data(file_name, overwrite=False, header=True):
 				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
 				continue
 
-			bec, is_new = MonkeyBEC.objects.get_or_create(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
-			if not is_new and not overwrite:
-				print ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
-				continue
+			bec = MonkeyBEC.objects.filter(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
+			if bec:
+				if overwrite:
+					bec.delete()
+				else:
+					print ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
+					continue
+			else:
+				bec = MonkeyBEC(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
 
 			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
 			model_fields = fields[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
@@ -1913,8 +1918,8 @@ def load_bec_data(file_name, overwrite=False, header=True):
 				bec.full_clean()
 			except Exception as e:
 				print ERROR_OUTPUT % (line_number, e, line)
-				bec.delete()
 				continue
+			bec.save()
 	print "Data load complete."
 
 def populate_mky_species():
