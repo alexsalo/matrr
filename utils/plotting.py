@@ -1613,7 +1613,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	pyplot.ylim(0-((y_max*1.25)/2), graph_y_max) # + % to show circles under the size legend instead of behind it
 	pyplot.xlim(0,len(xaxis) + 2)
 	max_y_int = int(round(y_max*1.25))
-	y_tick_int = int(round(max_y_int/5))
+	y_tick_int = max(int(round(max_y_int/5)), 1)
 	ax1.set_yticks(range(0, max_y_int, y_tick_int))
 	ax1.yaxis.get_label().set_position((0,0.6))
 
@@ -1666,7 +1666,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
 	for bar, x, color_value in zip(bec_values, bar_xaxis, pct_consumed):
 		color = cm.jet(norm(color_value))
-		pyplot.bar(x, bar, width=3, color=color, edgecolor='none')
+		pyplot.bar(x, bar, width=2, color=color, edgecolor='none')
 		facecolors.append(color)
 
 	ax3.set_xlim(0,len(xaxis) + 2)
