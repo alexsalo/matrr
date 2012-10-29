@@ -158,7 +158,7 @@ def cohort_necropsy_avg_22hr_g_per_kg(cohort):
 		legend_labels = ('12 Month Average', '6 Month Average')
 		return cohort_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
 	else:
-		return False, 'NO MAP'
+		return False, False
 
 def cohort_necropsy_etoh_4pct(cohort):
 	nec_sums = []
@@ -173,7 +173,7 @@ def cohort_necropsy_etoh_4pct(cohort):
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
 		return cohort_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
 	else:
-		return False, 'NO MAP'
+		return False, False
 
 def cohort_necropsy_sum_g_per_kg(cohort):
 	nec_sums = []
@@ -188,7 +188,7 @@ def cohort_necropsy_sum_g_per_kg(cohort):
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
 		return cohort_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
 	else:
-		return False, 'NO MAP'
+		return False, False
 
 def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
 	from matrr.models import Cohort
@@ -198,7 +198,7 @@ def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.  Using monkey's cohort")
-		return False, 'NO MAP'
+		return False, False
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = fig.add_subplot(111)
@@ -215,7 +215,7 @@ def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 
 	if not coh_data_1:
 		print("Cohort doesn't have any necropsy summary data for this callable")
-		return False, 'NO MAP'
+		return False, False
 
 	idx = numpy.arange(len(coh_data_1))
 	width = 0.4
@@ -266,7 +266,7 @@ def cohort_boxplot_m2de_general(specific_callable, y_label, cohort, days=10,):
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return False, 'NO MAP'
+			return False, False
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 	if cohort_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('-drinking_experiment__dex_date')
@@ -293,11 +293,11 @@ def cohort_boxplot_m2de_general(specific_callable, y_label, cohort, days=10,):
 		pyplot.setp(bp['fliers'], color='red', marker='+')
 		xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 		pyplot.setp(xtickNames, rotation=45)
-		return fig, 'NO MAP'
+		return fig, False
 
 	else:
 		print "No drinking experiments for this cohort."
-		return False, 'NO MAP'
+		return False, False
 
 
 def cohort_boxplot_m2de_month_etoh_intake(cohort, from_date=None, to_date=None, dex_type=''):
@@ -320,7 +320,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return False, 'NO MAP'
+			return False, False
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 
@@ -362,7 +362,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 		return fig, "cohort map"
 	else:
 		print "No drinking experiments for this cohort."
-		return False, 'NO MAP'
+		return False, False
 
 def convert_timedelta(t):
 	if t:
@@ -423,13 +423,13 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return False, 'NO MAP'
+			return False, False
 	if not isinstance(protein, Protein):
 		try:
 			protein = Protein.objects.get(pk=protein)
 		except Protein.DoesNotExist:
 			print("That's not a valid protein.")
-			return False, 'NO MAP'
+			return False, False
 
 	monkey_proteins = MonkeyProtein.objects.filter(monkey__in=cohort.monkey_set.all(), protein=protein).order_by('mpn_date')
 	if monkey_proteins.count() > 0:
@@ -462,11 +462,11 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 		pyplot.setp(bp['fliers'], color='red', marker='o', markersize=10)
 		xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 		pyplot.setp(xtickNames, rotation=45)
-		return fig, 'NO MAP'
+		return fig, False
 
 	else:
 		print "No MonkeyProteins for this cohort."
-		return False, 'NO MAP'
+		return False, False
 
 def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=''):
 	if not isinstance(cohort, Cohort):
@@ -474,7 +474,7 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return False, 'NO MAP'
+			return False, False
 	size_cache = {}
 	def size(thing):
 		if isinstance(thing, dict):
@@ -505,7 +505,7 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 	mtd_count = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys).count()
 	if not mtd_count:
 		print 'This cohort has no MTDs'
-		return False, 'NO MAP'
+		return False, False
 	monkey_pks = []
 	for monkey in monkeys:
 		monkey_pks.append(str(monkey.pk))
@@ -639,7 +639,7 @@ def monkey_boxplot_etoh(monkey=None):
 	##  Because this is ethanol data, only bother with drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -697,7 +697,7 @@ def monkey_boxplot_pellets(monkey=None):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -754,7 +754,7 @@ def monkey_boxplot_veh(monkey=None):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -812,7 +812,7 @@ def monkey_boxplot_weight(monkey=None):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -883,7 +883,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -907,7 +907,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	if drinking_experiments.count() > 0:
 		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
 	else:
-		return None, 'NO MAP'
+		return None, False
 
 	induction_days = list()
 	dr_per_bout = list()
@@ -1034,7 +1034,7 @@ def monkey_bouts_drinks_intraday(mtd=None):
 			mtd = MonkeyToDrinkingExperiment.objects.get(mtd_id=mtd)
 		except MonkeyToDrinkingExperiment.DoesNotExist:
 			print("That's not a valid MonkeyToDrinkingExperiment.")
-			return False, 'NO MAP'
+			return False, False
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = fig.add_subplot(111)
@@ -1071,7 +1071,7 @@ def monkey_bouts_drinks_intraday(mtd=None):
 		return fig, "bouts intraday"
 	else:
 		print("No bouts data available for this monkey drinking experiment.")
-		return False, 'NO MAP'
+		return False, False
 
 
 def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
@@ -1098,7 +1098,7 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -1123,7 +1123,7 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	if drinking_experiments.count() > 0:
 		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
 	else:
-		return None, 'NO MAP'
+		return None, False
 
 	induction_days = list()
 	avg_bout_volumes = list()
@@ -1240,7 +1240,7 @@ def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type=''
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -1264,7 +1264,7 @@ def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type=''
 	if drinking_experiments.count() > 0:
 		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
 	else:
-		return None, 'NO MAP'
+		return None, False
 
 	xaxis = list()
 	induction_days = list()
@@ -1414,7 +1414,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', ci
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -1435,7 +1435,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', ci
 	if bec_records.count() > 0:
 		dates = bec_records.dates('bec_collect_date', 'day').order_by('bec_collect_date')
 	else:
-		return False, 'NO MAP'
+		return False, False
 
 	bec_values = list() # yaxis
 	pct_intake = list() # color
@@ -1503,7 +1503,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', ci
 	ax2.yaxis.set_major_locator(NullLocator())
 	pyplot.setp(ax2, xticklabels=size_labels)
 
-	return fig, 'NO MAP'
+	return fig, True
 
 
 def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
@@ -1524,7 +1524,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -1556,7 +1556,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	if drinking_experiments.count() > 0 and bec_records.count() > 0:
 		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
 	else:
-		return None, 'NO MAP'
+		return None, False
 
 	induction_days = list()
 	avg_bout_volumes = list()
@@ -1680,7 +1680,14 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	cb = pyplot.colorbar(col, cax=cax)
 	cb.set_label("Etoh intake @ sample / Daily etoh consumption")
 
-	return fig, 'NO MAP'
+	zipped = numpy.vstack(zip(xaxis, bec_values))
+	coordinates = ax1.transData.transform(zipped)
+	ids = [de.pk for de in drinking_experiments]
+	xcoords, inv_ycoords = zip(*coordinates)
+	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
+	datapoint_map = zip(ids, xcoords, ycoords)
+
+	return fig, True
 
 
 def monkey_errorbox_etoh(monkey=None, **kwargs):
@@ -1706,12 +1713,12 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 				monkey = Monkey.objects.get(pk=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	monkey_alpha = .7
 	cohort = monkey.cohort
@@ -1791,7 +1798,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 
 		return fig1, 'errorbox'
 	else:
-		return False, 'NO MAP'
+		return False, False
 
 
 def monkey_necropsy_avg_22hr_g_per_kg(monkey):
@@ -1802,7 +1809,7 @@ def monkey_necropsy_avg_22hr_g_per_kg(monkey):
 		legend_labels = ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk))
 		return monkey_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
 	except NecropsySummary.DoesNotExist:
-		return False, "NO MAP"
+		return False, False
 
 def monkey_necropsy_etoh_4pct(monkey):
 	try:
@@ -1812,7 +1819,7 @@ def monkey_necropsy_etoh_4pct(monkey):
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
 		return monkey_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, monkey)
 	except NecropsySummary.DoesNotExist:
-		return False, "NO MAP"
+		return False, False
 
 def monkey_necropsy_sum_g_per_kg(monkey):
 	try:
@@ -1822,7 +1829,7 @@ def monkey_necropsy_sum_g_per_kg(monkey):
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
 		return monkey_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, monkey)
 	except NecropsySummary.DoesNotExist:
-		return False, "NO MAP"
+		return False, False
 
 def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, monkey, cohort=None):
 	from matrr.models import Monkey, Cohort
@@ -1835,7 +1842,7 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 	if cohort:
 		if not isinstance(cohort, Cohort):
 			try:
@@ -1860,12 +1867,12 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 
 	if not monkey.necropsy_summary:
 		print("Monkey doesn't have any necropsy summary rows")
-		return False, 'NO MAP'
+		return False, False
 
 	coh_data_1, coh_data_2, cohort_labels = specific_callable(cohort.monkey_set.exclude(pk=monkey.pk))
 	mky_data_1, mky_data_2, monkey_label = specific_callable(cohort.monkey_set.filter(pk=monkey.pk))
 	if not mky_data_1[0] or not mky_data_2[0]: # don't draw plots for control monkeys
-		return False, 'NO MAP'
+		return False, False
 
 	idx = numpy.arange(len(coh_data_1))
 	width = 0.4
@@ -1963,7 +1970,7 @@ def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
 	# Put a legend to the right of the current axis
 	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
 
-	return fig, 'NO MAP'
+	return fig, False
 
 def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 	try: # silly hack to enforce ability to forloop
@@ -2026,7 +2033,7 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 	# Put a legend to the right of the current axis
 	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
 
-	return fig, 'NO MAP'
+	return fig, False
 
 def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 #	try: # silly hack to enforce 1 protein
@@ -2091,7 +2098,7 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 	# Put a legend to the right of the current axis
 	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
 
-	return fig, 'NO MAP'
+	return fig, False
 
 
 

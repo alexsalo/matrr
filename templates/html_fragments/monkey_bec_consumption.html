@@ -1,0 +1,20 @@
+
+<div style='width: {{ bigWidth|add:"60" }}px; margin:auto; padding: 20px'>
+	<center>{{ image.title }}</center>
+</div>
+<div>
+	<center>
+		<img src="{{ image.image.url }}" ismap usemap="#{{ image.monkey.pk }}"><br>
+	</center>
+</div>
+<div style='width: {{ bigWidth }}px; margin:auto;'>
+    <b>Detailed drinking pattern for {{ image.monkey.mky_id }}.</b> Each dot represents three measurements of ethanol consumption on a drinking day.
+	Each bar represents a blood sample taken on that day.  The X axis is shared.<br>
+	<b>Scatter Plot</b><br>
+	The Y axis is the total ethanol intake for that day, measured in grams of ethanol per kilogram of monkey weight.
+	The color of the dot indicates the number of bouts during that experiment day.
+	The size of the dot indicates the average ethanol intake per bout for that day, in milliliters.<br>
+	<b>Bar Plot</b><br>
+	The Y axis is the Blood Ethanol Concentration (BEC), in mg %, in the blood sampled.
+    The color of the each dot represents the ethanol consumed at sample time as a percentage of the total ethanol intake that day.
+</div>
