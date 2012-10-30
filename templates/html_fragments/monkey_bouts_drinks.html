@@ -13,10 +13,3 @@
 		The size of each dot indicates the average number of drinks per bout in each day.  Using this average, the Y axis is the estimated number of drinks per day.
 		The volume of ethanol consumed is not represented in this graph.  To view actual ethanol consumption for a given day click on that days dot.
 </div>
-{% if map %}
-	<map name='{{ image.monkey.pk }}'>
-	{% for point in map %}
-		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 5' href="{%  url tools-etoh-mtd point.0  %}" target='_blank'>
-	{% endfor %}
-	</map>
-{% endif %}

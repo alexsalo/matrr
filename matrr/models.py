@@ -807,7 +807,7 @@ class MATRRImage(models.Model):
 			self.thumbnail = File(open(thumbnail, 'r'))
 			self.svg_image = File(open(svg_image_path, 'r'))
 			# generate the html fragment for the image and save it
-			if data_map != "NO MAP":
+			if data_map:
 				self.save() # must be called before html frag gets built, or else the image paths are still in /tmp
 				html_frag_path = self._build_html_fragment(data_map)
 				html_frag = open(html_frag_path, 'r')
@@ -838,17 +838,20 @@ class MATRRImage(models.Model):
 		return image_path, thumb_path, svg_image_path
 
 	def _build_html_fragment(self, data_map, add_footer=True):
+		import collections
 		from django.template.context import Context
 		from django.template.loader import get_template
 
 		fragment_path = '/tmp/%s.html' % str(self)
 
+		data_map = data_map if isinstance(data_map, collections.Iterable) else False
 		t = get_template('html_fragments/%s.html' % self.method) # templates will be named identical to the plotting method
 		c = Context({'map': data_map, 'image': self, 'bigWidth': self.image.width * 1.1, 'bigHeight': self.image.height * 1.1})
 #		print self.__class__.name
 		foot_t = get_template('html_fragments/fragment_foot.html')
 		foot_c = Context({'html_fragment': str(self).replace(" ", "_").replace('(', "").replace(")",""),
-						 'class': self.__class__.__name__, 'imageID': self.pk})
+						 'class': self.__class__.__name__, 'imageID': self.pk,
+						 'map': data_map })
 		
 		html_fragment = open(fragment_path, 'w+')
 		html_fragment.write(str(t.render(c)))
@@ -2245,7 +2248,7 @@ class MonkeyBEC(models.Model):
 	bec_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='bec_records', db_column='mky_id', editable=False)
 	bec_collect_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
-	bec_run_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
+	bec_run_date = models.DateTimeField("Date Run", editable=False, null=True, blank=False)
 	bec_exper = models.CharField('Experiment Type', max_length=20, null=True, blank=True)
 	bec_exper_day = models.IntegerField('Experiment Day', editable=False, null=True, blank=False)
 	bec_session_start = models.TimeField("Session Start", editable=False, null=True, blank=False)
@@ -2254,7 +2257,7 @@ class MonkeyBEC(models.Model):
 	bec_vol_etoh = models.FloatField("Etoh consumed at sample time, ml", null=True, blank=True)
 	bec_gkg_etoh = models.FloatField("Etoh consumed at sample time, g/kg", null=True, blank=True)
 	bec_daily_gkg_etoh = models.FloatField("Etoh consumed, entire day, g/kg", null=True, blank=True)
-	bec_mg_pct = models.FloatField("Blood Ethanol Concentration, mg %", null=True, blank=True)
+	bec_mg_pct = models.FloatField("Blood Ethanol Concentration, mg %", null=False, blank=False)
 
 
 	def __unicode__(self):

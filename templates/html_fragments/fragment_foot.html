@@ -1,5 +1,13 @@
 <link rel="stylesheet" type="text/css" href="/static/css/fragment.css"/>
 
+{% if map %}
+	<map name='{{ image.monkey.pk }}'>
+	{% for point in map %}
+		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 5' href="{%  url tools-etoh-mtd point.0  %}" target='_blank'>
+	{% endfor %}
+	</map>
+{% endif %}
+
 <div class="fragmentfoot">
 <a href="{% url pdf-fragment %}?html={{ html_fragment }}.html" class="blockLinkCheckoutButton"> Export PDF </a> 
 <a href="{% url svg-fragment class imageID %}" class="blockLinkCheckoutButton"> Export SVG </a>
