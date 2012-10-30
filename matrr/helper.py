@@ -1,3 +1,8 @@
+import StringIO
+from django.template import RequestContext, loader
+from django.template.context import Context
+from django.template import loader, Context
+from ho import pisa
 import networkx as nx
 from matrr.models import FamilyNode, FamilyRelationship
 import random
