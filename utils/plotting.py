@@ -697,7 +697,10 @@ def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_dat
 	def create_convex_hull_polygon(cluster):
 		from matrr.helper import convex_hull
 		from matplotlib.path import Path
-		hull = convex_hull(numpy.array(cluster).transpose())
+		try:
+			hull = convex_hull(numpy.array(cluster).transpose())
+		except AssertionError: # usually means < 5 datapoints
+			return
 		path = Path(hull)
 		x, y = zip(*path.vertices)
 		x = list(x)
