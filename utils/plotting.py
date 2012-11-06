@@ -781,7 +781,7 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 	for mky in mkys:
 		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, drinking_experiment__dex_date__in=dates).exclude(bec_record=None).order_by('drinking_experiment__dex_date')
 		if mtds.count():
-			xaxis = mtds.values_list('mtd_etoh_g_kg', flat=True)
+			xaxis = mtds.values_list('mtd_pct_etoh_in_1st_bout', flat=True)
 			yaxis = mtds.values_list('bec_record__bec_mg_pct', flat=True)
 			color = cmap(mky_color[mky] / float(mky_count))
 
