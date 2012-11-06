@@ -13,3 +13,12 @@
 		The Y axis is the total ethanol intake for that day, measured in grams of ethanol per kilogram of monkey weight.
 		Each dot is linked; click on a dot to view actual ethanol consumption for that day.
 </div>
+
+{% if map %}
+	<map name='{{ image.monkey.pk }}'>
+	{% for point in map %}
+		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 5' href="{%  url tools-etoh-mtd point.0  %}" target='_blank'>
+	{% endfor %}
+	</map>
+{% endif %}
+

@@ -1,0 +1,14 @@
+
+<div style='width: {{ bigWidth|add:"60" }}px; margin:auto; padding: 20px'>
+	<center>{{ image.title }}</center>
+</div>
+<div>
+	<center>
+		<img src="{{ image.image.url }}" ismap usemap="#{{ image.cohort.pk }}"><br>
+	</center>
+</div>
+<div style='width: {{ bigWidth }}px; margin:auto;'>
+    <b>K-means clustering of {{ image.cohort.coh_cohort_name }} intake and BEC.</b> This is a scatter plot showing Blood Ethanol Concentration versus the percentage of the
+	total daily intake taken in the first bout of the session  The lines are the convex hull polygon surrounding the three k-means partitions of the data points.
+	The large hollow XDots are the k-means cluster's centroid of each partition.
+</div>
