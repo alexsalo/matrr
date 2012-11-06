@@ -1,0 +1,22 @@
+
+<div style='width: {{ bigWidth|add:"60" }}px; margin:auto; padding: 20px'>
+	<center>{{ image.title }}</center>
+</div>
+<div>
+	<center>
+		<img src="{{ image.image.url }}" ismap usemap="#{{ image.cohort.pk }}"><br>
+	</center>
+</div>
+<div style='width: {{ bigWidth }}px; margin:auto;'>
+    <b>K-means clustering of {{ image.cohort.coh_cohort_name }} intake and BEC.</b> This is a scatter plot showing Blood Ethanol Concentration versus the percentage of the
+	total daily intake taken in the first bout of the session, displayed as small, faint dots.  The lines are the convex hull polygon surrounding all of the monkey's data
+	points.  The larger XDots are the k-means cluster centroid of each monkey.
+</div>
+
+{% if map %}
+	<map name='{{ image.cohort.pk }}'>
+	{% for point in map %}
+		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 8' href="{%  url monkey-detail image.cohort.pk point.0  %}" target='_blank'>
+	{% endfor %}
+	</map>
+{% endif %}

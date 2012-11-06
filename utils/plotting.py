@@ -725,7 +725,7 @@ def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_dat
 	pyplot.legend(loc="upper right")
 	pyplot.xlim(xmin=0)
 	pyplot.ylim(ymin=0)
-	return fig, False
+	return fig, True
 
 def cohort_bec_maxbout(cohort, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
 	return cohort_bec_bout_general(cohort, 'mtd_pct_max_bout_vol_total_etoh', 'Max Bout / Total Intake', from_date=from_date, to_date=to_date,
@@ -775,28 +775,25 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 	mky_color = dict()
 	for idx, key in enumerate(mkys):
 		mky_color[key] = idx
-	cmap = cmap_discretize('gist_rainbow', mkys.count())
+	cmap = cmap_discretize('jet', mkys.count())
 
 	mky_datas = dict()
+	centeroids = list()
 	for mky in mkys:
 		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, drinking_experiment__dex_date__in=dates).exclude(bec_record=None).order_by('drinking_experiment__dex_date')
-		if mtds.count():
-			xaxis = mtds.values_list('mtd_pct_etoh_in_1st_bout', flat=True)
-			yaxis = mtds.values_list('bec_record__bec_mg_pct', flat=True)
-			color = cmap(mky_color[mky] / float(mky_count))
+		xaxis = mtds.values_list('mtd_pct_etoh_in_1st_bout', flat=True)
+		yaxis = mtds.values_list('bec_record__bec_mg_pct', flat=True)
+		color = cmap(mky_color[mky] / float(mky_count))
 
-			s = ax1.scatter(xaxis, yaxis, c=color, s=40, alpha=.1, edgecolor=color)
-			try:
-				res, idx = vq.kmeans2(numpy.array(zip(xaxis, yaxis)), cluster_count)
-				ax1.scatter(res[:,0],res[:,1], marker='o', s=100, linewidths=3, c=color, edgecolor=color)
-				ax1.scatter(res[:,0],res[:,1], marker='x', s=300, linewidths=3, c=color)
-			except ValueError:
-				pass
-
-			mky_datas[mky] = (zip(xaxis, yaxis), color)
-		else:
-			mky_count -= 1
-
+		s = ax1.scatter(xaxis, yaxis, c=color, s=40, alpha=.1, edgecolor=color)
+		try:
+			res, idx = vq.kmeans2(numpy.array(zip(xaxis, yaxis)), cluster_count)
+			ax1.scatter(res[:,0],res[:,1], marker='o', s=100, linewidths=3, c=color, edgecolor=color)
+			ax1.scatter(res[:,0],res[:,1], marker='x', s=300, linewidths=3, c=color)
+			centeroids.append([res[:,0][0], res[:,1][0]])
+		except ValueError:
+			pass
+		mky_datas[mky] = (zip(xaxis, yaxis), color)
 
 	def create_convex_hull_polygon(cluster, color, label):
 		from matrr.helper import convex_hull
@@ -829,7 +826,13 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 	pyplot.legend(loc="upper left")
 	pyplot.xlim(xmin=0)
 	pyplot.ylim(ymin=0)
-	return fig, False
+
+	zipped = numpy.vstack(centeroids)
+	coordinates = ax1.transData.transform(zipped)
+	xcoords, inv_ycoords = zip(*coordinates)
+	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
+	datapoint_map = zip(mkys, xcoords, ycoords)
+	return fig, datapoint_map
 
 
 
