@@ -2038,11 +2038,10 @@ def tools_etoh(request): # pick a cohort
 			cohort = cohort_form.cleaned_data['subject']
 			return redirect('tools-cohort-etoh', cohort.pk)
 	else:
-		cohorts_with_protein_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
-		cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
-		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
+		cohorts_with_etoh_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
+		cohorts_with_etoh_data = Cohort.objects.filter(pk__in=cohorts_with_etoh_data) # so get the queryset of cohorts
+		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_etoh_data)
 	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
-
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_cohort_etoh(request, cohort_id):
@@ -2072,11 +2071,10 @@ def tools_cohort_etoh(request, cohort_id):
 	monkey_queryset = Monkey.objects.filter(pk__in=mky_ids)
 	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
-
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_cohort_etoh_graphs(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
-	plot_choices = plotting.fetch_plot_choices('cohort', request.user, cohort)
+	plot_choices = plotting.fetch_plot_choices('cohort', request.user, cohort, 'etoh')
 	plot_method = ''
 
 	context = {'cohort': cohort}
@@ -2118,7 +2116,7 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 def tools_monkey_etoh_graphs(request, cohort_id):
 	cohort = get_object_or_404(Cohort, pk=cohort_id)
 	context = {'cohort': cohort}
-	plot_choices = plotting.fetch_plot_choices('monkey', request.user, cohort)
+	plot_choices = plotting.fetch_plot_choices('monkey', request.user, cohort, 'etoh')
 	plot_method = ''
 
 	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
@@ -2170,7 +2168,6 @@ def tools_monkey_etoh_graphs(request, cohort_id):
 
 	return render_to_response('matrr/tools/ethanol_monkey.html', context, context_instance=RequestContext(request))
 
-
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_etoh_mtd(request, mtd_id):
 	mtd_image = ''
@@ -2183,123 +2180,158 @@ def tools_etoh_mtd(request, mtd_id):
 		)
 	return render_to_response('matrr/tools/graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
 
-# TODO: remove this whole view, move into ethanol tools
-@user_passes_test(lambda u: u.has_perm('matrr.view_vip_images'), login_url='/denied/')
-def vip_graph_builder(request, method_name):
-	if 'vip-graphs' in request.POST:
-		return redirect(reverse('vip-graphs'))
-
-	date_ranges = {}
-	all_max = datetime.min.date() # keep track of the max date range possible for all cohorts
-	all_min = datetime.today().date() # keep track of the min date range possible for all cohorts
-	if 'monkey' in method_name:
-		for monkey in Monkey.objects.filter(mtd_set__gt=0).distinct(): # for any monkey we have drinking data for
-			mky_min = min(MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).values_list('drinking_experiment__dex_date'))[0]
-			mky_max = max(MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).values_list('drinking_experiment__dex_date'))[0]
-			date_ranges[monkey] = (mky_min, mky_max)
-			# update all_max and all_min
-			if mky_min < all_min:
-				all_min = mky_min
-			if mky_max > all_max:
-				all_max = mky_max
+@user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
+def tools_bec(request): # pick a cohort
+	if request.method == 'POST':
+		cohort_form = CohortSelectForm(data=request.POST)
+		if cohort_form.is_valid():
+			cohort = cohort_form.cleaned_data['subject']
+			return redirect('tools-cohort-bec', cohort.pk)
 	else:
-		for cohort in Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct(): # for any cohort we have drinking data for
-			coh_min = min(DrinkingExperiment.objects.filter(cohort=cohort).values_list('dex_date'))[0]
-			coh_max = max(DrinkingExperiment.objects.filter(cohort=cohort).values_list('dex_date'))[0]
-			date_ranges[cohort] = (coh_min, coh_max)
-			# update all_max and all_min
-			if coh_min < all_min:
-				all_min = coh_min
-			if coh_max > all_max:
-				all_max = coh_max
+		cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
+		cohorts_with_bec_data = Cohort.objects.filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
+		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_bec_data)
+	return render_to_response('matrr/tools/bec.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
-	min_date = widgets.date_to_padded_int(all_min)
-	max_date = widgets.date_to_padded_int(all_max)
-	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
+@user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
+def tools_cohort_bec(request, cohort_id):
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	monkey_keys = MonkeyBEC.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
+	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
 
-	if 'monkey' in method_name:
-		if request.POST:
-			return monkey_graph_builder(request, method_name, date_ranges, min_date, max_date)
+	if request.method == 'POST':
+		subject_select_form = GraphSubjectSelectForm(monkey_queryset, data=request.POST)
+		if subject_select_form.is_valid():
+			subject = subject_select_form.cleaned_data['subject']
+			if subject == 'monkey':
+				monkeys = subject_select_form.cleaned_data['monkeys']
+				get_m = list()
+				for m in monkeys:
+					get_m.append(`m.mky_id`)
+				get_m = "-".join(get_m)
+				if not monkeys:
+					messages.error(request, "You must select at least one monkey.")
+					return render_to_response('matrr/tools/bec.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
+				return redirect_with_get('tools-monkey-bec', cohort_id, monkeys=get_m)
+			elif subject == 'cohort':
+				return redirect('tools-cohort-bec-graphs', cohort_id)
+			else: # assumes subject == 'download'
+				messages.warning(request, "BEC data download is currently disabled.")
+	mky_ids = MonkeyBEC.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True)
+	monkey_queryset = Monkey.objects.filter(pk__in=mky_ids)
+	return render_to_response('matrr/tools/bec.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
+def tools_cohort_bec_graphs(request, cohort_id):
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	plot_choices = plotting.fetch_plot_choices('cohort', request.user, cohort, 'bec')
+	plot_method = ''
+
+	context = {'cohort': cohort}
+	old_post = request.session.pop('_old_post')	if '_old_post' in request.session else {}
+	if request.method == "POST" or old_post:
+		post = request.POST if request.POST else old_post
+		plot_form = PlotSelectForm(plot_choices, data=post)
+		subject_select_form = CohortSelectForm(data=post)
+		experiment_range_form = BECRangeForm(data=post)
+		if plot_form.is_valid() and subject_select_form.is_valid() and experiment_range_form.is_valid():
+			if int(cohort_id) != subject_select_form.cleaned_data['subject'].pk:
+				request.session['_old_post'] = request.POST
+				return redirect(tools_cohort_bec_graphs, subject_select_form.cleaned_data['subject'].pk)
+
+			from_date = to_date = ''
+			experiment_range = experiment_range_form.cleaned_data['range']
+			if experiment_range == 'custom':
+				from_date = str(experiment_range_form.cleaned_data['from_date'])
+				to_date = str(experiment_range_form.cleaned_data['to_date'])
+				experiment_range = None
+
+			sample_before = sample_after = ''
+			sample_range = experiment_range_form.cleaned_data['sample_range']
+			if sample_range == 'morning':
+				sample_before = '14:00'
+			if sample_range == 'afternoon':
+				sample_after = '14:00'
+
+			plot_method = plot_form.cleaned_data['plot_method']
+			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date, 'sample_before': sample_before, 'sample_after': sample_after})
+			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=plotting.COHORT_PLOTS[plot_method][1], parameters=params)
+			context['graph'] = cohort_image
 		else:
-			subject_form = MonkeySelectForm(subject_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
+			messages.error(request, plot_form.errors.as_text())
+			messages.error(request, subject_select_form.errors.as_text())
+			messages.error(request, experiment_range_form.errors.as_text())
+	cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
+	cohorts_with_bec_data = Cohort.objects.filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
+
+	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_bec_data, horizontal=True, initial={'subject': cohort_id})
+	context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
+	context['experiment_range_form'] = BECRangeForm()
+	return render_to_response('matrr/tools/bec_cohort.html', context, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
+def tools_monkey_bec_graphs(request, cohort_id):
+	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	context = {'cohort': cohort}
+	plot_choices = plotting.fetch_plot_choices('monkey', request.user, cohort, 'bec')
+	plot_method = ''
+
+	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
+		monkeys = _verify_monkeys(request.GET['monkeys'])
+		get_m = list()
+		if monkeys:
+			for m in monkeys.values_list('mky_id', flat=True):
+				get_m.append(`m`)
+
+			text_monkeys = "-".join(get_m)
+		else:
+			text_monkeys = ""
+		context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
+		context['experiment_range_form'] = BECRangeForm_monkeys(text_monkeys)
+
+	elif request.method == 'POST':
+		experiment_range_form = BECRangeForm_monkeys(data=request.POST)
+		plot_form = PlotSelectForm(plot_choices, data=request.POST)
+
+		if experiment_range_form.is_valid() and plot_form.is_valid():
+			from_date = to_date = ''
+			experiment_range = experiment_range_form.cleaned_data['range']
+			if experiment_range == 'custom':
+				from_date = str(experiment_range_form.cleaned_data['from_date'])
+				to_date = str(experiment_range_form.cleaned_data['to_date'])
+				experiment_range = None
+
+			sample_before = sample_after = ''
+			sample_range = experiment_range_form.cleaned_data['sample_range']
+			if sample_range == 'morning':
+				sample_before = '14:00'
+			if sample_range == 'afternoon':
+				sample_after = '14:00'
+
+			monkeys = _verify_monkeys(experiment_range_form.cleaned_data['monkeys'])
+			plot_method = plot_form.cleaned_data['plot_method']
+			title = plotting.MONKEY_PLOTS[plot_method][1]
+			params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range, 'sample_before': sample_before, 'sample_after': sample_after}
+			graphs = list()
+			for monkey in monkeys:
+				mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, title=title, method=plot_method, parameters=str(params))
+				if is_new:
+					mig.save()
+				graphs.append(mig)
+			context['graphs'] = graphs
+		else:
+			if len(experiment_range_form.errors) + len(plot_form.errors) > 1:
+				raise Http404()
+			monkeys = experiment_range_form.data['monkeys']
+
+		context['monkeys'] = monkeys
+		context['experiment_range_form'] = experiment_range_form
+		context['plot_select_form'] = plot_form
 	else:
-		if request.POST:
-			return cohort_graph_builder(request, method_name, date_ranges, min_date, max_date)
-		else:
-			subject_form = CohortSelectForm(subject_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
-	# only reachable if NOT request.POST
-	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges},
-							  context_instance=RequestContext(request))
+		raise Http404()
 
-# TODO: remove this whole view
-def monkey_graph_builder(request, method_name, date_ranges, min_date, max_date):
-	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
-	subject_form = MonkeySelectForm(data=request.POST, subject_queryset=Monkey.objects.filter(mtd_set__gt=0).distinct().order_by('mky_id'))
-	matrr_image = ''
+	return render_to_response('matrr/tools/bec_monkey.html', context, context_instance=RequestContext(request))
 
-	if date_form.is_valid() and subject_form.is_valid():
-		parameters = {}
-		subject_data = subject_form.cleaned_data
-		subject = subject_data['subject']
-		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey=subject)
-
-		date_data = date_form.cleaned_data
-		if date_data:
-			_from = date_data['from_date']
-			_to = date_data['to_date']
-			if _from:
-				m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
-				parameters['from_date'] = str(_from)
-			if _to:
-				m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
-				parameters['to_date'] = str(_to)
-
-		if m2de.count():
-			title = "%s for monkey %s" % (plotting.MONKEY_PLOTS[method_name][1], subject)
-			parameters = str(parameters)
-			matrr_image, is_new = MonkeyImage.objects.get_or_create(monkey=subject, method=method_name, title=title, parameters=parameters)
-			if is_new:
-				matrr_image.save()
-		else:
-			messages.info(request, "No drinking experiments for the given date range for this monkey")
-
-	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges, 'matrr_image': matrr_image}
-	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
-
-# TODO: remove this whole view
-def cohort_graph_builder(request, method_name, date_ranges, min_date, max_date):
-	date_form = DateRangeForm(min_date=min_date, max_date=max_date, data=request.POST)
-	subject_form = CohortSelectForm(data=request.POST, subject_queryset=Cohort.objects.filter(cohort_drinking_experiment_set__gt=0).distinct().order_by('coh_cohort_name'))
-
-	context = {'date_form': date_form, 'subject_form': subject_form, 'date_ranges': date_ranges}
-
-	if date_form.is_valid() and subject_form.is_valid():
-		date_data = date_form.cleaned_data
-		subject_data = subject_form.cleaned_data
-		_from = date_data['from_date']
-		_to = date_data['to_date']
-		subject = subject_data['subject']
-
-		parameters = {}
-		m2de = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=subject)
-		if _from:
-			m2de = m2de.filter(drinking_experiment__dex_date__gte=_from)
-			parameters['from_date'] = str(_from)
-		if _to:
-			m2de = m2de.filter(drinking_experiment__dex_date__lte=_to)
-			parameters['to_date'] = str(_to)
-
-		if m2de.count():
-			title = "%s for cohort %s" % (plotting.COHORT_PLOTS[method_name][1], subject)
-			parameters = str(parameters)
-			matrr_image, is_new = CohortImage.objects.get_or_create(cohort=subject, method=method_name, title=title, parameters=parameters)
-			if is_new:
-				matrr_image.save()
-
-			context['matrr_image'] = matrr_image
-		else:
-			messages.info(request, "No drinking experiments for the given date range for this cohort")
-	return render_to_response('matrr/tools/VIP/vip_graph_builder.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.genealogy_tools'), login_url='/denied/')
 def tools_genealogy(request):

@@ -145,15 +145,20 @@ urlpatterns += patterns('matrr.views',
 	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_etoh_graphs, name='tools-cohort-etoh-graphs'),
 	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/monkey/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
 	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
-	url(r'^tool/etoh/mtd-graph/(?P<mtd_id>\d+)$', tools_etoh_mtd, name='tools-etoh-mtd'),
+	url(r'^tools/etoh/mtd-graph/(?P<mtd_id>\d+)$', tools_etoh_mtd, name='tools-etoh-mtd'),
+
+	url(r'^tools/bec/$', tools_bec, name='tools-bec'),
+	url(r'^tools/bec/cohort/(?P<cohort_id>\d+)/$', tools_cohort_bec, name='tools-cohort-bec'),
+	url(r'^tools/bec/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_bec_graphs, name='tools-cohort-bec-graphs'),
+	url(r'^tools/bec/cohort/(?P<cohort_id>\d+)/monkey/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
+	url(r'^tools/bec/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
+
 	url(r'^tools/graph-as-pdf/$', create_pdf_fragment, name='pdf-fragment'),
 	url(r'^tools/graph-as-svg/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', create_svg_fragment, name='svg-fragment'),
 
 	url(r'^tools/genealogy/$', tools_genealogy, name='tools-genealogy'),
 	url(r'^tools/genealogy/(?P<cohort_id>\d+)/$', tools_cohort_genealogy, name='tools-cohort-genealogy'),
 
-#	url(r'^tools/vip/graphs/mtd/(?P<mtd_id>[^/]*)$', vip_mtd_graph, name='vip-mtd-graph'),
-	url(r'^tools/vip/graph_builder/(?P<method_name>[^/]*)$', vip_graph_builder, name='vip-graph-builder'),
 
 	# ajax views, should not be visible by themselves
 	url(r'^ajax/advanced_search$', ajax_advanced_search, name='ajax-advanced-search'),
