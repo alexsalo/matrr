@@ -2256,7 +2256,11 @@ def tools_cohort_bec_graphs(request, cohort_id):
 			plot_method = plot_form.cleaned_data['plot_method']
 			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date, 'sample_before': sample_before, 'sample_after': sample_after})
 			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=plotting.COHORT_PLOTS[plot_method][1], parameters=params)
-			context['graph'] = cohort_image
+
+			if is_new and not cohort_image.pk:
+				messages.error(request, 'Image file not created.  This is usually caused by requesting insufficient or non-existant data.')
+			else:
+				context['graph'] = cohort_image
 		else:
 			messages.error(request, plot_form.errors.as_text())
 			messages.error(request, subject_select_form.errors.as_text())
