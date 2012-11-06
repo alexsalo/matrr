@@ -2248,7 +2248,7 @@ class MonkeyHormone(models.Model):
 class MonkeyBEC(models.Model):
 	bec_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='bec_records', db_column='mky_id', editable=False)
-	mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='bec_record', editable=False)
+	mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='bec_record', editable=False, on_delete=models.SET_NULL)
 	bec_collect_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
 	bec_run_date = models.DateTimeField("Date Run", editable=False, null=True, blank=False)
 	bec_exper = models.CharField('Experiment Type', max_length=20, null=True, blank=True)
