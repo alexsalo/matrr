@@ -743,6 +743,22 @@ class ExperimentRangeForm_monkeys(ExperimentRangeForm):
 		if monkeys:
 			self.fields['monkeys'].initial = monkeys
 
+class BECRangeForm(ExperimentRangeForm):
+	sample_choices = (('all', 'All Samples'), ('morning', 'Sampled before 2pm'), ('afternoon', 'Sampled After 2pm'))
+	sample_range = ChoiceField(choices=sample_choices,
+							   label='Time of blood sample',
+							   help_text="Blood samples were taken at multiple times of day, generally 11a-1p and 3p-5p.",
+							   widget=RadioSelect(renderer=widgets.RadioFieldRendererSpecial_dates),
+							   initial=sample_choices[0][0])
+
+
+class BECRangeForm_monkeys(BECRangeForm): # same as ExperimentRangeForm_monkeys, except for the parent class
+	monkeys = CharField(widget=HiddenInput())
+	def __init__(self, monkeys=None, *args, **kwargs):
+		super(BECRangeForm_monkeys, self).__init__(*args, **kwargs)
+		if monkeys:
+			self.fields['monkeys'].initial = monkeys
+
 
 class AdvancedSearchSelectForm(Form):
 	sex = MultipleChoiceField(choices=Monkey.SEX_CHOICES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))

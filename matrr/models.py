@@ -489,8 +489,9 @@ class Account(models.Model):
 		permissions = ([
 			('view_other_accounts', 'Can view accounts of other users'),
 			('view_etoh_data', 'Can view ethanol data'),
-			('bcc_request_email', 'Will receive BCC of processed request emails'),
-			('po_manifest_email', 'Will receive Purchase Order shipping manifest email'),
+			('view_bec_data', 'Can view BEC data'),
+			('bcc_request_email', 'Receive BCC of processed request emails'),
+			('po_manifest_email', 'Receive PO shipping manifest email'),
 			('verify_mta', 'Can verify MTA uploads'),
 		])
 
@@ -2247,6 +2248,7 @@ class MonkeyHormone(models.Model):
 class MonkeyBEC(models.Model):
 	bec_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='bec_records', db_column='mky_id', editable=False)
+	mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='bec_record', editable=False, on_delete=models.SET_NULL)
 	bec_collect_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
 	bec_run_date = models.DateTimeField("Date Run", editable=False, null=True, blank=False)
 	bec_exper = models.CharField('Experiment Type', max_length=20, null=True, blank=True)
@@ -2262,6 +2264,14 @@ class MonkeyBEC(models.Model):
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.bec_collect_date), str(self.bec_mg_pct))
+
+	def populate_mtd(self, repopulate=True):
+		if not self.mtd or repopulate:
+			mtd = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey, drinking_experiment__dex_date=self.bec_collect_date)
+			if mtd.count() is 1:
+				self.mtd = mtd[0]
+				self.save()
+
 
 	class Meta:
 		db_table = 'bec_monkey_bec'

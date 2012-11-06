@@ -101,6 +101,9 @@
 						{% if perms.matrr.view_etoh_data %}
 							<li class='drop-down'><a href="{% url tools-etoh %}">Ethanol</a></li>
 						{% endif %}
+						{% if perms.matrr.view_etoh_data %}
+							<li class='drop-down'><a href="{% url tools-bec %}">BEC</a></li>
+						{% endif %}
 						{% if user.is_superuser %}
 							<li class='drop-down'><a href="{% url tools-sandbox %}">Sandbox</a></li>
 						{% endif %}
