@@ -10,7 +10,7 @@
 	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/style.css"/>
 	<link rel="shortcut icon" href="{{ STATIC_URL }}images/matrr_favicon.ico"/>
 
-	{% if plot_gallery or unsupported_browser or 1 %} {% comment %} or 1, lol {% endcomment %}
+	{% if plot_gallery or unsupported_browser or 1 %}
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
 		<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.colorbox.js"></script>
 		<script type="text/javascript" src="{{ STATIC_URL }}js/plot_gallery.js"></script>
@@ -145,6 +145,9 @@
 						<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
 						{% if perms.matrr.browse_inventory %}
 							<li class='drop-down'><a href="{% url inventory %}">Browse Inventory</a></li>
+						{% endif %}
+						{% if perms.matrr.rna_display or perms.matrr.rna_submit %}
+							<li class='drop-down'><a href='{% url rna-landing %}'>RNA Yields</a></li>
 						{% endif %}
 						{% if perms.matrr.view_rud_file %}
 							<li class='drop-down'><a href='{% url rud-overdue %}'>Research Updates</a></li>
