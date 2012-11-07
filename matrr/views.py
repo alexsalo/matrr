@@ -1842,7 +1842,7 @@ def rna_submit(request, cohort_pk):
 		rna_form = RNASubmitForm(cohort)
 	return render_to_response('matrr/rna/submit.html', {'rna_form': rna_form}, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.has_perm('rna_view'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('rna_display'), login_url='/denied/')
 def rna_display(request, cohort_pk):
 	cohort = get_object_or_404(Cohort, pk=cohort_pk)
 	rna_records = RNARecord.objects.filter(cohort=cohort)
