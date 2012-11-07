@@ -671,6 +671,7 @@ class RNASubmitForm(ModelForm):
 		super(ModelForm, self).__init__(*args, **kwargs)
 		self.cohort = cohort
 		self.fields['monkey'].queryset = cohort.monkey_set.all()
+		self.fields['monkey'].required = False
 
 	class Meta:
 		model = RNARecord
