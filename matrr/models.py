@@ -14,6 +14,9 @@ from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 
+def get_sentinel_user():
+    return User.objects.get_or_create(username='deleted')[0]
+
 def percentage_validator(value):
 	MinValueValidator(0).__call__(value)
 	MaxValueValidator(100).__call__(value)
@@ -350,6 +353,7 @@ class Monkey(models.Model):
 
 	class Meta:
 		db_table = 'mky_monkeys'
+		ordering = ['mky_id']
 		permissions = ([
 			('monkey_view_confidential', 'Can view confidential data'),
 		])
@@ -489,7 +493,6 @@ class Account(models.Model):
 		permissions = ([
 			('view_other_accounts', 'Can view accounts of other users'),
 			('view_etoh_data', 'Can view ethanol data'),
-			('view_bec_data', 'Can view BEC data'),
 			('bcc_request_email', 'Receive BCC of processed request emails'),
 			('po_manifest_email', 'Receive PO shipping manifest email'),
 			('verify_mta', 'Can verify MTA uploads'),
@@ -1217,6 +1220,7 @@ class TissueType(models.Model):
 	class Meta:
 		db_table = 'tst_tissue_types'
 		unique_together = (('tst_tissue_name', 'category'),)
+		ordering = ['tst_tissue_name']
 		permissions = (
 		('browse_inventory', 'Can browse inventory'),
 		)
@@ -2275,8 +2279,47 @@ class MonkeyBEC(models.Model):
 
 	class Meta:
 		db_table = 'bec_monkey_bec'
+		permissions = (
+		[('view_bec_data', 'Can view BEC data'),
+		])
 
 
+class RNARecord(models.Model):
+	rna_id = models.AutoField(primary_key=True)
+	tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id', related_name='rna_set', blank=False, null=False)
+	cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', related_name='rna_set', editable=False, blank=False, null=False)
+	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET(get_sentinel_user), related_name='rna_set', editable=False, null=False)
+	monkey = models.ForeignKey(Monkey, db_column='mky_id', related_name='rna_set', blank=False, null=True)
+
+	rna_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
+	rna_min = models.FloatField("Minimum yield (in micrograms)", "Min Yield", blank=False, null=False)
+	rna_max = models.FloatField("Maximum yield (in micrograms)", "Max Yield", blank=False, null=False)
+
+	def __unicode__(self):
+		return "%s | %s | %.2f-%.2f" % (str(self.cohort), str(self.tissue_type), self.rna_min, self.rna_max)
+
+	def clean(self):
+		if self.rna_min > self.rna_max:
+			min = self.rna_max
+			self.rna_max = self.rna_min
+			self.rna_min = min
+
+
+	def save(self, *args, **kwargs):
+		# Don't allow user to select a monkey not in the (previously) chosen cohort.
+		if self.cohort != self.monkey.cohort:
+			raise Exception('The selected monkey is not part of the chosen cohort')
+		super(RNARecord, self).save(*args, **kwargs)
+
+
+
+	class Meta:
+		db_table = 'rna_rnarecord'
+		ordering = ['cohort__coh_cohort_name', 'tissue_type', 'monkey']
+		permissions = ([
+			('rna_submit', 	'Can submit RNA yields'),
+			('rna_display', 	'Can view RNA yields'),
+		])
 
 
 # put any signal callbacks down here after the model declarations

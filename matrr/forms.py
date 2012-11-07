@@ -657,6 +657,24 @@ class GenealogyParentsForm(MonkeySelectForm):
 		self.fields['mother'].help_text = "Select monkey's mother"
 
 
+class RNALandingForm(CohortSelectForm):
+	yields_choices = (('submit', 'Submit RNA yields'), ('display', "Display RNA yields"))
+	yields = ChoiceField(choices=yields_choices, label="", widget=widgets.RadioSelect, required=True,
+						 help_text="Do you want to upload or display RNA yields for the selected cohort?", )
+	def __init__(self, *args, **kwargs):
+		super(RNALandingForm, self).__init__(subject_widget=widgets.Select, *args, **kwargs)
+
+
+class RNASubmitForm(ModelForm):
+	cohort = None
+	def __init__(self, cohort, *args, **kwargs):
+		super(ModelForm, self).__init__(*args, **kwargs)
+		self.cohort = cohort
+		self.fields['monkey'].queryset = cohort.monkey_set.all()
+
+	class Meta:
+		model = RNARecord
+		fields = ('tissue_type', 'monkey', 'rna_min', 'rna_max')
 
 
 class ProteinSelectForm(Form):

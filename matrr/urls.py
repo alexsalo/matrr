@@ -114,7 +114,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),
 	url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
-	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
+	url(r'^upload/cohort_data/(?P<cohort_pk>\d+)/$',   		cod_upload, name='cod-upload'),
 
 	# Research update pages
 	url(r'^rud/list$', research_update_list, name='rud-list'),
@@ -126,10 +126,15 @@ urlpatterns += patterns('matrr.views',
 	url(r'^verification/(?P<req_request_id>\d+)/export$', tissue_verification_export, name='verification-list-export'),
 	url(r'^verification/(?P<req_request_id>\d+)/(?P<tiv_id>\d+)/$', tissue_verification_detail, name='verification-detail'),
 
-	url(r'^inventory/cohort/(?P<coh_id>\d+)/$', inventory_cohort, name="inventory-cohort"),
+	url(r'^inventory/cohort/(?P<cohort_pk>\d+)/$', inventory_cohort, name="inventory-cohort"),
 	url(r'^inventory/$', user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')(ListView.as_view(
 							model=Cohort,template_name="matrr/inventory/inventory.html")), name='inventory'),
 	
+	# RNA pages
+	url(r'^rna/$', rna_landing, name='rna-landing'),
+	url(r'^rna/(?P<cohort_pk>\d+)/submit$', rna_submit, name='rna-submit'),
+	url(r'^rna/(?P<cohort_pk>\d+)/display$', rna_display, name='rna-display'),
+
 	# Tools
 	url(r'^tools/$', tools_landing, name='tools-landing'),
 	url(r'^tools/sandbox/$', tools_sandbox, name='tools-sandbox'),

@@ -493,16 +493,16 @@ def rud_upload(request):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.add_cohortdata'), login_url='/denied/')
-def cod_upload(request, coh_id=1):
+def cod_upload(request, cohort_pk=1):
 	if request.method == 'POST':
 		form = CodForm(request.POST, request.FILES)
 		if form.is_valid():
 			# all the fields in the form are valid, so save the data
 			form.save()
 			messages.success(request, 'Upload Successful')
-			return redirect(reverse('cohort-details', args=[str(coh_id)]))
+			return redirect(reverse('cohort-details', args=[str(cohort_pk)]))
 	else:
-		cohort = Cohort.objects.get(pk=coh_id)
+		cohort = Cohort.objects.get(pk=cohort_pk)
 		form = CodForm(cohort=cohort)
 	return render_to_response('matrr/upload_forms/cod_upload_form.html', {'form': form, }, context_instance=RequestContext(request))
 
@@ -1737,8 +1737,8 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')
-def inventory_cohort(request, coh_id):
-	cohort = get_object_or_404(Cohort, pk=coh_id)
+def inventory_cohort(request, cohort_pk):
+	cohort = get_object_or_404(Cohort, pk=cohort_pk)
 	tsts = TissueType.objects.all().order_by('tst_tissue_name')
 	monkeys = cohort.monkey_set.all()
 	availability_matrix = list()
@@ -1806,6 +1806,61 @@ def research_update_overdue(request):
 		req_list = paginator.page(paginator.num_pages)
 	return render_to_response('matrr/rud_reports/req_list.html', {'req_list': req_list}, context_instance=RequestContext(request))
 
+
+@user_passes_test(lambda u: u.is_staff, login_url='/denied/')
+def rna_landing(request):
+	if request.method == "POST":
+		cohort_form = RNALandingForm(data=request.POST)
+		if cohort_form.is_valid():
+			cohort = cohort_form.cleaned_data['subject']
+			yields = cohort_form.cleaned_data['yields']
+			if yields == 'submit':
+				return redirect('rna-submit', cohort.pk)
+			else:
+				return redirect('rna-display', cohort.pk)
+		else:
+			messages.error(request, "Form submission was invalid.  Please try again.")
+	else:
+		cohort_form = RNALandingForm()
+	return render_to_response('matrr/rna/landing.html', {'cohort_form': cohort_form}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('rna_submit'), login_url='/denied/')
+def rna_submit(request, cohort_pk):
+	cohort = get_object_or_404(Cohort, pk=cohort_pk)
+	if request.method == "POST":
+		rna_form = RNASubmitForm(cohort, data=request.POST)
+		rna = rna_form.instance
+		if rna_form.is_valid():
+			rna.cohort = cohort
+			rna.user = request.user
+			rna.save()
+			messages.success(request, "RNA yield data saved.")
+		else:
+			messages.error(request, "Form submission was invalid.  Please try again.")
+	else:
+		rna_form = RNASubmitForm(cohort)
+	return render_to_response('matrr/rna/submit.html', {'rna_form': rna_form}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('rna_view'), login_url='/denied/')
+def rna_display(request, cohort_pk):
+	cohort = get_object_or_404(Cohort, pk=cohort_pk)
+	rna_records = RNARecord.objects.filter(cohort=cohort)
+	## Paginator stuff
+	if rna_records.count() > 0:
+		paginator = Paginator(rna_records, 25)
+		# Make sure page request is an int. If not, deliver first page.
+		try:
+			page = int(request.GET.get('page', '1'))
+		except ValueError:
+			page = 1
+		# If page request (9999) is out of range, deliver last page of results.
+		try:
+			rna_list = paginator.page(page)
+		except (EmptyPage, InvalidPage):
+			rna_list = paginator.page(paginator.num_pages)
+	else:
+		rna_list = rna_records
+	return render_to_response('matrr/rna/display.html', {'rna_list': rna_list, 'cohort': cohort}, context_instance=RequestContext(request))
 
 ### Tools
 def __gather_cohort_protein_images(cohort, proteins):
