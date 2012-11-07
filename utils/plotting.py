@@ -666,18 +666,19 @@ def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_dat
 	ax1 = fig.add_subplot(111)
 
 	mkys = cohort.monkey_set.filter(mky_drinking=True).values_list('pk', flat=True)
+	mky_count = float(mkys.count())
+
+	cmap = get_cmap('jet')
 	mky_color = dict()
 	for idx, key in enumerate(mkys):
-		mky_color[key] = idx
-	cmap = cmap_discretize('jet', mkys.count())
+		mky_color[key] = cmap(idx / (mky_count-1))
 
 	xy = list()
 	for mky in mkys:
 		becs = bec_records.filter(monkey=mky)
 		xaxis = MonkeyToDrinkingExperiment.objects.filter(pk__in=becs.values_list('mtd', flat=True)).values_list(x_axis, flat=True)
 		yaxis = becs.values_list('bec_mg_pct', flat=True)
-		color = cmap(mky_color[mky] / float(mkys.count()))
-		s = ax1.scatter(xaxis, yaxis, c=color, s=100, alpha=1, edgecolor='none', label=`mky`)
+		s = ax1.scatter(xaxis, yaxis, c=mky_color[mky], s=100, alpha=1, edgecolor='none', label=`mky`)
 		xy.extend(zip(xaxis, yaxis))
 
 
@@ -762,6 +763,7 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 	if sample_after:
 		bec_records = bec_records.filter(bec_sample__gte=sample_after)
 	bec_records = bec_records.order_by('bec_collect_date')
+
 	if bec_records.count() > 0:
 		dates = list(bec_records.dates('bec_collect_date', 'day').order_by('bec_collect_date'))
 	else:
@@ -770,20 +772,22 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = fig.add_subplot(111)
 
-	mkys = cohort.monkey_set.exclude(mky_drinking=False).values_list('pk', flat=True)
-	mky_count = mkys.count()
+
+	mkys = cohort.monkey_set.exclude(mky_drinking=False).values_list('pk', flat=True) # I'd rather have used bec_records to pull the monkey ids, but .distinct() was returning distinct bec records, not distinct monkeys
+	mky_count = float(mkys.count())
+
+	cmap = get_cmap('jet')
 	mky_color = dict()
 	for idx, key in enumerate(mkys):
-		mky_color[key] = idx
-	cmap = cmap_discretize('jet', mkys.count())
+		mky_color[key] = cmap(idx / (mky_count -1))
 
-	mky_datas = dict()
+	mky_datas = list()
 	centeroids = list()
 	for mky in mkys:
 		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, drinking_experiment__dex_date__in=dates).exclude(bec_record=None).order_by('drinking_experiment__dex_date')
 		xaxis = mtds.values_list('mtd_pct_etoh_in_1st_bout', flat=True)
 		yaxis = mtds.values_list('bec_record__bec_mg_pct', flat=True)
-		color = cmap(mky_color[mky] / float(mky_count))
+		color = mky_color[mky]
 
 		s = ax1.scatter(xaxis, yaxis, c=color, s=40, alpha=.1, edgecolor=color)
 		try:
@@ -793,7 +797,7 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 			centeroids.append([res[:,0][0], res[:,1][0]])
 		except ValueError:
 			pass
-		mky_datas[mky] = (zip(xaxis, yaxis), color)
+		mky_datas.append((mky, zip(xaxis, yaxis), color))
 
 	def create_convex_hull_polygon(cluster, color, label):
 		from matrr.helper import convex_hull
@@ -808,11 +812,11 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 		x.append(x[0])
 		y = list(y)
 		y.append(y[0])
-		line = ax1.plot(x, y, c=color, linewidth=2, label=str(label))
+		line = ax1.plot(x, y, c=color, linewidth=3, label=label)
 		return line
 
-	for mky, data in mky_datas.items():
-		create_convex_hull_polygon(data[0], data[1], mky)
+	for mky, data, color in mky_datas:
+		create_convex_hull_polygon(data, color, `mky`)
 
 	title = 'Cohort %s ' % cohort.coh_cohort_name
 	if sample_before:
