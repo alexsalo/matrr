@@ -2292,8 +2292,8 @@ class RNARecord(models.Model):
 	monkey = models.ForeignKey(Monkey, db_column='mky_id', related_name='rna_set', blank=True, null=True)
 
 	rna_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
-	rna_min = models.FloatField("Minimum yield (in micrograms)", "Min Yield", blank=False, null=False)
-	rna_max = models.FloatField("Maximum yield (in micrograms)", "Max Yield", blank=False, null=False)
+	rna_min = models.IntegerField("Minimum yield (in micrograms)", "Min Yield", blank=False, null=False)
+	rna_max = models.IntegerField("Maximum yield (in micrograms)", "Max Yield", blank=False, null=False)
 
 	def __unicode__(self):
 		return "%s | %s | %.2f-%.2f" % (str(self.cohort), str(self.tissue_type), self.rna_min, self.rna_max)
