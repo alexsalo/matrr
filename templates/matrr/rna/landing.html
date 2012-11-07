@@ -5,11 +5,11 @@
 	<div class=large-headline>RNA Records</div>
 	<form action='' method='post'>
 		{% csrf_token %}
-		<table>
+		<table class='common'>
 			<tr>
-				<td>{{ cohort_form.yields }}</td>
-                <td>{{ cohort_form.subject }}</td>
-                <td><button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button></td>
+				<td class='text-center-common-td'>{{ cohort_form.yields }}</td>
+                <td class='text-center-common-td'>{{ cohort_form.subject }}</td>
+                <td class='text-center-common-td'><button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button></td>
 			</tr>
 		</table>
 	</form>
