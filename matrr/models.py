@@ -2289,7 +2289,7 @@ class RNARecord(models.Model):
 	tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id', related_name='rna_set', blank=False, null=False)
 	cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', related_name='rna_set', editable=False, blank=False, null=False)
 	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET(get_sentinel_user), related_name='rna_set', editable=False, null=False)
-	monkey = models.ForeignKey(Monkey, db_column='mky_id', related_name='rna_set', blank=False, null=True)
+	monkey = models.ForeignKey(Monkey, db_column='mky_id', related_name='rna_set', blank=True, null=True)
 
 	rna_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 	rna_min = models.FloatField("Minimum yield (in micrograms)", "Min Yield", blank=False, null=False)
@@ -2299,19 +2299,14 @@ class RNARecord(models.Model):
 		return "%s | %s | %.2f-%.2f" % (str(self.cohort), str(self.tissue_type), self.rna_min, self.rna_max)
 
 	def clean(self):
+		# Don't allow user to select a monkey not in the (previously) chosen cohort.
+		if self.monkey and self.cohort != self.monkey.cohort:
+			raise Exception('The selected monkey is not part of the chosen cohort')
+		# And invert the min/max if they're not correctly labeled
 		if self.rna_min > self.rna_max:
 			min = self.rna_max
 			self.rna_max = self.rna_min
 			self.rna_min = min
-
-
-	def save(self, *args, **kwargs):
-		# Don't allow user to select a monkey not in the (previously) chosen cohort.
-		if self.cohort != self.monkey.cohort:
-			raise Exception('The selected monkey is not part of the chosen cohort')
-		super(RNARecord, self).save(*args, **kwargs)
-
-
 
 	class Meta:
 		db_table = 'rna_rnarecord'

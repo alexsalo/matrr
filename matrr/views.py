@@ -1833,6 +1833,7 @@ def rna_submit(request, cohort_pk):
 		if rna_form.is_valid():
 			rna.cohort = cohort
 			rna.user = request.user
+			rna.full_clean()
 			rna.save()
 			messages.success(request, "RNA yield data saved.")
 		else:
