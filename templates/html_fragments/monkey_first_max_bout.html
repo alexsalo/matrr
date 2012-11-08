@@ -15,6 +15,7 @@
 		The bar plot color indicates the first bout's volume as a percentage of the day's total ethanol intake.
 		The shaded region, if present, indicates the ethanol induction period.
 </div>
+
 {% if map %}
 	<map name='{{ image.monkey.pk }}'>
 	{% for point in map %}
@@ -22,3 +23,4 @@
 	{% endfor %}
 	</map>
 {% endif %}
+

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load basic_filters %}
+
+{% block title %}RNA Records{% endblock %}
+
+{% block content %}
+	<div id="large-headline">RNA Records for {{ cohort }}</div>
+	{% if rna_list %}
+        <center>
+            {% load inclusion_tags %}
+            {% pagination rna_list %}
+        </center>
+
+        <div class='clearfix'>
+            <table class="common">
+                <tr>
+                    <th>RNA ID</th>
+                    <th>Tissue Type</th>
+                    <th>Monkey</th>
+                    <th>User</th>
+                    <th>Modified</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                </tr>
+                {% for rna in rna_list.object_list %}
+                    <tr>
+                        <td class='text-center-common-td'>{{ rna.pk }}</td>
+                        <td class='text-center-common-td'>{{ rna.tissue_type }}</td>
+                        <td class='text-center-common-td'><a href="{% url monkey-detail rna.monkey.pk %}">{{ rna.monkey}}</a></td>
+                        <td class='text-center-common-td'>{{ rna.user }}</td>
+                        <td class='text-center-common-td'>{{ rna.rna_modified|date:"m/d/Y" }}</td>
+                        <td class='text-center-common-td'>{{ rna.rna_min }}</td>
+                        <td class='text-center-common-td'>{{ rna.rna_max }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <center>
+            {% pagination rna_list %}
+        </center>
+    {% else %}
+		<div class='messages clearfix'>
+			<div class="info"> No RNA records found.</div>
+		</div>
+	{% endif %}
+
+{% endblock %}

@@ -1,11 +1,13 @@
-from datetime import timedelta
+from datetime import timedelta, datetime, date, time
 from matplotlib import pyplot, cm
 from django.db.models.aggregates import Sum, Max, Avg
+from matplotlib.cm import get_cmap
 from matplotlib.patches import Circle, Rectangle
 from matplotlib.ticker import NullLocator, FixedLocator
 import numpy, dateutil, gc, operator, matplotlib
-#from pylab import *
 from numpy import polyfit, polyval
+from numpy.ma import concatenate
+from scipy.cluster import vq
 from matrr.models import *
 
 ###############  matplotlibrc settings
@@ -24,7 +26,7 @@ DEFAULT_DPI = 80
 COLORS = {'monkey' : "#01852F", 'cohort' : 'black'}
 
 def validate_dates(from_date=False, to_date=False):
-	from datetime import datetime, date
+	import traceback
 	if from_date and not isinstance(from_date, (datetime, date)):
 		try:
 			#maybe its a str(datetime)
@@ -32,6 +34,9 @@ def validate_dates(from_date=False, to_date=False):
 		except:
 			#otherwise give up
 			print "Invalid parameter, from_date"
+			print '>>> traceback <<<'
+			traceback.print_exc()
+			print '>>> end of traceback <<<'
 			from_date = None
 	if to_date and not isinstance(to_date, (datetime, date)):
 		try:
@@ -40,9 +45,36 @@ def validate_dates(from_date=False, to_date=False):
 		except:
 			#otherwise give up
 			print "Invalid parameter, to_date"
+			print '>>> traceback <<<'
+			traceback.print_exc()
+			print '>>> end of traceback <<<'
 			to_date = None
 	return from_date, to_date
 
+def cmap_discretize(cmap, N):
+	"""Return a discrete colormap from the continuous colormap cmap.
+
+		cmap: colormap instance, eg. cm.jet.
+		N: number of colors.
+
+	Example
+		x = resize(arange(100), (5,100))
+		djet = cmap_discretize(cm.jet, 5)
+		imshow(x, cmap=djet)
+	"""
+
+	if type(cmap) == str:
+		name = cmap
+		cmap = get_cmap(cmap)
+		cmap.name = name
+	colors_i = concatenate((numpy.linspace(0, 1., N), (0.,0.,0.,0.)))
+	colors_rgba = cmap(colors_i)
+	indices = numpy.linspace(0, 1., N+1)
+	cdict = {}
+	for ki,key in enumerate(('red','green','blue')):
+		cdict[key] = [ (indices[i], colors_rgba[i-1,ki], colors_rgba[i,ki]) for i in xrange(N+1) ]
+	# Return colormap object.
+	return matplotlib.colors.LinearSegmentedColormap(cmap.name + "_%d"%N, cdict, 1024)
 
 def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None):
 	def addnode(ax, node, color, lower=[0,0], upper=[1,1], axis=0):
@@ -158,7 +190,7 @@ def cohort_necropsy_avg_22hr_g_per_kg(cohort):
 		legend_labels = ('12 Month Average', '6 Month Average')
 		return cohort_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
 	else:
-		return False, 'NO MAP'
+		return False, False
 
 def cohort_necropsy_etoh_4pct(cohort):
 	nec_sums = []
@@ -173,7 +205,7 @@ def cohort_necropsy_etoh_4pct(cohort):
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
 		return cohort_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
 	else:
-		return False, 'NO MAP'
+		return False, False
 
 def cohort_necropsy_sum_g_per_kg(cohort):
 	nec_sums = []
@@ -188,7 +220,7 @@ def cohort_necropsy_sum_g_per_kg(cohort):
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
 		return cohort_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
 	else:
-		return False, 'NO MAP'
+		return False, False
 
 def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
 	from matrr.models import Cohort
@@ -198,7 +230,7 @@ def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.  Using monkey's cohort")
-		return False, 'NO MAP'
+		return False, False
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = fig.add_subplot(111)
@@ -215,7 +247,7 @@ def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 
 	if not coh_data_1:
 		print("Cohort doesn't have any necropsy summary data for this callable")
-		return False, 'NO MAP'
+		return False, False
 
 	idx = numpy.arange(len(coh_data_1))
 	width = 0.4
@@ -266,7 +298,7 @@ def cohort_boxplot_m2de_general(specific_callable, y_label, cohort, days=10,):
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return False, 'NO MAP'
+			return False, False
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 	if cohort_drinking_experiments.count() > 0:
 		dates = cohort_drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('-drinking_experiment__dex_date')
@@ -293,11 +325,11 @@ def cohort_boxplot_m2de_general(specific_callable, y_label, cohort, days=10,):
 		pyplot.setp(bp['fliers'], color='red', marker='+')
 		xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 		pyplot.setp(xtickNames, rotation=45)
-		return fig, 'NO MAP'
+		return fig, False
 
 	else:
 		print "No drinking experiments for this cohort."
-		return False, 'NO MAP'
+		return False, False
 
 
 def cohort_boxplot_m2de_month_etoh_intake(cohort, from_date=None, to_date=None, dex_type=''):
@@ -305,10 +337,10 @@ def cohort_boxplot_m2de_month_etoh_intake(cohort, from_date=None, to_date=None, 
 
 def cohort_boxplot_m2de_month_veh_intake(cohort, from_date=None, to_date=None, dex_type=''):
 	return cohort_boxplot_m2de_month_general(veh_intake , "Veh Intake", cohort, from_date, to_date, dex_type)
-	
+
 def cohort_boxplot_m2de_month_total_pellets(cohort, from_date=None, to_date=None, dex_type=''):
 	return cohort_boxplot_m2de_month_general(total_pellets,"Total Pellets" , cohort, from_date, to_date, dex_type)
-	
+
 def cohort_boxplot_m2de_month_mtd_weight(cohort, from_date=None, to_date=None, dex_type=''):
 	return cohort_boxplot_m2de_month_general(mtd_weight, "Weight (in kg)", cohort, from_date, to_date, dex_type)
 
@@ -320,7 +352,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return False, 'NO MAP'
+			return False, False
 
 	cohort_drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 
@@ -340,7 +372,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 			cde_of_month = cohort_drinking_experiments.filter(drinking_experiment__dex_date__month=date.month, drinking_experiment__dex_date__year=date.year)
 			all_data[date] = specific_callable(cde_of_month)
 
-		
+
 		sorted_keys = [item[0].strftime("%b %Y") for item in sorted(all_data.items())]
 		sorted_values = [item[1] for item in sorted(all_data.items())]
 
@@ -362,7 +394,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 		return fig, "cohort map"
 	else:
 		print "No drinking experiments for this cohort."
-		return False, 'NO MAP'
+		return False, False
 
 def convert_timedelta(t):
 	if t:
@@ -423,13 +455,13 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return False, 'NO MAP'
+			return False, False
 	if not isinstance(protein, Protein):
 		try:
 			protein = Protein.objects.get(pk=protein)
 		except Protein.DoesNotExist:
 			print("That's not a valid protein.")
-			return False, 'NO MAP'
+			return False, False
 
 	monkey_proteins = MonkeyProtein.objects.filter(monkey__in=cohort.monkey_set.all(), protein=protein).order_by('mpn_date')
 	if monkey_proteins.count() > 0:
@@ -462,11 +494,11 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 		pyplot.setp(bp['fliers'], color='red', marker='o', markersize=10)
 		xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 		pyplot.setp(xtickNames, rotation=45)
-		return fig, 'NO MAP'
+		return fig, False
 
 	else:
 		print "No MonkeyProteins for this cohort."
-		return False, 'NO MAP'
+		return False, False
 
 def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=''):
 	if not isinstance(cohort, Cohort):
@@ -474,7 +506,7 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 			cohort = Cohort.objects.get(pk=cohort)
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
-			return False, 'NO MAP'
+			return False, False
 	size_cache = {}
 	def size(thing):
 		if isinstance(thing, dict):
@@ -505,7 +537,7 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 	mtd_count = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys).count()
 	if not mtd_count:
 		print 'This cohort has no MTDs'
-		return False, 'NO MAP'
+		return False, False
 	monkey_pks = []
 	for monkey in monkeys:
 		monkey_pks.append(str(monkey.pk))
@@ -599,14 +631,229 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 
 	return fig, 'has_caption'
 
+
+def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
+	"""
+		Scatter plot for monkey
+			x axis - arguement
+			y axis - BEC
+			color - Monkey
+	"""
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print("That's not a valid cohort.")
+			return False, False
+
+	bec_records = MonkeyBEC.objects.filter(monkey__cohort=cohort)
+	from_date, to_date = validate_dates(from_date, to_date)
+	if from_date:
+		bec_records = bec_records.filter(mtd__drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		bec_records = bec_records.filter(mtd__drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		bec_records = bec_records.filter(mtd__drinking_experiment__dex_type=dex_type)
+	if sample_before:
+		bec_records = bec_records.filter(bec_sample__lte=sample_before)
+	if sample_after:
+		bec_records = bec_records.filter(bec_sample__gte=sample_after)
+
+	if bec_records.count() <= 0:
+		return False, False
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = fig.add_subplot(111)
+
+	mkys = cohort.monkey_set.filter(mky_drinking=True).values_list('pk', flat=True)
+	mky_count = float(mkys.count())
+
+	cmap = get_cmap('jet')
+	mky_color = dict()
+	for idx, key in enumerate(mkys):
+		mky_color[key] = cmap(idx / (mky_count-1))
+
+	xy = list()
+	for mky in mkys:
+		becs = bec_records.filter(monkey=mky)
+		xaxis = MonkeyToDrinkingExperiment.objects.filter(pk__in=becs.values_list('mtd', flat=True)).values_list(x_axis, flat=True)
+		yaxis = becs.values_list('bec_mg_pct', flat=True)
+		s = ax1.scatter(xaxis, yaxis, c=mky_color[mky], s=100, alpha=1, edgecolor='none', label=`mky`)
+		xy.extend(zip(xaxis, yaxis))
+
+
+	from scipy.cluster import vq
+	res, idx = vq.kmeans2(numpy.array(xy), cluster_count)
+	ax1.scatter(res[:,0],res[:,1], marker='o', s = 500, linewidths=2, c='none')
+	ax1.scatter(res[:,0],res[:,1], marker='x', s = 500, linewidths=2)
+
+	clusters = dict()
+	for i in range(cluster_count):
+		clusters[i] = list()
+	for index, point in zip(idx, xy):
+		cluster = clusters[index]
+		cluster.append(point)
+		clusters[index] = cluster
+
+	def create_convex_hull_polygon(cluster):
+		from matrr.helper import convex_hull
+		from matplotlib.path import Path
+		try:
+			hull = convex_hull(numpy.array(cluster).transpose())
+		except AssertionError: # usually means < 5 datapoints
+			return
+		path = Path(hull)
+		x, y = zip(*path.vertices)
+		x = list(x)
+		x.append(x[0])
+		y = list(y)
+		y.append(y[0])
+		line = ax1.plot(x, y, 'black')
+		return line
+
+	for cluster in clusters.values():
+		create_convex_hull_polygon(cluster)
+
+	title = 'Cohort %s ' % cohort.coh_cohort_name
+	if sample_before:
+		title += "before %s " % str(sample_before)
+	if sample_after:
+		title += "after %s " % str(sample_after)
+
+	ax1.set_title(title)
+	ax1.set_xlabel(x_axis_label)
+	ax1.set_ylabel("Blood Ethanol Concentration, mg %")
+	pyplot.legend(loc="upper right")
+	pyplot.xlim(xmin=0)
+	pyplot.ylim(ymin=0)
+	return fig, True
+
+def cohort_bec_maxbout(cohort, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
+	return cohort_bec_bout_general(cohort, 'mtd_pct_max_bout_vol_total_etoh', 'Max Bout / Total Intake', from_date=from_date, to_date=to_date,
+								   dex_type=dex_type, sample_before=sample_before, sample_after=sample_after, cluster_count=cluster_count)
+
+def cohort_bec_firstbout(cohort, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
+	return cohort_bec_bout_general(cohort, 'mtd_pct_etoh_in_1st_bout', 'First Bout / Total Intake', from_date=from_date, to_date=to_date,
+								   dex_type=dex_type, sample_before=sample_before, sample_after=sample_after, cluster_count=cluster_count)
+
+def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=1):
+	"""
+		Scatter plot for monkey
+			x axis - first bout / total intake
+			y axis - BEC
+			color - Monkey
+	"""
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print("That's not a valid cohort.")
+			return False, False
+
+	bec_records = MonkeyBEC.objects.filter(monkey__cohort=cohort)
+	from_date, to_date = validate_dates(from_date, to_date)
+	if from_date:
+		bec_records = bec_records.filter(mtd__drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		bec_records = bec_records.filter(mtd__drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		bec_records = bec_records.filter(mtd__drinking_experiment__dex_type=dex_type)
+	if sample_before:
+		bec_records = bec_records.filter(bec_sample__lte=sample_before)
+	if sample_after:
+		bec_records = bec_records.filter(bec_sample__gte=sample_after)
+	bec_records = bec_records.order_by('bec_collect_date')
+
+	if bec_records.count() > 0:
+		dates = list(bec_records.dates('bec_collect_date', 'day').order_by('bec_collect_date'))
+	else:
+		return False, False
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = fig.add_subplot(111)
+
+
+	mkys = cohort.monkey_set.exclude(mky_drinking=False).values_list('pk', flat=True) # I'd rather have used bec_records to pull the monkey ids, but .distinct() was returning distinct bec records, not distinct monkeys
+	mky_count = float(mkys.count())
+
+	cmap = get_cmap('jet')
+	mky_color = dict()
+	for idx, key in enumerate(mkys):
+		mky_color[key] = cmap(idx / (mky_count -1))
+
+	mky_datas = list()
+	centeroids = list()
+	for mky in mkys:
+		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, drinking_experiment__dex_date__in=dates).exclude(bec_record=None).order_by('drinking_experiment__dex_date')
+		xaxis = mtds.values_list('mtd_pct_etoh_in_1st_bout', flat=True)
+		yaxis = mtds.values_list('bec_record__bec_mg_pct', flat=True)
+		color = mky_color[mky]
+
+		s = ax1.scatter(xaxis, yaxis, c=color, s=40, alpha=.1, edgecolor=color)
+		try:
+			res, idx = vq.kmeans2(numpy.array(zip(xaxis, yaxis)), cluster_count)
+			ax1.scatter(res[:,0],res[:,1], marker='o', s=100, linewidths=3, c=color, edgecolor=color)
+			ax1.scatter(res[:,0],res[:,1], marker='x', s=300, linewidths=3, c=color)
+			centeroids.append([res[:,0][0], res[:,1][0]])
+		except ValueError:
+			pass
+		mky_datas.append((mky, zip(xaxis, yaxis), color))
+
+	def create_convex_hull_polygon(cluster, color, label):
+		from matrr.helper import convex_hull
+		from matplotlib.path import Path
+		try:
+			hull = convex_hull(numpy.array(cluster).transpose())
+		except AssertionError: # usually means < 5 datapoints
+			return
+		path = Path(hull)
+		x, y = zip(*path.vertices)
+		x = list(x)
+		x.append(x[0])
+		y = list(y)
+		y.append(y[0])
+		line = ax1.plot(x, y, c=color, linewidth=3, label=label)
+		return line
+
+	for mky, data, color in mky_datas:
+		create_convex_hull_polygon(data, color, `mky`)
+
+	title = 'Cohort %s ' % cohort.coh_cohort_name
+	if sample_before:
+		title += "before %s " % str(sample_before)
+	if sample_after:
+		title += "after %s " % str(sample_after)
+
+	ax1.set_title(title)
+	ax1.set_xlabel("First bout / total intake")
+	ax1.set_ylabel("Blood Ethanol Concentration, mg %")
+	pyplot.legend(loc="upper left")
+	pyplot.xlim(xmin=0)
+	pyplot.ylim(ymin=0)
+
+	zipped = numpy.vstack(centeroids)
+	coordinates = ax1.transData.transform(zipped)
+	xcoords, inv_ycoords = zip(*coordinates)
+	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
+	datapoint_map = zip(mkys, xcoords, ycoords)
+	return fig, datapoint_map
+
+
+
 # Dictionary of ethanol cohort plots VIPs can customize
 COHORT_ETOH_TOOLS_PLOTS = {"cohort_bihourly_etoh_treemap": 					(cohort_bihourly_etoh_treemap, "Cohort Bihourly Drinking Pattern")}
+# Data-limited plots
+COHORT_BEC_PLOTS = { 'cohort_bec_maxbout': 							(cohort_bec_maxbout, 'BEC vs Max Bout'),
+					 'cohort_bec_firstbout': 						(cohort_bec_firstbout, 'BEC vs First Bout'),
+					 'cohort_bec_firstbout_monkeycluster': 			(cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
+}
 # Dictionary of protein cohort plots VIPs can customize
 COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}
 
 # Dictionary of all cohort plots
 COHORT_PLOTS = {}
 COHORT_PLOTS.update(COHORT_ETOH_TOOLS_PLOTS)
+COHORT_PLOTS.update(COHORT_BEC_PLOTS)
 COHORT_PLOTS.update(COHORT_PROTEIN_TOOLS_PLOTS)
 COHORT_PLOTS.update({"cohort_boxplot_m2de_month_etoh_intake": 		(cohort_boxplot_m2de_month_etoh_intake,'Monthly Cohort Ethanol Intake boxplot'),
 					 "cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 	'Average Ethanol Intake, 22hr'),
@@ -635,7 +882,7 @@ def monkey_boxplot_etoh(monkey=None):
 	##  Because this is ethanol data, only bother with drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -693,7 +940,7 @@ def monkey_boxplot_pellets(monkey=None):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -750,7 +997,7 @@ def monkey_boxplot_veh(monkey=None):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -808,7 +1055,7 @@ def monkey_boxplot_weight(monkey=None):
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	##  The fun stuff:
 	cohort = monkey.cohort
@@ -852,7 +1099,7 @@ def monkey_boxplot_weight(monkey=None):
 def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
 		Scatter plot for monkey
-			x axis - dates of monkey experiments in range [from_date, to_date] or all possible
+				x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
 			y axis - total number of drinks (bouts * drinks per bout)
 			color - number of bouts
 			size - drinks per bout
@@ -879,7 +1126,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -903,7 +1150,7 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 	if drinking_experiments.count() > 0:
 		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
 	else:
-		return None, 'NO MAP'
+		return None, False
 
 	induction_days = list()
 	dr_per_bout = list()
@@ -986,35 +1233,35 @@ def monkey_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', 
 
 #	barplot
 	ax3 = fig.add_subplot(313)
-	
+
 	ax3.get_yaxis().tick_right()
 	ax3.yaxis.set_label_position('right')
 	ax3.set_ylabel("Max Bout Volume as % of Total Etoh")
 	ax3.set_autoscalex_on(False)
-	
+
 	import matplotlib.colors as colors
 	import matplotlib.cm as cm
-	
+
 	# normalize colors to use full range of colormap
 	norm = colors.normalize(min(bar_color), max(bar_color))
-	
+
 	facecolors = list()
-	
+
 	for bar, x, color_value in zip(bar_size, xaxis, bar_color):
 		pyplot.bar(x, bar, color=cm.jet(norm(color_value)),  edgecolor='none')
 		facecolors.append(cm.jet(norm(color_value)))
-		
+
 	ax3.set_xlim(0,len(xaxis) + 2)
-	
+
 	# create a collection that we will use in colorbox
 	col = matplotlib.collections.Collection(facecolors=facecolors, norm = norm, cmap = cm.jet)
 	col.set_array(bar_color)
-	
+
 	# colorbor for bar plot
 	cax = fig.add_axes((0.88, 0.09, 0.03, 0.25))
 	cb = pyplot.colorbar(col, cax=cax)
 	cb.set_label("Max Bout Length")
-	
+
 	zipped = numpy.vstack(zip(xaxis, total_drinks))
 	coordinates = ax1.transData.transform(zipped)
 	ids = [de.pk for de in drinking_experiments]
@@ -1030,7 +1277,7 @@ def monkey_bouts_drinks_intraday(mtd=None):
 			mtd = MonkeyToDrinkingExperiment.objects.get(mtd_id=mtd)
 		except MonkeyToDrinkingExperiment.DoesNotExist:
 			print("That's not a valid MonkeyToDrinkingExperiment.")
-			return False, 'NO MAP'
+			return False, False
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = fig.add_subplot(111)
@@ -1067,13 +1314,13 @@ def monkey_bouts_drinks_intraday(mtd=None):
 		return fig, "bouts intraday"
 	else:
 		print("No bouts data available for this monkey drinking experiment.")
-		return False, 'NO MAP'
+		return False, False
 
 
 def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
 		Scatter plot for monkey
-			x axis - dates of monkey experiments in range [from_date, to_date] or all possible
+			x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
 			y axis - g/kg consumed that day
 			color - number of bouts
 			size - avg volume per bout
@@ -1094,7 +1341,7 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -1119,11 +1366,11 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	if drinking_experiments.count() > 0:
 		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
 	else:
-		return None, 'NO MAP'
+		return None, False
 
 	induction_days = list()
 	avg_bout_volumes = list()
-	g_per_kg_consumed = list()
+	g_per_kg_consumed = list() # yaxis
 	bouts = list()
 	for index, date in enumerate(dates, 1):
 		de = drinking_experiments.get(drinking_experiment__dex_date=date)
@@ -1213,24 +1460,20 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
 		Scatter plot for monkey
-			x axis - dates of monkey experiments in range [from_date, to_date] or all possible
+			x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
 			y axis - total number of drinks (max_bout_length * drinks per bout)
 			color - number of max_bout_length
 			size - drinks per bout
 		Circle sizes scaled to range [cirle_min, circle_max]
 	"""
-	from matrr.models import Monkey
-	from matrr.models import MonkeyToDrinkingExperiment
+	from matrr.models import Monkey, MonkeyToDrinkingExperiment
 
 	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
 	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
 	matplotlib.rcParams['figure.subplot.right'] 	= 0.8
 
 	import matplotlib.gridspec as gridspec
-
-
 	gs = gridspec.GridSpec(2, 1,height_ratios=[2,1])
-
 
 	if not isinstance(monkey, Monkey):
 		try:
@@ -1240,7 +1483,7 @@ def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type=''
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -1264,7 +1507,7 @@ def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type=''
 	if drinking_experiments.count() > 0:
 		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
 	else:
-		return None, 'NO MAP'
+		return None, False
 
 	xaxis = list()
 	induction_days = list()
@@ -1392,6 +1635,314 @@ def monkey_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type=''
 	return fig, datapoint_map
 
 
+def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
+	"""
+		Scatter plot for monkey
+			x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
+			y axis - BEC
+			color - % of daily intake consumed at time of sample
+			size - monkey weight
+		Circle sizes scaled to range [cirle_min, circle_max]
+	"""
+	from matrr.models import Monkey
+
+	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
+	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
+
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return False, False
+
+	if circle_max < circle_min:
+		circle_max = DEFAULT_CIRCLE_MAX
+		circle_min = DEFAULT_CIRCLE_MIN
+	else:
+		if circle_max < 10:
+			circle_max = DEFAULT_CIRCLE_MAX
+		if circle_min < 1:
+			circle_min = DEFAULT_CIRCLE_MIN
+
+	bec_records = monkey.bec_records.all()
+	from_date, to_date = validate_dates(from_date, to_date)
+	if from_date:
+		bec_records = bec_records.filter(mtd__drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		bec_records = bec_records.filter(mtd__drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		bec_records = bec_records.filter(mtd__drinking_experiment__dex_type=dex_type)
+	if sample_before:
+		bec_records = bec_records.filter(bec_sample__lte=sample_before)
+	if sample_after:
+		bec_records = bec_records.filter(bec_sample__gte=sample_after)
+
+	if bec_records.count() > 0:
+		dates = bec_records.dates('bec_collect_date', 'day').order_by('bec_collect_date')
+	else:
+		return False, False
+
+	bec_values = list() # yaxis
+	pct_intake = list() # color
+	smp_intake = list() # size
+	for index, date in enumerate(dates, 1):
+		bec_rec = bec_records.get(bec_collect_date=date)
+		bec_values.append(bec_rec.bec_mg_pct) # y-axis
+		pct_intake.append(float(bec_rec.bec_gkg_etoh) / bec_rec.bec_daily_gkg_etoh) # color
+		smp_intake.append(bec_rec.bec_gkg_etoh) # size
+
+	xaxis = numpy.array(range(1,len(smp_intake)+1))
+	smp_intake = numpy.array(smp_intake) # size
+	pct_intake   = numpy.array(pct_intake) # color
+
+	size_min = circle_min
+	size_scale = circle_max - size_min
+
+	patches = []
+	for x1,v in zip(xaxis, smp_intake):
+		circle = Circle((x1,v), v*0.1)
+		patches.append(circle)
+
+	max_intake = float(smp_intake.max())
+	rescaled_volumes = [ (w/max_intake)*size_scale+size_min for w in smp_intake ] # rescaled, so that circles will be in range (size_min, size_scale)
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+
+#    main graph
+	ax1 = fig.add_subplot(111)
+
+	s= ax1.scatter(xaxis, bec_values, c=pct_intake, s=rescaled_volumes, alpha=0.4)
+
+	ax1.set_ylabel("Blood Ethanol Concentration, mg %")
+	ax1.set_xlabel("Days")
+
+	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
+
+	y_max = max(bec_values)
+	graph_y_max = y_max*1.25
+	pyplot.ylim(0, graph_y_max) # + % to show circles under the size legend instead of behind it
+	pyplot.xlim(0,len(xaxis) + 1)
+
+	cb = pyplot.colorbar(s)
+
+	cb.set_label("Percentage of daily intake consumed at time of sample")
+
+#    size legend
+	x = numpy.array(range(1,6))
+	y = numpy.array([1,1,1,1,1])
+
+	size_m = size_scale/(len(y)-1)
+	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
+	size.insert(0,1+size_min)
+	size = numpy.array(size)
+
+	m = max_intake/(len(y)-1)
+	size_labels = [ round(i*m, 2) for i in range(1, len(y))] # labels in the range as monkey weights
+	size_labels.insert(0,round(smp_intake.min(), 2))
+	size_labels.insert(0, "")
+	size_labels.append("")
+
+	ax2 = fig.add_subplot(721)
+	ax2.scatter(x, y, s=size, alpha=0.4)
+	ax2.set_xlabel("Intake at time of sample, g/kg")
+	ax2.yaxis.set_major_locator(NullLocator())
+	pyplot.setp(ax2, xticklabels=size_labels)
+
+	return fig, True
+
+def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
+	from matrr.models import Monkey, MonkeyToDrinkingExperiment
+
+	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
+	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
+	matplotlib.rcParams['figure.subplot.right'] 	= 0.8
+
+	import matplotlib.gridspec as gridspec
+	gs = gridspec.GridSpec(2, 1,height_ratios=[2,1])
+
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return False, False
+
+	if circle_max < circle_min:
+		circle_max = DEFAULT_CIRCLE_MAX
+		circle_min = DEFAULT_CIRCLE_MIN
+	else:
+		if circle_max < 10:
+			circle_max = DEFAULT_CIRCLE_MAX
+		if circle_min < 1:
+			circle_min = DEFAULT_CIRCLE_MIN
+
+	drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+	bec_records = monkey.bec_records.all()
+	from_date, to_date = validate_dates(from_date, to_date)
+	if from_date:
+		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
+		bec_records = bec_records.filter(bec_collect_date__gte=from_date)
+	if to_date:
+		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+		bec_records = bec_records.filter(bec_collect_date__lte=from_date)
+	if sample_before:
+		bec_records = bec_records.filter(bec_sample__lte=sample_before)
+	if sample_after:
+		bec_records = bec_records.filter(bec_sample__gte=sample_after)
+	if dex_type:
+		from django.db.models import Max, Min
+		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
+		max_date = drinking_experiments.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
+		min_date = drinking_experiments.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
+		bec_records = bec_records.filter(bec_collect_date__lte=max_date).filter(bec_collect_date__gte=min_date)
+
+	drinking_experiments = drinking_experiments.exclude(mtd_etoh_bout=None, mtd_etoh_drink_bout=None)
+
+	if drinking_experiments.count() > 0 and bec_records.count() > 0:
+		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
+	else:
+		return None, False
+
+	induction_days = list()
+	avg_bout_volumes = list()
+	g_per_kg_consumed = list() # yaxis
+	bouts = list()
+	bar_xaxis = list()
+	bec_values = list()
+	pct_consumed = list()
+	for index, date in enumerate(dates, 1):
+		bec_rec = bec_records.filter(bec_collect_date=date)
+		if bec_rec.count():
+			bec_rec = bec_rec[0]
+			bec_values.append(bec_rec.bec_mg_pct)
+			pct_consumed.append(float(bec_rec.bec_gkg_etoh) / bec_rec.bec_daily_gkg_etoh)
+			bar_xaxis.append(index)
+
+		de = drinking_experiments.get(drinking_experiment__dex_date=date)
+		if de.drinking_experiment.dex_type == 'Induction':
+			induction_days.append(index)
+		g_per_kg_consumed.append(de.mtd_etoh_g_kg) # y-axis
+		bouts.append(de.mtd_etoh_bout) # color
+		bouts_volume = de.bouts_set.all().aggregate(Avg('ebt_volume'))['ebt_volume__avg']
+		avg_bout_volumes.append(bouts_volume if bouts_volume else 0) # size
+
+	xaxis = numpy.array(range(1,len(avg_bout_volumes)+1))
+	avg_bout_volumes = numpy.array(avg_bout_volumes)
+	bouts = numpy.array(bouts)
+	pct_consumed = numpy.array(pct_consumed)
+	induction_days = numpy.array(induction_days)
+
+	size_min = circle_min
+	size_scale = circle_max - size_min
+
+	volume_max = float(avg_bout_volumes.max())
+	rescaled_volumes = [ (vol/volume_max)*size_scale+size_min for vol in avg_bout_volumes ] # rescaled, so that circles will be in range (size_min, size_scale)
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+
+#    main graph
+	ax1 = fig.add_subplot(111)
+
+	s= ax1.scatter(xaxis, g_per_kg_consumed, c=bouts, s=rescaled_volumes, alpha=0.4)
+
+	y_max = max(g_per_kg_consumed)
+	graph_y_max = y_max + y_max*0.25
+	if len(induction_days) and len(induction_days) != len(xaxis):
+		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
+
+	ax1.set_ylabel("Daily Ethanol Consumption (in g/kg)")
+	ax1.set_xlabel("Days")
+
+	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
+
+	pyplot.ylim(0-((y_max*1.25)/2), graph_y_max) # + % to show circles under the size legend instead of behind it
+	pyplot.xlim(0,len(xaxis) + 2)
+	max_y_int = int(round(y_max*1.25))
+	y_tick_int = max(int(round(max_y_int/5)), 1)
+	ax1.set_yticks(range(0, max_y_int, y_tick_int))
+	ax1.yaxis.get_label().set_position((0,0.6))
+
+	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
+	cb = pyplot.colorbar(s, cax=cax)
+	cb.alpha = 1
+	cb.set_label("Number of bouts")
+
+#	regression line
+	fit = polyfit(xaxis, g_per_kg_consumed, 3)
+	xr=polyval(fit, xaxis)
+	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
+
+#    size legend
+	x =numpy.array(range(1,6))
+	y =numpy.array([1,1,1,1,1])
+
+	size_m = size_scale/(len(y)-1)
+	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
+	size.insert(0,1+size_min)
+	size = numpy.array(size)
+
+	m = volume_max/(len(y)-1)
+	bout_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of bouts
+	bout_labels.insert(0,"1")
+	bout_labels.insert(0, "")
+	bout_labels.append("")
+
+	ax2 = fig.add_subplot(721)
+	ax2.scatter(x, y, s=size, alpha=0.4)
+	ax2.set_xlabel("Average bout volume")
+	ax2.yaxis.set_major_locator(NullLocator())
+	pyplot.setp(ax2, xticklabels=bout_labels)
+
+#	barplot
+	ax3 = fig.add_subplot(313)
+
+	ax3.get_yaxis().tick_right()
+	ax3.yaxis.set_label_position('right')
+	ax3.set_ylabel("Blood Ethanol Concentration, mg %")
+	ax3.set_autoscalex_on(False)
+
+	import matplotlib.colors as colors
+	import matplotlib.cm as cm
+
+	# normalize colors to use full range of colormap
+	norm = colors.normalize(pct_consumed.min(), pct_consumed.max())
+
+	facecolors = list()
+
+	for bar, x, color_value in zip(bec_values, bar_xaxis, pct_consumed):
+		color = cm.jet(norm(color_value))
+		pyplot.bar(x, bar, width=2, color=color, edgecolor='none')
+		facecolors.append(color)
+
+	ax3.set_xlim(0,len(xaxis) + 2)
+
+	# create a collection that we will use in colorbox
+	col = matplotlib.collections.Collection(facecolors=facecolors, norm = norm, cmap = cm.jet)
+	col.set_array(pct_consumed)
+
+	# colorbor for bar plot
+	cax = fig.add_axes((0.88, 0.09, 0.03, 0.25))
+	cb = pyplot.colorbar(col, cax=cax)
+	cb.set_label("Etoh intake @ sample / Daily etoh consumption")
+
+	zipped = numpy.vstack(zip(xaxis, bec_values))
+	coordinates = ax1.transData.transform(zipped)
+	ids = [de.pk for de in drinking_experiments]
+	xcoords, inv_ycoords = zip(*coordinates)
+	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
+	datapoint_map = zip(ids, xcoords, ycoords)
+
+	return fig, True
+
+
+
 def monkey_errorbox_etoh(monkey=None, **kwargs):
 	return monkey_errorbox_general(etoh_intake, 'Ethanol Intake (in ml)', monkey, **kwargs)
 
@@ -1415,12 +1966,12 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 				monkey = Monkey.objects.get(pk=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 
 	##  No data for non-drinking monkeys
 	if monkey.mky_drinking is False:
 		print "This monkey isn't drinking:  " + str(monkey)
-		return False, 'NO MAP'
+		return False, False
 
 	monkey_alpha = .7
 	cohort = monkey.cohort
@@ -1500,7 +2051,7 @@ def monkey_errorbox_general(specific_callable, y_label, monkey, **kwargs):
 
 		return fig1, 'errorbox'
 	else:
-		return False, 'NO MAP'
+		return False, False
 
 
 def monkey_necropsy_avg_22hr_g_per_kg(monkey):
@@ -1511,7 +2062,7 @@ def monkey_necropsy_avg_22hr_g_per_kg(monkey):
 		legend_labels = ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk))
 		return monkey_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
 	except NecropsySummary.DoesNotExist:
-		return False, "NO MAP"
+		return False, False
 
 def monkey_necropsy_etoh_4pct(monkey):
 	try:
@@ -1521,7 +2072,7 @@ def monkey_necropsy_etoh_4pct(monkey):
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
 		return monkey_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, monkey)
 	except NecropsySummary.DoesNotExist:
-		return False, "NO MAP"
+		return False, False
 
 def monkey_necropsy_sum_g_per_kg(monkey):
 	try:
@@ -1531,7 +2082,7 @@ def monkey_necropsy_sum_g_per_kg(monkey):
 		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
 		return monkey_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, monkey)
 	except NecropsySummary.DoesNotExist:
-		return False, "NO MAP"
+		return False, False
 
 def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, monkey, cohort=None):
 	from matrr.models import Monkey, Cohort
@@ -1544,7 +2095,7 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
-				return False, 'NO MAP'
+				return False, False
 	if cohort:
 		if not isinstance(cohort, Cohort):
 			try:
@@ -1569,12 +2120,12 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 
 	if not monkey.necropsy_summary:
 		print("Monkey doesn't have any necropsy summary rows")
-		return False, 'NO MAP'
+		return False, False
 
 	coh_data_1, coh_data_2, cohort_labels = specific_callable(cohort.monkey_set.exclude(pk=monkey.pk))
 	mky_data_1, mky_data_2, monkey_label = specific_callable(cohort.monkey_set.filter(pk=monkey.pk))
 	if not mky_data_1[0] or not mky_data_2[0]: # don't draw plots for control monkeys
-		return False, 'NO MAP'
+		return False, False
 
 	idx = numpy.arange(len(coh_data_1))
 	width = 0.4
@@ -1672,7 +2223,7 @@ def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
 	# Put a legend to the right of the current axis
 	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
 
-	return fig, 'NO MAP'
+	return fig, False
 
 def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 	try: # silly hack to enforce ability to forloop
@@ -1735,7 +2286,7 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 	# Put a legend to the right of the current axis
 	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
 
-	return fig, 'NO MAP'
+	return fig, False
 
 def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 #	try: # silly hack to enforce 1 protein
@@ -1743,11 +2294,11 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 #		raise Exception("This method CANNOT be called with multiple proteins.  You must create these images individually.")
 #	except TypeError:
 #		pass
-	
+
 	protein = proteins[0]
 	print "This method CANNOT be called with multiple proteins.  You must create these images individually."
 #		raise Exception("This method CANNOT be called with multiple proteins.  You must create these images individually.")
-		
+
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = fig.add_subplot(111)
@@ -1800,7 +2351,7 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 	# Put a legend to the right of the current axis
 	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
 
-	return fig, 'NO MAP'
+	return fig, False
 
 
 
@@ -1808,6 +2359,10 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 MONKEY_ETOH_TOOLS_PLOTS = { 'monkey_bouts_vol': 			(monkey_bouts_vol, 'Ethanol Consumption Pattern'),
 							'monkey_first_max_bout': 		(monkey_first_max_bout, 'First Bout and Max Bout Details'),
 							'monkey_bouts_drinks': 			(monkey_bouts_drinks, 'Detailed Drinking Pattern'),
+}
+# Data-limited plots
+MONKEY_BEC_PLOTS = { 'monkey_bec_bubble': 			(monkey_bec_bubble, 'BEC Plot'),
+					 'monkey_bec_consumption':		(monkey_bec_consumption, "BEC Consumption Pattern")
 }
 # Dictionary of protein monkey plots VIPs can customize
 MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': 			(monkey_protein_stdev, "Protein Value (standard deviation)"),
@@ -1818,6 +2373,7 @@ MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': 			(monkey_protein_stdev, 
 # Dictionary of all cohort plots
 MONKEY_PLOTS = {}
 MONKEY_PLOTS.update(MONKEY_ETOH_TOOLS_PLOTS)
+MONKEY_PLOTS.update(MONKEY_BEC_PLOTS)
 MONKEY_PLOTS.update(MONKEY_PROTEIN_TOOLS_PLOTS)
 MONKEY_PLOTS.update({
 				"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg,	"Average Monkey Ethanol Intake, 22hr"),
@@ -1830,6 +2386,25 @@ MONKEY_PLOTS.update({
 				'monkey_errorbox_etoh': (monkey_errorbox_etoh, 								'Monkey Ethanol Intake'),
 				'monkey_bouts_drinks': (monkey_bouts_drinks, 								'Detailed Drink Pattern'),
 })
+
+def fetch_plot_choices(subject, user, cohort, tool):
+	plot_choices = []
+	if subject == 'monkey':
+		if user.has_perm('matrr.view_etoh_data'):
+			if tool == 'etoh' and cohort.monkey_set.exclude(mtd_set=None).count():
+				plot_choices.extend([(plot_key, plot_value[1]) for plot_key, plot_value in MONKEY_ETOH_TOOLS_PLOTS.items()])
+			if tool == 'bec' and cohort.monkey_set.exclude(bec_records=None).count():
+				plot_choices.extend([(plot_key, plot_value[1]) for plot_key, plot_value in MONKEY_BEC_PLOTS.items()])
+
+	elif subject == 'cohort':
+		if user.has_perm('matrr.view_etoh_data'):
+			if tool == 'etoh' and cohort.monkey_set.exclude(mtd_set=None).count():
+				plot_choices.extend([(plot_key, plot_value[1]) for plot_key, plot_value in COHORT_ETOH_TOOLS_PLOTS.items()])
+			if tool == 'bec' and cohort.monkey_set.exclude(bec_records=None).count():
+				plot_choices.extend([(plot_key, plot_value[1]) for plot_key, plot_value in COHORT_BEC_PLOTS.items()])
+	else:
+		raise Exception("'subject' parameter must be 'monkey' or 'cohort'")
+	return plot_choices
 
 def create_plots(cohorts=True, monkeys=True, delete=False):
 	if monkeys:

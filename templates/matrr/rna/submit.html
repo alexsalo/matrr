@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}RNA Records{% endblock %}
+
+{% block content %}
+	<div class=large-headline>RNA Records</div>
+	<form action='' method='post'>
+		{% csrf_token %}
+		{{ rna_form.as_ul }}
+		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
+	</form>
+{% endblock %}

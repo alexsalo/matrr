@@ -657,6 +657,25 @@ class GenealogyParentsForm(MonkeySelectForm):
 		self.fields['mother'].help_text = "Select monkey's mother"
 
 
+class RNALandingForm(CohortSelectForm):
+	yields_choices = (('submit', 'Submit RNA yields'), ('display', "Display RNA yields"))
+	yields = ChoiceField(choices=yields_choices, label="", widget=widgets.RadioSelect, required=True,
+						 help_text="Do you want to upload or display RNA yields for the selected cohort?", )
+	def __init__(self, *args, **kwargs):
+		super(RNALandingForm, self).__init__(subject_widget=widgets.Select, *args, **kwargs)
+
+
+class RNASubmitForm(ModelForm):
+	cohort = None
+	def __init__(self, cohort, *args, **kwargs):
+		super(ModelForm, self).__init__(*args, **kwargs)
+		self.cohort = cohort
+		self.fields['monkey'].queryset = cohort.monkey_set.all()
+		self.fields['monkey'].required = False
+
+	class Meta:
+		model = RNARecord
+		fields = ('tissue_type', 'monkey', 'rna_min', 'rna_max')
 
 
 class ProteinSelectForm(Form):
@@ -740,6 +759,22 @@ class ExperimentRangeForm_monkeys(ExperimentRangeForm):
 	monkeys = CharField(widget=HiddenInput())
 	def __init__(self, monkeys=None, *args, **kwargs):
 		super(ExperimentRangeForm_monkeys, self).__init__(*args, **kwargs)
+		if monkeys:
+			self.fields['monkeys'].initial = monkeys
+
+class BECRangeForm(ExperimentRangeForm):
+	sample_choices = (('all', 'All Samples'), ('morning', 'Sampled before 2pm'), ('afternoon', 'Sampled After 2pm'))
+	sample_range = ChoiceField(choices=sample_choices,
+							   label='Time of blood sample',
+							   help_text="Blood samples were taken at multiple times of day, generally 11a-1p and 3p-5p.",
+							   widget=RadioSelect(renderer=widgets.RadioFieldRendererSpecial_dates),
+							   initial=sample_choices[0][0])
+
+
+class BECRangeForm_monkeys(BECRangeForm): # same as ExperimentRangeForm_monkeys, except for the parent class
+	monkeys = CharField(widget=HiddenInput())
+	def __init__(self, monkeys=None, *args, **kwargs):
+		super(BECRangeForm_monkeys, self).__init__(*args, **kwargs)
 		if monkeys:
 			self.fields['monkeys'].initial = monkeys
 

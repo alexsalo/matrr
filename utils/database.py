@@ -9,8 +9,30 @@ import csv, re
 
 DEX_TYPES = ("Open Access", "Induction")
 
-def convert_dates_to_correct_datetimes():
-	
+def __get_datetime_from_steve(steve_date):
+	def minimalist_xldate_as_datetime(xldate, datemode):
+		# datemode: 0 for 1900-based, 1 for 1904-based
+		return datetime.datetime(1899, 12, 30) + datetime.timedelta(days=int(xldate) + 1462 * datemode)
+	try:
+		real_date = dt.strptime(steve_date, "%m/%d/%y")
+		return real_date
+	except Exception as e:
+		pass
+	try:
+		real_date = dt.strptime(steve_date, "%Y-%m-%d")
+		return real_date
+	except Exception as e:
+		pass
+	try:
+		real_date = minimalist_xldate_as_datetime(steve_date, 1)
+		return real_date
+	except Exception as e:
+		pass
+	return None
+
+
+def convert_MonkeyProtein_dates_to_correct_datetimes():
+
 	dates = (
 			(2002,4,15),
 			(2003,3,5),
@@ -33,7 +55,6 @@ def convert_dates_to_correct_datetimes():
 		new_datetime = old_datetime.combine(old_datetime.date(), time(*t))
 		monkeys.update(mpn_date = new_datetime)
 
-	
 @transaction.commit_on_success
 def load_initial_inventory(file, output_file, load_tissue_types=False,  delete_name_duplicates=False, create_tissue_samples=False):
 	"""
@@ -422,7 +443,7 @@ def dump_monkey_protein_data(queryset, output_file):
 def load_monkey_data(input_file):
 	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
 	columns = input_data.next()
-	
+
 	for row in input_data:
 		if row[2] == '0':
 				continue
@@ -472,7 +493,7 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 		print "TissueTypes not added, missing Tissue Categories. Following categories are necessary: "
 		for cat in categories.itervalues():
 			print cat
-	
+
 	from matrr.models import TissueTypeSexRelevant
 	category_iter = categs.__iter__()
 	current_category = category_iter.next()
@@ -522,7 +543,7 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 					wsr.save()
 					print "Tissue type " + tst_name + " already exists with correct category but with wrong sex relevant field. Updating that filed for id = " + `wsr.tst_type_id`
 				continue
-			
+
 			tt = TissueType()
 			tt.tst_tissue_name = tst_name
 			tt.tst_sex_relevant = tissueSexRelevant
@@ -679,20 +700,15 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			data_fields = data[2:38]
 			data_fields.extend(data[40:46])
 
-			#			create or get experiment - date, cohort, dex_type
-			try:
-				dex_date = dt.strptime(data[0], "%m/%d/%y")
-			#				dex_check_date = dt.strptime(data[38], "%m/%d/%y")
-			except Exception as e:
+			# create or get experiment - date, cohort, dex_type
+			dex_date = __get_datetime_from_steve(data[0])
+			if not dex_date:
 				err = ERROR_OUTPUT % (line_number, "Wrong date format", line)
 				if dump_file:
 					dump_file.write(err + '\n')
 				else:
 					print err
 				continue
-			#			if dex_date != dex_check_date:
-			#				print error_output % (line_number, "Date check failed", line)
-			#				continue
 			else:
 				des = DrinkingExperiment.objects.filter(dex_type=dex_type, dex_date=dex_date, cohort=cohort)
 				if des.count() == 0:
@@ -786,7 +802,7 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
 	FIELDS_INDEX = (1,8) #[1,7) => 1,2,3,4,5,6
 	MONKEY_DATA_INDEX = 0
 	BOUT_NUMBER_DATA_INDEX = bout_index
-	
+
 	if data_list[MONKEY_DATA_INDEX] == '28479':
 		return
 	try:
@@ -821,7 +837,7 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
 			print err
 		return
 	mtd = mtds[0]
-	
+
 	ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number=data_list[BOUT_NUMBER_DATA_INDEX])
 	if ebts.count() != 0:
 		err = ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
@@ -830,19 +846,19 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
 		else:
 			print err
 		return
-	
+
 	ebt = ExperimentBout()
 	ebt.mtd = mtd			
 	data_fields = data_list[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
-	
+
 	for i, field in enumerate(fields):
-		
+
 		if data_fields[i] != '':
 				setattr(ebt, field, data_fields[i])
-			
+
 	try:
 		ebt.full_clean()
-		
+
 	except Exception as e:
 		err = ERROR_OUTPUT % (line_number, e, line)
 		if dump_file:
@@ -864,7 +880,7 @@ def load_ebt_one_file(file_name, dex, create_mtd=False):
 	FIELDS_INDEX = (1,7) #[1,7) => 1,2,3,4,5,6
 	MONKEY_DATA_INDEX = 0
 	BOUT_NUMBER_DATA_INDEX = 1
-	
+
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data[1:], start=1):
@@ -876,7 +892,7 @@ def load_ebt_one_file(file_name, dex, create_mtd=False):
 			except:
 				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
 				continue
-			
+
 			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
 			if mtds.count() == 0:
 				if create_mtd:
@@ -891,23 +907,23 @@ def load_ebt_one_file(file_name, dex, create_mtd=False):
 				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
 				continue
 			mtd = mtds[0]
-			
+
 			ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data[BOUT_NUMBER_DATA_INDEX])
 			if ebts.count() != 0:
 				print ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
 				continue
-			
+
 			ebt = ExperimentBout()
 			ebt.mtd = mtd			
 			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
-			
+
 			for i, field in enumerate(fields):
 				if data_fields[i] != '':
 					setattr(ebt, field, data_fields[i])
-					
+
 			try:
 				ebt.full_clean()
-				
+
 			except Exception as e:
 				print ERROR_OUTPUT % (line_number, e, line)
 				continue
@@ -926,7 +942,7 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
 	MONKEY_DATA_INDEX = 0
 	BOUT_NUMBER_DATA_INDEX = bout_index
 	DRINK_NUMBER_DATA_INDEX = drink_index
-		
+
 	if data_list[MONKEY_DATA_INDEX] == '28479':
 		return
 	try:
@@ -938,7 +954,7 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
 		else:
 			print err
 		return
-	
+
 	mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
 	if mtds.count() == 0:
 		err =  ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
@@ -955,7 +971,7 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
 			print err
 		return
 	mtd = mtds[0]
-	
+
 	ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data_list[BOUT_NUMBER_DATA_INDEX])
 	if ebts.count() == 0:
 		err = ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
@@ -972,7 +988,7 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
 			print err
 		return
 	ebt = ebts[0]
-	
+
 	edrs = ExperimentDrink.objects.filter(ebt=ebt, edr_number = data_list[DRINK_NUMBER_DATA_INDEX])
 	if edrs.count() != 0:
 		err =  ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
@@ -981,19 +997,19 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
 		else:
 			print err
 		return
-	
+
 	edr = ExperimentDrink()
 	edr.ebt = ebt
-			
+
 	data_fields = data_list[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
-	
+
 	for i, field in enumerate(fields):
 		if data_fields[i] != '':
 			setattr(edr, field, data_fields[i])
-			
+
 	try:
 		edr.full_clean()
-		
+
 	except Exception as e:
 		err =  ERROR_OUTPUT % (line_number, e, line)
 		if dump_file:
@@ -1016,7 +1032,7 @@ def load_edr_one_file(file_name, dex):
 	MONKEY_DATA_INDEX = 0
 	BOUT_NUMBER_DATA_INDEX = 1
 	DRINK_NUMBER_DATA_INDEX = 2
-	
+
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data[1:], start=1):
@@ -1028,7 +1044,7 @@ def load_edr_one_file(file_name, dex):
 			except:
 				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
 				continue
-			
+
 			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
 			if mtds.count() == 0:
 				print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
@@ -1037,7 +1053,7 @@ def load_edr_one_file(file_name, dex):
 				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
 				continue
 			mtd = mtds[0]
-			
+
 			ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number = data[BOUT_NUMBER_DATA_INDEX])
 			if ebts.count() == 0:
 				print ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
@@ -1046,24 +1062,24 @@ def load_edr_one_file(file_name, dex):
 				print ERROR_OUTPUT % (line_number, "More than one EBT.", line)
 				continue
 			ebt = ebts[0]
-			
+
 			edrs = ExperimentDrink.objects.filter(ebt=ebt, edr_number = data[DRINK_NUMBER_DATA_INDEX])
 			if edrs.count() != 0:
 				print ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
 				continue
-			
+
 			edr = ExperimentDrink()
 			edr.ebt = ebt
-					
+
 			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
-			
+
 			for i, field in enumerate(fields):
 				if data_fields[i] != '':
 					setattr(edr, field, data_fields[i])
-					
+
 			try:
 				edr.full_clean()
-				
+
 			except Exception as e:
 				print ERROR_OUTPUT % (line_number, e, line)
 				continue
@@ -1158,10 +1174,12 @@ def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 	for entry in entries:
 		file_name = os.path.join(file_dir, entry)
 		if not os.path.isdir(file_name):
-			m = re.match(r'([0-9]+_[0-9]+_[0-9]+)_(bout|drink)_', entry)
+			m = re.match(r'([0-9]+_[0-9]+_[0-9]+)_(bout|drink)', entry)
 			if not m:
-				print "Invalid file name format: %s" % entry
-				continue
+				m = re.match(r'([0-9]+_[0-9]+_[0-9]+)_(bout|drink).*', entry)
+				if not m:
+					print "Invalid file name format: %s" % entry
+					continue
 			try:
 				day = dt.strptime(m.group(1), "%Y_%m_%d")
 			except:
@@ -1180,14 +1198,14 @@ def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 				bouts.append((dex, file_name))
 			else:
 				drinks.append((dex, file_name))
-	
+
 	for (dex, bout) in bouts:
 		print "Loading %s..." % bout
 		load_ebt_one_file(bout, dex, create_mtd)
 	for (dex, drink) in drinks:
 		print "Loading %s..." % drink
 		load_edr_one_file(drink, dex)
-				
+
 def convert_excel_time_to_datetime(time_string):
 	DATE_BASE = dt(day=1, month=1, year=1904)
 	SECONDS_BASE = 24*60*60
@@ -1195,7 +1213,7 @@ def convert_excel_time_to_datetime(time_string):
 	date_time = float("0.%s" % time_string.split('.')[1])
 	seconds = round(date_time * SECONDS_BASE)
 	return DATE_BASE + timedelta(days=data_days, seconds=seconds)
-	
+
 def parse_left_right(side_string):
 	if string.count(side_string, "Left") != 0:
 		return LeftRight.Left
@@ -1203,9 +1221,9 @@ def parse_left_right(side_string):
 		return LeftRight.Right
 	else:
 		return None
-	
+
 def load_eev_one_file(file_name, dex, create_mtd=False):
-	
+
 	fields = (
 #		'eev_occurred',
 		'eev_dose',
@@ -1248,7 +1266,7 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 	DATA_ETOH_SIDE_INDEX = 11
 	DATA_VEH_SIDE_INDEX = 15
 	DATA_HIB_INDEX = 20
-	
+
 	with open(file_name, 'r') as f:
 		read_data = f.readlines()
 		for line_number, line in enumerate(read_data[1:], start=1):
@@ -1260,7 +1278,7 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 			except:
 				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
 				continue
-			
+
 			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
 			if mtds.count() == 0:
 				if create_mtd:
@@ -1276,14 +1294,14 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 				continue
 			mtd = mtds[0]
 
-			
+
 			eev_date = convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
-			
+
 			eevs = ExperimentEvent.objects.filter(mtd=mtd, eev_source_row_number=line_number, eev_occurred=eev_date)
 			if eevs.count() != 0:
 				print ERROR_OUTPUT % (line_number, "EEV with MTD, date occurred and source row number already exists.", line)
 				continue
-			
+
 			eev = ExperimentEvent()
 			eev.mtd = mtd
 			eev.eev_occurred = eev_date
@@ -1291,24 +1309,24 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 			eev.eev_veh_side = parse_left_right(data[DATA_VEH_SIDE_INDEX])
 			eev.eev_etoh_side = parse_left_right(data[DATA_ETOH_SIDE_INDEX])
 			eev.eev_source_row_number = line_number
-			
+
 			if data[DATA_HIB_INDEX] == 'X':
 				eev.eev_hand_in_bar = False
 			else:
 				eev.eev_hand_in_bar = True
-			
+
 			data_fields = list()
 			for low_ind, high_ind in FIELDS_INDEX:
 				data_fields.extend(data[low_ind:high_ind])
-		
+
 			for i, field in enumerate(fields):
-			
+
 				if data_fields[i] != '':
 					setattr(eev, field, data_fields[i])
-					
+
 			try:
 				eev.full_clean()
-				
+
 			except Exception as e:
 				print ERROR_OUTPUT % (line_number, e, line)
 				continue
@@ -1875,10 +1893,15 @@ def load_bec_data(file_name, overwrite=False, header=True):
 				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
 				continue
 
-			bec, is_new = MonkeyBEC.objects.get_or_create(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
-			if not is_new and not overwrite:
-				print ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
-				continue
+			bec = MonkeyBEC.objects.filter(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
+			if bec:
+				if overwrite:
+					bec.delete()
+				else:
+					print ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
+					continue
+			else:
+				bec = MonkeyBEC(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
 
 			data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
 			model_fields = fields[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
@@ -1895,8 +1918,8 @@ def load_bec_data(file_name, overwrite=False, header=True):
 				bec.full_clean()
 			except Exception as e:
 				print ERROR_OUTPUT % (line_number, e, line)
-				bec.delete()
 				continue
+			bec.save()
 	print "Data load complete."
 
 def populate_mky_species():

@@ -1,20 +1,22 @@
+import StringIO, random, numpy, pylab, time
+from django.template import loader, Context
+from ho import pisa
 import networkx as nx
 from matrr.models import FamilyNode, FamilyRelationship
-import random
 
 class CytoVisualStyle():
 #	family_graph = None
 	family_tree = None
 
 	global_vs = {'backgroundColor': "#fff"}
-	nodes_vs = {'shape': 'Diamond', 'size': 50, 'color': '#999', 'borderColor': 'orange', 'borderWidth': 5 }
+	nodes_vs = {'shape': 'Diamond', 'size': 50, 'color': '#999', 'borderColor': 'orange', 'borderWidth': 5}
 	edges_vs = {'color': "blue", 'width': 3}
 
 	def __init__(self, family_tree):
 		self.family_tree = family_tree
 
 	def continuous_node_colors(self, attr_name, min_value='#000000', max_value='#ffffff'):
-		self.nodes_vs['color'] = {'continuousMapper': { 'attrName': attr_name,  'minValue': min_value, 'maxValue': max_value }}
+		self.nodes_vs['color'] = {'continuousMapper': {'attrName': attr_name, 'minValue': min_value, 'maxValue': max_value}}
 
 	def discrete_node_shapes(self, shape_method=None):
 		def default_shape(node):
@@ -27,7 +29,7 @@ class CytoVisualStyle():
 			# node == ( node_id, {node data dictionary} )
 			entries.append({'attrValue': node[0], 'value': get_shape(node)})
 
-		self.nodes_vs['shape'] = {'discreteMapper': {'attrName': "id",'entries' : entries,} }
+		self.nodes_vs['shape'] = {'discreteMapper': {'attrName': "id", 'entries': entries, }}
 
 	def discrete_node_colors(self, color_method=None):
 		def default_color(node):
@@ -42,7 +44,7 @@ class CytoVisualStyle():
 		for node in self.family_tree.family_graph.nodes(data=True):
 			# node == ( node_id, {node data dictionary} )
 			entries.append({'attrValue': node[0], 'value': get_color(node)})
-		self.nodes_vs['color'] = {'discreteMapper': {'attrName': "id",'entries' : entries} }
+		self.nodes_vs['color'] = {'discreteMapper': {'attrName': "id", 'entries': entries}}
 
 	def discrete_node_borderColors(self, color_method=None):
 		def default_color(node):
@@ -54,11 +56,11 @@ class CytoVisualStyle():
 		for node in self.family_tree.family_graph.nodes(data=True):
 			# node == ( node_id, {node data dictionary} )
 			entries.append({'attrValue': node[0], 'value': get_color(node)})
-		self.nodes_vs['borderColor'] =  {'discreteMapper': {'attrName': "id", 'entries' : entries } }
+		self.nodes_vs['borderColor'] = {'discreteMapper': {'attrName': "id", 'entries': entries}}
 
 	def discrete_node_borderWidth(self, width_method=None):
 		def default_width(node):
-			return node[1]['borderWidth_input']/100
+			return node[1]['borderWidth_input'] / 100
 
 		get_color = width_method if width_method else default_width
 
@@ -66,19 +68,19 @@ class CytoVisualStyle():
 		for node in self.family_tree.family_graph.nodes(data=True):
 			# node == ( node_id, {node data dictionary} )
 			entries.append({'attrValue': node[0], 'value': get_color(node)})
-		self.nodes_vs['borderWidth'] =  {'discreteMapper': {'attrName': "id", 'entries' : entries } }
+		self.nodes_vs['borderWidth'] = {'discreteMapper': {'attrName': "id", 'entries': entries}}
 
 	def passthru_node_borderColors(self, attr_name='borderColor_color'):
-		self.nodes_vs['borderColor'] =  { 'passthroughMapper': { 'attrName': attr_name } }
+		self.nodes_vs['borderColor'] = {'passthroughMapper': {'attrName': attr_name}}
 
 	def continuous_edge_curvature(self, attr_name, min_value='1', max_value='90'):
-		self.edges_vs['curvature'] = {'continuousMapper': { 'attrName': attr_name,  'minValue': min_value, 'maxValue': max_value }}
+		self.edges_vs['curvature'] = {'continuousMapper': {'attrName': attr_name, 'minValue': min_value, 'maxValue': max_value}}
 
 	def passthru_edge_colors(self, attr_name='edge_color'):
-		self.edges_vs['color'] =  { 'passthroughMapper': { 'attrName': attr_name } }
+		self.edges_vs['color'] = {'passthroughMapper': {'attrName': attr_name}}
 
 	def passthru_edge_width(self, attr_name='edge_width'):
-		self.edges_vs['width'] =  { 'passthroughMapper': { 'attrName': attr_name } }
+		self.edges_vs['width'] = {'passthroughMapper': {'attrName': attr_name}}
 
 	def get_visual_style(self):
 		""" returns dict() of visual cytoscapeweb style, http://cytoscapeweb.cytoscape.org/documentation/visual_style """
@@ -107,7 +109,7 @@ class FamilyTree(object):
 		self.visual_style = visual_style if visual_style else CytoVisualStyle(self)
 
 	def dump_graphml(self):
-		return 	"".join(nx.generate_graphml(self.family_graph))
+		return "".join(nx.generate_graphml(self.family_graph))
 
 	def plant_tree(self):
 		self._add_family_node(self.me)
@@ -129,7 +131,7 @@ class FamilyTree(object):
 				self._add_family_edge(relation.me, relation.relative, relation=relation) # relation.me == node
 				related_nodes.append(relation.relative)
 			for relative in related_nodes:
-				self.__grow_tree(relative, current_depth+1)
+				self.__grow_tree(relative, current_depth + 1)
 		else:
 			print "Max depth reached"
 
@@ -156,11 +158,11 @@ class FamilyTree(object):
 
 
 class ExampleFamilyTree(FamilyTree):
-
 	def _construct_node_data(self, node, data=None):
 		colors = {0: 'purple', 1: 'yellow', 2: 'green'}
+
 		def border_color_calc(node):
-			return colors[random.randint(0,2)]
+			return colors[random.randint(0, 2)]
 
 		data = super(ExampleFamilyTree, self)._construct_node_data(node, data)
 		data['shape_input'] = node.monkey.mky_gender # continuousMapper
@@ -179,8 +181,10 @@ class ExampleFamilyTree(FamilyTree):
 def family_tree():
 	import settings
 	from matrr.models import Monkey, Cohort, Institution
+
 	if not settings.PRODUCTION:
 		import random
+
 		for monkey in Monkey.objects.all():
 			FamilyNode.objects.get_or_create(monkey=monkey)
 
@@ -192,7 +196,7 @@ def family_tree():
 		female_monkeys = Monkey.objects.filter(mky_gender='F').exclude(pk__in=monkeys)
 		male_monkeys = Monkey.objects.filter(mky_gender='M', cohort=3, mky_drinking=True).exclude(pk__in=monkeys)
 		for monkey in monkeys:
-			index = random.randint(0, min(female_monkeys.count()-1, male_monkeys.count()-1))
+			index = random.randint(0, min(female_monkeys.count() - 1, male_monkeys.count() - 1))
 			monkey.genealogy.sire = male_monkeys[index].genealogy
 			monkey.genealogy.dam = female_monkeys[index].genealogy
 			monkey.genealogy.save()
@@ -208,7 +212,7 @@ def family_tree():
 		female_monkeys = Monkey.objects.exclude(pk__in=parents).exclude(pk__in=monkeys).filter(mky_gender='F', cohort=11)
 		male_monkeys = Monkey.objects.exclude(pk__in=parents).exclude(pk__in=monkeys).filter(mky_gender='M', cohort=5)
 		for monkey in parents:
-			index = random.randint(0, min(female_monkeys.count()-1, male_monkeys.count()-1))
+			index = random.randint(0, min(female_monkeys.count() - 1, male_monkeys.count() - 1))
 			monkey.genealogy.sire = male_monkeys[index].genealogy
 			monkey.genealogy.dam = female_monkeys[index].genealogy
 
@@ -234,6 +238,7 @@ def family_tree():
 	else:
 		print "this shit creates a publicly visible bogus cohort.  dont use this."
 
+
 def export_template_to_pdf(template, context={}, outfile=None, return_pisaDocument=False):
 	t = loader.get_template(template)
 	c = Context(context)
@@ -250,3 +255,83 @@ def export_template_to_pdf(template, context={}, outfile=None, return_pisaDocume
 	else:
 		raise Exception(pdf.err)
 
+
+def _angle_to_point(point, centre):
+	'''calculate angle in 2-D between points and x axis'''
+	delta = point - centre
+	res = numpy.arctan(delta[1] / delta[0])
+	if delta[0] < 0:
+		res += numpy.pi
+	return res
+
+
+def _draw_triangle(p1, p2, p3, **kwargs):
+	tmp = numpy.vstack((p1, p2, p3))
+	x, y = [x[0] for x in zip(tmp.transpose())]
+	pylab.fill(x, y, **kwargs)
+	#time.sleep(0.2)
+
+
+def area_of_triangle(p1, p2, p3):
+	'''calculate area of any triangle given co-ordinates of the corners'''
+	return numpy.linalg.norm(numpy.cross((p2 - p1), (p3 - p1), axis=0)) / 2.
+
+
+def convex_hull(points, graphic=False, smidgen=0.0075):
+	'''Calculate subset of points that make a convex hull around points
+
+Recursively eliminates points that lie inside two neighbouring points until only convex hull is remaining.
+
+:Parameters:
+	points : ndarray (2 x m)
+		array of points for which to find hull
+	graphic : bool
+		use pylab to show progress?
+	smidgen : float
+		offset for graphic number labels - useful values depend on your data range
+
+:Returns:
+	hull_points : ndarray (2 x n)
+		convex hull surrounding points
+	'''
+	if graphic:
+		pylab.clf()
+		pylab.plot(points[0], points[1], 'ro')
+	n_pts = points.shape[1]
+	assert(n_pts > 5)
+	centre = points.mean(1)
+	if graphic: pylab.plot((centre[0],), (centre[1],), 'bo')
+	angles = numpy.apply_along_axis(_angle_to_point, 0, points, centre)
+	pts_ord = points[:, angles.argsort()]
+	if graphic:
+		for i in xrange(n_pts):
+			pylab.text(pts_ord[0, i] + smidgen, pts_ord[1, i] + smidgen,\
+				   '%d' % i)
+	pts = [x[0] for x in zip(pts_ord.transpose())]
+	prev_pts = len(pts) + 1
+	k = 0
+	while prev_pts > n_pts:
+		prev_pts = n_pts
+		n_pts = len(pts)
+		if graphic: pylab.gca().patches = []
+		i = -2
+		while i < (n_pts - 2):
+			Aij = area_of_triangle(centre, pts[i], pts[(i + 1) % n_pts])
+			Ajk = area_of_triangle(centre, pts[(i + 1) % n_pts],\
+								   pts[(i + 2) % n_pts])
+			Aik = area_of_triangle(centre, pts[i], pts[(i + 2) % n_pts])
+			if graphic:
+				_draw_triangle(centre, pts[i], pts[(i + 1) % n_pts],\
+							   facecolor='blue', alpha=0.2)
+				_draw_triangle(centre, pts[(i + 1) % n_pts],\
+							   pts[(i + 2) % n_pts],\
+							   facecolor='green', alpha=0.2)
+				_draw_triangle(centre, pts[i], pts[(i + 2) % n_pts],\
+							   facecolor='red', alpha=0.2)
+			if Aij + Ajk < Aik:
+				if graphic: pylab.plot((pts[i + 1][0],), (pts[i + 1][1],), 'go')
+				del pts[i + 1]
+			i += 1
+			n_pts = len(pts)
+		k += 1
+	return numpy.asarray(pts)
