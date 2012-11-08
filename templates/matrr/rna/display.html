@@ -26,7 +26,7 @@
                     <tr>
                         <td class='text-center-common-td'>{{ rna.pk }}</td>
                         <td class='text-center-common-td'>{{ rna.tissue_type }}</td>
-                        <td class='text-center-common-td'>{{ rna.monkey}}</td>
+                        <td class='text-center-common-td'><a href="{% url monkey-detail rna.monkey.pk %}">{{ rna.monkey}}</a></td>
                         <td class='text-center-common-td'>{{ rna.user }}</td>
                         <td class='text-center-common-td'>{{ rna.rna_modified|date:"m/d/Y" }}</td>
                         <td class='text-center-common-td'>{{ rna.rna_min }}</td>
