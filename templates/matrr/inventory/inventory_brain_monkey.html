@@ -8,43 +8,40 @@
 	<div class='headline'>Brain Inventory for Monkey {{ monkey }}</div>
 
 	<div class=left>
-		<a href="{% url inventory %}">
-
+		<a href="{% url inventory-brain-cohort monkey.cohort.pk %}">
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
-			&nbsp;View Inventory Cohort List</a>
+			&nbsp;View Cohort Brain Inventory List</a>
 		<br/>
 	</div>
-	<div class=right>
-        {% pagination samples %}
-	</div>
-
-	<table class="common_center" width=100%>
-	{% for tss in samples.object_list %}
-		<th colspan="3">{{ tss.tissue_type }}</th>
-		<tr>
-            <td><span class="headline">Left Hemisphere</span><br>
-				{{  brain_form.left_hemisphere }}
- 		    </td>
-            <td><img src='{{ STATIC_URL }}images/500.jpg' width=400></td>
-			<td><span class="headline">Right Hemisphere</span><br>
-                {{  brain_form.right_hemisphere }}
-		    <td>
-        </tr>
-	{% endfor %}
-	</table>
+	<form action='' method='post'>
+		{% csrf_token %}
+	    <div class="clearfix"></div>
+        <table class="common_center" width=100%>
+            <th>Select Tissue Type:</th>
+            <th colspan="2">{{ brain_form.tissue_type }}</th>
+            <tr>
+                <td><span class="headline">Left Hemisphere</span><br>
+                    {{  brain_form.left_hemisphere }}
+                </td>
+                <td>
+                    <a rel="plot_gallery" href="{{ brain.html_fragment.url }}" target="_blank">
+                        <img src="{{ brain.image.url }}" width=400>
+                    </a>
+                </td>
+                <td><span class="headline">Right Hemisphere</span><br>
+                    {{  brain_form.right_hemisphere }}
+                <td>
+            </tr>
+        </table>
+		<div class="clearfix"></div>
+		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
+	</form>
 	<div class='headline'> </div>
 
 	<div class=left>
-		<a href="{% url inventory %}">
-
+		<a href="{% url inventory-brain-cohort monkey.cohort.pk %}">
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
-			&nbsp;View Inventory Cohort List</a>
+			&nbsp;View Cohort Brain Inventory List</a>
 		<br/>
 	</div>
-	<div class=right>
-        {% pagination samples %}
-	</div>
-
-
-
 {% endblock %}

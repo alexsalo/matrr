@@ -790,10 +790,11 @@ class AdvancedSearchFilterForm(Form):
 	cohorts = ModelMultipleChoiceField(label="Cohorts", required=False, queryset=Cohort.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
 
 
-class InventoryBrainForm(ModelForm):
-	BLOCKS = tuple((d, "Block%d" % d) for d in range(1,16,1))
-	def __init__(self, *args, **kwargs):
-		raise Exception('shit is broke')
-		super(InventoryBrainForm, self).__init__(*args, **kwargs)
-		self.fields['left_hemisphere'] = MultipleChoiceField(choices=self.BLOCKS, required=False, widget=widgets.SelectMultiple(attrs={'size':16}))
-		self.fields['right_hemisphere'] = MultipleChoiceField(choices=self.BLOCKS, required=False, widget=widgets.SelectMultiple(attrs={'size':16}))
+class InventoryBrainForm(Form):
+	block_names = MonkeyBrainBlock.objects.all().order_by().values_list('mbb_block_name', flat=True).distinct().order_by('mbb_block_name')
+	BLOCKS = tuple((name, name) for name in block_names)
+
+	tissue_type = ModelChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=True, empty_label='--required--')
+	left_hemisphere = MultipleChoiceField(choices=BLOCKS, required=False, widget=widgets.CheckboxSelectMultiple)
+	right_hemisphere = MultipleChoiceField(choices=BLOCKS, required=False, widget=widgets.CheckboxSelectMultiple )
+

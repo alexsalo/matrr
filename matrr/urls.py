@@ -59,10 +59,10 @@ urlpatterns += patterns('matrr.views',
 
 	url(r'^cohort/(?P<pk>\d+)/$', 			cohort_details, name='cohort-details'),
 	url(r'^cohort/(?P<pk>\d+)/timeline$', 	cohort_timeline, name='cohort-timeline'),
-	url(r'^cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey-detail'),
-	url(r'^cohort/(?P<cohort_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list, name='tissue-category'),
-	url(r'^cohort/(?P<cohort_id>\d+)/tissues/$', 								tissue_shop_landing_view, name='tissue-shop-landing'),
-	url(r'^cohort/(?P<cohort_id>\d+)/tissues/add-to-cart/(?P<tissue_id>\d+)/$',     tissue_shop_detail_view, name='tissue-shop-detail'),
+	url(r'^cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', 	monkey_cohort_detail_view, name='monkey-detail'),
+	url(r'^cohort/(?P<coh_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', 	tissue_list, name='tissue-category'),
+	url(r'^cohort/(?P<coh_id>\d+)/tissues/$', 								tissue_shop_landing_view, name='tissue-shop-landing'),
+	url(r'^cohort/(?P<coh_id>\d+)/tissues/add-to-cart/(?P<tissue_id>\d+)/$',     tissue_shop_detail_view, name='tissue-shop-detail'),
 
 	#  Cart Views
 	url(r'^cart/$', 			                            cart_view, name='cart'),
@@ -114,7 +114,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),
 	url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
-	url(r'^upload/cohort_data/(?P<cohort_pk>\d+)/$',   		cod_upload, name='cod-upload'),
+	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
 	# Research update pages
 	url(r'^rud/list$', research_update_list, name='rud-list'),
@@ -126,44 +126,46 @@ urlpatterns += patterns('matrr.views',
 	url(r'^verification/(?P<req_request_id>\d+)/export$', tissue_verification_export, name='verification-list-export'),
 	url(r'^verification/(?P<req_request_id>\d+)/(?P<tiv_id>\d+)/$', tissue_verification_detail, name='verification-detail'),
 
+	# Inventory pages
 	url(r'^inventory/$', user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')(ListView.as_view(
 							model=Cohort,template_name="matrr/inventory/inventory.html")), name='inventory'),
-	url(r'^inventory/brains/monkey/(?P<mky_id>\d+)/$', inventory_brain_monkey, name="inventory-brain-cohort"),
-	url(r'^inventory/cohort/(?P<cohort_pk>\d+)/$', inventory_cohort, name="inventory-cohort"),
+	url(r'^inventory/cohort/(?P<coh_id>\d+)/$', inventory_cohort, name="inventory-cohort"),
+	url(r'^inventory/cohort/(?P<coh_id>\d+)/brains/$', inventory_brain_cohort, name="inventory-brain-cohort"),
+	url(r'^inventory/monkey/(?P<mky_id>\d+)/brains/$', inventory_brain_monkey, name="inventory-brain-monkey"),
 
 	# RNA pages
 	url(r'^rna/$', rna_landing, name='rna-landing'),
-	url(r'^rna/(?P<cohort_pk>\d+)/submit$', rna_submit, name='rna-submit'),
-	url(r'^rna/(?P<cohort_pk>\d+)/display$', rna_display, name='rna-display'),
+	url(r'^rna/(?P<coh_id>\d+)/submit$', rna_submit, name='rna-submit'),
+	url(r'^rna/(?P<coh_id>\d+)/display$', rna_display, name='rna-display'),
 
 	# Tools
 	url(r'^tools/$', tools_landing, name='tools-landing'),
 	url(r'^tools/sandbox/$', tools_sandbox, name='tools-sandbox'),
 
 	url(r'^tools/protein/$', tools_protein, name='tools-protein'),
-	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/$', tools_cohort_protein, name='tools-cohort-protein'),
-	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_protein_graphs, name='tools-cohort-protein-graphs'),
-	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/monkey/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
-	url(r'^tools/protein/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
+	url(r'^tools/protein/cohort/(?P<coh_id>\d+)/$', tools_cohort_protein, name='tools-cohort-protein'),
+	url(r'^tools/protein/cohort/(?P<coh_id>\d+)/graphs$', tools_cohort_protein_graphs, name='tools-cohort-protein-graphs'),
+	url(r'^tools/protein/cohort/(?P<coh_id>\d+)/monkey/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
+	url(r'^tools/protein/cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
 
 	url(r'^tools/etoh/$', tools_etoh, name='tools-etoh'),
-	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/$', tools_cohort_etoh, name='tools-cohort-etoh'),
-	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_etoh_graphs, name='tools-cohort-etoh-graphs'),
-	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/monkey/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
-	url(r'^tools/etoh/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
+	url(r'^tools/etoh/cohort/(?P<coh_id>\d+)/$', tools_cohort_etoh, name='tools-cohort-etoh'),
+	url(r'^tools/etoh/cohort/(?P<coh_id>\d+)/graphs$', tools_cohort_etoh_graphs, name='tools-cohort-etoh-graphs'),
+	url(r'^tools/etoh/cohort/(?P<coh_id>\d+)/monkey/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
+	url(r'^tools/etoh/cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
 	url(r'^tools/etoh/mtd-graph/(?P<mtd_id>\d+)$', tools_etoh_mtd, name='tools-etoh-mtd'),
 
 	url(r'^tools/bec/$', tools_bec, name='tools-bec'),
-	url(r'^tools/bec/cohort/(?P<cohort_id>\d+)/$', tools_cohort_bec, name='tools-cohort-bec'),
-	url(r'^tools/bec/cohort/(?P<cohort_id>\d+)/graphs$', tools_cohort_bec_graphs, name='tools-cohort-bec-graphs'),
-	url(r'^tools/bec/cohort/(?P<cohort_id>\d+)/monkey/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
-	url(r'^tools/bec/cohort/(?P<cohort_id>\d+)/monkey/(?P<monkey_id>\d+)/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
+	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/$', tools_cohort_bec, name='tools-cohort-bec'),
+	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/graphs$', tools_cohort_bec_graphs, name='tools-cohort-bec-graphs'),
+	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
+	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
 
 	url(r'^tools/graph-as-pdf/$', create_pdf_fragment, name='pdf-fragment'),
 	url(r'^tools/graph-as-svg/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', create_svg_fragment, name='svg-fragment'),
 
 	url(r'^tools/genealogy/$', tools_genealogy, name='tools-genealogy'),
-	url(r'^tools/genealogy/(?P<cohort_id>\d+)/$', tools_cohort_genealogy, name='tools-cohort-genealogy'),
+	url(r'^tools/genealogy/(?P<coh_id>\d+)/$', tools_cohort_genealogy, name='tools-cohort-genealogy'),
 
 
 	# ajax views, should not be visible by themselves
