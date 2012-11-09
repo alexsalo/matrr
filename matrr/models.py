@@ -15,7 +15,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 
 def get_sentinel_user():
-    return User.objects.get_or_create(username='deleted')[0]
+	return User.objects.get_or_create(username='deleted')[0]
 
 def percentage_validator(value):
 	MinValueValidator(0).__call__(value)
@@ -243,6 +243,11 @@ class Cohort(models.Model):
 		for monkey in self.monkey_set.all():
 			if MonkeyProtein.objects.filter(monkey=monkey):
 				return True
+		return False
+
+	def has_brain_images(self):
+		if MonkeyImage.objects.filter(method='__brain_image', monkey__cohort=self).count():
+			return True
 		return False
 
 	class Meta:
@@ -841,7 +846,7 @@ class MATRRImage(models.Model):
 
 		return image_path, thumb_path, svg_image_path
 
-	def _build_html_fragment(self, data_map, add_footer=True):
+	def _build_html_fragment(self, data_map, add_footer=True, save_fragment=False):
 		import collections
 		from django.template.context import Context
 		from django.template.loader import get_template
@@ -856,13 +861,17 @@ class MATRRImage(models.Model):
 		foot_c = Context({'html_fragment': str(self).replace(" ", "_").replace('(', "").replace(")",""),
 						 'class': self.__class__.__name__, 'imageID': self.pk,
 						 'map': data_map })
-		
+
 		html_fragment = open(fragment_path, 'w+')
 		html_fragment.write(str(t.render(c)))
 		if add_footer:
 			html_fragment.write(str(foot_t.render(foot_c)))
 		html_fragment.flush()
 		html_fragment.close()
+
+		if save_fragment: # Most of the MATRRImage framework saves the fragment in _construct_filefields.  This overrides that, primarily for brain images
+			self.html_fragment = File(open(fragment_path, 'r'))
+			self.save()
 		return fragment_path
 
 
@@ -963,6 +972,8 @@ class MonkeyImage(MATRRImage):
 				self._construct_filefields()
 
 	def __unicode__(self):
+		if self.method == '__brain_image':
+			return "%s.%s.(%s)" % (self.monkey.__unicode__(), "BrainImage", str(self.pk))
 		return "%s.%s.(%s)" % (self.monkey.__unicode__(), self.title, str(self.pk))
 
 	class Meta:
@@ -1190,6 +1201,8 @@ class TissueType(models.Model):
 		return Availability.Available
 
 	def get_monkey_availability(self, monkey):
+		if 'custom' in self.tst_tissue_name.lower():
+			return Availability.Available
 		if self.tst_sex_relevant != TissueTypeSexRelevant.Both:
 			if monkey.mky_gender != self.tst_sex_relevant:
 				return Availability.Unavailable
@@ -1199,16 +1212,10 @@ class TissueType(models.Model):
 		# 			if yes, we should probably track it somehow and reflect here, but not important right now
 			return Availability.Available
 
-		tissue_samples = TissueSample.objects.filter(monkey=monkey, tissue_type=self)
-
+		tissue_samples = TissueSample.objects.filter(monkey=monkey, tissue_type=self) # should return 1 result, always.
 		for tissue_sample in tissue_samples:
-			if tissue_sample.tss_sample_quantity > 0 or tissue_sample.tss_sample_quantity is None:
-			#		returns In_stock if any of the samples is present and its amount is positive
-			#		does not reflect accepted requests
-				return Availability.In_Stock
+			return tissue_sample.get_availability()
 
-		if 'custom' in self.tst_tissue_name.lower():
-			return Availability.Available
 		return Availability.Unavailable
 
 	def get_pending_request_count(self, monkey):
@@ -1869,26 +1876,13 @@ class TissueRequestReview(models.Model):
 
 class TissueSample(models.Model):
 	tss_id = models.AutoField(primary_key=True)
-	tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id',
-									related_name='tissue_sample_set',
-									blank=False, null=False)
-	monkey = models.ForeignKey(Monkey, db_column='mky_id',
-							   related_name='tissue_sample_set',
-							   blank=False, null=False)
-	tss_freezer = models.CharField('Freezer Name',
-								   max_length=100,
-								   null=False, blank=True,
-								   help_text='Please enter the name of the freezer this sample is in.')
-	tss_location = models.CharField('Location of Sample',
-									max_length=100,
-									null=False, blank=True,
-									help_text='Please enter the location in the freezer where this sample is stored.')
-	tss_details = models.TextField('Details',
-								   null=True, blank=True,
-								   help_text='Any extras details about this tissue sample.')
+	tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id', related_name='tissue_sample_set', blank=False, null=False)
+	monkey = models.ForeignKey(Monkey, db_column='mky_id',related_name='tissue_sample_set', blank=False, null=False)
+	tss_freezer = models.CharField('Freezer Name', max_length=100, null=False, blank=True, help_text='Please enter the name of the freezer this sample is in.')
+	tss_location = models.CharField('Location of Sample', max_length=100, null=False, blank=True, help_text='Please enter the location in the freezer where this sample is stored.')
+	tss_details = models.TextField('Details', null=True, blank=True, help_text='Any extras details about this tissue sample.')
 	tss_sample_quantity = models.FloatField('Sample Quantity', null=True, default=0)
-	tss_units = models.CharField('Quantity units',
-								 choices=Units, null=False, max_length=20, default=Units[3][0])
+	tss_units = models.CharField('Quantity units', choices=Units, null=False, max_length=20, default=Units[3][0])
 	tss_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='+', db_column='usr_usr_id', editable=False, null=True)
 
@@ -1897,8 +1891,7 @@ class TissueSample(models.Model):
 		return self.tss_modified
 
 	def __unicode__(self):
-		return str(self.monkey) + ' ' + str(self.tissue_type) + ' ' + self.tss_freezer\
-			   + ': ' + self.tss_location + ' (' + str(self.get_quantity()) + ' ' + self.get_tss_units_display() + ')'
+		return "%s %s %s:%s" % (str(self.monkey), str(self.tissue_type), self.tss_freezer, self.tss_location)
 
 	def get_location(self):
 		if self.monkey.cohort.coh_upcoming:
@@ -1911,6 +1904,21 @@ class TissueSample(models.Model):
 		else:
 			location = 'unknown'
 		return location
+
+	def get_availability(self):
+		if self.monkey.cohort.coh_upcoming:
+			return Availability.Available
+
+#		# This takes SOOO long to query.  I have MonkeyBrainBlock.save() updating tss_sample_quantity
+#		if 'brain' in self.tissue_type.category.cat_name.lower():
+#			if MonkeyBrainBlock.objects.filter(monkey=self.monkey, tissue_types=self.tissue_type).count():
+#				return Availability.In_Stock
+#		elif self.tss_sample_quantity > 0: # ignore tss_sample_quantity if this is a brain tissue
+
+		if self.tss_sample_quantity > 0:
+			return Availability.In_Stock
+		return Availability.Unavailable
+
 
 	def get_quantity(self):
 		return self.tss_sample_quantity
@@ -2315,6 +2323,43 @@ class RNARecord(models.Model):
 			('rna_submit', 	'Can submit RNA yields'),
 			('rna_display', 	'Can view RNA yields'),
 		])
+
+
+class MonkeyBrainBlock(models.Model):
+	mbb_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, blank=False, related_name='brainblock_set')
+	tissue_types = models.ManyToManyField(TissueType, symmetrical=False, null=True, blank=True, related_name='brainblock_set')
+	mbb_block_name = models.CharField(max_length=20)
+	mbb_hemisphere = models.CharField('Hemisphere', max_length=5, choices=(('L', 'Left'), ('R', 'Right')))
+	brain_image = models.ForeignKey(MonkeyImage, null=True, blank=True, related_name='brainblock_set', on_delete=models.SET_NULL)
+
+
+	def __unicode__(self):
+		return "Brain block %s for monkey %d" % (self.mbb_block_name, self.monkey.pk)
+
+	def save(self, *args, **kwargs):
+		super(MonkeyBrainBlock, self).save(*args, **kwargs)
+		if self.tissue_types.exclude(category__cat_name__icontains='brain').count():
+			raise Exception("Cannot add non-brain tissue type to MonkeyBrainBlock.tissue_types")
+		self.update_tss_sample_quantity()
+
+	def update_tss_sample_quantity(self):
+		for tst in self.tissue_types.all():
+			tss = TissueSample.objects.get(monkey=self.monkey, tissue_type=tst)
+			tss.tss_sample_quantity = .01234
+			tss.save()
+
+	def image_url(self):
+		return self.brain_image.image.url
+
+	def fragment_url(self):
+		return self.brain_image.html_fragment.url
+
+	class Meta:
+		permissions = ([
+			('brainblock_update', 	'Can update brain inventory'),
+		])
+		db_table = 'mbb_monkey_brain_block'
 
 
 # put any signal callbacks down here after the model declarations

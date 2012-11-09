@@ -25,6 +25,24 @@ from matrr.decorators import user_owner_test
 import urllib
 
 
+def __paginator_stuff(request, queryset, count):
+	if len(queryset) > 0:
+		paginator = Paginator(queryset, count)
+		# Make sure page request is an int. If not, deliver first page.
+		try:
+			page = int(request.GET.get('page', '1'))
+		except ValueError:
+			page = 1
+		# If page request (9999) is out of range, deliver last page of results.
+		try:
+			paged = paginator.page(page)
+		except (EmptyPage, InvalidPage):
+			paged = paginator.page(paginator.num_pages)
+	else:
+		paged = queryset
+	return paged
+
+
 def redirect_with_get(url_name, *args, **kwargs):
 	url = reverse(url_name, args=args)
 	params = urllib.urlencode(kwargs)
@@ -134,14 +152,14 @@ def cohort_details(request, **kwargs):
 	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'images': images, 'coh_data': coh_data, 'plot_gallery': True}, context_instance=RequestContext(request))
 
 
-def monkey_cohort_detail_view(request, cohort_id, monkey_id):
+def monkey_cohort_detail_view(request, coh_id, monkey_id):
 	try:
 		monkey = Monkey.objects.get(mky_id=monkey_id)
 	except:
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	if str(monkey.cohort.coh_cohort_id) != cohort_id:
+	if str(monkey.cohort.coh_cohort_id) != coh_id:
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
@@ -191,8 +209,8 @@ def get_or_create_cart(request, cohort):
 	return cart_request
 
 
-def tissue_shop_detail_view(request, cohort_id, tissue_id):
-	current_cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
+def tissue_shop_detail_view(request, coh_id, tissue_id):
+	current_cohort = Cohort.objects.get(coh_cohort_id=coh_id)
 	cart_request = get_or_create_cart(request, current_cohort)
 	if cart_request is None:
 		# The user has a cart open with a different cohort
@@ -493,16 +511,16 @@ def rud_upload(request):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.add_cohortdata'), login_url='/denied/')
-def cod_upload(request, cohort_pk=1):
+def cod_upload(request, coh_id=1):
 	if request.method == 'POST':
 		form = CodForm(request.POST, request.FILES)
 		if form.is_valid():
 			# all the fields in the form are valid, so save the data
 			form.save()
 			messages.success(request, 'Upload Successful')
-			return redirect(reverse('cohort-details', args=[str(cohort_pk)]))
+			return redirect(reverse('cohort-details', args=[str(coh_id)]))
 	else:
-		cohort = Cohort.objects.get(pk=cohort_pk)
+		cohort = Cohort.objects.get(pk=coh_id)
 		form = CodForm(cohort=cohort)
 	return render_to_response('matrr/upload_forms/cod_upload_form.html', {'form': form, }, context_instance=RequestContext(request))
 
@@ -1080,10 +1098,10 @@ def order_edit_tissue(request, req_rtt_id):
 #	raise Http404('This page does not exist.')
 
 
-def tissue_shop_landing_view(request, cohort_id):
+def tissue_shop_landing_view(request, coh_id):
 	context = dict()
 	assay = Cohort.objects.get(coh_cohort_name__iexact="Assay Development")
-	cohort = Cohort.objects.get(coh_cohort_id=cohort_id)
+	cohort = Cohort.objects.get(coh_cohort_id=coh_id)
 	context['cohort'] = cohort
 	if cohort != assay:
 		context['assay'] = assay
@@ -1737,8 +1755,8 @@ def tissue_verification_detail(request, req_request_id, tiv_id):
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')
-def inventory_cohort(request, cohort_pk):
-	cohort = get_object_or_404(Cohort, pk=cohort_pk)
+def inventory_cohort(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	tsts = TissueType.objects.all().order_by('tst_tissue_name')
 	monkeys = cohort.monkey_set.all()
 	availability_matrix = list()
@@ -1766,6 +1784,42 @@ def inventory_cohort(request, cohort_pk):
 					tst_row['row'].append(Availability.Unavailable)
 			availability_matrix.append(tst_row)
 	return render_to_response('matrr/inventory/inventory_cohort.html', {"cohort": cohort, "monkeys": monkeys, "matrix": availability_matrix}, context_instance=RequestContext(request))
+
+
+@user_passes_test(lambda u: u.has_perm('matrr.change_tissuesample'), login_url='/denied/')
+def inventory_brain_cohort(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
+	brains = MonkeyImage.objects.filter(method='__brain_image', monkey__cohort=cohort).distinct()
+
+	cohort.brains = brains.order_by('monkey')
+	return render_to_response('matrr/inventory/inventory_brain_cohort.html', {"cohort": cohort}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('matrr.change_tissuesample'), login_url='/denied/')
+def inventory_brain_monkey(request, mky_id):
+	monkey = get_object_or_404(Monkey, pk=mky_id)
+
+	if request.method == 'POST':
+		brain_form = InventoryBrainForm(data=request.POST)
+		if brain_form.is_valid():
+			data = brain_form.cleaned_data
+			for block in data['left_hemisphere']:
+				mbb = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_block_name=block, mbb_hemisphere='L')
+				mbb.tissue_types.clear()
+				mbb.tissue_types.add(data['tissue_type'])
+				mbb.save()
+			for block in data['right_hemisphere']:
+				mbb = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_block_name=block, mbb_hemisphere='R')
+				mbb.tissue_types.clear()
+				mbb.tissue_types.add(data['tissue_type'])
+				mbb.save()
+		else:
+			messages.error(request, "Invalid form submission")
+	else:
+		brain_form = InventoryBrainForm()
+
+	brain = MonkeyImage.objects.get(monkey=monkey, method='__brain_image') # There can be only 1
+	context = {"plot_gallery": True, "monkey": monkey, 'brain_form': brain_form, 'brain': brain}
+	return render_to_response('matrr/inventory/inventory_brain_monkey.html', context, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_file'), login_url='/denied/')
@@ -1825,8 +1879,8 @@ def rna_landing(request):
 	return render_to_response('matrr/rna/landing.html', {'cohort_form': cohort_form}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.rna_submit'), login_url='/denied/')
-def rna_submit(request, cohort_pk):
-	cohort = get_object_or_404(Cohort, pk=cohort_pk)
+def rna_submit(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	if request.method == "POST":
 		rna_form = RNASubmitForm(cohort, data=request.POST)
 		rna = rna_form.instance
@@ -1843,8 +1897,8 @@ def rna_submit(request, cohort_pk):
 	return render_to_response('matrr/rna/submit.html', {'rna_form': rna_form}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.rna_display'), login_url='/denied/')
-def rna_display(request, cohort_pk):
-	cohort = get_object_or_404(Cohort, pk=cohort_pk)
+def rna_display(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	rna_records = RNARecord.objects.filter(cohort=cohort)
 	## Paginator stuff
 	if rna_records.count() > 0:
@@ -1902,8 +1956,8 @@ def tools_protein(request): # pick a cohort
 	return render_to_response('matrr/tools/protein.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 
-def tools_cohort_protein(request, cohort_id):
-	cohort = get_object_or_404(Cohort, pk=cohort_id)
+def tools_cohort_protein(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	monkey_keys = MonkeyProtein.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
 	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
 
@@ -1921,9 +1975,9 @@ def tools_cohort_protein(request, cohort_id):
 					messages.error(request, "You have to select at least one monkey.")
 					return render_to_response('matrr/tools/protein.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
-				return redirect_with_get('tools-monkey-protein', cohort_id, monkeys=get_m)
+				return redirect_with_get('tools-monkey-protein', coh_id, monkeys=get_m)
 			elif subject == 'cohort':
-				return redirect('tools-cohort-protein-graphs', cohort_id)
+				return redirect('tools-cohort-protein-graphs', coh_id)
 			else: # assumes subject == 'download'
 				account = request.user.account
 				if account.has_mta():
@@ -1956,17 +2010,17 @@ def _verify_monkeys(text_monkeys):
 		return list()
 
 
-def tools_cohort_protein_graphs(request, cohort_id):
+def tools_cohort_protein_graphs(request, coh_id):
 	proteins = None
 	old_post = request.session.get('_old_post')
-	cohort = Cohort.objects.get(pk=cohort_id)
+	cohort = Cohort.objects.get(pk=coh_id)
 	context = {'cohort': cohort}
 	if request.method == "POST" or old_post:
 		post = request.POST if request.POST else old_post
 		protein_form = ProteinSelectForm(data=post)
 		subject_select_form = CohortSelectForm(data=post)
 		if protein_form.is_valid() and subject_select_form.is_valid():
-			if int(cohort_id) != subject_select_form.cleaned_data['subject'].pk:
+			if int(coh_id) != subject_select_form.cleaned_data['subject'].pk:
 				request.session['_old_post'] = request.POST
 				return redirect(tools_cohort_protein_graphs, subject_select_form.cleaned_data['subject'].pk)
 			proteins = protein_form.cleaned_data['proteins']
@@ -1976,16 +2030,16 @@ def tools_cohort_protein_graphs(request, cohort_id):
 	cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
 	cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
 
-	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_protein_data, horizontal=True, initial={'subject': cohort_id})
+	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_protein_data, horizontal=True, initial={'subject': coh_id})
 	context['protein_form'] = ProteinSelectForm(initial={'proteins': proteins})
 	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
 
 
-def tools_monkey_protein_graphs(request, cohort_id, monkey_id=None):
+def tools_monkey_protein_graphs(request, coh_id, monkey_id=None):
 	proteins = None
 	#	old_post = request.session.get('_old_post')
 	#	monkey = Monkey.objects.get(pk=monkey_id) if monkey_id else None
-	cohort = get_object_or_404(Cohort, pk=cohort_id)
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 
 	context = {'cohort': cohort}
 
@@ -2100,8 +2154,8 @@ def tools_etoh(request): # pick a cohort
 	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
-def tools_cohort_etoh(request, cohort_id):
-	cohort = get_object_or_404(Cohort, pk=cohort_id)
+def tools_cohort_etoh(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	monkey_keys = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
 	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
 
@@ -2118,9 +2172,9 @@ def tools_cohort_etoh(request, cohort_id):
 				if not monkeys:
 					messages.error(request, "You must select at least one monkey.")
 					return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
-				return redirect_with_get('tools-monkey-etoh', cohort_id, monkeys=get_m)
+				return redirect_with_get('tools-monkey-etoh', coh_id, monkeys=get_m)
 			elif subject == 'cohort':
-				return redirect('tools-cohort-etoh-graphs', cohort_id)
+				return redirect('tools-cohort-etoh-graphs', coh_id)
 			else: # assumes subject == 'download'
 				messages.warning(request, "Ethanol data download is currently disabled.")
 	mky_ids = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True)
@@ -2128,8 +2182,8 @@ def tools_cohort_etoh(request, cohort_id):
 	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
-def tools_cohort_etoh_graphs(request, cohort_id):
-	cohort = get_object_or_404(Cohort, pk=cohort_id)
+def tools_cohort_etoh_graphs(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	plot_choices = plotting.fetch_plot_choices('cohort', request.user, cohort, 'etoh')
 	plot_method = ''
 
@@ -2141,7 +2195,7 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 		subject_select_form = CohortSelectForm(data=post)
 		experiment_range_form = ExperimentRangeForm(data=post)
 		if plot_form.is_valid() and subject_select_form.is_valid() and experiment_range_form.is_valid():
-			if int(cohort_id) != subject_select_form.cleaned_data['subject'].pk:
+			if int(coh_id) != subject_select_form.cleaned_data['subject'].pk:
 				request.session['_old_post'] = request.POST
 				return redirect(tools_cohort_etoh_graphs, subject_select_form.cleaned_data['subject'].pk)
 
@@ -2163,14 +2217,14 @@ def tools_cohort_etoh_graphs(request, cohort_id):
 	cohorts_with_ethanol_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 	cohorts_with_ethanol_data = Cohort.objects.filter(pk__in=cohorts_with_ethanol_data) # so get the queryset of cohorts
 
-	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_ethanol_data, horizontal=True, initial={'subject': cohort_id})
+	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_ethanol_data, horizontal=True, initial={'subject': coh_id})
 	context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
 	context['experiment_range_form'] = ExperimentRangeForm()
 	return render_to_response('matrr/tools/ethanol_cohort.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
-def tools_monkey_etoh_graphs(request, cohort_id):
-	cohort = get_object_or_404(Cohort, pk=cohort_id)
+def tools_monkey_etoh_graphs(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	context = {'cohort': cohort}
 	plot_choices = plotting.fetch_plot_choices('monkey', request.user, cohort, 'etoh')
 	plot_method = ''
@@ -2250,8 +2304,8 @@ def tools_bec(request): # pick a cohort
 	return render_to_response('matrr/tools/bec.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
-def tools_cohort_bec(request, cohort_id):
-	cohort = get_object_or_404(Cohort, pk=cohort_id)
+def tools_cohort_bec(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	monkey_keys = MonkeyBEC.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
 	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
 
@@ -2268,9 +2322,9 @@ def tools_cohort_bec(request, cohort_id):
 				if not monkeys:
 					messages.error(request, "You must select at least one monkey.")
 					return render_to_response('matrr/tools/bec.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
-				return redirect_with_get('tools-monkey-bec', cohort_id, monkeys=get_m)
+				return redirect_with_get('tools-monkey-bec', coh_id, monkeys=get_m)
 			elif subject == 'cohort':
-				return redirect('tools-cohort-bec-graphs', cohort_id)
+				return redirect('tools-cohort-bec-graphs', coh_id)
 			else: # assumes subject == 'download'
 				messages.warning(request, "BEC data download is currently disabled.")
 	mky_ids = MonkeyBEC.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True)
@@ -2278,8 +2332,8 @@ def tools_cohort_bec(request, cohort_id):
 	return render_to_response('matrr/tools/bec.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
-def tools_cohort_bec_graphs(request, cohort_id):
-	cohort = get_object_or_404(Cohort, pk=cohort_id)
+def tools_cohort_bec_graphs(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	plot_choices = plotting.fetch_plot_choices('cohort', request.user, cohort, 'bec')
 	plot_method = ''
 
@@ -2291,7 +2345,7 @@ def tools_cohort_bec_graphs(request, cohort_id):
 		subject_select_form = CohortSelectForm(data=post)
 		experiment_range_form = BECRangeForm(data=post)
 		if plot_form.is_valid() and subject_select_form.is_valid() and experiment_range_form.is_valid():
-			if int(cohort_id) != subject_select_form.cleaned_data['subject'].pk:
+			if int(coh_id) != subject_select_form.cleaned_data['subject'].pk:
 				request.session['_old_post'] = request.POST
 				return redirect(tools_cohort_bec_graphs, subject_select_form.cleaned_data['subject'].pk)
 
@@ -2324,14 +2378,14 @@ def tools_cohort_bec_graphs(request, cohort_id):
 	cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 	cohorts_with_bec_data = Cohort.objects.filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
 
-	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_bec_data, horizontal=True, initial={'subject': cohort_id})
+	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_bec_data, horizontal=True, initial={'subject': coh_id})
 	context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
 	context['experiment_range_form'] = BECRangeForm()
 	return render_to_response('matrr/tools/bec_cohort.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
-def tools_monkey_bec_graphs(request, cohort_id):
-	cohort = get_object_or_404(Cohort, pk=cohort_id)
+def tools_monkey_bec_graphs(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	context = {'cohort': cohort}
 	plot_choices = plotting.fetch_plot_choices('monkey', request.user, cohort, 'bec')
 	plot_method = ''
@@ -2404,8 +2458,8 @@ def tools_genealogy(request):
 	return render_to_response('matrr/tools/genealogy/subject_select.html', {'subject_select_form': CohortSelectForm()}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.access_genealogy_tools'), login_url='/denied/')
-def tools_cohort_genealogy(request, cohort_id):
-	cohort = get_object_or_404(Cohort, pk=cohort_id)
+def tools_cohort_genealogy(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
 	cohort_monkeys = cohort.monkey_set.all()
 
 	if request.method == 'POST':
@@ -2420,7 +2474,7 @@ def tools_cohort_genealogy(request, cohort_id):
 			me.save()
 
 			messages.success(request, "Parentage for monkey %d saved." % me.monkey.pk)
-			return redirect(reverse('tools-cohort-genealogy', args=[cohort_id]))
+			return redirect(reverse('tools-cohort-genealogy', args=[coh_id]))
 		else:
 			messages.error(request, "Invalid form submission")
 

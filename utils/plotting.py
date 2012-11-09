@@ -2408,10 +2408,11 @@ def fetch_plot_choices(subject, user, cohort, tool):
 
 def create_plots(cohorts=True, monkeys=True, delete=False):
 	if monkeys:
-		monkey_plots = ['monkey_errorbox_veh',
-						'monkey_errorbox_pellets',
-						'monkey_errorbox_etoh',
-						'monkey_errorbox_weight',
+		monkey_plots = [
+#						'monkey_errorbox_veh',
+#						'monkey_errorbox_pellets',
+#						'monkey_errorbox_etoh',
+#						'monkey_errorbox_weight',
 						'monkey_necropsy_etoh_4pct',
 						'monkey_necropsy_sum_g_per_kg',
 						'monkey_necropsy_avg_22hr_g_per_kg']
@@ -2425,10 +2426,11 @@ def create_plots(cohorts=True, monkeys=True, delete=False):
 				gc.collect()
 
 	if cohorts:
-		cohort_plots = ['cohort_boxplot_m2de_month_veh_intake',
-						'cohort_boxplot_m2de_month_total_pellets',
-						'cohort_boxplot_m2de_month_mtd_weight',
-						'cohort_boxplot_m2de_month_etoh_intake',
+		cohort_plots = [
+#						'cohort_boxplot_m2de_month_veh_intake',
+#						'cohort_boxplot_m2de_month_total_pellets',
+#						'cohort_boxplot_m2de_month_mtd_weight',
+#						'cohort_boxplot_m2de_month_etoh_intake',
 						'cohort_necropsy_etoh_4pct',
 						'cohort_necropsy_sum_g_per_kg',
 						'cohort_necropsy_avg_22hr_g_per_kg',
