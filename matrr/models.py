@@ -1942,6 +1942,16 @@ class TissueSample(models.Model):
 			self.tss_details = "MATRR does not track assay inventory."
 		super(TissueSample, self).save(*args, **kwargs)
 
+	def update_brain_quantity(self):
+		if not 'brain' in self.tissue_type.category.cat_name.lower():
+			return # ignore peripheral tissues
+		brain_blocks = MonkeyBrainBlock.objects.filter(monkey=self.monkey).filter(tissue_types=self.tissue_type)
+		if brain_blocks.count():
+			self.tss_sample_quantity = 0.01234
+		else:
+			self.tss_sample_quantity = -0.01234
+		self.save()
+
 	class Meta:
 		db_table = 'tss_tissue_samples'
 		ordering = ['-monkey__mky_real_id', '-tissue_type__tst_tissue_name']
@@ -2344,10 +2354,9 @@ class MonkeyBrainBlock(models.Model):
 		self.update_tss_sample_quantity()
 
 	def update_tss_sample_quantity(self):
-		for tst in self.tissue_types.all():
+		for tst in TissueType.objects.filter(category__cat_name__icontains='brain'):
 			tss = TissueSample.objects.get(monkey=self.monkey, tissue_type=tst)
-			tss.tss_sample_quantity = .01234
-			tss.save()
+			tss.update_brain_quantity()
 
 	def image_url(self):
 		return self.brain_image.image.url
