@@ -795,6 +795,6 @@ class InventoryBrainForm(Form):
 	BLOCKS = tuple((name, name) for name in block_names)
 
 	block = ChoiceField(choices=BLOCKS, required=True)
-	left_tissues = ModelMultipleChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=4))
-	right_tissues = ModelMultipleChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=4))
+	left_tissues = ModelMultipleChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=1))
+	right_tissues = ModelMultipleChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=1))
 
