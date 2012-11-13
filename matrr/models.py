@@ -2335,7 +2335,7 @@ class MonkeyBrainBlock(models.Model):
 
 
 	def __unicode__(self):
-		return "Brain block %s for monkey %d" % (self.mbb_block_name, self.monkey.pk)
+		return "Brain %s for monkey %d" % (self.mbb_block_name, self.monkey.pk)
 
 	def save(self, *args, **kwargs):
 		super(MonkeyBrainBlock, self).save(*args, **kwargs)
@@ -2354,6 +2354,11 @@ class MonkeyBrainBlock(models.Model):
 
 	def fragment_url(self):
 		return self.brain_image.html_fragment.url
+
+	def assign_tissues(self, iterable):
+		self.tissue_types.clear()
+		self.tissue_types.add(*iterable)
+		self.save()
 
 	class Meta:
 		permissions = ([

@@ -828,6 +828,13 @@ td#avail2 {
 	background-color: #FFAAAA;
 }
 
+td.mbb_0 {
+	background-color: #FFAAAA;
+}
+td.mbb_1 {
+	background-color: #AFE9AF;
+}
+
 .current {
     padding-left: 5px;
     padding-right: 5px;

@@ -1926,7 +1926,7 @@ def populate_mky_species():
 	for coh in Cohort.objects.exclude(coh_cohort_name__icontains='assay'):
 		coh.monkey_set.all().update(mky_species=coh.coh_species)
 
-def create_mbb(monkey=10172, image_file=''):
+def create_mbb(monkey, image_path):
 	##  Verify argument is actually a monkey
 	if not isinstance(monkey, Monkey):
 		try:
@@ -1937,14 +1937,18 @@ def create_mbb(monkey=10172, image_file=''):
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
 				return
-	if image_file:
-		image_file = File(open(image_file, 'r'))
-		image_file, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method='__brain_image', image=image_file)
-		image_file._build_html_fragment(None, add_footer=False, save_fragment=True)
+	_file = File(open(image_path, 'r'))
+	mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method='__brain_image')
+	mig.image = _file
+	mig.save()
+	mig._build_html_fragment(None, add_footer=False, save_fragment=True)
+
+	for i in range(1, 16, 1):
+		mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig, mbb_block_name='Block %02d' % i)
+		mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block %02d' % i)
 
 	brain_tissues = TissueType.objects.filter(category__cat_name__icontains='brain')
-	for i in range(1, 16, 1):
-		mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=image_file, mbb_block_name='Block %02d' % i)
-		mbb.tissue_types.add(*brain_tissues)
-		mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=image_file, mbb_block_name='Block %02d' % i)
-		mbb.tissue_types.add(*brain_tissues)
+	mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig, mbb_block_name='Block 15')
+	mbb.assign_tissues(brain_tissues)
+	mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block 15')
+	mbb.assign_tissues(brain_tissues)
