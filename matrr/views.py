@@ -1802,16 +1802,15 @@ def inventory_brain_monkey(request, mky_id):
 		brain_form = InventoryBrainForm(data=request.POST)
 		if brain_form.is_valid():
 			data = brain_form.cleaned_data
-			for block in data['left_hemisphere']:
-				mbb = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_block_name=block, mbb_hemisphere='L')
-				mbb.tissue_types.clear()
-				mbb.tissue_types.add(data['tissue_type'])
-				mbb.save()
-			for block in data['right_hemisphere']:
-				mbb = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_block_name=block, mbb_hemisphere='R')
-				mbb.tissue_types.clear()
-				mbb.tissue_types.add(data['tissue_type'])
-				mbb.save()
+			mbb = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_block_name=data['block'], mbb_hemisphere='L')
+			mbb.tissue_types.clear()
+			mbb.tissue_types.add(*data['left_tissues'])
+			mbb.save()
+
+			mbb = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_block_name=data['block'], mbb_hemisphere='R')
+			mbb.tissue_types.clear()
+			mbb.tissue_types.add(*data['right_tissues'])
+			mbb.save()
 		else:
 			messages.error(request, "Invalid form submission")
 	else:

@@ -16,20 +16,23 @@
 	<form action='' method='post'>
 		{% csrf_token %}
 	    <div class="clearfix"></div>
-        <table class="common_center" width=100%>
-            <th>Select Tissue Type:</th>
-            <th colspan="2">{{ brain_form.tissue_type }}</th>
+        <table class="common_right">
+            <th><center>Select Tissue Type: {{ brain_form.block }}</center></th>
             <tr>
                 <td><span class="headline">Left Hemisphere</span><br>
-                    {{  brain_form.left_hemisphere }}
+                    {{  brain_form.left_tissues }}
                 </td>
-                <td>
+			</tr>
+			<tr>
+                <td class="text-center-common-td">
                     <a rel="plot_gallery" href="{{ brain.html_fragment.url }}" target="_blank">
-                        <img src="{{ brain.image.url }}" width=400>
+                        <img src="{{ brain.image.url }}" width=300>
                     </a>
                 </td>
+			</tr>
+			<tr>
                 <td><span class="headline">Right Hemisphere</span><br>
-                    {{  brain_form.right_hemisphere }}
+                    {{  brain_form.right_tissues }}
                 <td>
             </tr>
         </table>

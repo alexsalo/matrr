@@ -794,7 +794,7 @@ class InventoryBrainForm(Form):
 	block_names = MonkeyBrainBlock.objects.all().order_by().values_list('mbb_block_name', flat=True).distinct().order_by('mbb_block_name')
 	BLOCKS = tuple((name, name) for name in block_names)
 
-	tissue_type = ModelChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=True, empty_label='--required--')
-	left_hemisphere = MultipleChoiceField(choices=BLOCKS, required=False, widget=widgets.CheckboxSelectMultiple)
-	right_hemisphere = MultipleChoiceField(choices=BLOCKS, required=False, widget=widgets.CheckboxSelectMultiple )
+	block = ChoiceField(choices=BLOCKS, required=True)
+	left_tissues = ModelMultipleChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=4))
+	right_tissues = ModelMultipleChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=4))
 
