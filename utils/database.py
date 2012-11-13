@@ -1935,7 +1935,7 @@ def create_mbb(monkey, image_path):
 			try:
 				monkey = Monkey.objects.get(mky_real_id=monkey)
 			except Monkey.DoesNotExist:
-				print("That's not a valid monkey.")
+				print("That's not a valid monkey:  %s." % monkey)
 				return
 	_file = File(open(image_path, 'r'))
 	mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method='__brain_image')
@@ -1952,3 +1952,11 @@ def create_mbb(monkey, image_path):
 	mbb.assign_tissues(brain_tissues)
 	mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block 15')
 	mbb.assign_tissues(brain_tissues)
+
+def load_mbb_images(image_dir):
+	recomp = re.compile('^.*([0-9]{5}).png$')
+	files = os.listdir(image_dir)
+	for file in files:
+		if file.endswith('.png'):
+			real_id = recomp.match(file).group(1)
+			create_mbb(real_id, os.path.join(image_dir, file))
