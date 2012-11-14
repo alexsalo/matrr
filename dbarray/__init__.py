@@ -72,4 +72,5 @@ IntegerArrayField = array_field_factory('IntegerArrayField', models.IntegerField
 FloatArrayField = array_field_factory('FloatArrayField', models.FloatField)
 CharArrayField = array_field_factory('CharArrayField', models.CharField)
 TextArrayField = array_field_factory('TextArrayField', models.TextField)
+NullBoolArrayField = array_field_factory('NullBoolArrayField', models.NullBooleanField)
 

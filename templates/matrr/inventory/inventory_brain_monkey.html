@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load inclusion_tags %}
+
+{% block title %}Brain Inventory for monkey {{ monkey }}{% endblock %}
+
+
+{% block content %}
+	<div class='headline'>Brain Inventory for Monkey {{ monkey }}</div>
+
+	<div class=left>
+		<a href="{% url inventory-brain-cohort monkey.cohort.pk %}">
+			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+			&nbsp;View Cohort Brain Inventory List</a>
+		<br/>
+	</div>
+	<form action='' method='post'>
+		{% csrf_token %}
+	    <div class="clearfix"></div>
+        <table class="common_right" style='width: 115%'>
+            <th colspan="3"><center>Select Tissue Type: {{ brain_form.block }}</center></th>
+            <tr>
+                <td><span class="headline">Left Hemisphere</span><br>
+                    {{  brain_form.left_tissues }}
+                </td>
+                <td class="text-center-common-td">
+                    <a rel="plot_gallery" href="{{ image.html_fragment.url }}" target="_blank">
+                        <img src="{{ image.image.url }}" width=300>
+                    </a>
+                </td>
+                <td><span class="headline">Right Hemisphere</span><br>
+                    {{  brain_form.right_tissues }}
+                <td>
+            </tr>
+        </table>
+		<div class="clearfix"></div>
+		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
+	</form>
+	<div class='headline'> </div>
+	<br>
+	<table class='common_center' style='padding: 0;width: 115%'>
+		<tr>
+			<th>Left Hemisphere</th>
+			{% for block in blocks %}
+				<th colspan="2">{{ block }}</th>
+			{% endfor %}
+		</tr>
+		{% for tst in matrix %}
+			<tr>
+				<th>{{ tst.title }}</th>
+				{% for avail in tst.row %}
+					<td class="mbb_{{ avail.0 }}"></td>
+					<td class="mbb_{{ avail.1 }}"></td>
+				{% endfor %}
+			</tr>
+		{% endfor %}
+	</table>
+{% endblock %}

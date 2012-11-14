@@ -780,8 +780,8 @@ class BECRangeForm_monkeys(BECRangeForm): # same as ExperimentRangeForm_monkeys,
 
 
 class AdvancedSearchSelectForm(Form):
-	sex = MultipleChoiceField(choices=Monkey.SEX_CHOICES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
-	species = MultipleChoiceField(choices=Monkey.SPECIES, required=False, widget=CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
+	sex = MultipleChoiceField(choices=Monkey.SEX_CHOICES, required=False, widget=widgets.CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
+	species = MultipleChoiceField(choices=Monkey.SPECIES, required=False, widget=widgets.CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
 
 
 class AdvancedSearchFilterForm(Form):
@@ -789,4 +789,12 @@ class AdvancedSearchFilterForm(Form):
 	proteins = ModelMultipleChoiceField(label="Proteins", required=False, queryset=Protein.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
 	cohorts = ModelMultipleChoiceField(label="Cohorts", required=False, queryset=Cohort.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
 
+
+class InventoryBrainForm(Form):
+	block_names = MonkeyBrainBlock.objects.all().order_by().values_list('mbb_block_name', flat=True).distinct().order_by('mbb_block_name')
+	BLOCKS = tuple((name, name) for name in block_names)
+
+	block = ChoiceField(choices=BLOCKS, required=True)
+	left_tissues = ModelMultipleChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=1))
+	right_tissues = ModelMultipleChoiceField(queryset=TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=1))
 
