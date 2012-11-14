@@ -37,6 +37,14 @@
 	</form>
 	<div class='headline'> </div>
 	<br>
+	<form action='' method='get'><center>
+        <button class="blockLinkButton"
+                type='submit'
+                name='show_grid'
+                value='{% if show_grid %}0{% else %}1{% endif %}'>Toggle Grid
+        </button></center>
+	</form>
+	{% if show_grid %}
 	<table class='common_center' style='padding: 0;width: 115%'>
 		<tr>
 			<th>Left Hemisphere</th>
@@ -54,4 +62,5 @@
 			</tr>
 		{% endfor %}
 	</table>
+    {% endif %}
 {% endblock %}
