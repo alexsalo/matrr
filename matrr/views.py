@@ -1811,25 +1811,27 @@ def inventory_brain_monkey(request, mky_id):
 	else:
 		brain_form = InventoryBrainForm()
 
-	# Current Matrix:
 	blocks = MonkeyBrainBlock.objects.all().values_list('mbb_block_name', flat=True).distinct().count()
-	blocks = ['%02d'%i for i in range(1, blocks+1, 1)]
 	matrix = list()
-	for tst in TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'):
-		tst_row = dict()
-		tst_row['row'] = list()
-		tst_row['title'] = tst.tst_tissue_name
-		for block in blocks:
-			brain = list()
-			left_hemi = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_hemisphere='L', mbb_block_name__contains=block)
-			right_hemi = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_hemisphere='R', mbb_block_name__contains=block)
-			brain.append(1 if tst in left_hemi.tissue_types.all() else 0)
-			brain.append(1 if tst in right_hemi.tissue_types.all() else 0)
-			tst_row['row'].append(brain)
-		matrix.append(tst_row)
+	show_grid = request.GET.get('show_grid', '0') == '1'
+	if show_grid:
+		blocks = ['%02d'%i for i in range(1, blocks+1, 1)]
+		# Current Matrix:
+		for tst in TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'):
+			tst_row = dict()
+			tst_row['row'] = list()
+			tst_row['title'] = tst.tst_tissue_name
+			for block in blocks:
+				brain = list()
+				left_hemi = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_hemisphere='L', mbb_block_name__contains=block)
+				right_hemi = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_hemisphere='R', mbb_block_name__contains=block)
+				brain.append(1 if tst in left_hemi.tissue_types.all() else 0)
+				brain.append(1 if tst in right_hemi.tissue_types.all() else 0)
+				tst_row['row'].append(brain)
+			matrix.append(tst_row)
 
 	image = MonkeyImage.objects.get(monkey=monkey, method='__brain_image') # There can be only 1
-	context = {"plot_gallery": True, "monkey": monkey, 'brain_form': brain_form, 'image': image, 'matrix': matrix, 'blocks': blocks}
+	context = {"plot_gallery": True, "monkey": monkey, 'brain_form': brain_form, 'image': image, 'matrix': matrix, 'blocks': blocks, 'show_grid':show_grid}
 	return render_to_response('matrr/inventory/inventory_brain_monkey.html', context, context_instance=RequestContext(request))
 
 
