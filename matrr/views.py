@@ -152,9 +152,9 @@ def cohort_details(request, **kwargs):
 	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'images': images, 'coh_data': coh_data, 'plot_gallery': True}, context_instance=RequestContext(request))
 
 
-def monkey_cohort_detail_view(request, coh_id, monkey_id):
+def monkey_cohort_detail_view(request, coh_id, mky_id):
 	try:
-		monkey = Monkey.objects.get(mky_id=monkey_id)
+		monkey = Monkey.objects.get(mky_id=mky_id)
 	except:
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
@@ -168,9 +168,9 @@ def monkey_cohort_detail_view(request, coh_id, monkey_id):
 							  context_instance=RequestContext(request))
 
 
-def monkey_detail_view(request, monkey_id):
+def monkey_detail_view(request, mky_id):
 	try:
-		monkey = Monkey.objects.get(mky_id=monkey_id)
+		monkey = Monkey.objects.get(mky_id=mky_id)
 	except:
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
@@ -2048,10 +2048,10 @@ def tools_cohort_protein_graphs(request, coh_id):
 	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
 
 
-def tools_monkey_protein_graphs(request, coh_id, monkey_id=None):
+def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 	proteins = None
 	#	old_post = request.session.get('_old_post')
-	#	monkey = Monkey.objects.get(pk=monkey_id) if monkey_id else None
+	#	monkey = Monkey.objects.get(pk=mky_id) if mky_id else None
 	cohort = get_object_or_404(Cohort, pk=coh_id)
 
 	context = {'cohort': cohort}
@@ -2142,8 +2142,8 @@ def tools_monkey_protein_graphs(request, coh_id, monkey_id=None):
 	else:
 		# function lands here when directed to protein tools from monkey detail page
 		get_m = list()
-		if monkey_id:
-			get_m.append(`monkey_id`)
+		if mky_id:
+			get_m.append(`mky_id`)
 			text_monkeys = "-".join(get_m)
 		else:
 			text_monkeys = ""
