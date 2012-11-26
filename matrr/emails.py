@@ -171,7 +171,7 @@ def urge_progress_reports():
 		from_email = Account.objects.get(user__username='matrr_admin').email
 		recipients = [user.email for user in Group.objects.get(name='Uberuser').user_set.all()]
 		subject = 'Overdue Progress Report'
-		body = "Yo yo,\n\nWe have some users who haven't given us a research update.  Click the link below to see who's slacking off.\n\n"
+		body = "We have some users who haven't given us a research update.  Click the link below to see who's slacking off.\n\n"
 		body += 'http://gleek.ecs.baylor.edu' + reverse('rud-overdue')
 
 		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
@@ -429,18 +429,3 @@ def send_mta_uploaded_email(account):
 			print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 
 
-
-
-
-'''
-You requested the following tissues from {{ req_request.cohort }}:
-{% for tissue_request in req_request.get_requested_tissues %}{% for datum in tissue_request.get_data %}
-{{ datum.0 }}: {{ datum.1 }}{% endfor %}
-{% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
-{% endif %}
-Requested Monkeys:
-{% for monkey in tissue_request.monkeys.all %}{{ monkey.mky_id }}  {% endfor %}
-{% endfor %}
-
-Total cost of request ${{ req_request.get_total_estimated_cost }}
-'''
