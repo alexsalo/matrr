@@ -1939,6 +1939,8 @@ def create_mbb(monkey, image_path):
 				return
 	_file = File(open(image_path, 'r'))
 	mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method='__brain_image')
+	if not is_new:
+		return
 	mig.image = _file
 	mig.save()
 	mig._build_html_fragment(None, add_footer=False, save_fragment=True)
