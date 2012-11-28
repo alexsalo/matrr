@@ -256,27 +256,6 @@ def export_template_to_pdf(template, context={}, outfile=None, return_pisaDocume
 		raise Exception(pdf.err)
 
 
-def _angle_to_point(point, centre):
-	'''calculate angle in 2-D between points and x axis'''
-	delta = point - centre
-	res = numpy.arctan(delta[1] / delta[0])
-	if delta[0] < 0:
-		res += numpy.pi
-	return res
-
-
-def _draw_triangle(p1, p2, p3, **kwargs):
-	tmp = numpy.vstack((p1, p2, p3))
-	x, y = [x[0] for x in zip(tmp.transpose())]
-	pylab.fill(x, y, **kwargs)
-	#time.sleep(0.2)
-
-
-def area_of_triangle(p1, p2, p3):
-	'''calculate area of any triangle given co-ordinates of the corners'''
-	return numpy.linalg.norm(numpy.cross((p2 - p1), (p3 - p1), axis=0)) / 2.
-
-
 def convex_hull(points, graphic=False, smidgen=0.0075):
 	'''Calculate subset of points that make a convex hull around points
 
@@ -294,19 +273,35 @@ Recursively eliminates points that lie inside two neighbouring points until only
 	hull_points : ndarray (2 x n)
 		convex hull surrounding points
 	'''
+	def _angle_to_point(point, centre):
+		'''calculate angle in 2-D between points and x axis'''
+		delta = point - centre
+		res = numpy.arctan(delta[1] / delta[0])
+		if delta[0] < 0:
+			res += numpy.pi
+		return res
+	def _draw_triangle(p1, p2, p3, **kwargs):
+		tmp = numpy.vstack((p1, p2, p3))
+		x, y = [x[0] for x in zip(tmp.transpose())]
+		pylab.fill(x, y, **kwargs)
+		#time.sleep(0.2)
+	def area_of_triangle(p1, p2, p3):
+		'''calculate area of any triangle given co-ordinates of the corners'''
+		return numpy.linalg.norm(numpy.cross((p2 - p1), (p3 - p1), axis=0)) / 2.
+
+
 	if graphic:
 		pylab.clf()
 		pylab.plot(points[0], points[1], 'ro')
 	n_pts = points.shape[1]
-	assert(n_pts > 5)
+#	assert(n_pts > 5)
 	centre = points.mean(1)
 	if graphic: pylab.plot((centre[0],), (centre[1],), 'bo')
 	angles = numpy.apply_along_axis(_angle_to_point, 0, points, centre)
 	pts_ord = points[:, angles.argsort()]
 	if graphic:
 		for i in xrange(n_pts):
-			pylab.text(pts_ord[0, i] + smidgen, pts_ord[1, i] + smidgen,\
-				   '%d' % i)
+			pylab.text(pts_ord[0, i] + smidgen, pts_ord[1, i] + smidgen, '%d' % i)
 	pts = [x[0] for x in zip(pts_ord.transpose())]
 	prev_pts = len(pts) + 1
 	k = 0

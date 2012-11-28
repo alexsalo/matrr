@@ -428,4 +428,19 @@ def send_mta_uploaded_email(account):
 		if ret > 0:
 			print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 
+# matrr
+def send_dna_request_details(req_request):
+	from_email = Account.objects.get(user__username='matrr_admin').email
 
+	# todo: create permission for this email
+	users = Account.objects.users_with_perm('')
+	for user in users:
+		recipients = [user.email]
+
+		# todo: actually write the email
+		subject = ''
+		body = ''
+
+		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+		if ret > 0:
+			print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)

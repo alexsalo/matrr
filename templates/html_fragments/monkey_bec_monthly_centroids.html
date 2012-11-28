@@ -1,0 +1,27 @@
+
+<div style='width: {{ bigWidth|add:"60" }}px; margin:auto; padding: 20px'>
+	<center>{{ image.title }}</center>
+</div>
+<div>
+	<center>
+		<img src="{{ image.image.url }}" ismap usemap="#{{ image.monkey.pk }}"><br>
+	</center>
+</div>
+<div style='width: {{ bigWidth }}px; margin:auto;'>
+    <b>BEC Monthly Centroid Distance for {{ image.monkey.mky_id }}.</b> This is a scatter plot of the k-means centroids of the BEC records for each month.<br>
+	<b>Scatter Plot</b><br>
+	The Y axis is the blood ethanol concentration.
+	The X axis is the volume of ethanol intake at the time the blood sample was taken.
+	The color of the data point indicates the month being aggregated.
+	The shape of the data point indicates the subject being aggregated.<br><br>
+	This plot is built in two stages.  The first stage, takes all daily BEC records for each month for monkey {{ image.monkey.mky_id }} and finds the k-means centroid of
+	these records.  The second stage takes all daily BEC records for each month for{{ image.monkey.cohort }}, excluding {{ image.monkey.mky_id }} finds the k-means centroid
+	of the cohort records.  These centroids are plotted with a line connecting them, all colored by month. The euclidean distance between like data points (ie, the length
+	of the line) is calculated and plotted in the bar graph below.
+    <br>
+	<b>Bar Plot</b><br>
+	The Y axis is the euclidean distance between the monkey centroid and its cohort's centroid.  The height of this bar represents how different from {{ image.monkey.cohort }}
+	monkey {{ image.monkey.mky_id }} is by comparing the monthly differences in ethanol intake and BEC.
+	The X axis is the month being compared.
+    The bars are colored uniquely by month, to be used as a legend in the above scatter plot.
+</div>
