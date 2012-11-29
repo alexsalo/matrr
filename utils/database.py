@@ -1926,39 +1926,40 @@ def populate_mky_species():
 	for coh in Cohort.objects.exclude(coh_cohort_name__icontains='assay'):
 		coh.monkey_set.all().update(mky_species=coh.coh_species)
 
-def create_mbb(monkey, image_path):
-	##  Verify argument is actually a monkey
-	if not isinstance(monkey, Monkey):
-		try:
-			monkey = Monkey.objects.get(pk=monkey)
-		except Monkey.DoesNotExist:
-			try:
-				monkey = Monkey.objects.get(mky_real_id=monkey)
-			except Monkey.DoesNotExist:
-				print("That's not a valid monkey:  %s." % monkey)
-				return
-	_file = File(open(image_path, 'r'))
-	mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method='__brain_image')
-	if not is_new:
-		return
-	mig.image = _file
-	mig.save()
-	mig._build_html_fragment(None, add_footer=False, save_fragment=True)
-
-	for i in range(1, 16, 1):
-		mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig, mbb_block_name='Block %02d' % i)
-		mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block %02d' % i)
-
-	brain_tissues = TissueType.objects.filter(category__cat_name__icontains='brain')
-	mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig, mbb_block_name='Block 15')
-	mbb.assign_tissues(brain_tissues)
-	mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block 15')
-	mbb.assign_tissues(brain_tissues)
-
 def load_mbb_images(image_dir):
+	def create_mbb(monkey, image_path):
+		##  Verify argument is actually a monkey
+		if not isinstance(monkey, Monkey):
+			try:
+				monkey = Monkey.objects.get(pk=monkey)
+			except Monkey.DoesNotExist:
+				try:
+					monkey = Monkey.objects.get(mky_real_id=monkey)
+				except Monkey.DoesNotExist:
+					print("That's not a valid monkey:  %s." % monkey)
+					return
+		_file = File(open(image_path, 'r'))
+		mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method='__brain_image')
+		if not is_new:
+			return
+		mig.image = _file
+		mig.save()
+		mig._build_html_fragment(None, add_footer=False, save_fragment=True)
+
+		for i in range(1, 16, 1):
+			mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig, mbb_block_name='Block %02d' % i)
+			mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block %02d' % i)
+
+		brain_tissues = TissueType.objects.filter(category__cat_name__icontains='brain')
+		mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig, mbb_block_name='Block 15')
+		mbb.assign_tissues(brain_tissues)
+		mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block 15')
+		mbb.assign_tissues(brain_tissues)
+
 	recomp = re.compile('^.*([0-9]{5}).png$')
 	files = os.listdir(image_dir)
 	for file in files:
 		if file.endswith('.png'):
 			real_id = recomp.match(file).group(1)
 			create_mbb(real_id, os.path.join(image_dir, file))
+

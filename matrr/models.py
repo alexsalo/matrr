@@ -2569,6 +2569,16 @@ def user_post_save(**kwargs):
 		account = Account(user=user)
 		account.save()
 
+# This is a method to check to see if a cohort exists that does not have
+# an CohortMetaData attached to it.
+@receiver(post_save, sender=Cohort)
+def cohort_post_save(**kwargs):
+	#check to see if user exists in accounts relation
+	cohort = kwargs['instance']
+	if not CohortMetaData.objects.filter(cohort=cohort).count():
+		cbc = CohortMetaData(cohort=cohort)
+		cbc.populate_self()
+
 # This will delete MATRRImage's FileField's files from media before deleting the database entry.
 # Helps keep the media folder pretty.
 @receiver(pre_delete, sender=MonkeyImage)
