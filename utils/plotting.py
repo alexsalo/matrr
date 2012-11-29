@@ -2556,7 +2556,7 @@ def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type=
 	ax1 = fig.add_subplot(gs[0:22,  0:30])
 
 	cmap = get_cmap('jet')
-	month_count = float(len(dates))
+	month_count = float( max(len(dates), 2)) # prevents zero division in the forloop below
 	month_color = dict()
 	for idx, key in enumerate(dates):
 		month_color[key] = cmap(idx / (month_count-1))
