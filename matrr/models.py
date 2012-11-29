@@ -3,7 +3,7 @@ import Image, numpy, dbarray, settings, os, ast
 from django.core.files.base import File
 from django.core.mail.message import EmailMessage
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Min, Max, Avg
 from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, pre_delete
@@ -2283,23 +2283,116 @@ class MonkeyBEC(models.Model):
 	bec_daily_gkg_etoh = models.FloatField("Etoh consumed, entire day, g/kg", null=True, blank=True)
 	bec_mg_pct = models.FloatField("Blood Ethanol Concentration, mg %", null=False, blank=False)
 
+	bec_pct_intake = models.FloatField("Percent of daily intake consumed at sample", null=True, blank=False)
+
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.bec_collect_date), str(self.bec_mg_pct))
 
-	def populate_mtd(self, repopulate=True):
+	def populate_fields(self, repopulate=True):
+		save = False
 		if not self.mtd or repopulate:
 			mtd = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey, drinking_experiment__dex_date=self.bec_collect_date)
 			if mtd.count() is 1:
 				self.mtd = mtd[0]
-				self.save()
-
+				save = True
+		if not self.bec_pct_intake or repopulate:
+			self.bec_pct_intake = float(self.bec_gkg_etoh) / self.bec_daily_gkg_etoh
+			save = True
+		if save:
+			self.save()
 
 	class Meta:
 		db_table = 'bec_monkey_bec'
 		permissions = (
 		[('view_bec_data', 'Can view BEC data'),
 		])
+
+
+class CohortMetaData(models.Model):
+	# Origionally this object was named CohortBEC, shortname cbc
+	# Table grew into more than BEC, but I'm leaving the shortname of this table cbc.
+	# I'm not naming an object cmd, the very established shortname for 'command'
+	# -jf 29Nov2012
+	cbc_id = models.AutoField(primary_key=True)
+	cohort = models.OneToOneField(Cohort, null=False, blank=False, related_name='cbc', editable=False)
+
+	cbc_bec_mg_pct_min = models.FloatField("Minimum BEC, mg %", null=True, blank=False)
+	cbc_bec_mg_pct_max = models.FloatField("Maximum BEC, mg %", null=True, blank=False)
+	cbc_bec_mg_pct_avg = models.FloatField("Average BEC, mg %", null=True, blank=False)
+
+	cbc_bec_etoh_min = models.FloatField("Minimum Etoh Intake at BEC Blood Sample, in ml", null=True, blank=False)
+	cbc_bec_etoh_max = models.FloatField("Maximum Etoh Intake at BEC Blood Sample, in ml", null=True, blank=False)
+	cbc_bec_etoh_avg = models.FloatField("Average Etoh Intake at BEC Blood Sample, in ml", null=True, blank=False)
+
+	cbc_bec_gkg_etoh_min = models.FloatField("Minimum Etoh Intake at BEC Blood Sample, in g/kg", null=True, blank=False)
+	cbc_bec_gkg_etoh_max = models.FloatField("Maximum Etoh Intake at BEC Blood Sample, in g/kg", null=True, blank=False)
+	cbc_bec_gkg_etoh_avg = models.FloatField("Average Etoh Intake at BEC Blood Sample, in g/kg", null=True, blank=False)
+
+	cbc_bec_pct_intake_min = models.FloatField("Minimum Percentage Intake at BEC Blood Sample", null=True, blank=False)
+	cbc_bec_pct_intake_max = models.FloatField("Maximum Percentage Intake at BEC Blood Sample", null=True, blank=False)
+	cbc_bec_pct_intake_avg = models.FloatField("Average Percentage Intake at BEC Blood Sample", null=True, blank=False)
+
+	cbc_mtd_etoh_g_kg_min = models.FloatField('Minimum Etoh intake per day, in g/kg', null=True, blank=False)
+	cbc_mtd_etoh_g_kg_max = models.FloatField('Maximum Etoh intake per day, in g/kg', null=True, blank=False)
+	cbc_mtd_etoh_g_kg_avg = models.FloatField('Average Etoh intake per day, in g/kg', null=True, blank=False)
+
+
+	cbc_mtd_etoh_bout_min = models.IntegerField('Minimum Etoh Bouts per day', null=True, blank=True)
+	cbc_mtd_etoh_bout_max = models.IntegerField('Maximum Etoh Bouts per day', null=True, blank=True)
+	cbc_mtd_etoh_bout_avg = models.IntegerField('Average Etoh Bouts per day', null=True, blank=True)
+
+	cbc_ebt_volume_min = models.FloatField('Minimum Etoh Bout volume per day', null=True, blank=True)
+	cbc_ebt_volume_max = models.FloatField('Maximum Etoh Bout volume per day', null=True, blank=True)
+	cbc_ebt_volume_avg = models.FloatField('Average Etoh Bout volume per day', null=True, blank=True)
+
+
+	def __unicode__(self):
+		return "%s metadata" % str(self.cohort)
+
+	def populate_self(self):
+		becs = MonkeyBEC.objects.filter(monkey__cohort=self.cohort)
+		data = becs.aggregate(Min('bec_mg_pct'), Max('bec_mg_pct'), Avg('bec_mg_pct'))
+		self.cbc_bec_mg_pct_min = data['bec_mg_pct__min']
+		self.cbc_bec_mg_pct_max = data['bec_mg_pct__max']
+		self.cbc_bec_mg_pct_avg = data['bec_mg_pct__avg']
+
+		data = becs.aggregate(Min('bec_vol_etoh'), Max('bec_vol_etoh'), Avg('bec_vol_etoh'))
+		self.cbc_bec_etoh_min = data['bec_vol_etoh__min']
+		self.cbc_bec_etoh_max = data['bec_vol_etoh__max']
+		self.cbc_bec_etoh_avg = data['bec_vol_etoh__avg']
+
+		data = becs.aggregate(Min('bec_gkg_etoh'), Max('bec_gkg_etoh'), Avg('bec_gkg_etoh'))
+		self.cbc_bec_gkg_etoh_min = data['bec_gkg_etoh__min']
+		self.cbc_bec_gkg_etoh_max = data['bec_gkg_etoh__max']
+		self.cbc_bec_gkg_etoh_avg = data['bec_gkg_etoh__avg']
+
+		data = becs.aggregate(Min('bec_pct_intake'), Max('bec_pct_intake'), Avg('bec_pct_intake'))
+		self.cbc_bec_pct_intake_min = data['bec_pct_intake__min']
+		self.cbc_bec_pct_intake_max = data['bec_pct_intake__max']
+		self.cbc_bec_pct_intake_avg = data['bec_pct_intake__avg']
+
+		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=self.cohort)
+		data = mtds.aggregate(Min('mtd_etoh_g_kg'), Max('mtd_etoh_g_kg'), Avg('mtd_etoh_g_kg'))
+		self.cbc_mtd_etoh_g_kg_min = data['mtd_etoh_g_kg__min']
+		self.cbc_mtd_etoh_g_kg_max = data['mtd_etoh_g_kg__max']
+		self.cbc_mtd_etoh_g_kg_avg = data['mtd_etoh_g_kg__avg']
+
+		data = mtds.aggregate(Min('mtd_etoh_bout'), Max('mtd_etoh_bout'), Avg('mtd_etoh_bout'))
+		self.cbc_mtd_etoh_bout_min = data['mtd_etoh_bout__min']
+		self.cbc_mtd_etoh_bout_max = data['mtd_etoh_bout__max']
+		self.cbc_mtd_etoh_bout_avg = data['mtd_etoh_bout__avg']
+
+		bouts = ExperimentBout.objects.filter(mtd__monkey__cohort=self.cohort)
+		data = bouts.aggregate(Min('ebt_volume'), Max('ebt_volume'), Avg('ebt_volume'))
+		self.cbc_ebt_volume_min = data['ebt_volume__min']
+		self.cbc_ebt_volume_max = data['ebt_volume__max']
+		self.cbc_ebt_volume_avg = data['ebt_volume__avg']
+
+		self.save()
+
+	class Meta:
+		db_table = 'cbc_cohort_metadata'
 
 
 class RNARecord(models.Model):
@@ -2475,6 +2568,16 @@ def user_post_save(**kwargs):
 	if not Account.objects.filter(user=user).count():
 		account = Account(user=user)
 		account.save()
+
+# This is a method to check to see if a cohort exists that does not have
+# an CohortMetaData attached to it.
+@receiver(post_save, sender=Cohort)
+def cohort_post_save(**kwargs):
+	#check to see if user exists in accounts relation
+	cohort = kwargs['instance']
+	if not CohortMetaData.objects.filter(cohort=cohort).count():
+		cbc = CohortMetaData(cohort=cohort)
+		cbc.populate_self()
 
 # This will delete MATRRImage's FileField's files from media before deleting the database entry.
 # Helps keep the media folder pretty.

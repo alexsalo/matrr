@@ -1467,9 +1467,6 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 		Circle sizes scaled to range [cirle_min, circle_max]
 		Plot saved to filename or to static/images/monkeys-bouts-drinks as mky_[real_id].png and mky_[real_id]-thumb.png
 	"""
-	from matrr.models import Monkey
-	from matrr.models import MonkeyToDrinkingExperiment
-
 	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
 	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
 
@@ -1528,11 +1525,6 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
-
-	patches = []
-	for x1,v in zip(xaxis, avg_bout_volumes):
-		circle = Circle((x1,v), v*0.1)
-		patches.append(circle)
 
 	volume_max = float(avg_bout_volumes.max())
 	rescaled_volumes = [ (vol/volume_max)*size_scale+size_min for vol in avg_bout_volumes ] # rescaled, so that circles will be in range (size_min, size_scale)
@@ -2218,6 +2210,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 		if circle_min < 1:
 			circle_min = DEFAULT_CIRCLE_MIN
 
+	cbc = monkey.cohort.cbc
 	bec_records = monkey.bec_records.all()
 	from_date, to_date = validate_dates(from_date, to_date)
 	if from_date:
@@ -2242,7 +2235,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 	for index, date in enumerate(dates, 1):
 		bec_rec = bec_records.get(bec_collect_date=date)
 		bec_values.append(bec_rec.bec_mg_pct) # y-axis
-		pct_intake.append(float(bec_rec.bec_gkg_etoh) / bec_rec.bec_daily_gkg_etoh) # size
+		pct_intake.append(bec_rec.bec_pct_intake) # size
 		smp_intake.append(bec_rec.bec_gkg_etoh) # color
 
 	xaxis = numpy.array(range(1,len(smp_intake)+1))
@@ -2252,17 +2245,12 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 	size_min = circle_min
 	size_scale = circle_max - size_min
 
-	patches = []
-	for x1,v in zip(xaxis, smp_intake):
-		circle = Circle((x1,v), v*0.1)
-		patches.append(circle)
-
-	max_intake = float(pct_intake.max())
+	max_intake = cbc.cbc_bec_pct_intake_max
 	rescaled_volumes = [ (w/max_intake)*size_scale+size_min for w in pct_intake ] # rescaled, so that circles will be in range (size_min, size_scale)
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 
-#    main graph
+#   main graph
 	ax1 = fig.add_subplot(111)
 
 	s= ax1.scatter(xaxis, bec_values, c=smp_intake, s=rescaled_volumes, alpha=0.4)
@@ -2272,27 +2260,26 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	y_max = max(bec_values)
-	graph_y_max = y_max*1.25
+	graph_y_max = cbc.cbc_bec_mg_pct_max
 	pyplot.ylim(0, graph_y_max) # + % to show circles under the size legend instead of behind it
-	pyplot.xlim(0,len(xaxis) + 1)
+	pyplot.xlim(0, len(xaxis) + 1)
 
 	cb = pyplot.colorbar(s)
-
 	cb.set_label("Intake at time of sample, g/kg")
+	cb.set_clim(cbc.cbc_bec_gkg_etoh_min, cbc.cbc_bec_gkg_etoh_max)
 
 #    size legend
 	x = numpy.array(range(1,6))
 	y = numpy.array([1,1,1,1,1])
 
-	size_m = size_scale/(len(y)-1)
+	size_m = float(size_scale)/(len(y)-1)
 	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
 	size.insert(0,1+size_min)
 	size = numpy.array(size)
 
 	m = max_intake/(len(y)-1)
 	size_labels = [ round(i*m, 2) for i in range(1, len(y))] # labels in the range as monkey weights
-	size_labels.insert(0,round(smp_intake.min(), 2))
+	size_labels.insert(0,round(cbc.cbc_bec_pct_intake_min, 2))
 	size_labels.insert(0, "")
 	size_labels.append("")
 
@@ -2305,8 +2292,6 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 	return fig, True
 
 def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
-	from matrr.models import Monkey, MonkeyToDrinkingExperiment
-
 	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
 	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
 	matplotlib.rcParams['figure.subplot.right'] 	= 0.8
@@ -2324,6 +2309,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 				print("That's not a valid monkey.")
 				return False, False
 
+	cbc = monkey.cohort.cbc
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
 		circle_min = DEFAULT_CIRCLE_MIN
@@ -2372,7 +2358,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 		if bec_rec.count():
 			bec_rec = bec_rec[0]
 			bec_values.append(bec_rec.bec_mg_pct)
-			pct_consumed.append(float(bec_rec.bec_gkg_etoh) / bec_rec.bec_daily_gkg_etoh)
+			pct_consumed.append(bec_rec.bec_pct_intake)
 			bar_xaxis.append(index)
 
 		de = drinking_experiments.get(drinking_experiment__dex_date=date)
@@ -2389,22 +2375,20 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	pct_consumed = numpy.array(pct_consumed)
 	induction_days = numpy.array(induction_days)
 
+#    main graph
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = fig.add_subplot(111)
+
 	size_min = circle_min
 	size_scale = circle_max - size_min
-
-	volume_max = float(avg_bout_volumes.max())
+	volume_max = cbc.cbc_ebt_volume_max
 	rescaled_volumes = [ (vol/volume_max)*size_scale+size_min for vol in avg_bout_volumes ] # rescaled, so that circles will be in range (size_min, size_scale)
-
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-
-#    main graph
-	ax1 = fig.add_subplot(111)
 
 	s= ax1.scatter(xaxis, g_per_kg_consumed, c=bouts, s=rescaled_volumes, alpha=0.4)
 
 	y_max = max(g_per_kg_consumed)
-	graph_y_max = y_max + y_max*0.25
-	if induction_days and len(induction_days) != len(xaxis):
+	graph_y_max = max(y_max*1.25, cbc.cbc_mtd_etoh_g_kg_max)
+	if len(induction_days) != len(xaxis):
 		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
 	ax1.set_ylabel("Daily Ethanol Consumption (in g/kg)")
@@ -2412,8 +2396,9 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	pyplot.ylim(0-((y_max*1.25)/2), graph_y_max) # + % to show circles under the size legend instead of behind it
+	pyplot.ylim(0-((y_max*1.25)/2), graph_y_max)
 	pyplot.xlim(0,len(xaxis) + 2)
+
 	max_y_int = int(round(y_max*1.25))
 	y_tick_int = max(int(round(max_y_int/5)), 1)
 	ax1.set_yticks(range(0, max_y_int, y_tick_int))
@@ -2422,6 +2407,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
 	cb = pyplot.colorbar(s, cax=cax)
 	cb.alpha = 1
+	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
 	cb.set_label("Number of bouts")
 
 #	regression line
@@ -2462,10 +2448,9 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	import matplotlib.cm as cm
 
 	# normalize colors to use full range of colormap
-	norm = colors.normalize(pct_consumed.min(), pct_consumed.max())
+	norm = colors.normalize(cbc.cbc_bec_pct_intake_min, cbc.cbc_bec_pct_intake_max)
 
 	facecolors = list()
-
 	for bar, x, color_value in zip(bec_values, bar_xaxis, pct_consumed):
 		color = cm.jet(norm(color_value))
 		pyplot.bar(x, bar, width=2, color=color, edgecolor='none')
@@ -2474,12 +2459,13 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	ax3.set_xlim(0,len(xaxis) + 2)
 
 	# create a collection that we will use in colorbox
-	col = matplotlib.collections.Collection(facecolors=facecolors, norm = norm, cmap = cm.jet)
+	col = matplotlib.collections.Collection(facecolors=facecolors, norm=norm, cmap=cm.jet)
 	col.set_array(pct_consumed)
 
 	# colorbor for bar plot
 	cax = fig.add_axes((0.88, 0.09, 0.03, 0.25))
 	cb = pyplot.colorbar(col, cax=cax)
+	cb.alpha = 1
 	cb.set_label("Etoh intake @ sample / Daily etoh consumption")
 
 	zipped = numpy.vstack(zip(xaxis, bec_values))
