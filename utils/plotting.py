@@ -2269,20 +2269,20 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 
 	cb = pyplot.colorbar(s)
 	cb.set_label("Intake at time of sample, g/kg")
-	cb.set_clim(cbccbc.cbc_gkg_etoh_min, cbc.cbc_gkg_etoh_max)
+	cb.set_clim(cbc.cbc_gkg_etoh_min, cbc.cbc_gkg_etoh_max)
 
 #    size legend
 	x = numpy.array(range(1,6))
 	y = numpy.array([1,1,1,1,1])
 
-	size_m = size_scale/(len(y)-1)
+	size_m = float(size_scale)/(len(y)-1)
 	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
 	size.insert(0,1+size_min)
 	size = numpy.array(size)
 
 	m = max_intake/(len(y)-1)
 	size_labels = [ round(i*m, 2) for i in range(1, len(y))] # labels in the range as monkey weights
-	size_labels.insert(0,round(smp_intake.min(), 2))
+	size_labels.insert(0,round(cbc.cbc_pct_intake_min, 2))
 	size_labels.insert(0, "")
 	size_labels.append("")
 
