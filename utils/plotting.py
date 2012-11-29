@@ -1529,11 +1529,6 @@ def monkey_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', cir
 	size_min = circle_min
 	size_scale = circle_max - size_min
 
-	patches = []
-	for x1,v in zip(xaxis, avg_bout_volumes):
-		circle = Circle((x1,v), v*0.1)
-		patches.append(circle)
-
 	volume_max = float(avg_bout_volumes.max())
 	rescaled_volumes = [ (vol/volume_max)*size_scale+size_min for vol in avg_bout_volumes ] # rescaled, so that circles will be in range (size_min, size_scale)
 
@@ -2218,6 +2213,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 		if circle_min < 1:
 			circle_min = DEFAULT_CIRCLE_MIN
 
+	cbc = monkey.cohort.cbc
 	bec_records = monkey.bec_records.all()
 	from_date, to_date = validate_dates(from_date, to_date)
 	if from_date:
@@ -2242,7 +2238,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 	for index, date in enumerate(dates, 1):
 		bec_rec = bec_records.get(bec_collect_date=date)
 		bec_values.append(bec_rec.bec_mg_pct) # y-axis
-		pct_intake.append(float(bec_rec.bec_gkg_etoh) / bec_rec.bec_daily_gkg_etoh) # size
+		pct_intake.append(bec_rec.bec_pct_intake) # size
 		smp_intake.append(bec_rec.bec_gkg_etoh) # color
 
 	xaxis = numpy.array(range(1,len(smp_intake)+1))
@@ -2252,17 +2248,12 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 	size_min = circle_min
 	size_scale = circle_max - size_min
 
-	patches = []
-	for x1,v in zip(xaxis, smp_intake):
-		circle = Circle((x1,v), v*0.1)
-		patches.append(circle)
-
-	max_intake = float(pct_intake.max())
+	max_intake = cbc.cbc_pct_intake_max
 	rescaled_volumes = [ (w/max_intake)*size_scale+size_min for w in pct_intake ] # rescaled, so that circles will be in range (size_min, size_scale)
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 
-#    main graph
+#   main graph
 	ax1 = fig.add_subplot(111)
 
 	s= ax1.scatter(xaxis, bec_values, c=smp_intake, s=rescaled_volumes, alpha=0.4)
@@ -2272,14 +2263,13 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	y_max = max(bec_values)
-	graph_y_max = y_max*1.25
+	graph_y_max = cbc.cbc_mg_pct_max
 	pyplot.ylim(0, graph_y_max) # + % to show circles under the size legend instead of behind it
-	pyplot.xlim(0,len(xaxis) + 1)
+	pyplot.xlim(0, len(xaxis) + 1)
 
 	cb = pyplot.colorbar(s)
-
 	cb.set_label("Intake at time of sample, g/kg")
+	cb.set_clim(cbccbc.cbc_gkg_etoh_min, cbc.cbc_gkg_etoh_max)
 
 #    size legend
 	x = numpy.array(range(1,6))

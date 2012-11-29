@@ -3,7 +3,7 @@ import Image, numpy, dbarray, settings, os, ast
 from django.core.files.base import File
 from django.core.mail.message import EmailMessage
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Min, Max, Avg
 from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, pre_delete
@@ -2283,23 +2283,81 @@ class MonkeyBEC(models.Model):
 	bec_daily_gkg_etoh = models.FloatField("Etoh consumed, entire day, g/kg", null=True, blank=True)
 	bec_mg_pct = models.FloatField("Blood Ethanol Concentration, mg %", null=False, blank=False)
 
+	bec_pct_intake = models.FloatField("Percent of daily intake consumed at sample", null=True, blank=False)
+
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.bec_collect_date), str(self.bec_mg_pct))
 
-	def populate_mtd(self, repopulate=True):
+	def populate_fields(self, repopulate=True):
+		save = False
 		if not self.mtd or repopulate:
 			mtd = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey, drinking_experiment__dex_date=self.bec_collect_date)
 			if mtd.count() is 1:
 				self.mtd = mtd[0]
-				self.save()
-
+				save = True
+		if not self.bec_pct_intake or repopulate:
+			self.bec_pct_intake = float(self.bec_gkg_etoh) / self.bec_daily_gkg_etoh
+			save = True
+		if save:
+			self.save()
 
 	class Meta:
 		db_table = 'bec_monkey_bec'
 		permissions = (
 		[('view_bec_data', 'Can view BEC data'),
 		])
+
+
+class CohortBEC(models.Model):
+	cbc_id = models.AutoField(primary_key=True)
+	cohort = models.OneToOneField(Cohort, null=False, blank=False, related_name='cbc', editable=False)
+
+	cbc_mg_pct_min = models.FloatField("Minimum BEC, mg %", null=True, blank=False)
+	cbc_mg_pct_max = models.FloatField("Maximum BEC, mg %", null=True, blank=False)
+	cbc_mg_pct_avg = models.FloatField("Average BEC, mg %", null=True, blank=False)
+
+	cbc_etoh_min = models.FloatField("Minimum Etoh Intake at Sample, in ml", null=True, blank=False)
+	cbc_etoh_max = models.FloatField("Maximum Etoh Intake at Sample, in ml", null=True, blank=False)
+	cbc_etoh_avg = models.FloatField("Average Etoh Intake at Sample, in ml", null=True, blank=False)
+
+	cbc_gkg_etoh_min = models.FloatField("Minimum Etoh Intake at Sample, in g/kg", null=True, blank=False)
+	cbc_gkg_etoh_max = models.FloatField("Maximum Etoh Intake at Sample, in g/kg", null=True, blank=False)
+	cbc_gkg_etoh_avg = models.FloatField("Average Etoh Intake at Sample, in g/kg", null=True, blank=False)
+
+	cbc_pct_intake_min = models.FloatField("Minimum Percentage Intake at Sample", null=True, blank=False)
+	cbc_pct_intake_max = models.FloatField("Maximum Percentage Intake at Sample", null=True, blank=False)
+	cbc_pct_intake_avg = models.FloatField("Average Percentage Intake at Sample", null=True, blank=False)
+
+	def __unicode__(self):
+		return "%s CBC data" % str(self.cohort)
+
+	def populate_self(self):
+		becs = MonkeyBEC.objects.filter(monkey__cohort=self.cohort)
+		mg_datas = becs.aggregate(Min('bec_mg_pct'), Max('bec_mg_pct'), Avg('bec_mg_pct'))
+		self.cbc_mg_pct_min = mg_datas['bec_mg_pct__min']
+		self.cbc_mg_pct_max = mg_datas['bec_mg_pct__max']
+		self.cbc_mg_pct_avg = mg_datas['bec_mg_pct__avg']
+
+		etoh_datas = becs.aggregate(Min('bec_vol_etoh'), Max('bec_vol_etoh'), Avg('bec_vol_etoh'))
+		self.cbc_etoh_min = etoh_datas['bec_vol_etoh__min']
+		self.cbc_etoh_max = etoh_datas['bec_vol_etoh__max']
+		self.cbc_etoh_avg = etoh_datas['bec_vol_etoh__avg']
+
+		gkg_datas = becs.aggregate(Min('bec_gkg_etoh'), Max('bec_gkg_etoh'), Avg('bec_gkg_etoh'))
+		self.cbc_gkg_etoh_min = gkg_datas['bec_gkg_etoh__min']
+		self.cbc_gkg_etoh_max = gkg_datas['bec_gkg_etoh__max']
+		self.cbc_gkg_etoh_avg = gkg_datas['bec_gkg_etoh__avg']
+
+		pct_datas = becs.aggregate(Min('bec_pct_intake'), Max('bec_pct_intake'), Avg('bec_pct_intake'))
+		self.cbc_pct_intake_min = pct_datas['bec_pct_intake__min']
+		self.cbc_pct_intake_max = pct_datas['bec_pct_intake__max']
+		self.cbc_pct_intake_avg = pct_datas['bec_pct_intake__avg']
+
+		self.save()
+
+	class Meta:
+		db_table = 'cbc_cohort_bec'
 
 
 class RNARecord(models.Model):
