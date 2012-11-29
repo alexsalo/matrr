@@ -2222,7 +2222,11 @@ def tools_cohort_etoh_graphs(request, coh_id):
 
 			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date})
 			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=plotting.COHORT_PLOTS[plot_method][1], parameters=params)
-			context['graph'] = cohort_image
+
+			if is_new and not cohort_image.pk:
+				messages.error(request, 'Image file not created.  This is usually caused by requesting insufficient or non-existant data.')
+			else:
+				context['graph'] = cohort_image
 		else:
 			messages.error(request, plot_form.errors.as_text())
 			messages.error(request, subject_select_form.errors.as_text())
@@ -2274,10 +2278,12 @@ def tools_monkey_etoh_graphs(request, coh_id):
 			graphs = list()
 			for monkey in monkeys:
 				mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, title=title, method=plot_method, parameters=str(params))
-				if is_new:
-					mig.save()
-				graphs.append(mig)
-			context['graphs'] = graphs
+				if mig.pk:
+					graphs.append(mig)
+			if not graphs:
+				messages.info(request, "No graphs could be made with these settings.")
+			else:
+				context['graphs'] = graphs
 		else:
 			if len(experiment_range_form.errors) + len(plot_form.errors) > 1:
 				raise Http404()
@@ -2375,8 +2381,8 @@ def tools_cohort_bec_graphs(request, coh_id):
 				sample_before = '14:00'
 			if sample_range == 'afternoon':
 				sample_after = '14:00'
-
 			plot_method = plot_form.cleaned_data['plot_method']
+
 			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date, 'sample_before': sample_before, 'sample_after': sample_after})
 			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=plotting.COHORT_PLOTS[plot_method][1], parameters=params)
 
@@ -2442,10 +2448,12 @@ def tools_monkey_bec_graphs(request, coh_id):
 			graphs = list()
 			for monkey in monkeys:
 				mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, title=title, method=plot_method, parameters=str(params))
-				if is_new:
-					mig.save()
-				graphs.append(mig)
-			context['graphs'] = graphs
+				if mig.pk:
+					graphs.append(mig)
+			if not graphs:
+				messages.info(request, "No graphs could be made with these settings.")
+			else:
+				context['graphs'] = graphs
 		else:
 			if len(experiment_range_form.errors) + len(plot_form.errors) > 1:
 				raise Http404()
