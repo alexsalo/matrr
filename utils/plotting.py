@@ -2392,7 +2392,8 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
 	s= ax1.scatter(xaxis, g_per_kg_consumed, c=bouts, s=rescaled_volumes, alpha=0.4)
 
-	graph_y_max = cbc.cbc_mtd_etoh_g_kg_max
+	y_max = cbc.cbc_mtd_etoh_g_kg_max
+	graph_y_max = y_max + y_max*0.25
 	if len(induction_days) and len(induction_days) != len(xaxis):
 		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
