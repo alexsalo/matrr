@@ -1891,6 +1891,7 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
 				return False, False
+	cbc = monkey.cohort.cbc
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -1938,17 +1939,17 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 	size_min = circle_min
 	size_scale = circle_max - size_min
 
-	volume_max = float(avg_bout_volumes.max())
+	volume_max = cbc.cbc_ebt_volume_max
 	rescaled_volumes = [ (vol/volume_max)*size_scale+size_min for vol in avg_bout_volumes ] # rescaled, so that circles will be in range (size_min, size_scale)
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 
-#    main graph
+#   main graph
 	ax1 = fig.add_subplot(111)
 
 	s= ax1.scatter(xaxis, g_per_kg_consumed, c=bouts, s=rescaled_volumes, alpha=0.4)
 
-	y_max = max(g_per_kg_consumed)
+	y_max = cbc.cbc_mtd_etoh_g_kg_max
 	graph_y_max = y_max + y_max*0.25
 	if len(induction_days) and len(induction_days) != len(xaxis):
 		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
@@ -1957,12 +1958,11 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 	ax1.set_xlabel("Days")
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
-	y_max = max(g_per_kg_consumed)
 	pyplot.ylim(0, graph_y_max) # + % to show circles under the size legend instead of behind it
 	pyplot.xlim(0,len(xaxis) + 1)
 
 	cb = pyplot.colorbar(s)
-
+	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
 	cb.set_label("Number of bouts")
 
 #    size legend
