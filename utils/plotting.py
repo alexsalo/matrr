@@ -2265,7 +2265,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	y_max = cbc.cbc_mtd_max_bout_vol_max
+	y_max = cbc.cbc_bec_mg_pct_max
 	graph_y_max = y_max + y_max*0.25
 	pyplot.ylim(0, graph_y_max) # + % to show circles under the size legend instead of behind it
 	pyplot.xlim(0, len(xaxis) + 1)
@@ -2392,8 +2392,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
 	s= ax1.scatter(xaxis, g_per_kg_consumed, c=bouts, s=rescaled_volumes, alpha=0.4)
 
-	y_max = cbc.cbc_mtd_etoh_g_kg_max
-	graph_y_max = y_max + y_max*0.25
+	graph_y_max = cbc.cbc_mtd_etoh_g_kg_max
 	if len(induction_days) and len(induction_days) != len(xaxis):
 		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
