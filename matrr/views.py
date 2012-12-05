@@ -2304,7 +2304,7 @@ def tools_etoh_mtd(request, mtd_id):
 		mtd = MonkeyToDrinkingExperiment.objects.get(pk=mtd_id)
 		mtd_image, is_new = MTDImage.objects.get_or_create(
 			monkey_to_drinking_experiment=mtd,
-			method='monkey_bouts_drinks_intraday',
+			method='monkey_etoh_bouts_drinks_intraday',
 			title="Drinks on %s for monkey %s" % (str(mtd.drinking_experiment.dex_date), str(mtd.monkey))
 		)
 	return render_to_response('matrr/tools/graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))

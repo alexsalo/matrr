@@ -123,10 +123,10 @@ VerificationStatus =  Enumeration([
 
 # These are the method names which ONLY VIP members can _see_
 VIP_IMAGES_LIST = (
-'monkey_bouts_drinks',
-'monkey_bouts_drinks_intraday',
-'monkey_first_max_bout',
-'monkey_bouts_vol',
+'monkey_etoh_bouts_drinks',
+'monkey_etoh_bouts_drinks_intraday',
+'monkey_etoh_first_max_bout',
+'monkey_etoh_bouts_vol',
 'monkey_errorbox_etoh',
 '__vip',
 '__brain_image',
@@ -2337,10 +2337,37 @@ class CohortMetaData(models.Model):
 	cbc_mtd_etoh_g_kg_max = models.FloatField('Maximum Etoh intake per day, in g/kg', null=True, blank=False)
 	cbc_mtd_etoh_g_kg_avg = models.FloatField('Average Etoh intake per day, in g/kg', null=True, blank=False)
 
-
 	cbc_mtd_etoh_bout_min = models.IntegerField('Minimum Etoh Bouts per day', null=True, blank=True)
 	cbc_mtd_etoh_bout_max = models.IntegerField('Maximum Etoh Bouts per day', null=True, blank=True)
 	cbc_mtd_etoh_bout_avg = models.IntegerField('Average Etoh Bouts per day', null=True, blank=True)
+
+	cbc_mtd_etoh_drink_bout_min = models.IntegerField('Minimum Etoh Bouts per bout per day', null=True, blank=True)
+	cbc_mtd_etoh_drink_bout_max = models.IntegerField('Maximum Etoh Bouts per bout per day', null=True, blank=True)
+	cbc_mtd_etoh_drink_bout_avg = models.IntegerField('Average Etoh Bouts per bout per day', null=True, blank=True)
+
+	cbc_mtd_pct_max_bout_vol_total_etoh_min = models.IntegerField('Minimum Max Bout Volume as % of Total Etoh per day', null=True, blank=True)
+	cbc_mtd_pct_max_bout_vol_total_etoh_max = models.IntegerField('Maximum Max Bout Volume as % of Total Etoh per day', null=True, blank=True)
+	cbc_mtd_pct_max_bout_vol_total_etoh_avg = models.IntegerField('Average Max Bout Volume as % of Total Etoh per day', null=True, blank=True)
+
+	cbc_mtd_max_bout_length_min = models.IntegerField('Minimum Max Bout Length per day', null=True, blank=True)
+	cbc_mtd_max_bout_length_max = models.IntegerField('Maximum Max Bout Length per day', null=True, blank=True)
+	cbc_mtd_max_bout_length_avg = models.IntegerField('Average Max Bout Length per day', null=True, blank=True)
+
+	cbc_mtd_max_bout_vol_min = models.IntegerField('Minimum Max Bout Volume per day', null=True, blank=True)
+	cbc_mtd_max_bout_vol_max = models.IntegerField('Maximum Max Bout Volume per day', null=True, blank=True)
+	cbc_mtd_max_bout_vol_avg = models.IntegerField('Average Max Bout Volume per day', null=True, blank=True)
+
+	cbc_mtd_vol_1st_bout_min = models.IntegerField('Minimum Vol. 1st Bout per day', null=True, blank=True)
+	cbc_mtd_vol_1st_bout_max = models.IntegerField('Maximum Vol. 1st Bout per day', null=True, blank=True)
+	cbc_mtd_vol_1st_bout_avg = models.IntegerField('Average Vol. 1st Bout per day', null=True, blank=True)
+
+	cbc_mtd_pct_etoh_in_1st_bout_min = models.IntegerField('Minimum % Etoh in First Bout per day', null=True, blank=True)
+	cbc_mtd_pct_etoh_in_1st_bout_max = models.IntegerField('Maximum % Etoh in First Bout per day', null=True, blank=True)
+	cbc_mtd_pct_etoh_in_1st_bout_avg = models.IntegerField('Average % Etoh in First Bout per day', null=True, blank=True)
+
+	cbc_total_drinks_min = models.IntegerField('Minimum total drinks per day', null=True, blank=True) # this field is fuzzy.  It's a guestimate derived from an average
+	cbc_total_drinks_max = models.IntegerField('Maximum total drinks per day', null=True, blank=True) # this field is fuzzy.  It's a guestimate derived from an average
+	cbc_total_drinks_avg = models.IntegerField('Average total drinks per day', null=True, blank=True) # this field is fuzzy.  It's a guestimate derived from an average
 
 	cbc_ebt_volume_min = models.FloatField('Minimum Etoh Bout volume per day', null=True, blank=True)
 	cbc_ebt_volume_max = models.FloatField('Maximum Etoh Bout volume per day', null=True, blank=True)
@@ -2382,6 +2409,43 @@ class CohortMetaData(models.Model):
 		self.cbc_mtd_etoh_bout_min = data['mtd_etoh_bout__min']
 		self.cbc_mtd_etoh_bout_max = data['mtd_etoh_bout__max']
 		self.cbc_mtd_etoh_bout_avg = data['mtd_etoh_bout__avg']
+
+		data = mtds.aggregate(Min('mtd_etoh_drink_bout'), Max('mtd_etoh_drink_bout'), Avg('mtd_etoh_drink_bout'))
+		self.cbc_mtd_etoh_drink_bout_min = data['mtd_etoh_drink_bout__min']
+		self.cbc_mtd_etoh_drink_bout_max = data['mtd_etoh_drink_bout__max']
+		self.cbc_mtd_etoh_drink_bout_avg = data['mtd_etoh_drink_bout__avg']
+
+		data = mtds.aggregate(Min('mtd_pct_max_bout_vol_total_etoh'), Max('mtd_pct_max_bout_vol_total_etoh'), Avg('mtd_pct_max_bout_vol_total_etoh'))
+		self.cbc_mtd_pct_max_bout_vol_total_etoh_min = data['mtd_pct_max_bout_vol_total_etoh__min']
+		self.cbc_mtd_pct_max_bout_vol_total_etoh_max = data['mtd_pct_max_bout_vol_total_etoh__max']
+		self.cbc_mtd_pct_max_bout_vol_total_etoh_avg = data['mtd_pct_max_bout_vol_total_etoh__avg']
+
+		data = mtds.aggregate(Min('mtd_max_bout_length'), Max('mtd_max_bout_length'), Avg('mtd_max_bout_length'))
+		self.cbc_mtd_max_bout_length_min = data['mtd_max_bout_length__min']
+		self.cbc_mtd_max_bout_length_max = data['mtd_max_bout_length__max']
+		self.cbc_mtd_max_bout_length_avg = data['mtd_max_bout_length__avg']
+
+		data = mtds.aggregate(Min('mtd_max_bout_vol'), Max('mtd_max_bout_vol'), Avg('mtd_max_bout_vol'))
+		self.cbc_mtd_max_bout_vol_min = data['mtd_max_bout_vol__min']
+		self.cbc_mtd_max_bout_vol_max = data['mtd_max_bout_vol__max']
+		self.cbc_mtd_max_bout_vol_avg = data['mtd_max_bout_vol__avg']
+
+		data = mtds.aggregate(Min('mtd_vol_1st_bout'), Max('mtd_vol_1st_bout'), Avg('mtd_vol_1st_bout'))
+		self.cbc_mtd_vol_1st_bout_min = data['mtd_vol_1st_bout__min']
+		self.cbc_mtd_vol_1st_bout_max = data['mtd_vol_1st_bout__max']
+		self.cbc_mtd_vol_1st_bout_avg = data['mtd_vol_1st_bout__avg']
+
+		data = mtds.aggregate(Min('mtd_pct_etoh_in_1st_bout'), Max('mtd_pct_etoh_in_1st_bout'), Avg('mtd_pct_etoh_in_1st_bout'))
+		self.cbc_mtd_pct_etoh_in_1st_bout_min = data['mtd_pct_etoh_in_1st_bout__min']
+		self.cbc_mtd_pct_etoh_in_1st_bout_max = data['mtd_pct_etoh_in_1st_bout__max']
+		self.cbc_mtd_pct_etoh_in_1st_bout_avg = data['mtd_pct_etoh_in_1st_bout__avg']
+
+		_data = mtds.values_list('mtd_etoh_drink_bout', 'mtd_etoh_bout')
+		data = numpy.array([d[0]*d[1] if all(d) else 0 for d in _data])
+		if data.any():
+			self.cbc_total_drinks_min = data.min()
+			self.cbc_total_drinks_max = data.max()
+			self.cbc_total_drinks_avg = data.mean()
 
 		bouts = ExperimentBout.objects.filter(mtd__monkey__cohort=self.cohort)
 		data = bouts.aggregate(Min('ebt_volume'), Max('ebt_volume'), Avg('ebt_volume'))
