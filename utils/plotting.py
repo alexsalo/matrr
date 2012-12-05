@@ -2393,7 +2393,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
 	y_max = max(g_per_kg_consumed)
 	graph_y_max = max(y_max*1.25, cbc.cbc_mtd_etoh_g_kg_max)
-	if len(induction_days) != len(xaxis):
+	if len(induction_days) and len(induction_days) != len(xaxis):
 		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
 	ax1.set_ylabel("Daily Ethanol Consumption (in g/kg)")
