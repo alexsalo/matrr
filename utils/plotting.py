@@ -2027,6 +2027,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
 				return False, False
+	cbc = monkey.cohort.cbc
 
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
@@ -2079,7 +2080,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	size_min = circle_min
 	size_scale = circle_max - size_min
 
-	max_bout_length_max = float(max_bout_length.max())
+	max_bout_length_max = cbc.cbc_mtd_max_bout_length_max
 	rescaled_bouts = [ (bout/max_bout_length_max)*size_scale+size_min for bout in max_bout_length ] # rescaled, so that circles will be in range (size_min, size_scale)
 
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
@@ -2089,7 +2090,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 
 	s= ax1.scatter(xaxis, max_bout_vol, c=max_bout_percent, s=rescaled_bouts, alpha=.6)
 
-	y_max = max_bout_vol.max()
+	y_max = cbc.cbc_mtd_max_bout_vol_max
 	graph_y_max = y_max + y_max*0.25
 	if len(induction_days) and len(induction_days) != len(xaxis):
 		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
@@ -2109,6 +2110,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
 	cb = pyplot.colorbar(s, cax=cax)
 	cb.alpha = 1
+	cb.set_clim(cbc.cbc_mtd_pct_max_bout_vol_total_etoh_min, cbc.cbc_mtd_pct_max_bout_vol_total_etoh_max)
 	cb.set_label("Maximum Bout / Total Intake")
 
 	#	Regression line
@@ -2149,7 +2151,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	import matplotlib.cm as cm
 
 	# normalize colors to use full range of colormap
-	norm = colors.normalize(min(first_bout_percent), max(first_bout_percent))
+	norm = colors.normalize(cbc.cbc_mtd_pct_etoh_in_1st_bout_min, cbc.cbc_mtd_pct_etoh_in_1st_bout_max)
 
 	facecolors = list()
 
@@ -2159,6 +2161,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 		facecolors.append(color)
 
 	ax3.set_xlim(0,len(xaxis) + 2)
+	ax3.set_ylim(cbc.cbc_mtd_vol_1st_bout_min, cbc.cbc_mtd_vol_1st_bout_max)
 
 	# create a collection that we will use in colorbox
 	col = matplotlib.collections.Collection(facecolors=facecolors, norm = norm, cmap = cm.jet)
@@ -2167,6 +2170,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	# colorbor for bar plot
 	cax = fig.add_axes((0.88, 0.09, 0.03, 0.25))
 	cb = pyplot.colorbar(col, cax=cax)
+	cb.set_clim(0, 100)
 	cb.set_label("First Bout Vol / Total Intake")
 
 	zipped = numpy.vstack(zip(xaxis, max_bout_vol))
