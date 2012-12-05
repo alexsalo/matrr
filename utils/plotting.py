@@ -2265,7 +2265,8 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	graph_y_max = cbc.cbc_bec_mg_pct_max
+	y_max = cbc.cbc_mtd_max_bout_vol_max
+	graph_y_max = y_max + y_max*0.25
 	pyplot.ylim(0, graph_y_max) # + % to show circles under the size legend instead of behind it
 	pyplot.xlim(0, len(xaxis) + 1)
 
@@ -2391,8 +2392,8 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
 	s= ax1.scatter(xaxis, g_per_kg_consumed, c=bouts, s=rescaled_volumes, alpha=0.4)
 
-	y_max = max(g_per_kg_consumed)
-	graph_y_max = max(y_max*1.25, cbc.cbc_mtd_etoh_g_kg_max)
+	y_max = cbc.cbc_mtd_etoh_g_kg_max
+	graph_y_max = y_max + y_max*0.25
 	if len(induction_days) and len(induction_days) != len(xaxis):
 		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
@@ -2412,7 +2413,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
 	cb = pyplot.colorbar(s, cax=cax)
 	cb.alpha = 1
-	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
+#	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
 	cb.set_label("Number of bouts")
 
 #	regression line
@@ -2571,8 +2572,6 @@ def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type=
 			xaxis = numpy.array(mtd_set.values_list('bec_record__bec_vol_etoh', flat=True))
 			yaxis = mtd_set.values_list('bec_record__bec_mg_pct', flat=True)
 			color = month_color[date]
-			marker = 'x' if index else 'o'
-			label = '' if index else date.strftime('%h %Y')
 
 			try:
 				res, idx = vq.kmeans2(numpy.array(zip(xaxis, yaxis)), 1)
