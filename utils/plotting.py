@@ -2413,7 +2413,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
 	cb = pyplot.colorbar(s, cax=cax)
 	cb.alpha = 1
-#	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
+	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
 	cb.set_label("Number of bouts")
 
 #	regression line
