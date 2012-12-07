@@ -2283,7 +2283,7 @@ class MonkeyBEC(models.Model):
 	bec_daily_gkg_etoh = models.FloatField("Etoh consumed, entire day, g/kg", null=True, blank=True)
 	bec_mg_pct = models.FloatField("Blood Ethanol Concentration, mg %", null=False, blank=False)
 
-	bec_pct_intake = models.FloatField("Percent of daily intake consumed at sample", null=True, blank=False)
+	bec_pct_intake = models.FloatField("Percent of daily intake consumed at sample", null=True, blank=True	)
 
 
 	def __unicode__(self):

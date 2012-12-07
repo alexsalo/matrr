@@ -1897,6 +1897,7 @@ def load_bec_data(file_name, overwrite=False, header=True):
 			if bec:
 				if overwrite:
 					bec.delete()
+					bec = MonkeyBEC(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
 				else:
 					print ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
 					continue
