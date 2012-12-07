@@ -1945,12 +1945,11 @@ def tools_landing(request):
 	if request.method == "POST":
 		dataset = request.POST.get('dataset')
 		if dataset == 'etoh':
-			if request.user.has_perm('matrr.view_etoh_data'):
-				return redirect('tools-etoh')
-			else:
-				return redirect('/denied/')
+			return redirect('tools-etoh')
 		elif dataset == 'protein':
 			return redirect('tools-protein')
+		elif dataset == 'bec':
+			return redirect('tools-bec')
 		else:
 			messages.error(request, "Form submission was invalid.  Please try again.")
 	return render_to_response('matrr/tools/landing.html', {}, context_instance=RequestContext(request))
