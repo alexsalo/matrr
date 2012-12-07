@@ -2297,7 +2297,10 @@ class MonkeyBEC(models.Model):
 				self.mtd = mtd[0]
 				save = True
 		if not self.bec_pct_intake or repopulate:
-			self.bec_pct_intake = float(self.bec_gkg_etoh) / self.bec_daily_gkg_etoh
+			if self.bec_daily_gkg_etoh and self.bec_daily_gkg_etoh:
+				self.bec_pct_intake = float(self.bec_gkg_etoh) / self.bec_daily_gkg_etoh
+			else:
+				self.bec_pct_intake = 0
 			save = True
 		if save:
 			self.save()
