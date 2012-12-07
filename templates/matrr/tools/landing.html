@@ -7,7 +7,8 @@
 		<br>
 		<input type="radio" name="dataset" value="protein" checked="checked">Access protein-associated data tools<br>
 		{% if perms.matrr.view_vip_images %}
-			<input type="radio" name="dataset" value="etoh">Access ethanol-associated data tools
+			<input type="radio" name="dataset" value="etoh">Access ethanol-associated data tools<br>
+			<input type="radio" name="dataset" value="bec">Access BEC-associated data tools<br>
 		{% endif %}
 		<br>
 		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
