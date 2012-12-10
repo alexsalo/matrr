@@ -16,13 +16,15 @@ def shipments_ready():
 	accepted = Request.objects.filter(accepted)
 	for req in accepted:
 		if req.can_be_shipped():
-			send_email = True
 			if 'assay' in req.cohort.coh_cohort_name.lower():
 				assay_ready = True
-
+			else:
+				send_email = True
 	return send_email, assay_ready
 
 send_email, assay_ready = shipments_ready()
 if settings.PRODUCTION and send_email:
-	send_shipment_ready_notification(assay_ready=assay_ready)
+	send_shipment_ready_notification()
+	if assay_ready:
+		send_shipment_ready_notification(assay_ready=assay_ready)
 
