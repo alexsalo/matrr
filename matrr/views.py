@@ -2688,7 +2688,6 @@ def ajax_advanced_search(request):
 		select_form = AdvancedSearchSelectForm(data=request.POST, prefix='select')
 		if select_form.is_valid():
 			select_query = Q()
-			filter_query = Q()
 			selects = select_form.cleaned_data
 			if selects['sex']:
 				select_query = select_query & Q(mky_gender__in=selects['sex'])
@@ -2699,22 +2698,19 @@ def ajax_advanced_search(request):
 			if filter_form.is_valid():
 				filters = filter_form.cleaned_data
 				if filters['control']:
-					filter_query = (Q(mky_drinking=False) | Q(mky_housing_control=True))
+					select_query = select_query & (Q(mky_drinking=False) | Q(mky_housing_control=True))
 				if filters['proteins']:
-					filter_query = filter_query & Q(protein_set__mpn_stdev__gte=1, protein_set__protein__in=filters['proteins'])
+					select_query = select_query & Q(protein_set__mpn_stdev__gte=1, protein_set__protein__in=filters['proteins'])
 				if filters['cohorts']:
-					filter_query = filter_query & Q(cohort__in=filters['cohorts'])
+					select_query = select_query & Q(cohort__in=filters['cohorts'])
 
-			# Counterintuitive note:
-			# Reason: Initially,  all checkboxes are unchecked and all monkeys are hidden.  Once a checkbox is selected, and then unselected
-			# the filter() of empty Q objects will return all monkeys, showing all monkeys when no checkboxes are selected.
-
-			# Workaround:
-			# Gather the monkeys to hide, by filtering the opposite of the search query.  This will return all monkeys when no checkboxes are selected
-			hide_ids = Monkey.objects.filter(~select_query | ~filter_query).values_list('mky_id', flat=True).distinct()
-			show_ids = Monkey.objects.exclude(pk__in=hide_ids).values_list('mky_id', flat=True).distinct()
-			show_ids = list(show_ids)
+			if select_query:
+				show_ids = Monkey.objects.filter(select_query).values_list('mky_id', flat=True).distinct()
+			else:
+				show_ids = Monkey.objects.none()
+			hide_ids = Monkey.objects.exclude(pk__in=show_ids).values_list('mky_id', flat=True).distinct()
 			hide_ids = list(hide_ids)
+			show_ids = list(show_ids)
 
 		return HttpResponse(simplejson.dumps({'show_ids': show_ids, 'hide_ids': hide_ids}), mimetype='application/json')
 	else:
