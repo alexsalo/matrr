@@ -211,7 +211,7 @@ def send_shipment_ready_notification(assay_ready=False):
 		email = user.email
 		recipients = list()
 		recipients.append(email)
-		subject = 'Request is ready to ship'
+		subject = '%sequest is ready to ship' % ('Assay r' if assay_ready else 'R')
 		body =  'Click here to see the shipping overview page.\n'
 		body += 'http://gleek.ecs.baylor.edu%s\n' % reverse('shipping-overview')
 		body += 'Please, do not respond. This is an automated message.\n'
