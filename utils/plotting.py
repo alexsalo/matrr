@@ -2261,7 +2261,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 	s= ax1.scatter(xaxis, bec_values, c=smp_intake, s=rescaled_volumes, alpha=0.4)
 
 	ax1.set_ylabel("Blood Ethanol Concentration, mg %")
-	ax1.set_xlabel("Days")
+	ax1.set_xlabel("Sample Days")
 
 	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
