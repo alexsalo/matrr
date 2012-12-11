@@ -487,8 +487,6 @@ class Account(models.Model):
 		else:
 			return False
 
-
-
 	def save(self, *args, **kwargs):
 		super(Account, self).save(*args, **kwargs)
 

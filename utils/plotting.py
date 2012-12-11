@@ -639,6 +639,7 @@ def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_dat
 			y axis - BEC
 			color - Monkey
 	"""
+	from scipy.cluster import vq
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -673,31 +674,6 @@ def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_dat
 	for idx, key in enumerate(mkys):
 		mky_color[key] = cmap(idx / (mky_count-1))
 
-	xy = list()
-	for mky in mkys:
-		becs = bec_records.filter(monkey=mky)
-		mtds = MonkeyToDrinkingExperiment.objects.filter(pk__in=becs.values_list('mtd', flat=True))
-		gen_x = numpy.array(mtds.values_list(x_axis, flat=True))
-		sample = numpy.array(mtds.values_list('bec_record__bec_vol_etoh', flat=True))
-		xaxis = gen_x/sample
-		yaxis = becs.values_list('bec_mg_pct', flat=True)
-		s = ax1.scatter(xaxis, yaxis, c=mky_color[mky], s=100, alpha=1, edgecolor='none', label=`mky`)
-		xy.extend(zip(xaxis, yaxis))
-
-
-	from scipy.cluster import vq
-	res, idx = vq.kmeans2(numpy.array(xy), cluster_count)
-	ax1.scatter(res[:,0],res[:,1], marker='o', s = 500, linewidths=2, c='none')
-	ax1.scatter(res[:,0],res[:,1], marker='x', s = 500, linewidths=2)
-
-	clusters = dict()
-	for i in range(cluster_count):
-		clusters[i] = list()
-	for index, point in zip(idx, xy):
-		cluster = clusters[index]
-		cluster.append(point)
-		clusters[index] = cluster
-
 	def create_convex_hull_polygon(cluster):
 		from matrr.helper import convex_hull
 		from matplotlib.path import Path
@@ -713,9 +689,33 @@ def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_dat
 		y.append(y[0])
 		line = ax1.plot(x, y, 'black')
 		return line
+	for mky in mkys:
+		xy = list()
+		becs = bec_records.filter(monkey=mky)
+		mtds = MonkeyToDrinkingExperiment.objects.filter(pk__in=becs.values_list('mtd', flat=True))
+		gen_x = numpy.array(mtds.values_list(x_axis, flat=True))
+		sample = numpy.array(mtds.values_list('bec_record__bec_vol_etoh', flat=True))
+		xaxis = numpy.array([n/d if n and d else 0 for n, d in zip(gen_x, sample)]) # will catch division by 0 issues
+		yaxis = mtds.values_list('bec_record__bec_mg_pct', flat=True)
+		s = ax1.scatter(xaxis, yaxis, c=mky_color[mky], s=100, alpha=1, edgecolor='none', label=`mky`)
+		xy.extend(zip(xaxis, yaxis))
 
-	for cluster in clusters.values():
-		create_convex_hull_polygon(cluster)
+		try:
+			res, idx = vq.kmeans2(numpy.array(xy), cluster_count)
+			ax1.scatter(res[:,0],res[:,1], marker='o', s = 500, linewidths=2, c='none')
+			ax1.scatter(res[:,0],res[:,1], marker='x', s = 500, linewidths=2)
+			clusters = dict()
+			for i in range(cluster_count):
+				clusters[i] = list()
+			for index, point in zip(idx, xy):
+				cluster = clusters[index]
+				cluster.append(point)
+				clusters[index] = cluster
+			for cluster in clusters.values():
+				create_convex_hull_polygon(cluster)
+
+		except Exception as e:
+			print e
 
 	title = 'Cohort %s ' % cohort.coh_cohort_name
 	if sample_before:
