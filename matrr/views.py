@@ -1549,7 +1549,7 @@ def order_checkout(request, req_request_id):
 			req.req_experimental_plan = checkout_form.cleaned_data['req_experimental_plan']
 			req.req_notes = checkout_form.cleaned_data['req_notes']
 			req.submit_request()
-			req.req_request_date = datetime.now
+			req.req_request_date = datetime.now()
 			req.save()
 			messages.success(request, 'Tissue Request Submitted.')
 			return redirect('order-list')
