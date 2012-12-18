@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class='large-headline'>
+		{% block title %}Duplicate Order{% endblock %}
+	</div>
+	For instructions on how to revise previous requests, see our <a href="/faq/#DuplicateRequest">FAQ page.</a>
+	<div class="messages">
+		<div class="warning">Please, read the following carefully!</div>
+	</div>
+	<div>
+		To expedite the request process for return users MATRR allows you to create a duplicate request from a previously accepted request. This duplicate request
+		<strong>cannot</strong> be modified, but it can be created to request tissues from another cohort, pending tissue availability.
+		<strong>A rejected request cannot be duplicated.</strong> However, we can create a copy of an accepted/partially accepted request for you to resubmit.
+		This copied order will use a special status "Duplicated" and will not interfere with your cart. Duplicated orders have specific restrictions, discussed below.
+	</div>
+	<br>
+	With Duplicated orders:
+	<ul>
+		<li>you can select a new cohort from which to request tissues</li>
+		<li>you can change details of the request</li>
+		<li>you can make changes to the requested tissues (monkeys, amount, units, notes etc.)</li>
+		<li>you can delete requested tissues</li>
+		<li>you <strong>cannot</strong> add new tissues. To request new tissues you must submit a new request.</li>
+		<li>you <strong>cannot</strong> select a cohort unless it all tissue originally requested are available in the new cohort</li>
+	</ul>
+
+	<div class="messages">
+		Once you have finished making changes, you have to <strong>resubmit the order.</strong> A duplicated order is just your draft. The
+		MATRR team cannot see or process the order until it has been submitted.
+	</div>
+	<br/>
+
+	<form action="{% url order-duplicate-confirm req_id %}" method="post">
+		{% csrf_token %}
+		New Cohort:<br>
+		{{ cohort_form.subject }}
+		<br><br>
+		<button type='submit' name='submit' value="duplicate" class='blockLinkCheckoutButton' style='float: left'>Create Editable Copy</button>
+	</form>
+	<a href='{% url order-list %}' class='blockLinkDeleteButton' style='float: left'>Cancel</a>
+
+
+{% endblock %}

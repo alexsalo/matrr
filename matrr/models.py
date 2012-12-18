@@ -1375,7 +1375,7 @@ class Request(models.Model, DiffingMixin):
 
 		return collision_requests
 
-	def create_revised_duplicate(self):
+	def __duplicate(self, cohort, is_revision=False):
 		kwargs = {}
 		# this does not capture m2m fields or other models with FK refs to Request
 		for field in self._meta.fields:
@@ -1383,6 +1383,7 @@ class Request(models.Model, DiffingMixin):
 				kwargs[field.name] = self.__getattribute__(field.name)
 		revised = Request.objects.create(**kwargs)
 		# Don't duplicate some other fields
+		revised.cohort = cohort
 		revised.req_modified_date = datetime.now()
 		revised.req_status = RequestStatus.Revised
 		revised.req_report_asked = False
@@ -1392,12 +1393,22 @@ class Request(models.Model, DiffingMixin):
 		revised.save() # save() must be called before the forloop and m2m assignment
 		tr_duplicates = []
 		for tissue_request in self.tissue_request_set.all():
-			if not tissue_request.is_fully_accepted():
-				tr_duplicates.append(tissue_request.create_revised_duplicate(revised))
+			fully_accepted = tissue_request.is_fully_accepted()
+			if is_revision and not fully_accepted: # for revised requests, do not duplicate fully accepted tissue requests
+				tr_duplicates.append(tissue_request.create_revised_duplicate(revised)) # update monkey fields
+			if not is_revision and fully_accepted: # for duplicate requests, only duplicate fully accepted tissue requests
+				tr_duplicates.append(tissue_request.create_duplicate(revised)) # clear monkey fields and populate with new cohort
+
 		revised.tissue_request_set = tr_duplicates
 		revised.req_estimated_cost = None
 		revised.save()
 		return revised
+
+	def create_revised_duplicate(self):
+		return self.__duplicate(self.cohort, is_revision=True)
+
+	def create_duplicate(self, cohort):
+		return self.__duplicate(cohort, is_revision=False)
 
 	def get_sub_req_collisions_for_monkey(self, monkey):
 		collisions = self.get_tiv_collisions()
@@ -1432,6 +1443,15 @@ class Request(models.Model, DiffingMixin):
 	def can_be_revised(self):
 		if self.req_status == RequestStatus.Rejected or self.req_status == RequestStatus.Partially:
 			return True
+		return False
+
+	def can_be_duplicated(self):
+		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
+			allow_dupe = True
+			for rtt in self.tissue_request_set.all():
+				if rtt.accepted_monkeys.all(): # only test tissues with accepted monkeys.  Rejected tissues won't be duplicated anyway
+					allow_dupe = allow_dupe and (rtt.accepted_monkeys.all().count() == self.cohort.monkey_set.all().count())
+			return allow_dupe
 		return False
 
 	def can_be_edited(self):
@@ -1719,34 +1739,50 @@ class TissueRequest(models.Model):
 		return VerificationStatus.Complete
 
 	def create_revised_duplicate(self, revised_request):
-		duplicate = TissueRequest() # I don't know why this worked for TissueRequest but not Request
+		revised = TissueRequest() # I don't know why this worked for TissueRequest but not Request
 		# this does not capture M2M fields or other models with FK refs to TissueRequest
 		for field in self._meta.fields:
-			if field.name != 'rtt_tissue_request_id': # do not duplicate the primary key
-				duplicate.__setattr__(field.name, self.__getattribute__(field.name))
-
-
+			if field.name != 'rtt_tissue_request_id': # do not copy the primary key
+				revised.__setattr__(field.name, self.__getattribute__(field.name))
 
 		# Update the request FK with the new revised request
-		duplicate.req_request = revised_request
-		# And duplicate the requested and accepted monkeys
-		duplicate.save() # Must have a PK before doing m2m stuff
-
+		revised.req_request = revised_request
+		revised.rtt_estimated_cost = None
+		# And copy the requested and accepted monkeys
+		revised.save() # Must have a PK before doing m2m stuff
 		for a in self.accepted_monkeys.all():
-			duplicate.previously_accepted_monkeys.add(a)
-		duplicate.accepted_monkeys.clear()
-		#		duplicate.accepted_monkeys = self.accepted_monkeys.all()
+			revised.previously_accepted_monkeys.add(a)
+		revised.accepted_monkeys.clear()
 		if self.is_partially_accepted():
 			monk = list()
 			for m in self.monkeys.all():
 				if m not in self.accepted_monkeys.all():
 					monk.append(m)
-			duplicate.monkeys = monk
+			revised.monkeys = monk
 		else:
-			duplicate.monkeys = self.monkeys.all()
+			revised.monkeys = self.monkeys.all()
 
-		duplicate.save()
-		return duplicate
+		revised.save()
+		return revised
+
+	def create_duplicate(self, revised_request):
+		revised = TissueRequest() # I don't know why this worked for TissueRequest but not Request
+		# this does not capture M2M fields or other models with FK refs to TissueRequest
+		for field in self._meta.fields:
+			if field.name != 'rtt_tissue_request_id': # do not copy the primary key
+				revised.__setattr__(field.name, self.__getattribute__(field.name))
+
+		# Update the request FK with the new revised request
+		revised.req_request = revised_request
+		revised.rtt_estimated_cost = None
+		# And clear the requested and accepted monkeys
+		revised.save() # Must have a PK before doing m2m stuff
+		revised.accepted_monkeys.clear()
+		revised.previously_accepted_monkeys.clear()
+		revised.monkeys.clear()
+		revised.monkeys.add(*revised_request.cohort.monkey_set.all())
+		revised.save()
+		return revised
 
 	def cart_display(self):
 		return self.tissue_type.tst_tissue_name
