@@ -1031,16 +1031,7 @@ def order_duplicate(request, req_request_id):
 			if rtt.accepted_monkeys.all().count() == req.cohort.monkey_set.all().count():
 				tissues.append(rtt.tissue_type)
 
-	cohorts = list() # Cohorts from which tissue-to-be-duplicated are available
-	for coh in Cohort.objects.all():
-		coh_avail = True
-		for tst in tissues:
-			coh_avail = coh_avail and tst.get_cohort_availability(coh)
-			if not coh_avail:
-				break
-		if coh_avail:
-			cohorts.append(coh.pk)
-	queryset = Cohort.objects.filter(pk__in=cohorts).order_by('coh_cohort_name')
+	queryset = Cohort.objects.exclude(pk=req.pk).order_by('coh_cohort_name')
 	return render_to_response('matrr/order/order_duplicate.html', {'req_id': req_request_id, 'cohort_form': CohortSelectForm(subject_queryset=queryset, subject_widget=widgets.Select)}, context_instance=RequestContext(request))
 
 
