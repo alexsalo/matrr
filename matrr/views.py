@@ -933,7 +933,7 @@ def orders_list(request):
 	# get a list of all requests for the user
 	order_list = ''
 	orders = Request.objects.processed().filter(user=request.user).order_by('-req_request_date')
-	revised = Request.objects.revised().filter(user=request.user)
+	revised = Request.objects.revised_or_duplicated().filter(user=request.user)
 	## Paginator stuff
 	paginator = Paginator(orders, 20)
 	# Make sure page request is an int. If not, deliver first page.

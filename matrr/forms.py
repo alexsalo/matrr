@@ -148,7 +148,7 @@ class TissueRequestForm(ModelForm):
 				raise forms.ValidationError("Units of bone marrow must be in microliters.")
 
 		rtt_count = TissueRequest.objects.filter(req_request=self.req_request, tissue_type=self.tissue, rtt_prep_type=prep_type).count()
-		if self.req_request and self.req_request.req_status != RequestStatus.Revised and self.tissue and prep_type and rtt_count > 0:
+		if self.req_request and self.req_request.req_status == RequestStatus.Cart and self.tissue and prep_type and rtt_count > 0:
 			raise forms.ValidationError("You already have this tissue and prep in your cart.")
 
 		# Always return the full collection of cleaned data.

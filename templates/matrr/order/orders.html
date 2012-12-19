@@ -46,8 +46,8 @@
 				<th>Status</th>
 				<th>Date Shipped</th>
 				<th>Request Details</th>
-				<th>Revise Request</th>
 				<th>Duplicate Request</th>
+				<th>Revise Request</th>
 			</tr>
 
 			{% for order in order_list.object_list %}
@@ -59,13 +59,13 @@
 
 					<td>{% if order.shipment.shp_shipment_date %}{{ order.shipment.shp_shipment_date|date:"m/d/Y" }}{% else %}Order has not shipped.{% endif %}</td>
 					<td><a href='{% url order-detail order.req_request_id %}'>Details</a></td>
-					{% if order.can_be_revised %}
-						<td><a href='{% url order-revise order.req_request_id %}'>Revise</a></td>
+					{% if order.can_be_duplicated %}
+						<td><a href='{% url order-duplicate order.req_request_id %}'>Duplicate</a></td>
 					{% else %}
 						<td></td>
 					{% endif %}
-					{% if order.can_be_duplicated %}
-						<td><a href='{% url order-duplicate order.req_request_id %}'>Duplicate</a></td>
+					{% if order.can_be_revised %}
+						<td><a href='{% url order-revise order.req_request_id %}'>Revise</a></td>
 					{% else %}
 						<td></td>
 					{% endif %}

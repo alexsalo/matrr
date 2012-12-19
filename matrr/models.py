@@ -109,6 +109,7 @@ TissueTypeSexRelevant =  Enumeration([
 RequestStatus =  Enumeration([
 						('CA', 'Cart', 'Cart'),
 						('RV', 'Revised', 'Revised'),
+						('DP', 'Duplicated', 'Duplicated'),
 						('SB', 'Submitted', 'Submitted'),
 						('RJ', 'Rejected', 'Rejected'),
 						('AC', 'Accepted', 'Accepted'),
@@ -1233,14 +1234,26 @@ class TissueType(models.Model):
 
 class RequestManager(models.Manager):
 	def processed(self):
-		return self.get_query_set().exclude(req_status=RequestStatus.Cart).exclude(req_status=RequestStatus.Revised)
+		return self.get_query_set()\
+		.exclude(req_status=RequestStatus.Cart)\
+		.exclude(req_status=RequestStatus.Revised)\
+		.exclude(req_status=RequestStatus.Duplicated)
 
 	def evaluated(self):
-		return self.get_query_set().exclude(req_status=RequestStatus.Cart).exclude(req_status=RequestStatus.Revised).exclude(
-			req_status=RequestStatus.Submitted)
+		return self.get_query_set()\
+		.exclude(req_status=RequestStatus.Cart)\
+		.exclude(req_status=RequestStatus.Revised)\
+		.exclude(req_status=RequestStatus.Duplicated)\
+		.exclude(req_status=RequestStatus.Submitted)
 
 	def revised(self):
 		return self.get_query_set().filter(req_status=RequestStatus.Revised)
+
+	def duplicated(self):
+		return self.get_query_set().filter(req_status=RequestStatus.Duplicated)
+
+	def revised_or_duplicated(self):
+		return self.get_query_set().filter(Q(req_status=RequestStatus.Revised) | Q(req_status=RequestStatus.Duplicated))
 
 	def submitted(self):
 		return self.get_query_set().filter(req_status=RequestStatus.Submitted)
@@ -1385,7 +1398,7 @@ class Request(models.Model, DiffingMixin):
 		# Don't duplicate some other fields
 		revised.cohort = cohort
 		revised.req_modified_date = datetime.now()
-		revised.req_status = RequestStatus.Revised
+		revised.req_status = RequestStatus.Revised if is_revision else RequestStatus.Duplicated
 		revised.req_report_asked = False
 		revised.parent_request = self
 
@@ -1396,10 +1409,10 @@ class Request(models.Model, DiffingMixin):
 			fully_accepted = tissue_request.is_fully_accepted()
 			if is_revision and not fully_accepted: # for revised requests, do not duplicate fully accepted tissue requests
 				tr_duplicates.append(tissue_request.create_revised_duplicate(revised)) # update monkey fields
-			if not is_revision and fully_accepted: # for duplicate requests, only duplicate fully accepted tissue requests
+			if not is_revision: # for duplicate requests, duplicate everything
 				tr_duplicates.append(tissue_request.create_duplicate(revised)) # clear monkey fields and populate with new cohort
 
-		revised.tissue_request_set = tr_duplicates
+		revised.tissue_request_set.add(*tr_duplicates)
 		revised.req_estimated_cost = None
 		revised.save()
 		return revised
@@ -1434,7 +1447,8 @@ class Request(models.Model, DiffingMixin):
 	def save(self, force_insert=False, force_update=False, using=None):
 		if self.req_status != self._original_state['req_status']\
 		and (self._original_state['req_status'] == RequestStatus.Cart or
-			 self._original_state['req_status'] == RequestStatus.Revised):
+			 self._original_state['req_status'] == RequestStatus.Revised or
+			 self._original_state['req_status'] == RequestStatus.Duplicated):
 			self.req_request_date = datetime.now()
 		self.req_modified_date = datetime.now()
 		self._previous_status = self._original_state['req_status']
@@ -1446,21 +1460,22 @@ class Request(models.Model, DiffingMixin):
 		return False
 
 	def can_be_duplicated(self):
-		if self.req_status == RequestStatus.Accepted or self.req_status == RequestStatus.Partially:
-			allow_dupe = True
-			for rtt in self.tissue_request_set.all():
-				if rtt.accepted_monkeys.all(): # only test tissues with accepted monkeys.  Rejected tissues won't be duplicated anyway
-					allow_dupe = allow_dupe and (rtt.accepted_monkeys.all().count() == self.cohort.monkey_set.all().count())
-			return allow_dupe
+		if self.req_status != RequestStatus.Cart:
+#			allow_dupe = True
+#			for rtt in self.tissue_request_set.all():
+#				if rtt.accepted_monkeys.all(): # only test tissues with accepted monkeys.  Rejected tissues won't be duplicated anyway
+#					allow_dupe = allow_dupe and (rtt.accepted_monkeys.all().count() == self.cohort.monkey_set.all().count())
+#			return allow_dupe
+			return True
 		return False
 
 	def can_be_edited(self):
-		if self.req_status == RequestStatus.Revised:
+		if self.req_status in  (RequestStatus.Duplicated, RequestStatus.Revised):
 			return True
 		return False
 
 	def is_processed(self):
-		if self.req_status != RequestStatus.Cart and self.req_status != RequestStatus.Revised:
+		if not self.req_status in (RequestStatus.Cart, RequestStatus.Revised, RequestStatus.Duplicated):
 			return True
 		return False
 
@@ -2593,7 +2608,7 @@ def request_post_save(**kwargs):
 	tissue_requests = TissueRequest.objects.filter(req_request=req_request.req_request_id)
 
 	# For Submitted Requests
-	if (previous_status == RequestStatus.Cart or previous_status == RequestStatus.Revised)\
+	if previous_status in (RequestStatus.Cart, RequestStatus.Revised, RequestStatus.Duplicated)\
 	and current_status == RequestStatus.Submitted:
 		from matrr.emails import send_new_request_info
 		# Send email notification the request was submitted
