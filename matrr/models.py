@@ -128,7 +128,15 @@ VIP_IMAGES_LIST = (
 'monkey_etoh_bouts_drinks_intraday',
 'monkey_etoh_first_max_bout',
 'monkey_etoh_bouts_vol',
-'monkey_errorbox_etoh',
+'monkey_bec_bubble',
+'monkey_bec_consumption',
+'monkey_bec_monthly_centroids',
+
+'cohort_bec_maxbout',
+'cohort_bec_firstbout',
+'cohort_bec_firstbout_monkeycluster',
+
+'monkey_errorbox_etoh', # deprecated
 '__vip',
 '__brain_image',
 )
@@ -806,6 +814,7 @@ class MATRRImage(models.Model):
 	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
 
 	thumbnail_size = (240, 240)
+	objects = VIPManager()
 
 	def _construct_filefields(self, mpl_figure, data_map, *args, **kwargs):
 		# export the image and thumbnail to a temp folder and save them to the self.ImageFields
@@ -897,7 +906,6 @@ class MATRRImage(models.Model):
 class MTDImage(MATRRImage):
 	mdi_id = models.AutoField(primary_key=True)
 	monkey_to_drinking_experiment = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, related_name='image_set', editable=False)
-	objects = VIPManager()
 
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
@@ -939,7 +947,6 @@ class MTDImage(MATRRImage):
 class MonkeyImage(MATRRImage):
 	mig_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='image_set', editable=False)
-	objects = VIPManager()
 
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
@@ -986,7 +993,6 @@ class MonkeyImage(MATRRImage):
 class CohortImage(MATRRImage):
 	cig_id = models.AutoField(primary_key=True)
 	cohort = models.ForeignKey(Cohort, null=False, related_name='image_set', editable=False)
-	objects = VIPManager()
 
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map

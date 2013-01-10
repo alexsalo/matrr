@@ -981,19 +981,25 @@ def cohort_bec_mcd_beta(cohort, from_date=None, to_date=None, dex_type='', sampl
 
 
 # Dictionary of ethanol cohort plots VIPs can customize
-COHORT_ETOH_TOOLS_PLOTS = {"cohort_bihourly_etoh_treemap": 					(cohort_bihourly_etoh_treemap, "Cohort Bihourly Drinking Pattern")}
+COHORT_ETOH_TOOLS_PLOTS = {"cohort_bihourly_etoh_treemap": (cohort_bihourly_etoh_treemap, "Cohort Bihourly Drinking Pattern")}
 # Data-limited plots
-COHORT_BEC_PLOTS = { 'cohort_bec_maxbout': 							(cohort_bec_maxbout, 'BEC vs Max Bout'),
-					 'cohort_bec_firstbout': 						(cohort_bec_firstbout, 'BEC vs First Bout'),
-					 'cohort_bec_firstbout_monkeycluster': 			(cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
+COHORT_BEC_TOOLS_PLOTS = { 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
+						   'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
+						   'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
 }
 # Dictionary of protein cohort plots VIPs can customize
 COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}
 
+# Dictionary of Monkey Tools' plots
+COHORT_TOOLS_PLOTS = dict()
+COHORT_TOOLS_PLOTS.update(COHORT_ETOH_TOOLS_PLOTS)
+COHORT_TOOLS_PLOTS.update(COHORT_BEC_TOOLS_PLOTS)
+COHORT_TOOLS_PLOTS.update(COHORT_PROTEIN_TOOLS_PLOTS)
+
 # Dictionary of all cohort plots
 COHORT_PLOTS = {}
 COHORT_PLOTS.update(COHORT_ETOH_TOOLS_PLOTS)
-COHORT_PLOTS.update(COHORT_BEC_PLOTS)
+COHORT_PLOTS.update(COHORT_BEC_TOOLS_PLOTS)
 COHORT_PLOTS.update(COHORT_PROTEIN_TOOLS_PLOTS)
 COHORT_PLOTS.update({"cohort_boxplot_m2de_month_etoh_intake": 		(cohort_boxplot_m2de_month_etoh_intake,'Monthly Cohort Ethanol Intake boxplot'),
 					 "cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 	'Average Ethanol Intake, 22hr'),
@@ -2646,6 +2652,11 @@ MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': (monkey_protein_stdev, "Pr
 							  'monkey_protein_pctdev': (monkey_protein_pctdev, "Protein Value (percent deviation)"),
 							  'monkey_protein_value': (monkey_protein_value, "Protein Value (raw value)"),
 							  }
+# Dictionary of Monkey Tools' plots
+MONKEY_TOOLS_PLOTS = dict()
+MONKEY_TOOLS_PLOTS.update(MONKEY_ETOH_TOOLS_PLOTS)
+MONKEY_TOOLS_PLOTS.update(MONKEY_BEC_TOOLS_PLOTS)
+MONKEY_TOOLS_PLOTS.update(MONKEY_PROTEIN_TOOLS_PLOTS)
 
 # Dictionary of all cohort plots
 MONKEY_PLOTS = {}
@@ -2677,7 +2688,7 @@ def fetch_plot_choices(subject, user, cohort, tool):
 			if tool == 'etoh' and cohort.monkey_set.exclude(mtd_set=None).count():
 				plot_choices.extend([(plot_key, plot_value[1]) for plot_key, plot_value in COHORT_ETOH_TOOLS_PLOTS.items()])
 			if tool == 'bec' and cohort.monkey_set.exclude(bec_records=None).count():
-				plot_choices.extend([(plot_key, plot_value[1]) for plot_key, plot_value in COHORT_BEC_PLOTS.items()])
+				plot_choices.extend([(plot_key, plot_value[1]) for plot_key, plot_value in COHORT_BEC_TOOLS_PLOTS.items()])
 	else:
 		raise Exception("'subject' parameter must be 'monkey' or 'cohort'")
 	return plot_choices
