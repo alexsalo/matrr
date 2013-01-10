@@ -1987,6 +1987,9 @@ def tools_landing_sandbox(request):
 	context['coh_images'] = coh_images
 	mky_images = list()
 	for method in monkey_methods:
+		if method == 'monkey_bec_bubble' and settings.PRODUCTION:
+			mky_images.append(MonkeyImage.objects.get(pk=20025))
+			continue
 		try:
 			mky_images.append(MonkeyImage.objects.filter(method=method)[0])
 		except:
