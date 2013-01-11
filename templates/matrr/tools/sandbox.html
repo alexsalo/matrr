@@ -7,7 +7,7 @@
         {% for cig in coh_images %}
             <div class="image_container">
                 <div class="image_thumbnail left">
-                    <a rel="plot_gallery" href="{{ cig.html_fragment.url }}" target="_blank">
+                    <a href="{{ cig.html_fragment.url }}">
                         <img src="{{ cig.thumbnail.url }}" width="240px">
                     </a>
                 </div>
@@ -22,7 +22,7 @@
         {% for mig in mky_images %}
             <div class="image_container">
                 <div class="image_thumbnail left">
-                    <a rel="plot_gallery" href="{{ mig.html_fragment.url }}" target="_blank">
+                    <a href="{{ mig.html_fragment.url }}">
                         <img src="{{ mig.thumbnail.url }}" width="240px">
                     </a>
                 </div>
