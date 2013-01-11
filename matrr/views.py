@@ -2116,7 +2116,10 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 	context = {'cohort': cohort}
 
 	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
-		monkeys = _verify_monkeys(request.GET['monkeys'])
+		try:
+			monkeys = _verify_monkeys(request.GET['monkeys'])
+		except ValueError:
+			monkeys = _verify_monkeys(mky_id)
 		get_m = list()
 		if monkeys:
 			for m in monkeys.values_list('mky_id', flat=True):
@@ -2134,7 +2137,10 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 		graph_form = MonkeyProteinGraphAppearanceForm(data=request.POST)
 
 		if protein_form.is_valid() and graph_form.is_valid():
-			monkeys = _verify_monkeys(graph_form.cleaned_data['monkeys'])
+			try:
+				monkeys = _verify_monkeys(graph_form.cleaned_data['monkeys'])
+			except ValueError:
+				monkeys = _verify_monkeys(mky_id)
 			yaxis = graph_form.cleaned_data['yaxis_units']
 			data_filter = graph_form.cleaned_data['data_filter']
 			proteins = protein_form.cleaned_data['proteins']
