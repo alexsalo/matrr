@@ -432,6 +432,23 @@ table.clear tr {
     cursor: pointer;
 }
 
+.blockLinkToolsButton {
+	display: block;
+	padding: 3px 5px;
+	margin: auto;
+	text-decoration: none;
+	line-height: 1;
+	font-size: 15px;
+	border-style: solid;
+	border-width: 2px;
+	-moz-box-shadow: 1px #999;
+	-webkit-box-shadow: 1px #999;
+	cursor: pointer;
+	color: #4E4E4E;
+	border-color: #6E7C85;
+	background-color: #D4EFFF;
+}
+
 .blockLinkButton {
     color: #4E4E4E;
     border-color: #7B7E82;

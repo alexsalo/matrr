@@ -1308,9 +1308,18 @@ def cohort_bec_mcd_beta(cohort, from_date=None, to_date=None, dex_type='', sampl
 
 
 # Dictionary of ethanol cohort plots VIPs can customize
+<<<<<<< HEAD
 COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_etoh_bihourly_treemap, "Cohort Bihourly Drinking Pattern")}
 # Data-limited plots
 COHORT_BEC_TOOLS_PLOTS = { 'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
+=======
+COHORT_ETOH_TOOLS_PLOTS = {"cohort_bihourly_etoh_treemap": (cohort_bihourly_etoh_treemap, "Cohort Bihourly Drinking")}
+
+# BEC plots
+COHORT_BEC_TOOLS_PLOTS = { 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
+						   'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
+						   'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
+>>>>>>> WIP, nothing significant finished
 }
 # Dictionary of protein cohort plots VIPs can customize
 COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}
@@ -3072,13 +3081,13 @@ def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type=
 
 
 # Dictionary of ethanol monkey plots VIPs can customize
-MONKEY_ETOH_TOOLS_PLOTS = {'monkey_etoh_bouts_vol': (monkey_etoh_bouts_vol, 'Ethanol Consumption Pattern'),
+MONKEY_ETOH_TOOLS_PLOTS = {'monkey_etoh_bouts_vol': (monkey_etoh_bouts_vol, 'Ethanol Consumption'),
 						   'monkey_etoh_first_max_bout': (monkey_etoh_first_max_bout, 'First Bout and Max Bout Details'),
-						   'monkey_etoh_bouts_drinks': (monkey_etoh_bouts_drinks, 'Detailed Drinking Pattern'),
+						   'monkey_etoh_bouts_drinks': (monkey_etoh_bouts_drinks, 'Drinking Pattern'),
 						   }
 # BEC-related plots
 MONKEY_BEC_TOOLS_PLOTS = { 'monkey_bec_bubble': (monkey_bec_bubble, 'BEC Plot'),
-						   'monkey_bec_consumption': (monkey_bec_consumption, "BEC Consumption Pattern"),
+						   'monkey_bec_consumption': (monkey_bec_consumption, "BEC Consumption "),
 						   'monkey_bec_monthly_centroids': (monkey_bec_monthly_centroids, "BEC Monthly Centroid Distance"),
 						   }
 # Dictionary of protein monkey plots VIPs can customize
@@ -3105,9 +3114,12 @@ MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_2
 					 'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
 					 'monkey_etoh_bouts_drinks_intraday': (monkey_etoh_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
 					 'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
+<<<<<<< HEAD
 					 'mtd_histogram_general': (mtd_histogram_general, 'Monkey Histogram'),
 					 'bec_histogram_general': (bec_histogram_general, 'Monkey Histogram'),
 					 'monkey_etoh_induction_cumsum': (monkey_etoh_induction_cumsum, 'Monkey Induction Daily Ethanol Intake'),
+=======
+>>>>>>> WIP, nothing significant finished
 					 })
 
 def fetch_plot_choices(subject, user, cohort, tool):

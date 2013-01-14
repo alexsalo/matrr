@@ -2052,14 +2052,19 @@ def tools_landing_sandbox(request):
 	cohort_methods = plotting.COHORT_TOOLS_PLOTS.keys()
 	monkey_methods = plotting.MONKEY_TOOLS_PLOTS.keys()
 
-	context = dict()
+	if request.method == 'POST':
+		if request.POST.has_key('cohort_method'):
+			redirect('cohort-plot') # totally not done
+		if request.POST.has_key('monkey_method'):
+			do_stuff() # go to cohort selection page for this method
+
+
 	coh_images = list()
 	for method in cohort_methods:
 		try:
 			coh_images.append(CohortImage.objects.filter(method=method)[0])
 		except:
 			pass
-	context['coh_images'] = coh_images
 	mky_images = list()
 	for method in monkey_methods:
 		if method == 'monkey_bec_bubble' and settings.PRODUCTION:
@@ -2069,9 +2074,7 @@ def tools_landing_sandbox(request):
 			mky_images.append(MonkeyImage.objects.filter(method=method)[0])
 		except:
 			pass
-	context['mky_images'] = mky_images
-
-	return render_to_response('matrr/tools/sandbox.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/sandbox.html', {'mky_images': mky_images, 'coh_images': coh_images}, context_instance=RequestContext(request))
 
 def tools_landing(request):
 	if request.method == "POST":

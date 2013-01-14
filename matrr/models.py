@@ -907,7 +907,7 @@ class MATRRImage(models.Model):
 		return os.path.basename(self.html_fragment.name)
 
 	def __unicode__(self):
-		# You should override this method too
+		# Subclasses should override this method too
 		return "%s.(%s)" % (self.title, 'MATRRImage')
 
 	def populate_svg(self):
