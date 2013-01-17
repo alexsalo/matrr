@@ -344,6 +344,8 @@ class Monkey(models.Model):
 	mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
 	mky_notes = models.CharField('Monkey Notes', null=True, blank=True, max_length=1000, )
 	mky_species = models.CharField('Species', max_length=30, choices=SPECIES, help_text='Please select the species of the monkey.')
+	mky_high_drinker = models.BooleanField("High-drinking monkey", null=False, blank=False, default=False)
+	mky_low_drinker = models.BooleanField("Low-drinking monkey", null=False, blank=False, default=False)
 
 	def __unicode__(self):
 		return str(self.mky_id)
@@ -621,7 +623,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 											  help_text='Length of maximum bout (bout with largest ethanol consumption)')
 	mtd_max_bout_vol = models.FloatField('Max Bout Volume', blank=True, null=True,
 										 help_text='Volume of maximum bout')
-	mtd_pct_max_bout_vol_total_etoh = models.FloatField('Max Bout Volume as % of Total Etoh', blank=True, null=True,
+	mtd_pct_max_bout_vol_total_etoh = models.FloatField('% Etoh in Max Bout', blank=True, null=True,
 														help_text='Maximum bout volume as a percentage of total ethanol consumed that day')
 
 	# It might be ugly but being able to query this will speed up plotting.cohort_bihourly_etoh_treemap() a LOT
@@ -2333,12 +2335,12 @@ class MonkeyBEC(models.Model):
 	bec_session_start = models.TimeField("Session Start", editable=False, null=True, blank=False)
 	bec_sample = models.TimeField("Session Start", editable=False, null=True, blank=False)
 	bec_weight = models.FloatField("Monkey Weight (week)", null=True, blank=True)
-	bec_vol_etoh = models.FloatField("Etoh consumed at sample time, ml", null=True, blank=True)
-	bec_gkg_etoh = models.FloatField("Etoh consumed at sample time, g/kg", null=True, blank=True)
-	bec_daily_gkg_etoh = models.FloatField("Etoh consumed, entire day, g/kg", null=True, blank=True)
-	bec_mg_pct = models.FloatField("Blood Ethanol Concentration, mg %", null=False, blank=False)
+	bec_vol_etoh = models.FloatField("Etoh at sample time, ml", null=True, blank=True)
+	bec_gkg_etoh = models.FloatField("Etoh at sample time, g/kg", null=True, blank=True)
+	bec_daily_gkg_etoh = models.FloatField("Total Etoh, g/kg", null=True, blank=True)
+	bec_mg_pct = models.FloatField("Blood Ethanol Conc., mg %", null=False, blank=False)
 
-	bec_pct_intake = models.FloatField("Percent of daily intake consumed at sample", null=True, blank=True	)
+	bec_pct_intake = models.FloatField("Sample Volume / Total Intake", null=True, blank=True)
 
 
 	def __unicode__(self):
@@ -2395,37 +2397,57 @@ class CohortMetaData(models.Model):
 	cbc_mtd_etoh_g_kg_max = models.FloatField('Maximum Etoh intake per day, in g/kg', null=True, blank=False)
 	cbc_mtd_etoh_g_kg_avg = models.FloatField('Average Etoh intake per day, in g/kg', null=True, blank=False)
 
-	cbc_mtd_etoh_bout_min = models.IntegerField('Minimum Etoh Bouts per day', null=True, blank=True)
-	cbc_mtd_etoh_bout_max = models.IntegerField('Maximum Etoh Bouts per day', null=True, blank=True)
-	cbc_mtd_etoh_bout_avg = models.IntegerField('Average Etoh Bouts per day', null=True, blank=True)
+	cbc_mtd_etoh_bout_min = models.FloatField('Minimum Etoh Bouts per day', null=True, blank=True)
+	cbc_mtd_etoh_bout_max = models.FloatField('Maximum Etoh Bouts per day', null=True, blank=True)
+	cbc_mtd_etoh_bout_avg = models.FloatField('Average Etoh Bouts per day', null=True, blank=True)
 
-	cbc_mtd_etoh_drink_bout_min = models.IntegerField('Minimum Etoh Bouts per bout per day', null=True, blank=True)
-	cbc_mtd_etoh_drink_bout_max = models.IntegerField('Maximum Etoh Bouts per bout per day', null=True, blank=True)
-	cbc_mtd_etoh_drink_bout_avg = models.IntegerField('Average Etoh Bouts per bout per day', null=True, blank=True)
+	cbc_mtd_etoh_drink_bout_min = models.FloatField('Minimum Etoh Bouts per bout per day', null=True, blank=True)
+	cbc_mtd_etoh_drink_bout_max = models.FloatField('Maximum Etoh Bouts per bout per day', null=True, blank=True)
+	cbc_mtd_etoh_drink_bout_avg = models.FloatField('Average Etoh Bouts per bout per day', null=True, blank=True)
 
-	cbc_mtd_pct_max_bout_vol_total_etoh_min = models.IntegerField('Minimum Max Bout Volume as % of Total Etoh per day', null=True, blank=True)
-	cbc_mtd_pct_max_bout_vol_total_etoh_max = models.IntegerField('Maximum Max Bout Volume as % of Total Etoh per day', null=True, blank=True)
-	cbc_mtd_pct_max_bout_vol_total_etoh_avg = models.IntegerField('Average Max Bout Volume as % of Total Etoh per day', null=True, blank=True)
+	cbc_mtd_pct_max_bout_vol_total_etoh_min = models.FloatField('Minimum Max Bout Volume as % of Total Etoh per day', null=True, blank=True)
+	cbc_mtd_pct_max_bout_vol_total_etoh_max = models.FloatField('Maximum Max Bout Volume as % of Total Etoh per day', null=True, blank=True)
+	cbc_mtd_pct_max_bout_vol_total_etoh_avg = models.FloatField('Average Max Bout Volume as % of Total Etoh per day', null=True, blank=True)
 
-	cbc_mtd_max_bout_length_min = models.IntegerField('Minimum Max Bout Length per day', null=True, blank=True)
-	cbc_mtd_max_bout_length_max = models.IntegerField('Maximum Max Bout Length per day', null=True, blank=True)
-	cbc_mtd_max_bout_length_avg = models.IntegerField('Average Max Bout Length per day', null=True, blank=True)
+	cbc_mtd_max_bout_length_min = models.FloatField('Minimum Max Bout Length per day', null=True, blank=True)
+	cbc_mtd_max_bout_length_max = models.FloatField('Maximum Max Bout Length per day', null=True, blank=True)
+	cbc_mtd_max_bout_length_avg = models.FloatField('Average Max Bout Length per day', null=True, blank=True)
 
-	cbc_mtd_max_bout_vol_min = models.IntegerField('Minimum Max Bout Volume per day', null=True, blank=True)
-	cbc_mtd_max_bout_vol_max = models.IntegerField('Maximum Max Bout Volume per day', null=True, blank=True)
-	cbc_mtd_max_bout_vol_avg = models.IntegerField('Average Max Bout Volume per day', null=True, blank=True)
+	cbc_mtd_max_bout_vol_min = models.FloatField('Minimum Max Bout Volume per day', null=True, blank=True)
+	cbc_mtd_max_bout_vol_max = models.FloatField('Maximum Max Bout Volume per day', null=True, blank=True)
+	cbc_mtd_max_bout_vol_avg = models.FloatField('Average Max Bout Volume per day', null=True, blank=True)
 
-	cbc_mtd_vol_1st_bout_min = models.IntegerField('Minimum Vol. 1st Bout per day', null=True, blank=True)
-	cbc_mtd_vol_1st_bout_max = models.IntegerField('Maximum Vol. 1st Bout per day', null=True, blank=True)
-	cbc_mtd_vol_1st_bout_avg = models.IntegerField('Average Vol. 1st Bout per day', null=True, blank=True)
+	cbc_mtd_vol_1st_bout_min = models.FloatField('Minimum Vol. 1st Bout per day', null=True, blank=True)
+	cbc_mtd_vol_1st_bout_max = models.FloatField('Maximum Vol. 1st Bout per day', null=True, blank=True)
+	cbc_mtd_vol_1st_bout_avg = models.FloatField('Average Vol. 1st Bout per day', null=True, blank=True)
 
-	cbc_mtd_pct_etoh_in_1st_bout_min = models.IntegerField('Minimum % Etoh in First Bout per day', null=True, blank=True)
-	cbc_mtd_pct_etoh_in_1st_bout_max = models.IntegerField('Maximum % Etoh in First Bout per day', null=True, blank=True)
-	cbc_mtd_pct_etoh_in_1st_bout_avg = models.IntegerField('Average % Etoh in First Bout per day', null=True, blank=True)
+	cbc_mtd_pct_etoh_in_1st_bout_min = models.FloatField('Minimum % Etoh in First Bout per day', null=True, blank=True)
+	cbc_mtd_pct_etoh_in_1st_bout_max = models.FloatField('Maximum % Etoh in First Bout per day', null=True, blank=True)
+	cbc_mtd_pct_etoh_in_1st_bout_avg = models.FloatField('Average % Etoh in First Bout per day', null=True, blank=True)
 
-	cbc_total_drinks_min = models.IntegerField('Minimum total drinks per day', null=True, blank=True) # this field is fuzzy.  It's a guestimate derived from an average
-	cbc_total_drinks_max = models.IntegerField('Maximum total drinks per day', null=True, blank=True) # this field is fuzzy.  It's a guestimate derived from an average
-	cbc_total_drinks_avg = models.IntegerField('Average total drinks per day', null=True, blank=True) # this field is fuzzy.  It's a guestimate derived from an average
+	cbc_mtd_etoh_intake_min = models.FloatField('Minimum Etoh Intake', null=True, blank=True)
+	cbc_mtd_etoh_intake_max = models.FloatField('Maximum Etoh Intake', null=True, blank=True)
+	cbc_mtd_etoh_intake_avg = models.FloatField('Average Etoh Intake', null=True, blank=True)
+
+	cbc_mtd_etoh_bout_min = models.FloatField('Minimum EtOH Bout', null=True, blank=True)
+	cbc_mtd_etoh_bout_max = models.FloatField('Maximum EtOH Bout', null=True, blank=True)
+	cbc_mtd_etoh_bout_avg = models.FloatField('Average EtOH Bout', null=True, blank=True)
+
+	cbc_mtd_etoh_drink_bout_min = models.FloatField('Minimum EtOH Drink/Bout', null=True, blank=True)
+	cbc_mtd_etoh_drink_bout_max = models.FloatField('Maximum EtOH Drink/Bout', null=True, blank=True)
+	cbc_mtd_etoh_drink_bout_avg = models.FloatField('Average EtOH Drink/Bout', null=True, blank=True)
+
+	cbc_mtd_etoh_mean_drink_vol_min = models.FloatField('Minimum EtOH Mean Drink Vol', null=True, blank=True)
+	cbc_mtd_etoh_mean_drink_vol_max = models.FloatField('Maximum EtOH Mean Drink Vol', null=True, blank=True)
+	cbc_mtd_etoh_mean_drink_vol_avg = models.FloatField('Average EtOH Mean Drink Vol', null=True, blank=True)
+
+	cbc_mtd_etoh_mean_bout_vol_min = models.FloatField('Minimum EtOH Mean Bout Vol', null=True, blank=True)
+	cbc_mtd_etoh_mean_bout_vol_max = models.FloatField('Maximum EtOH Mean Bout Vol', null=True, blank=True)
+	cbc_mtd_etoh_mean_bout_vol_avg = models.FloatField('Average EtOH Mean Bout Vol', null=True, blank=True)
+
+	cbc_total_drinks_min = models.FloatField('Minimum total drinks per day', null=True, blank=True) # this field is fuzzy.  It's a guestimate derived from an average
+	cbc_total_drinks_max = models.FloatField('Maximum total drinks per day', null=True, blank=True) # this field is fuzzy.  It's a guestimate derived from an average
+	cbc_total_drinks_avg = models.FloatField('Average total drinks per day', null=True, blank=True) # this field is fuzzy.  It's a guestimate derived from an average
 
 	cbc_ebt_volume_min = models.FloatField('Minimum Etoh Bout volume per day', null=True, blank=True)
 	cbc_ebt_volume_max = models.FloatField('Maximum Etoh Bout volume per day', null=True, blank=True)
@@ -2497,6 +2519,31 @@ class CohortMetaData(models.Model):
 		self.cbc_mtd_pct_etoh_in_1st_bout_min = data['mtd_pct_etoh_in_1st_bout__min']
 		self.cbc_mtd_pct_etoh_in_1st_bout_max = data['mtd_pct_etoh_in_1st_bout__max']
 		self.cbc_mtd_pct_etoh_in_1st_bout_avg = data['mtd_pct_etoh_in_1st_bout__avg']
+
+		data = mtds.aggregate(Min('mtd_etoh_intake'), Max('mtd_etoh_intake'), Avg('mtd_etoh_intake'))
+		self.cbc_mtd_etoh_intake_min = data['mtd_etoh_intake__min']
+		self.cbc_mtd_etoh_intake_max = data['mtd_etoh_intake__max']
+		self.cbc_mtd_etoh_intake_avg = data['mtd_etoh_intake__avg']
+
+		data = mtds.aggregate(Min('mtd_etoh_bout'), Max('mtd_etoh_bout'), Avg('mtd_etoh_bout'))
+		self.cbc_mtd_etoh_bout_min = data['mtd_etoh_bout__min']
+		self.cbc_mtd_etoh_bout_max = data['mtd_etoh_bout__max']
+		self.cbc_mtd_etoh_bout_avg = data['mtd_etoh_bout__avg']
+
+		data = mtds.aggregate(Min('mtd_etoh_drink_bout'), Max('mtd_etoh_drink_bout'), Avg('mtd_etoh_drink_bout'))
+		self.cbc_mtd_etoh_drink_bout_min = data['mtd_etoh_drink_bout__min']
+		self.cbc_mtd_etoh_drink_bout_max = data['mtd_etoh_drink_bout__max']
+		self.cbc_mtd_etoh_drink_bout_avg = data['mtd_etoh_drink_bout__avg']
+
+		data = mtds.aggregate(Min('mtd_etoh_mean_drink_vol'), Max('mtd_etoh_mean_drink_vol'), Avg('mtd_etoh_mean_drink_vol'))
+		self.cbc_mtd_etoh_mean_drink_vol_min = data['mtd_etoh_mean_drink_vol__min']
+		self.cbc_mtd_etoh_mean_drink_vol_max = data['mtd_etoh_mean_drink_vol__max']
+		self.cbc_mtd_etoh_mean_drink_vol_avg = data['mtd_etoh_mean_drink_vol__avg']
+
+		data = mtds.aggregate(Min('mtd_etoh_mean_bout_vol'), Max('mtd_etoh_mean_bout_vol'), Avg('mtd_etoh_mean_bout_vol'))
+		self.cbc_mtd_etoh_mean_bout_vol_min = data['mtd_etoh_mean_bout_vol__min']
+		self.cbc_mtd_etoh_mean_bout_vol_max = data['mtd_etoh_mean_bout_vol__max']
+		self.cbc_mtd_etoh_mean_bout_vol_avg = data['mtd_etoh_mean_bout_vol__avg']
 
 		_data = mtds.values_list('mtd_etoh_drink_bout', 'mtd_etoh_bout')
 		data = numpy.array([d[0]*d[1] if all(d) else 0 for d in _data])

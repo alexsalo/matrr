@@ -1,13 +1,14 @@
 from datetime import timedelta, datetime, date, time
-from matplotlib import pyplot, cm
+from matplotlib import pyplot, cm, gridspec, colors, cm
 from django.db.models.aggregates import Sum, Max, Avg
 from matplotlib.cm import get_cmap
 from matplotlib.patches import Circle, Rectangle
-from matplotlib.ticker import NullLocator, FixedLocator
+from matplotlib.ticker import NullLocator, FixedLocator, MaxNLocator
 import numpy, dateutil, gc, operator, matplotlib
 from numpy import polyfit, polyval
 from numpy.ma import concatenate
 from scipy.cluster import vq
+from scipy.interpolate import spline
 from matrr.models import *
 
 ###############  matplotlibrc settings
@@ -22,6 +23,7 @@ matplotlib.rcParams['figure.subplot.hspace'] 	= 0.05	# the amount of height rese
 DEFAULT_CIRCLE_MAX = 280
 DEFAULT_CIRCLE_MIN = 20
 DEFAULT_FIG_SIZE = (10,10)
+HISTOGRAM_FIG_SIZE = (15,10)
 DEFAULT_DPI = 80
 COLORS = {'monkey' : "#01852F", 'cohort' : 'black'}
 
@@ -127,6 +129,164 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
 		assign_x_labels(ax, x_labels)
 	else:
 		ax.set_xticks([])
+
+def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend):
+	linspace = numpy.linspace(0, cohort_values.max(), 15) # defines number of bins in histogram
+
+	# Monkey histogram spline
+	n, bins, patches = axis.hist(monkey_values, bins=linspace, normed=True, alpha=0, color='gold')
+	bincenters = 0.5*(bins[1:]+bins[:-1])
+	newx = numpy.linspace(min(bincenters), max(bincenters), 100) # smooth out the x axis
+	newy = spline(bincenters, n, newx) # smooth out the y axis
+	axis.plot(newx, newy, color='gold', linewidth=5, label="%d" % monkey.pk) # smoothed line
+
+	# Cohort histogram spline
+	n, bins, patches = axis.hist(cohort_values, bins=linspace, normed=True, alpha=0, color='purple')
+	bincenters = 0.5*(bins[1:]+bins[:-1])
+	newx = numpy.linspace(min(bincenters), max(bincenters), 100) # smooth out the x axis
+	newy = spline(bincenters, n, newx) # smooth out the y axis
+	axis.plot(newx, newy, color='purple', linewidth=2, label=str(monkey.cohort)) # smoothed line
+
+	# high-drinker histogram spline
+	n, bins, patches = axis.hist(high_values, bins=linspace, normed=True, alpha=0, color='purple')
+	bincenters = 0.5*(bins[1:]+bins[:-1])
+	newx = numpy.linspace(min(bincenters), max(bincenters), 100) # smooth out the x axis
+	newy = spline(bincenters, n, newx) # smooth out the y axis
+	axis.plot(newx, newy, color='red', ls='--', linewidth=2, label="HD") # smoothed line
+
+	# low-drinker histogram spline
+	n, bins, patches = axis.hist(low_values, bins=linspace, normed=True, alpha=0, color='purple')
+	bincenters = 0.5*(bins[1:]+bins[:-1])
+	newx = numpy.linspace(min(bincenters), max(bincenters), 100) # smooth out the x axis
+	newy = spline(bincenters, n, newx) # smooth out the y axis
+	axis.plot(newx, newy, color='blue', ls='--', linewidth=2, label="LD") # smoothed line
+
+	if show_legend:
+		pyplot.legend(loc="upper left", frameon=False)
+	axis.set_title(label)
+	axis.set_yticks([])
+	if hide_xticks:
+		axis.set_xticks([])
+	else:
+		axis.xaxis.set_major_locator(MaxNLocator(4))
+	return axis
+
+def _histogram_legend(monkey, axis):
+	lines = list()
+	labels = list()
+	lines.append(pyplot.Line2D((0,1),(0,0), color='gold', linewidth=5))
+	labels.append(monkey)
+	lines.append(pyplot.Line2D((0,1),(0,0), color='purple', linewidth=2))
+	labels.append(str(monkey.cohort))
+	lines.append(pyplot.Line2D((0,1),(0,0), color='red', linewidth=2, ls='--'))
+	labels.append("High-drinker")
+	lines.append(pyplot.Line2D((0,1),(0,0), color='blue', linewidth=2, ls='--'))
+	labels.append("Low-drinker")
+	axis.legend(lines, labels, loc=10, frameon=False, prop={'size':12})
+	axis.set_yticks([])
+	axis.set_xticks([])
+
+def _bec_histogram(monkey, column_name, axis, from_date=None, to_date=None, sample_before=None, sample_after=None, dex_type='', verbose_name='', hide_xticks=False, show_legend=False):
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
+	high_monkey = Monkey.objects.get(mky_high_drinker=True)
+	low_monkey = Monkey.objects.get(mky_low_drinker=True)
+
+	cohort_bec = MonkeyBEC.objects.filter(monkey__cohort=monkey.cohort)
+	high_bec = MonkeyBEC.objects.filter(monkey=high_monkey)
+	low_bec = MonkeyBEC.objects.filter(monkey=low_monkey)
+	from_date, to_date = validate_dates(from_date, to_date)
+	q_filter = Q()
+	if from_date:
+		q_filter = q_filter & Q(mtd__drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		q_filter = q_filter & Q(mtd__drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		q_filter = q_filter & Q(mtd__drinking_experiment__dex_type=dex_type)
+	if sample_before:
+		q_filter = q_filter & Q(bec_sample__lte=sample_before)
+	if sample_after:
+		q_filter = q_filter & Q(bec_sample__gte=sample_after)
+
+	cohort_bec = cohort_bec.filter(q_filter)
+	monkey_bec = cohort_bec.filter(monkey=monkey)
+	cohort_bec = cohort_bec.exclude(monkey=monkey)
+	high_bec = high_bec.filter(q_filter)
+	low_bec = low_bec.filter(q_filter)
+
+	label = verbose_name
+	monkey_values = list()
+	cohort_values = list()
+	dates = monkey_bec.dates('bec_collect_date', 'day').order_by('bec_collect_date')
+	for index, date in enumerate(dates, 1):
+		bec = monkey_bec.get(bec_collect_date=date)
+		monkey_values.append(getattr(bec, column_name))
+		coh_bec = cohort_bec.filter(bec_collect_date=date)
+		cohort_values.extend(coh_bec.values_list(column_name, flat=True))
+		if not label:
+			label = bec._meta.get_field(column_name).verbose_name
+
+	monkey_values = numpy.array(monkey_values)
+	cohort_values = numpy.array(cohort_values)
+	high_values = numpy.array(high_bec.values_list(column_name, flat=True))
+	low_values = numpy.array(low_bec.values_list(column_name, flat=True))
+	return _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend)
+
+def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_type='', verbose_name='', hide_xticks=False, show_legend=False):
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print "That's not a valid monkey."
+				return
+	high_monkey = Monkey.objects.get(mky_high_drinker=True)
+	low_monkey = Monkey.objects.get(mky_low_drinker=True)
+
+	cohort_dex = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=monkey.cohort)
+	high_dex = MonkeyToDrinkingExperiment.objects.filter(monkey=high_monkey)
+	low_dex = MonkeyToDrinkingExperiment.objects.filter(monkey=low_monkey)
+	from_date, to_date = validate_dates(from_date, to_date)
+	q_filter = Q()
+	if from_date:
+		q_filter = q_filter & Q(drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		q_filter = q_filter & Q(drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		q_filter = q_filter & Q(drinking_experiment__dex_type=dex_type)
+
+	cohort_dex = cohort_dex.filter(q_filter)
+	monkey_dex = cohort_dex.filter(monkey=monkey)
+	cohort_dex = cohort_dex.exclude(monkey=monkey)
+	high_dex = high_dex.filter(q_filter)
+	low_dex = low_dex.filter(q_filter)
+
+	label = verbose_name
+	monkey_values = list()
+	cohort_values = list()
+	dates = monkey_dex.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
+	for index, date in enumerate(dates, 1):
+		de = monkey_dex.filter(drinking_experiment__dex_date=date)
+		monkey_values.extend(de.values_list(column_name, flat=True))
+		coh_dex = cohort_dex.filter(drinking_experiment__dex_date=date)
+		cohort_values.extend(coh_dex.values_list(column_name, flat=True))
+		if not label:
+			label = de[0]._meta.get_field(column_name).verbose_name
+
+	monkey_values = numpy.array(monkey_values)
+	cohort_values = numpy.array(cohort_values)
+	high_values = numpy.array(high_dex.values_list(column_name, flat=True))
+	low_values = numpy.array(low_dex.values_list(column_name, flat=True))
+	return _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend)
 
 
 ### Specific Callables ###
@@ -395,6 +555,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 	else:
 		print "No drinking experiments for this cohort."
 		return False, False
+
 
 def convert_timedelta(t):
 	if t:
@@ -1830,6 +1991,200 @@ def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type
 
 	return fig, datapoint_map
 
+def new_monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
+	"""
+		Scatter plot for monkey
+				x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
+			y axis - total number of drinks (bouts * drinks per bout)
+			color - number of bouts
+			size - drinks per bout
+		Circle sizes scaled to range [cirle_min, circle_max]
+	"""
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return False, False
+	cbc = monkey.cohort.cbc
+
+	if circle_max < circle_min:
+		circle_max = DEFAULT_CIRCLE_MAX
+		circle_min = DEFAULT_CIRCLE_MIN
+	else:
+		if circle_max < 10:
+			circle_max = DEFAULT_CIRCLE_MAX
+		if circle_min < 1:
+			circle_min = DEFAULT_CIRCLE_MIN
+
+	drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+	from_date, to_date = validate_dates(from_date, to_date)
+	if from_date:
+		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
+	drinking_experiments = drinking_experiments.exclude(mtd_etoh_bout=None, mtd_etoh_drink_bout=None)
+
+	if drinking_experiments.count() > 0:
+		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
+	else:
+		return None, False
+
+	bar_y_label = ''
+	bar_color_label = ''
+	scatter_y_label = ''
+	scatter_color_label = ''
+	scatter_size_label = ''
+	induction_days = list()
+	scatter_y = list()
+	scatter_size = list()
+	scatter_color = list()
+	bar_yaxis = list() # ??
+	bar_color = list() # max_bout_vol / total intake
+	for index, date in enumerate(dates, 1):
+		de = drinking_experiments.get(drinking_experiment__dex_date=date)
+		if de.drinking_experiment.dex_type == 'Induction':
+			induction_days.append(index)
+		scatter_y.append(de.mtd_etoh_intake)
+		scatter_color.append(de.mtd_etoh_drink_bout)
+		scatter_size.append(de.mtd_etoh_bout)
+		bar_yaxis.append(de.mtd_etoh_mean_drink_vol)
+		bar_color.append(de.mtd_etoh_mean_bout_vol)
+		if not scatter_y_label:
+			scatter_y_label = de._meta.get_field('mtd_etoh_intake').verbose_name
+		if not scatter_color_label:
+			scatter_color_label = de._meta.get_field('mtd_etoh_drink_bout').verbose_name
+		if not scatter_size_label:
+			scatter_size_label = de._meta.get_field('mtd_etoh_bout').verbose_name
+		if not bar_y_label:
+			bar_y_label = de._meta.get_field('mtd_etoh_mean_drink_vol').verbose_name
+		if not bar_color_label:
+			bar_color_label = de._meta.get_field('mtd_etoh_mean_bout_vol').verbose_name
+
+	xaxis = numpy.array(range(1,len(scatter_size)+1))
+	scatter_y = numpy.array(scatter_y)
+	scatter_size = numpy.array(scatter_size)
+	scatter_color = numpy.array(scatter_color)
+	induction_days = numpy.array(induction_days)
+
+	fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+#   main graph
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
+	main_plot = pyplot.subplot(main_gs[0:2,0:39])
+
+	size_min = circle_min
+	size_scale = circle_max - size_min
+	size_max = float(cbc.cbc_mtd_etoh_bout_max)
+	rescaled_bouts = [ (b/size_max)*size_scale+size_min for b in scatter_size ] # rescaled, so that circles will be in range (size_min, size_scale)
+
+	s = main_plot.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_bouts, alpha=0.4)
+
+	y_max = cbc.cbc_mtd_etoh_intake_max
+	graph_y_max = y_max + y_max*0.25
+	if len(induction_days) and len(induction_days) != len(xaxis):
+		main_plot.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
+
+	main_plot.set_ylabel(scatter_y_label)
+	main_plot.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
+
+	pyplot.ylim(cbc.cbc_mtd_etoh_intake_max, graph_y_max)
+	pyplot.xlim(0,len(xaxis) + 2)
+
+	max_y_int = int(round(y_max*1.25))
+	y_tick_int = int(round(max_y_int/5))
+	main_plot.set_yticks(range(0, max_y_int, y_tick_int))
+	main_plot.yaxis.get_label().set_position((0,0.6))
+
+	main_color = pyplot.subplot(main_gs[0:2,39:])
+	cb = fig.colorbar(s, alpha=1, cax=main_color)
+	cb.set_label(scatter_color_label)
+	cb.set_clim(cbc.cbc_mtd_etoh_drink_bout_min, cbc.cbc_mtd_etoh_drink_bout_max)
+
+#	regression line
+	fit = polyfit(xaxis, scatter_y, 3)
+	xr=polyval(fit, xaxis)
+	main_plot.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
+
+#   size legend
+	x =numpy.array(range(1,6))
+	y =numpy.array([1,1,1,1,1])
+
+	size_m = size_scale/(len(y)-1)
+	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
+	size.insert(0,1+size_min)
+	size = numpy.array(size)
+
+	m = size_max/(len(y)-1)
+	bout_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of bouts
+	bout_labels.insert(0,"1")
+	bout_labels.insert(0, "")
+	bout_labels.append("")
+
+	size_legend = fig.add_subplot(931)
+	size_legend.set_position((0.05, .89, .3, .07))
+	size_legend.scatter(x, y, s=size, alpha=0.4)
+	size_legend.set_xlabel(scatter_size_label)
+	size_legend.yaxis.set_major_locator(NullLocator())
+	pyplot.setp(size_legend, xticklabels=bout_labels)
+
+#	barplot
+	bar_plot = pyplot.subplot(main_gs[-1:, 0:39])
+
+	bar_plot.set_xlabel("Days")
+	bar_plot.set_ylabel(bar_y_label)
+	bar_plot.set_autoscalex_on(False)
+
+	# normalize colors to use full range of colormap
+	norm = colors.normalize(cbc.cbc_mtd_etoh_mean_bout_vol_min, cbc.cbc_mtd_etoh_mean_bout_vol_max)
+
+	facecolors = list()
+	for yvalue, x, color_value in zip(bar_yaxis, xaxis, bar_color):
+		pyplot.bar(x, yvalue, color=cm.jet(norm(color_value)),  edgecolor='none')
+		facecolors.append(cm.jet(norm(color_value)))
+
+	bar_plot.set_ylim(cbc.cbc_mtd_etoh_mean_drink_vol_min, cbc.cbc_mtd_etoh_mean_drink_vol_max)
+	bar_plot.set_xlim(0,len(xaxis) + 2)
+	if len(induction_days) and len(induction_days) != len(xaxis):
+		bar_plot.bar(induction_days.min(), bar_plot.get_ylim()[1], width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
+
+	# create a collection that we will use in colorbox
+	col = matplotlib.collections.Collection(facecolors=facecolors, norm = norm, cmap = cm.jet)
+	col.set_array(bar_color)
+
+	# colorbar for bar plot
+	barplot_color = pyplot.subplot(main_gs[-1:,39:])
+	cb = fig.colorbar(col, alpha=1, cax=barplot_color)
+	cb.set_label(bar_color_label)
+
+	hist_gs = gridspec.GridSpec(6, 1)
+	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
+	hist = pyplot.subplot(hist_gs[0, :])
+	hist = _histogram_legend(monkey, hist)
+	hist = pyplot.subplot(hist_gs[1, :])
+	hist = _mtd_histogram(monkey, 'mtd_etoh_intake', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[2, :])
+	hist = _mtd_histogram(monkey, 'mtd_etoh_drink_bout', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[3, :])
+	hist = _mtd_histogram(monkey, 'mtd_etoh_bout', hist, from_date=from_date, to_date=to_date, dex_type=dex_type,)
+	hist = pyplot.subplot(hist_gs[4, :])
+	hist = _mtd_histogram(monkey, 'mtd_etoh_mean_drink_vol', hist, from_date=from_date, to_date=to_date, dex_type=dex_type,)
+	hist = pyplot.subplot(hist_gs[5, :])
+	hist = _mtd_histogram(monkey, 'mtd_etoh_mean_bout_vol', hist, from_date=from_date, to_date=to_date, dex_type=dex_type,)
+
+	zipped = numpy.vstack(zip(xaxis, scatter_y))
+	coordinates = main_plot.transData.transform(zipped)
+	ids = [de.pk for de in drinking_experiments]
+	xcoords, inv_ycoords = zip(*coordinates)
+	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
+	datapoint_map = zip(ids, xcoords, ycoords)
+	return fig, datapoint_map
+
 def monkey_etoh_bouts_drinks_intraday(mtd=None):
 	if not isinstance(mtd, MonkeyToDrinkingExperiment):
 		try:
@@ -1885,9 +2240,6 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 		Circle sizes scaled to range [cirle_min, circle_max]
 		Plot saved to filename or to static/images/monkeys-bouts-drinks as mky_[real_id].png and mky_[real_id]-thumb.png
 	"""
-	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
-	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
-
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(pk=monkey)
@@ -1924,52 +2276,60 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 	else:
 		return None, False
 
+	scatter_y_label = ''
+	scatter_color_label = ''
+	scatter_size_label = ''
 	induction_days = list()
-	avg_bout_volumes = list()
-	g_per_kg_consumed = list() # yaxis
-	bouts = list()
+	scatter_y = list()
+	scatter_color = list()
+	scatter_size = list()
 	for index, date in enumerate(dates, 1):
 		de = drinking_experiments.get(drinking_experiment__dex_date=date)
 		if de.drinking_experiment.dex_type == 'Induction':
 			induction_days.append(index)
-		g_per_kg_consumed.append(de.mtd_etoh_g_kg) # y-axis
-		bouts.append(de.mtd_etoh_bout) # color
+		scatter_y.append(de.mtd_etoh_g_kg)
+		scatter_color.append(de.mtd_etoh_bout)
 		bouts_volume = de.bouts_set.all().aggregate(Avg('ebt_volume'))['ebt_volume__avg']
-		avg_bout_volumes.append(bouts_volume if bouts_volume else 0) # size
+		scatter_size.append(bouts_volume if bouts_volume else 0)
+		if not scatter_y_label:
+			scatter_y_label = de._meta.get_field('mtd_etoh_g_kg').verbose_name
+		if not scatter_color_label:
+			scatter_color_label = de._meta.get_field('mtd_etoh_bout').verbose_name
+		if not scatter_size_label:
+			scatter_size_label = "Avg bout volume"
 
-	xaxis = numpy.array(range(1,len(avg_bout_volumes)+1))
-	avg_bout_volumes = numpy.array(avg_bout_volumes)
-	bouts   = numpy.array(bouts)
+	xaxis = numpy.array(range(1,len(scatter_size)+1))
+	scatter_size = numpy.array(scatter_size)
+	scatter_color   = numpy.array(scatter_color)
 	induction_days = numpy.array(induction_days)
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
-
 	volume_max = cbc.cbc_ebt_volume_max
-	rescaled_volumes = [ (vol/volume_max)*size_scale+size_min for vol in avg_bout_volumes ] # rescaled, so that circles will be in range (size_min, size_scale)
+	rescaled_volumes = [ (vol/volume_max)*size_scale+size_min for vol in scatter_size ] # rescaled, so that circles will be in range (size_min, size_scale)
 
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-
+	fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
 #   main graph
-	ax1 = fig.add_subplot(111)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
+	main_plot = pyplot.subplot(main_gs[:,0:39])
+	s = main_plot.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_volumes, alpha=0.4)
 
-	s= ax1.scatter(xaxis, g_per_kg_consumed, c=bouts, s=rescaled_volumes, alpha=0.4)
+	main_plot.set_ylabel("Daily Ethanol Consumption (in g/kg)")
+	main_plot.set_xlabel("Days")
+	main_plot.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
 	y_max = cbc.cbc_mtd_etoh_g_kg_max
 	graph_y_max = y_max + y_max*0.25
-	if len(induction_days) and len(induction_days) != len(xaxis):
-		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
-
-	ax1.set_ylabel("Daily Ethanol Consumption (in g/kg)")
-	ax1.set_xlabel("Days")
-
-	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
-	pyplot.ylim(0, graph_y_max) # + % to show circles under the size legend instead of behind it
+	pyplot.ylim(0, graph_y_max)
 	pyplot.xlim(0,len(xaxis) + 1)
+	if len(induction_days) and len(induction_days) != len(xaxis):
+		main_plot.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
-	cb = pyplot.colorbar(s)
+	main_color = pyplot.subplot(main_gs[:,39:])
+	cb = fig.colorbar(s, alpha=1, cax=main_color)
+	cb.set_label(scatter_color_label)
 	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
-	cb.set_label("Number of bouts")
 
 #    size legend
 	x =numpy.array(range(1,6))
@@ -1981,49 +2341,50 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 	size = numpy.array(size)
 
 	m = volume_max/(len(y)-1)
-	bout_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of bouts
-	bout_labels.insert(0,"1")
-	bout_labels.insert(0, "")
-	bout_labels.append("")
+	size_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of bouts
+	size_labels.insert(0,"1")
+	size_labels.insert(0, "")
+	size_labels.append("")
 
-	ax2 = fig.add_subplot(721)
-	ax2.scatter(x, y, s=size, alpha=0.4)
-	ax2.set_xlabel("Average bout volume")
-	ax2.yaxis.set_major_locator(NullLocator())
-	pyplot.setp(ax2, xticklabels=bout_labels)
+	size_legend = fig.add_subplot(721)
+	size_legend.scatter(x, y, s=size, alpha=0.4)
+	size_legend.set_xlabel(scatter_size_label)
+	size_legend.yaxis.set_major_locator(NullLocator())
+	pyplot.setp(size_legend, xticklabels=size_labels)
 
 #	regression line
-	fit = polyfit(xaxis, g_per_kg_consumed, 3)
+	fit = polyfit(xaxis, scatter_y, 3)
 	xr=polyval(fit, xaxis)
-	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
+	main_plot.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
-	zipped = numpy.vstack(zip(xaxis, g_per_kg_consumed))
-	coordinates = ax1.transData.transform(zipped)
+	hist_gs = gridspec.GridSpec(4, 1)
+	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
+	hist = pyplot.subplot(hist_gs[0, :])
+	hist = _histogram_legend(monkey, hist)
+	hist = pyplot.subplot(hist_gs[1, :])
+	hist = _mtd_histogram(monkey, 'mtd_etoh_g_kg', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[2, :])
+	hist = _mtd_histogram(monkey, 'mtd_etoh_bout', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[3, :])
+	hist = _mtd_histogram(monkey, 'bouts_set__ebt_volume', hist, from_date=from_date, to_date=to_date, dex_type=dex_type, verbose_name='Bout Volume')
+
+	zipped = numpy.vstack(zip(xaxis, scatter_y))
+	coordinates = main_plot.transData.transform(zipped)
 	ids = [de.pk for de in drinking_experiments]
 	xcoords, inv_ycoords = zip(*coordinates)
 	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
 	datapoint_map = zip(ids, xcoords, ycoords)
-
 	return fig, datapoint_map
 
 def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
 		Scatter plot for monkey
 			x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
-			y axis - total number of drinks (max_bout_length * drinks per bout)
-			color - number of max_bout_length
+			y axis - total number of drinks (scatter_size * drinks per bout)
+			color - number of scatter_size
 			size - drinks per bout
 		Circle sizes scaled to range [cirle_min, circle_max]
 	"""
-	from matrr.models import Monkey, MonkeyToDrinkingExperiment
-
-	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
-	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
-	matplotlib.rcParams['figure.subplot.right'] 	= 0.8
-
-	import matplotlib.gridspec as gridspec
-	gs = gridspec.GridSpec(2, 1,height_ratios=[2,1])
-
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(pk=monkey)
@@ -2034,7 +2395,6 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 				print("That's not a valid monkey.")
 				return False, False
 	cbc = monkey.cohort.cbc
-
 	if circle_max < circle_min:
 		circle_max = DEFAULT_CIRCLE_MAX
 		circle_min = DEFAULT_CIRCLE_MIN
@@ -2059,74 +2419,87 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	else:
 		return None, False
 
+	bar_y_label = ''
+	bar_color_label = ''
+	scatter_y_label = ''
+	scatter_color_label = ''
+	scatter_size_label = ''
 	xaxis = list()
 	induction_days = list()
-	max_bout_vol = list() # scater yaxis
-	max_bout_length = list() # size
-	max_bout_percent = list() # size
-	first_bout_vol = list() # bar yaxis
-	first_bout_percent = list() # bar color
+	scatter_y = list()
+	scatter_size = list()
+	scatter_color = list()
+	bar_yaxis = list()
+	bar_color = list()
 	for index, date in enumerate(dates, 1):
 		xaxis.append(index)
 		de = drinking_experiments.get(drinking_experiment__dex_date=date)
 		if de.drinking_experiment.dex_type == 'Induction':
 			induction_days.append(index)
-		max_bout_vol.append(de.mtd_max_bout_vol)
-		max_bout_length.append(de.mtd_max_bout_length)
-		max_bout_percent.append(de.mtd_pct_max_bout_vol_total_etoh)
-		first_bout_vol.append(de.mtd_vol_1st_bout)
-		first_bout_percent.append(de.mtd_pct_etoh_in_1st_bout)
+		scatter_y.append(de.mtd_max_bout_vol)
+		scatter_size.append(de.mtd_max_bout_length)
+		scatter_color.append(de.mtd_pct_max_bout_vol_total_etoh)
+		bar_yaxis.append(de.mtd_vol_1st_bout)
+		bar_color.append(de.mtd_pct_etoh_in_1st_bout)
+		if not scatter_y_label:
+			scatter_y_label = de._meta.get_field('mtd_max_bout_vol').verbose_name
+		if not scatter_color_label:
+			scatter_color_label = de._meta.get_field('mtd_pct_max_bout_vol_total_etoh').verbose_name
+		if not scatter_size_label:
+			scatter_size_label = de._meta.get_field("mtd_max_bout_length").verbose_name
+		if not bar_y_label:
+			bar_y_label = de._meta.get_field('mtd_vol_1st_bout').verbose_name
+		if not bar_color_label:
+			bar_color_label = de._meta.get_field('mtd_pct_etoh_in_1st_bout').verbose_name
 
 	xaxis = numpy.array(xaxis)
 	induction_days = numpy.array(induction_days)
-	max_bout_vol = numpy.array(max_bout_vol)
-	max_bout_length = numpy.array(max_bout_length)
-	max_bout_percent = numpy.array(max_bout_percent)
+	scatter_y = numpy.array(scatter_y)
+	scatter_size = numpy.array(scatter_size)
+	scatter_color = numpy.array(scatter_color)
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
-
 	max_bout_length_max = cbc.cbc_mtd_max_bout_length_max
-	rescaled_bouts = [ (bout/max_bout_length_max)*size_scale+size_min for bout in max_bout_length ] # rescaled, so that circles will be in range (size_min, size_scale)
+	rescaled_bouts = [ (bout/max_bout_length_max)*size_scale+size_min for bout in scatter_size ] # rescaled, so that circles will be in range (size_min, size_scale)
 
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-
+	fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
 #   main graph
-	ax1 = fig.add_subplot(111)
-
-	s= ax1.scatter(xaxis, max_bout_vol, c=max_bout_percent, s=rescaled_bouts, alpha=.6)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
+	main_plot = pyplot.subplot(main_gs[0:2,0:39])
+	s = main_plot.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_bouts, alpha=.6)
 
 	y_max = cbc.cbc_mtd_max_bout_vol_max
 	graph_y_max = y_max + y_max*0.25
 	if len(induction_days) and len(induction_days) != len(xaxis):
-		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
+		main_plot.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
-	ax1.set_ylabel("Maximum Bout Volume")
-	ax1.set_xlabel("Days")
+	main_plot.set_ylabel(scatter_y_label)
+	main_plot.set_xlabel("Days")
 
-	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
+	main_plot.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	pyplot.ylim(0-((y_max*1.25)/2), graph_y_max) # + % to show circles under the size legend instead of behind it
+	pyplot.ylim(0, graph_y_max)
 	pyplot.xlim(0,len(xaxis) + 2)
 	max_y_int = int(round(y_max*1.25))
 	y_tick_int = int(round(max_y_int/5))
-	ax1.set_yticks(range(0, max_y_int, y_tick_int))
-	ax1.yaxis.get_label().set_position((0,0.6))
+	main_plot.set_yticks(range(0, max_y_int, y_tick_int))
+	main_plot.yaxis.get_label().set_position((0,0.6))
 
-	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
-	cb = pyplot.colorbar(s, cax=cax)
-	cb.alpha = 1
+	main_color = pyplot.subplot(main_gs[0:2,39:])
+	cb = fig.colorbar(s, alpha=1, cax=main_color)
 	cb.set_clim(cbc.cbc_mtd_pct_max_bout_vol_total_etoh_min, cbc.cbc_mtd_pct_max_bout_vol_total_etoh_max)
-	cb.set_label("Maximum Bout / Total Intake")
+	cb.set_label(scatter_color_label)
 
 	#	Regression line
-	fit = polyfit(xaxis, max_bout_vol ,2)
+	fit = polyfit(xaxis, scatter_y ,2)
 	xr=polyval(fit, xaxis)
-	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
+	main_plot.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
 #    size legend
-	x =numpy.array(range(1,6))
-	y =numpy.array([1,1,1,1,1])
+	x = numpy.array(range(1,6))
+	y = numpy.array([1,1,1,1,1])
 
 	size_m = size_scale/(len(y)-1)
 	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
@@ -2134,53 +2507,63 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	size = numpy.array(size)
 
 	m = max_bout_length_max/(len(y)-1)
-	bout_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of max_bout_length
+	bout_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of scatter_size
 	bout_labels.insert(0,"1")
 	bout_labels.insert(0, "")
 	bout_labels.append("")
 
-	ax2 = fig.add_subplot(721)
-	ax2.scatter(x, y, s=size, alpha=0.4)
-	ax2.set_xlabel("Maximum Bout Length")
-	ax2.yaxis.set_major_locator(NullLocator())
-	pyplot.setp(ax2, xticklabels=bout_labels)
+	size_legend = fig.add_subplot(931)
+	size_legend.set_position((0, .89, .3, .07))
+	size_legend.scatter(x, y, s=size, alpha=0.4)
+	size_legend.set_xlabel(scatter_size_label)
+	size_legend.yaxis.set_major_locator(NullLocator())
+	pyplot.setp(size_legend, xticklabels=bout_labels)
 
 #	barplot
-	ax3 = fig.add_subplot(313)
+	bar_plot = pyplot.subplot(main_gs[-1:, 0:39])
 
-	ax3.get_yaxis().tick_right()
-	ax3.yaxis.set_label_position('right')
-	ax3.set_ylabel("First Bout Volume")
-	ax3.set_autoscalex_on(False)
-
-	import matplotlib.colors as colors
-	import matplotlib.cm as cm
+	bar_plot.set_xlabel("Days")
+	bar_plot.set_ylabel(bar_y_label)
+	bar_plot.set_autoscalex_on(False)
 
 	# normalize colors to use full range of colormap
 	norm = colors.normalize(cbc.cbc_mtd_pct_etoh_in_1st_bout_min, cbc.cbc_mtd_pct_etoh_in_1st_bout_max)
 
 	facecolors = list()
-
-	for bar, x, color_value in zip(first_bout_vol, xaxis, first_bout_percent):
+	for bar, x, color_value in zip(bar_yaxis, xaxis, bar_color):
 		color = cm.jet(norm(color_value))
 		pyplot.bar(x, bar, color=color, edgecolor='none')
 		facecolors.append(color)
 
-	ax3.set_xlim(0,len(xaxis) + 2)
-	ax3.set_ylim(cbc.cbc_mtd_vol_1st_bout_min, cbc.cbc_mtd_vol_1st_bout_max)
+	bar_plot.set_xlim(0,len(xaxis) + 2)
+	bar_plot.set_ylim(cbc.cbc_mtd_vol_1st_bout_min, cbc.cbc_mtd_vol_1st_bout_max)
 
 	# create a collection that we will use in colorbox
 	col = matplotlib.collections.Collection(facecolors=facecolors, norm = norm, cmap = cm.jet)
-	col.set_array(first_bout_percent)
+	col.set_array(bar_color)
 
 	# colorbor for bar plot
-	cax = fig.add_axes((0.88, 0.09, 0.03, 0.25))
-	cb = pyplot.colorbar(col, cax=cax)
-	cb.set_clim(0, 100)
-	cb.set_label("First Bout Vol / Total Intake")
+	barplot_color = pyplot.subplot(main_gs[-1:,39:])
+	cb = fig.colorbar(col, alpha=1, cax=barplot_color)
+	cb.set_label(bar_color_label)
 
-	zipped = numpy.vstack(zip(xaxis, max_bout_vol))
-	coordinates = ax1.transData.transform(zipped)
+	hist_gs = gridspec.GridSpec(6, 1)
+	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
+	hist = pyplot.subplot(hist_gs[0, :])
+	hist = _histogram_legend(monkey, hist)
+	hist = pyplot.subplot(hist_gs[1, :])
+	hist = _mtd_histogram(monkey, 'mtd_max_bout_vol', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[2, :])
+	hist = _mtd_histogram(monkey, 'mtd_max_bout_length', hist, from_date=from_date, to_date=to_date, dex_type=dex_type, hide_xticks=True)
+	hist = pyplot.subplot(hist_gs[3, :])
+	hist = _mtd_histogram(monkey, 'mtd_pct_max_bout_vol_total_etoh', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[4, :])
+	hist = _mtd_histogram(monkey, 'mtd_vol_1st_bout', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[5, :])
+	hist = _mtd_histogram(monkey, 'mtd_pct_etoh_in_1st_bout', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+
+	zipped = numpy.vstack(zip(xaxis, scatter_y))
+	coordinates = main_plot.transData.transform(zipped)
 	ids = [de.pk for de in drinking_experiments]
 	xcoords, inv_ycoords = zip(*coordinates)
 	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
@@ -2197,11 +2580,6 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 			size - % of daily intake consumed at time of sample
 		Circle sizes scaled to range [cirle_min, circle_max]
 	"""
-	from matrr.models import Monkey
-
-	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
-	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
-
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(pk=monkey)
@@ -2240,44 +2618,59 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 	else:
 		return False, False
 
-	bec_values = list() # yaxis
-	pct_intake = list() # size
-	smp_intake = list() # color
+	scatter_y_label = ''
+	scatter_color_label = ''
+	scatter_size_label = ''
+	induction_days = list()
+	scatter_y = list()
+	scatter_size = list()
+	scatter_color = list()
 	for index, date in enumerate(dates, 1):
 		bec_rec = bec_records.get(bec_collect_date=date)
-		bec_values.append(bec_rec.bec_mg_pct) # y-axis
-		pct_intake.append(bec_rec.bec_pct_intake) # size
-		smp_intake.append(bec_rec.bec_gkg_etoh) # color
+		if bec_rec.mtd.drinking_experiment.dex_type == 'Induction':
+			induction_days.append(index)
+		scatter_y.append(bec_rec.bec_mg_pct)
+		scatter_size.append(bec_rec.bec_pct_intake)
+		scatter_color.append(bec_rec.bec_gkg_etoh)
+		if not scatter_y_label:
+			scatter_y_label = bec_rec._meta.get_field('bec_mg_pct').verbose_name
+		if not scatter_size_label:
+			scatter_size_label = bec_rec._meta.get_field("bec_pct_intake").verbose_name
+		if not scatter_color_label:
+			scatter_color_label = bec_rec._meta.get_field('bec_gkg_etoh').verbose_name
 
-	xaxis = numpy.array(range(1,len(smp_intake)+1))
-	smp_intake = numpy.array(smp_intake) # color
-	pct_intake   = numpy.array(pct_intake) # size
+	xaxis = numpy.array(range(1,len(scatter_color)+1))
+	scatter_color = numpy.array(scatter_color) # color
+	scatter_size   = numpy.array(scatter_size) # size
+	induction_days = numpy.array(induction_days)
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
 
 	max_intake = cbc.cbc_bec_pct_intake_max
-	rescaled_volumes = [ (w/max_intake)*size_scale+size_min for w in pct_intake ] # rescaled, so that circles will be in range (size_min, size_scale)
+	rescaled_volumes = [ (w/max_intake)*size_scale+size_min for w in scatter_size ] # rescaled, so that circles will be in range (size_min, size_scale)
 
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-
+	fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
 #   main graph
-	ax1 = fig.add_subplot(111)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
+	main_plot = pyplot.subplot(main_gs[:,0:39])
+	s = main_plot.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_volumes, alpha=0.4)
 
-	s= ax1.scatter(xaxis, bec_values, c=smp_intake, s=rescaled_volumes, alpha=0.4)
-
-	ax1.set_ylabel("Blood Ethanol Concentration, mg %")
-	ax1.set_xlabel("Sample Days")
-
-	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
+	main_plot.set_ylabel(scatter_y_label)
+	main_plot.set_xlabel("Sample Days")
+	main_plot.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
 	y_max = cbc.cbc_bec_mg_pct_max
 	graph_y_max = y_max + y_max*0.25
-	pyplot.ylim(0, graph_y_max) # + % to show circles under the size legend instead of behind it
+	pyplot.ylim(0, graph_y_max)
 	pyplot.xlim(0, len(xaxis) + 1)
+	if len(induction_days) and len(induction_days) != len(xaxis):
+		main_plot.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
-	cb = pyplot.colorbar(s)
-	cb.set_label("Intake at time of sample, g/kg")
+	main_color = pyplot.subplot(main_gs[:,39:])
+	cb = fig.colorbar(s, alpha=1, cax=main_color)
+	cb.set_label(scatter_color_label)
 	cb.set_clim(cbc.cbc_bec_gkg_etoh_min, cbc.cbc_bec_gkg_etoh_max)
 
 #    size legend
@@ -2295,22 +2688,25 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 	size_labels.insert(0, "")
 	size_labels.append("")
 
-	ax2 = fig.add_subplot(721)
-	ax2.scatter(x, y, s=size, alpha=0.4)
-	ax2.set_xlabel("Intake at sample / Total intake")
-	ax2.yaxis.set_major_locator(NullLocator())
-	pyplot.setp(ax2, xticklabels=size_labels)
+	size_legend = fig.add_subplot(721)
+	size_legend.scatter(x, y, s=size, alpha=0.4)
+	size_legend.set_xlabel(scatter_size_label)
+	size_legend.yaxis.set_major_locator(NullLocator())
+	pyplot.setp(size_legend, xticklabels=size_labels)
 
+	hist_gs = gridspec.GridSpec(4, 1)
+	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
+	hist = pyplot.subplot(hist_gs[0, :])
+	hist = _histogram_legend(monkey, hist)
+	hist = pyplot.subplot(hist_gs[1, :])
+	hist = _bec_histogram(monkey, 'bec_mg_pct', hist, from_date=from_date, to_date=to_date, sample_before=None, sample_after=None, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[2, :])
+	hist = _bec_histogram(monkey, 'bec_pct_intake', hist, from_date=from_date, to_date=to_date, sample_before=None, sample_after=None, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[3, :])
+	hist = _bec_histogram(monkey, 'bec_gkg_etoh', hist, from_date=from_date, to_date=to_date, sample_before=None, sample_after=None, dex_type=dex_type)
 	return fig, True
 
 def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
-	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
-	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
-	matplotlib.rcParams['figure.subplot.right'] 	= 0.8
-
-	import matplotlib.gridspec as gridspec
-	gs = gridspec.GridSpec(2, 1,height_ratios=[2,1])
-
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(pk=monkey)
@@ -2358,74 +2754,89 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	else:
 		return None, False
 
+	bar_y_label = ''
+	bar_color_label = ''
+	scatter_y_label = ''
+	scatter_color_label = ''
+	scatter_size_label = ''
 	induction_days = list()
-	avg_bout_volumes = list()
-	g_per_kg_consumed = list() # yaxis
-	bouts = list()
+	scatter_size = list()
+	scatter_y = list() # yaxis
+	scatter_color = list()
 	bar_xaxis = list()
-	bec_values = list()
-	pct_consumed = list()
+	bar_yaxis = list()
+	bar_color = list()
 	for index, date in enumerate(dates, 1):
 		bec_rec = bec_records.filter(bec_collect_date=date)
 		if bec_rec.count():
 			bec_rec = bec_rec[0]
-			bec_values.append(bec_rec.bec_mg_pct)
-			pct_consumed.append(bec_rec.bec_pct_intake)
+			bar_yaxis.append(bec_rec.bec_mg_pct)
+			bar_color.append(bec_rec.bec_pct_intake)
 			bar_xaxis.append(index)
+			if not bar_color_label:
+				bar_color_label = bec_rec._meta.get_field('bec_pct_intake').verbose_name
+			if not bar_y_label:
+				bar_y_label = bec_rec._meta.get_field('bec_mg_pct').verbose_name
 
 		de = drinking_experiments.get(drinking_experiment__dex_date=date)
 		if de.drinking_experiment.dex_type == 'Induction':
 			induction_days.append(index)
-		g_per_kg_consumed.append(de.mtd_etoh_g_kg) # y-axis
-		bouts.append(de.mtd_etoh_bout) # color
+		scatter_y.append(de.mtd_etoh_g_kg) # y-axis
+		scatter_color.append(de.mtd_etoh_bout) # color
 		bouts_volume = de.bouts_set.all().aggregate(Avg('ebt_volume'))['ebt_volume__avg']
-		avg_bout_volumes.append(bouts_volume if bouts_volume else 0) # size
+		scatter_size.append(bouts_volume if bouts_volume else 0) # size
+		if not scatter_y_label:
+			scatter_y_label = de._meta.get_field('mtd_etoh_g_kg').verbose_name
+		if not scatter_color_label:
+			scatter_color_label = de._meta.get_field('mtd_etoh_bout').verbose_name
+		if not scatter_size_label:
+			scatter_size_label = "Avg bout volume"
 
-	xaxis = numpy.array(range(1,len(avg_bout_volumes)+1))
-	avg_bout_volumes = numpy.array(avg_bout_volumes)
-	bouts = numpy.array(bouts)
-	pct_consumed = numpy.array(pct_consumed)
+	xaxis = numpy.array(range(1,len(scatter_size)+1))
+	scatter_size = numpy.array(scatter_size)
+	scatter_color = numpy.array(scatter_color)
+	bar_color = numpy.array(bar_color)
 	induction_days = numpy.array(induction_days)
 
-#    main graph
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-	ax1 = fig.add_subplot(111)
+	fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+#   main graph
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
+	main_plot = pyplot.subplot(main_gs[0:2,0:39])
+	main_plot.set_xticks([])
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
 	volume_max = cbc.cbc_ebt_volume_max
-	rescaled_volumes = [ (vol/volume_max)*size_scale+size_min for vol in avg_bout_volumes ] # rescaled, so that circles will be in range (size_min, size_scale)
+	rescaled_volumes = [ (vol/volume_max)*size_scale+size_min for vol in scatter_size ] # rescaled, so that circles will be in range (size_min, size_scale)
 
-	s= ax1.scatter(xaxis, g_per_kg_consumed, c=bouts, s=rescaled_volumes, alpha=0.4)
+	s = main_plot.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_volumes, alpha=0.4)
 
 	y_max = cbc.cbc_mtd_etoh_g_kg_max
 	graph_y_max = y_max + y_max*0.25
 	if len(induction_days) and len(induction_days) != len(xaxis):
-		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
+		main_plot.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
-	ax1.set_ylabel("Daily Ethanol Consumption (in g/kg)")
-	ax1.set_xlabel("Days")
+	main_plot.set_ylabel(scatter_y_label)
+	main_plot.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
-
-	pyplot.ylim(0-((y_max*1.25)/2), graph_y_max)
+	pyplot.ylim(0, graph_y_max)
 	pyplot.xlim(0,len(xaxis) + 2)
 
 	max_y_int = int(round(y_max*1.25))
 	y_tick_int = max(int(round(max_y_int/5)), 1)
-	ax1.set_yticks(range(0, max_y_int, y_tick_int))
-	ax1.yaxis.get_label().set_position((0,0.6))
+	main_plot.set_yticks(range(0, max_y_int, y_tick_int))
+	main_plot.yaxis.get_label().set_position((0,0.6))
 
-	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
-	cb = pyplot.colorbar(s, cax=cax)
-	cb.alpha = 1
+	main_color = pyplot.subplot(main_gs[0:2,39:])
+	cb = fig.colorbar(s, alpha=1, cax=main_color)
 	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
-	cb.set_label("Number of bouts")
+	cb.set_label(scatter_color_label)
 
 #	regression line
-	fit = polyfit(xaxis, g_per_kg_consumed, 3)
+	fit = polyfit(xaxis, scatter_y, 3)
 	xr=polyval(fit, xaxis)
-	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
+	main_plot.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
 #    size legend
 	x =numpy.array(range(1,6))
@@ -2442,51 +2853,56 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	bout_labels.insert(0, "")
 	bout_labels.append("")
 
-	ax2 = fig.add_subplot(721)
-	ax2.scatter(x, y, s=size, alpha=0.4)
-	ax2.set_xlabel("Average bout volume")
-	ax2.yaxis.set_major_locator(NullLocator())
-	pyplot.setp(ax2, xticklabels=bout_labels)
+	size_legend = fig.add_subplot(931)
+	size_legend.set_position((0.05, .89, .3, .07))
+	size_legend.scatter(x, y, s=size, alpha=0.4)
+	size_legend.set_xlabel(scatter_size_label)
+	size_legend.yaxis.set_major_locator(NullLocator())
+	pyplot.setp(size_legend, xticklabels=bout_labels)
 
 #	barplot
-	ax3 = fig.add_subplot(313)
+	bar_plot = pyplot.subplot(main_gs[-1:, 0:39])
 
-	ax3.get_yaxis().tick_right()
-	ax3.yaxis.set_label_position('right')
-	ax3.set_ylabel("Blood Ethanol Concentration, mg %")
-	ax3.set_autoscalex_on(False)
-
-	import matplotlib.colors as colors
-	import matplotlib.cm as cm
+	bar_plot.set_xlabel("Days")
+	bar_plot.set_ylabel(bar_y_label)
+	bar_plot.set_autoscalex_on(False)
 
 	# normalize colors to use full range of colormap
 	norm = colors.normalize(cbc.cbc_bec_pct_intake_min, cbc.cbc_bec_pct_intake_max)
 
 	facecolors = list()
-	for bar, x, color_value in zip(bec_values, bar_xaxis, pct_consumed):
+	for bar, x, color_value in zip(bar_yaxis, bar_xaxis, bar_color):
 		color = cm.jet(norm(color_value))
 		pyplot.bar(x, bar, width=2, color=color, edgecolor='none')
 		facecolors.append(color)
 
-	ax3.set_xlim(0,len(xaxis) + 2)
+	bar_plot.set_xlim(0,len(xaxis) + 2)
+	if len(induction_days) and len(induction_days) != len(xaxis):
+		bar_plot.bar(induction_days.min(), bar_plot.get_ylim()[1], width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
 	# create a collection that we will use in colorbox
 	col = matplotlib.collections.Collection(facecolors=facecolors, norm=norm, cmap=cm.jet)
-	col.set_array(pct_consumed)
+	col.set_array(bar_color)
 
-	# colorbor for bar plot
-	cax = fig.add_axes((0.88, 0.09, 0.03, 0.25))
-	cb = pyplot.colorbar(col, cax=cax)
-	cb.alpha = 1
-	cb.set_label("Etoh intake @ sample / Daily etoh consumption")
+	# colorbar for bar plot
+	barplot_color = pyplot.subplot(main_gs[-1:,39:])
+	cb = fig.colorbar(col, alpha=1, cax=barplot_color)
+	cb.set_label(bar_color_label)
 
-	zipped = numpy.vstack(zip(xaxis, bec_values))
-	coordinates = ax1.transData.transform(zipped)
-	ids = [de.pk for de in drinking_experiments]
-	xcoords, inv_ycoords = zip(*coordinates)
-	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
-	datapoint_map = zip(ids, xcoords, ycoords)
-
+	hist_gs = gridspec.GridSpec(6, 1)
+	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
+	hist = pyplot.subplot(hist_gs[0, :])
+	hist = _histogram_legend(monkey, hist)
+	hist = pyplot.subplot(hist_gs[1, :])
+	hist = _bec_histogram(monkey, 'bec_mg_pct', hist, from_date=from_date, to_date=to_date, sample_before=None, sample_after=None, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[2, :])
+	hist = _bec_histogram(monkey, 'bec_pct_intake', hist, from_date=from_date, to_date=to_date, sample_before=None, sample_after=None, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[3, :])
+	hist = _mtd_histogram(monkey, 'mtd_etoh_g_kg', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[4, :])
+	hist = _mtd_histogram(monkey, 'mtd_etoh_bout', hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
+	hist = pyplot.subplot(hist_gs[5, :])
+	hist = _mtd_histogram(monkey, 'bouts_set__ebt_volume', hist, from_date=from_date, to_date=to_date, dex_type=dex_type, verbose_name='Bout Volume')
 	return fig, True
 
 def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None):
