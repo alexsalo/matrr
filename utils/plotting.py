@@ -131,8 +131,8 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
 		ax.set_xticks([])
 
 def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend):
-	if not all(any(monkey_values), any(cohort_values), any(high_values), any(low_values)):
-		return hist
+	if not all( [any(monkey_values), any(cohort_values), any(high_values), any(low_values)] ):
+		return axis
 	linspace = numpy.linspace(0, cohort_values.max(), 15) # defines number of bins in histogram
 
 	# Monkey histogram spline
