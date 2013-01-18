@@ -131,6 +131,13 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
 		ax.set_xticks([])
 
 def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend):
+	axis.set_title(label)
+	axis.set_yticks([])
+	if hide_xticks:
+		axis.set_xticks([])
+	else:
+		axis.xaxis.set_major_locator(MaxNLocator(4))
+
 	if not all( [any(monkey_values), any(cohort_values), any(high_values), any(low_values)] ):
 		return axis
 	linspace = numpy.linspace(0, cohort_values.max(), 15) # defines number of bins in histogram
@@ -165,12 +172,6 @@ def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_va
 
 	if show_legend:
 		pyplot.legend(loc="upper left", frameon=False)
-	axis.set_title(label)
-	axis.set_yticks([])
-	if hide_xticks:
-		axis.set_xticks([])
-	else:
-		axis.xaxis.set_major_locator(MaxNLocator(4))
 	return axis
 
 def _histogram_legend(monkey, axis):
