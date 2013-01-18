@@ -982,7 +982,8 @@ class MonkeyImage(MATRRImage):
 	def __unicode__(self):
 		if self.method == '__brain_image':
 			return "%s.%s.(%s)" % (self.monkey.__unicode__(), "BrainImage", str(self.pk))
-		return "%s.%s.(%s)" % (self.monkey.__unicode__(), self.title, str(self.pk))
+		title = "".join(x for x in self.title if x.isalnum())
+		return "%s.%s.(%s)" % (self.monkey.__unicode__(), title, str(self.pk))
 
 	class Meta:
 		permissions = (

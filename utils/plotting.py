@@ -273,6 +273,64 @@ def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_
 	low_values = numpy.array(low_dex.values_list(column_name, flat=True))
 	return _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend)
 
+def bec_histogram_general(monkey, column_name, dex_type=''):
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return False, False
+
+	bec_records = MonkeyBEC.objects.filter(monkey=monkey)
+	if dex_type:
+		bec_records = bec_records.filter(drinking_experiment__dex_type=dex_type)
+
+	if not bec_records:
+		return False, False
+
+	field = bec_records[0]._meta.get_field(column_name)
+	if not isinstance(field, (models.FloatField, models.IntegerField, models.BigIntegerField, models.SmallIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+		return False, False
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(1, 1)
+	main_gs.update(left=0.05, right=0.95, wspace=0, hspace=0)
+	main_plot = pyplot.subplot(main_gs[:,:])
+	main_plot = _bec_histogram(monkey, column_name, main_plot, dex_type=dex_type, show_legend=True)
+	return fig, True
+
+def mtd_histogram_general(monkey, column_name, dex_type=''):
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return False, False
+
+	mtd_records = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+	if dex_type:
+		mtd_records = mtd_records.filter(drinking_experiment__dex_type=dex_type)
+
+	if not mtd_records:
+		return False, False
+
+	field = mtd_records[0]._meta.get_field(column_name)
+	if not isinstance(field, (models.FloatField, models.IntegerField, models.BigIntegerField, models.SmallIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+		return False, False
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(1, 1)
+	main_gs.update(left=0.05, right=0.95, wspace=0, hspace=0)
+	main_plot = pyplot.subplot(main_gs[:,:])
+	main_plot = _mtd_histogram(monkey, column_name, main_plot, dex_type=dex_type, show_legend=True)
+	return fig, True
+
 
 ### Specific Callables ###
 def etoh_intake(queryset):
@@ -2896,6 +2954,8 @@ MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_2
 					 'monkey_etoh_bouts_drinks_intraday': (monkey_etoh_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
 					 'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
 					 'monkey_etoh_bouts_drinks': (monkey_etoh_bouts_drinks, 'Detailed Drink Pattern'),
+					 'mtd_histogram_general': (mtd_histogram_general, 'Monkey Histogram'),
+					 'bec_histogram_general': (bec_histogram_general, 'Monkey Histogram')
 					 })
 
 def fetch_plot_choices(subject, user, cohort, tool):
