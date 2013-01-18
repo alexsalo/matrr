@@ -222,19 +222,11 @@ def _bec_histogram(monkey, column_name, axis, from_date=None, to_date=None, samp
 	low_bec = low_bec.filter(q_filter)
 
 	label = verbose_name
-	monkey_values = list()
-	cohort_values = list()
-	dates = monkey_bec.dates('bec_collect_date', 'day').order_by('bec_collect_date')
-	for index, date in enumerate(dates, 1):
-		bec = monkey_bec.get(bec_collect_date=date)
-		monkey_values.append(getattr(bec, column_name))
-		coh_bec = cohort_bec.filter(bec_collect_date=date)
-		cohort_values.extend(coh_bec.values_list(column_name, flat=True))
-		if not label:
-			label = bec._meta.get_field(column_name).verbose_name
+	if not label:
+		label = monkey_bec[0]._meta.get_field(column_name).verbose_name
 
-	monkey_values = numpy.array(monkey_values)
-	cohort_values = numpy.array(cohort_values)
+	monkey_values = numpy.array(monkey_bec.values_list(column_name, flat=True))
+	cohort_values = numpy.array(cohort_bec.values_list(column_name, flat=True))
 	high_values = numpy.array(high_bec.values_list(column_name, flat=True))
 	low_values = numpy.array(low_bec.values_list(column_name, flat=True))
 	return _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend)
@@ -271,19 +263,11 @@ def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_
 	low_dex = low_dex.filter(q_filter)
 
 	label = verbose_name
-	monkey_values = list()
-	cohort_values = list()
-	dates = monkey_dex.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
-	for index, date in enumerate(dates, 1):
-		de = monkey_dex.filter(drinking_experiment__dex_date=date)
-		monkey_values.extend(de.values_list(column_name, flat=True))
-		coh_dex = cohort_dex.filter(drinking_experiment__dex_date=date)
-		cohort_values.extend(coh_dex.values_list(column_name, flat=True))
-		if not label:
-			label = de[0]._meta.get_field(column_name).verbose_name
+	if not label:
+		label = monkey_dex[0]._meta.get_field(column_name).verbose_name
 
-	monkey_values = numpy.array(monkey_values)
-	cohort_values = numpy.array(cohort_values)
+	monkey_values = numpy.array(monkey_dex.values_list(column_name, flat=True))
+	cohort_values = numpy.array(cohort_dex.values_list(column_name, flat=True))
 	high_values = numpy.array(high_dex.values_list(column_name, flat=True))
 	low_values = numpy.array(low_dex.values_list(column_name, flat=True))
 	return _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend)
@@ -1815,183 +1799,6 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 
 
 def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
-	"""
-		Scatter plot for monkey
-				x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
-			y axis - total number of drinks (bouts * drinks per bout)
-			color - number of bouts
-			size - drinks per bout
-		Circle sizes scaled to range [cirle_min, circle_max]
-	"""
-	from matrr.models import Monkey
-	from matrr.models import MonkeyToDrinkingExperiment
-
-	matplotlib.rcParams['figure.subplot.top'] 	= 0.92
-	matplotlib.rcParams['figure.subplot.bottom'] 	= 0.08
-	matplotlib.rcParams['figure.subplot.right'] 	= 0.8
-
-	import matplotlib.gridspec as gridspec
-
-
-	gs = gridspec.GridSpec(2, 1,height_ratios=[2,1])
-
-
-	if not isinstance(monkey, Monkey):
-		try:
-			monkey = Monkey.objects.get(pk=monkey)
-		except Monkey.DoesNotExist:
-			try:
-				monkey = Monkey.objects.get(mky_real_id=monkey)
-			except Monkey.DoesNotExist:
-				print("That's not a valid monkey.")
-				return False, False
-	cbc = monkey.cohort.cbc
-
-	if circle_max < circle_min:
-		circle_max = DEFAULT_CIRCLE_MAX
-		circle_min = DEFAULT_CIRCLE_MIN
-	else:
-		if circle_max < 10:
-			circle_max = DEFAULT_CIRCLE_MAX
-		if circle_min < 1:
-			circle_min = DEFAULT_CIRCLE_MIN
-
-	drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
-	from_date, to_date = validate_dates(from_date, to_date)
-	if from_date:
-		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__gte=from_date)
-	if to_date:
-		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_date__lte=to_date)
-	if dex_type:
-		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
-	drinking_experiments = drinking_experiments.exclude(mtd_etoh_bout=None, mtd_etoh_drink_bout=None)
-
-	if drinking_experiments.count() > 0:
-		dates = drinking_experiments.dates('drinking_experiment__dex_date', 'day').order_by('drinking_experiment__dex_date')
-	else:
-		return None, False
-
-	induction_days = list()
-	dr_per_bout = list()
-	bouts = list()
-	bar_size = list() # ??
-	bar_color = list() # max_bout_vol / total intake
-	for index, date in enumerate(dates, 1):
-		de = drinking_experiments.get(drinking_experiment__dex_date=date)
-		if de.drinking_experiment.dex_type == 'Induction':
-			induction_days.append(index)
-		bouts.append(de.mtd_etoh_bout)
-		dr_per_bout.append(de.mtd_etoh_drink_bout)
-		bar_size.append(de.mtd_pct_max_bout_vol_total_etoh)
-		bar_color.append(de.mtd_max_bout_length)
-
-	xaxis = numpy.array(range(1,len(dr_per_bout)+1))
-	dr_per_bout       = numpy.array(dr_per_bout)
-	bouts   = numpy.array(bouts)
-	induction_days = numpy.array(induction_days)
-
-	size_min = circle_min
-	size_scale = circle_max - size_min
-
-	bouts_max = float(cbc.cbc_mtd_etoh_drink_bout_max)
-	total_drinks = [ b*pb for b, pb in zip(dr_per_bout, bouts)]
-	rescaled_bouts = [ (b/bouts_max)*size_scale+size_min for b in dr_per_bout ] # rescaled, so that circles will be in range (size_min, size_scale)
-
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-
-#    main graph
-	ax1 = fig.add_subplot(111)
-
-	s= ax1.scatter(xaxis, total_drinks, c=bouts, s=rescaled_bouts, alpha=0.4)
-
-	y_max = cbc.cbc_total_drinks_max
-	graph_y_max = y_max + y_max*0.25
-	if len(induction_days) and len(induction_days) != len(xaxis):
-		ax1.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
-
-#	regression line
-	fit = polyfit(xaxis, total_drinks, 3)
-	xr=polyval(fit, xaxis)
-	ax1.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
-
-	ax1.set_ylabel("Total number of drinks =  bouts * drinks per bout")
-	ax1.set_xlabel("Days")
-
-	ax1.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
-	pyplot.ylim(0-((y_max*1.25)/2), graph_y_max) # + % to show circles under the size legend instead of behind it
-	pyplot.xlim(0,len(xaxis) + 2)
-	max_y_int = int(round(y_max*1.25))
-	y_tick_int = int(round(max_y_int/5))
-	ax1.set_yticks(range(0, max_y_int, y_tick_int))
-	ax1.yaxis.get_label().set_position((0,0.6))
-
-	cax = fig.add_axes((0.88, 0.4, 0.03, 0.5))
-	cb = pyplot.colorbar(s, cax=cax)
-	cb.set_label("Number of bouts")
-	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
-
-#    size legend
-	x =numpy.array(range(1,6))
-	y =numpy.array([1,1,1,1,1])
-
-	size_m = size_scale/(len(y)-1)
-	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
-	size.insert(0,1+size_min)
-	size = numpy.array(size)
-
-	m = bouts_max/(len(y)-1)
-	bout_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of bouts
-	bout_labels.insert(0,"1")
-	bout_labels.insert(0, "")
-	bout_labels.append("")
-
-	ax2 = fig.add_subplot(721)
-	ax2.scatter(x, y, s=size, alpha=0.4)
-	ax2.set_xlabel("Drinks per bout")
-	ax2.yaxis.set_major_locator(NullLocator())
-	pyplot.setp(ax2, xticklabels=bout_labels)
-
-#	barplot
-	ax3 = fig.add_subplot(313)
-
-	ax3.get_yaxis().tick_right()
-	ax3.yaxis.set_label_position('right')
-	ax3.set_ylabel("Max Bout Volume as % of Total Etoh")
-	ax3.set_autoscalex_on(False)
-
-	import matplotlib.colors as colors
-	import matplotlib.cm as cm
-
-	# normalize colors to use full range of colormap
-	norm = colors.normalize(cbc.cbc_mtd_max_bout_length_min, cbc.cbc_mtd_max_bout_length_max)
-
-	facecolors = list()
-
-	for bar, x, color_value in zip(bar_size, xaxis, bar_color):
-		pyplot.bar(x, bar, color=cm.jet(norm(color_value)),  edgecolor='none')
-		facecolors.append(cm.jet(norm(color_value)))
-
-	ax3.set_xlim(0,len(xaxis) + 2)
-
-	# create a collection that we will use in colorbox
-	col = matplotlib.collections.Collection(facecolors=facecolors, norm = norm, cmap = cm.jet)
-	col.set_array(bar_color)
-
-	# colorbor for bar plot
-	cax = fig.add_axes((0.88, 0.09, 0.03, 0.25))
-	cb = pyplot.colorbar(col, cax=cax)
-	cb.set_label("Max Bout Length")
-
-	zipped = numpy.vstack(zip(xaxis, total_drinks))
-	coordinates = ax1.transData.transform(zipped)
-	ids = [de.pk for de in drinking_experiments]
-	xcoords, inv_ycoords = zip(*coordinates)
-	ycoords = [fig.get_window_extent().height-point for point in inv_ycoords]
-	datapoint_map = zip(ids, xcoords, ycoords)
-
-	return fig, datapoint_map
-
-def new_monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
 		Scatter plot for monkey
 				x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
