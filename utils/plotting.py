@@ -3032,7 +3032,7 @@ def create_mtd_histograms():
 	 'mtd_pct_max_bout_vol_total_etoh',
 	]
 	mtd = MonkeyToDrinkingExperiment
-	for monkey in mtd.objects.all().values_list('monkey', flat=True):
+	for monkey in mtd.objects.all().values_list('monkey', flat=True).distinct():
 		m = Monkey.objects.get(pk=monkey)
 		for field in names:
 			mig = MonkeyImage.objects.create(method='mtd_histogram_general', monkey=m)
@@ -3048,7 +3048,7 @@ def create_bec_histograms():
 	]
 
 	bec = MonkeyBEC
-	for monkey in bec.objects.all().values_list('monkey', flat=True):
+	for monkey in bec.objects.all().values_list('monkey', flat=True).distinct():
 		m = Monkey.objects.get(pk=monkey)
 		for field in names:
 			mig = MonkeyImage.objects.create(method='bec_histogram_general', monkey=m)
