@@ -388,8 +388,8 @@ def cohort_necropsy_avg_22hr_g_per_kg(cohort):
 		except NecropsySummary.DoesNotExist:
 			continue
 	if nec_sums:
-		graph_title = 'Average Ethanol Intake for cohort %s during 22 Hour Free Access Phase' % str(cohort)
-		x_label = "Ethanol Intake (in g/kg)"
+		graph_title = 'Average Daily Ethanol Intake for cohort %s during 22 Hour Free Access Phase' % str(cohort)
+		x_label = "Average Daily Ethanol Intake (in g/kg)"
 		legend_labels = ('12 Month Average', '6 Month Average')
 		return cohort_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
 	else:
