@@ -3015,3 +3015,75 @@ def create_plots(cohorts=True, monkeys=True, delete=False):
 			for graph in cohort_plots:
 				gc.collect()
 				cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[graph][1])
+
+def create_mtd_histograms():
+	names = [
+	 'mtd_etoh_intake',
+	 'mtd_veh_intake',
+	 'mtd_total_pellets',
+	 'mtd_weight',
+	 'mtd_pct_etoh',
+	 'mtd_etoh_g_kg',
+	 'mtd_etoh_bout',
+	 'mtd_etoh_drink_bout',
+	 'mtd_etoh_mean_drink_length',
+	 'mtd_etoh_median_idi',
+	 'mtd_etoh_mean_drink_vol',
+	 'mtd_etoh_mean_bout_length',
+	 'mtd_etoh_media_ibi',
+	 'mtd_etoh_mean_bout_vol',
+	 'mtd_etoh_st_1',
+	 'mtd_etoh_st_2',
+	 'mtd_etoh_st_3',
+	 'mtd_vol_1st_bout',
+	 'mtd_pct_etoh_in_1st_bout',
+	 'mtd_drinks_1st_bout',
+	 'mtd_mean_drink_vol_1st_bout',
+	 'mtd_fi_wo_drinking_st_1',
+	 'mtd_pct_fi_with_drinking_st_1',
+	 'mtd_latency_1st_drink',
+	 'mtd_max_bout',
+	 'mtd_max_bout_length',
+	 'mtd_max_bout_vol',
+	 'mtd_pct_max_bout_vol_total_etoh',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_0',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_1',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_2',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_3',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_4',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_5',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_6',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_7',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_8',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_9',
+	 'mtd_pct_max_bout_vol_total_etoh_hour_10'
+	]
+	mtd = MonkeyToDrinkingExperiment
+	for monkey in mtd.objects.all().values_list('monkey', flat=True):
+		m = Monkey.objects.get(pk=monkey)
+		for field in names:
+			mig = MonkeyImage.objects.create(method='mtd_histogram_general', monkey=m)
+			params = {'column_name': field }
+			mig.parameters = str(params)
+			mig.title = mtd._meta.get_field(field).verbose_name
+			mig.save()
+
+def create_bec_histograms():
+	names = [
+		'bec_weight',
+		'bec_vol_etoh',
+		'bec_gkg_etoh',
+		'bec_daily_gkg_etoh',
+		'bec_mg_pct',
+		'bec_pct_intake'
+	]
+
+	bec = MonkeyBEC
+	for monkey in bec.objects.all().values_list('monkey', flat=True):
+		m = Monkey.objects.get(pk=monkey)
+		for field in names:
+			mig = MonkeyImage.objects.create(method='bec_histogram_general', monkey=m)
+			params = {'column_name': field }
+			mig.parameters = str(params)
+			mig.title = bec._meta.get_field(field).verbose_name
+			mig.save()
