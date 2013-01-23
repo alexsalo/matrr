@@ -2953,7 +2953,6 @@ MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_2
 					 'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
 					 'monkey_etoh_bouts_drinks_intraday': (monkey_etoh_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
 					 'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
-					 'monkey_etoh_bouts_drinks': (monkey_etoh_bouts_drinks, 'Detailed Drink Pattern'),
 					 'mtd_histogram_general': (mtd_histogram_general, 'Monkey Histogram'),
 					 'bec_histogram_general': (bec_histogram_general, 'Monkey Histogram')
 					 })
