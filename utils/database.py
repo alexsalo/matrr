@@ -775,7 +775,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			mtd.mtd_notes = notes
 
 			for i, field in enumerate(fields):
-				if data_fields[i] != '':
+				if not data_fields[i] in ['', '\n', '\r']:
 					setattr(mtd, field, data_fields[i])
 
 			try:
