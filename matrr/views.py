@@ -175,7 +175,7 @@ def monkey_detail_view(request, mky_id):
 		raise Http404((u"No %(verbose_name)s found matching the query") %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	images = MonkeyImage.objects.filter(monkey=monkey).vip_filter(request.user)
+	images = MonkeyImage.objects.filter(monkey=monkey).vip_filter(request.user).order_by('method')
 	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
 
