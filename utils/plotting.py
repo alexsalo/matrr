@@ -2873,9 +2873,9 @@ def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type=
 			else:
 				if index:
 					coh_centroids.append([res[:,0][0], res[:,1][0]])
+					colors.append(color)
 				else:
 					mky_centroids.append([res[:,0][0], res[:,1][0]])
-					colors.append(color)
 
 	bar_x_labels = [date.strftime('%h %Y') for date in bar_x]
 	bar_x = range(0, len(bar_x))
@@ -2887,9 +2887,11 @@ def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type=
 		bar_y.append(euclid_dist(a, b))
 	m = numpy.array(mky_centroids)
 	c = numpy.array(coh_centroids)
-	ax1.scatter(m[:,0], m[:,1], marker='o', s=100, linewidths=3, c=colors, edgecolor=colors,  label='Monkey')
-	ax1.scatter(c[:,0], c[:,1], marker='x', s=100, linewidths=3, c=colors, edgecolor=colors,  label='Cohort')
-
+	try:
+		ax1.scatter(m[:,0], m[:,1], marker='o', s=100, linewidths=3, c=colors, edgecolor=colors,  label='Monkey')
+		ax1.scatter(c[:,0], c[:,1], marker='x', s=100, linewidths=3, c=colors, edgecolor=colors,  label='Cohort')
+	except IndexError as e: # m and c are empty if all_mtds.count() == 0
+		return False, False
 	title = 'Monthly drinking effects for monkey %s ' % monkey
 	if sample_before:
 		title += "before %s " % str(sample_before)
