@@ -2053,10 +2053,17 @@ def tools_landing_sandbox(request):
 	monkey_methods = plotting.MONKEY_TOOLS_PLOTS.keys()
 
 	if request.method == 'POST':
-		if request.POST.has_key('cohort_method'):
-			redirect('cohort-plot') # totally not done
-		if request.POST.has_key('monkey_method'):
-			do_stuff() # go to cohort selection page for this method
+		_method = request.POST.get('cohort_method', '')
+		if _method:
+			if _method in plotting.COHORT_BEC_TOOLS_PLOTS.keys():
+				return redirect('tools-cohort-bec-graphs', _method)
+			elif _method in plotting.COHORT_ETOH_TOOLS_PLOTS.keys():
+				return redirect('tools-cohort-etoh-graphs', _method)
+			else:
+				raise Http404("There is no '%s' method in the MATRR BEC or ETOH toolboxs." % _method)
+		_method = request.POST.get('monkey_method', '')
+		if _method:
+			redirect('monkey-plot',  plot=_method)
 
 
 	coh_images = list()
@@ -2288,89 +2295,41 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 	return render_to_response('matrr/tools/protein_monkey.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
-def tools_etoh(request): # pick a cohort
-	if request.method == 'POST':
-		cohort_form = CohortSelectForm(data=request.POST)
-		if cohort_form.is_valid():
-			cohort = cohort_form.cleaned_data['subject']
-			return redirect('tools-cohort-etoh', cohort.pk)
-	else:
-		cohorts_with_etoh_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
-		cohorts_with_etoh_data = Cohort.objects.filter(pk__in=cohorts_with_etoh_data) # so get the queryset of cohorts
-		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_etoh_data)
-	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
+def tools_cohort_etoh_graphs(request, cohort_method):
+	context = dict()
+	subject_initial = dict()
+	range_initial = dict()
+	if request.method == "POST":
+		subject_select_form = CohortSelectForm(data=request.POST)
+		experiment_range_form = ExperimentRangeForm(data=request.POST)
+		if subject_select_form.is_valid() and experiment_range_form.is_valid():
+			subject_initial = subject_select_form.cleaned_data
+			range_initial = experiment_range_form.cleaned_data
+			cohort = subject_select_form.cleaned_data['subject']
 
-@user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
-def tools_cohort_etoh(request, coh_id):
-	cohort = get_object_or_404(Cohort, pk=coh_id)
-	monkey_keys = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
-	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
-
-	if request.method == 'POST':
-		subject_select_form = GraphSubjectSelectForm(monkey_queryset, data=request.POST)
-		if subject_select_form.is_valid():
-			subject = subject_select_form.cleaned_data['subject']
-			if subject == 'monkey':
-				monkeys = subject_select_form.cleaned_data['monkeys']
-				get_m = list()
-				for m in monkeys:
-					get_m.append(`m.mky_id`)
-				get_m = "-".join(get_m)
-				if not monkeys:
-					messages.error(request, "You must select at least one monkey.")
-					return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
-				return redirect_with_get('tools-monkey-etoh', coh_id, monkeys=get_m)
-			elif subject == 'cohort':
-				return redirect('tools-cohort-etoh-graphs', coh_id)
-			else: # assumes subject == 'download'
-				messages.warning(request, "Ethanol data download is currently disabled.")
-	mky_ids = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True)
-	monkey_queryset = Monkey.objects.filter(pk__in=mky_ids)
-	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
-
-@user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
-def tools_cohort_etoh_graphs(request, coh_id):
-	cohort = get_object_or_404(Cohort, pk=coh_id)
-	plot_choices = plotting.fetch_plot_choices('cohort', request.user, cohort, 'etoh')
-	plot_method = ''
-
-	context = {'cohort': cohort}
-	old_post = request.session.pop('_old_post')	if '_old_post' in request.session else {}
-	if request.method == "POST" or old_post:
-		post = request.POST if request.POST else old_post
-		plot_form = PlotSelectForm(plot_choices, data=post)
-		subject_select_form = CohortSelectForm(data=post)
-		experiment_range_form = ExperimentRangeForm(data=post)
-		if plot_form.is_valid() and subject_select_form.is_valid() and experiment_range_form.is_valid():
-			if int(coh_id) != subject_select_form.cleaned_data['subject'].pk:
-				request.session['_old_post'] = request.POST
-				return redirect(tools_cohort_etoh_graphs, subject_select_form.cleaned_data['subject'].pk)
-
-			from_date = to_date = ''
+			from_date = ''
+			to_date = ''
 			experiment_range = experiment_range_form.cleaned_data['range']
 			if experiment_range == 'custom':
 				from_date = str(experiment_range_form.cleaned_data['from_date'])
 				to_date = str(experiment_range_form.cleaned_data['to_date'])
 				experiment_range = None
-			plot_method = plot_form.cleaned_data['plot_method']
 
 			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date})
-			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=plotting.COHORT_PLOTS[plot_method][1], parameters=params)
+			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=cohort_method, title=plotting.COHORT_PLOTS[cohort_method][1], parameters=params)
 
 			if is_new and not cohort_image.pk:
 				messages.error(request, 'Image file not created.  This is usually caused by requesting insufficient or non-existant data.')
 			else:
 				context['graph'] = cohort_image
 		else:
-			messages.error(request, plot_form.errors.as_text())
 			messages.error(request, subject_select_form.errors.as_text())
 			messages.error(request, experiment_range_form.errors.as_text())
 	cohorts_with_ethanol_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 	cohorts_with_ethanol_data = Cohort.objects.filter(pk__in=cohorts_with_ethanol_data) # so get the queryset of cohorts
 
-	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_ethanol_data, horizontal=True, initial={'subject': coh_id})
-	context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
-	context['experiment_range_form'] = ExperimentRangeForm()
+	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_ethanol_data, horizontal=True, initial=subject_initial)
+	context['experiment_range_form'] = ExperimentRangeForm(initial=range_initial)
 	return render_to_response('matrr/tools/ethanol_cohort.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
@@ -2444,96 +2403,48 @@ def tools_etoh_mtd(request, mtd_id):
 	return render_to_response('matrr/tools/graph_generic.html', {'matrr_image': mtd_image}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
-def tools_bec(request): # pick a cohort
-	if request.method == 'POST':
-		cohort_form = CohortSelectForm(data=request.POST)
-		if cohort_form.is_valid():
-			cohort = cohort_form.cleaned_data['subject']
-			return redirect('tools-cohort-bec', cohort.pk)
-	else:
-		cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
-		cohorts_with_bec_data = Cohort.objects.filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
-		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_bec_data)
-	return render_to_response('matrr/tools/bec.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
+def tools_cohort_bec_graphs(request, cohort_method):
+	context = dict()
+	subject_initial = dict()
+	range_initial = dict()
+	if request.method == "POST":
+		subject_select_form = CohortSelectForm(data=request.POST)
+		experiment_range_form = BECRangeForm(data=request.POST)
+		if subject_select_form.is_valid() and experiment_range_form.is_valid():
+			subject_initial = subject_select_form.cleaned_data
+			range_initial = experiment_range_form.cleaned_data
+			cohort = subject_select_form.cleaned_data['subject']
 
-@user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
-def tools_cohort_bec(request, coh_id):
-	cohort = get_object_or_404(Cohort, pk=coh_id)
-	monkey_keys = MonkeyBEC.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
-	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
-
-	if request.method == 'POST':
-		subject_select_form = GraphSubjectSelectForm(monkey_queryset, data=request.POST)
-		if subject_select_form.is_valid():
-			subject = subject_select_form.cleaned_data['subject']
-			if subject == 'monkey':
-				monkeys = subject_select_form.cleaned_data['monkeys']
-				get_m = list()
-				for m in monkeys:
-					get_m.append(`m.mky_id`)
-				get_m = "-".join(get_m)
-				if not monkeys:
-					messages.error(request, "You must select at least one monkey.")
-					return render_to_response('matrr/tools/bec.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
-				return redirect_with_get('tools-monkey-bec', coh_id, monkeys=get_m)
-			elif subject == 'cohort':
-				return redirect('tools-cohort-bec-graphs', coh_id)
-			else: # assumes subject == 'download'
-				messages.warning(request, "BEC data download is currently disabled.")
-	mky_ids = MonkeyBEC.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True)
-	monkey_queryset = Monkey.objects.filter(pk__in=mky_ids)
-	return render_to_response('matrr/tools/bec.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
-
-@user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
-def tools_cohort_bec_graphs(request, coh_id):
-	cohort = get_object_or_404(Cohort, pk=coh_id)
-	plot_choices = plotting.fetch_plot_choices('cohort', request.user, cohort, 'bec')
-	plot_method = ''
-
-	context = {'cohort': cohort}
-	old_post = request.session.pop('_old_post')	if '_old_post' in request.session else {}
-	if request.method == "POST" or old_post:
-		post = request.POST if request.POST else old_post
-		plot_form = PlotSelectForm(plot_choices, data=post)
-		subject_select_form = CohortSelectForm(data=post)
-		experiment_range_form = BECRangeForm(data=post)
-		if plot_form.is_valid() and subject_select_form.is_valid() and experiment_range_form.is_valid():
-			if int(coh_id) != subject_select_form.cleaned_data['subject'].pk:
-				request.session['_old_post'] = request.POST
-				return redirect(tools_cohort_bec_graphs, subject_select_form.cleaned_data['subject'].pk)
-
-			from_date = to_date = ''
+			from_date = ''
+			to_date = ''
 			experiment_range = experiment_range_form.cleaned_data['range']
 			if experiment_range == 'custom':
 				from_date = str(experiment_range_form.cleaned_data['from_date'])
 				to_date = str(experiment_range_form.cleaned_data['to_date'])
 				experiment_range = None
 
-			sample_before = sample_after = ''
+			sample_before = ''
+			sample_after = ''
 			sample_range = experiment_range_form.cleaned_data['sample_range']
 			if sample_range == 'morning':
 				sample_before = '14:00'
 			if sample_range == 'afternoon':
 				sample_after = '14:00'
-			plot_method = plot_form.cleaned_data['plot_method']
 
 			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date, 'sample_before': sample_before, 'sample_after': sample_after})
-			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=plotting.COHORT_PLOTS[plot_method][1], parameters=params)
-
+			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=cohort_method, title=plotting.COHORT_PLOTS[cohort_method][1], parameters=params)
 			if is_new and not cohort_image.pk:
 				messages.error(request, 'Image file not created.  This is usually caused by requesting insufficient or non-existant data.')
 			else:
 				context['graph'] = cohort_image
 		else:
-			messages.error(request, plot_form.errors.as_text())
 			messages.error(request, subject_select_form.errors.as_text())
 			messages.error(request, experiment_range_form.errors.as_text())
 	cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 	cohorts_with_bec_data = Cohort.objects.filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
 
-	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_bec_data, horizontal=True, initial={'subject': coh_id})
-	context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
-	context['experiment_range_form'] = BECRangeForm()
+	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_bec_data, horizontal=True, initial=subject_initial)
+	context['experiment_range_form'] = BECRangeForm(initial=range_initial)
 	return render_to_response('matrr/tools/bec_cohort.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')

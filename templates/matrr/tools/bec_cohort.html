@@ -20,10 +20,12 @@
 		<div class=small>{{ subject_select_form.subject.help_text }}</div>
 		{{ subject_select_form.subject }}
 		<br><br>
+{% comment %}
 		<div class=headline>{{ plot_select_form.plot_method.label }}</div>
 		<div class=small>{{ plot_select_form.plot_method.help_text }}</div>
 		{{ plot_select_form.plot_method }}
 		<br><br>
+{% endcomment %}
 		<div>
             <div class=headline>{{ experiment_range_form.sample_range.label }}</div>
             <div class=small>{{ experiment_range_form.sample_range.help_text }}</div>
@@ -36,7 +38,9 @@
             {{ experiment_range_form.range }}
             <div id='dates' style='display:none;'>
                 <div class='small' style="padding: 15px 0 0 30px">Leave blank to plot all available data</div>
+{% comment %}
                 <div style="float:right"><div class='mini-headline'>{{ cohort }} Timeline</div>{% include 'matrr/__timeline.html' %}</div>
+{% endcomment %}
                 From:{{ experiment_range_form.from_date }} <br>
                 To:{{ experiment_range_form.to_date }}
             </div>
