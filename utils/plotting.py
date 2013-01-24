@@ -7,6 +7,7 @@ from matplotlib.ticker import NullLocator, FixedLocator, MaxNLocator
 import numpy, dateutil, gc, operator, matplotlib
 from numpy import polyfit, polyval
 from numpy.ma import concatenate
+from scipy.linalg import LinAlgError
 from scipy.cluster import vq
 from scipy.interpolate import spline
 from matrr.models import *
@@ -1002,8 +1003,10 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 			ax1.scatter(res[:,0],res[:,1], marker='o', s=100, linewidths=3, c=color, edgecolor=color)
 			ax1.scatter(res[:,0],res[:,1], marker='x', s=300, linewidths=3, c=color)
 			centeroids.append([res[:,0][0], res[:,1][0]])
-		except ValueError:
+		except LinAlgError as e: # I'm not sure what about kmeans2() causes this, or how to avoid it
+			# todo: logging.error('blah')
 			pass
+
 		mky_datas.append((mky, zip(xaxis, yaxis), color))
 
 	def create_convex_hull_polygon(cluster, color, label):
@@ -1187,9 +1190,7 @@ def cohort_bec_mcd_beta(cohort, from_date=None, to_date=None, dex_type='', sampl
 # Dictionary of ethanol cohort plots VIPs can customize
 COHORT_ETOH_TOOLS_PLOTS = {"cohort_bihourly_etoh_treemap": (cohort_bihourly_etoh_treemap, "Cohort Bihourly Drinking Pattern")}
 # Data-limited plots
-COHORT_BEC_TOOLS_PLOTS = { 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
-						   'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
-						   'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
+COHORT_BEC_TOOLS_PLOTS = { 'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
 }
 # Dictionary of protein cohort plots VIPs can customize
 COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}
@@ -1212,6 +1213,9 @@ COHORT_PLOTS.update({"cohort_boxplot_m2de_month_etoh_intake": 		(cohort_boxplot_
 					 "cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 			'Cohort Water Intake, by month'),
 					 "cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 	'Cohort Pellets, by month'),
 					 "cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 			'Cohort Weight, by month'),
+					 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
+					 'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
+
 })
 
 

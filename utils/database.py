@@ -680,7 +680,7 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 		('mtd_pct_max_bout_vol_total_etoh'),
 	)
 	if not dex_type in DEX_TYPES:
-		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DEX_TYPES))
 
 	if dump_file:
 		_filename = file_name.split('/')
@@ -1087,7 +1087,7 @@ def load_edr_one_file(file_name, dex):
 
 def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_index=1, drink_index=2, create_dex=False, create_mtd=False, dump_file=False):
 	if not dex_type in DEX_TYPES:
-		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DEX_TYPES))
 
 	""" Input file may start with header, but ONLY if entry[1] == 'Date'! """
 	if dump_file:
@@ -1165,7 +1165,7 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
 
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
 	if not dex_type in DEX_TYPES:
-		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DEX_TYPES))
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	entries = os.listdir(file_dir)
 	bouts = list()
@@ -1334,7 +1334,7 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 
 def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
 	if not dex_type in DEX_TYPES:
-		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, '>>placeholder<<'))
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DEX_TYPES))
 
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	entries = os.listdir(file_dir)
