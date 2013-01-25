@@ -153,15 +153,15 @@ urlpatterns += patterns('matrr.views',
 	url(r'^tools/protein/cohort/(?P<coh_id>\d+)/monkey/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
 	url(r'^tools/protein/cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', tools_monkey_protein_graphs, name='tools-monkey-protein'),
 
-#	url(r'^tools/etoh/$', tools_etoh, name='tools-etoh'),
-#	url(r'^tools/etoh/cohort/(?P<coh_id>\d+)/$', tools_cohort_etoh, name='tools-cohort-etoh'),
-	url(r'^tools/etoh/cohort/(?P<cohort_method>.+)/$', tools_cohort_etoh_graphs, name='tools-cohort-etoh-graphs'),
-	url(r'^tools/etoh/cohort/(?P<coh_id>\d+)/monkey/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
-	url(r'^tools/etoh/cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh'),
 	url(r'^tools/etoh/mtd-graph/(?P<mtd_id>\d+)$', tools_etoh_mtd, name='tools-etoh-mtd'),
 
-#	url(r'^tools/bec/$', tools_bec, name='tools-bec'),
-#	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/$', tools_cohort_bec, name='tools-cohort-bec'),
+	url(r'^tools/etoh/cohort/(?P<cohort_method>[a-zA-Z_]+)/$', tools_cohort_etoh_graphs, name='tools-cohort-etoh-graphs'),
+
+	url(r'^tools/etoh/monkey/(?P<monkey_method>[a-zA-Z_]+)/$', tools_monkey_etoh, name='tools-monkey-etoh'),
+	url(r'^tools/etoh/monkey/(?P<monkey_method>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh-graphs'),
+#	url(r'^tools/etoh/monkey/(?P<monkey_method>[a-zA-Z_]+)/(?P<coh_id>\d+)/(?P<mky_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh-graphs'),
+
+
 	url(r'^tools/bec/cohort/(?P<cohort_method>.+)/$', tools_cohort_bec_graphs, name='tools-cohort-bec-graphs'),
 	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
 	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),

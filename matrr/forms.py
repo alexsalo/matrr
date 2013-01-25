@@ -661,7 +661,7 @@ class CohortSelectForm(SubjectSelectForm):
 
 class MonkeySelectForm(SubjectSelectForm):
 	def __init__(self, 	*args, **kwargs):
-		super(MonkeySelectForm, self).__init__(subject_label='Monkey', subject_helptext='Select a monkey', *args, **kwargs)
+		super(MonkeySelectForm, self).__init__(subject_label='Monkey', subject_helptext='Select a monkey', **kwargs)
 
 
 class GenealogyParentsForm(MonkeySelectForm):
@@ -731,7 +731,7 @@ class DataSelectForm(forms.Form):
 	dataset_choices = (('protein', 'Access protein-associated data tools'), ('etoh', 'Access ethanol-associated data tools'))
 	dataset = forms.ChoiceField(choices=dataset_choices, label='Data Set', help_text="Choose what data to analyze", widget=widgets.RadioSelect, initial=dataset_choices[0][0])
 
-#fiels = document.getElementByID('monkey_fieldset'); fiels.style.display='None';
+
 class GraphSubjectSelectForm(forms.Form):
 	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
 	subject = forms.ChoiceField(choices=subject_choices,
@@ -818,4 +818,22 @@ class InventoryBrainForm(forms.Form):
 	block = forms.ChoiceField(choices=BLOCKS, required=True)
 	left_tissues = forms.ModelMultipleChoiceField(queryset=models.TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=1))
 	right_tissues = forms.ModelMultipleChoiceField(queryset=models.TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=1))
+
+
+class GraphToolsMonkeySelectForm(forms.Form):
+	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=10))
+
+	def __init__(self, monkey_queryset, *args, **kwargs):
+		super(GraphToolsMonkeySelectForm, self).__init__(*args, **kwargs)
+		self.fields['monkeys'].queryset = monkey_queryset
+
+
+class GraphSubjectSelectForm(GraphToolsMonkeySelectForm):
+	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
+	subject = forms.ChoiceField(choices=subject_choices,
+						  label='Subject',
+						  help_text="Choose what scope of subjects to analyze",
+						  widget=forms.RadioSelect(renderer=widgets.RadioFieldRendererSpecial_monkey),
+						  initial=subject_choices[0][0])
+
 

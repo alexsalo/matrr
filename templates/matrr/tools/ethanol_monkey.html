@@ -18,9 +18,9 @@
 	<div class=clearfix></div>
 	<form action='' method='post'>
 		{% csrf_token %}
-		<div class=headline>{{ plot_select_form.plot_method.label }}</div>
-		<div class=small>{{ plot_select_form.plot_method.help_text }}</div>
-		{{ plot_select_form.plot_method }}
+		<div class=headline>{{ monkey_select_form.monkeys.label }}</div>
+		<div class=small>{{ monkey_select_form.monkeys.help_text }}</div>
+		{{ monkey_select_form.monkeys}}
 		<br><br>
 		{{ experiment_range_form.monkeys }}
 		<div class=headline>{{ experiment_range_form.range.label }}</div>
