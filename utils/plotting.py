@@ -3024,11 +3024,10 @@ def create_mtd_histograms():
 	for monkey in mtd.objects.all().values_list('monkey', flat=True).distinct():
 		m = Monkey.objects.get(pk=monkey)
 		for field in names:
-			mig = MonkeyImage.objects.create(method='mtd_histogram_general', monkey=m)
 			params = {'column_name': field }
-			mig.parameters = str(params)
-			mig.title = mtd._meta.get_field(field).verbose_name
-			mig.save()
+			parameters = str(params)
+			title = mtd._meta.get_field(field).verbose_name
+			mig, is_new = MonkeyImage.objects.get_or_create(method='mtd_histogram_general', monkey=m, title=title, parameters=parameters)
 
 def create_bec_histograms():
 	names = [
@@ -3040,8 +3039,7 @@ def create_bec_histograms():
 	for monkey in bec.objects.all().values_list('monkey', flat=True).distinct():
 		m = Monkey.objects.get(pk=monkey)
 		for field in names:
-			mig = MonkeyImage.objects.create(method='bec_histogram_general', monkey=m)
 			params = {'column_name': field }
-			mig.parameters = str(params)
-			mig.title = bec._meta.get_field(field).verbose_name
-			mig.save()
+			parameters = str(params)
+			title = bec._meta.get_field(field).verbose_name
+			mig, is_new = MonkeyImage.objects.get_or_create(method='bec_histogram_general', monkey=m, title=title, parameters=parameters)
