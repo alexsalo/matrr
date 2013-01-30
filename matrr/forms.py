@@ -788,6 +788,7 @@ class BECRangeForm(ExperimentRangeForm):
 	sample_range = forms.ChoiceField(choices=sample_choices,
 							   label='Time of blood sample',
 							   help_text="Blood samples were taken at multiple times of day, generally 11a-1p and 3p-5p.",
+							   required=False,
 							   widget=widgets.RadioSelect(renderer=widgets.RadioFieldRendererSpecial_dates),
 							   initial=sample_choices[0][0])
 

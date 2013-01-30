@@ -2340,6 +2340,7 @@ def tools_cohort_etoh_graphs(request, cohort_method):
 	cohorts_with_ethanol_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 	cohorts_with_ethanol_data = Cohort.objects.filter(pk__in=cohorts_with_ethanol_data) # so get the queryset of cohorts
 
+	context['cohorts'] = cohorts_with_ethanol_data
 	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_ethanol_data, horizontal=True, initial=subject_initial)
 	context['experiment_range_form'] = ExperimentRangeForm(initial=range_initial)
 	return render_to_response('matrr/tools/ethanol_cohort.html', context, context_instance=RequestContext(request))
@@ -2436,6 +2437,7 @@ def tools_cohort_bec_graphs(request, cohort_method):
 	cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 	cohorts_with_bec_data = Cohort.objects.filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
 
+	context['cohorts'] = cohorts_with_bec_data
 	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_bec_data, horizontal=True, initial=subject_initial)
 	context['experiment_range_form'] = BECRangeForm(initial=range_initial)
 	return render_to_response('matrr/tools/bec_cohort.html', context, context_instance=RequestContext(request))
