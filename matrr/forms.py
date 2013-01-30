@@ -822,11 +822,27 @@ class InventoryBrainForm(forms.Form):
 
 
 class GraphToolsMonkeySelectForm(forms.Form):
+	"""
+	IMPORTANT NOTE:
+	When using this form, you need to add the text below to the template in which it's used.  I haven't figured out why yet, but the Media class in the
+	CheckboxSelectMultipleSelectAll widget doesn't work.  I don't even know where to start debugging that.
+
+	{% block extra_js %}
+		{{ block.super }}
+		<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+	{% endblock %}
+	"""
 	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=10))
 
 	def __init__(self, monkey_queryset, *args, **kwargs):
 		super(GraphToolsMonkeySelectForm, self).__init__(*args, **kwargs)
 		self.fields['monkeys'].queryset = monkey_queryset
+
+	class Media:
+		js = (
+			'js/toggle-checked.js',
+			)
+
 
 
 class GraphSubjectSelectForm(GraphToolsMonkeySelectForm):

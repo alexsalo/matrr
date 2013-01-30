@@ -87,6 +87,49 @@ class RadioFieldRendererSpecial_proteins(RadioFieldRenderer):
 			return mark_safe('\n'.join(radios))
 
 
+class CheckboxSelectMultipleSelectAll(CheckboxSelectMultiple):
+	"""
+	IMPORTANT NOTE:
+	When using this widget, you need to add the text below to the template in which it's used.  I haven't figured out why yet, but the Media class doesn't work.
+	I don't even know where to start debugging that.
+
+	{% block extra_js %}
+		{{ block.super }}
+		<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+	{% endblock %}
+	"""
+
+	def __init__(self, attrs=None, choices=()):
+		super(CheckboxSelectMultipleSelectAll, self).__init__(attrs, choices)
+
+	def render(self, name, value, attrs=None, choices=()):
+		if value is None: value = []
+		has_id = attrs and 'id' in attrs
+		final_attrs = self.build_attrs(attrs, name=name)
+
+		output = [u'<fieldset><legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (
+		attrs['id'], name, attrs['id'])]
+
+		str_values = set([force_unicode(v) for v in value])
+		for i, (option_value, option_label) in enumerate(chain(self.choices, choices)):
+			# If an ID attribute was given, add a numeric index as a suffix,
+			# so that the checkboxes don't all have the same ID attribute.
+			if has_id:
+				final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
+				label_for = u' for="%s"' % final_attrs['id']
+			else:
+				label_for = ''
+
+			cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
+			option_value = force_unicode(option_value)
+			rendered_cb = cb.render(name, option_value)
+			option_label = conditional_escape(force_unicode(option_label))
+			output.append(u'<label%s>%s %s</label>' % (label_for, rendered_cb, option_label))
+#		output.append(u'</ul>')
+		output.append(u'</fieldset>')
+		return mark_safe(u'\n'.join(output))
+
+
 #this class is supposed to be abstract
 class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
 	def __init__(self, link_base, tissue, attrs=None, choices=()):
@@ -457,11 +500,15 @@ class CheckboxSelectMultiple_columns(forms.CheckboxSelectMultiple):
 		super(CheckboxSelectMultiple, self).__init__(*args, **kwargs)
 		self.columns = columns
 
+	def _base_output(self, name, value, attrs=None, choices=()):
+		return [u'<table style="width=80%"><tr>']
+
+
 	def render(self, name, value, attrs=None, choices=()):
 		if value is None: value = []
 		has_id = attrs and 'id' in attrs
 		final_attrs = self.build_attrs(attrs, name=name)
-		output = [u'<table style="width=80%"><tr>']
+		output = self._base_output(name, value, attrs, choices)
 		# Normalize to strings
 		str_values = set([force_unicode(v) for v in value])
 		for i, (option_value, option_label) in enumerate(chain(self.choices, choices)):
@@ -483,6 +530,13 @@ class CheckboxSelectMultiple_columns(forms.CheckboxSelectMultiple):
 			output.append(u'<td><label%s>%s %s</label></td>' % (label_for, rendered_cb, option_label))
 		output.append(u'</tr></table>')
 		return mark_safe(u'\n'.join(output))
+
+
+class CheckboxSelectMultipleSelectAll_columns(CheckboxSelectMultiple_columns):
+	def _base_output(self, name, value, attrs=None, choices=()):
+		select_all_checkbox = u'<legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All</label></legend>' % (attrs['id'], name, attrs['id'])
+		output = [u'<table><tr><td colspan=%d>%s</td>' % (self.columns, select_all_checkbox)]
+		return output
 
 class CheckboxSelectMultiple_proteinAdvSearch(forms.CheckboxSelectMultiple):
 	""" this widget creates a table of checkboxes, 1 checkbox per <td>, and n <td>'s per <tr>, where n is the columns kwarg.'

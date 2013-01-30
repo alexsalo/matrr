@@ -24,7 +24,8 @@
 		<div class=headline>{{ subject_select_form.subject.label }}</div>
 		<div class=small>{{ subject_select_form.subject.help_text }}</div>
 		{{ subject_select_form.subject }}
-		<br><br>
+		<br>
+		<br>
 		<div class=headline>{{ experiment_range_form.range.label }}</div>
 		<div class=small>{{ experiment_range_form.range.help_text }}</div>
 		{{ experiment_range_form.range }}
@@ -45,11 +46,9 @@
 
 		<br><br>
 	    <div class='clearfix'></div>
-	    <div>
+	    <div class=float-left>
             <button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
 		</div>
 	</form>
-
-
 
 {% endblock %}
