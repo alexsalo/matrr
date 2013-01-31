@@ -131,7 +131,6 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
 	else:
 		ax.set_xticks([])
 
-
 def _lifetime_cumsum_etoh(eevs, subplot, color_monkey=True):
 	"""
 
@@ -274,8 +273,8 @@ def _bec_histogram(monkey, column_name, axis, from_date=None, to_date=None, samp
 			except Monkey.DoesNotExist:
 				print("That's not a valid monkey.")
 				return
-	high_monkey = Monkey.objects.get(mky_high_drinker=True)
-	low_monkey = Monkey.objects.get(mky_low_drinker=True)
+	high_monkey = Monkey.objects.get(mky_high_drinker=True, mky_species=monkey.mky_species)
+	low_monkey = Monkey.objects.get(mky_low_drinker=True, mky_species=monkey.mky_species)
 
 	cohort_bec = MonkeyBEC.objects.filter(monkey__cohort=monkey.cohort)
 	high_bec = MonkeyBEC.objects.filter(monkey=high_monkey)
@@ -1308,18 +1307,11 @@ def cohort_bec_mcd_beta(cohort, from_date=None, to_date=None, dex_type='', sampl
 
 
 # Dictionary of ethanol cohort plots VIPs can customize
-<<<<<<< HEAD
 COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_etoh_bihourly_treemap, "Cohort Bihourly Drinking Pattern")}
-# Data-limited plots
-COHORT_BEC_TOOLS_PLOTS = { 'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
-=======
-COHORT_ETOH_TOOLS_PLOTS = {"cohort_bihourly_etoh_treemap": (cohort_bihourly_etoh_treemap, "Cohort Bihourly Drinking")}
-
 # BEC plots
 COHORT_BEC_TOOLS_PLOTS = { 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
 						   'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
 						   'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
->>>>>>> WIP, nothing significant finished
 }
 # Dictionary of protein cohort plots VIPs can customize
 COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}
@@ -3114,12 +3106,9 @@ MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_2
 					 'monkey_errorbox_weight': (monkey_errorbox_weight, 'Monkey Weight'),
 					 'monkey_etoh_bouts_drinks_intraday': (monkey_etoh_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
 					 'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
-<<<<<<< HEAD
 					 'mtd_histogram_general': (mtd_histogram_general, 'Monkey Histogram'),
 					 'bec_histogram_general': (bec_histogram_general, 'Monkey Histogram'),
 					 'monkey_etoh_induction_cumsum': (monkey_etoh_induction_cumsum, 'Monkey Induction Daily Ethanol Intake'),
-=======
->>>>>>> WIP, nothing significant finished
 					 })
 
 def fetch_plot_choices(subject, user, cohort, tool):
