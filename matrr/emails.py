@@ -14,7 +14,7 @@ def send_colliding_requests_info():
 
 	time_now = datetime.now()
 	time_yesterday = time_now - timedelta(days=1)
-	requests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now).exclude(user__username='matrr_admin')
+	requests = Request.objects.submitted().filter(req_request_date__gte=time_yesterday, req_request_date__lte=time_now).exclude(user__username='matrr_admin')
 
 	collisions = list()
 
