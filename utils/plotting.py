@@ -2255,7 +2255,7 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 #   main graph
 	main_gs = gridspec.GridSpec(3, 40)
 	main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
-	etoh_bout_vol_main = pyplot.subplot(main_gs[:,0:39])
+	etoh_bout_vol_main = fig.add_subplot(main_gs[:,0:39])
 	s = etoh_bout_vol_main.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_volumes, alpha=0.4)
 
 	etoh_bout_vol_main.set_ylabel("Daily Ethanol Consumption (in g/kg)")
@@ -2269,7 +2269,7 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 	if len(induction_days) and len(induction_days) != len(xaxis):
 		etoh_bout_vol_main.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
-	etoh_bout_vol_color = pyplot.subplot(main_gs[:,39:])
+	etoh_bout_vol_color = fig.add_subplot(main_gs[:,39:])
 	cb = fig.colorbar(s, alpha=1, cax=etoh_bout_vol_color)
 	cb.set_label(scatter_color_label)
 	cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
@@ -2302,13 +2302,13 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 
 	hist_gs = gridspec.GridSpec(4, 1)
 	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
-	etoh_bout_vol_hist = pyplot.subplot(hist_gs[0, :])
+	etoh_bout_vol_hist = fig.add_subplot(hist_gs[0, :])
 	etoh_bout_vol_hist = _histogram_legend(monkey, etoh_bout_vol_hist)
-	etoh_bout_vol_hist = pyplot.subplot(hist_gs[1, :])
+	etoh_bout_vol_hist = fig.add_subplot(hist_gs[1, :])
 	etoh_bout_vol_hist = _mtd_histogram(monkey, 'mtd_etoh_g_kg', etoh_bout_vol_hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
-	etoh_bout_vol_hist = pyplot.subplot(hist_gs[2, :])
+	etoh_bout_vol_hist = fig.add_subplot(hist_gs[2, :])
 	etoh_bout_vol_hist = _mtd_histogram(monkey, 'mtd_etoh_bout', etoh_bout_vol_hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
-	etoh_bout_vol_hist = pyplot.subplot(hist_gs[3, :])
+	etoh_bout_vol_hist = fig.add_subplot(hist_gs[3, :])
 	etoh_bout_vol_hist = _mtd_histogram(monkey, 'bouts_set__ebt_volume', etoh_bout_vol_hist, from_date=from_date, to_date=to_date, dex_type=dex_type, verbose_name='Bout Volume')
 
 	zipped = numpy.vstack(zip(xaxis, scatter_y))
@@ -2410,7 +2410,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 #   main graph
 	main_gs = gridspec.GridSpec(3, 40)
 	main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
-	etoh_1st_max_main = pyplot.subplot(main_gs[0:2,0:39])
+	etoh_1st_max_main = fig.add_subplot(main_gs[0:2,0:39])
 	s = etoh_1st_max_main.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_bouts, alpha=.6)
 
 	y_max = cbc.cbc_mtd_max_bout_vol_max
@@ -2430,7 +2430,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	etoh_1st_max_main.set_yticks(range(0, max_y_int, y_tick_int))
 	etoh_1st_max_main.yaxis.get_label().set_position((0,0.6))
 
-	etoh_1st_max_color = pyplot.subplot(main_gs[0:2,39:])
+	etoh_1st_max_color = fig.add_subplot(main_gs[0:2,39:])
 	cb = fig.colorbar(s, alpha=1, cax=etoh_1st_max_color)
 	cb.set_clim(cbc.cbc_mtd_pct_max_bout_vol_total_etoh_min, cbc.cbc_mtd_pct_max_bout_vol_total_etoh_max)
 	cb.set_label(scatter_color_label)
@@ -2463,7 +2463,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	pyplot.setp(etoh_1st_max_size, xticklabels=bout_labels)
 
 #	barplot
-	etoh_1st_max_barplot = pyplot.subplot(main_gs[-1:, 0:39])
+	etoh_1st_max_barplot = fig.add_subplot(main_gs[-1:, 0:39])
 
 	etoh_1st_max_barplot.set_xlabel("Days")
 	etoh_1st_max_barplot.set_ylabel(bar_y_label)
@@ -2486,23 +2486,23 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	col.set_array(bar_color)
 
 	# colorbor for bar plot
-	etoh_1st_max_barcolor = pyplot.subplot(main_gs[-1:,39:])
+	etoh_1st_max_barcolor = fig.add_subplot(main_gs[-1:,39:])
 	cb = fig.colorbar(col, alpha=1, cax=etoh_1st_max_barcolor)
 	cb.set_label(bar_color_label)
 
 	hist_gs = gridspec.GridSpec(6, 1)
 	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
-	etoh_1st_max_hist = pyplot.subplot(hist_gs[0, :])
+	etoh_1st_max_hist = fig.add_subplot(hist_gs[0, :])
 	etoh_1st_max_hist = _histogram_legend(monkey, etoh_1st_max_hist)
-	etoh_1st_max_hist = pyplot.subplot(hist_gs[1, :])
+	etoh_1st_max_hist = fig.add_subplot(hist_gs[1, :])
 	etoh_1st_max_hist = _mtd_histogram(monkey, 'mtd_max_bout_vol', etoh_1st_max_hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
-	etoh_1st_max_hist = pyplot.subplot(hist_gs[2, :])
+	etoh_1st_max_hist = fig.add_subplot(hist_gs[2, :])
 	etoh_1st_max_hist = _mtd_histogram(monkey, 'mtd_max_bout_length', etoh_1st_max_hist, from_date=from_date, to_date=to_date, dex_type=dex_type, hide_xticks=True)
-	etoh_1st_max_hist = pyplot.subplot(hist_gs[3, :])
+	etoh_1st_max_hist = fig.add_subplot(hist_gs[3, :])
 	etoh_1st_max_hist = _mtd_histogram(monkey, 'mtd_pct_max_bout_vol_total_etoh', etoh_1st_max_hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
-	etoh_1st_max_hist = pyplot.subplot(hist_gs[4, :])
+	etoh_1st_max_hist = fig.add_subplot(hist_gs[4, :])
 	etoh_1st_max_hist = _mtd_histogram(monkey, 'mtd_vol_1st_bout', etoh_1st_max_hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
-	etoh_1st_max_hist = pyplot.subplot(hist_gs[5, :])
+	etoh_1st_max_hist = fig.add_subplot(hist_gs[5, :])
 	etoh_1st_max_hist = _mtd_histogram(monkey, 'mtd_pct_etoh_in_1st_bout', etoh_1st_max_hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
 
 	zipped = numpy.vstack(zip(xaxis, scatter_y))
