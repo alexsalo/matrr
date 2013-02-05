@@ -131,10 +131,12 @@ VIP_IMAGES_LIST = (
 'monkey_bec_bubble',
 'monkey_bec_consumption',
 'monkey_bec_monthly_centroids',
+'monkey_etoh_induction_cumsum',
 
 'cohort_bec_maxbout',
 'cohort_bec_firstbout',
 'cohort_bec_firstbout_monkeycluster',
+'cohort_etoh_induction_cumsum',
 
 'monkey_errorbox_etoh', # deprecated
 '__vip',
