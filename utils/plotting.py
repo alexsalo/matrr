@@ -131,6 +131,40 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
 	else:
 		ax.set_xticks([])
 
+
+def _days_cumsum_etoh(mtds, subplot):
+	"""
+	This fn is used by cohort_etoh_induction_cumsum and monky_etoh_induction_cumsum.  It plots the mtd cumsum lines on the gives subplot.
+	"""
+	colors = ['navy', 'goldenrod']
+	max_x = 0
+	stage_2_min = 0
+	stage_2_max = 0
+	max_y = 0
+	for index, mtd in enumerate(mtds):
+		bouts = mtd.bouts_set.all().order_by('drinks_set__edr_start_time')
+		drink_starts = bouts.values_list('drinks_set__edr_start_time', flat=True)
+		drink_vols = bouts.values_list('drinks_set__edr_volume', flat=True)
+		xaxis = numpy.array(drink_starts)
+		xaxis += max_x
+		yaxis = numpy.array(drink_vols)
+		yaxis = numpy.cumsum(yaxis)
+		subplot.plot(xaxis, yaxis, alpha=1, linewidth=0, color=colors[index%2])
+		subplot.fill_between(xaxis, 0, yaxis, color=colors[index%2])
+
+		if xaxis.any(): max_x = xaxis.max() # .max() raise exception if xaxis is empty
+		if yaxis.any(): # .max() raise exception if yaxis is empty
+			if yaxis.max() > max_y: max_y = yaxis.max()
+
+		if not stage_2_min and mtd.mtd_etoh_g_kg >= .6:
+			stage_2_min = xaxis.min()
+		if not stage_2_max and mtd.mtd_etoh_g_kg >= 1.1:
+			stage_2_max = xaxis.min() # .min() is correct.  .max() would include the first day of stage 1.5
+
+	if stage_2_min and stage_2_max:
+		subplot.axvspan(stage_2_min, stage_2_max, color='black', alpha=.2, zorder=-100)
+
+# histograms
 def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend):
 	maxes = [monkey_values.max(), cohort_values.max(), high_values.max(), low_values.max()]
 	linspace = numpy.linspace(0, max(maxes), 15) # defines number of bins in histogram
@@ -836,6 +870,50 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 
 	return fig, 'has_caption'
 
+def cohort_etoh_induction_cumsum(cohort, stage=1):
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print("That's not a valid cohort.")
+			return False, False
+	monkeys = cohort.monkey_set.filter(mky_drinking=True)
+
+	stages = dict()
+	stages[0] = Q(mtd_etoh_g_kg__lt=1.6)
+	stages[1] = Q(mtd_etoh_g_kg__lt=.6)
+	stages[2] = Q(mtd_etoh_g_kg__gt=.6, mtd_etoh_g_kg__lt=1.1)
+	stages[3] = Q(mtd_etoh_g_kg__gt=1.4)
+
+	fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+#   main graph
+	main_gs = gridspec.GridSpec(monkeys.count(), 40)
+	main_gs.update(left=0.02, right=0.95, wspace=0, hspace=.01*monkeys.count()) # sharing xaxis
+
+	stage_plot = fig.add_subplot(main_gs[0:1,2:41])
+	stage_text = "Stage %d" % stage if stage else "Induction"
+	stage_plot.set_title("%s Cumulative Intraday EtOH Intake for %s" % (stage_text, str(cohort)))
+	for index, monkey in enumerate(monkeys):
+		if index:
+			stage_plot = pyplot.subplot(main_gs[index:index+1,2:41], sharex=stage_plot, sharey=stage_plot) # sharing xaxis
+		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment__dex_type='Induction').order_by('drinking_experiment__dex_date')
+		stage_x = mtds.filter(stages[stage])
+		_days_cumsum_etoh(stage_x, stage_plot)
+		stage_plot.get_xaxis().set_visible(False)
+		stage_plot.legend((), title=str(monkey), loc=1, frameon=False, prop={'size':12})
+
+#	ylims = stage_plot.get_ylim()
+	stage_plot.set_ylim(ymin=0, )#ymax=ylims[1]*1.05)
+	stage_plot.yaxis.set_major_locator(MaxNLocator(3, prune='lower'))
+
+	# yxes label
+	ylabel = pyplot.subplot(main_gs[:,0:2])
+	ylabel.set_axis_off()
+	ylabel.set_xlim(0, 1)
+	ylabel.set_ylim(0, 1)
+	ylabel.text(.05, 0.5, "Cumulative EtOH intake, ml", rotation='vertical', horizontalalignment='center', verticalalignment='center')
+	return fig, True
+
 
 def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
 	"""
@@ -1215,7 +1293,7 @@ COHORT_PLOTS.update({"cohort_boxplot_m2de_month_etoh_intake": 		(cohort_boxplot_
 					 "cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 			'Cohort Weight, by month'),
 					 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
 					 'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
-
+					 'cohort_etoh_induction_cumsum': (cohort_etoh_induction_cumsum, 'Cohort Induction Daily Ethanol Intake'),
 })
 
 
@@ -2440,6 +2518,52 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
 	datapoint_map = zip(ids, xcoords, ycoords)
 	return fig, datapoint_map
 
+def monkey_etoh_induction_cumsum(monkey):
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return False, False
+
+	stages = dict()
+	stages[1] = Q(mtd_etoh_g_kg__lt=.6)
+	stages[2] = Q(mtd_etoh_g_kg__gt=.6, mtd_etoh_g_kg__lt=1.1)
+	stages[3] = Q(mtd_etoh_g_kg__gt=1.4)
+
+	fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+#   main graph
+	main_gs = gridspec.GridSpec(3, 40)
+#	main_gs.update(left=0.02, right=0.95, wspace=0, hspace=.02) # NOT sharing xaxis
+	main_gs.update(left=0.02, right=0.95, wspace=0, hspace=.05) # sharing xaxis
+
+	stage_plot = fig.add_subplot(main_gs[0:1,2:39])
+	stage_plot.set_title("Induction Cumulative Intraday EtOH Intake for %s" % str(monkey))
+	for stage in stages.keys():
+		if stage > 1:
+#			stage_plot = pyplot.subplot(main_gs[stage-1:stage,2:39], sharey=stage_plot) # NOT sharing xaxis
+			stage_plot = pyplot.subplot(main_gs[stage-1:stage,2:39], sharey=stage_plot, sharex=stage_plot) # sharing xaxis
+		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment__dex_type='Induction').order_by('drinking_experiment__dex_date')
+		stage_x = mtds.filter(stages[stage])
+		_days_cumsum_etoh(stage_x, stage_plot)
+		stage_plot.get_xaxis().set_visible(False)
+		stage_plot.legend((), title="Stage %d" % stage, loc=1, frameon=False, prop={'size':12})
+
+#	ylims = stage_plot.get_ylim()
+	stage_plot.set_ylim(ymin=0, )#ymax=ylims[1]*1.05)
+	stage_plot.yaxis.set_major_locator(MaxNLocator(3))
+
+	# yaxis label
+	ylabel = pyplot.subplot(main_gs[:,0:2])
+	ylabel.set_axis_off()
+	ylabel.set_xlim(0, 1)
+	ylabel.set_ylim(0, 1)
+	ylabel.text(.05, 0.5, "Cumulative EtOH intake, ml", rotation='vertical', horizontalalignment='center', verticalalignment='center')
+	return fig, True
+
 
 def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
@@ -2944,7 +3068,8 @@ MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_2
 					 'monkey_etoh_bouts_drinks_intraday': (monkey_etoh_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
 					 'monkey_errorbox_etoh': (monkey_errorbox_etoh, 'Monkey Ethanol Intake'),
 					 'mtd_histogram_general': (mtd_histogram_general, 'Monkey Histogram'),
-					 'bec_histogram_general': (bec_histogram_general, 'Monkey Histogram')
+					 'bec_histogram_general': (bec_histogram_general, 'Monkey Histogram'),
+					 'monkey_etoh_induction_cumsum': (monkey_etoh_induction_cumsum, 'Monkey Induction Daily Ethanol Intake'),
 					 })
 
 def fetch_plot_choices(subject, user, cohort, tool):
@@ -3045,3 +3170,15 @@ def create_bec_histograms():
 			mig.parameters = str(params)
 			mig.title = bec._meta.get_field(field).verbose_name
 			mig.save()
+
+def create_daily_cumsum_graphs():
+	cohorts = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct()
+	for cohort in cohorts:
+		cohort = Cohort.objects.get(pk=cohort)
+		for stage in range(0, 4):
+			plot_method = 'cohort_etoh_induction_cumsum'
+			params = str({'stage': stage})
+			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=COHORT_PLOTS[plot_method][1], parameters=params)
+		for monkey in cohort.monkey_set.filter(mky_drinking=True):
+			plot_method = 'monkey_etoh_induction_cumsum'
+			monkey_image, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=plot_method, title=MONKEY_PLOTS[plot_method][1])
