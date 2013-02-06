@@ -1886,10 +1886,9 @@ def load_bec_data(file_name, overwrite=False, header=True):
 				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
 				continue
 
-			try:
-				bec_collect_date = dt.strptime(data[2], "%m/%d/%y")
-				bec_run_date = dt.strptime(data[3], "%m/%d/%y")
-			except:
+			bec_collect_date = __get_datetime_from_steve(data[2])
+			bec_run_date = __get_datetime_from_steve(data[3])
+			if not bec_collect_date or not bec_run_date:
 				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
 				continue
 
