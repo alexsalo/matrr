@@ -1,5 +1,9 @@
 # bogus change
+import logging
 import os
+import traceback
+import sys
+
 path = os.path.dirname(os.path.realpath(__file__))
 
 TEMPLATE_DEBUG = DEBUG = False
@@ -26,6 +30,25 @@ if getpass.getuser().lower() == 'root':
 if GLEEK:
 	import matplotlib
 	matplotlib.use('Cairo')
+
+# logging
+_log_path = os.environ['HOME']
+_log_file = 'MATRR.log'
+LOG_FILE_PATH = os.path.join(_log_path, _log_file)
+# this logger will only get hit by django if debug == False.  I think django wraps everything in a try:catch
+logging.basicConfig(format='%(asctime)s|%(levelname)s|%(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=LOG_FILE_PATH, level=logging.WARNING)
+
+def log_except_hook(*exc_info):
+	text = "".join(traceback.format_exception(*exc_info))
+	logging.error("Unhandled exception: %s", text)
+
+sys.excepthook = log_except_hook
+
+
+
+
+
+
 
 DATABASES = {
 		'default': {

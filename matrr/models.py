@@ -62,6 +62,8 @@ class Enumeration(object):
 	def __iter__(self):
 		return self.enum_list.__iter__()
 
+DexTypes = ("Open Access", "Induction")
+DexTypesChoices = tuple((i, i) for i in DexTypes)
 
 InventoryStatus = (('Unverified', 'Unverified'), ('Sufficient', 'Sufficient'), ('Insufficient', 'Insufficient'))
 
@@ -735,6 +737,8 @@ class ExperimentDrink(models.Model):
 
 class ExperimentEvent(models.Model):
 	eev_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, related_name='event_set', db_column='mky_id', editable=False)
+	dex_type = models.CharField('Experiment Type', choices=DexTypesChoices, max_length=100, help_text='The type of experiment. (ex. "Open Access")')
 	eev_source_row_number = models.PositiveIntegerField('Source file row number', blank=False, null=False)
 	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='events_set')
 	eev_occurred = models.DateTimeField('Event occurred', blank=False, null=False)
