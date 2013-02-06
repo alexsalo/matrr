@@ -740,7 +740,6 @@ class ExperimentEvent(models.Model):
 	monkey = models.ForeignKey(Monkey, related_name='event_set', db_column='mky_id', editable=False)
 	dex_type = models.CharField('Experiment Type', choices=DexTypesChoices, max_length=100, help_text='The type of experiment. (ex. "Open Access")')
 	eev_source_row_number = models.PositiveIntegerField('Source file row number', blank=False, null=False)
-	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='events_set')
 	eev_occurred = models.DateTimeField('Event occurred', blank=False, null=False)
 	eev_dose = models.FloatField('Dose', blank=False, null=False)
 	eev_panel = models.PositiveIntegerField('Panel', null=False, blank=False)
