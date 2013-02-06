@@ -1280,7 +1280,7 @@ def load_eev_one_file(file_name, dex_type, date):
 				continue
 
 			eev_date = convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
-			if date != eev_date:
+			if date.date() != eev_date.date():
 				msg = ERROR_OUTPUT % (line_number, "Filename date does not match line date.  Will use line date. filename_date=%s" % str(date), line)
 				logging.warning(msg)
 
@@ -1346,6 +1346,7 @@ def load_eevs(file_dir, dex_type):
 				continue
 			msg = "Loading %s..." % file_name
 			logging.debug(msg)
+			print msg
 			load_eev_one_file(file_name, dex_type, day)
 
 def load_necropsy_summary(filename):

@@ -42,7 +42,8 @@ def log_except_hook(*exc_info):
 	text = "".join(traceback.format_exception(*exc_info))
 	logging.error("Unhandled exception: %s", text)
 
-sys.excepthook = log_except_hook
+if GLEEK:
+	sys.excepthook = log_except_hook
 
 
 
