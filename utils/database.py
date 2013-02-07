@@ -614,7 +614,7 @@ def create_Assay_Development_tree():
 
 
 
-ERROR_OUTPUT = "%d %s # %s\n\n"
+ERROR_OUTPUT = "%d %s # %s"
 
 @transaction.commit_on_success
 def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_headers=True, dump_file=False):
@@ -1282,12 +1282,12 @@ def load_eev_one_file(file_name, dex_type, date):
 			eev_date = convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
 			if date.date() != eev_date.date():
 				msg = ERROR_OUTPUT % (line_number, "Filename date does not match line date.  Will use line date. filename_date=%s" % str(date), line)
-				logging.warning(msg)
+				logging.info(msg)
 
 			eevs = ExperimentEvent.objects.filter(monkey=monkey, dex_type=dex_type, eev_source_row_number=line_number, eev_occurred=eev_date)
 			if eevs.count() != 0:
 				msg = ERROR_OUTPUT % (line_number, "EEV with monkey, dex_type, date occurred and source row number already exists.", line)
-				logging.warning(msg)
+				logging.debug(msg)
 				continue
 
 			eev = ExperimentEvent()
