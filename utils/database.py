@@ -6,8 +6,7 @@ from datetime import timedelta, time
 import string
 import datetime
 import csv, re
-
-DEX_TYPES = ("Open Access", "Induction")
+import logging
 
 def __get_datetime_from_steve(steve_date):
 	def minimalist_xldate_as_datetime(xldate, datemode):
@@ -615,7 +614,7 @@ def create_Assay_Development_tree():
 
 
 
-ERROR_OUTPUT = "%d %s # %s\n\n"
+ERROR_OUTPUT = "%d %s # %s"
 
 @transaction.commit_on_success
 def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_headers=True, dump_file=False):
@@ -679,8 +678,8 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 		('mtd_max_bout_vol'),
 		('mtd_pct_max_bout_vol_total_etoh'),
 	)
-	if not dex_type in DEX_TYPES:
-		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DEX_TYPES))
+	if not dex_type in DexTypes:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DexTypes))
 
 	if dump_file:
 		_filename = file_name.split('/')
@@ -1086,8 +1085,8 @@ def load_edr_one_file(file_name, dex):
 			edr.save()	
 
 def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_index=1, drink_index=2, create_dex=False, create_mtd=False, dump_file=False):
-	if not dex_type in DEX_TYPES:
-		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DEX_TYPES))
+	if not dex_type in DexTypes:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DexTypes))
 
 	""" Input file may start with header, but ONLY if entry[1] == 'Date'! """
 	if dump_file:
@@ -1164,8 +1163,8 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
 		dump_file.close()
 
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
-	if not dex_type in DEX_TYPES:
-		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DEX_TYPES))
+	if not dex_type in DexTypes:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DexTypes))
 	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	entries = os.listdir(file_dir)
 	bouts = list()
@@ -1222,7 +1221,7 @@ def parse_left_right(side_string):
 	else:
 		return None
 
-def load_eev_one_file(file_name, dex, create_mtd=False):
+def load_eev_one_file(file_name, dex_type, date):
 
 	fields = (
 #		'eev_occurred',
@@ -1276,34 +1275,24 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 			try:
 				monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
 			except:
-				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				msg = ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+				logging.warning(msg)
 				continue
-
-			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
-			if mtds.count() == 0:
-				if create_mtd:
-					mtd = MonkeyToDrinkingExperiment(monkey=monkey, drinking_experiment=dex, mtd_etoh_intake=-1, mtd_veh_intake=-1, mtd_total_pellets=-1)
-					mtd.save()
-					mtds = [mtd,]
-					print "%d Creating MTD." % line_number
-				else:
-					print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
-					continue
-			if mtds.count() > 1:
-				print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
-				continue
-			mtd = mtds[0]
-
 
 			eev_date = convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
+			if date.date() != eev_date.date():
+				msg = ERROR_OUTPUT % (line_number, "Filename date does not match line date.  Will use line date. filename_date=%s" % str(date), line)
+				logging.info(msg)
 
-			eevs = ExperimentEvent.objects.filter(mtd=mtd, eev_source_row_number=line_number, eev_occurred=eev_date)
+			eevs = ExperimentEvent.objects.filter(monkey=monkey, dex_type=dex_type, eev_source_row_number=line_number, eev_occurred=eev_date)
 			if eevs.count() != 0:
-				print ERROR_OUTPUT % (line_number, "EEV with MTD, date occurred and source row number already exists.", line)
+				msg = ERROR_OUTPUT % (line_number, "EEV with monkey, dex_type, date occurred and source row number already exists.", line)
+				logging.debug(msg)
 				continue
 
 			eev = ExperimentEvent()
-			eev.mtd = mtd
+			eev.monkey = monkey
+			eev.dex_type = dex_type
 			eev.eev_occurred = eev_date
 			eev.eev_event_type = data[DATA_TYPE_D_INDEX] or data[DATA_TYPE_P_INDEX] or data[DATA_TYPE_T_INDEX]
 			eev.eev_veh_side = parse_left_right(data[DATA_VEH_SIDE_INDEX])
@@ -1328,15 +1317,17 @@ def load_eev_one_file(file_name, dex, create_mtd=False):
 				eev.full_clean()
 
 			except Exception as e:
-				print ERROR_OUTPUT % (line_number, e, line)
+				msg = ERROR_OUTPUT % (line_number, e, line)
+				print msg
+				logging.error(msg)
 				continue
 			eev.save()	
 
-def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
-	if not dex_type in DEX_TYPES:
-		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DEX_TYPES))
+def load_eevs(file_dir, dex_type):
+	if not dex_type in DexTypes:
+		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DexTypes))
 
-	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
+#	cohort = Cohort.objects.get(coh_cohort_name=cohort_name)
 	entries = os.listdir(file_dir)
 	print "Reading list of files in folder..."
 	for entry in entries:
@@ -1344,23 +1335,19 @@ def load_eevs(cohort_name, dex_type, file_dir, create_mtd=False):
 		if not os.path.isdir(file_name):
 			m = re.match(r'([0-9]+_[0-9]+_[0-9]+)_', entry)
 			if not m:
-				print "Invalid file name format: %s" % entry
+				msg = "Invalid file name format: %s" % entry
+				logging.warning(msg)
 				continue
 			try:
 				day = dt.strptime(m.group(1), "%Y_%m_%d")
 			except:
-				print "Invalid date format in file name: %s" % entry
+				msg =  "Invalid date format in file name: %s" % entry
+				logging.warning(msg)
 				continue
-			dexs = DrinkingExperiment.objects.filter(cohort=cohort,dex_type=dex_type,dex_date=day)
-			if dexs.count() == 0:
-				print "DEX does not exist: %s" % entry
-				continue
-			if dexs.count() > 1:
-				print "More than one DEX: %s" % entry
-				continue
-			dex = dexs[0]	
-			print "Loading %s..." % file_name
-			load_eev_one_file(file_name, dex, create_mtd)
+			msg = "Loading %s..." % file_name
+			logging.debug(msg)
+			print msg
+			load_eev_one_file(file_name, dex_type, day)
 
 def load_necropsy_summary(filename):
 	"""
@@ -1886,10 +1873,9 @@ def load_bec_data(file_name, overwrite=False, header=True):
 				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
 				continue
 
-			try:
-				bec_collect_date = dt.strptime(data[2], "%m/%d/%y")
-				bec_run_date = dt.strptime(data[3], "%m/%d/%y")
-			except:
+			bec_collect_date = __get_datetime_from_steve(data[2])
+			bec_run_date = __get_datetime_from_steve(data[3])
+			if not bec_collect_date or not bec_run_date:
 				print ERROR_OUTPUT % (line_number, "Wrong date format", line)
 				continue
 
