@@ -1,12 +1,17 @@
 #encoding=utf-8
-import Image, numpy, dbarray, settings, os, ast
+import os
+import ast
+import Image
+import numpy
+import dbarray
+import settings
 from django.core.files.base import File
 from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models import Q, Min, Max, Avg
 from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete, pre_save
 from django.core.urlresolvers import reverse
 from django.dispatch import receiver
 from datetime import datetime
@@ -122,6 +127,11 @@ VerificationStatus =  Enumeration([
 						('CP', 'Complete', 'Complete'),
 						('IC', 'Incomplete', 'Incomplete'),
 					])
+ResearchProgress = Enumeration([
+	('NP', 'NoProgress', "No Progress"),
+	("IP", 'InProgress', "In Progress"),
+	("CP", 'Complete', "Complete"),
+])
 
 
 # These are the method names which ONLY VIP members can _see_
@@ -1599,28 +1609,32 @@ class Shipment(models.Model):
 
 class ResearchUpdate(models.Model):
 	rud_id = models.AutoField(primary_key=True)
-	req_request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False,
-								help_text='Choose a shipped request for which you would like to upload a research update:')
-	rud_date = models.DateField('Date uploaded', editable=False, blank=True, null=True, auto_now_add=True)
-	rud_title = models.CharField('Title', blank=True, null=False, max_length=250,
-								 help_text='Give your research update a short name to make it easier for you to reference.')
-	rud_file = models.FileField('Selected file', upload_to='rud/', default='', null=False, blank=False,
-								help_text='File to Upload')
+	req_request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False, help_text='Choose a shipped request for which you would like to upload a research update:')
+	rud_date = models.DateField('Date updated', editable=False, blank=False, null=False, auto_now_add=True)
+	rud_progress = models.CharField("Research Progress", choices=ResearchProgress, max_length=5, blank=False, null=False, default='IP')
+	rud_pmid = models.CharField("PMID", max_length=20, blank=True, null=False, default='')
+	rud_data_available = models.BooleanField("Data Available", help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.")
+	rud_comments = models.TextField("Comments", blank=True, null=False)
+	rud_file = models.FileField('Research Update', upload_to='rud/', default='', null=False, blank=False, help_text='File to Upload')
 
 	def __unicode__(self):
-		return "%s: %s (%s)" % (self.req_request.__unicode__(), self.rud_title, self.rud_file.name)
+		_pmid = " (%s)" % self.rud_pmid if self.rud_pmid else ''
+		return "%s: %s%s" % (str(self.req_request), self.rud_progress, _pmid)
+
+	def publication_url(self):
+		return "http://www.ncbi.nlm.nih.gov/pubmed?term=%s" % self.rud_pmid
 
 	def verify_user_access_to_file(self, user):
 		if self.req_request.user == user:
 			return True
-		if user.has_perm('matrr.view_rud_file'):
+		if user.has_perm('matrr.view_rud_detail'):
 			return True
 		return False
 
 	class Meta:
 		db_table = 'rud_research_update'
 		permissions = (
-		('view_rud_file', 'Can view research update files of other users'),
+		('view_rud_detail', 'Can view research updates of other users.'),
 		)
 
 
@@ -2808,3 +2822,18 @@ def tiv_post_save(**kwargs):
 				from matrr.emails import send_verification_complete_notification
 				send_verification_complete_notification(req_request)
 
+# This is a method to check to see if the rud_data_available boolean has changed to True
+# If True, it will email matrr_admin that there is some data ready to be uploaded.
+@receiver(pre_save, sender=ResearchUpdate)
+def rud_pre_save(**kwargs):
+	#check to see if user exists in accounts relation
+	new_rud = kwargs['instance']
+	try:
+		old_rud = ResearchUpdate.objects.get(pk=new_rud.pk)
+		old_data = old_rud.rud_data_available
+	except ResearchUpdate.DoesNotExist:
+		old_data = False
+		
+	if new_rud.rud_data_available and not old_data:
+		from matrr import emails
+		emails.send_rud_data_available_email(new_rud)

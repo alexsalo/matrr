@@ -7,7 +7,7 @@ from matrr import helper
 import settings, re
 from datetime import datetime, timedelta, date
 from django.core.mail import send_mail
-from matrr.models import Request, User, Shipment, Account, RequestStatus, Acceptance, Group, Review
+from matrr.models import Request, User, Shipment, Account, RequestStatus, ResearchProgress, Acceptance, Group, Review
 
 # regular_tasks
 def send_colliding_requests_info():
@@ -141,9 +141,21 @@ def urge_po_mta():
 # regular_tasks
 def urge_progress_reports():
 	today = date.today()
+
+	# first, we collect requests which require updating
+	days30 = timedelta(days = 30)
+	date_ignoring = today - days30
+	no_updates = Request.objects.filter(rud_set=None) # requests with no updates
+	stale_updates = Request.objects.filter(rud_set__rud_progress=ResearchProgress.NoProgress, rud_set__rud_date__lt=date_ignoring) # requests with old "No Progress" updates
+	update_required = no_updates | stale_updates
+
+	# next, we collect the shipments that have been shipped over 90 days ago
 	days90 = timedelta(days = 90)
-	limit_date = today - days90
-	ship_to_report_req = Shipment.objects.filter(shp_shipment_date__lte = limit_date, req_request__rud_set=None)
+	date_required = today - days90
+	ship_to_report_req = Shipment.objects.filter(shp_shipment_date__lte=date_required)
+
+	# finally, only shipments for requests which need updating should be emailed
+	ship_to_report_req = ship_to_report_req.filter(req_request__in=update_required)
 
 	for shipment in ship_to_report_req.values('req_request','user','shp_shipment_date'):
 		from_email = Account.objects.get(user__username='matrr_admin').email
@@ -444,3 +456,22 @@ def send_dna_request_details(req_request):
 		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 		if ret > 0:
 			print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+
+# matrr
+def send_rud_data_available_email(rud):
+	admin = Account.objects.get(user__username='matrr_admin')
+	from_email = admin.email
+
+	recipients = [admin.email]
+	subject = 'User %s has data for MATRR' % rud.req_request.user.username
+	body = "That's right %s, you read that subject line correctly.\n" % admin.username
+	body += "\n"
+	body += "%s has submitted a research update and indicated there is data ready to be submitted to MATRR.\n" % rud.req_request.user.username
+	body += "I told them that MATRR admins would contact them shortly for upload instructions.\n"
+	body += "\n"
+	body += "You should probably buy Jon a celebratory beer.  :)\n"
+
+	ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+	if ret > 0:
+		print "%s rud data available email sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
+
