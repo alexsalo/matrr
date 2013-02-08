@@ -115,12 +115,14 @@ urlpatterns += patterns('matrr.views',
 	# Upload pages
 	url(r'^upload/$', raw_data_upload, name='raw-upload'),
 	url(r'^upload/mta/$', 				mta_upload, name='mta-upload'),
-	url(r'^upload/research_update/$',   rud_upload, name='rud-upload'),
 	url(r'^upload/cohort_data/(?P<coh_id>\d+)/$',   		cod_upload, name='cod-upload'),
 
 	# Research update pages
+	url(r'^rud/$',   rud_update, name='rud-upload'),
 	url(r'^rud/list$', research_update_list, name='rud-list'),
 	url(r'^rud/overdue$', research_update_overdue, name='rud-overdue'),
+	url(r'^rud/in_progress$',   rud_in_progress, name='rud-in-progress'),
+	url(r'^rud/complete$',   rud_complete, name='rud-complete'),
 
 	# Inventory Verification pages
 	url(r'^verification/$', tissue_verification, name='verification'),

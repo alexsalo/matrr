@@ -4,20 +4,19 @@
 	<div id="large-headline">Research Updates <span class="right"><a href="{% url rud-overdue %}">View overdue requests</a></span></div>
 	<table class='common center'>
 		<tr>
+			<th>RUD Date</th>
 			<th>Request</th>
 			<th>User</th>
-			<th>RUD Date</th>
-			<th>RUD Title</th>
+			<th>Progress</th>
 			<th> </th>
 		</tr>
-	{% for req in rud_list.object_list %}
+	{% for req in req_list.object_list %}
 		{% for rud in req.rud_set.all %}
 			<tr>
 				<td class='text-center-common-td'><a href='{% url order-detail req.pk %}'>{{ req.pk }}</a></td>
 				<td class='text-center-common-td'><a href='{% url account-reviewer-view req.user.id %}'>{{ req.user.username }}</a></td>
-				<td class='text-center-common-td'>{{ rud.rud_date|date:"m/d/Y" }}</td>
-				<td class='text-center-common-td'>{{ rud.rud_title }}</td>
-				<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{rud.rud_file }}'>View Research Update</a></td>
+				<td class='text-center-common-td'>{{ rud.rud_progress }}</td>
+				<td class='text-center-common-td'><a href='{% url rud-detail %}'>View Research Update</a></td>
 			</tr>
 		{% endfor %}
 	{% endfor %}

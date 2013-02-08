@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+	<div class="content-item" xmlns="http://www.w3.org/1999/html">
+		<div id="large-headline">Submit Research Updates</div>
+		{% if form.errors %}
+			<div class="messages">
+				<div class="error">
+					{% for field in form %}
+					{% if field.errors %}
+					{{ field.label_tag }}:
+						{% for error in field.errors %}
+							 {{ error }}<br>
+						{% endfor %}
+					{% endif %}
+					{% endfor %}
+					
+				</div></div>
+		{% endif %}
+		<form method="post" action="">{% csrf_token %}
+			<table class='common'>
+				<tr>
+					<th width="30%">{{ form.comments.label }}<br><div class=small>{{ form.comments.help_text }}</div></th>
+					<td>{{ form.comments }}</td>
+				</tr>
+			</table>
+			<input type="submit" value="Submit"/>
+		</form>
+	</div>
+{% endblock %}

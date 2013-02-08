@@ -1598,17 +1598,19 @@ class Shipment(models.Model):
 
 
 class ResearchUpdate(models.Model):
+	RUD_CHOICES = (('NP', "No Progress"), ("IP", "In Progress"), ("CP", "Complete"))
 	rud_id = models.AutoField(primary_key=True)
-	req_request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False,
-								help_text='Choose a shipped request for which you would like to upload a research update:')
-	rud_date = models.DateField('Date uploaded', editable=False, blank=True, null=True, auto_now_add=True)
-	rud_title = models.CharField('Title', blank=True, null=False, max_length=250,
-								 help_text='Give your research update a short name to make it easier for you to reference.')
-	rud_file = models.FileField('Selected file', upload_to='rud/', default='', null=False, blank=False,
-								help_text='File to Upload')
+	req_request = models.ForeignKey(Request, related_name='rud_set', db_column='req_id', null=False, blank=False, help_text='Choose a shipped request for which you would like to upload a research update:')
+	rud_date = models.DateField('Date updated', editable=False, blank=False, null=False, auto_now_add=True)
+	rud_progress = models.CharField("Research Progress", choices=RUD_CHOICES, max_length=5, blank=False, null=False, default='IP')
+	rud_pmid = models.CharField("PMID", max_length=20, blank=True, null=False, default='')
+	rud_data_available = models.BooleanField("Data Available", help_text="Data is available for upload to MATRR")
+	rud_comments = models.TextField("Comments", blank=True, null=False)
+	rud_file = models.FileField('Research Update', upload_to='rud/', default='', null=False, blank=False, help_text='File to Upload')
 
 	def __unicode__(self):
-		return "%s: %s (%s)" % (self.req_request.__unicode__(), self.rud_title, self.rud_file.name)
+		_pmid = " (%s)" % self.rud_pmid if self.rud_pmid else ''
+		return "%s: %s%s" % (str(self.req_request), self.rud_progress, _pmid)
 
 	def verify_user_access_to_file(self, user):
 		if self.req_request.user == user:
@@ -1620,7 +1622,7 @@ class ResearchUpdate(models.Model):
 	class Meta:
 		db_table = 'rud_research_update'
 		permissions = (
-		('view_rud_file', 'Can view research update files of other users'),
+		('view_rud_file', 'Can view research update files of other users.  Deprecated'),
 		)
 
 

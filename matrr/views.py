@@ -491,24 +491,84 @@ def mta_upload(request):
 		},
 							  context_instance=RequestContext(request))
 
-
-def rud_upload(request):
-	from matrr.forms import RudForm
+def rud_update(request):
 	if request.method == 'POST':
-		form = RudForm(request.user, request.POST, request.FILES)
+		form = RudUpdateForm(user=request.user, data=request.POST)
 		if form.is_valid():
-			# all the fields in the form are valid, so save the data
-			form.save()
-			messages.success(request, 'Research Uploaded Successfully')
-			return redirect(reverse('account-view'))
+			cd = form.cleaned_data
+			if cd['progress'] == 'CP':
+				request.session['rud_form'] = form
+				return redirect(reverse('rud-complete'))
+			elif cd['progress'] == 'IP':
+				request.session['rud_form'] = form
+				return redirect(reverse('rud-in-progress'))
+			else:
+				# todo: remind user in 4 weeks
+				messages.info(request, "You will be emailed again in four weeks to provide another research update.")
+				return redirect(reverse('account-view'))
 	else:
-		# create the form for the MTA upload
-		form = RudForm(request.user)
-	return render_to_response('matrr/upload_forms/rud_upload_form.html',
-			{'form': form,
-			 },
-							  context_instance=RequestContext(request))
+		form = RudUpdateForm(user=request.user)
+	return render_to_response('matrr/rud_reports/rud_update.html', {'form': form, }, context_instance=RequestContext(request))
 
+def rud_in_progress(request):
+	progress_form = ''
+	update_form = request.session.get('rud_form', '')
+	if not update_form:
+		messages.error(request, "There was an issue loading the first part of your research update, please start over.  If this continues to happen, please contact a MATRR administrator.")
+		return redirect(reverse('rud-upload'))
+
+	update_cd = update_form.cleaned_data
+	if request.method == 'POST':
+		post = request.POST.copy()
+		post.update({'progress':update_cd['progress']})
+		progress_form = RudProgressForm(data=post)
+		if progress_form.is_valid():
+			progress_form.clean()
+			if not progress_form.errors:
+				update_cd = update_form.cleaned_data
+				progress_cd = progress_form.cleaned_data
+				for req in update_cd['req_request']:
+					rud = ResearchUpdate()
+					rud.req_request = req
+					rud.rud_progress = update_cd['progress']
+					rud.rud_pmid = progress_cd['pmid']
+					rud.rud_data_available = progress_cd['data_available']
+					rud.rud_file = progress_cd['update_file']
+				messages.success(request, "Your research update was successfully submitted.  Thank you.")
+				return redirect(reverse('account-view'))
+
+	form = progress_form if progress_form else RudProgressForm(initial={'progress':update_cd['progress']})
+	return render_to_response('matrr/rud_reports/rud_in_progress.html', {'form': form, }, context_instance=RequestContext(request))
+
+def rud_complete(request):
+	progress_form = ''
+	update_form = request.session.get('rud_form', '')
+	if not update_form:
+		messages.error(request, "There was an issue loading the first part of your research update, please start over.  If this continues to happen, please contact a MATRR administrator.")
+		return redirect(reverse('rud-upload'))
+
+	update_cd = update_form.cleaned_data
+	if request.method == 'POST':
+		post = request.POST.copy()
+		post.update({'progress':update_cd['progress']})
+		progress_form = RudProgressForm(data=post)
+		if progress_form.is_valid():
+			progress_form.clean()
+			if not progress_form.errors:
+				progress_cd = progress_form.cleaned_data
+				for req in update_cd['req_request']:
+					rud = ResearchUpdate()
+					rud.req_request = req
+					rud.rud_progress = update_cd['progress']
+					rud.rud_pmid = progress_cd['pmid']
+					rud.rud_data_available = progress_cd['data_available']
+					rud.rud_file = progress_cd['update_file']
+					rud.save()
+				messages.success(request, "Your research update was successfully submitted.  Thank you.")
+				return redirect(reverse('account-view'))
+
+	form = progress_form if progress_form else RudProgressForm(initial={'progress':update_cd['progress']})
+	return render_to_response('matrr/rud_reports/rud_complete.html', {'form': form, }, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.add_cohortdata'), login_url='/denied/')
 def cod_upload(request, coh_id=1):
@@ -523,7 +583,6 @@ def cod_upload(request, coh_id=1):
 		cohort = Cohort.objects.get(pk=coh_id)
 		form = CodForm(cohort=cohort)
 	return render_to_response('matrr/upload_forms/cod_upload_form.html', {'form': form, }, context_instance=RequestContext(request))
-
 
 @staff_member_required
 def account_verify(request, user_id):
@@ -1818,7 +1877,6 @@ def inventory_cohort(request, coh_id):
 			availability_matrix.append(tst_row)
 	return render_to_response('matrr/inventory/inventory_cohort.html', {"cohort": cohort, "monkeys": monkeys, "matrix": availability_matrix}, context_instance=RequestContext(request))
 
-
 @user_passes_test(lambda u: u.has_perm('matrr.change_tissuesample'), login_url='/denied/')
 def inventory_brain_cohort(request, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
@@ -1867,10 +1925,9 @@ def inventory_brain_monkey(request, mky_id):
 	context = {"plot_gallery": True, "monkey": monkey, 'brain_form': brain_form, 'image': image, 'matrix': matrix, 'blocks': blocks, 'show_grid':show_grid}
 	return render_to_response('matrr/inventory/inventory_brain_monkey.html', context, context_instance=RequestContext(request))
 
-
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_file'), login_url='/denied/')
 def research_update_list(request):
-	pending_ruds = Request.objects.exclude(rud_set=None).order_by('req_request_date')
+	pending_ruds = Request.objects.exclude(rud_set=None).order_by('rud_date')
 	paginator = Paginator(pending_ruds, 20)
 
 	if request.GET and 'page' in request.GET:
@@ -1878,14 +1935,14 @@ def research_update_list(request):
 	else:
 		page = 1
 	try:
-		rud_list = paginator.page(page)
+		req_list = paginator.page(page)
 	except PageNotAnInteger:
 		# If page is not an integer, deliver first page.
-		rud_list = paginator.page(1)
+		req_list = paginator.page(1)
 	except EmptyPage:
 		# If page is out of range (e.g. 9999), deliver last page of results.
-		rud_list = paginator.page(paginator.num_pages)
-	return render_to_response('matrr/rud_reports/rud_list.html', {'rud_list': rud_list}, context_instance=RequestContext(request))
+		req_list = paginator.page(paginator.num_pages)
+	return render_to_response('matrr/rud_reports/rud_list.html', {'req_list': req_list}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_file'), login_url='/denied/')
 def research_update_overdue(request):
@@ -1905,7 +1962,6 @@ def research_update_overdue(request):
 		# If page is out of range (e.g. 9999), deliver last page of results.
 		req_list = paginator.page(paginator.num_pages)
 	return render_to_response('matrr/rud_reports/req_list.html', {'req_list': req_list}, context_instance=RequestContext(request))
-
 
 @user_passes_test(lambda u: u.is_staff, login_url='/denied/')
 def rna_landing(request):
@@ -2014,7 +2070,6 @@ def tools_landing(request):
 			messages.error(request, "Form submission was invalid.  Please try again.")
 	return render_to_response('matrr/tools/landing.html', {}, context_instance=RequestContext(request))
 
-
 def tools_protein(request): # pick a cohort
 	if request.method == 'POST':
 		cohort_form = CohortSelectForm(data=request.POST)
@@ -2026,7 +2081,6 @@ def tools_protein(request): # pick a cohort
 		cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
 		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
 	return render_to_response('matrr/tools/protein.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
-
 
 def tools_cohort_protein(request, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
@@ -2070,7 +2124,6 @@ def tools_cohort_protein(request, coh_id):
 					messages.warning(request, "You must have a valid MTA on record to download data.  MTA information can be updated on your account page.")
 	return render_to_response('matrr/tools/protein.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
-
 def _verify_monkeys(text_monkeys):
 	monkey_keys = text_monkeys.split('-')
 	query_keys = list()
@@ -2080,7 +2133,6 @@ def _verify_monkeys(text_monkeys):
 		return Monkey.objects.filter(mky_id__in=query_keys)
 	else:
 		return list()
-
 
 def tools_cohort_protein_graphs(request, coh_id):
 	proteins = None
@@ -2105,7 +2157,6 @@ def tools_cohort_protein_graphs(request, coh_id):
 	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_protein_data, horizontal=True, initial={'subject': coh_id})
 	context['protein_form'] = ProteinSelectForm(initial={'proteins': proteins})
 	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
-
 
 def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 	proteins = None
@@ -2216,7 +2267,6 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 		context['protein_form'] = ProteinSelectForm()
 
 	return render_to_response('matrr/tools/protein_monkey.html', context, context_instance=RequestContext(request))
-
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_etoh(request): # pick a cohort
@@ -2532,7 +2582,6 @@ def tools_monkey_bec_graphs(request, coh_id):
 
 	return render_to_response('matrr/tools/bec_monkey.html', context, context_instance=RequestContext(request))
 
-
 @user_passes_test(lambda u: u.has_perm('matrr.genealogy_tools'), login_url='/denied/')
 def tools_genealogy(request):
 	if request.method == 'POST':
@@ -2567,7 +2616,6 @@ def tools_cohort_genealogy(request, coh_id):
 	context = dict()
 	context['genealogy_form'] = GenealogyParentsForm(subject_queryset=cohort_monkeys)
 	return render_to_response('matrr/tools/genealogy/parent_select.html', context, context_instance=RequestContext(request))
-
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox(request):

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+	<div class="content-item" xmlns="http://www.w3.org/1999/html">
+		<div id="large-headline">Submit Research Updates</div>
+		{% if form.errors %}
+			<div class="messages">
+				<div class="error">
+					{% for field in form %}
+					{% if field.errors %}
+					{{ field.label_tag }}:
+						{% for error in field.errors %}
+							 {{ error }}<br>
+						{% endfor %}
+					{% endif %}
+					{% endfor %}
+					
+				</div></div>
+		{% endif %}
+		<form method="post" action="">{% csrf_token %}
+			<table class='common'>
+				<tr>
+					<th>{{ form.req_request.label }}<br><div class=small>{{ form.req_request.help_text }}</div></th>
+					<td>{{ form.req_request }}</td>
+				</tr>
+                <tr>
+					<th>{{ form.progress.label }}<br><div class="small">{{ form.progress.help_text }}</div></th>
+					<td>
+						<div class='small right' style='max-width: 80%;'>
+							<ul>
+								<li>
+									No Progress: We have received tissues from the MATRR, but we have yet to begin the process of their analysis.
+								</li>
+								<li>
+									In Progress: Our lab continues to analyze tissue samples received from the MATRR.
+								</li>
+								<li>
+									Completed: Our lab has completed all relevant analysis proposed with the tissue samples received from the MATRR.
+								</li>
+							</ul>
+						</div><br>
+						<div class='left' style='width:15%;'>{{ form.progress }}</div>
+					</td>
+                </tr>
+			</table>
+			<input type="submit" value="Next"/>
+		</form>
+	</div>
+{% endblock %}

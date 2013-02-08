@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+	<div class="content-item" xmlns="http://www.w3.org/1999/html">
+		<div id="large-headline">Submit Research Updates</div>
+		{% if form.errors %}
+			<div class="messages"><div class="error">
+					{% for field in form %} {% if field.errors %} {{ field.label_tag }}:  {% for error in field.errors %} {{ error }}<br> {% endfor %} {% endif %} {% endfor %}
+            </div></div>
+		{% endif %}
+
+		<div class='small'>
+			Please provide any information available regarding your successful investigation.  Only one field is required.
+		</div>
+		<form method="post" action="">{% csrf_token %}
+			<table class='common'>
+				<tr>
+					<th>{{ form.pmid.label }}<br><div class=small>{{ form.pmid.help_text }}</div></th>
+					<td>{{ form.pmid }}</td>
+				</tr>
+                <tr>
+					<th>{{ form.update_file.label }}<br><div class="small">{{ form.update_file.help_text }}</div></th>
+					<td>{{ form.update_file }}  </td>
+                </tr>
+				<tr>
+					<th width="30%">{{ form.comments.label }}<br><div class=small>{{ form.comments.help_text }}</div></th>
+					<td>{{ form.comments }}</td>
+				</tr>
+			</table>
+			<input type="submit" value="Complete"/>
+		</form>
+	</div>
+{% endblock %}
