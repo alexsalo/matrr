@@ -266,7 +266,7 @@ class CodForm(forms.ModelForm):
 
 class RudUpdateForm(forms.Form):
 	req_request = forms.ModelMultipleChoiceField(queryset=models.Request.objects.none(), required=True, label="Shipped Requests", help_text="Select all requests for which this update applies.")
-	progress = forms.ChoiceField(label="Research Progress", choices=models.ResearchUpdate.RUD_CHOICES, required=True)
+	progress = forms.ChoiceField(label="Research Progress", choices=models.ResearchProgress, required=True)
 
 	def __init__(self, user, *args, **kwargs):
 		super(RudUpdateForm, self).__init__(*args, **kwargs)
@@ -277,8 +277,8 @@ class RudProgressForm(forms.Form):
 	progress = forms.CharField(widget=forms.HiddenInput)
 	pmid = forms.CharField(max_length=20, label="PMID", help_text="PubMed id number of publication", required=False)
 	update_file = forms.FileField(label='Research Update', help_text='File to Upload', required=False)
-	comments = forms.CharField(label="Comments", max_length=1000, help_text="Please briefly describe the progress made thus far.",widget=forms.Textarea(attrs={'rows': 5}), required=False)
-	data_available = forms.BooleanField(label="Data Available", help_text="Data is available for upload to MATRR", required=False)
+	comments = forms.CharField(label="Comments", max_length=5000, help_text="Please briefly describe the progress made thus far.",widget=forms.Textarea(attrs={'rows': 5}), required=False)
+	data_available = forms.BooleanField(label="Data Available", help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.", required=False)
 
 	def clean(self):
 		cleaned_data = super(RudProgressForm, self).clean()

@@ -25,6 +25,13 @@
 					<th width="30%">{{ form.comments.label }}<br><div class=small>{{ form.comments.help_text }}</div></th>
 					<td>{{ form.comments }}</td>
 				</tr>
+				<tr>
+					<th width="30%">{{ form.data_available.label }}</th>
+					<td>
+						<div class='right' style='width: 95%;margin:auto'>{{ form.data_available.help_text }}</div>
+						<div class='left' style='width:5%;'>{{ form.data_available }}</div>
+					</td>
+				</tr>
 			</table>
 			<input type="submit" value="Submit"/>
 		</form>

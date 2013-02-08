@@ -533,6 +533,15 @@ table.common_center, table.common_right {
     padding: 10px;
 }
 
+table.rud_detail th {
+    max-width: 10%;
+}
+table.rud_detail td {
+	min-width: 75%;
+	max-width: 84%;
+	padding: 5px;
+}
+
 table.monkey_table td {
     min-width: 50px;
 }
