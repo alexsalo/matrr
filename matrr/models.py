@@ -1343,7 +1343,6 @@ class Request(models.Model, DiffingMixin):
 			self.save()
 
 	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
-#	req_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
 
 	def __unicode__(self):
 		return 'Request: %d' % self.pk + \
