@@ -1863,7 +1863,7 @@ def rud_update(request):
 					rud.req_request = req
 					rud.rud_progress = cd['progress']
 					rud.save()
-				messages.info(request, "You will be emailed again in four weeks to provide another research update.")
+				messages.info(request, "You will be emailed again in 45 days to provide another research update.")
 				return redirect(reverse('account-view'))
 	else:
 		form = RudUpdateForm(user=request.user)
