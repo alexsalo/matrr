@@ -507,10 +507,7 @@ class Account(models.Model):
 		urge_rud_from = date.today() - timedelta(days=90)
 		urged_rud = Shipment.objects.filter(req_request__user=self.user, shp_shipment_date__lte=urge_rud_from,
 											req_request__rud_set=None)
-		if urged_rud:
-			return True
-		else:
-			return False
+		return bool(urged_rud)
 
 	def save(self, *args, **kwargs):
 		super(Account, self).save(*args, **kwargs)
