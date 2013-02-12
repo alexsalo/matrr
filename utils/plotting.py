@@ -170,7 +170,6 @@ def _days_cumsum_etoh(eevs, subplot):
 		subplot.plot(xaxis, yaxis, alpha=1, linewidth=0, color=colors[index%2])
 		subplot.fill_between(xaxis, 0, yaxis, color=colors[index%2])
 
-	subplot.xlims(xmin=0)
 	if len(eevs.order_by().values_list('eev_dose', flat=True).distinct()) > 1:
 		stage_2_eevs = eevs.filter(eev_dose=1)
 		stage_2_xaxis = numpy.array(stage_2_eevs.values_list('eev_occurred', flat=True))
@@ -918,6 +917,7 @@ def cohort_etoh_induction_cumsum(cohort, stage=1):
 #	ylims = stage_plot.get_ylim()
 	stage_plot.set_ylim(ymin=0, )#ymax=ylims[1]*1.05)
 	stage_plot.yaxis.set_major_locator(MaxNLocator(3, prune='lower'))
+	stage_plot.set_xlim(xmin=0)
 
 	# yxes label
 	ylabel = fig.add_subplot(main_gs[:,0:2])
@@ -2562,6 +2562,7 @@ def monkey_etoh_induction_cumsum(monkey):
 #	ylims = stage_plot.get_ylim()
 	stage_plot.set_ylim(ymin=0, )#ymax=ylims[1]*1.05)
 	stage_plot.yaxis.set_major_locator(MaxNLocator(3))
+	stage_plot.set_xlim(xmin=0, )
 
 	# yaxis label
 	ylabel = fig.add_subplot(main_gs[:,0:2])
@@ -3179,9 +3180,11 @@ def create_bec_histograms():
 			mig.save()
 
 def create_daily_cumsum_graphs():
-	cohorts = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct()
+	cohorts = ExperimentEvent.objects.all().values_list('monkey__cohort', flat=True).distinct()
 	for cohort in cohorts:
 		cohort = Cohort.objects.get(pk=cohort)
+		print "Creating %s graphs" % str(cohort)
+		gc.collect()
 		for stage in range(0, 4):
 			plot_method = 'cohort_etoh_induction_cumsum'
 			params = str({'stage': stage})
