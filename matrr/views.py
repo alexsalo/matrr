@@ -114,7 +114,7 @@ def matrr_handler500(request):
 
 
 def __set_images(cohort, user):
-	cohort.images = cohort.image_set.vip_filter(user)
+	cohort.images = cohort.image_set.filter(canonical=True).vip_filter(user)
 	return cohort
 
 
@@ -146,38 +146,33 @@ def cohort_details(request, **kwargs):
 	if kwargs.has_key('pk'):
 		cohort = get_object_or_404(Cohort, pk=kwargs['pk'])
 		coh_data = True if cohort.cod_set.all().count() else False
-		images = CohortImage.objects.filter(cohort=cohort).vip_filter(request.user)
+		images = CohortImage.objects.filter(cohort=cohort, canonical=True).vip_filter(request.user)
 	else:
 		return redirect(reverse('cohorts'))
 	return render_to_response('matrr/cohort.html', {'cohort': cohort, 'images': images, 'coh_data': coh_data, 'plot_gallery': True}, context_instance=RequestContext(request))
 
 
-def monkey_cohort_detail_view(request, coh_id, mky_id):
+def __monkey_detail(request, mky_id, coh_id=0):
 	try:
 		monkey = Monkey.objects.get(mky_id=mky_id)
 	except:
-		raise Http404((u"No %(verbose_name)s found matching the query") %
+		raise Http404(u"No %(verbose_name)s found matching the query" %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	if str(monkey.cohort.coh_cohort_id) != coh_id:
-		raise Http404((u"No %(verbose_name)s found matching the query") %
+	if coh_id and str(monkey.cohort.coh_cohort_id) != coh_id:
+		raise Http404(u"No %(verbose_name)s found matching the query" %
 					  {'verbose_name': Monkey._meta.verbose_name})
 
-	images = MonkeyImage.objects.filter(monkey=monkey).vip_filter(request.user)
+	images = MonkeyImage.objects.filter(monkey=monkey, canonical=True).vip_filter(request.user).order_by('method')
 	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
 
+#todo: change the urls file to handle these in the same view, if possible
+def monkey_cohort_detail_view(request, coh_id, mky_id):
+	return __monkey_detail(request, mky_id, coh_id=coh_id)
 
 def monkey_detail_view(request, mky_id):
-	try:
-		monkey = Monkey.objects.get(mky_id=mky_id)
-	except:
-		raise Http404((u"No %(verbose_name)s found matching the query") %
-					  {'verbose_name': Monkey._meta.verbose_name})
-
-	images = MonkeyImage.objects.filter(monkey=monkey).vip_filter(request.user).order_by('method')
-	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery': True},
-							  context_instance=RequestContext(request))
+	return __monkey_detail(request, mky_id)
 
 
 def get_or_create_cart(request, cohort):
@@ -1863,7 +1858,7 @@ def rud_update(request):
 					rud.req_request = req
 					rud.rud_progress = cd['progress']
 					rud.save()
-				messages.info(request, "You will be emailed again in four weeks to provide another research update.")
+				messages.info(request, "You will be emailed again in 45 days to provide another research update.")
 				return redirect(reverse('account-view'))
 	else:
 		form = RudUpdateForm(user=request.user)
@@ -1894,6 +1889,7 @@ def rud_in_progress(request):
 					rud.rud_data_available = progress_cd['data_available']
 					rud.rud_file = progress_cd['update_file']
 				messages.success(request, "Your research update was successfully submitted.  Thank you.")
+				messages.info(request, "You will be emailed again in 45 days to provide another research update.")
 				return redirect(reverse('account-view'))
 
 	form = progress_form if progress_form else RudProgressForm(initial={'progress':update_cd['progress']})

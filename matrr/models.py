@@ -507,10 +507,7 @@ class Account(models.Model):
 		urge_rud_from = date.today() - timedelta(days=90)
 		urged_rud = Shipment.objects.filter(req_request__user=self.user, shp_shipment_date__lte=urge_rud_from,
 											req_request__rud_set=None)
-		if urged_rud:
-			return True
-		else:
-			return False
+		return bool(urged_rud)
 
 	def save(self, *args, **kwargs):
 		super(Account, self).save(*args, **kwargs)
@@ -829,6 +826,7 @@ class MATRRImage(models.Model):
 	svg_image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
 	thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
 	html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
+	canonical = models.BooleanField("MATRR Canonical Image", blank=False, null=False, default=False)
 
 	thumbnail_size = (240, 240)
 	objects = VIPManager()
@@ -1343,7 +1341,6 @@ class Request(models.Model, DiffingMixin):
 			self.save()
 
 	req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
-#	req_estimated_cost = models.IntegerField("Estimated cost", null=True, blank=True)
 
 	def __unicode__(self):
 		return 'Request: %d' % self.pk + \
@@ -1616,6 +1613,7 @@ class ResearchUpdate(models.Model):
 	rud_data_available = models.BooleanField("Data Available", help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.")
 	rud_comments = models.TextField("Comments", blank=True, null=False)
 	rud_file = models.FileField('Research Update', upload_to='rud/', default='', null=False, blank=False, help_text='File to Upload')
+	rud_grant = models.TextField("Grant Information", blank=True, null=False, help_text="Description of grant submissions resulting from the MATRR tissues")
 
 	def __unicode__(self):
 		_pmid = " (%s)" % self.rud_pmid if self.rud_pmid else ''

@@ -143,8 +143,8 @@ def urge_progress_reports():
 	today = date.today()
 
 	# first, we collect requests which require updating
-	days30 = timedelta(days = 30)
-	date_ignoring = today - days30
+	days45 = timedelta(days = 45)
+	date_ignoring = today - days45
 	no_updates = Request.objects.filter(rud_set=None) # requests with no updates
 	stale_updates = Request.objects.filter(rud_set__rud_progress=ResearchProgress.NoProgress, rud_set__rud_date__lt=date_ignoring) # requests with old "No Progress" updates
 	update_required = no_updates | stale_updates
