@@ -1613,6 +1613,7 @@ class ResearchUpdate(models.Model):
 	rud_data_available = models.BooleanField("Data Available", help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.")
 	rud_comments = models.TextField("Comments", blank=True, null=False)
 	rud_file = models.FileField('Research Update', upload_to='rud/', default='', null=False, blank=False, help_text='File to Upload')
+	rud_grant = models.TextField("Grant Information", blank=True, null=False, help_text="Description of grant submissions resulting from the MATRR tissues")
 
 	def __unicode__(self):
 		_pmid = " (%s)" % self.rud_pmid if self.rud_pmid else ''

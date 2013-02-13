@@ -279,6 +279,7 @@ class RudProgressForm(forms.Form):
 	update_file = forms.FileField(label='Research Update', help_text='File to Upload', required=False)
 	comments = forms.CharField(label="Comments", max_length=5000, help_text="Please briefly describe the progress made thus far.",widget=forms.Textarea(attrs={'rows': 5}), required=False)
 	data_available = forms.BooleanField(label="Data Available", help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.", required=False)
+	grants = forms.CharField(label="Submitted Grants", max_length=5000, help_text="Please describe any grant submissions resulting from the MATRR tissues.  Include title, funding agency, expected review date, etc.", widget=forms.Textarea(attrs={'rows': 7}), required=False)
 
 	def clean(self):
 		cleaned_data = super(RudProgressForm, self).clean()
