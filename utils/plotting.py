@@ -220,16 +220,29 @@ def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_va
 	return axis
 
 def _histogram_legend(monkey, axis):
+	from matplotlib.lines import Line2D
 	lines = list()
 	labels = list()
-	lines.append(axis.Line2D((0,1),(0,0), color='gold', linewidth=5))
+	l = Line2D((0,1),(0,0), color='gold', linewidth=5)
+	axis.add_line(l)
+	lines.append(l)
 	labels.append(monkey)
-	lines.append(axis.Line2D((0,1),(0,0), color='purple', linewidth=2))
+
+	l = Line2D((0,1),(0,0), color='purple', linewidth=2)
+	axis.add_line(l)
+	lines.append(l)
 	labels.append(str(monkey.cohort))
-	lines.append(axis.Line2D((0,1),(0,0), color='red', linewidth=2, ls='--'))
+
+	l = Line2D((0,1),(0,0), color='red', linewidth=2, ls='--')
+	axis.add_line(l)
+	lines.append(l)
 	labels.append("High-drinker")
-	lines.append(axis.Line2D((0,1),(0,0), color='blue', linewidth=2, ls='--'))
+
+	l = Line2D((0,1),(0,0), color='blue', linewidth=2, ls='--')
+	axis.add_line(l)
+	lines.append(l)
 	labels.append("Low-drinker")
+
 	axis.legend(lines, labels, loc=10, frameon=False, prop={'size':12})
 	axis.set_yticks([])
 	axis.set_xticks([])
@@ -854,7 +867,7 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 	left_h = left+width+0.07
 	ax_dims = [left, bottom, width, height]
 
-	ax = fig.axes(ax_dims)
+	ax = fig.add_axes(ax_dims)
 	ax.set_aspect('equal')
 	ax.set_yticks([])
 
@@ -872,12 +885,12 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 	ax.set_title(graph_title)
 
 	## Custom Colorbar
-	color_ax = fig.axes([left_h, bottom, 0.08, height])
+	color_ax = fig.add_axes([left_h, bottom, 0.08, height])
 	m = numpy.outer(numpy.arange(0,1,0.01),numpy.ones(10))
 	color_ax.imshow(m, cmap=cmap, origin="lower")
-	color_ax.xticks(numpy.arange(0))
+	color_ax.set_xticks(numpy.arange(0))
 	labels = [str(int((max_color*100./4)*i))+'%' for i in range(5)]
-	color_ax.yticks(numpy.arange(0,101,25), labels)
+	color_ax.set_yticks(numpy.arange(0,101,25), labels)
 	color_ax.set_title("Average maximum bout,\nby ethanol intake,\nexpressed as percentage \nof total daily intake\n")
 
 	return fig, 'has_caption'
@@ -1129,8 +1142,8 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 	ax1.set_xlabel("First bout / total intake")
 	ax1.set_ylabel("Blood Ethanol Concentration, mg %")
 	ax1.legend(loc="upper left")
-	ax1.xlim(xmin=0)
-	ax1.ylim(ymin=0)
+	ax1.set_xlim(0)
+	ax1.set_ylim(0)
 
 	zipped = numpy.vstack(centeroids)
 	coordinates = ax1.transData.transform(zipped)
@@ -2049,8 +2062,8 @@ def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type
 	etoh_b_d_main_plot.set_ylabel(scatter_y_label)
 	etoh_b_d_main_plot.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	etoh_b_d_main_plot.ylim(cbc.cbc_mtd_etoh_intake_max, graph_y_max)
-	etoh_b_d_main_plot.xlim(0,len(xaxis) + 2)
+	etoh_b_d_main_plot.set_ylim(cbc.cbc_mtd_etoh_intake_max, graph_y_max)
+	etoh_b_d_main_plot.set_xlim(0,len(xaxis) + 2)
 
 	max_y_int = int(round(y_max*1.25))
 	y_tick_int = int(round(max_y_int/5))
@@ -2666,8 +2679,8 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 
 	y_max = cbc.cbc_bec_mg_pct_max
 	graph_y_max = y_max + y_max*0.25
-	bec_bub_main_plot.ylim(0, graph_y_max)
-	bec_bub_main_plot.xlim(0, len(xaxis) + 1)
+	bec_bub_main_plot.set_ylim(0, graph_y_max)
+	bec_bub_main_plot.set_xlim(0, len(xaxis) + 1)
 	if len(induction_days) and len(induction_days) != len(xaxis):
 		bec_bub_main_plot.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
 
@@ -2823,8 +2836,8 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 	bec_con_main_plot.set_ylabel(scatter_y_label)
 	bec_con_main_plot.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
-	bec_con_main_plot.ylim(0, graph_y_max)
-	bec_con_main_plot.xlim(0,len(xaxis) + 2)
+	bec_con_main_plot.set_ylim(0, graph_y_max)
+	bec_con_main_plot.set_xlim(0,len(xaxis) + 2)
 
 	max_y_int = int(round(y_max*1.25))
 	y_tick_int = max(int(round(max_y_int/5)), 1)
@@ -3099,44 +3112,32 @@ def fetch_plot_choices(subject, user, cohort, tool):
 		raise Exception("'subject' parameter must be 'monkey' or 'cohort'")
 	return plot_choices
 
-def create_plots(cohorts=True, monkeys=True, delete=False):
+def create_necropsy_plots(cohorts=True, monkeys=True):
 	if monkeys:
 		monkey_plots = [
-#						'monkey_errorbox_veh',
-#						'monkey_errorbox_pellets',
-#						'monkey_errorbox_etoh',
-#						'monkey_errorbox_weight',
 						'monkey_necropsy_etoh_4pct',
 						'monkey_necropsy_sum_g_per_kg',
 						'monkey_necropsy_avg_22hr_g_per_kg']
 
 		from matrr.models import MonkeyImage, Monkey
-		if delete:
-			MonkeyImage.objects.all().delete()
 		for monkey in Monkey.objects.all():
 			for graph in monkey_plots:
-				monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[graph][1])
+				monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[graph][1], canonical=True)
 				gc.collect()
 
 	if cohorts:
 		cohort_plots = [
-#						'cohort_boxplot_m2de_month_veh_intake',
-#						'cohort_boxplot_m2de_month_total_pellets',
-#						'cohort_boxplot_m2de_month_mtd_weight',
-#						'cohort_boxplot_m2de_month_etoh_intake',
 						'cohort_necropsy_etoh_4pct',
 						'cohort_necropsy_sum_g_per_kg',
 						'cohort_necropsy_avg_22hr_g_per_kg',
 						]
 
 		from matrr.models import CohortImage, Cohort
-		if delete:
-			CohortImage.objects.all().delete()
 		for cohort in Cohort.objects.all():
 			print cohort
 			for graph in cohort_plots:
 				gc.collect()
-				cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[graph][1])
+				cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[graph][1], canonical=True)
 
 def create_mtd_histograms():
 	names = [
@@ -3157,11 +3158,9 @@ def create_mtd_histograms():
 	for monkey in mtd.objects.all().values_list('monkey', flat=True).distinct():
 		m = Monkey.objects.get(pk=monkey)
 		for field in names:
-			mig = MonkeyImage.objects.create(method='mtd_histogram_general', monkey=m)
-			params = {'column_name': field }
-			mig.parameters = str(params)
-			mig.title = mtd._meta.get_field(field).verbose_name
-			mig.save()
+			params = str({'column_name': field })
+			title = mtd._meta.get_field(field).verbose_name
+			mig, is_new = MonkeyImage.objects.create(method='mtd_histogram_general', monkey=m, parameters=params, title=title, canonical=True)
 
 def create_bec_histograms():
 	names = [
@@ -3173,11 +3172,9 @@ def create_bec_histograms():
 	for monkey in bec.objects.all().values_list('monkey', flat=True).distinct():
 		m = Monkey.objects.get(pk=monkey)
 		for field in names:
-			mig = MonkeyImage.objects.create(method='bec_histogram_general', monkey=m)
-			params = {'column_name': field }
-			mig.parameters = str(params)
-			mig.title = bec._meta.get_field(field).verbose_name
-			mig.save()
+			params = str({'column_name': field })
+			title = bec._meta.get_field(field).verbose_name
+			mig, is_new = MonkeyImage.objects.create(method='bec_histogram_general', monkey=m, parameters=params, title=title, canonical=True)
 
 def create_daily_cumsum_graphs():
 	cohorts = ExperimentEvent.objects.all().values_list('monkey__cohort', flat=True).distinct()
@@ -3188,7 +3185,44 @@ def create_daily_cumsum_graphs():
 		for stage in range(0, 4):
 			plot_method = 'cohort_etoh_induction_cumsum'
 			params = str({'stage': stage})
-			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=COHORT_PLOTS[plot_method][1], parameters=params)
+			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=COHORT_PLOTS[plot_method][1], parameters=params, canonical=True)
 		for monkey in cohort.monkey_set.filter(mky_drinking=True):
 			plot_method = 'monkey_etoh_induction_cumsum'
-			monkey_image, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=plot_method, title=MONKEY_PLOTS[plot_method][1])
+			monkey_image, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=plot_method, title=MONKEY_PLOTS[plot_method][1], canonical=True)
+
+def create_tools_canonicals(cohort, create_monkey_plots=True):
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print "That's not a valid cohort."
+			return
+
+	cohort_plots = ['cohort_bihourly_etoh_treemap',
+					'cohort_bec_firstbout_monkeycluster',
+					]
+	dex_types = ["", "Induction", "Open Access"]
+
+	for dex_type in dex_types:
+		params = str({'dex_type': dex_type})
+		for method in cohort_plots:
+			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=COHORT_PLOTS[method][1], canonical=True)
+		gc.collect()
+
+	if create_monkey_plots:
+		monkey_plots = ['monkey_etoh_bouts_vol',
+						'monkey_etoh_first_max_bout',
+						'monkey_etoh_bouts_drinks',
+						'monkey_bec_bubble',
+						'monkey_bec_consumption',
+						'monkey_bec_monthly_centroids',
+						]
+		dex_types = ["", "Induction", "Open Access"]
+
+		for monkey in cohort.monkey_set.all():
+			print "Creating %s's plots." % str(monkey)
+			for dex_type in dex_types:
+				params = str({'dex_type': dex_type})
+				for method in monkey_plots:
+					monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=MONKEY_PLOTS[method][1], canonical=True)
+					gc.collect()

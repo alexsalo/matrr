@@ -1894,6 +1894,7 @@ def rud_in_progress(request):
 					rud.rud_data_available = progress_cd['data_available']
 					rud.rud_file = progress_cd['update_file']
 				messages.success(request, "Your research update was successfully submitted.  Thank you.")
+				messages.info(request, "You will be emailed again in 45 days to provide another research update.")
 				return redirect(reverse('account-view'))
 
 	form = progress_form if progress_form else RudProgressForm(initial={'progress':update_cd['progress']})
