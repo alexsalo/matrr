@@ -3122,7 +3122,7 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
 						'monkey_necropsy_avg_22hr_g_per_kg']
 
 		from matrr.models import MonkeyImage, Monkey
-		for monkey in Monkey.objects.all():
+		for monkey in NecropsySummary.objects.all().values_list('monkey', flat=True).distinct():
 			for graph in monkey_plots:
 				monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[graph][1], canonical=True)
 				gc.collect()
@@ -3135,7 +3135,7 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
 						]
 
 		from matrr.models import CohortImage, Cohort
-		for cohort in Cohort.objects.all():
+		for cohort in NecropsySummary.objects.all().values_list('monkey__cohort', flat=True).distinct():
 			print cohort
 			for graph in cohort_plots:
 				gc.collect()
