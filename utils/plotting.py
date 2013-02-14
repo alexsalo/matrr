@@ -782,7 +782,6 @@ def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=
 			return size_cache[thing]
 		else:
 			size_cache[thing] = reduce(operator.add, [size(x) for x in thing])
-			print thing
 			return size_cache[thing]
 
 	max_color = 0
@@ -2760,8 +2759,11 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 		from django.db.models import Max, Min
 		drinking_experiments = drinking_experiments.filter(drinking_experiment__dex_type=dex_type)
 		max_date = drinking_experiments.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
+		if max_date:
+			bec_records = bec_records.filter(bec_collect_date__lte=max_date)
 		min_date = drinking_experiments.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
-		bec_records = bec_records.filter(bec_collect_date__lte=max_date).filter(bec_collect_date__gte=min_date)
+		if min_date:
+			bec_records = bec_records.filter(bec_collect_date__gte=min_date)
 
 	drinking_experiments = drinking_experiments.exclude(mtd_etoh_bout=None, mtd_etoh_drink_bout=None)
 
