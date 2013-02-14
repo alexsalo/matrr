@@ -3123,8 +3123,9 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
 
 		from matrr.models import MonkeyImage, Monkey
 		for monkey in NecropsySummary.objects.all().values_list('monkey', flat=True).distinct():
+			monkey = Monkey.objects.get(pk=monkey)
 			for graph in monkey_plots:
-				monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=int(monkey), method=graph, title=MONKEY_PLOTS[graph][1], canonical=True)
+				monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[graph][1], canonical=True)
 				gc.collect()
 
 	if cohorts:
@@ -3136,10 +3137,11 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
 
 		from matrr.models import CohortImage, Cohort
 		for cohort in NecropsySummary.objects.all().values_list('monkey__cohort', flat=True).distinct():
+			cohort = Cohort.objects.get(pk=cohort)
 			print cohort
 			for graph in cohort_plots:
 				gc.collect()
-				cohortimage, is_new = CohortImage.objects.get_or_create(cohort=int(cohort), method=graph, title=COHORT_PLOTS[graph][1], canonical=True)
+				cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[graph][1], canonical=True)
 
 def create_mtd_histograms():
 	names = [
