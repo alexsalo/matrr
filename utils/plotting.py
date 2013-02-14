@@ -3162,7 +3162,7 @@ def create_mtd_histograms():
 		for field in names:
 			params = str({'column_name': field })
 			title = mtd._meta.get_field(field).verbose_name
-			mig, is_new = MonkeyImage.objects.create(method='mtd_histogram_general', monkey=m, parameters=params, title=title, canonical=True)
+			mig, is_new = MonkeyImage.objects.get_or_create(method='mtd_histogram_general', monkey=m, parameters=params, title=title, canonical=True)
 
 def create_bec_histograms():
 	names = [
@@ -3176,7 +3176,7 @@ def create_bec_histograms():
 		for field in names:
 			params = str({'column_name': field })
 			title = bec._meta.get_field(field).verbose_name
-			mig, is_new = MonkeyImage.objects.create(method='bec_histogram_general', monkey=m, parameters=params, title=title, canonical=True)
+			mig, is_new = MonkeyImage.objects.get_or_create(method='bec_histogram_general', monkey=m, parameters=params, title=title, canonical=True)
 
 def create_daily_cumsum_graphs():
 	cohorts = ExperimentEvent.objects.all().values_list('monkey__cohort', flat=True).distinct()
