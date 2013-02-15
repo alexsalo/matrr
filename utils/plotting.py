@@ -764,7 +764,7 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 		print "No MonkeyProteins for this cohort."
 		return False, False
 
-def cohort_bihourly_etoh_treemap(cohort, from_date=None, to_date=None, dex_type=''):
+def cohort_etoh_bihourly_treemap(cohort, from_date=None, to_date=None, dex_type=''):
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -1291,7 +1291,7 @@ def cohort_bec_mcd_beta(cohort, from_date=None, to_date=None, dex_type='', sampl
 
 
 # Dictionary of ethanol cohort plots VIPs can customize
-COHORT_ETOH_TOOLS_PLOTS = {"cohort_bihourly_etoh_treemap": (cohort_bihourly_etoh_treemap, "Cohort Bihourly Drinking Pattern")}
+COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_etoh_bihourly_treemap, "Cohort Bihourly Drinking Pattern")}
 # Data-limited plots
 COHORT_BEC_TOOLS_PLOTS = { 'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
 }
@@ -2003,8 +2003,6 @@ def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type
 	else:
 		return None, False
 
-	bar_y_label = ''
-	bar_color_label = ''
 	scatter_y_label = ''
 	scatter_color_label = ''
 	scatter_size_label = ''
@@ -2012,27 +2010,19 @@ def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type
 	scatter_y = list()
 	scatter_size = list()
 	scatter_color = list()
-	bar_yaxis = list() # ??
-	bar_color = list() # max_bout_vol / total intake
 	for index, date in enumerate(dates, 1):
 		de = drinking_experiments.get(drinking_experiment__dex_date=date)
 		if de.drinking_experiment.dex_type == 'Induction':
 			induction_days.append(index)
 		scatter_y.append(de.mtd_etoh_intake)
-		scatter_color.append(de.mtd_etoh_drink_bout)
 		scatter_size.append(de.mtd_etoh_bout)
-		bar_yaxis.append(de.mtd_etoh_mean_drink_vol)
-		bar_color.append(de.mtd_etoh_mean_bout_vol)
+		scatter_color.append(de.mtd_etoh_mean_bout_vol)
 		if not scatter_y_label:
 			scatter_y_label = de._meta.get_field('mtd_etoh_intake').verbose_name
 		if not scatter_color_label:
-			scatter_color_label = de._meta.get_field('mtd_etoh_drink_bout').verbose_name
+			scatter_color_label = de._meta.get_field('mtd_etoh_mean_bout_vol').verbose_name
 		if not scatter_size_label:
 			scatter_size_label = de._meta.get_field('mtd_etoh_bout').verbose_name
-		if not bar_y_label:
-			bar_y_label = de._meta.get_field('mtd_etoh_mean_drink_vol').verbose_name
-		if not bar_color_label:
-			bar_color_label = de._meta.get_field('mtd_etoh_mean_bout_vol').verbose_name
 
 	xaxis = numpy.array(range(1,len(scatter_size)+1))
 	scatter_y = numpy.array(scatter_y)
@@ -2044,7 +2034,7 @@ def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type
 #   main graph
 	main_gs = gridspec.GridSpec(3, 40)
 	main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
-	etoh_b_d_main_plot = fig.add_subplot(main_gs[0:2,0:39])
+	etoh_b_d_main_plot = fig.add_subplot(main_gs[:,0:39])
 
 	size_min = circle_min
 	size_scale = circle_max - size_min
@@ -2062,17 +2052,17 @@ def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type
 	etoh_b_d_main_plot.set_title('Monkey %d: from %s to %s' % (monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count()-1]).strftime("%d/%m/%y")))
 
 	etoh_b_d_main_plot.set_ylim(cbc.cbc_mtd_etoh_intake_max, graph_y_max)
-	etoh_b_d_main_plot.set_xlim(0,len(xaxis) + 2)
+	etoh_b_d_main_plot.set_xlim(0, xaxis.max() + 2)
 
 	max_y_int = int(round(y_max*1.25))
 	y_tick_int = int(round(max_y_int/5))
 	etoh_b_d_main_plot.set_yticks(range(0, max_y_int, y_tick_int))
 	etoh_b_d_main_plot.yaxis.get_label().set_position((0,0.6))
 
-	main_color = fig.add_subplot(main_gs[0:2,39:])
+	main_color = fig.add_subplot(main_gs[:,39:])
 	cb = fig.colorbar(s, alpha=1, cax=main_color)
 	cb.set_label(scatter_color_label)
-	cb.set_clim(cbc.cbc_mtd_etoh_drink_bout_min, cbc.cbc_mtd_etoh_drink_bout_max)
+	cb.set_clim(cbc.cbc_mtd_etoh_mean_bout_vol_min, cbc.cbc_mtd_etoh_mean_bout_vol_max)
 
 #	regression line
 	fit = polyfit(xaxis, scatter_y, 3)
@@ -2101,48 +2091,15 @@ def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type
 	etoh_b_d_size_plot.yaxis.set_major_locator(NullLocator())
 	pyplot.setp(etoh_b_d_size_plot, xticklabels=bout_labels)
 
-#	barplot
-	etoh_b_d_bar_plot = fig.add_subplot(main_gs[-1:, 0:39])
-
-	etoh_b_d_bar_plot.set_xlabel("Days")
-	etoh_b_d_bar_plot.set_ylabel(bar_y_label)
-	etoh_b_d_bar_plot.set_autoscalex_on(False)
-
-	# normalize colors to use full range of colormap
-	norm = colors.normalize(cbc.cbc_mtd_etoh_mean_bout_vol_min, cbc.cbc_mtd_etoh_mean_bout_vol_max)
-
-	facecolors = list()
-	for yvalue, x, color_value in zip(bar_yaxis, xaxis, bar_color):
-		etoh_b_d_bar_plot.bar(x, yvalue, color=cm.jet(norm(color_value)),  edgecolor='none')
-		facecolors.append(cm.jet(norm(color_value)))
-
-	etoh_b_d_bar_plot.set_ylim(cbc.cbc_mtd_etoh_mean_drink_vol_min, cbc.cbc_mtd_etoh_mean_drink_vol_max)
-	etoh_b_d_bar_plot.set_xlim(0,len(xaxis) + 2)
-	if len(induction_days) and len(induction_days) != len(xaxis):
-		etoh_b_d_bar_plot.bar(induction_days.min(), etoh_b_d_bar_plot.get_ylim()[1], width=induction_days.max(), bottom=0, color='black', alpha=.2, edgecolor='black', zorder=-100)
-
-	# create a collection that we will use in colorbox
-	col = matplotlib.collections.Collection(facecolors=facecolors, norm = norm, cmap = cm.jet)
-	col.set_array(bar_color)
-
-	# colorbar for bar plot
-	barplot_color = fig.add_subplot(main_gs[-1:,39:])
-	cb = fig.colorbar(col, alpha=1, cax=barplot_color)
-	cb.set_label(bar_color_label)
-
-	hist_gs = gridspec.GridSpec(6, 1)
+	hist_gs = gridspec.GridSpec(4, 1)
 	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
 	etoh_b_d_hist = fig.add_subplot(hist_gs[0, :])
 	etoh_b_d_hist = _histogram_legend(monkey, etoh_b_d_hist)
 	etoh_b_d_hist = fig.add_subplot(hist_gs[1, :])
 	etoh_b_d_hist = _mtd_histogram(monkey, 'mtd_etoh_intake', etoh_b_d_hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
 	etoh_b_d_hist = fig.add_subplot(hist_gs[2, :])
-	etoh_b_d_hist = _mtd_histogram(monkey, 'mtd_etoh_drink_bout', etoh_b_d_hist, from_date=from_date, to_date=to_date, dex_type=dex_type)
-	etoh_b_d_hist = fig.add_subplot(hist_gs[3, :])
 	etoh_b_d_hist = _mtd_histogram(monkey, 'mtd_etoh_bout', etoh_b_d_hist, from_date=from_date, to_date=to_date, dex_type=dex_type,)
-	etoh_b_d_hist = fig.add_subplot(hist_gs[4, :])
-	etoh_b_d_hist = _mtd_histogram(monkey, 'mtd_etoh_mean_drink_vol', etoh_b_d_hist, from_date=from_date, to_date=to_date, dex_type=dex_type,)
-	etoh_b_d_hist = fig.add_subplot(hist_gs[5, :])
+	etoh_b_d_hist = fig.add_subplot(hist_gs[3, :])
 	etoh_b_d_hist = _mtd_histogram(monkey, 'mtd_etoh_mean_bout_vol', etoh_b_d_hist, from_date=from_date, to_date=to_date, dex_type=dex_type,)
 
 	zipped = numpy.vstack(zip(xaxis, scatter_y))
@@ -2187,8 +2144,8 @@ def monkey_etoh_bouts_drinks_intraday(mtd=None):
 
 			colorcount+= 1
 
-		ax1.xlim(xmin=0)
-		ax1.ylim(ymin=0)
+		ax1.set_xlim(xmin=0)
+		ax1.set_ylim(ymin=0)
 		if X+Xend > 60*60:
 			ax1.set_xticks(range(0, X+Xend, 60*60))
 		else:
@@ -3023,11 +2980,13 @@ def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type=
 		bec_cen_dist_mainplot.scatter(c[:,0], c[:,1], marker='x', s=100, linewidths=3, c=colors, edgecolor=colors,  label='Cohort')
 	except IndexError as e: # m and c are empty if all_mtds.count() == 0
 		return False, False
-	title = 'Monthly drinking effects for monkey %s ' % monkey
+
+	_t = dex_type if dex_type else 'all'
+	title = 'Monthly drinking effects for monkey %s, %s data' % (str(monkey.pk), _t)
 	if sample_before:
-		title += "before %s " % str(sample_before)
+		title += " before %s" % str(sample_before)
 	if sample_after:
-		title += "after %s " % str(sample_after)
+		title += " after %s" % str(sample_after)
 
 	bec_cen_dist_mainplot.set_title(title)
 	bec_cen_dist_mainplot.set_xlabel("Intake at sample")
@@ -3194,7 +3153,7 @@ def create_daily_cumsum_graphs():
 			plot_method = 'monkey_etoh_induction_cumsum'
 			monkey_image, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=plot_method, title=MONKEY_PLOTS[plot_method][1], canonical=True)
 
-def create_tools_canonicals(cohort, create_monkey_plots=True):
+def create_bec_tools_canonicals(cohort, create_monkey_plots=True):
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -3202,31 +3161,64 @@ def create_tools_canonicals(cohort, create_monkey_plots=True):
 			print "That's not a valid cohort."
 			return
 
-	cohort_plots = ['cohort_bihourly_etoh_treemap',
-					'cohort_bec_firstbout_monkeycluster',
+	cohort_plots = ['cohort_bec_firstbout_monkeycluster',
 					]
 	dex_types = ["", "Induction", "Open Access"]
 
+	print "Creating bec cohort plots for %s." % str(cohort)
 	for dex_type in dex_types:
 		params = str({'dex_type': dex_type})
 		for method in cohort_plots:
 			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=COHORT_PLOTS[method][1], canonical=True)
-		gc.collect()
 
 	if create_monkey_plots:
-		monkey_plots = ['monkey_etoh_bouts_vol',
-						'monkey_etoh_first_max_bout',
-						'monkey_etoh_bouts_drinks',
-						'monkey_bec_bubble',
+		monkey_plots = ['monkey_bec_bubble',
 						'monkey_bec_consumption',
 						'monkey_bec_monthly_centroids',
 						]
 		dex_types = ["", "Induction", "Open Access"]
 
+		print "Creating bec monkey plots."
 		for monkey in cohort.monkey_set.all():
-			print "Creating %s's plots." % str(monkey)
 			for dex_type in dex_types:
 				params = str({'dex_type': dex_type})
 				for method in monkey_plots:
 					monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=MONKEY_PLOTS[method][1], canonical=True)
 					gc.collect()
+
+def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print "That's not a valid cohort."
+			return
+
+	cohort_plots = ['cohort_etoh_bihourly_treemap',
+					]
+	dex_types = ["", "Induction", "Open Access"]
+
+	print "Creating cohort mtd plots for %s." % str(cohort)
+	for dex_type in dex_types:
+		params = str({'dex_type': dex_type})
+		for method in cohort_plots:
+			cohortimage, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=COHORT_PLOTS[method][1], canonical=True)
+
+	if create_monkey_plots:
+		monkey_plots = ['monkey_etoh_bouts_vol',
+						'monkey_etoh_first_max_bout',
+						'monkey_etoh_bouts_drinks',
+						]
+		dex_types = ["", "Induction", "Open Access"]
+
+		print "Creating mtd monkey plots."
+		for monkey in cohort.monkey_set.all():
+			for dex_type in dex_types:
+				params = str({'dex_type': dex_type})
+				for method in monkey_plots:
+					monkeyimage, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=MONKEY_PLOTS[method][1], canonical=True)
+					gc.collect()
+
+
+
+

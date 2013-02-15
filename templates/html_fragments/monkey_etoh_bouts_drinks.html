@@ -8,10 +8,10 @@
 	</center>
 </div>
 <div style='width: {{ bigWidth }}px; margin:auto; margin: 0px 40px 40px 40px'>
-		<b>Detailed drinking pattern for {{ image.monkey.mky_id }}.</b> Each dot represents three parameters of a drinking pattern.  A bout is a group of drinks, as defined by a break in drinking of at least 300 seconds.
-		A drink is defined as a break in drinking of at least 5 seconds.  The color of the each dot indicates the number of bouts during each experiment day.
-		The size of each dot indicates the average number of drinks per bout in each day.  Using this average, the Y axis is the estimated number of drinks per day.
-		The volume of ethanol consumed is not represented in this graph.  To view actual ethanol consumption for a given day click on that days dot.
+    <b>Detailed drinking pattern for {{ image.monkey.mky_id }}.</b> Each dot represents three parameters of a drinking pattern.  A bout is a group of drinks,
+    as defined by a break in drinking of at least 300 seconds. A drink is defined as a break in drinking of at least 5 seconds.  The color of the each dot
+	indicates the average bout volume during each experiment day. The size of each dot indicates the number of bouts that day.  The Y axis is the
+	volume of ethanol consumption. To view more detailed ethanol consumption for a given day click on that day's dot.
 </div>
 
 {% if map %}

@@ -7,10 +7,9 @@
 	</center>
 </div>
 <div style='width: {{ bigWidth }}px; margin:auto;'>
-<!--    <b>K-means clustering of {{ image.cohort.coh_cohort_name }} intake and BEC.</b> This is a scatter plot showing Blood Ethanol Concentration versus the percentage of the
-	total daily intake taken in the first bout of the session, displayed as small, faint dots.  The lines are the convex hull polygon surrounding all of the monkey's data
-	points.  The larger XDots are the k-means cluster centroid of each monkey. Clicking on an XDot will take you to the detail page of the monkey.
--->
+    <b>Daily ethanol cumulative summation for {{ image.cohort.coh_cohort_name }}.</b> This graph shows the ethanol intake over time
+	for each monkey during stages of induction.  Each colored section represents a day of induction.  The line illustrates the monkey's
+	ethanol consumption over time until reaching the allotted volume for the day. Granularity of drinking events is by second.
 </div>
 
 {% if map %}
