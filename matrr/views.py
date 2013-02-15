@@ -1875,7 +1875,7 @@ def rud_in_progress(request):
 	if request.method == 'POST':
 		post = request.POST.copy()
 		post.update({'progress':update_cd['progress']})
-		progress_form = RudProgressForm(data=post)
+		progress_form = RudProgressForm(post, request.FILES)
 		if progress_form.is_valid():
 			progress_form.clean()
 			if not progress_form.errors:
@@ -1887,7 +1887,8 @@ def rud_in_progress(request):
 					rud.rud_progress = update_cd['progress']
 					rud.rud_pmid = progress_cd['pmid']
 					rud.rud_data_available = progress_cd['data_available']
-					rud.rud_file = progress_cd['update_file']
+					rud.rud_file = File(progress_cd['update_file'])
+					rud.save()
 				messages.success(request, "Your research update was successfully submitted.  Thank you.")
 				messages.info(request, "You will be emailed again in 45 days to provide another research update.")
 				return redirect(reverse('account-view'))
@@ -1906,7 +1907,7 @@ def rud_complete(request):
 	if request.method == 'POST':
 		post = request.POST.copy()
 		post.update({'progress':update_cd['progress']})
-		progress_form = RudProgressForm(data=post)
+		progress_form = RudProgressForm(post, request.FILES)
 		if progress_form.is_valid():
 			progress_form.clean()
 			if not progress_form.errors:
@@ -1916,7 +1917,7 @@ def rud_complete(request):
 					rud.req_request = req
 					rud.rud_progress = update_cd['progress']
 					rud.rud_pmid = progress_cd['pmid']
-					rud.rud_file = progress_cd['update_file']
+					rud.rud_file = File(progress_cd['update_file'])
 					rud.rud_comments = progress_cd['comments']
 					rud.rud_data_available = progress_cd['data_available']
 					rud.save()

@@ -14,7 +14,7 @@
 		<div class='small'>
 			Please provide any information available regarding your successful investigation.  Only one field is required.
 		</div>
-		<form method="post" action="">{% csrf_token %}
+		<form method="post" action="" enctype="multipart/form-data">{% csrf_token %}
 			<table class='common'>
 				<tr>
 					<th>{{ form.pmid.label }}<br><div class=small>{{ form.pmid.help_text }}</div></th>

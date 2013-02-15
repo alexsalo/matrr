@@ -216,18 +216,16 @@
 		{% if rud_info %}
 			<table class="common">
 				<tr>
-					<!--<th>ID</th>-->
 					<th>Date Uploaded</th>
-					<th>Title</th>
+					<th>Progress</th>
 					<th>Request</th>
 					<th>&nbsp;</th>
 					{% for rud in rud_info %}
 						<tr>
-							<!--<td class='text-center-common-td'>{{ rud.rud_id }}</td>-->
 							<td class='text-center-common-td'>{{ rud.rud_date|date:"m/d/Y" }}</td>
-							<td class='text-center-common-td'>{{ rud.rud_title }}</td>
+							<td class='text-center-common-td'>{{ rud.get_rud_progress_display }}</td>
 							<td class='text-center-common-td'><a href="{% url order-detail rud.req_request.pk %}">{{ rud.req_request.pk }}</a></td>
-							<td class='text-center-common-td'><a href='{{ MEDIA_URL}}{{rud.rud_file }}'>View Research Update</a></td>
+							<td class='text-center-common-td'><a href='{% url rud-detail rud.pk %}'>View Research Update</a></td>
 						</tr>
 					{% endfor %}
 			</table>
