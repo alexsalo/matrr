@@ -219,6 +219,18 @@ def tissue_shop_detail_view(request, coh_id, tissue_id):
 
 	# get the current tissue
 	current_tissue = TissueType.objects.get(tst_type_id=tissue_id)
+	if current_tissue.tst_tissue_name == "Plasma":
+		messages.info(request, "The policy for blood samples is not the same as most of the other tissue.")
+		messages.info(request,
+					  """
+					  You will need to contact Kathy Grant directly (grantka@ohsu.edu) due to the
+					  many NIH supported projects currently underway using these samples.
+					  Nevertheless, each of these projects will begin posting the data (such as
+					  protein and hormone data).  Helping labs with in silico hypothesis testing
+					  is a future aim of the MATRR.
+					  """)
+
+
 	instance = TissueRequest(tissue_type=current_tissue, req_request=cart_request)
 
 	# Upcoming cohort warning
