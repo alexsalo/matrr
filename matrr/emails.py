@@ -145,7 +145,7 @@ def urge_progress_reports():
 	# first, we collect requests which require updating
 	days45 = timedelta(days = 45)
 	date_ignoring = today - days45
-	no_updates = Request.objects.filter(rud_set=None) # requests with no updates
+	no_updates = Request.objects.shipped().filter(rud_set=None) # shipped requests with no updates
 	stale_updates = Request.objects.filter(rud_set__rud_progress=ResearchProgress.NoProgress, rud_set__rud_date__lt=date_ignoring) # requests with old "No Progress" updates
 	update_required = no_updates | stale_updates
 
@@ -154,19 +154,20 @@ def urge_progress_reports():
 	date_required = today - days90
 	ship_to_report_req = Shipment.objects.filter(shp_shipment_date__lte=date_required)
 
+	req = Request()
+	req.shipments.all().order_by('-shp_shipment_date')
 	# finally, only shipments for requests which need updating should be emailed
 	ship_to_report_req = ship_to_report_req.filter(req_request__in=update_required)
 
-	for shipment in ship_to_report_req.values('req_request','user','shp_shipment_date'):
+	urge_requests = ship_to_report_req.values_list('req_request', flat=True).distinct()
+	urge_requests = Request.objects.filter(pk__in=urge_requests).distinct()
+	for req in urge_requests:
 		from_email = Account.objects.get(user__username='matrr_admin').email
-		email = User.objects.get(id= shipment['user']).email
+		recipients = [req.user.email,]
 
-		recipients = list()
-		recipients.append(email)
-		req = Request.objects.get(req_request_id= shipment['req_request'])
-
+		shipment_date = req.shipments.order_by('-shp_shipment_date')[0]
 		subject = 'Progress Report'
-		body = 'Hello, \nthe tissue(s) you requested were shipped on %s. ' % shipment['shp_shipment_date'] + \
+		body = 'Hello, \nthe tissue(s) you requested were shipped on %s. ' % str(shipment_date) + \
 			'Please, submit a 90 day progress report concerning this request using this link: http://gleek.ecs.baylor.edu%s\n' % reverse('rud-upload') + \
 			"\nRequest overview:\n\n%s\n" % req.print_self_in_detail() + \
 			"\nYours sincerely,\nMATRR team\n\n" + \
