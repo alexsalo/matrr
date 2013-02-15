@@ -29,7 +29,7 @@ if getpass.getuser().lower() == 'root':
 		os.environ['HOME'] = "/web/www/matrr-dev"	
 if GLEEK:
 	import matplotlib
-	matplotlib.use('Cairo')
+	matplotlib.use('agg')
 
 # logging
 _log_path = os.environ['HOME']
