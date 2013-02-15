@@ -275,7 +275,7 @@ class RudUpdateForm(forms.Form):
 
 class RudProgressForm(forms.Form):
 	progress = forms.CharField(widget=forms.HiddenInput)
-	pmid = forms.CharField(max_length=20, label="PMID", help_text="PubMed id number of publication", required=False)
+	pmid = forms.CharField(max_length=20, label="PMID", help_text="PubMed ID number of publication", required=False)
 	update_file = forms.FileField(label='Research Update', help_text='File to Upload', required=False)
 	comments = forms.CharField(label="Comments", max_length=5000, help_text="Please briefly describe the progress made thus far.",widget=forms.Textarea(attrs={'rows': 5}), required=False)
 	data_available = forms.BooleanField(label="Data Available", help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.", required=False)
