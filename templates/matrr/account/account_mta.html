@@ -1,31 +1,35 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-
 {% block content %}
-
 	<div class="content-item">
 		<div id="headline">Material Transfer Agreement (MTA)</div>
 		<br>
 		<div class='center-content'>
 			<p>
-				The UBMTA agreement is used by MATRR when releasing tissues.  Many institutions are already signatories to this agreement.  If your institution in is the alphabetically-sorted list below
-				please choose your institution and you will be eligible to receive tissue shipments.  If your institution has not signed a UBMTA agreement, or you are ordering tissues from a Wake Forest cohort,
-				please choose "Non-UBMTA Institution" from the list follow the additional instructions.  <br><br>The UBMTA text can be found <a href="{{ STATIC_URL }}pdf/ubmta.pdf">here.</a>
+				The UBMTA materials transfer agreement is used by MATRR when releasing tissues.  Many institutions are already signatories to the UBMTA agreement.
+				<br><br>
+				Please choose your institution from the alphabetically-sorted list below.  This will satisfy the MATRR MTA requirement and you will be eligible to
+				receive tissue shipments.
+				<br><br>
+				If you are ordering tissues from a Wake Forest cohort or your institution has not signed a UBMTA agreement, please choose "Non-UBMTA Institution"
+				from the list and follow the additional instructions.
+				<br><br>
+				The UBMTA text can be found <a href="{{ STATIC_URL }}pdf/ubmta.pdf">here.</a>
 			</p>
 		</div>
 		{% if form.errors %}
 			<div class="messages">
 				<div class="error">
 					{% for field in form %}
-					{% if field.errors %}
-					{{ field.label_tag }}:
-						{% for error in field.errors %}
-							 {{ error }}
-						{% endfor %}
-					{% endif %}
+						{% if field.errors %}
+							{{ field.label_tag }}:
+							{% for error in field.errors %}
+								{{ error }}
+							{% endfor %}
+						{% endif %}
 					{% endfor %}
-					
+
 				</div></div>
 		{% endif %}
 
@@ -38,6 +42,4 @@
 			</div>
 		</form>
 	</div>
-
-
 {% endblock %}
