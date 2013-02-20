@@ -132,6 +132,24 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
 		ax.set_xticks([])
 
 
+def _lifetime_cumsum_etoh(eevs, subplot, color_monkey=True):
+	"""
+
+	"""
+	colors = ['navy', 'goldenrod']
+	volumes = numpy.array(eevs.values_list('eev_etoh_volume', flat=True))
+	yaxis = numpy.cumsum(volumes)
+	xaxis = numpy.array(eevs.values_list('eev_occurred', flat=True))
+	color = colors[1] if color_monkey else colors[0]
+	subplot.plot(xaxis, yaxis, alpha=1, linewidth=3, color=color)
+#		subplot.fill_between(xaxis, 0, yaxis, color=colors[index%2])
+
+#	if len(eevs.order_by().values_list('eev_dose', flat=True).distinct()) > 1:
+#		stage_2_eevs = eevs.filter(eev_dose=1)
+#		stage_2_xaxis = numpy.array(stage_2_eevs.values_list('eev_occurred', flat=True))
+#		subplot.axvspan(stage_2_xaxis.min(), stage_2_xaxis.max(), color='black', alpha=.2, zorder=-100)
+	return subplot
+
 def _days_cumsum_etoh(eevs, subplot):
 	"""
 	This fn is used by cohort_etoh_induction_cumsum and monky_etoh_induction_cumsum.  It plots the eev cumsum lines on the gives subplot.
@@ -174,7 +192,6 @@ def _days_cumsum_etoh(eevs, subplot):
 		stage_2_eevs = eevs.filter(eev_dose=1)
 		stage_2_xaxis = numpy.array(stage_2_eevs.values_list('eev_occurred', flat=True))
 		subplot.axvspan(stage_2_xaxis.min(), stage_2_xaxis.max(), color='black', alpha=.2, zorder=-100)
-
 
 # histograms
 def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend):
@@ -2541,6 +2558,45 @@ def monkey_etoh_induction_cumsum(monkey):
 	ylabel.text(.05, 0.5, "Cumulative EtOH intake, ml", rotation='vertical', horizontalalignment='center', verticalalignment='center')
 	return fig, True
 
+def monkey_etoh_lifetime_cumsum(monkey):
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return False, False
+
+	fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+
+#   main graph
+	main_gs = gridspec.GridSpec(1, 40)
+	main_gs.update(left=0.02, right=0.95, wspace=0, hspace=.05) # sharing xaxis
+
+	lifetime_plot = fig.add_subplot(main_gs[:,1:41])
+	lifetime_plot.set_title("Lifetime Cumulative EtOH Intake for %s" % str(monkey))
+
+	for m in monkey.cohort.monkey_set.all():
+		color_monkey = m.pk == monkey.pk
+		eevs = ExperimentEvent.objects.filter(monkey=m).exclude(eev_etoh_volume=None).order_by('eev_occurred')
+		_lifetime_cumsum_etoh(eevs, lifetime_plot, color_monkey=color_monkey)
+
+	lifetime_plot.get_xaxis().set_visible(False)
+#	lifetime_plot.legend((), title="Stage %d" % stage, loc=1, frameon=False, prop={'size':12})
+
+#	lifetime_plot.set_ylim(ymin=0, )#ymax=ylims[1]*1.05)
+#	lifetime_plot.yaxis.set_major_locator(MaxNLocator(3))
+#	lifetime_plot.set_xlim(xmin=0, )
+
+	# yaxis label
+#	ylabel = fig.add_subplot(main_gs[:,0:2])
+#	ylabel.set_axis_off()
+#	ylabel.set_xlim(0, 1)
+#	ylabel.set_ylim(0, 1)
+#	ylabel.text(.05, 0.5, "Cumulative EtOH intake, ml", rotation='vertical', horizontalalignment='center', verticalalignment='center')
+	return fig, True
 
 def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
