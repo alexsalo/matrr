@@ -1902,7 +1902,7 @@ def rud_in_progress(request):
 					rud.rud_file = File(progress_cd['update_file'])
 					rud.save()
 				messages.success(request, "Your research update was successfully submitted.  Thank you.")
-				messages.info(request, "You will be emailed again in 45 days to provide another research update.")
+				messages.info(request, "You will be emailed again in 90 days to provide another research update.")
 				return redirect(reverse('account-view'))
 
 	form = progress_form if progress_form else RudProgressForm(initial={'progress':update_cd['progress']})
@@ -2072,9 +2072,6 @@ def tools_landing_sandbox(request):
 	context['mky_images'] = mky_images
 
 	return render_to_response('matrr/tools/sandbox.html', context, context_instance=RequestContext(request))
-
-
-
 
 def tools_landing(request):
 	if request.method == "POST":

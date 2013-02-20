@@ -7,7 +7,7 @@ from matrr import helper
 import settings, re
 from datetime import datetime, timedelta, date
 from django.core.mail import send_mail
-from matrr.models import Request, User, Shipment, Account, RequestStatus, ResearchProgress, Acceptance, Group, Review
+from matrr.models import Request, User, Shipment, Account, RequestStatus, ResearchUpdate, ResearchProgress, Acceptance, Group, Review
 
 # regular_tasks
 def send_colliding_requests_info():
@@ -142,30 +142,42 @@ def urge_po_mta():
 def urge_progress_reports():
 	today = date.today()
 
-	# first, we collect requests which require updating
+# first, we collect requests which require updating
 	days45 = timedelta(days = 45)
-	date_ignoring = today - days45
-	no_updates = Request.objects.shipped().filter(rud_set=None) # shipped requests with no updates
-	stale_updates = Request.objects.filter(rud_set__rud_progress=ResearchProgress.NoProgress, rud_set__rud_date__lt=date_ignoring) # requests with old "No Progress" updates
-	update_required = no_updates | stale_updates
-
-	# next, we collect the shipments that have been shipped over 90 days ago
 	days90 = timedelta(days = 90)
-	date_required = today - days90
-	ship_to_report_req = Shipment.objects.filter(shp_shipment_date__lte=date_required)
+	date_90 = today - days90
+	date_45 = today - days45
+	base_requests = Request.objects.shipped().exclude(rud_set__rud_progress=ResearchProgress.Complete)
 
-	req = Request()
-	req.shipments.all().order_by('-shp_shipment_date')
-	# finally, only shipments for requests which need updating should be emailed
+	no_updates = Request.objects.shipped().filter(rud_set=None) # shipped requests with no updates
+
+	# these are requests that have only been updated with NoProgress (exclude complete, exclude inprogress)
+	stale_noprogress_updates = base_requests.exclude(rud_set__rud_progress=ResearchProgress.InProgress)
+	# of this subset, find the requests whose research update is older than 45days
+	stale_noprogress_updates = stale_noprogress_updates.filter(rud_set__rud_date__lt=date_45)
+
+	# find all requests that have been updated with InProgress (ignoring the (non)existance of NoProgress updates
+	# and of this subset, find the requests whose reseach update is older than 90 days.
+	stale_inprogress_updates = base_requests.filter(rud_set__rud_progress=ResearchProgress.InProgress, rud_set__rud_date__lt=date_90)
+
+	# all requests which need to be updated
+	update_required = no_updates | stale_noprogress_updates | stale_inprogress_updates
+
+# next, we collect the shipments that have been shipped over 90 days ago
+	ship_to_report_req = Shipment.objects.filter(shp_shipment_date__lte=date_90)
+
+# next, collect all the shipments, older than 90 days, from requests that need to be updated
 	ship_to_report_req = ship_to_report_req.filter(req_request__in=update_required)
 
+# finally, collect the requests from these shipments
 	urge_requests = ship_to_report_req.values_list('req_request', flat=True).distinct()
 	urge_requests = Request.objects.filter(pk__in=urge_requests).distinct()
+# to loop thru and email
 	for req in urge_requests:
 		from_email = Account.objects.get(user__username='matrr_admin').email
 		recipients = [req.user.email,]
 
-		shipment_date = req.shipments.order_by('-shp_shipment_date')[0]
+		shipment_date = req.shipments.order_by('-shp_shipment_date')[0].shp_shipment_date
 		subject = 'Progress Report'
 		body = 'Hello, \nthe tissue(s) you requested were shipped on %s. ' % str(shipment_date) + \
 			'Please, submit a 90 day progress report concerning this request using this link: http://gleek.ecs.baylor.edu%s\n' % reverse('rud-upload') + \
