@@ -775,14 +775,6 @@ class ExperimentRangeForm(forms.Form):
 	to_date = forms.DateField(widget=widgets.DateTimeWidget, required=False)
 
 
-class ExperimentRangeForm_monkeys(ExperimentRangeForm):
-	monkeys = forms.CharField(widget=forms.HiddenInput())
-	def __init__(self, monkeys=None, *args, **kwargs):
-		super(ExperimentRangeForm_monkeys, self).__init__(*args, **kwargs)
-		if monkeys:
-			self.fields['monkeys'].initial = monkeys
-
-
 class BECRangeForm(ExperimentRangeForm):
 	sample_choices = (('all', 'All Samples'), ('morning', 'Sampled before 2pm'), ('afternoon', 'Sampled After 2pm'))
 	sample_range = forms.ChoiceField(choices=sample_choices,
@@ -791,14 +783,6 @@ class BECRangeForm(ExperimentRangeForm):
 							   required=False,
 							   widget=widgets.RadioSelect(renderer=widgets.RadioFieldRendererSpecial_dates),
 							   initial=sample_choices[0][0])
-
-
-class BECRangeForm_monkeys(BECRangeForm): # same as ExperimentRangeForm_monkeys, except for the parent class
-	monkeys = forms.CharField(widget=widgets.HiddenInput())
-	def __init__(self, monkeys=None, *args, **kwargs):
-		super(BECRangeForm_monkeys, self).__init__(*args, **kwargs)
-		if monkeys:
-			self.fields['monkeys'].initial = monkeys
 
 
 class AdvancedSearchSelectForm(forms.Form):
@@ -832,7 +816,7 @@ class GraphToolsMonkeySelectForm(forms.Form):
 		<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
 	{% endblock %}
 	"""
-	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=10))
+	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.CheckboxSelectMultipleSelectAll())
 
 	def __init__(self, monkey_queryset, *args, **kwargs):
 		super(GraphToolsMonkeySelectForm, self).__init__(*args, **kwargs)

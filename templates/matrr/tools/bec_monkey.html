@@ -24,21 +24,23 @@
 	<div class=clearfix></div>
 	<form action='' method='post'>
 		{% csrf_token %}
-		<div class=headline>{{ plot_select_form.plot_method.label }}</div>
-		<div class=small>{{ plot_select_form.plot_method.help_text }}</div>
-		{{ plot_select_form.plot_method }}
-		<br><br>
-		{{ experiment_range_form.monkeys }}
+		<div>
+            <div class=headline>{{ monkey_select_form.monkeys.label }}</div>
+            <div class=small>{{ monkey_select_form.monkeys.help_text }}</div>
+            {{ monkey_select_form.monkeys }}
+        </div>
+		<br>
 		<div>
             <div class=headline>{{ experiment_range_form.sample_range.label }}</div>
             <div class=small>{{ experiment_range_form.sample_range.help_text }}</div>
             {{ experiment_range_form.sample_range }}
 		</div>
 		<br>
-		<br>
-		<div class=headline>{{ experiment_range_form.range.label }}</div>
-		<div class=small>{{ experiment_range_form.range.help_text }}</div>
-		{{ experiment_range_form.range }}
+		<div>
+            <div class=headline>{{ experiment_range_form.range.label }}</div>
+            <div class=small>{{ experiment_range_form.range.help_text }}</div>
+    		{{ experiment_range_form.range }}
+		</div>
 		<div id='dates' style='display:none;'>
 			<div  style="width: 65%; float:right">
 				<div class='small' style="padding: 5px 0 5px 0px">Leave blank to plot all available data</div>

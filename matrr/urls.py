@@ -145,7 +145,7 @@ urlpatterns += patterns('matrr.views',
 
 	# Tools
 	url(r'^tools/$', tools_landing, name='tools-landing'),
-	url(r'^tools/sandbox/$', tools_landing_sandbox, name='tools-sandbox'),
+	url(r'^tools/sandbox/$', tools_sandbox, name='tools-sandbox'),
 
 	url(r'^tools/protein/$', tools_protein, name='tools-protein'),
 	url(r'^tools/protein/cohort/(?P<coh_id>\d+)/$', tools_cohort_protein, name='tools-cohort-protein'),
@@ -163,8 +163,11 @@ urlpatterns += patterns('matrr.views',
 
 
 	url(r'^tools/bec/cohort/(?P<cohort_method>.+)/$', tools_cohort_bec_graphs, name='tools-cohort-bec-graphs'),
-	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
-	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
+
+	url(r'^tools/bec/monkey/(?P<monkey_method>[a-zA-Z_]+)/$', tools_monkey_bec, name='tools-monkey-bec'),
+	url(r'^tools/bec/monkey/(?P<monkey_method>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', tools_monkey_bec_graphs, name='tools-monkey-bec-graphs'),
+#	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
+#	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
 
 	url(r'^tools/graph-as-pdf/$', create_pdf_fragment, name='pdf-fragment'),
 	url(r'^tools/graph-as-svg/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', create_svg_fragment, name='svg-fragment'),

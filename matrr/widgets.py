@@ -1,3 +1,6 @@
+import re
+import datetime
+import time
 from itertools import chain
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
@@ -5,9 +8,10 @@ from django.utils.encoding import  force_unicode
 from matrr.models import Availability, Monkey
 from django.forms.util import flatatt
 from django.core.urlresolvers import reverse
-from django.forms import *
+from django.forms import * # i'd like to refactor this to not import *, instead use forms.Blah
 from django.forms.widgets import Input, RadioFieldRenderer, RadioInput
-import re
+from django.conf import settings
+from django import forms
 
 def date_to_padded_int(date):
 	return str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2)
@@ -124,7 +128,7 @@ class CheckboxSelectMultipleSelectAll(CheckboxSelectMultiple):
 			option_value = force_unicode(option_value)
 			rendered_cb = cb.render(name, option_value)
 			option_label = conditional_escape(force_unicode(option_label))
-			output.append(u'<label%s>%s %s</label>' % (label_for, rendered_cb, option_label))
+			output.append(u'<div style="display: inline-block;white-space: nowrap;"><label%s>%s %s</label></div>' % (label_for, rendered_cb, option_label))
 #		output.append(u'</ul>')
 		output.append(u'</fieldset>')
 		return mark_safe(u'\n'.join(output))
@@ -348,19 +352,12 @@ class GroupedCheckboxSelectMultipleMonkeys(CheckboxSelectMultiple):
 		return mark_safe(u'\n'.join(output))
 
 
-# -*- coding: utf-8 -*-   // i dunno if this is important -jf
+# -*- coding: utf-8 -*-   # i dunno if this is important -jf
 '''
 http://djangosnippets.org/snippets/1629/
 
 DateTimeWidget using JSCal2 from http://www.dynarch.com/projects/calendar/
 '''
-
-from django.utils.encoding import force_unicode
-from django.conf import settings
-from django import forms
-import datetime, time
-from django.utils.safestring import mark_safe
-
 # DATETIMEWIDGET
 calbtn = u'''<img src="%simages/calendar.gif" alt="calendar" id="%s_btn" style="cursor: pointer;" title="Select date" />
 <script type="text/javascript">

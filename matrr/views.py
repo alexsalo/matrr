@@ -13,6 +13,7 @@ from django.template.loader import render_to_string
 from django.core.paginator import Paginator, InvalidPage, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
+from django.utils.safestring import mark_safe
 from djangosphinx.models import SphinxQuerySet
 import settings
 from matrr import helper, emails
@@ -2048,7 +2049,7 @@ def __gather_cohort_protein_images(cohort, proteins):
 		images.append(pcimage)
 	return images
 
-def tools_landing_sandbox(request):
+def tools_landing(request):
 	cohort_methods = plotting.COHORT_TOOLS_PLOTS.keys()
 	monkey_methods = plotting.MONKEY_TOOLS_PLOTS.keys()
 
@@ -2063,27 +2064,30 @@ def tools_landing_sandbox(request):
 				raise Http404("There is no '%s' method in the MATRR BEC or ETOH toolboxs." % _method)
 		_method = request.POST.get('monkey_method', '')
 		if _method:
-			return redirect('tools-monkey-etoh',  _method)
+			if _method in plotting.MONKEY_BEC_TOOLS_PLOTS.keys():
+				return redirect('tools-monkey-bec', _method)
+			elif _method in plotting.MONKEY_ETOH_TOOLS_PLOTS.keys():
+				return redirect('tools-monkey-etoh', _method)
+			else:
+				raise Http404("There is no '%s' method in the MATRR BEC or ETOH toolboxs." % _method)
 
 
 	coh_images = list()
 	for method in cohort_methods:
 		try:
-			coh_images.append(CohortImage.objects.filter(method=method)[0])
+			coh_images.append(CohortImage.objects.filter(canonical=True, method=method)[0])
 		except:
 			pass
 	mky_images = list()
 	for method in monkey_methods:
-		if method == 'monkey_bec_bubble' and settings.PRODUCTION:
-			mky_images.append(MonkeyImage.objects.get(pk=20025))
-			continue
 		try:
-			mky_images.append(MonkeyImage.objects.filter(method=method)[0])
-		except:
+			mky_images.append(MonkeyImage.objects.filter(canonical=True, method=method)[0])
+		except IndexError:
+			# no images to show.  ignore.
 			pass
 	return render_to_response('matrr/tools/sandbox.html', {'mky_images': mky_images, 'coh_images': coh_images}, context_instance=RequestContext(request))
 
-def tools_landing(request):
+def __tools_landing(request): # deprecated
 	if request.method == "POST":
 		dataset = request.POST.get('dataset')
 		if dataset == 'etoh':
@@ -2366,7 +2370,7 @@ def tools_monkey_etoh_graphs(request, monkey_method, coh_id):
 
 	if request.method == 'POST':
 		monkey_select_form = GraphToolsMonkeySelectForm(drinking_monkeys, data=request.POST)
-		experiment_range_form = ExperimentRangeForm_monkeys(data=request.POST)
+		experiment_range_form = ExperimentRangeForm(data=request.POST)
 		if experiment_range_form.is_valid() and monkey_select_form.is_valid():
 			from_date = to_date = ''
 			experiment_range = experiment_range_form.cleaned_data['range']
@@ -2443,20 +2447,64 @@ def tools_cohort_bec_graphs(request, cohort_method):
 	return render_to_response('matrr/tools/bec_cohort.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
-def tools_monkey_bec(request): # pick a cohort
+def tools_monkey_bec(request, monkey_method): # pick a cohort
 	if request.method == 'POST':
 		cohort_form = CohortSelectForm(data=request.POST)
 		if cohort_form.is_valid():
 			cohort = cohort_form.cleaned_data['subject']
-			return redirect('tools-monkey-etoh', cohort.pk)
+			return redirect('tools-monkey-bec-graphs', monkey_method, cohort.pk)
 	else:
-		cohorts_with_etoh_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
-		cohorts_with_etoh_data = Cohort.objects.filter(pk__in=cohorts_with_etoh_data) # so get the queryset of cohorts
-		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_etoh_data)
-	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
+		cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
+		cohorts_with_bec_data = Cohort.objects.filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
+		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_bec_data)
+	return render_to_response('matrr/tools/bec.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
-def tools_monkey_bec_graphs(request, coh_id):
+def tools_monkey_bec_graphs(request, monkey_method, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
+	drinking_monkeys = cohort.monkey_set.filter(mky_drinking=True)
+	context = {'cohort': cohort}
+
+	if request.method == 'POST':
+		monkey_select_form = GraphToolsMonkeySelectForm(drinking_monkeys, data=request.POST)
+		experiment_range_form = BECRangeForm(data=request.POST)
+		if experiment_range_form.is_valid() and monkey_select_form.is_valid():
+			from_date = to_date = ''
+			experiment_range = experiment_range_form.cleaned_data['range']
+			if experiment_range == 'custom':
+				from_date = str(experiment_range_form.cleaned_data['from_date'])
+				to_date = str(experiment_range_form.cleaned_data['to_date'])
+				experiment_range = None
+
+			sample_before = sample_after = ''
+			sample_range = experiment_range_form.cleaned_data['sample_range']
+			if sample_range == 'morning':
+				sample_before = '14:00'
+			if sample_range == 'afternoon':
+				sample_after = '14:00'
+
+			monkeys = monkey_select_form.cleaned_data['monkeys']
+			title = plotting.MONKEY_PLOTS[monkey_method][1]
+			params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range}
+			graphs = list()
+			for monkey in monkeys:
+				mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, title=title, method=monkey_method, parameters=str(params))
+				if mig.pk:
+					graphs.append(mig)
+			if not graphs:
+				messages.info(request, "No graphs could be made with these settings.")
+			else:
+				context['graphs'] = graphs
+
+		context['monkey_select_form'] = monkey_select_form
+		context['experiment_range_form'] = experiment_range_form
+	else:
+		context['monkey_select_form'] = GraphToolsMonkeySelectForm(drinking_monkeys)
+		context['experiment_range_form'] = BECRangeForm()
+
+	return render_to_response('matrr/tools/bec_monkey.html', context, context_instance=RequestContext(request))
+
+def __tools_monkey_bec_graphs(request, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
 	context = {'cohort': cohort}
 	plot_choices = plotting.fetch_plot_choices('monkey', request.user, cohort, 'bec')
