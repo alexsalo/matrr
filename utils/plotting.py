@@ -1842,7 +1842,7 @@ def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
 	ax1.ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
 
 	# rotate the xaxis labels
-	ax1.xticks(dates, [str(date.date()) for date in dates], rotation=45)
+	ax1.set_xticks(dates, [str(date.date()) for date in dates], rotation=45)
 
 	# Shink current axis by 20%
 	box = ax1.get_position()
@@ -1905,7 +1905,7 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 	ax1.ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
 
 	# rotate the xaxis labels
-	ax1.xticks(dates, [str(date.date()) for date in dates], rotation=45)
+	ax1.set_xticks(dates, [str(date.date()) for date in dates], rotation=45)
 
 	# Shink current axis by 20%
 	box = ax1.get_position()
@@ -1964,7 +1964,7 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 	line_labels.append(str(protein.pro_abbrev))
 
 	# rotate the xaxis labels
-	ax1.xticks(dates, [str(date.date()) for date in dates], rotation=45)
+	ax1.set_xticks(dates, [str(date.date()) for date in dates], rotation=45)
 
 	# Shink current axis by width% to fit the legend
 	box = ax1.get_position()
