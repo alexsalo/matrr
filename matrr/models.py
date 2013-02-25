@@ -650,6 +650,9 @@ class MonkeyToDrinkingExperiment(models.Model):
 	mtd_pct_max_bout_vol_total_etoh_hour_9  = models.FloatField('Max Bout in 10th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
 	mtd_pct_max_bout_vol_total_etoh_hour_10 = models.FloatField('Max Bout in 11th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
 
+	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=False, null=True, default=None,
+												  help_text="Seconds it took for monkey to reach day's ethanol allotment")
+
 	def __unicode__(self):
 		return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey)
 
@@ -680,6 +683,16 @@ class MonkeyToDrinkingExperiment(models.Model):
 			self.__setattr__(field_name, max_bout)
 			self.save()
 
+	def populate_mtd_seconds_to_stageone(self):
+		if self.drinking_experiment.dex_type == 'Open Access':
+			self.mtd_seconds_to_stageone = 0
+		else:
+			dex_date = self.drinking_experiment.dex_date
+			eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=dex_date.year, eev_occurred__month=dex_date.month, eev_occurred__day=dex_date.day)
+			eevs = eevs.exclude(eev_etoh_volume=None).order_by('-eev_occurred')
+			eev = eevs[0]
+			self.mtd_seconds_to_stageone = eev.eev_session_time
+		self.save()
 
 	class Meta:
 		db_table = 'mtd_monkeys_to_drinking_experiments'
