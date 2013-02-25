@@ -1284,11 +1284,11 @@ def load_eev_one_file(file_name, dex_type, date):
 				msg = ERROR_OUTPUT % (line_number, "Filename date does not match line date.  Will use line date. filename_date=%s" % str(date), line)
 				logging.info(msg)
 
-			eevs = ExperimentEvent.objects.filter(monkey=monkey, dex_type=dex_type, eev_source_row_number=line_number, eev_occurred=eev_date)
-			if eevs.count() != 0:
-				msg = ERROR_OUTPUT % (line_number, "EEV with monkey, dex_type, date occurred and source row number already exists.", line)
-				logging.debug(msg)
-				continue
+#			eevs = ExperimentEvent.objects.filter(monkey=monkey, dex_type=dex_type, eev_source_row_number=line_number, eev_occurred=eev_date)
+#			if eevs.count() != 0:
+#				msg = ERROR_OUTPUT % (line_number, "EEV with monkey, dex_type, date occurred and source row number already exists.", line)
+#				logging.debug(msg)
+#				continue
 
 			eev = ExperimentEvent()
 			eev.monkey = monkey
