@@ -664,7 +664,7 @@ def cohort_boxplot_m2de_month_general(specific_callable, y_label, cohort, from_d
 		ax1.set_ylabel(y_label)
 		ax1.ylim(ymin=0)
 
-		bp = pyplot.boxplot(sorted_values)
+		bp = ax1.boxplot(sorted_values)
 		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
 		pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
 		pyplot.setp(bp['fliers'], color='red', marker='+')
@@ -767,8 +767,8 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 				scatter_x.append(index+1)
 				scatter_y.append(data)
 
-		bp = pyplot.boxplot(sorted_values)
-		scat = pyplot.scatter(scatter_x, scatter_y, marker='+', color='purple', s=80)
+		bp = ax1.boxplot(sorted_values)
+		scat = ax1.scatter(scatter_x, scatter_y, marker='+', color='purple', s=80)
 		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
 		pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
 		pyplot.setp(bp['fliers'], color='red', marker='o', markersize=10)
@@ -1167,7 +1167,7 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 	datapoint_map = zip(mkys, xcoords, ycoords)
 	return fig, datapoint_map
 
-def cohort_bec_monthly_centroid_distance_general(cohort, mtd_x_axis, mtd_y_axis, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None):
+def cohort_bec_monthly_centroid_distance_general(cohort, mtd_x_axis, mtd_y_axis, title, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None):
 	"""
 	"""
 	def add_1_month(date):
@@ -1211,9 +1211,6 @@ def cohort_bec_monthly_centroid_distance_general(cohort, mtd_x_axis, mtd_y_axis,
 		return False, False
 
 	monkeys = cohort.monkey_set.exclude(mky_drinking=False)
-	import matplotlib.gridspec as gridspec
-	gs = gridspec.GridSpec(20*monkeys.count(), 10)
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 
 	cmap = get_cmap('jet')
 	month_count = float(len(dates))
@@ -1264,45 +1261,57 @@ def cohort_bec_monthly_centroid_distance_general(cohort, mtd_x_axis, mtd_y_axis,
 				bar_y.append(euclid_dist(mky_center, coh_center))
 		mky_datas[mky] = (bar_y, colors)
 
-	title = 'Monthly drinking effects for monkey %s '
-	if sample_before:
-		title += "before %s " % str(sample_before)
-	if sample_after:
-		title += "after %s " % str(sample_after)
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(monkeys.count(), 40)
+	main_gs.update(left=0.03, right=0.98, wspace=0, hspace=.1) # sharing xaxis
 
 	ax_index = 0
 	ax = None
 	for mky, data in mky_datas.items():
-		ax = fig.add_subplot(gs[ax_index+3:ax_index+17, 0:10], sharex=ax, sharey=ax)
-		ax.set_title(title % mky)
-		ax_index += 20
+		ax = fig.add_subplot(main_gs[ax_index:ax_index+1, 3:], sharex=ax, sharey=ax)
+		if ax_index == 0:
+			ax.set_title(title)
+		ax.legend((), title=str(mky.pk), loc=1, frameon=False, prop={'size':12})
+		ax_index += 1
 		bar_y, colors = data
 		for _x, _y, _c in zip(bar_x, bar_y, colors):
+			# this forloop, while appearing stupid, works out well when there is missing data between monkeys in the cohort.
 			ax.bar(_x, _y, color=_c, edgecolor='none')
+			ax.get_xaxis().set_visible(False)
 
-	pyplot.xticks(bar_x, bar_x_labels, rotation=45)
-	pyplot.xlabel("Month of sample")
-	pyplot.ylabel('Distance between monkey-cohort centroids')
 
-	### This chunk of code removes the xlabels from all but 1 axes
-	nr_ax=len(pyplot.gcf().get_axes())
-	count=0
-	for z in pyplot.gcf().get_axes():
-		if count == nr_ax-1: break
-		pyplot.setp(z.get_xticklabels(),visible=False)
-		count+=1
-	###
-	yticks = pyplot.yticks()
-	new_ticks = [0, yticks[0].max()/2, yticks[0].max()]
-	pyplot.yticks(new_ticks)
+	ax.get_xaxis().set_visible(True)
+	ax.set_xticks(bar_x)
+	ax.set_xticklabels(bar_x_labels, rotation=45)
+	ax.yaxis.set_major_locator(MaxNLocator(2, prune='lower'))
+
+	# yxes label
+	ylabel = fig.add_subplot(main_gs[:,0:2])
+	ylabel.set_axis_off()
+	ylabel.set_xlim(0, 1)
+	ylabel.set_ylim(0, 1)
+	ylabel.text(.05, 0.5, "Euclidean distance between k-means centroids", rotation='vertical', horizontalalignment='center', verticalalignment='center')
+
 	return fig, True
 
 def cohort_bec_mcd_sessionVSbec(cohort, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None):
-	return cohort_bec_monthly_centroid_distance_general(cohort, 'bec_record__bec_vol_etoh', 'bec_record__bec_mg_pct',
+	title = 'Euclidean monkey-cohort k-means centroids distance, etoh volume vs bec, by month'
+	if sample_before:
+		title += ", before %s" % str(sample_before)
+	if sample_after:
+		title += ", after %s" % str(sample_after)
+
+	return cohort_bec_monthly_centroid_distance_general(cohort, 'bec_record__bec_vol_etoh', 'bec_record__bec_mg_pct', title,
 														from_date, to_date, dex_type, sample_before, sample_after)
 
 def cohort_bec_mcd_beta(cohort, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None):
-	return cohort_bec_monthly_centroid_distance_general(cohort, 'mtd_etoh_media_ibi', 'bec_record__bec_mg_pct',
+	title = 'Euclidean monkey-cohort k-means centroids distance, median ibi vs bec, by month'
+	if sample_before:
+		title += ", before %s" % str(sample_before)
+	if sample_after:
+		title += ", after %s" % str(sample_after)
+	return cohort_bec_monthly_centroid_distance_general(cohort, 'mtd_etoh_media_ibi', 'bec_record__bec_mg_pct', title,
 														from_date, to_date, dex_type, sample_before, sample_after)
 
 
