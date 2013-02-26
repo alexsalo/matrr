@@ -1222,6 +1222,7 @@ def parse_left_right(side_string):
 	else:
 		return None
 
+@commit_on_success
 def load_eev_one_file(file_name, dex_type, date):
 
 	fields = (
@@ -1324,7 +1325,6 @@ def load_eev_one_file(file_name, dex_type, date):
 				continue
 			eev.save()	
 
-@commit_on_success
 def load_eevs(file_dir, dex_type):
 	if not dex_type in DexTypes:
 		raise Exception("'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DexTypes))
@@ -1440,8 +1440,6 @@ def load_necropsy_summary(filename):
 				columns_offset += 1
 			nec_sum.ncm_22hr_12mo_avg_g_per_kg	= row[21+columns_offset] if row[21+columns_offset] != "control" else 0
 			nec_sum.save()
-
-
 
 def load_metabolites(filename):
 	"""
