@@ -1950,3 +1950,38 @@ def load_mbb_images(image_dir):
 			real_id = recomp.match(file).group(1)
 			create_mbb(real_id, os.path.join(image_dir, file))
 
+def delete_wonky_monkeys():
+	monkey_pks = [10043, 10050, 10053]
+	models = [MonkeyToDrinkingExperiment, MonkeyBEC, ExperimentEvent, MonkeyImage]
+
+	for model in models:
+		for mky in monkey_pks:
+			print "Deleting mky %d from table %s" % (mky, model.__name__)
+			model.objects.filter(monkey=mky).delete()
+
+def find_outlier_datapoints(cohort):
+	search_models = [MonkeyToDrinkingExperiment, MonkeyBEC, ExperimentEvent, ExperimentBout, ExperimentDrink]
+	search_field = ['monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'mtd__ebt__monkey__cohort']
+
+	field_types = [models.FloatField, models.IntegerField, models.BigIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField, models.SmallIntegerField]
+
+	for model, search in zip(search_models, search_field):
+		fields = list()
+		for field in model._meta.fields:
+			if type(field) in field_types:
+				fields.append(field)
+		for field in fields:
+			all_values = model.objects.filter(**{search: cohort}).exclude(**{field.name: None}).values_list(field.name, flat=True)
+			all_values = numpy.array(all_values)
+			mean = all_values.mean()
+			std = all_values.std()
+			low_std = mean - 3*std
+			high_std = mean + 3*std
+			low_search_dict = {field.name+"__lt": low_std}
+			high_search_dict = {field.name+"__gt": high_std}
+			low_outliers = model.objects.filter(**low_search_dict)
+			high_outliers = model.objects.filter(**high_search_dict)
+
+			if low_outliers or high_outliers:
+				output_file = "%s__%s-outliers.csv" % (model.__name__, field.name)
+				output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
