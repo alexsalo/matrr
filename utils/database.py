@@ -1959,7 +1959,7 @@ def delete_wonky_monkeys():
 			print "Deleting mky %d from table %s" % (mky, model.__name__)
 			model.objects.filter(monkey=mky).delete()
 
-def find_outlier_datapoints(cohort):
+def find_outlier_datapoints(cohort, stdev_min):
 	search_models = [MonkeyToDrinkingExperiment, MonkeyBEC,]# ExperimentEvent, ExperimentBout, ExperimentDrink]
 	search_field = ['monkey__cohort', 'monkey__cohort', ]#'monkey__cohort', 'mtd__monkey__cohort', 'mtd__ebt__monkey__cohort']
 
@@ -1981,8 +1981,8 @@ def find_outlier_datapoints(cohort):
 					print mean
 				if not std:
 					print std
-				low_std = mean - 5*std
-				high_std = mean + 5*std
+				low_std = mean - stdev_min*std
+				high_std = mean + stdev_min*std
 				low_search_dict = {_name+"__lt": low_std}
 				high_search_dict = {_name+"__gt": high_std}
 				low_outliers = all_rows.filter(**low_search_dict)
