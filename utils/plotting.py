@@ -1001,6 +1001,7 @@ def cohort_etoh_gkg_quadbar(cohort):
 			main_plot.get_yaxis().set_visible(False)
 	return fig, True
 
+# useless, deprecated
 def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
 	"""
 		Scatter plot for monkey
@@ -1086,6 +1087,9 @@ def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_dat
 		except Exception as e:
 			print e
 
+	ax1.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
+	ax1.text(0, 82, "80 mg pct")
+
 	title = 'Cohort %s ' % cohort.coh_cohort_name
 	if sample_before:
 		title += "before %s " % str(sample_before)
@@ -1096,14 +1100,16 @@ def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_dat
 	ax1.set_xlabel(x_axis_label)
 	ax1.set_ylabel("Blood Ethanol Concentration, mg %")
 	ax1.legend(loc="upper right")
-	ax1.xlim(xmin=0)
-	ax1.ylim(ymin=0)
+	ax1.set_xlim(xmin=0)
+	ax1.set_ylim(ymin=0)
 	return fig, True
 
+# useless, deprecated
 def cohort_bec_maxbout(cohort, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
 	return cohort_bec_bout_general(cohort, 'mtd_pct_max_bout_vol_total_etoh', 'Max Bout / Intake at sample', from_date=from_date, to_date=to_date,
 								   dex_type=dex_type, sample_before=sample_before, sample_after=sample_after, cluster_count=cluster_count)
 
+# useless, deprecated
 def cohort_bec_firstbout(cohort, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
 	return cohort_bec_bout_general(cohort, 'mtd_pct_etoh_in_1st_bout', 'First Bout / Intake at sample', from_date=from_date, to_date=to_date,
 								   dex_type=dex_type, sample_before=sample_before, sample_after=sample_after, cluster_count=cluster_count)
@@ -1198,6 +1204,8 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 	if sample_after:
 		title += "after %s " % str(sample_after)
 
+	ax1.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
+	ax1.text(0, 82, "80 mg pct")
 	ax1.set_title(title)
 	ax1.set_xlabel("First bout / total intake")
 	ax1.set_ylabel("Blood Ethanol Concentration, mg %")
@@ -1361,12 +1369,9 @@ def cohort_bec_mcd_beta(cohort, from_date=None, to_date=None, dex_type='', sampl
 
 
 # Dictionary of ethanol cohort plots VIPs can customize
-COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_etoh_bihourly_treemap, "Cohort Bihourly Drinking Pattern")}
+COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_etoh_bihourly_treemap, "Cohort Bihourly Drinking Pattern"),}
 # BEC plots
-COHORT_BEC_TOOLS_PLOTS = { 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
-						   'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
-						   'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
-}
+COHORT_BEC_TOOLS_PLOTS = {'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),}
 # Dictionary of protein cohort plots VIPs can customize
 COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}
 
@@ -1388,8 +1393,8 @@ COHORT_PLOTS.update({"cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2
 					 "cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 'Cohort Water Intake, by month'),
 					 "cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 'Cohort Pellets, by month'),
 					 "cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 'Cohort Weight, by month'),
-					 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
-					 'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
+#					 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
+#					 'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
 					 'cohort_etoh_induction_cumsum': (cohort_etoh_induction_cumsum, 'Cohort Induction Daily Ethanol Intake'),
 					 'cohort_etoh_gkg_quadbar': (cohort_etoh_gkg_quadbar, "Cohort Daily Ethanol Intake Counts"),
 })
@@ -2740,6 +2745,8 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
 	main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
 	bec_bub_main_plot = fig.add_subplot(main_gs[:,0:39])
 	s = bec_bub_main_plot.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_volumes, alpha=0.4)
+	bec_bub_main_plot.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
+	bec_bub_main_plot.text(0, 82, "80 mg pct")
 
 	bec_bub_main_plot.set_ylabel(scatter_y_label)
 	bec_bub_main_plot.set_xlabel("Sample Days")
@@ -2962,6 +2969,8 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 		color = cm.jet(norm(color_value))
 		bec_con_bar_plot.bar(x, bar, width=2, color=color, edgecolor='none')
 		facecolors.append(color)
+	bec_con_bar_plot.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
+	bec_con_bar_plot.text(0, 82, "80 mg pct")
 
 	bec_con_bar_plot.set_xlim(0,len(xaxis) + 2)
 	if len(induction_days) and len(induction_days) != len(xaxis):
@@ -3092,6 +3101,9 @@ def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type=
 		bec_cen_dist_mainplot.scatter(c[:,0], c[:,1], marker='x', s=100, linewidths=3, c=colors, edgecolor=colors,  label='Cohort')
 	except IndexError as e: # m and c are empty if all_mtds.count() == 0
 		return False, False
+
+	bec_cen_dist_mainplot.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
+	bec_cen_dist_mainplot.text(0, 82, "80 mg pct")
 
 	_t = dex_type if dex_type else 'all'
 	title = 'Monthly drinking effects for monkey %s, %s data' % (str(monkey.pk), _t)
