@@ -955,6 +955,48 @@ def cohort_etoh_induction_cumsum(cohort, stage=1):
 	ylabel.text(.05, 0.5, "Cumulative EtOH intake, ml", rotation='vertical', horizontalalignment='center', verticalalignment='center')
 	return fig, True
 
+def cohort_etoh_gkg_quadbar(cohort):
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print("That's not a valid cohort.")
+			return False, False
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	fig.suptitle(str(cohort), size=18)
+	main_gs = gridspec.GridSpec(2, 2)
+	main_gs.update(left=0.08, right=.98, top=.92, bottom=.06, wspace=.02, hspace=.23)
+
+	main_plot = None
+	subplots = [(i, j) for i in range(2) for j in range(2)]
+	for gkg, _sub in enumerate(subplots):
+		main_plot = fig.add_subplot(main_gs[_sub], sharey=main_plot)
+		main_plot.set_title("Days >= %d g per kg" % (gkg+1))
+
+		monkeys = cohort.monkey_set.filter(mky_drinking=True).values_list('pk', flat=True)
+		width = .4
+
+		data = list()
+		for mky in monkeys:
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, mtd_etoh_g_kg__gte=gkg+1).count()
+			mtds = mtds if mtds else .001
+			data.append((mky, mtds))
+		sorted_data = sorted(data, key=lambda t: t[1])
+		sorted_data = numpy.array(sorted_data)
+		labels = sorted_data[:,0]
+		yaxis = sorted_data[:,1]
+		bar = main_plot.bar(range(len(monkeys)), yaxis, width)
+
+		if gkg % 2:
+			main_plot.get_yaxis().set_visible(False)
+		else:
+			main_plot.set_ylabel("Day count")
+
+		x_labels = ['%d' % i for i in labels]
+		main_plot.set_xticks(range(len(monkeys)))
+		xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
+		pyplot.setp(xtickNames, rotation=45)
+	return fig, True
 
 def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
 	"""
@@ -1336,16 +1378,17 @@ COHORT_PLOTS = {}
 COHORT_PLOTS.update(COHORT_ETOH_TOOLS_PLOTS)
 COHORT_PLOTS.update(COHORT_BEC_TOOLS_PLOTS)
 COHORT_PLOTS.update(COHORT_PROTEIN_TOOLS_PLOTS)
-COHORT_PLOTS.update({"cohort_boxplot_m2de_month_etoh_intake": 		(cohort_boxplot_m2de_month_etoh_intake,'Monthly Cohort Ethanol Intake boxplot'),
-					 "cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 	'Average Ethanol Intake, 22hr'),
-					 "cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, 					"Total Ethanol Intake, ml"),
-					 "cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, 				"Total Ethanol Intake, g per kg"),
-					 "cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 			'Cohort Water Intake, by month'),
-					 "cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 	'Cohort Pellets, by month'),
-					 "cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 			'Cohort Weight, by month'),
+COHORT_PLOTS.update({"cohort_boxplot_m2de_month_etoh_intake": (cohort_boxplot_m2de_month_etoh_intake,'Monthly Cohort Ethanol Intake boxplot'),
+					 "cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake, 22hr'),
+					 "cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, "Total Ethanol Intake, ml"),
+					 "cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake, g per kg"),
+					 "cohort_boxplot_m2de_month_veh_intake": (cohort_boxplot_m2de_month_veh_intake, 'Cohort Water Intake, by month'),
+					 "cohort_boxplot_m2de_month_total_pellets": (cohort_boxplot_m2de_month_total_pellets, 'Cohort Pellets, by month'),
+					 "cohort_boxplot_m2de_month_mtd_weight": (cohort_boxplot_m2de_month_mtd_weight, 'Cohort Weight, by month'),
 					 'cohort_bec_maxbout': (cohort_bec_maxbout, 'BEC vs Max Bout'),
 					 'cohort_bec_firstbout': (cohort_bec_firstbout, 'BEC vs First Bout'),
 					 'cohort_etoh_induction_cumsum': (cohort_etoh_induction_cumsum, 'Cohort Induction Daily Ethanol Intake'),
+					 'cohort_etoh_gkg_quadbar': (cohort_etoh_gkg_quadbar, "Cohort Daily Ethanol Intake Counts"),
 })
 
 
@@ -3204,6 +3247,15 @@ def create_bec_histograms():
 			params = str({'column_name': field })
 			title = bec._meta.get_field(field).verbose_name
 			mig, is_new = MonkeyImage.objects.get_or_create(method='bec_histogram_general', monkey=m, parameters=params, title=title, canonical=True)
+
+def create_quadbar_graphs():
+	plot_method = 'cohort_etoh_gkg_quadbar'
+	for cohort in MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct():
+		cohort = Cohort.objects.get(pk=cohort)
+		print "Creating %s graphs" % str(cohort)
+		cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=COHORT_PLOTS[plot_method][1], canonical=True)
+		gc.collect()
+
 
 def create_daily_cumsum_graphs():
 	cohorts = ExperimentEvent.objects.all().values_list('monkey__cohort', flat=True).distinct()
