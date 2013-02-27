@@ -967,35 +967,38 @@ def cohort_etoh_gkg_quadbar(cohort):
 	main_gs = gridspec.GridSpec(2, 2)
 	main_gs.update(left=0.08, right=.98, top=.92, bottom=.06, wspace=.02, hspace=.23)
 
-	main_plot = None
+	cohort_colors =  ['navy', 'slateblue']
+	main_plot = None # this is so the first subplot has a sharey.  all subplots after the first will use the previous loop's subplot
 	subplots = [(i, j) for i in range(2) for j in range(2)]
-	for gkg, _sub in enumerate(subplots):
+	for gkg, _sub in enumerate(subplots, 1):
 		main_plot = fig.add_subplot(main_gs[_sub], sharey=main_plot)
-		main_plot.set_title("Days >= %d g per kg" % (gkg+1))
+		main_plot.set_title("Greater than %d g per kg Etoh" % gkg)
 
 		monkeys = cohort.monkey_set.filter(mky_drinking=True).values_list('pk', flat=True)
-		width = .4
-
 		data = list()
-		for mky in monkeys:
-			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, mtd_etoh_g_kg__gte=gkg+1).count()
+		colors = list()
+		for i, mky in enumerate(monkeys):
+			colors.append(cohort_colors[i%2]) # we don't want the colors sorted.  It breaks if you try anyway.
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, mtd_etoh_g_kg__gte=gkg).count()
 			mtds = mtds if mtds else .001
 			data.append((mky, mtds))
-		sorted_data = sorted(data, key=lambda t: t[1])
+
+		sorted_data = sorted(data, key=lambda t: t[1]) # sort the data by the 2nd tuple value (mtds).  This is important to keep yvalue-monkey matching
 		sorted_data = numpy.array(sorted_data)
-		labels = sorted_data[:,0]
-		yaxis = sorted_data[:,1]
-		bar = main_plot.bar(range(len(monkeys)), yaxis, width)
+		yaxis = sorted_data[:,1] # slice off the yaxis values
+		bar = main_plot.bar(range(len(monkeys)), yaxis, width=.9, color=colors)
 
-		if gkg % 2:
-			main_plot.get_yaxis().set_visible(False)
-		else:
-			main_plot.set_ylabel("Day count")
-
-		x_labels = ['%d' % i for i in labels]
-		main_plot.set_xticks(range(len(monkeys)))
-		xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
+		labels = sorted_data[:,0] # slice off the labels
+		xlabels = [str(l) for l in labels] # this ensures that the monkey label is "10023" and not "10023.0" -.-
+		main_plot.set_xticks(range(len(monkeys))) # this will force a tick for every monkey.  without this, labels become useless
+		xtickNames = pyplot.setp(main_plot, xticklabels=labels)
 		pyplot.setp(xtickNames, rotation=45)
+
+		# this hides the yticklabels and ylabel for the right plots
+		if gkg % 2:
+			main_plot.set_ylabel("Day count")
+		else:
+			main_plot.get_yaxis().set_visible(False)
 	return fig, True
 
 def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, cluster_count=3):
