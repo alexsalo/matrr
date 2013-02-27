@@ -1977,10 +1977,6 @@ def find_outlier_datapoints(cohort, stdev_min):
 				all_values = numpy.array(all_values)
 				mean = all_values.mean()
 				std = all_values.std()
-				if not mean:
-					print mean
-				if not std:
-					print std
 				low_std = mean - stdev_min*std
 				high_std = mean + stdev_min*std
 				low_search_dict = {_name+"__lt": low_std}
