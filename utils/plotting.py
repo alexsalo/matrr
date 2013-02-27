@@ -989,7 +989,7 @@ def cohort_etoh_gkg_quadbar(cohort):
 		bar = main_plot.bar(range(len(monkeys)), yaxis, width=.9, color=colors)
 
 		labels = sorted_data[:,0] # slice off the labels
-		x_labels = [str(l) for l in labels] # this ensures that the monkey label is "10023" and not "10023.0" -.-
+		x_labels = ["%d" % l for l in labels] # this ensures that the monkey label is "10023" and not "10023.0" -.-
 		main_plot.set_xticks(range(len(monkeys))) # this will force a tick for every monkey.  without this, labels become useless
 		xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
 		pyplot.setp(xtickNames, rotation=45)
