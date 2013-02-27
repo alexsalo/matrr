@@ -149,6 +149,7 @@ VIP_IMAGES_LIST = (
 'cohort_bec_firstbout',
 'cohort_bec_firstbout_monkeycluster',
 'cohort_etoh_induction_cumsum',
+'cohort_etoh_gkg_quadbar',
 
 'monkey_errorbox_etoh', # deprecated
 '__vip',

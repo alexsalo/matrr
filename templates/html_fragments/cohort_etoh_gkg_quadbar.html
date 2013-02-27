@@ -1,0 +1,20 @@
+<div style='width: {{ bigWidth|add:"60" }}px; margin:auto; padding: 20px'>
+	<center>{{ image.title }}</center>
+</div>
+<div>
+	<center>
+		<img src="{{ image.image.url }}" ismap usemap="#{{ image.cohort.pk }}"><br>
+	</center>
+</div>
+<div style='width: {{ bigWidth }}px; margin:auto;'>
+    <b>Cohort daily ethanol intake counts for {{ image.cohort.coh_cohort_name }}.</b> This graph shows the number of days each monkey
+	consumed over 1, 2, 3 and 4 grams per kilogram of ethanol during Open Access.
+</div>
+
+{% if map %}
+	<map name='{{ image.cohort.pk }}'>
+	{% for point in map %}
+		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 8' href="{%  url monkey-detail image.cohort.pk point.0  %}" target='_blank'>
+	{% endfor %}
+	</map>
+{% endif %}
