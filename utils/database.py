@@ -1960,28 +1960,50 @@ def delete_wonky_monkeys():
 			model.objects.filter(monkey=mky).delete()
 
 def find_outlier_datapoints(cohort):
-	search_models = [MonkeyToDrinkingExperiment, MonkeyBEC, ExperimentEvent, ExperimentBout, ExperimentDrink]
-	search_field = ['monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'mtd__ebt__monkey__cohort']
+	search_models = [MonkeyToDrinkingExperiment, MonkeyBEC,]# ExperimentEvent, ExperimentBout, ExperimentDrink]
+	search_field = ['monkey__cohort', 'monkey__cohort', ]#'monkey__cohort', 'mtd__monkey__cohort', 'mtd__ebt__monkey__cohort']
 
 	field_types = [models.FloatField, models.IntegerField, models.BigIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField, models.SmallIntegerField]
 
 	for model, search in zip(search_models, search_field):
-		fields = list()
+		search_field_names = list()
 		for field in model._meta.fields:
 			if type(field) in field_types:
-				fields.append(field)
-		for field in fields:
-			all_values = model.objects.filter(**{search: cohort}).exclude(**{field.name: None}).values_list(field.name, flat=True)
-			all_values = numpy.array(all_values)
-			mean = all_values.mean()
-			std = all_values.std()
-			low_std = mean - 3*std
-			high_std = mean + 3*std
-			low_search_dict = {field.name+"__lt": low_std}
-			high_search_dict = {field.name+"__gt": high_std}
-			low_outliers = model.objects.filter(**low_search_dict)
-			high_outliers = model.objects.filter(**high_search_dict)
+				search_field_names.append(field.name)
+		for _name in search_field_names:
+			all_rows = model.objects.filter(**{search: cohort}).exclude(**{_name: None})
+			if all_rows.count():
+				all_values = all_rows.values_list(_name, flat=True)
+				all_values = numpy.array(all_values)
+				mean = all_values.mean()
+				std = all_values.std()
+				if not mean:
+					print mean
+				if not std:
+					print std
+				low_std = mean - 5*std
+				high_std = mean + 5*std
+				low_search_dict = {_name+"__lt": low_std}
+				high_search_dict = {_name+"__gt": high_std}
+				low_outliers = all_rows.filter(**low_search_dict)
+				high_outliers = all_rows.filter(**high_search_dict)
 
-			if low_outliers or high_outliers:
-				output_file = "%s__%s-outliers.csv" % (model.__name__, field.name)
-				output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+				if low_outliers or high_outliers:
+					output_file = "%d.%s__%s-outliers.csv" % (cohort, model.__name__, _name)
+					output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+					header = ["Outlier Value", "Mean value", "StDev"]
+					all_field_names = [f.name for f in model._meta.fields]
+					header.extend(all_field_names)
+					output.writerow(header)
+					for out in low_outliers|high_outliers:
+						row = list()
+						row.append(getattr(out, _name))
+						row.append(mean)
+						row.append(std)
+						for f in all_field_names:
+							row.append(getattr(out, f))
+						output.writerow(row)
+			else:
+				print "No data: %s " % _name
+
+	print 'done'
