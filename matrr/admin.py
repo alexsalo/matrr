@@ -35,16 +35,14 @@ class RequestAdmin(admin.ModelAdmin):
 	readonly_fields = ('req_report_asked',)
 
 
-class UserAdmin(admin.StackedInline):
+class UserAdmin(admin.ModelAdmin):
 	model = User
-	fk_name = 'account'
-	fields = ['username','first_name', 'last_name', 'email']
-	readonly_fields = ['username','first_name', 'last_name', 'email']
+	list_display = ['username', 'email', 'first_name', 'last_name', 'date_joined']
 
 class VerificationAccountAdmin(admin.ModelAdmin):
-	
+
 	form = OtOAcountForm
-	
+
 	readonly_fields = ['username','verified', 'first_name', 'last_name','act_real_address1','act_real_address1', 'act_real_address2', 'act_real_city', 'act_real_state', 'act_real_country', 'act_shipping_name','email', 'phone_number', 'institution','act_address1', 'act_address2', 'act_city', 'act_state', 'act_country', 'act_fedex']
 	fieldsets = (
 				('Account information',{
@@ -54,11 +52,13 @@ class VerificationAccountAdmin(admin.ModelAdmin):
 							'fields':('act_real_address1', 'act_real_address2', 'act_real_city', 'act_real_state', 'act_real_country'),
 						}),
 				('Shipping information', {
-										'fields': ('act_shipping_name','act_address1', 'act_address2', 'act_city', 'act_state', 'act_country', 'act_fedex'), 
+										'fields': ('act_shipping_name','act_address1', 'act_address2', 'act_city', 'act_state', 'act_country', 'act_fedex'),
 										'classes': ('collapse',),
 										}),
 				)
 
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
 admin.site.register(TissueType, TissueAdmin)
 admin.site.register(TissueCategory)
 admin.site.register(Cohort)
