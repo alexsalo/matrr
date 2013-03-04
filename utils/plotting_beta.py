@@ -799,5 +799,85 @@ def cohort_age_sessiontime(stage):
 #	main_plot.set_xlim(xmin=0)
 	main_plot.set_ylim(ymin=0)
 
+def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
+	assert 0 <= phase <= 2
+	_7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a') # adolescents
+	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
+	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
+	cohorts = [_7a, _5, _4]
+	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
+	oa_phases = ['', 'drinking_experiment__dex_date__lte', 'drinking_experiment__dex_date__gt']
+	colors = ["orange", 'blue', 'green']
+	scatter_markers = ['+', 'x', '4']
+	titles = ["Open Access, 12 months", "Open Access, 1st Six Months", "Open Access, 2nd Six Months"]
 
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot.set_title(titles[phase])
+	main_plot.set_xlabel("Age at first intox")
+
+	label = ''
+	for index, cohort in enumerate(cohorts):
+		x = list()
+		y = list()
+		for monkey in cohort.monkey_set.exclude(mky_age_at_intox=None).exclude(mky_age_at_intox=0):
+			age = monkey.mky_age_at_intox / 365.25
+			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment__dex_type='Open Access', monkey=monkey)
+			if phase:
+				mtds = mtds.filter(**{oa_phases[phase]:cohort_1st_oa_end[cohort]})
+			x.append(age)
+			value, label = mtd_callable_yvalue_generator(mtds)
+			y.append(value)
+		main_plot.scatter(x, y, label=str(cohort), color=colors[index], marker=scatter_markers[index], s=150)
+	main_plot.set_ylabel(label)
+	main_plot.legend(loc=0, scatterpoints=1)
+	return fig
+
+def __mtd_call_secondsToStageOne(mtds):
+	avg = mtds.aggregate(Avg('mtd_seconds_to_stageone'))['mtd_seconds_to_stageone__avg']
+	avg /= 3600
+	return avg, "Average Seconds to Stage One"
+
+def __mtd_call_gkg_etoh(mtds):
+	avg = mtds.aggregate(Avg('mtd_etoh_g_kg'))['mtd_etoh_g_kg__avg']
+	return avg, "Average daily ethanol intake, g/kg"
+
+def __mtd_call_bec(mtds):
+	avg = mtds.aggregate(Avg('bec_record__bec_mg_pct'))['bec_record__bec_mg_pct__avg']
+	return avg, "Average BEC value"
+
+def __mtd_call_over_3gkg(mtds):
+	count = mtds.filter(mtd_etoh_g_kg__gte=3).count()
+	return count, "Days over 3 g/kg"
+
+def __mtd_call_over_4gkg(mtds):
+	count = mtds.filter(mtd_etoh_g_kg__gte=4).count()
+	return count, "Days over 4 g/kg"
+
+def __mtd_call_max_bout_vol(mtds):
+	avg = mtds.aggregate(Avg('mtd_pct_max_bout_vol_total_etoh'))['mtd_pct_max_bout_vol_total_etoh__avg']
+	return avg, "Average Maximum Bout, as % of total intake"
+
+
+cohort_age_mtd_general_sets = [__mtd_call_secondsToStageOne,
+							   __mtd_call_gkg_etoh,
+							   __mtd_call_bec,
+							   __mtd_call_over_3gkg,
+							   __mtd_call_over_4gkg,
+							   __mtd_call_max_bout_vol,
+							   ]
+
+def create_age_mtd_graphs():
+	import settings
+	output_path = settings.STATIC_ROOT
+	output_path = os.path.join(output_path, "images/christa/")
+	for method in cohort_age_mtd_general_sets:
+		for phase in range(3):
+			fig = cohort_age_mtd_general(phase, method)
+
+			DPI = fig.get_dpi()
+			filename = output_path + '%s.Phase%d.png' % (method.__name__, phase)
+			fig.savefig(filename, dpi=DPI)
 

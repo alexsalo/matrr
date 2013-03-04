@@ -2606,6 +2606,7 @@ def tools_cohort_genealogy(request, coh_id):
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox(request):
 	files = os.listdir(settings.STATIC_ROOT + '/images/christa/')
+	files = sorted(files)
 	return render_to_response('matrr/tools/sandbox.html', {'files':files}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
