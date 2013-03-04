@@ -2605,6 +2605,11 @@ def tools_cohort_genealogy(request, coh_id):
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox(request):
+	files = os.listdir(settings.STATIC_ROOT + '/images/christa/')
+	return render_to_response('matrr/tools/sandbox.html', {'files':files}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
+def tools_sandbox_familytree(request):
 	from matrr.helper import FamilyTree, ExampleFamilyTree
 	def male_female_shape(node):
 		shape = 'circle' if node[1]['shape_input'] == 'F' else 'square'
@@ -2625,7 +2630,7 @@ def tools_sandbox(request):
 	draw_options['network'] = tree.dump_graphml()
 	draw_options['visualStyle'] = tree.visual_style.get_visual_style()
 	draw_options = mark_safe(str(draw_options))
-	return render_to_response('matrr/tools/sandbox.html', {'monkey': me.monkey, 'draw_options': draw_options}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/sandbox_familytree.html', {'monkey': me.monkey, 'draw_options': draw_options}, context_instance=RequestContext(request))
 
 ### End tools
 
