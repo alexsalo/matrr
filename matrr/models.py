@@ -787,6 +787,18 @@ class ExperimentEvent(models.Model):
 	eev_veh_drink_number = models.PositiveIntegerField('H20 drink number', blank=True, null=True)
 	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
 
+	eev_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True)
+
+	def populate_time_since_pellet(self, recalculate=False):
+		if not self.eev_pellet_elapsed_time_since_last or recalculate:
+			current = self.eev_occurred
+			previous_events = ExperimentEvent.objects.filter(eev_occurred__lt=current).order_by('eev_occurred')
+			previous_pellets = previous_events.filter(eev_event_type=ExperimentEventType.Pellet)
+			pellet_max = previous_pellets.aggregate(Max('eev_occurred'))['eev_occurred__max']
+			time_diff = current-pellet_max
+			#self.eev_pellet_elapsed_time_since_last = time_diff.seconds
+			self.save()
+
 	class Meta:
 		db_table = 'eev_experiment_events'
 
