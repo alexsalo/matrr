@@ -798,6 +798,7 @@ def cohort_age_sessiontime(stage):
 #	pyplot.setp(ltext, fontsize=12)
 #	main_plot.set_xlim(xmin=0)
 	main_plot.set_ylim(ymin=0)
+	return fig
 
 def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 	assert 0 <= phase <= 2
@@ -835,11 +836,6 @@ def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 	main_plot.legend(loc=0, scatterpoints=1)
 	return fig
 
-def __mtd_call_secondsToStageOne(mtds):
-	avg = mtds.aggregate(Avg('mtd_seconds_to_stageone'))['mtd_seconds_to_stageone__avg']
-	avg /= 3600
-	return avg, "Average Seconds to Stage One"
-
 def __mtd_call_gkg_etoh(mtds):
 	avg = mtds.aggregate(Avg('mtd_etoh_g_kg'))['mtd_etoh_g_kg__avg']
 	return avg, "Average daily ethanol intake, g/kg"
@@ -861,8 +857,7 @@ def __mtd_call_max_bout_vol(mtds):
 	return avg, "Average Maximum Bout, as % of total intake"
 
 
-cohort_age_mtd_general_sets = [__mtd_call_secondsToStageOne,
-							   __mtd_call_gkg_etoh,
+cohort_age_mtd_general_sets = [__mtd_call_gkg_etoh,
 							   __mtd_call_bec,
 							   __mtd_call_over_3gkg,
 							   __mtd_call_over_4gkg,
@@ -880,4 +875,9 @@ def create_age_mtd_graphs():
 			DPI = fig.get_dpi()
 			filename = output_path + '%s.Phase%d.png' % (method.__name__, phase)
 			fig.savefig(filename, dpi=DPI)
+	for stage in range(3):
+		fig = cohort_age_sessiontime(stage)
+		DPI = fig.get_dpi()
+		filename = output_path + '%s.Stage%d.png' % ("cohort_age_sessiontime", stage)
+		fig.savefig(filename, dpi=DPI)
 
