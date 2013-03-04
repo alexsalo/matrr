@@ -361,6 +361,7 @@ class Monkey(models.Model):
 	mky_species = models.CharField('Species', max_length=30, choices=SPECIES, help_text='Please select the species of the monkey.')
 	mky_high_drinker = models.BooleanField("High-drinking monkey", null=False, blank=False, default=False)
 	mky_low_drinker = models.BooleanField("Low-drinking monkey", null=False, blank=False, default=False)
+	mky_age_at_intox = models.PositiveIntegerField("Age at first Intoxication (days)", null=True, blank=False, default=None)
 
 	def __unicode__(self):
 		return str(self.mky_id)
@@ -381,6 +382,19 @@ class Monkey(models.Model):
 			if choice[0] in self.cohort.coh_cohort_name:
 				self.mky_species = choice[0]
 				self.save()
+
+	def populate_age_at_intox(self):
+		becs = MonkeyBEC.objects.filter(monkey=self)
+		if becs.count():
+			becs = becs.filter(bec_mg_pct__gte=80).order_by('bec_collect_date')
+			try:
+				first_intox = becs[0]
+			except IndexError:
+				age = 0
+			else:
+				age = (first_intox.bec_collect_date.date() - self.mky_birthdate).days
+			self.mky_age_at_intox = age
+			self.save()
 
 	class Meta:
 		db_table = 'mky_monkeys'
@@ -691,8 +705,12 @@ class MonkeyToDrinkingExperiment(models.Model):
 			dex_date = self.drinking_experiment.dex_date
 			eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=dex_date.year, eev_occurred__month=dex_date.month, eev_occurred__day=dex_date.day)
 			eevs = eevs.exclude(eev_etoh_volume=None).order_by('-eev_occurred')
-			eev = eevs[0]
-			self.mtd_seconds_to_stageone = eev.eev_session_time
+			try:
+				eev = eevs[0]
+			except IndexError:
+				self.mtd_seconds_to_stageone = -1
+			else:
+				self.mtd_seconds_to_stageone = eev.eev_session_time
 		self.save()
 
 	class Meta:
