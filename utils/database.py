@@ -6,8 +6,32 @@ from datetime import datetime as dt
 from datetime import timedelta, time
 import string
 import datetime
-import csv, re
+import csv
+import re
+import gc
 import logging
+
+def queryset_iterator(queryset, chunksize=5000):
+	'''
+	http://djangosnippets.org/snippets/1949/
+
+	Iterate over a Django Queryset ordered by the primary key
+
+	This method loads a maximum of chunksize (default: 1000) rows in it's
+	memory at the same time while django normally would load all rows in it's
+	memory. Using the iterator() method only causes it to not preload all the
+	classes.
+
+	Note that the implementation of the iterator does not support ordered query sets.
+	'''
+	pk = 0
+	last_pk = queryset.order_by('-pk')[0].pk
+	queryset = queryset.order_by('pk')
+	while pk < last_pk:
+		for row in queryset.filter(pk__gt=pk)[:chunksize]:
+			pk = row.pk
+			yield row
+		gc.collect()
 
 def __get_datetime_from_steve(steve_date):
 	def minimalist_xldate_as_datetime(xldate, datemode):
@@ -29,7 +53,6 @@ def __get_datetime_from_steve(steve_date):
 	except Exception as e:
 		pass
 	return None
-
 
 def convert_MonkeyProtein_dates_to_correct_datetimes():
 
