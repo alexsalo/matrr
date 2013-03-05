@@ -1,3 +1,4 @@
+from django.db.models import Sum
 import numpy
 from matplotlib import pyplot, gridspec, ticker, cm, patches
 from scipy import cluster
@@ -856,18 +857,12 @@ def __mtd_call_max_bout_vol(mtds):
 	avg = mtds.aggregate(Avg('mtd_pct_max_bout_vol_total_etoh'))['mtd_pct_max_bout_vol_total_etoh__avg']
 	return avg, "Average Maximum Bout, as % of total intake"
 
-
-cohort_age_mtd_general_sets = [__mtd_call_gkg_etoh,
-							   __mtd_call_bec,
-							   __mtd_call_over_3gkg,
-							   __mtd_call_over_4gkg,
-							   __mtd_call_max_bout_vol,
-							   ]
-
-def create_age_mtd_graphs():
+def create_age_graphs():
 	import settings
 	output_path = settings.STATIC_ROOT
 	output_path = os.path.join(output_path, "images/christa/")
+	cohort_age_mtd_general_sets = \
+	[__mtd_call_gkg_etoh, __mtd_call_bec, __mtd_call_over_3gkg, __mtd_call_over_4gkg, __mtd_call_max_bout_vol, ]
 	for method in cohort_age_mtd_general_sets:
 		for phase in range(3):
 			fig = cohort_age_mtd_general(phase, method)
@@ -880,4 +875,50 @@ def create_age_mtd_graphs():
 		DPI = fig.get_dpi()
 		filename = output_path + '%s.Stage%d.png' % ("cohort_age_sessiontime", stage)
 		fig.savefig(filename, dpi=DPI)
+	for phase in range(3):
+		for hour in range(2):
+			fig = cohort_age_vol_hour(phase, hour)
+			DPI = fig.get_dpi()
+			filename = output_path + '%s.Phase%d.Hour%d.png' % ("cohort_age_vol_hour", phase, hour)
+			fig.savefig(filename, dpi=DPI)
 
+
+def cohort_age_vol_hour(phase, hours): # phase = 0-2
+	assert 0 <= phase <= 2
+	assert 0 < hours < 3
+	_7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a') # adolescents
+	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
+	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
+	cohorts = [_7a, _5, _4]
+	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
+	oa_phases = ['', 'eev_occurred__lte', 'eev_occurred__gt']
+	colors = ["orange", 'blue', 'green']
+	scatter_markers = ['+', 'x', '4']
+	titles = ["Open Access, 12 months", "Open Access, 1st Six Months", "Open Access, 2nd Six Months"]
+	titles = [t+", first %d hours" % hours for t in titles]
+
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot.set_title(titles[phase])
+	main_plot.set_xlabel("Age at first intox")
+	main_plot.set_ylabel("Daily Average Etoh Volume in First %d Hour%s" % (hours, '' if hours == 1 else 's'))
+
+	for index, cohort in enumerate(cohorts):
+		x = list()
+		y = list()
+		for monkey in cohort.monkey_set.exclude(mky_age_at_intox=None).exclude(mky_age_at_intox=0):
+			age = monkey.mky_age_at_intox / 365.25
+			x.append(age)
+
+			eevs = ExperimentEvent.objects.filter(dex_type='Open Access', monkey=monkey).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
+			eevs = eevs.filter(**{oa_phases[phase]: cohort_1st_oa_end[cohort]})
+			eevs = eevs.filter(eev_session_time__lt=hours*60*60)
+			eev_count = eevs.dates('eev_occurred', 'day').count()*1.
+			eev_vol = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+			value = eev_vol / eev_count
+			y.append(value)
+		main_plot.scatter(x, y, label=str(cohort), color=colors[index], marker=scatter_markers[index], s=150)
+	main_plot.legend(loc=0, scatterpoints=1)
+	return fig
