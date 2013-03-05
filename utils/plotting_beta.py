@@ -876,7 +876,7 @@ def create_age_graphs():
 		filename = output_path + '%s.Stage%d.png' % ("cohort_age_sessiontime", stage)
 		fig.savefig(filename, dpi=DPI)
 	for phase in range(3):
-		for hour in range(2):
+		for hour in range(1,3):
 			fig = cohort_age_vol_hour(phase, hour)
 			DPI = fig.get_dpi()
 			filename = output_path + '%s.Phase%d.Hour%d.png' % ("cohort_age_vol_hour", phase, hour)
