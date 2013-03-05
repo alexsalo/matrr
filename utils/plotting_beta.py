@@ -917,6 +917,10 @@ def __mtd_call_over_4gkg(mtds):
 	return count, "Days over 4 g/kg"
 
 def __mtd_call_max_bout_vol(mtds):
+	avg = mtds.aggregate(Avg('mtd_max_bout_vol'))['mtd_max_bout_vol__avg']
+	return avg, "Average Maximum Bout Volume"
+
+def __mtd_call_max_bout_vol_pct(mtds):
 	avg = mtds.aggregate(Avg('mtd_pct_max_bout_vol_total_etoh'))['mtd_pct_max_bout_vol_total_etoh__avg']
 	return avg, "Average Maximum Bout, as % of total intake"
 
@@ -925,7 +929,7 @@ def create_age_graphs():
 	output_path = settings.STATIC_ROOT
 	output_path = os.path.join(output_path, "images/christa/")
 	cohort_age_mtd_general_sets = \
-	[__mtd_call_gkg_etoh, __mtd_call_bec, __mtd_call_over_3gkg, __mtd_call_over_4gkg, __mtd_call_max_bout_vol, ]
+	[__mtd_call_gkg_etoh, __mtd_call_bec, __mtd_call_over_3gkg, __mtd_call_over_4gkg, __mtd_call_max_bout_vol, __mtd_call_max_bout_vol_pct]
 	for method in cohort_age_mtd_general_sets:
 		for phase in range(3):
 			fig = cohort_age_mtd_general(phase, method)
