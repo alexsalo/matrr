@@ -876,7 +876,7 @@ def create_age_graphs():
 		filename = output_path + '%s.Stage%d.png' % ("cohort_age_sessiontime", stage)
 		fig.savefig(filename, dpi=DPI)
 	for phase in range(3):
-		for hour in range(2):
+		for hour in range(1,3):
 			fig = cohort_age_vol_hour(phase, hour)
 			DPI = fig.get_dpi()
 			filename = output_path + '%s.Phase%d.Hour%d.png' % ("cohort_age_vol_hour", phase, hour)
@@ -913,7 +913,8 @@ def cohort_age_vol_hour(phase, hours): # phase = 0-2
 			x.append(age)
 
 			eevs = ExperimentEvent.objects.filter(dex_type='Open Access', monkey=monkey).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
-			eevs = eevs.filter(**{oa_phases[phase]: cohort_1st_oa_end[cohort]})
+			if phase:
+				eevs = eevs.filter(**{oa_phases[phase]: cohort_1st_oa_end[cohort]})
 			eevs = eevs.filter(eev_session_time__lt=hours*60*60)
 			eev_count = eevs.dates('eev_occurred', 'day').count()*1.
 			eev_vol = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
