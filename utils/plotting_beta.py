@@ -46,11 +46,11 @@ def cohorts_daytime_bouts_histogram():
 			x_axis.append(index)
 			labels.append(str(monkey.pk))
 			index += 1
-		index += 3
 		bin_edges = range(0, _22_hour, _1_hour)
 		n, bins, patches = main_plot.hist(y_axes, bins=bin_edges, normed=False, histtype='bar', alpha=.7, label=labels)
 		main_plot.axvspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
 		main_plot.legend(ncol=5, loc=9)
+		main_plot.set_ylim(ymax=1600)
 
 def cohorts_daytime_volbouts_bargraph():
 	cohorts = list()
@@ -112,6 +112,8 @@ def cohorts_daytime_volbouts_bargraph():
 		main_plot.xaxis.set_major_locator(ticker.LinearLocator(22))
 		xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
 		pyplot.setp(xtickNames, rotation=45)
+		main_plot.set_ylim(ymax=100000)
+
 
 def cohorts_daytime_bouts_boxplot():
 	cohorts = list()
@@ -582,7 +584,7 @@ def cohort_bec_day_distribution(cohort, stage):
 	return fig, True
 
 def cohorts_daytime_volbouts_bargraph_split(phase):
-	assert type(phase) == int and 0 < phase < 3
+	assert type(phase) == int and 0 <= phase <= 2
 	_7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a') # adolescents
 	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
 	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
@@ -601,7 +603,9 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 	lights_on = lights_out + _12_hour
 	diff = session_end - lights_on
 
+	title_append = " Phase %d Open Access" % phase if phase else "All Open Access"
 	width = 1
+	figures = list()
 	main_plot = None
 	for cohort in cohorts:
 		index = 0
@@ -611,7 +615,7 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 		main_gs = gridspec.GridSpec(3, 40)
 		main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 		main_plot = fig.add_subplot(main_gs[:,1:], sharey=main_plot)
-		main_plot.set_title(cohort.coh_cohort_name + " Phase %d Open Access Only" % phase)
+		main_plot.set_title(cohort.coh_cohort_name + title_append)
 		main_plot.set_xlabel("Hour of day")
 		main_plot.set_ylabel("Total vol etoh consumed during hour")
 
@@ -628,7 +632,8 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 				night_time.append(index)
 			for monkey in monkeys:
 				bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
-				bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
+				if phase:
+					bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
 				bout_vols = bouts.values_list('ebt_volume', flat=True)
 				bouts_sum = numpy.array(bout_vols).sum()
 	#			bout_starts = bout_starts - diff
@@ -645,9 +650,12 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 		main_plot.xaxis.set_major_locator(ticker.LinearLocator(22))
 		xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
 		pyplot.setp(xtickNames, rotation=45)
+		main_plot.set_ylim(ymax=100000)
+		figures.append((fig, cohort))
+	return figures
 
 def cohorts_daytime_bouts_histogram_split(phase):
-	assert type(phase) == int and 0 < phase < 3
+	assert type(phase) == int and 0 <= phase <= 2
 	_7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a') # adolescents
 	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
 	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
@@ -666,14 +674,17 @@ def cohorts_daytime_bouts_histogram_split(phase):
 	lights_on = lights_out + _12_hour
 	diff = session_end - lights_on
 
+	title_append = " Phase %d Open Access" % phase if phase else "All Open Access"
+	figures = list()
 	main_plot = None
 	for cohort in cohorts:
 		fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 		main_gs = gridspec.GridSpec(3, 40)
 		main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 		main_plot = fig.add_subplot(main_gs[:,:], sharey=main_plot)
-		main_plot.set_title(cohort.coh_cohort_name + " Phase %d Open Access Only" % phase)
-		main_plot.set_xlabel("Seconds of day, binned by hour")
+
+		main_plot.set_title(cohort.coh_cohort_name + title_append)
+		main_plot.set_xlabel("Hour of Session")
 		main_plot.set_ylabel("Total bout count during hour")
 		x_axis = list()
 		y_axes = list()
@@ -681,17 +692,28 @@ def cohorts_daytime_bouts_histogram_split(phase):
 		index = 0
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
 			bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey)
-			bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
+			if phase:
+				bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
 			bout_starts = bouts.values_list('ebt_start_time', flat=True)
 			bout_starts = numpy.array(bout_starts)
 			y_axes.append(bout_starts)
 			x_axis.append(index)
 			labels.append(str(monkey.pk))
 			index += 1
-		bin_edges = range(0, _22_hour, _1_hour)
+		bin_edges = range(0, _22_hour+1, _1_hour)
 		n, bins, patches = main_plot.hist(y_axes, bins=bin_edges, normed=False, histtype='bar', alpha=.7, label=labels)
 		main_plot.axvspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
 		main_plot.legend(ncol=5, loc=9)
+		main_plot.set_ylim(ymax=1600)
+
+		x_labels = ['hr %d' % i for i in range(1,23)]
+		new_xticks = range(0, _22_hour, _1_hour)
+		new_xticks = [_x + (_1_hour/2.) for _x in new_xticks]
+		main_plot.set_xticks(new_xticks)
+		xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
+		pyplot.setp(xtickNames, rotation=45)
+		figures.append((fig, cohort))
+	return figures
 
 def cohorts_scatterbox_split(phase):
 	assert type(phase) == int and 0 < phase < 3
@@ -801,6 +823,47 @@ def cohort_age_sessiontime(stage):
 	main_plot.set_ylim(ymin=0)
 	return fig
 
+def cohort_age_vol_hour(phase, hours): # phase = 0-2
+	assert 0 <= phase <= 2
+	assert 0 < hours < 3
+	_7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a') # adolescents
+	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
+	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
+	cohorts = [_7a, _5, _4]
+	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
+	oa_phases = ['', 'eev_occurred__lte', 'eev_occurred__gt']
+	colors = ["orange", 'blue', 'green']
+	scatter_markers = ['+', 'x', '4']
+	titles = ["Open Access, 12 months", "Open Access, 1st Six Months", "Open Access, 2nd Six Months"]
+	titles = [t+", first %d hours" % hours for t in titles]
+
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot.set_title(titles[phase])
+	main_plot.set_xlabel("Age at first intox")
+	main_plot.set_ylabel("Daily Average Etoh Volume in First %d Hour%s" % (hours, '' if hours == 1 else 's'))
+
+	for index, cohort in enumerate(cohorts):
+		x = list()
+		y = list()
+		for monkey in cohort.monkey_set.exclude(mky_age_at_intox=None).exclude(mky_age_at_intox=0):
+			age = monkey.mky_age_at_intox / 365.25
+			x.append(age)
+
+			eevs = ExperimentEvent.objects.filter(dex_type='Open Access', monkey=monkey).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
+			if phase:
+				eevs = eevs.filter(**{oa_phases[phase]: cohort_1st_oa_end[cohort]})
+			eevs = eevs.filter(eev_session_time__lt=hours*60*60)
+			eev_count = eevs.dates('eev_occurred', 'day').count()*1.
+			eev_vol = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+			value = eev_vol / eev_count
+			y.append(value)
+		main_plot.scatter(x, y, label=str(cohort), color=colors[index], marker=scatter_markers[index], s=150)
+	main_plot.legend(loc=0, scatterpoints=1)
+	return fig
+
 def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 	assert 0 <= phase <= 2
 	_7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a') # adolescents
@@ -882,44 +945,23 @@ def create_age_graphs():
 			filename = output_path + '%s.Phase%d.Hour%d.png' % ("cohort_age_vol_hour", phase, hour)
 			fig.savefig(filename, dpi=DPI)
 
+def create_christa_graphs():
+	import settings
+	output_path = settings.STATIC_ROOT
+	output_path = os.path.join(output_path, "images/christa/")
+	for i in range(3):
+		volbout_figs = cohorts_daytime_volbouts_bargraph_split(i)
+		bouts_figs = cohorts_daytime_bouts_histogram_split(i)
+		for fig, cohort in volbout_figs:
+			DPI = fig.get_dpi()
+			filename = output_path + '%s.%s.Phase%d.png' % ("cohorts_daytime_volbouts_bargraph_split", str(cohort), i)
+			fig.savefig(filename, dpi=DPI)
+		for fig, cohort in bouts_figs:
+			DPI = fig.get_dpi()
+			filename = output_path + '%s.%s.Phase%d.png' % ("cohorts_daytime_bouts_histogram_split", str(cohort), i)
+			fig.savefig(filename, dpi=DPI)
+	create_age_graphs()
 
-def cohort_age_vol_hour(phase, hours): # phase = 0-2
-	assert 0 <= phase <= 2
-	assert 0 < hours < 3
-	_7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a') # adolescents
-	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
-	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
-	cohorts = [_7a, _5, _4]
-	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
-	oa_phases = ['', 'eev_occurred__lte', 'eev_occurred__gt']
-	colors = ["orange", 'blue', 'green']
-	scatter_markers = ['+', 'x', '4']
-	titles = ["Open Access, 12 months", "Open Access, 1st Six Months", "Open Access, 2nd Six Months"]
-	titles = [t+", first %d hours" % hours for t in titles]
 
-	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
-	main_gs = gridspec.GridSpec(3, 40)
-	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
-	main_plot = fig.add_subplot(main_gs[:,:])
-	main_plot.set_title(titles[phase])
-	main_plot.set_xlabel("Age at first intox")
-	main_plot.set_ylabel("Daily Average Etoh Volume in First %d Hour%s" % (hours, '' if hours == 1 else 's'))
 
-	for index, cohort in enumerate(cohorts):
-		x = list()
-		y = list()
-		for monkey in cohort.monkey_set.exclude(mky_age_at_intox=None).exclude(mky_age_at_intox=0):
-			age = monkey.mky_age_at_intox / 365.25
-			x.append(age)
 
-			eevs = ExperimentEvent.objects.filter(dex_type='Open Access', monkey=monkey).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
-			if phase:
-				eevs = eevs.filter(**{oa_phases[phase]: cohort_1st_oa_end[cohort]})
-			eevs = eevs.filter(eev_session_time__lt=hours*60*60)
-			eev_count = eevs.dates('eev_occurred', 'day').count()*1.
-			eev_vol = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-			value = eev_vol / eev_count
-			y.append(value)
-		main_plot.scatter(x, y, label=str(cohort), color=colors[index], marker=scatter_markers[index], s=150)
-	main_plot.legend(loc=0, scatterpoints=1)
-	return fig
