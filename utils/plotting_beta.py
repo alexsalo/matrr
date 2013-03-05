@@ -405,6 +405,8 @@ def cohorts_scatterbox():
 	xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
 	pyplot.setp(xtickNames, rotation=45)
 
+#------
+
 def cohorts_bec_stage_scatter(stage):
 	cohorts = list()
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')) # adults
@@ -603,7 +605,7 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 	lights_on = lights_out + _12_hour
 	diff = session_end - lights_on
 
-	title_append = " Phase %d Open Access" % phase if phase else "All Open Access"
+	title_append = " Phase %d Open Access" % phase if phase else " All Open Access"
 	width = 1
 	figures = list()
 	main_plot = None
@@ -674,7 +676,7 @@ def cohorts_daytime_bouts_histogram_split(phase):
 	lights_on = lights_out + _12_hour
 	diff = session_end - lights_on
 
-	title_append = " Phase %d Open Access" % phase if phase else "All Open Access"
+	title_append = " Phase %d Open Access" % phase if phase else " All Open Access"
 	figures = list()
 	main_plot = None
 	for cohort in cohorts:
@@ -712,6 +714,60 @@ def cohorts_daytime_bouts_histogram_split(phase):
 		main_plot.set_xticks(new_xticks)
 		xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
 		pyplot.setp(xtickNames, rotation=45)
+		figures.append((fig, cohort))
+	return figures
+
+def cohorts_maxbouts_histogram(phase):
+	assert type(phase) == int and 0 <= phase <= 2
+	_7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a') # adolescents
+	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
+	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
+	cohorts = [_7a, _5, _4]
+	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
+	_phase = 'drinking_experiment__dex_date__gt' if phase == 2 else 'drinking_experiment__dex_date__lte'
+
+	_24_hour = 24*60*60
+	_22_hour = 22*60*60
+	_12_hour = 12*60*60
+	_7_hour = 7*60*60
+	_1_hour = 60*60
+	session_start = 0
+	session_end = session_start + _22_hour
+	lights_out = session_start + _7_hour
+	lights_on = lights_out + _12_hour
+	diff = session_end - lights_on
+
+	title_append = " Phase %d Open Access" % phase if phase else " All Open Access"
+	figures = list()
+	main_plot = None
+	for cohort in cohorts:
+		fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+		main_gs = gridspec.GridSpec(3, 40)
+		main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+		main_plot = fig.add_subplot(main_gs[:,:], sharey=main_plot)
+
+		main_plot.set_title(cohort.coh_cohort_name + title_append)
+		main_plot.set_xlabel("Maximum Bout Volume")
+		main_plot.set_ylabel("Bout Count")
+		y_axes = list()
+		labels = list()
+		max_bout = 0
+		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
+			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment__dex_type='Open Access', monkey=monkey)
+			if phase:
+				mtds = mtds.filter(**{_phase:cohort_1st_oa_end[cohort]})
+			mtd_maxes = mtds.values_list('mtd_max_bout_vol', flat=True)
+			mtd_maxes = numpy.array(mtd_maxes)
+			try:
+				max_bout = max_bout if max_bout > mtd_maxes.max() else mtd_maxes.max()
+			except:
+				continue
+			y_axes.append(mtd_maxes)
+			labels.append(str(monkey.pk))
+		bin_max = 900
+		bin_edges = range(0, bin_max, 100)
+		n, bins, patches = main_plot.hist(y_axes, bins=bin_edges, normed=False, histtype='bar', alpha=.7, label=labels)
+		main_plot.legend(ncol=5, loc=9)
 		figures.append((fig, cohort))
 	return figures
 
@@ -864,6 +920,7 @@ def cohort_age_vol_hour(phase, hours): # phase = 0-2
 	main_plot.legend(loc=0, scatterpoints=1)
 	return fig
 
+#--
 def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 	assert 0 <= phase <= 2
 	_7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a') # adolescents
@@ -923,6 +980,7 @@ def __mtd_call_max_bout_vol(mtds):
 def __mtd_call_max_bout_vol_pct(mtds):
 	avg = mtds.aggregate(Avg('mtd_pct_max_bout_vol_total_etoh'))['mtd_pct_max_bout_vol_total_etoh__avg']
 	return avg, "Average Maximum Bout, as % of total intake"
+#--
 
 def create_age_graphs():
 	import settings
@@ -955,6 +1013,7 @@ def create_christa_graphs():
 	for i in range(3):
 		volbout_figs = cohorts_daytime_volbouts_bargraph_split(i)
 		bouts_figs = cohorts_daytime_bouts_histogram_split(i)
+		maxbout_figs = cohorts_maxbouts_histogram(i)
 		for fig, cohort in volbout_figs:
 			DPI = fig.get_dpi()
 			filename = output_path + '%s.%s.Phase%d.png' % ("cohorts_daytime_volbouts_bargraph_split", str(cohort), i)
@@ -962,6 +1021,10 @@ def create_christa_graphs():
 		for fig, cohort in bouts_figs:
 			DPI = fig.get_dpi()
 			filename = output_path + '%s.%s.Phase%d.png' % ("cohorts_daytime_bouts_histogram_split", str(cohort), i)
+			fig.savefig(filename, dpi=DPI)
+		for fig, cohort in maxbout_figs:
+			DPI = fig.get_dpi()
+			filename = output_path + '%s.%s.Phase%d.png' % ("cohorts_maxbouts_histogram", str(cohort), i)
 			fig.savefig(filename, dpi=DPI)
 	create_age_graphs()
 
