@@ -933,7 +933,6 @@ def create_age_graphs():
 	for method in cohort_age_mtd_general_sets:
 		for phase in range(3):
 			fig = cohort_age_mtd_general(phase, method)
-
 			DPI = fig.get_dpi()
 			filename = output_path + '%s.Phase%d.png' % (method.__name__, phase)
 			fig.savefig(filename, dpi=DPI)

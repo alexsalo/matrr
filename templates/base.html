@@ -106,7 +106,7 @@
 							<li class='drop-down'><a href="{% url tools-bec %}">BEC</a></li>
 						{% endif %}
 {% endcomment %}
-						{% if user.is_superuser %}
+						{% if user.is_staff %}
 							<li class='drop-down'><a href="{% url tools-sandbox %}">Sandbox</a></li>
 						{% endif %}
 					</ul>

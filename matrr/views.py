@@ -2603,7 +2603,7 @@ def tools_cohort_genealogy(request, coh_id):
 	context['genealogy_form'] = GenealogyParentsForm(subject_queryset=cohort_monkeys)
 	return render_to_response('matrr/tools/genealogy/parent_select.html', context, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
+@user_passes_test(lambda u: u.is_staff, login_url='/denied/')
 def tools_sandbox(request):
 	base = settings.STATIC_ROOT + '/images/christa/'
 	_files = os.listdir(base)
