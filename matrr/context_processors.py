@@ -37,7 +37,8 @@ def global_context(request):
 
 
 def unsupported_browser(request):
-	if 'MSIE' in request.META['HTTP_USER_AGENT'] and 'chromeframe' not in request.META['HTTP_USER_AGENT']:
+	hua = request.META.get('HTTP_USER_AGENT', '')
+	if 'MSIE' in hua and 'chromeframe' not in hua:
 		return {'unsupported_browser' : request.META['HTTP_USER_AGENT']}
 	else:
 		return {}
