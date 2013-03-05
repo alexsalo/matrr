@@ -651,7 +651,11 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 		xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
 		pyplot.setp(xtickNames, rotation=45)
 		main_plot.set_ylim(ymax=100000)
+<<<<<<< HEAD
 		figures.append((fig, cohort))
+=======
+		figures.append(fig)
+>>>>>>> 73b2446aafee9a1bb157f9144dd771b35a2dc3ef
 	return figures
 
 def cohorts_daytime_bouts_histogram_split(phase):
@@ -712,7 +716,11 @@ def cohorts_daytime_bouts_histogram_split(phase):
 		main_plot.set_xticks(new_xticks)
 		xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
 		pyplot.setp(xtickNames, rotation=45)
+<<<<<<< HEAD
 		figures.append((fig, cohort))
+=======
+		figures.append(fig)
+>>>>>>> 73b2446aafee9a1bb157f9144dd771b35a2dc3ef
 	return figures
 
 def cohorts_scatterbox_split(phase):
