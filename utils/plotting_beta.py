@@ -807,7 +807,7 @@ def cohort_age_sessiontime(stage):
 	for index, cohort in enumerate(cohorts):
 		x = list()
 		y = list()
-		for monkey in cohort.monkey_set.exclude(mky_age_at_intox=None):
+		for monkey in cohort.monkey_set.exclude(mky_age_at_intox=None).exclude(mky_age_at_intox=0):
 			age = monkey.mky_age_at_intox / 365.25
 			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment__dex_type='Induction')
 			mtds = mtds.filter(mtd_etoh_g_kg__gte=stage_start).filter(mtd_etoh_g_kg__lte=stage_end)
