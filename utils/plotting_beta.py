@@ -789,7 +789,7 @@ def cohort_age_sessiontime(stage):
 	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
 	cohorts = [_7a, _5, _4]
 	colors = ["orange", 'blue', 'green']
-	scatter_markers = ['+', 'x', '4']
+	scatter_markers = ['s', 'D', 'v']
 
 	starts = [0, .9, 1.4]
 	ends = [.6, 1.1, 1.6]
@@ -833,7 +833,7 @@ def cohort_age_vol_hour(phase, hours): # phase = 0-2
 	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	oa_phases = ['', 'eev_occurred__lte', 'eev_occurred__gt']
 	colors = ["orange", 'blue', 'green']
-	scatter_markers = ['+', 'x', '4']
+	scatter_markers = ['s', 'D', 'v']
 	titles = ["Open Access, 12 months", "Open Access, 1st Six Months", "Open Access, 2nd Six Months"]
 	titles = [t+", first %d hours" % hours for t in titles]
 
@@ -873,7 +873,7 @@ def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	oa_phases = ['', 'drinking_experiment__dex_date__lte', 'drinking_experiment__dex_date__gt']
 	colors = ["orange", 'blue', 'green']
-	scatter_markers = ['+', 'x', '4']
+	scatter_markers = ['s', 'D', 'v']
 	titles = ["Open Access, 12 months", "Open Access, 1st Six Months", "Open Access, 2nd Six Months"]
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
