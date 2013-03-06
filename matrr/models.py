@@ -814,7 +814,7 @@ class ExperimentEvent(models.Model):
 			previous_pellets = previous_events.filter(eev_event_type=ExperimentEventType.Pellet)
 			pellet_max = previous_pellets.aggregate(Max('eev_occurred'))['eev_occurred__max']
 			time_diff = current-pellet_max
-			#self.eev_pellet_elapsed_time_since_last = time_diff.seconds
+			self.eev_pellet_elapsed_time_since_last = time_diff.seconds
 			self.save()
 
 	class Meta:
