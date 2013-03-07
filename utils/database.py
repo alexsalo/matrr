@@ -2029,10 +2029,10 @@ def find_outlier_datapoints(cohort, stdev_min):
 
 def populate_seconds_since_pellet(monkeys=None):
 	if not monkeys:
-		monkeys = ExperimentEvent.objects.filter(eev_seconds_since_last_pellet=None)
+		monkeys = ExperimentEvent.objects.filter(eev_pellet_elapsed_time_since_last=None)
 	for monkey in monkeys:
 		results = list()
-		eevs = ExperimentEvent.objects.filter(monkey=monkey, eev_seconds_since_last_pellet=None).values('eev_id', 'eev_occurred', 'eev_event_type').order_by('eev_occurred')
+		eevs = ExperimentEvent.objects.filter(monkey=monkey, eev_pellet_elapsed_time_since_last=None).values('eev_id', 'eev_occurred', 'eev_event_type').order_by('eev_occurred')
 		last_pellet = None
 		for eev in eevs:
 			if last_pellet == None:
