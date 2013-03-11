@@ -1612,28 +1612,35 @@ class Request(models.Model, DiffingMixin):
 			return ''
 
 	def is_rud_overdue(self):
+		return bool(self.get_rud_weeks_overdue())
+
+	def get_rud_weeks_overdue(self):
 		today = date.today()
+		grace_period = 0
 		try:
 			latest_rud = self.rud_set.order_by('-rud_date')[0]
 			age = (today - latest_rud.rud_date).days
+			if latest_rud.rud_progress == ResearchProgress.NoProgress:
+				grace_period = 45
+			if latest_rud.rud_progress == ResearchProgress.InProgress:
+				grace_period = 90
 		except IndexError:
 			max_shipment = self.get_max_shipment()
 			if not max_shipment:
-				return False # nothing shipped yet
+				return 0 # nothing shipped yet
 			age = (today - max_shipment.shp_shipment_date).days
-			return age > 90 # if no updates exist, request is only overdue if it has been over 90 days since the last shipment
+			grace_period = 90
 
-		if age > 45 and latest_rud.rud_progress == ResearchProgress.NoProgress:
-			return True
-		if age > 90 and latest_rud.rud_progress == ResearchProgress.InProgress:
-			return True
-		return False
+		age_overdue = age - grace_period
+		weeks_overdue = int(age_overdue / 7)
+		return weeks_overdue
 
 	def get_overdue_rud_color(self):
-		if self.req_report_asked_count >= 3:
-					return 'red'
-		elif self.req_report_asked_count <= 0:
-					return ''
+		weeks_overdue = self.get_rud_weeks_overdue()
+		if weeks_overdue >= 3:
+			return 'red'
+		elif weeks_overdue <= 0:
+			return ''
 		else:
 			return 'orange'
 
