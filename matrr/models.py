@@ -14,7 +14,7 @@ from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.core.urlresolvers import reverse
 from django.dispatch import receiver
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
@@ -1610,6 +1610,24 @@ class Request(models.Model, DiffingMixin):
 			return self.shipments.all().order_by('-shp_shipment_date')[0]
 		except IndexError:
 			return ''
+
+	def is_rud_overdue(self):
+		today = date.today()
+		try:
+			latest_rud = self.rud_set.order_by('-rud_date')[0]
+			age = (today - latest_rud.rud_date).days
+		except IndexError:
+			max_shipment = self.get_max_shipment()
+			if not max_shipment:
+				return False # nothing shipped yet
+			age = (today - max_shipment.shp_shipment_date)
+			return age > 90 # if no updates exist, request is only overdue if it has been over 90 days since the last shipment
+
+		if age > 45 and latest_rud.rud_progress == ResearchProgress.NoProgress:
+			return True
+		if age > 90 and latest_rud.rud_progress == ResearchProgress.InProgress:
+			return True
+		return False
 
 	def get_overdue_rud_color(self):
 		if self.req_report_asked_count >= 3:
