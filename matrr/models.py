@@ -1620,7 +1620,7 @@ class Request(models.Model, DiffingMixin):
 			max_shipment = self.get_max_shipment()
 			if not max_shipment:
 				return False # nothing shipped yet
-			age = (today - max_shipment.shp_shipment_date)
+			age = (today - max_shipment.shp_shipment_date).days
 			return age > 90 # if no updates exist, request is only overdue if it has been over 90 days since the last shipment
 
 		if age > 45 and latest_rud.rud_progress == ResearchProgress.NoProgress:
