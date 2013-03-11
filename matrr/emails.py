@@ -140,10 +140,13 @@ def urge_po_mta():
 
 # regular_tasks
 def urge_progress_reports():
+	way_overdue = False
 	shipped_requests = Request.objects.shipped().exclude(rud_set__rud_progress=ResearchProgress.Complete)
 	for req in shipped_requests:
 		if not req.is_rud_overdue():
 			continue
+		else:
+			way_overdue = way_overdue or req.get_rud_weeks_overdue() >= 2
 		from_email = Account.objects.get(user__username='matrr_admin').email
 		recipients = [req.user.email,]
 
@@ -161,8 +164,7 @@ def urge_progress_reports():
 		if ret > 0:
 			print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
 
-	way_overdues = ship_to_report_req.filter(req_request__req_report_asked_count__gte=2)
-	if way_overdues.count() and today.isocalendar()[1] % 2 == 0: # there exist overdue updates, and today is an even week of the year
+	if way_overdue and date.today().isocalendar()[1] % 2 == 0: # there exist overdue updates, and today is an even week of the year
 		from_email = Account.objects.get(user__username='matrr_admin').email
 		recipients = [user.email for user in Group.objects.get(name='Uberuser').user_set.all()]
 		subject = 'Overdue Progress Report'
