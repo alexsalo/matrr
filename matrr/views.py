@@ -2085,7 +2085,7 @@ def tools_landing(request):
 		except IndexError:
 			# no images to show.  ignore.
 			pass
-	return render_to_response('matrr/tools/sandbox.html', {'mky_images': mky_images, 'coh_images': coh_images}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/landing.html', {'mky_images': mky_images, 'coh_images': coh_images}, context_instance=RequestContext(request))
 
 def __tools_landing(request): # deprecated
 	if request.method == "POST":

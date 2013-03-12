@@ -1,16 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-	<div class=large-headline>Tools</div>
-	<form action='' method='post'>
-		{% csrf_token %}
-		<div class=small>Choose what type of data to analyze</div>
-		<br>
-		<input type="radio" name="dataset" value="protein" checked="checked">Access protein-associated data tools<br>
-		{% if perms.matrr.view_vip_images %}
-			<input type="radio" name="dataset" value="etoh">Access ethanol-associated data tools<br>
-			<input type="radio" name="dataset" value="bec">Access BEC-associated data tools<br>
-		{% endif %}
-		<br>
-		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
-	</form>
+    {% if coh_images %}
+        <div class=large-headline>Cohort Graph Tools</div>
+        <div class=small>These are graphs whose primary subject is a single cohort.</div>
+        <br>
+        {% for cig in coh_images %}
+            <div class="image_container">
+                <div class="image_thumbnail left">
+                    <a rel="plot_gallery" href="{{ cig.html_fragment.url }}" target="_blank">
+                        <img src="{{ cig.thumbnail.url }}" width="240px">
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    <div class=clearfix></div>
+    {% if mky_images %}
+        <div class=large-headline>Monkey Graph Tools</div>
+        <div class=small>These are graphs whose primary subject is one or more monkeys.</div>
+        <br>
+        {% for mig in mky_images %}
+            <div class="image_container">
+                <div class="image_thumbnail left">
+                    <a rel="plot_gallery" href="{{ mig.html_fragment.url }}" target="_blank">
+                        <img src="{{ mig.thumbnail.url }}" width="240px">
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
 {% endblock %}
