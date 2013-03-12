@@ -1,32 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
     {% if coh_images %}
-        <div class=large-headline>Cohort Graph Tools</div>
-        <div class=small>These are graphs whose primary subject is a single cohort.</div>
-        <br>
-        {% for cig in coh_images %}
-            <div class="image_container">
-                <div class="image_thumbnail left">
-                    <a rel="plot_gallery" href="{{ cig.html_fragment.url }}" target="_blank">
-                        <img src="{{ cig.thumbnail.url }}" width="240px">
-                    </a>
+		<form action='' method='post'>
+			{% csrf_token %}
+            <div class=large-headline>Cohort Graph Tools</div>
+            <div class=small>These are graphs whose primary subject is a single cohort.</div>
+            <br>
+            {% for cig in coh_images %}
+                <div class="image_container">
+                    <div class="image_thumbnail left" style="margin: 10px;">
+                        <a rel="plot_gallery" href="{{ cig.html_fragment.url }}" target="_blank">
+                            <img src="{{ cig.thumbnail.url }}" width="210px">
+                        </a>
+                        <button type='submit' name='cohort_method' value='{{ cig.method }}' class="blockLinkToolsButton">{{ cig.title }}</button>
+                    </div>
                 </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+		</form>
     {% endif %}
     <div class=clearfix></div>
     {% if mky_images %}
-        <div class=large-headline>Monkey Graph Tools</div>
-        <div class=small>These are graphs whose primary subject is one or more monkeys.</div>
-        <br>
-        {% for mig in mky_images %}
-            <div class="image_container">
-                <div class="image_thumbnail left">
-                    <a rel="plot_gallery" href="{{ mig.html_fragment.url }}" target="_blank">
-                        <img src="{{ mig.thumbnail.url }}" width="240px">
-                    </a>
+		<form action='' method='post'>
+			{% csrf_token %}
+            <div class=large-headline>Monkey Graph Tools</div>
+            <div class=small>These are graphs whose primary subject is one or more monkeys.</div>
+            <br>
+            {% for mig in mky_images %}
+                <div class="image_container">
+                    <div class="image_thumbnail left" style="margin: 10px;">
+                        <a rel="plot_gallery" href="{{ mig.html_fragment.url }}" target="_blank">
+                            <img src="{{ mig.thumbnail.url }}" width="210px">
+                        </a>
+                        <button type='submit' name='monkey_method' value='{{ mig.method }}' class="blockLinkToolsButton">{{ mig.title }}</button>
+                    </div>
                 </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+		</form>
     {% endif %}
 {% endblock %}
