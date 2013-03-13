@@ -127,7 +127,7 @@
 					</div>
 				{% endif %}
 
-				{% if not req_request.user.account.has_overdue_rud %}
+				{% if req_request.user.account.has_overdue_rud %}
 					<div class='messages clearfix'>
 						<div class="error">User has not submitted research updates for past requests.</div>
 					</div>
