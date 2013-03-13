@@ -518,11 +518,11 @@ class Account(models.Model):
 		return False
 
 	def has_overdue_rud(self):
-		from datetime import date, timedelta
-		urge_rud_from = date.today() - timedelta(days=90)
-		urged_rud = Shipment.objects.filter(req_request__user=self.user, shp_shipment_date__lte=urge_rud_from,
-											req_request__rud_set=None)
-		return bool(urged_rud)
+		requests = Request.objects.filter(user=self.user)
+		for req in requests:
+			if req.is_rud_overdue():
+				return True
+		return False
 
 	def save(self, *args, **kwargs):
 		super(Account, self).save(*args, **kwargs)
