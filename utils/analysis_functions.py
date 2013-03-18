@@ -93,7 +93,7 @@ def monkey_volumetric_monteFA():
 
 			for key, fa_o in zip(monkeys, output_convert):
 				output[key].append(fa_o)
-			if i % 1000 = 0:
+			if i % 1000 == 0:
 				print "Pass %d complete. %d node exceptions, %d value exceptions." % (i, node_exception_count, valueerror_exception_count)
 		return output
 
