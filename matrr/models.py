@@ -1618,6 +1618,8 @@ class Request(models.Model, DiffingMixin):
 		today = date.today()
 		grace_period = 0
 		try:
+			if self.rud_set.filter(rud_progress=ResearchProgress.Complete).count():
+				return 0
 			latest_rud = self.rud_set.order_by('-rud_date')[0]
 			age = (today - latest_rud.rud_date).days
 			if latest_rud.rud_progress == ResearchProgress.NoProgress:
