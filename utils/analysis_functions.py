@@ -1,7 +1,9 @@
 __author__ = 'jarquet'
 
 def monkey_volumetric_monteFA():
-	import mdp, json
+	import mdp
+	import json
+	import numpy
 	from random import randint
 	fan = mdp.nodes.FANode
 
@@ -61,6 +63,7 @@ def monkey_volumetric_monteFA():
 					monkeys.append(real_id)
 
 			fa = mdp.nodes.FANode()
+			data = numpy.array(list)
 			fa_output = fa.execute(data)
 
 			output_convert = list()
