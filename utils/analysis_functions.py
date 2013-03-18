@@ -4,8 +4,8 @@ def monkey_volumetric_monteFA():
 	import mdp
 	import json
 	import numpy
+	import time
 	from random import randint
-	fan = mdp.nodes.FANode
 
 	_6dict = dict()
 	_12dict = dict()
@@ -46,25 +46,43 @@ def monkey_volumetric_monteFA():
 	_12dict[23784] = [ -0.0003, -16.755, -47.32,33.5, -39.485,0.004,81.5,139.7, -0.003,0, ]
 	
 	def monte_carlo(input, more_input=None):
-		output = dict()
 		keys = input.keys()
+		output = dict()
+		for key in keys:
+			output[key] = list()
 		input_length = len(keys)
 		for i in range(15):# * 1000, num of iterations
-			data = list()
-			monkeys = list()
-			for j in range(randint(1, input_length)):# monkeys per sample, randint includes both endpoints
-				id_index = randint(0, input_length-1)
-				real_id = keys[id_index]
-				if more_input and randint(0, 1): # randomly choose which input dictionary, if 2nd input dictionary exist
-					data.append(more_input[real_id])
-					monkeys.append(real_id)
-				else:
-					data.append(input[real_id])
-					monkeys.append(real_id)
+			def sample_data():
+				data = list()
+				monkeys = list()
+				for j in range(randint(5, 10)):# monkeys per sample, randint includes both endpoints
+					id_index = randint(0, input_length-1)
+					real_id = keys[id_index]
+					if real_id in monkeys:
+						continue # cannot have duplicate rows in the factor analysis
+					if more_input and randint(0, 1): # randomly choose which input dictionary, if 2nd input dictionary exist
+						data.append(more_input[real_id])
+						monkeys.append(real_id)
+					else:
+						data.append(input[real_id])
+						monkeys.append(real_id)
 
-			fa = mdp.nodes.FANode()
-			data = numpy.array(list)
-			fa_output = fa.execute(data)
+				data = numpy.array(data)
+				return data, monkeys
+
+			while True:
+				data, monkeys = sample_data()
+				fa = mdp.nodes.FANode()
+				try:
+					fa_output = fa.execute(data)
+				except mdp.NodeException as m:
+					print m.message
+					continue
+				except ValueError as m:
+					print m.message
+					continue
+				else:
+					break
 
 			output_convert = list()
 			for row in fa_output:
@@ -72,6 +90,7 @@ def monkey_volumetric_monteFA():
 
 			for key, fa_o in zip(monkeys, output_convert):
 				output[key].append(fa_o)
+			print "Pass %d complete" % i
 		return output
 
 	six_month_output = monte_carlo(_6dict)
