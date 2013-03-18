@@ -1612,7 +1612,7 @@ class Request(models.Model, DiffingMixin):
 			return ''
 
 	def is_rud_overdue(self):
-		return bool(self.get_rud_weeks_overdue())
+		return self.get_rud_weeks_overdue() > 0
 
 	def get_rud_weeks_overdue(self):
 		today = date.today()
