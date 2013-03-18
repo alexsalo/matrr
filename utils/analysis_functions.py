@@ -50,7 +50,10 @@ def monkey_volumetric_monteFA():
 		output = dict()
 		for key in keys:
 			output[key] = list()
+
 		input_length = len(keys)
+		node_exception_count = 0
+		valueerror_exception_count = 0
 		for i in range(15*1000):# * 1000, num of iterations
 			def sample_data():
 				data = list()
@@ -76,10 +79,10 @@ def monkey_volumetric_monteFA():
 				try:
 					fa_output = fa.execute(data)
 				except mdp.NodeException as m:
-					print m.message
+					node_exception_count += 1
 					continue
 				except ValueError as m:
-					print m.message
+					valueerror_exception_count += 1
 					continue
 				else:
 					break
@@ -90,7 +93,8 @@ def monkey_volumetric_monteFA():
 
 			for key, fa_o in zip(monkeys, output_convert):
 				output[key].append(fa_o)
-			print "Pass %d complete" % i
+			if i % 1000 = 0:
+				print "Pass %d complete. %d node exceptions, %d value exceptions." % (i, node_exception_count, valueerror_exception_count)
 		return output
 
 	six_month_output = monte_carlo(_6dict)
