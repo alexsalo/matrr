@@ -1628,7 +1628,7 @@ class Request(models.Model, DiffingMixin):
 				grace_period = 90
 		except IndexError:
 			max_shipment = self.get_max_shipment()
-			if not max_shipment:
+			if not max_shipment or not max_shipment.shp_shipment_date:
 				return 0 # nothing shipped yet
 			age = (today - max_shipment.shp_shipment_date).days
 			grace_period = 90
