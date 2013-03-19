@@ -1875,8 +1875,6 @@ def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
 	ax1.set_ylabel("Standard deviation from cohort mean")
 
 	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
-	lines = []
-	line_labels = []
 	for index, protein in enumerate(proteins):
 		dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
 		y_values = []
@@ -1891,26 +1889,27 @@ def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
 			else:
 				dates = dates.exclude(mpn_date=date)
 
-		color_map = pyplot.get_cmap('gist_rainbow')
+		color_map = get_cmap('gist_rainbow')
 		color = color_map(1.*index/len(proteins))
-		lines.append(ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=8, markeredgecolor=color))
-		line_labels.append(str(protein.pro_abbrev))
+		ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=8, markeredgecolor=color, label=str(protein.pro_abbrev))
 
-	oldylims = ax1.ylim()
+	oldylims = ax1.get_ylim()
 	y_min = min(oldylims[0], -1 * oldylims[1])
 	y_max = max(oldylims[1], -1 * oldylims[0])
-	ax1.ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
+	ax1.set_ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
 
 	# rotate the xaxis labels
-	ax1.set_xticks(dates, [str(date.date()) for date in dates], rotation=45)
+	xticks = [date.date() for date in dates]
+	xtick_labels = [str(date.date()) for date in dates]
+	ax1.set_xticks(xticks)
+	ax1.set_xticklabels(xtick_labels, rotation=45)
 
 	# Shink current axis by 20%
 	box = ax1.get_position()
 	ax1.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
 	# Put a legend to the right of the current axis
-	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
-
+	ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 	return fig, False
 
 def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
@@ -1938,8 +1937,6 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 	ax1.set_ylabel("Percent deviation from cohort mean")
 
 	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
-	lines = []
-	line_labels = []
 	for index, protein in enumerate(proteins):
 		dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
 		y_values = []
@@ -1954,26 +1951,27 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 			else:
 				dates = dates.exclude(mpn_date=date)
 
-		color_map = ax1.get_cmap('gist_rainbow')
+		color_map = get_cmap('gist_rainbow')
 		color = color_map(1.*index/len(proteins))
-		lines.append(ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=8, markeredgecolor=color))
-		line_labels.append(str(protein.pro_abbrev))
+		ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=8, markeredgecolor=color, label=str(protein.pro_abbrev))
 
-	oldylims = ax1.ylim()
+	oldylims = ax1.get_ylim()
 	y_min = min(oldylims[0], -1 * oldylims[1])
 	y_max = max(oldylims[1], -1 * oldylims[0])
-	ax1.ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
+	ax1.set_ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
 
 	# rotate the xaxis labels
-	ax1.set_xticks(dates, [str(date.date()) for date in dates], rotation=45)
+	xticks = [date.date() for date in dates]
+	xtick_labels = [str(date.date()) for date in dates]
+	ax1.set_xticks(xticks)
+	ax1.set_xticklabels(xtick_labels, rotation=45)
 
 	# Shink current axis by 20%
 	box = ax1.get_position()
 	ax1.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
 	# Put a legend to the right of the current axis
-	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
-
+	ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 	return fig, False
 
 def monkey_protein_value(monkey, proteins, afternoon_reading=None):
@@ -2003,9 +2001,6 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 
 #	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
 
-	lines = []
-	line_labels = []
-
 	dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
 	y_values = []
 	for date in dates:
@@ -2020,11 +2015,13 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 			dates = dates.exclude(mpn_date=date)
 
 	color = 'black'
-	lines.append(ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=10))
-	line_labels.append(str(protein.pro_abbrev))
+	ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=10, label=str(protein.pro_abbrev))
 
 	# rotate the xaxis labels
-	ax1.set_xticks(dates, [str(date.date()) for date in dates], rotation=45)
+	xticks = [date.date() for date in dates]
+	xtick_labels = [str(date.date()) for date in dates]
+	ax1.set_xticks(xticks)
+	ax1.set_xticklabels(xtick_labels, rotation=45)
 
 	# Shink current axis by width% to fit the legend
 	box = ax1.get_position()
@@ -2032,8 +2029,7 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 	ax1.set_position([box.x0, box.y0, box.width * width, box.height])
 
 	# Put a legend to the right of the current axis
-	ax1.legend(lines, line_labels, loc='center left', bbox_to_anchor=(1, 0.5))
-
+	ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 	return fig, False
 
 
