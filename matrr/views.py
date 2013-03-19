@@ -2118,7 +2118,7 @@ def tools_cohort_protein(request, coh_id):
 	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
 
 	if request.method == 'POST':
-		subject_select_form = GraphSubjectSelectForm(monkey_queryset, data=request.POST)
+		subject_select_form = ProteinGraphSubjectSelectForm(monkey_queryset, data=request.POST)
 		if subject_select_form.is_valid():
 			subject = subject_select_form.cleaned_data['subject']
 			if subject == 'monkey':
@@ -2152,7 +2152,7 @@ def tools_cohort_protein(request, coh_id):
 						messages.warning(request, "This data file has already been created for you.  It is available to download on your account page.")
 				else:
 					messages.warning(request, "You must have a valid MTA on record to download data.  MTA information can be updated on your account page.")
-	return render_to_response('matrr/tools/protein.html', {'subject_select_form': GraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/protein.html', {'subject_select_form': ProteinGraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
 
 def _verify_monkeys(text_monkeys):
 	monkey_keys = text_monkeys.split('-')
@@ -2501,70 +2501,6 @@ def tools_monkey_bec_graphs(request, monkey_method, coh_id):
 	else:
 		context['monkey_select_form'] = GraphToolsMonkeySelectForm(drinking_monkeys)
 		context['experiment_range_form'] = BECRangeForm()
-
-	return render_to_response('matrr/tools/bec_monkey.html', context, context_instance=RequestContext(request))
-
-def __tools_monkey_bec_graphs(request, coh_id):
-	cohort = get_object_or_404(Cohort, pk=coh_id)
-	context = {'cohort': cohort}
-	plot_choices = plotting.fetch_plot_choices('monkey', request.user, cohort, 'bec')
-	plot_method = ''
-
-	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
-		monkeys = _verify_monkeys(request.GET['monkeys'])
-		get_m = list()
-		if monkeys:
-			for m in monkeys.values_list('mky_id', flat=True):
-				get_m.append(`m`)
-
-			text_monkeys = "-".join(get_m)
-		else:
-			text_monkeys = ""
-		context['plot_select_form'] = PlotSelectForm(plot_choices, initial={'plot_method': plot_method})
-		context['experiment_range_form'] = BECRangeForm_monkeys(text_monkeys)
-
-	elif request.method == 'POST':
-		experiment_range_form = BECRangeForm_monkeys(data=request.POST)
-		plot_form = PlotSelectForm(plot_choices, data=request.POST)
-
-		if experiment_range_form.is_valid() and plot_form.is_valid():
-			from_date = to_date = ''
-			experiment_range = experiment_range_form.cleaned_data['range']
-			if experiment_range == 'custom':
-				from_date = str(experiment_range_form.cleaned_data['from_date'])
-				to_date = str(experiment_range_form.cleaned_data['to_date'])
-				experiment_range = None
-
-			sample_before = sample_after = ''
-			sample_range = experiment_range_form.cleaned_data['sample_range']
-			if sample_range == 'morning':
-				sample_before = '14:00'
-			if sample_range == 'afternoon':
-				sample_after = '14:00'
-
-			monkeys = _verify_monkeys(experiment_range_form.cleaned_data['monkeys'])
-			plot_method = plot_form.cleaned_data['plot_method']
-			title = plotting.MONKEY_PLOTS[plot_method][1]
-			params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range, 'sample_before': sample_before, 'sample_after': sample_after}
-			graphs = list()
-			for monkey in monkeys:
-				mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, title=title, method=plot_method, parameters=str(params))
-				if mig.pk:
-					graphs.append(mig)
-			if not graphs:
-				messages.info(request, "No graphs could be made with these settings.")
-			else:
-				context['graphs'] = graphs
-		else:
-			if len(experiment_range_form.errors) + len(plot_form.errors) > 1:
-				raise Http404()
-			monkeys = experiment_range_form.data['monkeys']
-
-		context['monkeys'] = monkeys
-		context['experiment_range_form'] = experiment_range_form
-		context['plot_select_form'] = plot_form
-	else:
-		raise Http404()
 
 	return render_to_response('matrr/tools/bec_monkey.html', context, context_instance=RequestContext(request))
 

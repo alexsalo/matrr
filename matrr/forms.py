@@ -22,17 +22,6 @@ PREP_CHOICES = (('', '---------'),
 
 def trim_help_text(text):
 	return re.sub(r' Hold down .*$', '', text)
-#
-#class MonkeySelectForm(forms.Form):
-#	monkeys = forms.ModelMultipleChoiceField(queryset = Monkey.objects.all(),required=True, widget=CheckboxSelectMultipleSelectAll())
-#
-#	def __init__(self, cohort, **kwargs):
-#		super(MonkeySelectForm, self).__init__(**kwargs)
-#		self.monkeys.queryset = Monkey.objects.filter(cohort=cohort) 
-
-
-#from django.forms.util import ErrorList
-# 
 class OtOAcountForm(forms.ModelForm):
 	username = forms.CharField(required=False)
 	first_name = forms.CharField(required=False)
@@ -167,7 +156,6 @@ class CartCheckoutForm(forms.ModelForm):
 
 	class Meta:
 		model = models.Request
-#		exclude = ('req_status', 'req_report_asked', 'req_purchase_order')
 		fields = ('req_experimental_plan', 'req_project_title', 'req_reason', 'req_funding', 'req_progress_agreement', 'req_safety_agreement', 'req_referred_by', 'req_notes')
 		widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
 
@@ -345,12 +333,6 @@ class TissueRequestProcessForm(forms.ModelForm):
 		self.fields['accepted_monkeys'].queryset = self.instance.monkeys.all()
 		# change the help text to match the checkboxes
 		self.fields['accepted_monkeys'].help_text = ''
-
-#	def save(self, commit=True):
-#		import pdb
-#		pdb.set_trace()
-#		super(TissueRequestProcessForm, self).save(commit)
-
 
 	class Meta:
 		model = models.TissueRequest
@@ -727,12 +709,7 @@ class MonkeyProteinGraphAppearanceForm(forms.Form):
 			self.fields['monkeys'].initial = monkeys
 
 
-class DataSelectForm(forms.Form):
-	dataset_choices = (('protein', 'Access protein-associated data tools'), ('etoh', 'Access ethanol-associated data tools'))
-	dataset = forms.ChoiceField(choices=dataset_choices, label='Data Set', help_text="Choose what data to analyze", widget=widgets.RadioSelect, initial=dataset_choices[0][0])
-
-
-class GraphSubjectSelectForm(forms.Form):
+class ProteinGraphSubjectSelectForm(forms.Form):
 	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
 	subject = forms.ChoiceField(choices=subject_choices,
 						  label='Subject',
@@ -742,7 +719,7 @@ class GraphSubjectSelectForm(forms.Form):
 	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.CheckboxSelectMultipleSelectAll())
 
 	def __init__(self, monkey_queryset, **kwargs):
-		super(GraphSubjectSelectForm, self).__init__(**kwargs)
+		super(ProteinGraphSubjectSelectForm, self).__init__(**kwargs)
 		self.fields['monkeys'].queryset = monkey_queryset
 
 
@@ -752,16 +729,6 @@ class TissueShipmentForm(forms.Form):
 		self.fields['tissue_requests'] = forms.ModelMultipleChoiceField(queryset=tissue_request_queryset, widget=widgets.CheckboxSelectMultiple_columns(columns=2))
 		self.fields['tissue_requests'].label = "Shipment"
 		self.fields['tissue_requests'].help_text = "Select which tissue requests are included in this shipment"
-
-
-class PlotSelectForm(forms.Form):
-	plot_method = forms.ChoiceField(help_text="Choose which plot to generate")
-
-	def __init__(self, plot_choices, **kwargs):
-		super(PlotSelectForm, self).__init__(**kwargs)
-		self.fields['plot_method'].label = "Plot"
-		self.fields['plot_method'].choices = plot_choices
-		self.fields['plot_method'].initial = plot_choices[0][0]
 
 
 class ExperimentRangeForm(forms.Form):
@@ -803,38 +770,5 @@ class InventoryBrainForm(forms.Form):
 	block = forms.ChoiceField(choices=BLOCKS, required=True)
 	left_tissues = forms.ModelMultipleChoiceField(queryset=models.TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=1))
 	right_tissues = forms.ModelMultipleChoiceField(queryset=models.TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=1))
-
-
-class GraphToolsMonkeySelectForm(forms.Form):
-	"""
-	IMPORTANT NOTE:
-	When using this form, you need to add the text below to the template in which it's used.  I haven't figured out why yet, but the Media class in the
-	CheckboxSelectMultipleSelectAll widget doesn't work.  I don't even know where to start debugging that.
-
-	{% block extra_js %}
-		{{ block.super }}
-		<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
-	{% endblock %}
-	"""
-	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.CheckboxSelectMultipleSelectAll())
-
-	def __init__(self, monkey_queryset, *args, **kwargs):
-		super(GraphToolsMonkeySelectForm, self).__init__(*args, **kwargs)
-		self.fields['monkeys'].queryset = monkey_queryset
-
-	class Media:
-		js = (
-			'js/toggle-checked.js',
-			)
-
-
-
-class GraphSubjectSelectForm(GraphToolsMonkeySelectForm):
-	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
-	subject = forms.ChoiceField(choices=subject_choices,
-						  label='Subject',
-						  help_text="Choose what scope of subjects to analyze",
-						  widget=forms.RadioSelect(renderer=widgets.RadioFieldRendererSpecial_monkey),
-						  initial=subject_choices[0][0])
 
 
