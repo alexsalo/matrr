@@ -32,6 +32,10 @@
 			<td>{% if rud.rud_file %}<a href='{{ MEDIA_URL}}{{rud.rud_file }}'>View File</a>{% else %}None{% endif %}</td>
 		</tr>
 		<tr>
+			<th>Grant Info</th>
+			<td>{% if rud.rud_grant %}{{ rud.rud_grant }}{% else %}None{% endif %}</td>
+		</tr>
+		<tr>
 			<th>Data Available</th>
 			<td>{{ rud.rud_data_available }}</td>
 		</tr>
