@@ -74,11 +74,10 @@ _12list.append([23773, -0.0016, -7.835, -29.4,22.65,57.88,0.0525,76.9,294.3, -0.
 _12list.append([21607,0.0008, -13.3667, -4.3333,143.7333,12.0933,0.0287,62.6,59.4, -0.0014, -0.0004, ])
 _12list.append([23784, -0.0003, -16.755, -47.32,33.5, -39.485,0.004,81.5,139.7, -0.003,0, ])
 
-def monkey_volumetric_monteFA():
+def monkey_volumetric_monteFA(out_var='execute'):
 	import mdp
-	import json
+	import csv
 	import numpy
-	import time
 	from random import randint
 
 	def monte_carlo(input, more_input=None):
@@ -90,7 +89,7 @@ def monkey_volumetric_monteFA():
 		input_length = len(keys)
 		node_exception_count = 0
 		valueerror_exception_count = 0
-		for i in range(15):# * 1000, num of iterations
+		for i in range(15*100):# * 1000, num of iterations
 			def sample_data():
 				data = list()
 				monkeys = list()
@@ -103,6 +102,7 @@ def monkey_volumetric_monteFA():
 						_d = input[real_id]
 					if not _d in data:
 						data.append(_d)
+						monkeys.append(real_id)
 
 				data = numpy.array(data)
 				return data, monkeys
@@ -123,9 +123,22 @@ def monkey_volumetric_monteFA():
 				else:
 					break
 
+			if out_var == 'mu':
+				fa_output = fa.mu
+			elif out_var == 'A':
+				fa_output = fa.A
+			elif out_var == 'E_y_mtx':
+				fa_output = fa.E_y_mtx
+			elif out_var == 'sigma':
+				fa_output = fa.sigma
+			else:
+				pass
 			output_convert = list()
-			for row in fa_output:
-				output_convert.append(list(row))
+			if out_var == 'sigma':
+				output_convert.append(list(fa_output))
+			else:
+				for row in fa_output:
+					output_convert.append(list(row))
 
 			for key, fa_o in zip(monkeys, output_convert):
 				output[key].append(fa_o)
@@ -134,55 +147,39 @@ def monkey_volumetric_monteFA():
 		return output
 
 	six_month_output = monte_carlo(_6dict)
-	f = open('six_month_output.json.txt', 'w')
-	f.write(str(dict_header))
-	f.write(json.dumps(six_month_output))
-	f.close()
 	twelve_month_output = monte_carlo(_12dict)
-	f = open('twelve_month_output.json.txt', 'w')
-	f.write(str(dict_header))
-	f.write(json.dumps(twelve_month_output))
-	f.close()
 	all_output = monte_carlo(_6dict, _12dict)
-	f = open('all_month_output.json.txt', 'w')
-	f.write(str(dict_header))
-	f.write(json.dumps(all_output))
-	f.close()
 
-def CSVDump_montecarlo(dir_path):
-	import json, csv
-	all_file = open(dir_path+'/all_month_output.json.txt')
-	six_file = open(dir_path+'/six_month_output.json.txt')
-	twelve_file = open(dir_path+'/twelve_month_output.json.txt')
-
-	files = [all_file, six_file, twelve_file]
 	header = ['hippocampus+allocortex', 'cortisol', 'ACTH', 'DOC', 'aldosterone', 'DHEAS', 'EtOH (vol)', 'H2O (vol)', 'isocortex', 'lateral ventricles', 'mky_real_id']
-	header_text = "'key=Monkey\', columns=[\'hippocampus+allocortex\',\'cortisol\',\'ACTH\',\'DOC\',\'aldosterone\',\'DHEAS\',\'EtOH (vol)\',\'H2O (vol)\', \'isocortex\',\'lateral ventricles\']"
-
-	texts = list()
-	for f in files:
-		texts.append(f.readline())
-
-	jsons = list()
-	for t in texts:
-		jsons.append(t[len(header_text)-1:])
-
-	dicts = list()
-	for j in jsons:
-		dicts.append(json.loads(j))
-
+	outputs = [all_output, six_month_output, twelve_month_output]
 	labels = ['AllDataSampled', "First6MonthsSampled", "Second6MonthsSampled"]
+	labels = ["%s.%s" % (l, out_var) for l in labels]
 
-	for i in range(3):
-		output = csv.writer(open('%s.csv' % labels[i], 'w'))
+	for data, filename in zip(outputs, labels):
+		output = csv.writer(open('%s.csv' % filename, 'w'))
 		output.writerow(header)
-		data = dicts[i]
 		for key in data.keys():
 			mky_data = data[key]
 			for row in mky_data:
 				row.append(key)
 				output.writerow(row)
-		print "Step %d finished." % i
-	print "done"
 
+def cohort_PCA(cohort, column_names=None):
+	import numpy
+	from matplotlib import mlab
+	from matrr.models import MonkeyToDrinkingExperiment, Q
+	columns = column_names if column_names else ['mtd_veh_intake', 'mtd_pct_fi_with_drinking_st_1', 'mtd_pellets_st_1', 'mtd_pellets_st_3', 'mtd_st_1_ioc_avg', 'mtd_max_bout_vol', 'mtd_pct_max_bout_vol_total_etoh', 'mtd_seconds_to_stageone']
 
+	mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort, drinking_experiment__dex_type='Induction')
+	excludes = dict()
+	for key in columns:
+		excludes[key] = None
+	q_obj = Q(**excludes)
+	q_obj.connector = "OR"
+	mtds = mtds.exclude(q_obj)
+	if not mtds.count():
+		raise Exception("No valid MTDs for this cohort")
+	values = mtds.values_list(*columns)
+	values = numpy.array(values)
+	pca_results = mlab.PCA(values,)
+	return pca_results, columns
