@@ -21,6 +21,10 @@
 		{% endif %}
 		<form method="post" action="">{% csrf_token %}
 			<table class='common'>
+                <tr>
+					<th>{{ form.update_file.label }}<br><div class="small">{{ form.update_file.help_text }}</div></th>
+					<td>{{ form.update_file }}  </td>
+                </tr>
 				<tr>
 					<th width="30%">{{ form.comments.label }}<br><div class=small>{{ form.comments.help_text }}</div></th>
 					<td>{{ form.comments }}</td>

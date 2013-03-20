@@ -1877,7 +1877,7 @@ def rud_update(request):
 		form = RudUpdateForm(user=request.user)
 	return render_to_response('matrr/rud_reports/rud_update.html', {'form': form, }, context_instance=RequestContext(request))
 
-def rud_in_progress(request):
+def rud_progress(request):
 	progress_form = ''
 	update_form = request.session.get('rud_form', '')
 	if not update_form:
@@ -1885,9 +1885,10 @@ def rud_in_progress(request):
 		return redirect(reverse('rud-upload'))
 
 	update_cd = update_form.cleaned_data
+	progress = update_cd['progress']
 	if request.method == 'POST':
 		post = request.POST.copy()
-		post.update({'progress':update_cd['progress']})
+		post.update({'progress': progress})
 		progress_form = RudProgressForm(post, request.FILES)
 		if progress_form.is_valid():
 			progress_form.clean()
@@ -1899,46 +1900,24 @@ def rud_in_progress(request):
 					rud.req_request = req
 					rud.rud_progress = update_cd['progress']
 					rud.rud_pmid = progress_cd['pmid']
-					rud.rud_data_available = progress_cd['data_available']
 					rud.rud_file = File(progress_cd['update_file'])
+					rud.rud_comments = progress_cd['comments']
+					rud.rud_data_available = progress_cd['data_available']
+					rud.rud_grant = progress_cd['grants']
 					rud.save()
 				messages.success(request, "Your research update was successfully submitted.  Thank you.")
 				messages.info(request, "You will be emailed again in 90 days to provide another research update.")
 				return redirect(reverse('account-view'))
 
 	form = progress_form if progress_form else RudProgressForm(initial={'progress':update_cd['progress']})
-	return render_to_response('matrr/rud_reports/rud_in_progress.html', {'form': form, }, context_instance=RequestContext(request))
-
-def rud_complete(request):
-	progress_form = ''
-	update_form = request.session.get('rud_form', '')
-	if not update_form:
-		messages.error(request, "There was an issue loading the first part of your research update, please start over.  If this continues to happen, please contact a MATRR administrator.")
+	if progress == ResearchProgress.InProgress:
+		template = 'matrr/rud_reports/rud_in_progress.html'
+	elif progress == ResearchProgress.Complete:
+		template = 'matrr/rud_reports/rud_complete.html'
+	else:
+		messages.error(request, "There was an issue determining the progress of your research update, please start over.  If this continues to happen, please contact a MATRR administrator.")
 		return redirect(reverse('rud-upload'))
-
-	update_cd = update_form.cleaned_data
-	if request.method == 'POST':
-		post = request.POST.copy()
-		post.update({'progress':update_cd['progress']})
-		progress_form = RudProgressForm(post, request.FILES)
-		if progress_form.is_valid():
-			progress_form.clean()
-			if not progress_form.errors:
-				progress_cd = progress_form.cleaned_data
-				for req in update_cd['req_request']:
-					rud = ResearchUpdate()
-					rud.req_request = req
-					rud.rud_progress = update_cd['progress']
-					rud.rud_pmid = progress_cd['pmid']
-					rud.rud_file = File(progress_cd['update_file'])
-					rud.rud_comments = progress_cd['comments']
-					rud.rud_data_available = progress_cd['data_available']
-					rud.save()
-				messages.success(request, "Your research update was successfully submitted.  Thank you.")
-				return redirect(reverse('account-view'))
-
-	form = progress_form if progress_form else RudProgressForm(initial={'progress':update_cd['progress']})
-	return render_to_response('matrr/rud_reports/rud_complete.html', {'form': form, }, context_instance=RequestContext(request))
+	return render_to_response(template, {'form': form, }, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
 def rud_detail(request, rud_id):
