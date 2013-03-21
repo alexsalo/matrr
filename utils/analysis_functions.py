@@ -1,3 +1,8 @@
+from __future__ import division
+import numpy as np
+import numpy
+
+dot = np.dot
 __author__ = 'jarquet'
 
 dict_header = "key=Monkey', columns=['hippocampus+allocortex','cortisol','ACTH','DOC','aldosterone','DHEAS','EtOH (vol)','H2O (vol)', 'isocortex','lateral ventricles']"
@@ -164,22 +169,3 @@ def monkey_volumetric_monteFA(out_var='execute'):
 				row.append(key)
 				output.writerow(row)
 
-def cohort_PCA(cohort, column_names=None):
-	import numpy
-	from matplotlib import mlab
-	from matrr.models import MonkeyToDrinkingExperiment, Q
-	columns = column_names if column_names else ['mtd_veh_intake', 'mtd_pct_fi_with_drinking_st_1', 'mtd_pellets_st_1', 'mtd_pellets_st_3', 'mtd_st_1_ioc_avg', 'mtd_max_bout_vol', 'mtd_pct_max_bout_vol_total_etoh', 'mtd_seconds_to_stageone']
-
-	mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort, drinking_experiment__dex_type='Induction')
-	excludes = dict()
-	for key in columns:
-		excludes[key] = None
-	q_obj = Q(**excludes)
-	q_obj.connector = "OR"
-	mtds = mtds.exclude(q_obj)
-	if not mtds.count():
-		raise Exception("No valid MTDs for this cohort")
-	values = mtds.values_list(*columns)
-	values = numpy.array(values)
-	pca_results = mlab.PCA(values,)
-	return pca_results, columns
