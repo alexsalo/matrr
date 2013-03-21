@@ -1973,6 +1973,95 @@ def load_mbb_images(image_dir):
 			real_id = recomp.match(file).group(1)
 			create_mbb(real_id, os.path.join(image_dir, file))
 
+def load_monkey_exceptions(file_name, overwrite=False, header=True):
+	"""
+	Pre-7b format:
+	"Cohort","Experiment","File Errors Corrected","Day not used at all","BEC for Lifetime Intake only, no behav","Date","animal","etoh intake (.04 conc)"
+	"IniaRhesusMaleCoh4","Ind",,,"x","05/19/08",22215,377.2
+
+	7b format:
+	"Cohort","Experiment","File Errors Corrected","Day not used at all","BEC for Lifetime Intake only, no behav","Date","animal","etoh intake (.04 conc)", "2% etoh"
+	"IniaRhesusMaleCoh4","Ind",,,"x","05/19/08",22215,377.2,"x"
+
+	The "Cohort" column is gibberish, "INIARhesusMaleCoh7a"
+	The "Experiment" column is either "ind" or "22hr"
+	I don't yet know what "File errors Corrected" indicates, but its either "" or "x"
+	I think "Day not used at all" flags should be deleted entirely, for serious forever.  Faulty mechanism or some such.
+	"BEC for Lifetime Intake only" I think are exception days when monkeys were allowed to drink they knocked out the monkey with SpecialK or something
+	"Date" format keeps changing.  use __get_datetime_From_steve()
+	"Animal" == Monkey.mky_real_id
+	I don't know exactly what "etoh intake" means.  I'm pretty sure it's the (corrected) volume of alcohol consumed.  This should allow me to delete bad records and keep accurate lifetime intake volumes
+	"2% etoh" is a flag (""/"x") indicating this day the monkey received .02 conc alcohol instead of the normal .04 conc.
+	"""
+	csv_infile = csv.reader(open(file_name, 'rU'), delimiter=",")
+	if header:
+		columns = csv_infile.next()
+	column_format = [
+		'',
+		'',
+		'mex_file_corrected',
+		'mex_excluded',
+		'mex_lifetime',
+		'',
+		'',
+		'mex_etoh_intake',
+		'mex_2pct',
+	]
+	for line_number, row in enumerate(csv_infile):
+		try:
+			monkey = Monkey.objects.get(mky_real_id=row[6])
+		except Monkey.DoesNotExist:
+			msg = ERROR_OUTPUT % (line_number, "Monkey Does Not Exist", str(row))
+			logging.error(msg)
+			print msg
+			continue
+		except ValueError:
+			msg = ERROR_OUTPUT % (line_number, "Monkey value isn't an integer", str(row))
+			logging.error(msg)
+			print msg
+			continue
+
+		date = __get_datetime_from_steve(row[5])
+		if date is None:
+			msg = ERROR_OUTPUT % (line_number, "Unknown Date Format", str(row))
+			logging.error(msg)
+			print msg
+			continue
+
+		exists = MonkeyException.objects.filter(monkey=monkey, mex_date=date).count()
+		if exists >= 1 and not overwrite:
+			msg = ERROR_OUTPUT % (line_number, "Exception Record Already Exists", str(row))
+			logging.warning(msg)
+			print msg
+			continue
+
+		if row[1].lower() == 'ind':
+			stage = DexType.Ind
+		elif row[1].lower() == '22hr':
+			stage = DexType.OA
+		else:
+			msg = ERROR_OUTPUT % (line_number, "Unknown Experiment Stage", str(row))
+			logging.error(msg)
+			print msg
+			continue
+
+		mex = MonkeyException(monkey=monkey, mex_stage=stage, mex_date=date)
+		for name, value in zip(column_format, row):
+			if name and value:
+				if str(value).lower() == 'x': # boolean flags
+					value = True
+				setattr(mex, name, value)
+
+		try:
+			mex.full_clean()
+		except Exception as e:
+			msg = ERROR_OUTPUT % (line_number, e, str(row))
+			logging.error(msg)
+			print msg
+			continue
+
+		mex.save()
+
 def delete_wonky_monkeys():
 	monkey_pks = [10043, 10050, 10053]
 	models = [MonkeyToDrinkingExperiment, MonkeyBEC, ExperimentEvent, MonkeyImage]

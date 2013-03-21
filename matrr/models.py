@@ -67,9 +67,6 @@ class Enumeration(object):
 	def __iter__(self):
 		return self.enum_list.__iter__()
 
-DexTypes = ("Open Access", "Induction")
-DexTypesChoices = tuple((i, i) for i in DexTypes)
-
 InventoryStatus = (('Unverified', 'Unverified'), ('Sufficient', 'Sufficient'), ('Insufficient', 'Insufficient'))
 
 #Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
@@ -96,6 +93,14 @@ LatexUnits = {
 	'cm': '$cm$',
 	'mm': '$mm$',
 	}
+
+DexType = Enumeration([
+	('O', 'OA', "Open Access"),
+	('I', 'Ind', "Induction"),
+])
+DexTypes = tuple(i[1] for i in DexType) # uses of this should be replaced with DexType
+DexTypesChoices = tuple((i, i) for i in DexTypes) # This should be removed once DexTypes is refactored to use DexType
+
 
 ExperimentEventType = Enumeration([
 	('D', 'Drink', 'Drink event'),
@@ -819,6 +824,49 @@ class ExperimentEvent(models.Model):
 
 	class Meta:
 		db_table = 'eev_experiment_events'
+
+
+class MonkeyException(models.Model):
+	mex_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, related_name='exception_set', db_column='mky_id', editable=False)
+	mex_stage = models.CharField('Experiment Type', choices=DexType, max_length=1, help_text='The stage of the experiment')
+	mex_date = models.DateField('Exception Date', blank=False, null=False)
+	mex_file_corrected = models.BooleanField("File Errors Corrected", default=False)
+	mex_excluded = models.BooleanField("Day not used at all", default=False)
+	mex_lifetime = models.BooleanField("Day used for lifetime intake only", default=False)
+	mex_2pct = models.BooleanField("Monkey given .02 conc ethanol", default=False)
+	mex_etoh_intake = models.FloatField("Ethanol Intake", blank=False, null=False, default=0, help_text="Need to find out from steve _exactly_ what this is.")
+
+	def purge_own_data(self, delete_mtd=False, delete_bec=False, delete_eev=False, render_images=True, delete_for_serious=False):
+		if delete_mtd:
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey, drinking_experiment__dex_date=self.mex_date)
+			if delete_for_serious:
+				mtds.delete()
+			elif mtds.count():
+				print "%d mtd records would have been deleted." % mtds.count()
+		if delete_bec:
+			becs = MonkeyBEC.objects.filter(monkey=self.monkey, bec_collect_date__year=self.mex_date.year, bec_collect_date__month=self.mex_date.month, bec_collect_date__day=self.mex_date.day)
+			if delete_for_serious:
+				becs.delete()
+			elif becs.count():
+				print "%d bec records would have been deleted." % becs.count()
+		if delete_eev:
+			eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=self.mex_date.year, eev_occurred__month=self.mex_date.month, eev_occurred__day=self.mex_date.day)
+			if delete_for_serious:
+				eevs.delete()
+			elif eevs.count():
+				print "%d eev records would have been deleted." % eevs.count()
+		if (delete_mtd or delete_bec or delete_eev) and render_images:
+			for mig in MonkeyImage.objects.filter(monkey=self.monkey):
+				mig.save(force_render=True)
+
+
+	def clean(self):
+		if not (self.mex_file_corrected or self.mex_excluded or self.mex_lifetime or self.mex_2pct):
+			raise ValidationError('Exception records must have an exception')
+
+	class Meta:
+		db_table = 'mex_monkey_exception'
 
 
 class NecropsySummary(models.Model):
