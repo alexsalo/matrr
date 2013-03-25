@@ -79,13 +79,13 @@ _12list.append([23773, -0.0016, -7.835, -29.4,22.65,57.88,0.0525,76.9,294.3, -0.
 _12list.append([21607,0.0008, -13.3667, -4.3333,143.7333,12.0933,0.0287,62.6,59.4, -0.0014, -0.0004, ])
 _12list.append([23784, -0.0003, -16.755, -47.32,33.5, -39.485,0.004,81.5,139.7, -0.003,0, ])
 
-def monkey_volumetric_monteFA(out_var='execute'):
+def monkey_volumetric_monteFA(out_var='execute', iterations=10):
 	import mdp
 	import csv
 	import numpy
 	from random import randint
 
-	def monte_carlo(input, more_input=None):
+	def monte_carlo(input, more_input=None, iterations=10):
 		keys = input.keys()
 		output = dict()
 		for key in keys:
@@ -94,7 +94,7 @@ def monkey_volumetric_monteFA(out_var='execute'):
 		input_length = len(keys)
 		node_exception_count = 0
 		valueerror_exception_count = 0
-		for i in range(15*100):# * 1000, num of iterations
+		for i in range(15*iterations):# * 1000, num of iterations
 			def sample_data():
 				data = list()
 				monkeys = list()
@@ -151,9 +151,9 @@ def monkey_volumetric_monteFA(out_var='execute'):
 				print "Pass %d complete. %d node exceptions, %d value exceptions." % (i, node_exception_count, valueerror_exception_count)
 		return output
 
-	six_month_output = monte_carlo(_6dict)
-	twelve_month_output = monte_carlo(_12dict)
-	all_output = monte_carlo(_6dict, _12dict)
+	six_month_output = monte_carlo(_6dict, iterations=iterations)
+	twelve_month_output = monte_carlo(_12dict, iterations=iterations)
+	all_output = monte_carlo(_6dict, _12dict, iterations=iterations)
 
 	header = ['hippocampus+allocortex', 'cortisol', 'ACTH', 'DOC', 'aldosterone', 'DHEAS', 'EtOH (vol)', 'H2O (vol)', 'isocortex', 'lateral ventricles', 'mky_real_id']
 	outputs = [all_output, six_month_output, twelve_month_output]

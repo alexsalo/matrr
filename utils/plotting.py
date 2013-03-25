@@ -141,12 +141,6 @@ def _lifetime_cumsum_etoh(eevs, subplot, color_monkey=True):
 	xaxis = numpy.array(eevs.values_list('eev_occurred', flat=True))
 	color = colors[1] if color_monkey else colors[0]
 	subplot.plot(xaxis, yaxis, alpha=1, linewidth=3, color=color)
-#		subplot.fill_between(xaxis, 0, yaxis, color=colors[index%2])
-
-#	if len(eevs.order_by().values_list('eev_dose', flat=True).distinct()) > 1:
-#		stage_2_eevs = eevs.filter(eev_dose=1)
-#		stage_2_xaxis = numpy.array(stage_2_eevs.values_list('eev_occurred', flat=True))
-#		subplot.axvspan(stage_2_xaxis.min(), stage_2_xaxis.max(), color='black', alpha=.2, zorder=-100)
 	return subplot
 
 def _days_cumsum_etoh(eevs, subplot):
@@ -2641,18 +2635,6 @@ def monkey_etoh_lifetime_cumsum(monkey):
 		_lifetime_cumsum_etoh(eevs, lifetime_plot, color_monkey=color_monkey)
 
 	lifetime_plot.get_xaxis().set_visible(False)
-#	lifetime_plot.legend((), title="Stage %d" % stage, loc=1, frameon=False, prop={'size':12})
-
-#	lifetime_plot.set_ylim(ymin=0, )#ymax=ylims[1]*1.05)
-#	lifetime_plot.yaxis.set_major_locator(MaxNLocator(3))
-#	lifetime_plot.set_xlim(xmin=0, )
-
-	# yaxis label
-#	ylabel = fig.add_subplot(main_gs[:,0:2])
-#	ylabel.set_axis_off()
-#	ylabel.set_xlim(0, 1)
-#	ylabel.set_ylim(0, 1)
-#	ylabel.text(.05, 0.5, "Cumulative EtOH intake, ml", rotation='vertical', horizontalalignment='center', verticalalignment='center')
 	return fig, True
 
 def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
