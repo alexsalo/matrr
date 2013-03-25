@@ -2154,7 +2154,7 @@ def dump_tissue_inventory_csv(cohort):
 	filename = str(cohort).replace(' ', '_') + "-Inventory.csv"
 	output = csv.writer(open(filename, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
 	columns = ["Tissue Type \ Monkey"]
-	columns.extend([str(m.pk) for m in cohort.monkey_set.all().order_by('pk')])
+	columns.extend(["%s/%s" % (str(m.pk), str(m.mky_real_id))  for m in cohort.monkey_set.all().order_by('pk')])
 	output.writerow(columns)
 
 	for tst in TissueType.objects.all().order_by('category__cat_name', 'tst_tissue_name'):
