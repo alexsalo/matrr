@@ -2137,3 +2137,34 @@ def populate_seconds_since_pellet(monkeys=None):
 			eev = ExperimentEvent.objects.get(pk=r[0])
 			eev.eev_pellet_elapsed_time_since_last = r[1]
 			eev.save()
+
+def dump_tissue_inventory_csv(cohort):
+	"""
+		This function will dump the browse inventory page to CSV
+		It writes columns == monkey, row == tissue.
+		Cells where the tissue exists are given "Exists", non-existent tissues are left blank.
+	"""
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			print("That's not a valid cohort.")
+			return False, False
+
+	filename = str(cohort).replace(' ', '_') + "-Inventory.csv"
+	output = csv.writer(open(filename, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	columns = ["Tissue Type \ Monkey"]
+	columns.extend([str(m.pk) for m in cohort.monkey_set.all().order_by('pk')])
+	output.writerow(columns)
+
+	for tst in TissueType.objects.all().order_by('category__cat_name', 'tst_tissue_name'):
+		row = [str(tst)]
+		for mky in cohort.monkey_set.all().order_by('pk'):
+			availability = tst.get_monkey_availability(mky)
+			if availability == Availability.Unavailable:
+				row.append("")
+			else:
+				row.append("Exists")
+		output.writerow(row)
+	print "Success."
+
