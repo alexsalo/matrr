@@ -222,16 +222,16 @@ def dump_postprandial_matrices():
 		dump = csv.writer(open("%d.csv" % coh, 'w'))
 
 		_1 = build_postprandial_matrix(coh, 1)
-#		_5 = build_postprandial_matrix(coh, 5)
-#		_10 = build_postprandial_matrix(coh, 10)
-#		_15 = build_postprandial_matrix(coh, 15)
-#		_20 = build_postprandial_matrix(coh, 20)
-#		_25 = build_postprandial_matrix(coh, 25)
-#		_30 = build_postprandial_matrix(coh, 30)
+		_5 = build_postprandial_matrix(coh, 5)
+		_10 = build_postprandial_matrix(coh, 10)
+		_15 = build_postprandial_matrix(coh, 15)
+		_20 = build_postprandial_matrix(coh, 20)
+		_25 = build_postprandial_matrix(coh, 25)
+		_30 = build_postprandial_matrix(coh, 30)
 
 		labels = ['1']
 		labels.extend([str(i) for i in range(5, 31, 5)])
-		data = [_1,]# _5, _10, _15, _20, _25, _30]
+		data = [_1, _5, _10, _15, _20, _25, _30]
 
 		for label, d in zip(labels, data):
 			dump.writerow(label)
