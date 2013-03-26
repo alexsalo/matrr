@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
 import numpy
+from scipy.cluster import vq
 
 dot = np.dot
 __author__ = 'jarquet'
@@ -168,4 +169,81 @@ def monkey_volumetric_monteFA(out_var='execute', iterations=10):
 			for row in mky_data:
 				row.append(key)
 				output.writerow(row)
+
+def build_postprandial_matrix(cohort, minutes):
+	from matrr.models import Cohort, MonkeyToDrinkingExperiment, ExperimentEvent, Sum
+	assert bool(int(minutes))
+
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			raise Exception("%s not a valid cohort." % str(cohort))
+
+	monkeys = cohort.monkey_set.filter(mky_drinking=True).order_by('pk')
+	_gte2 = dict()
+	_gte3 = dict()
+	_gte4 = dict()
+	for mky in monkeys:
+		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
+		_gte2[mky] = mtds.filter(mtd_etoh_g_kg__gte=2).count()
+		_gte3[mky] = mtds.filter(mtd_etoh_g_kg__gte=3).count()
+		_gte4[mky] = mtds.filter(mtd_etoh_g_kg__gte=4).count()
+
+	res2, idx2 = vq.kmeans2(numpy.array([_gte2[mky] for mky in monkeys]), 2)
+	res3, idx3 = vq.kmeans2(numpy.array([_gte3[mky] for mky in monkeys]), 2)
+	res4, idx4 = vq.kmeans2(numpy.array([_gte4[mky] for mky in monkeys]), 2)
+
+	for i, mky in enumerate(monkeys):
+		_gte2[mky] = idx2[i]
+		_gte3[mky] = idx3[i]
+		_gte4[mky] = idx4[i]
+
+	_min = dict()
+	for mky in monkeys:
+		eevs = ExperimentEvent.objects.filter(monkey=mky).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
+		total_volume = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+		_min[mky] = eevs.exclude(eev_pellet_elapsed_time_since_last__lte=minutes*60).aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] / total_volume
+
+	cohort_matrix = list()
+	for mky in monkeys:
+		row = [mky,]
+		two = [_min[mky], _gte2[mky]]
+		three = [_min[mky], _gte3[mky]]
+		four = [_min[mky], _gte4[mky]]
+
+		row.extend([two, three, four])
+		cohort_matrix.append(row)
+	return cohort_matrix
+
+def dump_postprandial_matrices():
+	import csv
+	for coh in [5,]:# 6, 10]:
+		dump = csv.writer(open("%d.csv" % coh, 'w'))
+
+		_1 = build_postprandial_matrix(coh, 1)
+#		_5 = build_postprandial_matrix(coh, 5)
+#		_10 = build_postprandial_matrix(coh, 10)
+#		_15 = build_postprandial_matrix(coh, 15)
+#		_20 = build_postprandial_matrix(coh, 20)
+#		_25 = build_postprandial_matrix(coh, 25)
+#		_30 = build_postprandial_matrix(coh, 30)
+
+		labels = ['1']
+		labels.extend([str(i) for i in range(5, 31, 5)])
+		data = [_1,]# _5, _10, _15, _20, _25, _30]
+
+		for label, d in zip(labels, data):
+			dump.writerow(label)
+			for row in d:
+				_row = [str(row[0])]
+				_row.extend(row[1:])
+				dump.writerow(_row)
+
+
+
+
+
+
+
 
