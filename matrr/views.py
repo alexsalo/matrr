@@ -1927,6 +1927,7 @@ def rud_detail(request, rud_id):
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
 def research_update_list(request):
 	pending_ruds = Request.objects.exclude(rud_set=None).order_by('rud_set__rud_date')
+	pending_ruds = ResearchUpdate.objects.filter(pk__in=pending_ruds.values_list('rud_set__pk', flat=True))
 	paginator = Paginator(pending_ruds, 20)
 
 	if request.GET and 'page' in request.GET:
@@ -1934,14 +1935,14 @@ def research_update_list(request):
 	else:
 		page = 1
 	try:
-		req_list = paginator.page(page)
+		rud_list = paginator.page(page)
 	except PageNotAnInteger:
 		# If page is not an integer, deliver first page.
-		req_list = paginator.page(1)
+		rud_list = paginator.page(1)
 	except EmptyPage:
 		# If page is out of range (e.g. 9999), deliver last page of results.
-		req_list = paginator.page(paginator.num_pages)
-	return render_to_response('matrr/rud_reports/rud_list.html', {'req_list': req_list}, context_instance=RequestContext(request))
+		rud_list = paginator.page(paginator.num_pages)
+	return render_to_response('matrr/rud_reports/rud_list.html', {'rud_list': rud_list}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
 def research_update_overdue(request):

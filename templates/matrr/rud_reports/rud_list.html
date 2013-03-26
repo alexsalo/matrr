@@ -10,22 +10,20 @@
 			<th>Progress</th>
 			<th> </th>
 		</tr>
-	{% for req in req_list.object_list %}
-		{% for rud in req.rud_set.all %}
-			<tr>
-				<td class='text-center-common-td'>{{ rud.rud_date|date:"m/d/Y" }}</td>
-				<td class='text-center-common-td'><a href='{% url order-detail req.pk %}'>{{ req.pk }}</a></td>
-				<td class='text-center-common-td'><a href='{% url account-reviewer-view req.user.id %}'>{{ req.user.username }}</a></td>
-				<td class='text-center-common-td'>{{ rud.get_rud_progress_display }}</td>
-				<td class='text-center-common-td'><a href='{% url rud-detail rud.pk %}'>View Research Update</a></td>
-			</tr>
-		{% endfor %}
-	{% endfor %}
+	{% for rud in rud_list.object_list %}
+        <tr>
+            <td class='text-center-common-td'>{{ rud.rud_date|date:"m/d/Y" }}</td>
+            <td class='text-center-common-td'><a href='{% url order-detail rud.req_request.pk %}'>{{ rud.req_request.pk }}</a></td>
+            <td class='text-center-common-td'><a href='{% url account-reviewer-view rud.req_request.user.id %}'>{{ rud.req_request.user.username }}</a></td>
+            <td class='text-center-common-td'>{{ rud.get_rud_progress_display }}</td>
+            <td class='text-center-common-td'><a href='{% url rud-detail rud.pk %}'>View Research Update</a></td>
+        </tr>
+    {% endfor %}
 	</table>
 
 	<center>
 		{% load inclusion_tags %}
-		{% pagination req_list %}
+		{% pagination rud_list %}
 	</center>
 
 {% endblock %}
