@@ -1926,8 +1926,7 @@ def rud_detail(request, rud_id):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
 def research_update_list(request):
-	pending_ruds = Request.objects.exclude(rud_set=None).order_by('rud_set__rud_date')
-	pending_ruds = ResearchUpdate.objects.filter(pk__in=pending_ruds.values_list('rud_set__pk', flat=True))
+	pending_ruds = ResearchUpdate.objects.all().order_by('req_request', 'rud_date')
 	paginator = Paginator(pending_ruds, 20)
 
 	if request.GET and 'page' in request.GET:
