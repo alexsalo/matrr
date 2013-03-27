@@ -258,11 +258,7 @@ def dump_postprandial_matrices(monkeys_only=False):
 		data, header = _build_postprandial_matrix(None, _min, cluster_assignment, monkeys=monkeys)
 		dump.writerow(header)
 		for row in data:
-			_row = [str(row[0])]
-			for cel in row[1:]:
-				for c in cel:
-					_row.append(c)
-			dump.writerow(_row)
+			dump.writerow(row)
 
 
 
