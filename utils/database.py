@@ -2158,7 +2158,7 @@ def dump_tissue_inventory_csv(cohort):
 	output.writerow(columns)
 
 	for tst in TissueType.objects.all().order_by('category__cat_name', 'tst_tissue_name'):
-		row = [str(tst)]
+		row = [tst.tst_tissue_name]
 		for mky in cohort.monkey_set.all().order_by('pk'):
 			availability = tst.get_monkey_availability(mky)
 			if availability == Availability.Unavailable:
@@ -2166,5 +2166,33 @@ def dump_tissue_inventory_csv(cohort):
 			else:
 				row.append("Exists")
 		output.writerow(row)
+	print "Success."
+
+def load_tissue_inventory_csv(filename):
+	"""
+		This function will load the updated output of dump_tissue_inventory_csv()
+		TissueSamples are give a tss_sample_quantity=1, tss_units=Units[2][0] ('whole') if bool(cell_value) evaluates True.
+	"""
+	csv_infile = csv.reader(open(filename, 'rU'), delimiter=',')
+	columns = csv_infile.next()
+	label = columns.pop(0) # "should read "Tissue Type \ Monkey"
+	assert label == "Tissue Type \ Monkey"
+
+	# This will convert the header row of "matrr_pk/mky_real_id" cells into a list of monkey objects
+	monkeys = list()
+	for h in columns:
+		if h:
+			_pk, _id = h.split('/')
+			m = Monkey.objects.get(pk=_pk, mky_real_id=_id) # this will raise an Exception if the pk/id doesn't match or doesn't exist
+			monkeys.append(m)
+
+	for row in csv_infile:
+		tst = TissueType.objects.get(tst_tissue_name=row.pop(0))
+		for mky, cell in zip(monkeys, row):
+			if bool(cell):
+				tss = TissueSample.objects.get(monkey=mky, tissue_type=tst)
+				tss.tss_sample_quantity = 1
+				tss.tss_units = Units[2][0]
+				tss.save()
 	print "Success."
 
