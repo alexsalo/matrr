@@ -218,7 +218,7 @@ def build_postprandial_matrix(cohort, minutes):
 
 def dump_postprandial_matrices():
 	import csv
-	for coh in [5,]:# 6, 10]:
+	for coh in [5, 6, 10]:
 		dump = csv.writer(open("%d.csv" % coh, 'w'))
 
 		_1 = build_postprandial_matrix(coh, 1)
