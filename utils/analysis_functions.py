@@ -170,7 +170,7 @@ def monkey_volumetric_monteFA(out_var='execute', iterations=10):
 				row.append(key)
 				output.writerow(row)
 
-def build_postprandial_matrix(cohort, minutes):
+def build_postprandial_matrix(cohort, minutes, monkeys=None):
 	"""
 	This makes a data structure fitting the following design.
 	list(
@@ -183,13 +183,15 @@ def build_postprandial_matrix(cohort, minutes):
 	from matrr.models import Cohort, MonkeyToDrinkingExperiment, ExperimentEvent, Sum
 	assert bool(int(minutes))
 
-	if not isinstance(cohort, Cohort):
-		try:
-			cohort = Cohort.objects.get(pk=cohort)
-		except Cohort.DoesNotExist:
-			raise Exception("%s not a valid cohort." % str(cohort))
+	if not monkeys:
+		if not isinstance(cohort, Cohort):
+			try:
+				cohort = Cohort.objects.get(pk=cohort)
+			except Cohort.DoesNotExist:
+				raise Exception("%s not a valid cohort." % str(cohort))
 
-	monkeys = cohort.monkey_set.filter(mky_drinking=True).order_by('pk')
+		monkeys = cohort.monkey_set.filter(mky_drinking=True).order_by('pk')
+
 	_gte2 = dict()
 	_gte3 = dict()
 	_gte4 = dict()
@@ -228,23 +230,40 @@ def build_postprandial_matrix(cohort, minutes):
 		cohort_matrix.append(row)
 	return cohort_matrix, header
 
-def dump_postprandial_matrices():
+def dump_postprandial_matrices(monkeys_only=False):
 	import csv
+	from matrr.models import Monkey, Cohort
+	cohort_ids = [5, 6, 10]
 	minutes = [1]
 	minutes.extend([i for i in range(5, 31, 5)])
-	for coh in [5, 6, 10]:
-		dump = csv.writer(open("%d.csv" % coh, 'w'))
+	if not monkeys_only:
+		for coh in cohort_ids:
+			dump = csv.writer(open("%d.csv" % coh, 'w'))
 
-		for _min in minutes:
-			data, header = build_postprandial_matrix(coh, _min)
-			dump.writerow(header)
-			for row in data:
-				_row = [str(row[0])]
-				for cel in row[1:]:
-					for c in cel:
-						_row.append(c)
-				dump.writerow(_row)
+			for _min in minutes:
+				data, header = build_postprandial_matrix(coh, _min)
+				dump.writerow(header)
+				for row in data:
+					_row = [str(row[0])]
+					for cel in row[1:]:
+						for c in cel:
+							_row.append(c)
+					dump.writerow(_row)
+	mky_ids = list(Cohort.objects.get(pk=cohort_ids.pop(0)).monkey_set.filter(mky_drinking=True).values_list('pk', flat=True))
+	for _id in cohort_ids:
+		mky_ids.extend(Cohort.objects.get(pk=_id).monkey_set.filter(mky_drinking=True).values_list('pk', flat=True))
 
+	monkeys = Monkey.objects.filter(pk__in=mky_ids)
+	dump = csv.writer(open("AllRhesusMonkeys.csv", 'w'))
+	for _min in minutes:
+		data, header = build_postprandial_matrix(None, _min, monkeys=monkeys)
+		dump.writerow(header)
+		for row in data:
+			_row = [str(row[0])]
+			for cel in row[1:]:
+				for c in cel:
+					_row.append(c)
+			dump.writerow(_row)
 
 
 
