@@ -171,6 +171,15 @@ def monkey_volumetric_monteFA(out_var='execute', iterations=10):
 				output.writerow(row)
 
 def build_postprandial_matrix(cohort, minutes):
+	"""
+	This makes a data structure fitting the following design.
+	list(
+		list(
+
+			)
+		)
+	"""
+
 	from matrr.models import Cohort, MonkeyToDrinkingExperiment, ExperimentEvent, Sum
 	assert bool(int(minutes))
 
@@ -206,6 +215,9 @@ def build_postprandial_matrix(cohort, minutes):
 		_min[mky] = eevs.exclude(eev_pellet_elapsed_time_since_last__lte=minutes*60).aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] / total_volume
 
 	cohort_matrix = list()
+	header = ['mky', '%% drinking OUTSIDE %d minutes from last pellet' % minutes, "2 gkg group id"]
+	header.extend(['%% drinking OUTSIDE %d minutes from last pellet' % minutes, "3 gkg group id"])
+	header.extend(['%% drinking OUTSIDE %d minutes from last pellet' % minutes, "4 gkg group id"])
 	for mky in monkeys:
 		row = [mky,]
 		two = [_min[mky], _gte2[mky]]
@@ -214,30 +226,23 @@ def build_postprandial_matrix(cohort, minutes):
 
 		row.extend([two, three, four])
 		cohort_matrix.append(row)
-	return cohort_matrix
+	return cohort_matrix, header
 
 def dump_postprandial_matrices():
 	import csv
+	minutes = [1]
+	minutes.extend([i for i in range(5, 31, 5)])
 	for coh in [5, 6, 10]:
 		dump = csv.writer(open("%d.csv" % coh, 'w'))
 
-		_1 = build_postprandial_matrix(coh, 1)
-		_5 = build_postprandial_matrix(coh, 5)
-		_10 = build_postprandial_matrix(coh, 10)
-		_15 = build_postprandial_matrix(coh, 15)
-		_20 = build_postprandial_matrix(coh, 20)
-		_25 = build_postprandial_matrix(coh, 25)
-		_30 = build_postprandial_matrix(coh, 30)
-
-		labels = ['1']
-		labels.extend([str(i) for i in range(5, 31, 5)])
-		data = [_1, _5, _10, _15, _20, _25, _30]
-
-		for label, d in zip(labels, data):
-			dump.writerow(label)
-			for row in d:
+		for _min in minutes:
+			data, header = build_postprandial_matrix(coh, _min)
+			dump.writerow(header)
+			for row in data:
 				_row = [str(row[0])]
-				_row.extend(row[1:])
+				for cel in row[1:]:
+					for c in cel:
+						_row.append(c)
 				dump.writerow(_row)
 
 
