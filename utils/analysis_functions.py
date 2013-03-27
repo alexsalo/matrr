@@ -227,13 +227,13 @@ def dump_postprandial_matrices(monkeys_only=False):
 		header.extend(['%% drinking OUTSIDE %d minutes from last pellet' % minutes, "3 gkg group id"])
 		header.extend(['%% drinking OUTSIDE %d minutes from last pellet' % minutes, "4 gkg group id"])
 		for mky in monkeys:
-			row = [mky,]
+			row = [str(mky),]
 			for cluster in cluster_assignment:
 				c = [_min[mky], cluster[mky]]
 				row.extend(c)
 			cohort_matrix.append(row)
 		return cohort_matrix, header
-
+	#------
 	cohorts = Cohort.objects.filter(pk__in=[5, 6, 10])
 	minutes = [1]
 	minutes.extend([i for i in range(5, 31, 5)])
@@ -248,11 +248,7 @@ def dump_postprandial_matrices(monkeys_only=False):
 				data, header = _build_postprandial_matrix(coh, _min, cluster_assignment)
 				dump.writerow(header)
 				for row in data:
-					_row = [str(row[0])]
-					for cel in row[1:]:
-						for c in cel:
-							_row.append(c)
-					dump.writerow(_row)
+					dump.writerow(row)
 
 	mky_ids = cohorts.filter(monkey__mky_drinking=True).values_list('monkey__pk', flat=True)
 	monkeys = Monkey.objects.filter(pk__in=mky_ids)
