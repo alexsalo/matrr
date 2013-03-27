@@ -170,78 +170,80 @@ def monkey_volumetric_monteFA(out_var='execute', iterations=10):
 				row.append(key)
 				output.writerow(row)
 
-def build_postprandial_matrix(cohort, minutes, monkeys=None):
-	"""
-	This makes a data structure fitting the following design.
-	list(
-		list(
-
-			)
-		)
-	"""
-
-	from matrr.models import Cohort, MonkeyToDrinkingExperiment, ExperimentEvent, Sum
-	assert bool(int(minutes))
-
-	if not monkeys:
-		if not isinstance(cohort, Cohort):
-			try:
-				cohort = Cohort.objects.get(pk=cohort)
-			except Cohort.DoesNotExist:
-				raise Exception("%s not a valid cohort." % str(cohort))
-
-		monkeys = cohort.monkey_set.filter(mky_drinking=True).order_by('pk')
-
-	_gte2 = dict()
-	_gte3 = dict()
-	_gte4 = dict()
-	for mky in monkeys:
-		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
-		_gte2[mky] = mtds.filter(mtd_etoh_g_kg__gte=2).count()
-		_gte3[mky] = mtds.filter(mtd_etoh_g_kg__gte=3).count()
-		_gte4[mky] = mtds.filter(mtd_etoh_g_kg__gte=4).count()
-
-	res2, idx2 = vq.kmeans2(numpy.array([_gte2[mky] for mky in monkeys]), 2)
-	res3, idx3 = vq.kmeans2(numpy.array([_gte3[mky] for mky in monkeys]), 2)
-	res4, idx4 = vq.kmeans2(numpy.array([_gte4[mky] for mky in monkeys]), 2)
-
-	for i, mky in enumerate(monkeys):
-		_gte2[mky] = idx2[i]
-		_gte3[mky] = idx3[i]
-		_gte4[mky] = idx4[i]
-
-	_min = dict()
-	for mky in monkeys:
-		eevs = ExperimentEvent.objects.filter(monkey=mky).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
-		total_volume = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-		_min[mky] = eevs.exclude(eev_pellet_elapsed_time_since_last__lte=minutes*60).aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] / total_volume
-
-	cohort_matrix = list()
-	header = ['mky', '%% drinking OUTSIDE %d minutes from last pellet' % minutes, "2 gkg group id"]
-	header.extend(['%% drinking OUTSIDE %d minutes from last pellet' % minutes, "3 gkg group id"])
-	header.extend(['%% drinking OUTSIDE %d minutes from last pellet' % minutes, "4 gkg group id"])
-	for mky in monkeys:
-		row = [mky,]
-		two = [_min[mky], _gte2[mky]]
-		three = [_min[mky], _gte3[mky]]
-		four = [_min[mky], _gte4[mky]]
-
-		row.extend([two, three, four])
-		cohort_matrix.append(row)
-	return cohort_matrix, header
-
 def dump_postprandial_matrices(monkeys_only=False):
 	import csv
-	from matrr.models import Monkey, Cohort
-	cohort_ids = [5, 6, 10]
+	from matrr.models import Monkey, Cohort, MonkeyToDrinkingExperiment, ExperimentEvent, Sum
+	def _cluster_assignment(monkeys):
+		_gte2 = dict()
+		_gte3 = dict()
+		_gte4 = dict()
+		for mky in monkeys:
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
+			_gte2[mky] = mtds.filter(mtd_etoh_g_kg__gte=2).count()
+			_gte3[mky] = mtds.filter(mtd_etoh_g_kg__gte=3).count()
+			_gte4[mky] = mtds.filter(mtd_etoh_g_kg__gte=4).count()
+		res2, idx2 = vq.kmeans2(numpy.array([_gte2[mky] for mky in monkeys]), 2)
+		res3, idx3 = vq.kmeans2(numpy.array([_gte3[mky] for mky in monkeys]), 2)
+		res4, idx4 = vq.kmeans2(numpy.array([_gte4[mky] for mky in monkeys]), 2)
+		for i, mky in enumerate(monkeys):
+			_gte2[mky] = idx2[i]
+			_gte3[mky] = idx3[i]
+			_gte4[mky] = idx4[i]
+		return [_gte2, _gte3, _gte4]
+	def _build_postprandial_matrix(cohort, minutes, cluster_assignment, monkeys=None):
+		"""
+		This makes a data structure fitting the following design.
+		list( # Monkey # % etoh consumed outside (minutes) after pellet # Cluster assignment, based on day count >= 2/3/4 gkg # ect...
+			[<Monkey: 10048>, [0.97319840076047681, 0], [0.97319840076047681, 0], [0.97319840076047681, 1]]
+			[<Monkey: 10049>, [0.97096354516853889, 1], [0.97096354516853889, 0], [0.97096354516853889, 1]]
+			[<Monkey: 10050>, [0.61919341891216129, 0], [0.61919341891216129, 0], [0.61919341891216129, 1]]
+			[<Monkey: 10051>, [0.98696245904495228, 1], [0.98696245904495228, 0], [0.98696245904495228, 0]]
+			[<Monkey: 10052>, [0.90424440706200804, 0], [0.90424440706200804, 0], [0.90424440706200804, 1]]
+			[<Monkey: 10053>, [0.73065151067833833, 0], [0.73065151067833833, 0], [0.73065151067833833, 1]]
+			[<Monkey: 10054>, [0.9953534385998023, 1], [0.9953534385998023, 0], [0.9953534385998023, 0]]
+			[<Monkey: 10055>, [0.99405465790184422, 0], [0.99405465790184422, 0], [0.99405465790184422, 1]]
+			[<Monkey: 10056>, [0.94261800522588424, 0], [0.94261800522588424, 0], [0.94261800522588424, 1]]
+			[<Monkey: 10057>, [0.96637110291771489, 1], [0.96637110291771489, 0], [0.96637110291771489, 1]]
+			[<Monkey: 10058>, [0.97357126215980005, 1], [0.97357126215980005, 0], [0.97357126215980005, 1]]
+			[<Monkey: 10059>, [0.96442083938613721, 1], [0.96442083938613721, 0], [0.96442083938613721, 0]]
+		"""
+		assert bool(int(minutes))
+		if not monkeys:
+			if not isinstance(cohort, Cohort):
+				try:
+					cohort = Cohort.objects.get(pk=cohort)
+				except Cohort.DoesNotExist:
+					raise Exception("%s not a valid cohort." % str(cohort))
+			monkeys = cohort.monkey_set.filter(mky_drinking=True).order_by('pk')
+
+		_min = dict()
+		for mky in monkeys:
+			eevs = ExperimentEvent.objects.filter(monkey=mky).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
+			total_volume = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+			_min[mky] = eevs.exclude(eev_pellet_elapsed_time_since_last__lte=minutes*60).aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] / total_volume
+
+		cohort_matrix = list()
+		header = ['mky', '%% drinking OUTSIDE %d minutes from last pellet' % minutes, "2 gkg group id"]
+		header.extend(['%% drinking OUTSIDE %d minutes from last pellet' % minutes, "3 gkg group id"])
+		header.extend(['%% drinking OUTSIDE %d minutes from last pellet' % minutes, "4 gkg group id"])
+		for mky in monkeys:
+			row = [mky,]
+			for cluster in cluster_assignment:
+				c = [_min[mky], cluster[mky]]
+				row.extend(c)
+			cohort_matrix.append(row)
+		return cohort_matrix, header
+
+	cohorts = Cohort.objects.filter(pk__in=[5, 6, 10])
 	minutes = [1]
 	minutes.extend([i for i in range(5, 31, 5)])
-	if not monkeys_only:
-		for coh in cohort_ids:
-			dump = csv.writer(open("%d.csv" % coh, 'w'))
 
+	if not monkeys_only:
+		for coh in cohorts:
+			dump = csv.writer(open("%d.csv" % coh, 'w'))
+			cluster_assignment = _cluster_assignment(coh.monkey_set.filter(mky_drinking=True))
 			for _min in minutes:
-				data, header = build_postprandial_matrix(coh, _min)
+				data, header = _build_postprandial_matrix(coh, _min, cluster_assignment)
 				dump.writerow(header)
 				for row in data:
 					_row = [str(row[0])]
@@ -249,14 +251,13 @@ def dump_postprandial_matrices(monkeys_only=False):
 						for c in cel:
 							_row.append(c)
 					dump.writerow(_row)
-	mky_ids = list(Cohort.objects.get(pk=cohort_ids.pop(0)).monkey_set.filter(mky_drinking=True).values_list('pk', flat=True))
-	for _id in cohort_ids:
-		mky_ids.extend(Cohort.objects.get(pk=_id).monkey_set.filter(mky_drinking=True).values_list('pk', flat=True))
 
+	mky_ids = cohorts.filter(monkey__mky_drinking=True).values_list('monkey__pk', flat=True)
 	monkeys = Monkey.objects.filter(pk__in=mky_ids)
+	cluster_assignment = _cluster_assignment(monkeys)
 	dump = csv.writer(open("AllRhesusMonkeys.csv", 'w'))
 	for _min in minutes:
-		data, header = build_postprandial_matrix(None, _min, monkeys=monkeys)
+		data, header = _build_postprandial_matrix(None, _min, cluster_assignment, monkeys=monkeys)
 		dump.writerow(header)
 		for row in data:
 			_row = [str(row[0])]
