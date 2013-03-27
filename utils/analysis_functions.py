@@ -240,7 +240,9 @@ def dump_postprandial_matrices(monkeys_only=False):
 
 	if not monkeys_only:
 		for coh in cohorts:
-			dump = csv.writer(open("%d.csv" % coh, 'w'))
+			filename = "%s.csv" % str(coh)
+			filename = filename.replace(" ", "_")
+			dump = csv.writer(open(filename % coh, 'w'))
 			cluster_assignment = _cluster_assignment(coh.monkey_set.filter(mky_drinking=True))
 			for _min in minutes:
 				data, header = _build_postprandial_matrix(coh, _min, cluster_assignment)
