@@ -565,7 +565,16 @@ class DrinkingExperiment(models.Model):
 		db_table = 'dex_drinking_experiments'
 
 
+class MTDManager(models.Manager):
+	def Ind(self):
+		return self.get_query_set().filter(drinking_experiment__dex_type='Induction')
+
+	def OA(self):
+		return self.get_query_set().filter(drinking_experiment__dex_type='Open Access')
+
+
 class MonkeyToDrinkingExperiment(models.Model):
+	objects = MTDManager()
 	mtd_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='mtd_set', db_column='mky_id', editable=False)
 	drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
