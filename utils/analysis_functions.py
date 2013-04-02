@@ -329,8 +329,8 @@ def _cohort_etoh_max_bout_cumsum(cohort, subplot):
 	return subplot, mky_ymax, mky_colors
 
 def _cohort_etoh_horibar_ltgkg(cohort, subplot, mky_ymax, mky_colors):
-	subplot.set_title("Lifetime Cumulative EtOH Intake for %s" % str(cohort))
-	subplot.set_xlabel("Volume EtOH, g/kg")
+	subplot.set_title("Lifetime EtOH Intake for %s" % str(cohort))
+	subplot.set_xlabel("EtOH Intake, g/kg")
 
 	sorted_ymax = sorted(mky_ymax.iteritems(), key=operator.itemgetter(1))
 
@@ -359,7 +359,6 @@ def _cohort_etoh_horibar_ltgkg(cohort, subplot, mky_ymax, mky_colors):
 
 def _cohort_etoh_horibar_3gkg(cohort, subplot, mky_ymax, mky_colors):
 	subplot.set_title("# days over 3 g/kg")
-#	subplot.set_xlabel("")
 
 	sorted_ymax = sorted(mky_ymax.iteritems(), key=operator.itemgetter(1))
 
@@ -515,10 +514,12 @@ def rhesus_etoh_gkg_histogram():
 	newy = spline(bincenters, n, newx) # smooth out the y axis
 	subplot.plot(newx, newy, color='r', linewidth=5) # smoothed line
 	subplot.set_ylim(ymin=0)
+	subplot.set_title("Rhesus 4/5/7a, g/kg per day")
 	subplot.set_ylabel("Day Count")
 	subplot.set_xlabel("Day's etoh intake, g/kg")
+	return fig, None
 
-def rhesus_etoh_gkg_bargraph():
+def rhesus_etoh_gkg_bargraph(limit_step=1):
 	cohorts = Cohort.objects.filter(pk__in=[5,6,10])
 	fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
 	gs = gridspec.GridSpec(3, 3)
@@ -529,7 +530,8 @@ def rhesus_etoh_gkg_bargraph():
 	for coh in cohorts:
 		monkeys |= coh.monkey_set.filter(mky_drinking=True)
 
-	limits = range(1,9,1)
+	width = .90 / (.95/limit_step)
+	limits = numpy.arange(1,9, limit_step)
 	gkg_daycounts = numpy.zeros(len(limits))
 	for monkey in monkeys:
 		mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
@@ -543,11 +545,13 @@ def rhesus_etoh_gkg_bargraph():
 			gkg_daycounts[index] += _count / days
 
 	gkg_daycounts = list(gkg_daycounts)
-	subplot.bar(limits, gkg_daycounts, width=.95, color='navy')
+	subplot.bar(limits, gkg_daycounts, width=width, color='navy')
 	xmax = max(gkg_daycounts)*1.005
 	subplot.set_ylim(ymin=0, ymax=xmax)
-	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake exceeded yaxis")
+	subplot.set_title("Rhesus 4/5/7a, distribution of intakes exceeding g/kg minimums")
+	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake exceeded x-value")
 	subplot.set_xlabel("Etoh intake, g/kg")
+	return fig, None
 
 def rhesus_etoh_gkg_forced_histogram():
 	cohorts = Cohort.objects.filter(pk__in=[5,6,10])
@@ -585,8 +589,10 @@ def rhesus_etoh_gkg_forced_histogram():
 
 	xmax = max(gkg_daycounts)*1.005
 	subplot.set_ylim(ymin=0, ymax=xmax)
-	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake exceeded yaxis")
+	subplot.set_title("Rhesus 4/5/7a, distribution of intakes")
+	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake equaled x-value")
 	subplot.set_xlabel("Etoh intake, g/kg")
+	return fig, None
 
 def rhesus_etoh_gkg_monkeybargraph():
 	cohorts = Cohort.objects.filter(pk__in=[5,6,10])
@@ -623,8 +629,8 @@ def rhesus_etoh_gkg_monkeybargraph():
 	#	subplot.bar(limits, gkg_daycounts, #width=.95, color='navy')
 		xaxis = range(len(values))
 		subplot.bar(xaxis, values, width=1, color='navy', edgecolor=None)
+		subplot.set_xticks(range(len(monkeys))) # this will force a tick for every monkey.  without this, labels become useless
 		xtickNames = pyplot.setp(subplot, xticklabels=keys)
-		pyplot.setp(xtickNames, rotation=45)
-	#	subplot.set_ylim(ymin=0, ymax=xmax)
-
+		pyplot.setp(xtickNames, rotation=45, fontsize=8)
+	return fig, None
 
