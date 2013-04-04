@@ -546,15 +546,10 @@ class Account(models.Model):
 
 class DrinkingExperiment(models.Model):
 	dex_id = models.AutoField('ID', primary_key=True)
-	cohort = models.ForeignKey(Cohort, related_name='cohort_drinking_experiment_set', db_column='coh_cohort_id',
-							   verbose_name='Cohort',
-							   help_text='The cohort this experiment was performed on.')
-	dex_date = models.DateField('Date',
-								help_text='The date this experiment was conducted.')
-	dex_type = models.CharField('Experiment Type', max_length=100,
-								help_text='The type of experiment. (ex. "Open Access")')
-	dex_notes = models.TextField('Notes', blank=True, null=True,
-								 help_text='Use this space to enter anything about the experiment that does not fit in another field.')
+	cohort = models.ForeignKey(Cohort, related_name='cohort_drinking_experiment_set', db_column='coh_cohort_id', verbose_name='Cohort', help_text='The cohort this experiment was performed on.')
+	dex_date = models.DateField('Date', help_text='The date this experiment was conducted.')
+	dex_type = models.CharField('Experiment Type', max_length=100, help_text='The type of experiment. (ex. "Open Access")')
+	dex_notes = models.TextField('Notes', blank=True, null=True, help_text='Use this space to enter anything about the experiment that does not fit in another field.')
 	monkeys = models.ManyToManyField(Monkey, through='MonkeyToDrinkingExperiment')
 
 	def __unicode__(self):
@@ -772,6 +767,7 @@ class ExperimentBout(models.Model):
 	ebt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
 	ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
 	ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
+	cbt = models.ForeignKey('CohortBout', blank=True, null=True, default=None, related_name='cbt_set')
 
 	ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True, help_text="Bout's volume as a percentage of total ethanol consumed that day")
 
@@ -866,6 +862,23 @@ class ExperimentEvent(models.Model):
 
 	class Meta:
 		db_table = 'eev_experiment_events'
+
+
+class CohortBout(models.Model):
+	"""
+	These define groups of bouts where more than 1 monkey drank simultaneously.
+	cbt_number, cbt_start and cbt_end values of -1 indicate this bout has not finished being created.
+	"""
+	cbt_id = models.AutoField(primary_key=True)
+	dex_date = models.DateField('Date', help_text='The date this bout occurred')
+	cbt_number = models.IntegerField('CBout number', blank=False, null=False, default=-1)
+	cbt_start_time = models.IntegerField('Start time [s]', blank=False, null=False, default=-1)
+	cbt_end_time = models.IntegerField('End time [s]', blank=False, null=False, default=-1)
+#	cbt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
+#	cbt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
+
+	class Meta:
+		db_table = 'cbt_cohort_bouts'
 
 
 class MonkeyException(models.Model):
