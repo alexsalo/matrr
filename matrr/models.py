@@ -679,7 +679,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 	mtd_pct_max_bout_vol_total_etoh_hour_9  = models.FloatField('Max Bout in 10th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
 	mtd_pct_max_bout_vol_total_etoh_hour_10 = models.FloatField('Max Bout in 11th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
 
-	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=False, null=True, default=None,
+	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=True, null=True, default=None,
 												  help_text="Seconds it took for monkey to reach day's ethanol allotment")
 	mtd_max_bout_vol_excluding_1min_pellet = models.FloatField('Max Bout Volume, 1 Minute Pellet', blank=True, null=True, default=0,
 		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 1 minute of a pellet')
@@ -812,6 +812,8 @@ class ExperimentDrink(models.Model):
 			if  self.edr_end_time == self.edr_start_time and self.edr_length == 1:
 				return
 			raise ValidationError('Drink length does not correspond to Start and End time. (An isolated drink is given the length of 1 second, despite start time and end time being equal.)')
+		if self.edr_idi and self.edr_idi < 0:
+			raise ValidationError("edr_idi is less than 0.  This does not make sense.")
 
 	class Meta:
 		db_table = 'edr_experiment_drinks'

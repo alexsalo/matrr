@@ -48,6 +48,11 @@ def __get_datetime_from_steve(steve_date):
 	except Exception as e:
 		pass
 	try:
+		real_date = dt.strptime(steve_date, "%Y_%m_%d")
+		return real_date
+	except Exception as e:
+		pass
+	try:
 		real_date = minimalist_xldate_as_datetime(steve_date, 1)
 		return real_date
 	except Exception as e:
@@ -641,7 +646,7 @@ def create_Assay_Development_tree():
 ERROR_OUTPUT = "%d %s # %s"
 
 @transaction.commit_on_success
-def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_headers=True, dump_file=False):
+def load_mtd(file_name, dex_type, cohort_name, dump_duplicates=True, has_headers=True, dump_file=False, truncate_data_columns=48):
 	"""
 		0 - date
 		1 - monkey_real_id
@@ -720,8 +725,10 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			data = line.split(',')
 			if data[0] == '0.5' or data[0] == '1' or data[0] == '1.5' or data[0] == '1.0': # for some damn reason they added a column in cyno 2's induction file.
 				ind_portion = data.pop(0)
-			data_fields = data[2:38]
-			data_fields.extend(data[40:46])
+			_truncate_columns = min(38, truncate_data_columns)
+			data_fields = data[2:_truncate_columns]
+			if truncate_data_columns > 40:
+				data_fields.extend(data[40:truncate_data_columns])
 
 			# create or get experiment - date, cohort, dex_type
 			dex_date = __get_datetime_from_steve(data[0])
@@ -748,14 +755,15 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 					continue
 
 			monkey_real_id = data[1]
-			monkey_real_id_check = data[39]
-			if monkey_real_id != monkey_real_id_check:
-				err = ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
-				if dump_file:
-					dump_file.write(err + '\n')
-				else:
-					print err
-				continue
+			if truncate_data_columns > 38:
+				monkey_real_id_check = data[39]
+				if monkey_real_id != monkey_real_id_check:
+					err = ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
+					if dump_file:
+						dump_file.write(err + '\n')
+					else:
+						print err
+					continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
 			except:
@@ -798,6 +806,8 @@ def load_mtd(file_name, dex_type='', cohort_name='', dump_duplicates=True, has_h
 			mtd.mtd_notes = notes
 
 			for i, field in enumerate(fields):
+				if i >= len(data_fields):
+					break
 				if not data_fields[i] in ['', '\n', '\r']:
 					setattr(mtd, field, data_fields[i])
 
@@ -1133,7 +1143,7 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
 			entry = line.split("\t")
 			if entry[1] == 'Date':
 				continue
-			date = dt.strptime(entry[1], "%Y_%m_%d")
+			date = __get_datetime_from_steve(entry[1])
 			if last_date != date:
 				dexs = DrinkingExperiment.objects.filter(cohort=cohort,dex_type=dex_type,dex_date=date)
 				if dexs.count() == 0:
@@ -2035,7 +2045,7 @@ def load_monkey_exceptions(file_name, overwrite=False, header=True):
 			print msg
 			continue
 
-		if row[1].lower() == 'ind':
+		if 'ind' in row[1].lower():
 			stage = DexType.Ind
 		elif row[1].lower() == '22hr':
 			stage = DexType.OA
