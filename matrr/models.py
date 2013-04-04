@@ -809,9 +809,8 @@ class ExperimentDrink(models.Model):
 
 		if self.edr_end_time - self.edr_start_time != self.edr_length or self.edr_end_time == self.edr_start_time:
 			#		An isolated drink is given the length of 1 second, despite start time and end time being equal. 
-			if  self.edr_end_time == self.edr_start_time and self.edr_length == 1:
-				return
-			raise ValidationError('Drink length does not correspond to Start and End time. (An isolated drink is given the length of 1 second, despite start time and end time being equal.)')
+			if not (self.edr_end_time == self.edr_start_time and self.edr_length == 1):
+				raise ValidationError('Drink length does not correspond to Start and End time. (An isolated drink is given the length of 1 second, despite start time and end time being equal.)')
 		if self.edr_idi and self.edr_idi < 0:
 			raise ValidationError("edr_idi is less than 0.  This does not make sense.")
 
