@@ -681,15 +681,15 @@ class MonkeyToDrinkingExperiment(models.Model):
 
 	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=True, null=True, default=None,
 												  help_text="Seconds it took for monkey to reach day's ethanol allotment")
-	mtd_max_bout_vol_excluding_1min_pellet = models.FloatField('Max Bout Volume, 1 Minute Pellet', blank=True, null=True, default=0,
+	mtd_max_bout_vol_excluding_1min_pellet = models.FloatField('Max Bout Volume, 1 Minute Pellet', blank=True, null=True, default=None,
 		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 1 minute of a pellet')
-	mtd_max_bout_vol_excluding_5min_pellet = models.FloatField('Max Bout Volume, 5 Minute Pellet', blank=True, null=True, default=0,
+	mtd_max_bout_vol_excluding_5min_pellet = models.FloatField('Max Bout Volume, 5 Minute Pellet', blank=True, null=True, default=None,
 		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 5 minute of a pellet')
-	mtd_max_bout_vol_excluding_10min_pellet = models.FloatField('Max Bout Volume, 10 Minute Pellet', blank=True, null=True, default=0,
+	mtd_max_bout_vol_excluding_10min_pellet = models.FloatField('Max Bout Volume, 10 Minute Pellet', blank=True, null=True, default=None,
 		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 10 minute of a pellet')
-	mtd_max_bout_vol_excluding_15min_pellet = models.FloatField('Max Bout Volume, 15 Minute Pellet', blank=True, null=True, default=0,
+	mtd_max_bout_vol_excluding_15min_pellet = models.FloatField('Max Bout Volume, 15 Minute Pellet', blank=True, null=True, default=None,
 		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 15 minute of a pellet')
-	mtd_max_bout_vol_excluding_20min_pellet = models.FloatField('Max Bout Volume, 20 Minute Pellet', blank=True, null=True, default=0,
+	mtd_max_bout_vol_excluding_20min_pellet = models.FloatField('Max Bout Volume, 20 Minute Pellet', blank=True, null=True, default=None,
 		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 20 minute of a pellet')
 
 	def __unicode__(self):
@@ -740,20 +740,23 @@ class MonkeyToDrinkingExperiment(models.Model):
 	def populate_mtd_max_bout_vol_excluding_pellets(self, minute):
 		assert int(minute) > 0
 		dex_date = self.drinking_experiment.dex_date
-		bouts = self.bouts_set.all()
+		bouts = self.bouts_set.all().order_by('-ebt_volume')
 		eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=dex_date.year, eev_occurred__month=dex_date.month, eev_occurred__day=dex_date.day)
-		if not eevs:
+		eevs = eevs.values('eev_pellet_elapsed_time_since_last')# 'eev_session_time', 'eev_event_type',)
+		if not eevs or not bouts:
 			return
-		max_bout_vol = getattr(self, 'mtd_max_bout_vol_excluding_%dmin_pellet' % int(minute))
+		bout_vol = None
 		for bout in bouts:
 			intra_bout_events = eevs.filter(eev_session_time__gte=bout.ebt_start_time).exclude(eev_session_time__gte=bout.ebt_end_time)
 			intra_bout_pellets = intra_bout_events.filter(eev_event_type=ExperimentEventType.Pellet)
-			if not intra_bout_pellets.count():
-				intra_bout_sips = intra_bout_events.filter(eev_event_type=ExperimentEventType.Drink)
-				minimum_sip_pellet_interval = intra_bout_sips.aggregate(Min('eev_pellet_elapsed_time_since_last'))['eev_pellet_elapsed_time_since_last__min']
-				if minimum_sip_pellet_interval >= minute*60:
-					max_bout_vol = max(max_bout_vol, bout.ebt_volume)
-		setattr(self, 'mtd_max_bout_vol_excluding_%dmin_pellet' % int(minute), max_bout_vol)
+			if not intra_bout_pellets: # if there aren't any pellets in this bout
+				# get the first drink event of the bout
+				first_sip = intra_bout_events.filter(eev_event_type=ExperimentEventType.Drink).order_by('eev_session_time')[0]
+				if first_sip['eev_pellet_elapsed_time_since_last'] >= minute*60: # if the time since last pellet of the first sip is above threshold
+					# break the loop, we've found our max bout.
+					bout_vol = bout.ebt_volume
+					break
+		setattr(self, 'mtd_max_bout_vol_excluding_%dmin_pellet' % int(minute), bout_vol)
 		self.save()
 
 	class Meta:
