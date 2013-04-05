@@ -767,7 +767,7 @@ class ExperimentBout(models.Model):
 	ebt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
 	ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
 	ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
-	cbt = models.ForeignKey('CohortBout', blank=True, null=True, default=None, related_name='cbt_set')
+	cbt = models.ForeignKey('CohortBout', blank=True, null=True, default=None, related_name='ebt_set')
 
 	ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True, help_text="Bout's volume as a percentage of total ethanol consumed that day")
 
