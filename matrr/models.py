@@ -733,7 +733,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 		self.save()
 
 	def populate_mtd_max_bout_vol_excluding_pellets(self, minute):
-		assert int(minute) > 0
+		assert int(minute) in [1,5,10,15,20]
 		dex_date = self.drinking_experiment.dex_date
 		bouts = self.bouts_set.all().order_by('-ebt_volume')
 		eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=dex_date.year, eev_occurred__month=dex_date.month, eev_occurred__day=dex_date.day)
@@ -746,11 +746,15 @@ class MonkeyToDrinkingExperiment(models.Model):
 			intra_bout_pellets = intra_bout_events.filter(eev_event_type=ExperimentEventType.Pellet)
 			if not intra_bout_pellets: # if there aren't any pellets in this bout
 				# get the first drink event of the bout
-				first_sip = intra_bout_events.filter(eev_event_type=ExperimentEventType.Drink).order_by('eev_session_time')[0]
-				if first_sip['eev_pellet_elapsed_time_since_last'] >= minute*60: # if the time since last pellet of the first sip is above threshold
-					# break the loop, we've found our max bout.
-					bout_vol = bout.ebt_volume
-					break
+				try:
+					first_sip = intra_bout_events.filter(eev_event_type=ExperimentEventType.Drink).order_by('eev_session_time')[0]
+				except IndexError:
+					print "How does this even happen?  There were no drink events during bout pk=%d" % bout.pk
+				else:
+					if first_sip['eev_pellet_elapsed_time_since_last'] >= minute*60: # if the time since last pellet of the first sip is above threshold
+						# break the loop, we've found our max bout.
+						bout_vol = bout.ebt_volume
+						break
 		setattr(self, 'mtd_max_bout_vol_excluding_%dmin_pellet' % int(minute), bout_vol)
 		self.save()
 
@@ -767,7 +771,7 @@ class ExperimentBout(models.Model):
 	ebt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
 	ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
 	ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
-	cbt = models.ForeignKey('CohortBout', blank=True, null=True, default=None, related_name='ebt_set')
+	cbt = models.ForeignKey('CohortBout', blank=True, null=True, default=None, related_name='ebt_set', on_delete=models.SET_NULL)
 
 	ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True, help_text="Bout's volume as a percentage of total ethanol consumed that day")
 
