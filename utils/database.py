@@ -2220,7 +2220,6 @@ def _create_cbt(bouts, date, cbt_number=0, overwrite=False):
 			if is_new or ov:
 				cbt.cbt_start_time = bout['ebt_start_time']
 				cbt.cbt_end_time = bout['ebt_end_time']
-				cbt.save() # save this CBT, in case there ane no other bouts in this CBT
 				is_new = False
 				ov = False
 				continue
