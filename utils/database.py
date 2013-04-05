@@ -2212,32 +2212,33 @@ def _create_cbt(bouts, date, cbt_number=0, overwrite=False):
 	This recursive function will iterate thru the bouts' start and end times to create a CohortBout.
 	When it finds a bout start time that is over 5 minutes from this function's CohortBout it will call itself again to create a new CohortBout with the remaining bout times.
 	"""
-	ov = overwrite # I need to be able to disable overwrite in a loop, but continue to pass the same argument into deeper recursions
-	cbt, is_new = CohortBout.objects.get_or_create(dex_date=date, cbt_number=cbt_number)
-	for index, bout in enumerate(bouts):
-		# First, a new or overwritten CBT needs an initial start time and end time
-		if is_new or ov:
-			cbt.cbt_start_time = bout['ebt_start_time']
-			cbt.cbt_end_time = bout['ebt_end_time']
-			is_new = False
-			ov = False
-			continue
-		# Next, test if we need to trigger a new CBT
-		# New CBT will need to be triggered if the bout's start time is >= 300 seconds after the cbt_end_time
-		# this means there was a >300second gap between the end of a cohort bout and the start of another monkey bout.  This defines a new CBT
-		bout_gap = bout['ebt_start_time'] - cbt.cbt_end_time
-		if bout_gap >= 300:
-			cbt.save() # first, save this CBT
-			# next, begin(or continue) the recursion.
-			# bouts[index:]: We don't need to pass in bouts we've already evaluated
-			# cbt_number+1: We need to increment the cbt_number, to maintain distinct CBTs within a single day
-			_create_cbt(bouts[index:], date, cbt_number+1, overwrite)
-			return # this return is crutial. the recursion will continue the rest of the bout loop.  A break would also work, but why risk it.
-		else:
-			# This bout's start time within the current CBT's timespan
-			# update the CBTs timespan
-			# Because the bouts pasesd in are ordered by ebt_start_time, the cbt_start_time should always be less than the ebt_start_time
-			cbt.cbt_end_time = max(cbt.cbt_end_time, bout['ebt_end_time'])
+	if len(bouts):
+		ov = overwrite # I need to be able to disable overwrite in a loop, but continue to pass the same argument into deeper recursions
+		cbt, is_new = CohortBout.objects.get_or_create(dex_date=date, cbt_number=cbt_number)
+		for index, bout in enumerate(bouts):
+			# First, a new or overwritten CBT needs an initial start time and end time
+			if is_new or ov:
+				cbt.cbt_start_time = bout['ebt_start_time']
+				cbt.cbt_end_time = bout['ebt_end_time']
+				is_new = False
+				ov = False
+				continue
+			# Next, test if we need to trigger a new CBT
+			# New CBT will need to be triggered if the bout's start time is >= 300 seconds after the cbt_end_time
+			# this means there was a >300second gap between the end of a cohort bout and the start of another monkey bout.  This defines a new CBT
+			bout_gap = bout['ebt_start_time'] - cbt.cbt_end_time
+			if bout_gap >= 300:
+				cbt.save() # first, save this CBT
+				# next, begin(or continue) the recursion.
+				# bouts[index:]: We don't need to pass in bouts we've already evaluated
+				# cbt_number+1: We need to increment the cbt_number, to maintain distinct CBTs within a single day
+				_create_cbt(bouts[index:], date, cbt_number+1, overwrite)
+				break # this break is crutial. the recursion will continue the rest of the bout loop.
+			else:
+				# This bout's start time within the current CBT's timespan
+				# update the CBTs timespan
+				# Because the bouts pasesd in are ordered by ebt_start_time, the cbt_start_time should always be less than the ebt_start_time
+				cbt.cbt_end_time = max(cbt.cbt_end_time, bout['ebt_end_time'])
 
 def create_cohort_bouts(cohort, overwrite=False):
 	if not isinstance(cohort, Cohort):
