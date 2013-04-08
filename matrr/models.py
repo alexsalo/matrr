@@ -676,16 +676,6 @@ class MonkeyToDrinkingExperiment(models.Model):
 
 	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=True, null=True, default=None,
 												  help_text="Seconds it took for monkey to reach day's ethanol allotment")
-	mtd_max_bout_vol_excluding_1min_pellet = models.FloatField('Max Bout Volume, 1 Minute Pellet', blank=True, null=True, default=None,
-		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 1 minute of a pellet')
-	mtd_max_bout_vol_excluding_5min_pellet = models.FloatField('Max Bout Volume, 5 Minute Pellet', blank=True, null=True, default=None,
-		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 5 minute of a pellet')
-	mtd_max_bout_vol_excluding_10min_pellet = models.FloatField('Max Bout Volume, 10 Minute Pellet', blank=True, null=True, default=None,
-		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 10 minute of a pellet')
-	mtd_max_bout_vol_excluding_15min_pellet = models.FloatField('Max Bout Volume, 15 Minute Pellet', blank=True, null=True, default=None,
-		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 15 minute of a pellet')
-	mtd_max_bout_vol_excluding_20min_pellet = models.FloatField('Max Bout Volume, 20 Minute Pellet', blank=True, null=True, default=None,
-		help_text='Maximum bout volume excluding bouts containing a pellet or starting within 20 minute of a pellet')
 
 	def __unicode__(self):
 		return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey)
@@ -732,32 +722,6 @@ class MonkeyToDrinkingExperiment(models.Model):
 				self.mtd_seconds_to_stageone = eev.eev_session_time
 		self.save()
 
-	def populate_mtd_max_bout_vol_excluding_pellets(self, minute):
-		assert int(minute) in [1,5,10,15,20]
-		dex_date = self.drinking_experiment.dex_date
-		bouts = self.bouts_set.all().order_by('-ebt_volume')
-		eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=dex_date.year, eev_occurred__month=dex_date.month, eev_occurred__day=dex_date.day)
-		eevs = eevs.values('eev_pellet_elapsed_time_since_last')# 'eev_session_time', 'eev_event_type',)
-		if not eevs or not bouts:
-			return
-		bout_vol = None
-		for bout in bouts:
-			intra_bout_events = eevs.filter(eev_session_time__gte=bout.ebt_start_time).exclude(eev_session_time__gte=bout.ebt_end_time)
-			intra_bout_pellets = intra_bout_events.filter(eev_event_type=ExperimentEventType.Pellet)
-			if not intra_bout_pellets: # if there aren't any pellets in this bout
-				# get the first drink event of the bout
-				try:
-					first_sip = intra_bout_events.filter(eev_event_type=ExperimentEventType.Drink).order_by('eev_session_time')[0]
-				except IndexError:
-					print "How does this even happen?  There were no drink events during bout pk=%d" % bout.pk
-				else:
-					if first_sip['eev_pellet_elapsed_time_since_last'] >= minute*60: # if the time since last pellet of the first sip is above threshold
-						# break the loop, we've found our max bout.
-						bout_vol = bout.ebt_volume
-						break
-		setattr(self, 'mtd_max_bout_vol_excluding_%dmin_pellet' % int(minute), bout_vol)
-		self.save()
-
 	class Meta:
 		db_table = 'mtd_monkeys_to_drinking_experiments'
 
@@ -771,9 +735,12 @@ class ExperimentBout(models.Model):
 	ebt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
 	ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
 	ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
-	cbt = models.ForeignKey('CohortBout', blank=True, null=True, default=None, related_name='ebt_set', on_delete=models.SET_NULL)
 
+	cbt = models.ForeignKey('CohortBout', blank=True, null=True, default=None, related_name='ebt_set', on_delete=models.SET_NULL)
 	ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True, help_text="Bout's volume as a percentage of total ethanol consumed that day")
+	ebt_contains_pellet = models.NullBooleanField('Pellet distributed during bout', blank=True, null=True, default=None,
+		help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.')
+	ebt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, default=None)
 
 	def populate_pct_vol_total_etoh(self, recalculate=False):
 		if recalculate or not self.ebt_pct_vol_total_etoh:
@@ -781,6 +748,20 @@ class ExperimentBout(models.Model):
 			self.ebt_pct_vol_total_etoh = _pct if _pct > 0 else None
 			self.save()
 
+	def populate_pellet_elapsed_time_since_last(self, recalculate=False):
+		if not self.ebt_pellet_elapsed_time_since_last or recalculate:
+			previous_events = ExperimentEvent.objects.filter(monkey=self.mtd.monkey, eev_session_time__lt=self.ebt_start_time).order_by('eev_session_time')
+			previous_pellets = previous_events.filter(eev_event_type=ExperimentEventType.Pellet)
+			pellet_max = previous_pellets.aggregate(Max('eev_session_time'))['eev_session_time__max']
+			self.eev_pellet_elapsed_time_since_last = self.ebt_start_time - pellet_max
+			self.save()
+
+	def populate_contains_pellet(self, recalculate=False):
+		if self.ebt_contains_pellet is None or recalculate:
+			bout_events = ExperimentEvent.objects.filter(monkey=self.mtd.monkey, eev_session_time__gte=self.ebt_start_time, eev_session_time__lte=self.ebt_end_time)
+			event_types = bout_events.values_list('eev_event_type')
+			self.ebt_contains_pellet = ExperimentEventType.Pellet in event_types
+			self.save()
 
 	def clean(self):
 		if self.ebt_end_time < self.ebt_start_time:
@@ -853,16 +834,6 @@ class ExperimentEvent(models.Model):
 	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
 
 	eev_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True)
-
-	def populate_time_since_pellet(self, recalculate=False):
-		if not self.eev_pellet_elapsed_time_since_last or recalculate:
-			current = self.eev_occurred
-			previous_events = ExperimentEvent.objects.filter(eev_occurred__lt=current).order_by('eev_occurred')
-			previous_pellets = previous_events.filter(eev_event_type=ExperimentEventType.Pellet)
-			pellet_max = previous_pellets.aggregate(Max('eev_occurred'))['eev_occurred__max']
-			time_diff = current-pellet_max
-			self.eev_pellet_elapsed_time_since_last = time_diff.seconds
-			self.save()
 
 	class Meta:
 		db_table = 'eev_experiment_events'
