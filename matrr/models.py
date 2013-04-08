@@ -849,8 +849,9 @@ class CohortBout(models.Model):
 	cbt_number = models.IntegerField('CBout number', blank=False, null=False, default=-1)
 	cbt_start_time = models.IntegerField('Start time [s]', blank=False, null=False, default=-1)
 	cbt_end_time = models.IntegerField('End time [s]', blank=False, null=False, default=-1)
-#	cbt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
-#	cbt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
+
+	cbt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, default=None,
+		help_text="This is the threshold to allow a bout's inclusion in this CohortBout.  All EBT.ebt_pellet_elapsed_time_since_last >= this field.")
 
 	class Meta:
 		db_table = 'cbt_cohort_bouts'
