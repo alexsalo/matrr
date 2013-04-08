@@ -730,17 +730,17 @@ class ExperimentBout(models.Model):
 	ebt_id = models.AutoField(primary_key=True)
 	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='bouts_set')
 	ebt_number = models.PositiveIntegerField('Bout number', blank=False, null=False)
-	ebt_start_time = models.PositiveIntegerField('Start time [s]', blank=False, null=False)
-	ebt_end_time = models.PositiveIntegerField('End time [s]', blank=False, null=False)
+	ebt_start_time = models.PositiveIntegerField('Start time [s]', blank=False, null=False, db_index=True)
+	ebt_end_time = models.PositiveIntegerField('End time [s]', blank=False, null=False, db_index=True)
 	ebt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
 	ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
-	ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
+	ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False, db_index=True)
 
 	cbt = models.ForeignKey('CohortBout', blank=True, null=True, default=None, related_name='ebt_set', on_delete=models.SET_NULL)
 	ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True, help_text="Bout's volume as a percentage of total ethanol consumed that day")
 	ebt_contains_pellet = models.NullBooleanField('Pellet distributed during bout', blank=True, null=True, default=None,
-		help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.')
-	ebt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, default=None)
+		help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.', db_index=True)
+	ebt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, default=None, db_index=True)
 
 	def populate_pct_vol_total_etoh(self, recalculate=False):
 		if recalculate or not self.ebt_pct_vol_total_etoh:
@@ -808,12 +808,12 @@ class ExperimentEvent(models.Model):
 	dex_type = models.CharField('Experiment Type', choices=DexTypesChoices, max_length=100, help_text='The type of experiment. (ex. "Open Access")')
 	eev_source_row_number = models.PositiveIntegerField('Source file row number', blank=False, null=False)
 	eev_occurred = models.DateTimeField('Event occurred', blank=False, null=False)
-	eev_dose = models.FloatField('Dose', blank=False, null=False)
+	eev_dose = models.FloatField('Dose', blank=False, null=False, db_index=True)
 	eev_panel = models.PositiveIntegerField('Panel', null=False, blank=False)
 	eev_fixed_time = models.PositiveIntegerField('Fixed time [s]', blank=True, null=True)
 	eev_experiment_state = models.IntegerField('Induction experiment state', validators=[MaxValueValidator(3), MinValueValidator(0)], blank=False, null=False)
-	eev_event_type = models.CharField('Event type (Time/Pellet/Drink)', max_length=1, choices=ExperimentEventType, blank=False, null=False)
-	eev_session_time = models.PositiveIntegerField('Session time [s]', blank=False, null=False)
+	eev_event_type = models.CharField('Event type (Time/Pellet/Drink)', max_length=1, choices=ExperimentEventType, blank=False, null=False, db_index=True)
+	eev_session_time = models.PositiveIntegerField('Session time [s]', blank=False, null=False, db_index=True)
 	eev_segement_time = models.PositiveIntegerField('Segment time [s]', blank=False, null=False)
 	eev_pellet_time = models.PositiveIntegerField('Pellet time [s]', blank=False, null=False)
 	eev_etoh_side = models.CharField('EtOH side (Right/Left)', max_length=1, choices=LeftRight, blank=True, null=True)
@@ -833,7 +833,7 @@ class ExperimentEvent(models.Model):
 	eev_veh_drink_number = models.PositiveIntegerField('H20 drink number', blank=True, null=True)
 	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
 
-	eev_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True)
+	eev_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, db_index=True)
 
 	class Meta:
 		db_table = 'eev_experiment_events'
