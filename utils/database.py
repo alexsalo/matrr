@@ -2207,14 +2207,14 @@ def load_tissue_inventory_csv(filename):
 	print "Success."
 
 @commit_on_success # I'm pretty sure this will wait to commit the all cbts until the entire recursion tree is done
-def _create_cbt(bouts, date, cbt_number=0, overwrite=False, minutes_to_exclude=0):
+def _create_cbt(bouts, date, cbt_number=0, overwrite=False, seconds_to_exclude=0):
 	"""
 	This recursive function will iterate thru the bouts' start and end times to create a CohortBout.
 	When it finds a bout start time that is over 5 minutes from this function's CohortBout it will call itself again to create a new CohortBout with the remaining bout times.
 	"""
 	if len(bouts):
 		ov = overwrite # I need to be able to disable overwrite in a loop, but continue to pass the same argument into deeper recursions
-		cbt, is_new = CohortBout.objects.get_or_create(dex_date=date, cbt_number=cbt_number, cbt_pellet_elapsed_time_since_last=minutes_to_exclude)
+		cbt, is_new = CohortBout.objects.get_or_create(dex_date=date, cbt_number=cbt_number, cbt_pellet_elapsed_time_since_last=seconds_to_exclude)
 		if not is_new and not ov:
 			msg = "CBT already exists, overwrite=False.  Returning..."
 			print msg
@@ -2236,7 +2236,7 @@ def _create_cbt(bouts, date, cbt_number=0, overwrite=False, minutes_to_exclude=0
 				# next, begin(or continue) the recursion.
 				# bouts[index:]: We don't need to pass in bouts we've already evaluated
 				# cbt_number+1: We need to increment the cbt_number, to maintain distinct CBTs within a single day
-				_create_cbt(bouts[index:], date, cbt_number+1, overwrite=overwrite, minutes_to_exclude=minutes_to_exclude)
+				_create_cbt(bouts[index:], date, cbt_number+1, overwrite=overwrite, seconds_to_exclude=seconds_to_exclude)
 				break # this break is crutial. the recursion will continue the rest of the bout loop.
 			else:
 				# This bout's start time within the current CBT's timespan
@@ -2245,7 +2245,7 @@ def _create_cbt(bouts, date, cbt_number=0, overwrite=False, minutes_to_exclude=0
 				cbt.cbt_end_time = max(cbt.cbt_end_time, bout['ebt_end_time'])
 		cbt.save() # If we get here, we've run out of bouts to loop thru for this day.  This will end the recursion
 
-def create_cohort_bouts(cohort, overwrite=False, minutes_to_exclude=0):
+def create_cohort_bouts(cohort, overwrite=False, seconds_to_exclude=0):
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -2258,10 +2258,10 @@ def create_cohort_bouts(cohort, overwrite=False, minutes_to_exclude=0):
 	for date in all_dates:
 		# Get all the bout start and end times from each date
 		bouts = ExperimentBout.objects.filter(mtd__monkey__cohort=cohort, mtd__drinking_experiment__dex_date=date).order_by('ebt_start_time')
-		bouts = bouts.filter(ebt_contains_pellet=False, ebt_pellet_elapsed_time_since_last__gte=minutes_to_exclude*60)
+		bouts = bouts.filter(ebt_contains_pellet=False, ebt_pellet_elapsed_time_since_last__gte=seconds_to_exclude)
 		bout_values = bouts.values('ebt_start_time', 'ebt_end_time')
 		# And send the times into a recursion loop
-		_create_cbt(bout_values, date, cbt_number=0, overwrite=overwrite, minutes_to_exclude=minutes_to_exclude)
+		_create_cbt(bout_values, date, cbt_number=0, overwrite=overwrite, seconds_to_exclude=seconds_to_exclude)
 		# After we've created all the cohort bouts, we need to update the bouts cbt foreign key association
 		cbts = CohortBout.objects.filter(dex_date=date)
 		for cbt in cbts:

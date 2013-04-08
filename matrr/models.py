@@ -759,7 +759,7 @@ class ExperimentBout(models.Model):
 	def populate_contains_pellet(self, recalculate=False):
 		if self.ebt_contains_pellet is None or recalculate:
 			bout_events = ExperimentEvent.objects.filter(monkey=self.mtd.monkey, eev_session_time__gte=self.ebt_start_time, eev_session_time__lte=self.ebt_end_time)
-			event_types = bout_events.values_list('eev_event_type')
+			event_types = bout_events.values_list('eev_event_type', flat=True)
 			self.ebt_contains_pellet = ExperimentEventType.Pellet in event_types
 			self.save()
 
