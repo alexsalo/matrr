@@ -846,6 +846,7 @@ class CohortBout(models.Model):
 	cbt_number, cbt_start and cbt_end values of -1 indicate this bout has not finished being created.
 	"""
 	cbt_id = models.AutoField(primary_key=True)
+	cohort = models.ForeignKey(Cohort, related_name='cbt_set', db_column='coh_cohort_id', null=False, blank=False, default=2, help_text='Choose the cohort associated with these bouts.')
 	dex_date = models.DateField('Date', help_text='The date this bout occurred')
 	cbt_number = models.IntegerField('CBout number', blank=False, null=False, default=-1)
 	cbt_start_time = models.IntegerField('Start time [s]', blank=False, null=False, default=-1)
