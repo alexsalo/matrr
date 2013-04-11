@@ -2254,7 +2254,7 @@ def create_cohort_bouts(cohort, overwrite=False, seconds_to_exclude=0):
 
 	all_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 	# Get all the dates for this cohort
-	all_dates = all_mtds.dates('drinking_experiment__dex_date', flat=True).order_by('drinking_experiment__dex_date')
+	all_dates = all_mtds.dates('drinking_experiment__dex_date').order_by('drinking_experiment__dex_date')
 	for date in all_dates:
 		# Get all the bout start and end times from each date
 		bouts = ExperimentBout.objects.filter(mtd__monkey__cohort=cohort, mtd__drinking_experiment__dex_date=date).order_by('ebt_start_time')
