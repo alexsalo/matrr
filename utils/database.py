@@ -2254,16 +2254,17 @@ def create_cohort_bouts(cohort, overwrite=False, seconds_to_exclude=0):
 
 	all_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
 	# Get all the dates for this cohort
-	all_dates = all_mtds.values_list('drinking_experiment__dex_date', flat=True).distinct().order_by('drinking_experiment__dex_date')
+	all_dates = all_mtds.dates('drinking_experiment__dex_date', flat=True).order_by('drinking_experiment__dex_date')
 	for date in all_dates:
 		# Get all the bout start and end times from each date
 		bouts = ExperimentBout.objects.filter(mtd__monkey__cohort=cohort, mtd__drinking_experiment__dex_date=date).order_by('ebt_start_time')
-		bouts = bouts.filter(ebt_contains_pellet=False, ebt_pellet_elapsed_time_since_last__gte=seconds_to_exclude)
+		if seconds_to_exclude:
+			bouts = bouts.filter(ebt_contains_pellet=False, ebt_pellet_elapsed_time_since_last__gte=seconds_to_exclude)
 		bout_values = bouts.values('ebt_start_time', 'ebt_end_time')
 		# And send the times into a recursion loop
 		_create_cbt(bout_values, date, cohort, cbt_number=0, overwrite=overwrite, seconds_to_exclude=seconds_to_exclude)
 		# After we've created all the cohort bouts, we need to update the bouts cbt foreign key association
-		cbts = CohortBout.objects.filter(dex_date=date)
+		cbts = CohortBout.objects.filter(cohort=cohort, dex_date=date)
 		for cbt in cbts:
 			# I didn't update the cbt fk in the recursion because this update should be much faster
 			bouts.filter(ebt_start_time__gte=cbt.cbt_start_time, ebt_end_time__lte=cbt.cbt_end_time).update(cbt=cbt)
