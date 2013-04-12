@@ -1,11 +1,11 @@
 #-*- coding:utf-8 - *-
 # http://aimotion.blogspot.com/2013/01/machine-learning-and-data-mining.html
 
-def load_dataset(cohort_pk):
+def load_dataset(cohort_pk, minutes=0):
 	"Load the sample dataset."
 #    return [[1, 3, 4], [2, 3, 5], [1, 2, 3, 5], [2, 5]]
 	from matrr.models import CohortBout
-	cbts = CohortBout.objects.filter(cohort=cohort_pk)
+	cbts = CohortBout.objects.filter(cohort=cohort_pk, cbt_pellet_elapsed_time_since_last=minutes*60)
 	bout_groups = list()
 	for cbt in cbts:
 		monkeys = cbt.ebt_set.all().values_list('mtd__monkey', flat=True).distinct()
