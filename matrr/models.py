@@ -736,7 +736,8 @@ class ExperimentBout(models.Model):
 	ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
 	ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False, db_index=True)
 
-	cbt = models.ForeignKey('CohortBout', blank=True, null=True, default=None, related_name='ebt_set', on_delete=models.SET_NULL)
+	cbt_set = models.ManyToManyField('CohortBout', blank=True, null=True, default=None, related_name='ebt_set')
+
 	ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True, help_text="Bout's volume as a percentage of total ethanol consumed that day")
 	ebt_contains_pellet = models.NullBooleanField('Pellet distributed during bout', blank=True, null=True, default=None,
 		help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.', db_index=True)
@@ -858,7 +859,7 @@ class CohortBout(models.Model):
 	def populate_ebt_set(self):
 		ebts = ExperimentBout.objects.filter(mtd__monkey__cohort=self.cohort, mtd__drinking_experiment__dex_date=self.dex_date)
 		ebts = ebts.filter(ebt_start_time__gte=self.cbt_start_time).filter(ebt_end_time__lte=self.cbt_end_time)
-		ebts.update(cbt=self)
+		self.ebt_set.add(*ebts)
 
 	class Meta:
 		db_table = 'cbt_cohort_bouts'

@@ -2263,8 +2263,7 @@ def create_cohort_bouts(cohort, overwrite=False, seconds_to_exclude=0):
 		# And send the times into a recursion loop
 		_create_cbt(bout_values, date, cohort, cbt_number=0, overwrite=overwrite, seconds_to_exclude=seconds_to_exclude)
 		# After we've created all the cohort bouts, we need to update the bouts cbt foreign key association
-		cbts = CohortBout.objects.filter(cohort=cohort, dex_date=date)
-		bouts = bouts.all()
+		cbts = CohortBout.objects.filter(cohort=cohort, dex_date=date, cbt_pellet_elapsed_time_since_last=seconds_to_exclude)
 		for cbt in cbts:
-			# I didn't update the cbt fk in the recursion because this update should be much faster
+			# I didn't update the cbt fk in the recursion because this update should be faster
 			cbt.populate_ebt_set()
