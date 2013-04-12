@@ -2206,7 +2206,6 @@ def load_tissue_inventory_csv(filename):
 				tss.save()
 	print "Success."
 
-@commit_on_success # I'm pretty sure this will wait to commit the all cbts until the entire recursion tree is done
 def _create_cbt(bouts, date, cohort, cbt_number=0, overwrite=False, seconds_to_exclude=0):
 	"""
 	This recursive function will iterate thru the bouts' start and end times to create a CohortBout.
@@ -2231,7 +2230,7 @@ def _create_cbt(bouts, date, cohort, cbt_number=0, overwrite=False, seconds_to_e
 			# New CBT will need to be triggered if the bout's start time is >= 300 seconds after the cbt_end_time
 			# this means there was a >300second gap between the end of a cohort bout and the start of another monkey bout.  This defines a new CBT
 			bout_gap = bout['ebt_start_time'] - cbt.cbt_end_time
-			if bout_gap >= 300:
+			if bout_gap >= 5*60:
 				cbt.save() # first, save this CBT
 				# next, begin(or continue) the recursion.
 				# bouts[index:]: We don't need to pass in bouts we've already evaluated
@@ -2265,6 +2264,7 @@ def create_cohort_bouts(cohort, overwrite=False, seconds_to_exclude=0):
 		_create_cbt(bout_values, date, cohort, cbt_number=0, overwrite=overwrite, seconds_to_exclude=seconds_to_exclude)
 		# After we've created all the cohort bouts, we need to update the bouts cbt foreign key association
 		cbts = CohortBout.objects.filter(cohort=cohort, dex_date=date)
+		bouts = bouts.all()
 		for cbt in cbts:
 			# I didn't update the cbt fk in the recursion because this update should be much faster
-			bouts.filter(ebt_start_time__gte=cbt.cbt_start_time, ebt_end_time__lte=cbt.cbt_end_time).update(cbt=cbt)
+			cbt.populate_ebt_set()

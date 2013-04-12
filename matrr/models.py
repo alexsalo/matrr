@@ -855,6 +855,12 @@ class CohortBout(models.Model):
 	cbt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, default=None,
 		help_text="This is the threshold to allow a bout's inclusion in this CohortBout.  All EBT.ebt_pellet_elapsed_time_since_last >= this field.")
 
+	def populate_ebt_set(self):
+		ebts = ExperimentBout.objects.filter(mtd__monkey__cohort=self.cohort, mtd__drinking_experiment__dex_date=self.dex_date)
+		ebts = ebts.filter(ebt_start_time__gte=self.cbt_start_time).filter(ebt_end_time__lte=self.cbt_end_time)
+		ebts.update(cbt=self)
+		print self.ebt_set.all().count()
+
 	class Meta:
 		db_table = 'cbt_cohort_bouts'
 
