@@ -859,7 +859,6 @@ class CohortBout(models.Model):
 		ebts = ExperimentBout.objects.filter(mtd__monkey__cohort=self.cohort, mtd__drinking_experiment__dex_date=self.dex_date)
 		ebts = ebts.filter(ebt_start_time__gte=self.cbt_start_time).filter(ebt_end_time__lte=self.cbt_end_time)
 		ebts.update(cbt=self)
-		print self.ebt_set.all().count()
 
 	class Meta:
 		db_table = 'cbt_cohort_bouts'
