@@ -1730,7 +1730,7 @@ class Request(models.Model, DiffingMixin):
 			return 'orange'
 
 	def contains_genetics(self):
-		if self.tissue_request_set.filter(rtt_fix_type__in=['RNA', 'DNA']).count():
+		if self.tissue_request_set.filter(Q(rtt_fix_type='RNA') | Q(rtt_fix_type='DNA')).count():
 			return True
 		return False
 
