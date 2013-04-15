@@ -405,8 +405,6 @@ def cohorts_scatterbox():
 	xtickNames = pyplot.setp(main_plot, xticklabels=x_labels)
 	pyplot.setp(xtickNames, rotation=45)
 
-#------
-
 def cohorts_bec_stage_scatter(stage):
 	cohorts = list()
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')) # adults
