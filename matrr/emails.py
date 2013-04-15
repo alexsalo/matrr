@@ -350,7 +350,7 @@ def send_processed_request_email(form_data, req_request):
 	subject = form_data['subject']
 	body = form_data['body']
 	subject = ' '.join(subject.splitlines())
-	perm = Permission.objects.get(codename='matrr.bcc_request_email')
+	perm = Permission.objects.get(codename='bcc_request_email')
 	bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
 	email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
 	if req_request.req_status != RequestStatus.Rejected:
@@ -437,7 +437,7 @@ def send_dna_request_details(req_request):
 
 	The attached invoice should provide any details required for the extraction.  If you have any questions please contact a MATRR administrator.
 	"""
-	perm = Permission.objects.get(codename='matrr.ship_genetics')
+	perm = Permission.objects.get(codename='ship_genetics')
 	recipients = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
 	email = EmailMessage(subject, body, from_email, recipients)
 
