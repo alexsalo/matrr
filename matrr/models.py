@@ -1766,7 +1766,7 @@ class Shipment(models.Model):
 		return TissueRequest.objects.filter(shipment=self)
 
 	def contains_genetics(self):
-		if self.get_tissue_requests().filter(rtt_fix_type__in=['RNA', 'DNA']).count():
+		if self.get_tissue_requests().filter(rtt_prep_type__in=['RNA', 'DNA']).count():
 			return True
 		return False
 
