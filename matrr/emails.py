@@ -350,7 +350,7 @@ def send_processed_request_email(form_data, req_request):
 	subject = form_data['subject']
 	body = form_data['body']
 	subject = ' '.join(subject.splitlines())
-	perm = Permission.objects.get(codename='bcc_request_email')
+	perm = Permission.objects.get(codename='matrr.bcc_request_email')
 	bcc_list = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
 	email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, [req_request.user.email], bcc=bcc_list)
 	if req_request.req_status != RequestStatus.Rejected:
@@ -360,6 +360,8 @@ def send_processed_request_email(form_data, req_request):
 		outfile.close()
 		email.attach_file(outfile.name)
 	email.send()
+	if req_request.contains_genetics() and req_request.req_status != RequestStatus.Rejected:
+		send_dna_request_details(req_request)
 
 # matrr
 def send_contact_us_email(form_data, user):
@@ -428,19 +430,23 @@ def send_mta_uploaded_email(account):
 # matrr
 def send_dna_request_details(req_request):
 	from_email = Account.objects.get(user__username='matrr_admin').email
+	subject = "A user has requested DNA/RNA"
+	body = \
+	"""
+	This email is to notify you that a user has requested tissue DNA- or RNA-fixed tissues from cohort %s.  A tech user will ship the tissues needed for the extraction to you.
 
-	# todo: create permission for this email
-	users = Account.objects.users_with_perm('')
-	for user in users:
-		recipients = [user.email]
+	The attached invoice should provide any details required for the extraction.  If you have any questions please contact a MATRR administrator.
+	"""
+	perm = Permission.objects.get(codename='matrr.ship_genetics')
+	recipients = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list('email', flat=True)
+	email = EmailMessage(subject, body, from_email, recipients)
 
-		# todo: actually write the email
-		subject = ''
-		body = ''
-
-		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-		if ret > 0:
-			print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+	outfile = open('/tmp/MATRR_Invoice-%s.pdf' % str(req_request.pk), 'wb')
+	context = {'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
+	helper.export_template_to_pdf('pdf_templates/invoice.html', context, outfile=outfile)
+	outfile.close()
+	email.attach_file(outfile.name)
+	email.send()
 
 # matrr
 def send_rud_data_available_email(rud):

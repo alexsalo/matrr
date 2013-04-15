@@ -17,7 +17,7 @@ from django.dispatch import receiver
 from datetime import datetime, date, timedelta
 from string import lower, replace
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 
 def get_sentinel_user():
 	return User.objects.get_or_create(username='deleted')[0]
@@ -127,6 +127,11 @@ RequestStatus =  Enumeration([
 						('AC', 'Accepted', 'Accepted'),
 						('PA', 'Partially', 'Partially accepted'),
 						('SH', 'Shipped', 'Shipped'),
+					])
+ShipmentStatus =  Enumeration([
+						('UN', 'Unshipped', 'Unshipped'), # built, but not shipped
+						('SH', 'Shipped', 'Shipped'), # shipment has been sent to the customer
+						('GN', 'Genetics', 'Genetics'), # shipment has been sent to the in-house DNA/RNA collection facility
 					])
 VerificationStatus =  Enumeration([
 						('CP', 'Complete', 'Complete'),
@@ -541,6 +546,7 @@ class Account(models.Model):
 			('bcc_request_email', 'Receive BCC of processed request emails'),
 			('po_manifest_email', 'Receive PO shipping manifest email'),
 			('verify_mta', 'Can verify MTA uploads'),
+			('ship_genetics', 'Can ship RNA/DNA'),
 		])
 
 
@@ -1438,30 +1444,20 @@ class Request(models.Model, DiffingMixin):
 	user = models.ForeignKey(User, null=False, db_column='usr_user_id', editable=False, )
 	req_modified_date = models.DateTimeField(auto_now_add=True, editable=False, auto_now=True)
 	req_request_date = models.DateTimeField(editable=False, auto_now_add=True)
-	req_experimental_plan = models.FileField('Experimental Plan', upload_to='experimental_plans/',
-											 default='', null=True, blank=True,
-											 help_text='You may upload a detailed description of your research plans for the tissues you are requesting.')
-	req_project_title = models.CharField('Project Title', null=False, blank=False,
-										 max_length=200,
-										 help_text='The name of the project or proposal these tissues will be used in.')
+	req_experimental_plan = models.FileField('Experimental Plan', upload_to='experimental_plans/', default='', null=True, blank=True,
+		help_text='You may upload a detailed description of your research plans for the tissues you are requesting.')
+	req_project_title = models.CharField('Project Title', null=False, blank=False, max_length=200,
+		help_text='The name of the project or proposal these tissues will be used in.')
 	req_reason = models.TextField('Purpose of Tissue Request', null=False, blank=False,
-								  help_text='Please provide a short paragraph describing the hypothesis and methods proposed.')
+		help_text='Please provide a short paragraph describing the hypothesis and methods proposed.')
 	req_funding = models.TextField('Source of Funding', null=True, blank=False,
-								   help_text='Please describe the source of funding which will be used for this request.')
+		help_text='Please describe the source of funding which will be used for this request.')
 	req_progress_agreement = models.BooleanField(
-		'I acknowledge that I will be required to submit a 90 day progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.'
-		,
-		blank=False,
-		null=False, )
-	req_safety_agreement = models.BooleanField(
-		'I acknowledge that I have read and understand the potential biohazards associated with tissue shipment.'
-		,
-		blank=False,
-		null=False, )
-	req_referred_by = models.CharField('How did you hear about the tissue bank?',
-									   choices=REFERRAL_CHOICES,
-									   null=False,
-									   max_length=100)
+		'I acknowledge that I will be required to submit a 90 day progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.',
+		blank=False, null=False)
+	req_safety_agreement = models.BooleanField('I acknowledge that I have read and understand the potential biohazards associated with tissue shipment.',
+		blank=False, null=False)
+	req_referred_by = models.CharField('How did you hear about the tissue bank?', choices=REFERRAL_CHOICES, null=False, max_length=100)
 	req_notes = models.TextField('Request Notes', null=True, blank=True)
 	req_report_asked = models.BooleanField('Progress report asked', default=False)
 	req_report_asked_count = models.IntegerField('Progress report requested count', default=0)
@@ -1678,7 +1674,7 @@ class Request(models.Model, DiffingMixin):
 	def ship_request(self):
 		fully_shipped = True
 		for tr in self.tissue_request_set.all():
-			if tr.shipment is None or tr.shipment.shp_shipment_date is None:
+			if tr.shipment is None or tr.shipment.shp_shipment_status != ShipmentStatus.Shipped:
 				fully_shipped = False
 				break
 
@@ -1694,7 +1690,7 @@ class Request(models.Model, DiffingMixin):
 
 	def get_max_shipment(self):
 		try:
-			return self.shipments.all().order_by('-shp_shipment_date')[0]
+			return self.shipments.shipped().order_by('-shp_shipment_date')[0]
 		except IndexError:
 			return ''
 
@@ -1733,6 +1729,11 @@ class Request(models.Model, DiffingMixin):
 		else:
 			return 'orange'
 
+	def contains_genetics(self):
+		if self.tissue_request_set.filter(rtt_fix_type__in=['RNA', 'DNA']).count():
+			return True
+		return False
+
 	class Meta:
 		db_table = 'req_requests'
 		permissions = (
@@ -1741,22 +1742,57 @@ class Request(models.Model, DiffingMixin):
 		)
 
 
+class ShipmentManager(models.Manager):
+	def unshipped(self):
+		return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Unshipped)
+
+	def genetics(self):
+		return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Genetics)
+
+	def shipped(self):
+		return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Shipped)
+
+
 class Shipment(models.Model):
+	objects = ShipmentManager()
 	shp_shipment_id = models.AutoField(primary_key=True)
-	user = models.ForeignKey(User, null=False,
-							 related_name='shipment_set')
-	req_request = models.ForeignKey(Request, null=False,
-									   related_name='shipments')
-	shp_tracking = models.CharField('Tracking Number', null=True, blank=True,
-									max_length=100,
-									help_text='Please enter the tracking number for this shipment.')
-	shp_shipment_date = models.DateField('Shipped Date',
-										 blank=True,
-										 null=True,
-										 help_text='The date these tissues were shipped.')
+	user = models.ForeignKey(User, null=False, related_name='shipment_set')
+	req_request = models.ForeignKey(Request, null=False, related_name='shipments')
+	shp_tracking = models.CharField('Tracking Number', null=True, blank=True, max_length=100, help_text='Please enter the tracking number for this shipment.')
+	shp_shipment_date = models.DateField('Shipped Date', blank=True, null=True, help_text='The date these tissues were shipped.')
+	shp_shipment_status = models.CharField("Shipment Status", null=False, blank=False, max_length=2, default=ShipmentStatus.Unshipped, choices=ShipmentStatus)
 
 	def get_tissue_requests(self):
 		return TissueRequest.objects.filter(shipment=self)
+
+	def contains_genetics(self):
+		if self.get_tissue_requests().filter(rtt_fix_type__in=['RNA', 'DNA']).count():
+			return True
+		return False
+
+
+	def ship(self, user):
+		if self.contains_genetics():
+			if self.shp_shipment_status == ShipmentStatus.Unshipped:
+				return self._send(user) # staff user sent the tissue to the DNA/RNA processing facility
+			if self.shp_shipment_status == ShipmentStatus.Genetics:
+				# if the user isn't part of the DNA processing facility, raise a permission exception
+				if not user.has_perm('matrr.ship_genetics'):
+					raise PermissionDenied("User does not have permission to ship genetic tissues.")
+				# otherwise behave normally, because this tissue is either not genetic, or is being shipped with appropriate permissions.
+		self.shp_shipment_date = datetime.today()
+		self.user = user
+		self.shp_shipment_status = ShipmentStatus.Shipped
+		self.save()
+		return self.shp_shipment_status
+
+	def _send(self, user):
+		# updates self to indicate it has been sent to the DNA processing facility
+		self.shp_shipment_date = datetime.today()
+		self.user = user
+		self.shp_shipment_status = ShipmentStatus.Genetics
+		self.save()
+		return self.shp_shipment_status
 
 	class Meta:
 		db_table = 'shp_shipments'

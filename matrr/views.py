@@ -1387,17 +1387,17 @@ def shipping_history_user(request, user_id):
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_overview(request):
-#	Requests Pending Shipment
+	#Requests Pending Shipment
 	accepted_requests = Request.objects.none()
 	for req_request in Request.objects.accepted_and_partially():
 		if req_request.is_missing_shipments():
 			accepted_requests |= Request.objects.filter(pk=req_request.pk)
-
-		#	Pending Shipments
-	pending_shipments = Shipment.objects.filter(shp_shipment_date=None)
-
-	#	Shipped Shipments
-	shipped_shipments = Shipment.objects.exclude(shp_shipment_date=None).exclude(req_request__req_status=RequestStatus.Shipped)
+	# Pending Shipments
+	pending_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Unshipped)
+	if request.user.has_perm('matrr.ship_genetics'):
+		pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Genetics)
+	# Shipped Shipments
+	shipped_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Shipped).exclude(req_request__req_status=RequestStatus.Shipped)
 
 	return render_to_response('matrr/shipping/shipping_overview.html',
 			{'accepted_requests': accepted_requests,
@@ -1475,15 +1475,20 @@ def shipment_detail(request, shipment_id):
 													  3) User has submitted a valid MTA.\
 								 					  4) User has no pending research update requests.")
 			else:
-				messages.success(request, "Shipment #%d for user %s has been shipped." % (shipment.pk, req_request.user.username))
-				shipment.shp_shipment_date = datetime.today()
-				shipment.user = request.user
-				shipment.save()
-				if settings.PRODUCTION:
-					emails.send_po_manifest_upon_shipment(shipment)
-					emails.notify_user_upon_shipment(shipment)
-				req_request.ship_request()
-				return redirect(reverse('shipping-overview'))
+				try:
+					shipment_status = shipment.ship(request.user)
+				except PermissionDenied as pd:
+					messages.error(request, str(pd))
+				else:
+					if shipment_status == ShipmentStatus.Shipped:
+						messages.success(request, "Shipment #%d has been shipped." % shipment.pk)
+						if settings.PRODUCTION:
+							emails.send_po_manifest_upon_shipment(shipment)
+							emails.notify_user_upon_shipment(shipment)
+					if shipment_status == ShipmentStatus.Genetics:
+						messages.success(request, "Shipment #%d has been sent to the DNA processing facility." % shipment.pk)
+					req_request.ship_request()
+					return redirect(reverse('shipping-overview'))
 
 		if 'delete_shipment' in request.POST:
 			messages.warning(request, "Are you sure you want to delete this shipment?  You will have to recreate it before shipping the tissue.")

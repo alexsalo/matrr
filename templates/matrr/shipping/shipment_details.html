@@ -134,7 +134,7 @@
 	</div>
 	<div class=clearfix></div>
 	<div class='right'>
-		{% if shipment.shp_shipment_date %}
+		{% if shipment.shp_shipment_status == 'SH' %}
 			<div class='sufficient'>Shipped on: {{ shipment.shp_shipment_date }}</div>
 		{% else %}
 			{% if confirm_ship %}
