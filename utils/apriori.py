@@ -1,17 +1,6 @@
 #-*- coding:utf-8 - *-
 # http://aimotion.blogspot.com/2013/01/machine-learning-and-data-mining.html
 
-def load_dataset(cohort_pk, minutes=0):
-	"Load the sample dataset."
-#    return [[1, 3, 4], [2, 3, 5], [1, 2, 3, 5], [2, 5]]
-	from matrr.models import CohortBout
-	cbts = CohortBout.objects.filter(cohort=cohort_pk, cbt_pellet_elapsed_time_since_last=minutes*60)
-	bout_groups = list()
-	for cbt in cbts:
-		monkeys = cbt.ebt_set.all().values_list('mtd__monkey', flat=True).distinct()
-		bout_groups.append(set(monkeys))
-	return bout_groups
-
 def createC1(dataset):
 	"Create a list of candidate item sets of size one."
 	c1 = []
@@ -110,3 +99,23 @@ def generateRules(L, support_data, min_confidence=0.7):
 			else:
 				calc_confidence(freqSet, H1, support_data, rules, min_confidence)
 	return rules
+
+def confederate_groups(cohort_pk, minutes, min_confidence=0):
+	def load_dataset(cohort_pk, minutes=0):
+		from matrr.models import CohortBout
+		cbts = CohortBout.objects.filter(cohort=cohort_pk, cbt_pellet_elapsed_time_since_last=minutes*60)
+		bout_groups = list()
+		for cbt in cbts:
+			monkeys = cbt.ebt_set.all().values_list('mtd__monkey', flat=True).distinct()
+			bout_groups.append(set(monkeys))
+		return bout_groups
+	import numpy
+	supports = dict()
+	for _support in numpy.arange(.05, .96, .05):
+		data = load_dataset(cohort_pk, minutes=minutes)
+		l, sd = apriori(data, minsupport=_support)
+		rules = generateRules(l, sd, min_confidence)
+		supports[_support] = rules
+	return supports
+
+
