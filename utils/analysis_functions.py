@@ -213,7 +213,7 @@ def dump_postprandial_matrices(monkeys_only=False):
 					cohort = Cohort.objects.get(pk=cohort)
 				except Cohort.DoesNotExist:
 					raise Exception("%s not a valid cohort." % str(cohort))
-			monkeys = cohort.monkey_set.filter(mky_drinking=True).order_by('pk')
+			monkeys = Monkey.objects.Drinkers().filter(cohort=cohort).order_by('pk')
 
 		_min = dict()
 		for mky in monkeys:
