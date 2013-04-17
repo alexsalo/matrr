@@ -328,7 +328,13 @@ class CohortEvent(models.Model):
 		db_table = 'cev_cohort_events'
 
 
+class MonkeyManager(models.Manager):
+	def Drinkers(self):
+		return self.get_query_set().filter(mky_drinking=True).exclude(pk__in=[10043, 10050, 10053])
+
+
 class Monkey(models.Model):
+	objects = MonkeyManager()
 	SEX_CHOICES = ( ('M', 'Male'), ('F', 'Female'))
 	SPECIES = ( ('Rhesus', 'Rhesus'), ('Cyno', 'Cynomolgus'), ('Vervet', 'Vervet'))
 
@@ -338,7 +344,7 @@ class Monkey(models.Model):
 	mky_real_id = models.IntegerField('ID', unique=True,
 									  help_text='The ID of the monkey.')
 	mky_name = models.CharField('Name', max_length=100, blank=True, null=True,
-								help_text='The monkey\'s name.')
+								help_text="The monkey's name.")
 	# Legacy note about the mky_gender field
 	# It was decided sometime 2011 that 'gender' is an inaccurate representation of a monkey's sex.
 	# It should (justly) be 'sex'.

@@ -181,8 +181,6 @@ def dump_postprandial_matrices(monkeys_only=False):
 			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
 			max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
 			min_date = mtds.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
-			if not (min_date and max_date):
-				continue
 			days = float((max_date-min_date).days)
 			_2 = mtds.filter(mtd_etoh_g_kg__gte=2).count() / days
 			_3 = mtds.filter(mtd_etoh_g_kg__gte=3).count() / days
@@ -252,7 +250,7 @@ def dump_postprandial_matrices(monkeys_only=False):
 					dump.writerow(row)
 
 	mky_ids = cohorts.filter(monkey__mky_drinking=True).values_list('monkey__pk', flat=True)
-	monkeys = Monkey.objects.filter(pk__in=mky_ids)
+	monkeys = Monkey.objects.Drinkers().filter(pk__in=mky_ids)
 	cluster_assignment = _cluster_assignment(monkeys)
 	dump = csv.writer(open("AllRhesusMonkeys.csv", 'w'))
 	for _min in minutes:
