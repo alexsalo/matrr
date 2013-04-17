@@ -181,7 +181,7 @@ def dump_postprandial_matrices(monkeys_only=False):
 			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
 			max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
 			min_date = mtds.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
-			if not min_date and max_date:
+			if not (min_date and max_date):
 				continue
 			days = float((max_date-min_date).days)
 			_2 = mtds.filter(mtd_etoh_g_kg__gte=2).count() / days
