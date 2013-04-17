@@ -217,7 +217,7 @@ def dump_postprandial_matrices(monkeys_only=False):
 
 		_min = dict()
 		for mky in monkeys:
-			eevs = ExperimentEvent.objects.filter(monkey=mky).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
+			eevs = ExperimentEvent.objects.filter(monkey=mky, dex_type="Open Access").exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
 			total_volume = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
 			_min[mky] = eevs.exclude(eev_pellet_elapsed_time_since_last__lte=minutes*60).aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] / total_volume
 
