@@ -178,7 +178,7 @@ def dump_postprandial_matrices(monkeys_only=False):
 		_gte3 = dict()
 		_gte4 = dict()
 		for mky in monkeys:
-			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
+			mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=mky)
 			max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
 			min_date = mtds.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
 			days = float((max_date-min_date).days)
@@ -217,7 +217,7 @@ def dump_postprandial_matrices(monkeys_only=False):
 
 		_min = dict()
 		for mky in monkeys:
-			eevs = ExperimentEvent.objects.filter(monkey=mky, dex_type="Open Access").exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
+			eevs = ExperimentEvent.objects.OA().filter(monkey=mky).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
 			total_volume = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
 			_min[mky] = eevs.exclude(eev_pellet_elapsed_time_since_last__lte=minutes*60).aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] / total_volume
 
@@ -283,7 +283,7 @@ def _cohort_etoh_cumsum_nofood(cohort, subplot, minutes_excluded=5):
 	mky_colors = dict()
 	mky_ymax = dict()
 	for idx, m in enumerate(mkys):
-		eevs = ExperimentEvent.objects.filter(monkey=m, dex_type="Induction").exclude(eev_etoh_volume=None).order_by('eev_occurred')
+		eevs = ExperimentEvent.objects.Ind().filter(monkey=m).exclude(eev_etoh_volume=None).order_by('eev_occurred')
 		eevs = eevs.exclude(eev_pellet_elapsed_time_since_last__gte=minutes_excluded*60)
 		if not eevs.count():
 			continue
