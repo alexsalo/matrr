@@ -39,7 +39,7 @@ def cohorts_daytime_bouts_histogram():
 		labels = list()
 		index = 0
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-			bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey)
+			bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
 			bout_starts = bouts.values_list('ebt_start_time', flat=True)
 			bout_starts = numpy.array(bout_starts)
 			y_axes.append(bout_starts)
@@ -95,11 +95,11 @@ def cohorts_daytime_volbouts_bargraph():
 			if start_time >= lights_out and start_time <= lights_on:
 				night_time.append(index)
 			for monkey in monkeys:
-				bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
+				bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
 				bout_vols = bouts.values_list('ebt_volume', flat=True)
 				bouts_sum = numpy.array(bout_vols).sum()
 	#			bout_starts = bout_starts - diff
-				y_axis.append(bouts_sum	)
+				y_axis.append(bouts_sum)
 				x_axis.append(index)
 				index += 1
 				labels.add(str(monkey.pk))
@@ -143,7 +143,7 @@ def cohorts_daytime_bouts_boxplot():
 	index = 0
 	for cohort in cohorts:
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-			bouts = ExperimentBout.objects.filter(mtd__monkey=monkey)
+			bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
 			bout_starts = bouts.values_list('ebt_start_time', flat=True)
 			bout_starts = numpy.array(bout_starts)
 			y_axes.append(bout_starts)
@@ -187,7 +187,7 @@ def cohorts_daytime_bouts_boxplot_remix():
 	index = 0
 	for cohort in cohorts:
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-			bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey)
+			bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
 			night_bouts = bouts.filter(ebt_start_time__gte=lights_out).filter(ebt_start_time__lt=lights_on).values_list('ebt_start_time', flat=True)
 			day_bouts = bouts.filter(ebt_start_time__gte=lights_on) | bouts.filter(ebt_start_time__lt=lights_out)
 			day_bouts = day_bouts.values_list('ebt_start_time', flat=True)
@@ -243,7 +243,7 @@ def cohorts_daytime_bouts_boxplot_doubleremix():
 	index = 0
 	for cohort in cohorts:
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-			bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey)
+			bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
 			night_bouts = bouts.filter(ebt_start_time__gte=lights_out).filter(ebt_start_time__lt=lights_on).values_list('ebt_start_time', flat=True)
 			day_bouts = bouts.filter(ebt_start_time__gte=lights_on) | bouts.filter(ebt_start_time__lt=lights_out)
 			day_bouts = day_bouts.values_list('ebt_start_time', flat=True)
@@ -308,7 +308,7 @@ def cohorts_daytime_bouts_boxplot_hattrick():
 	index = 0
 	for cohort in cohorts:
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-			bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey)
+			bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
 			night_bouts = bouts.filter(ebt_start_time__gte=lights_out).filter(ebt_start_time__lt=lights_on).values_list('ebt_start_time', flat=True)
 			day_bouts = bouts.filter(ebt_start_time__gte=lights_on) | bouts.filter(ebt_start_time__lt=lights_out)
 			day_bouts = day_bouts.values_list('ebt_start_time', flat=True)
@@ -376,7 +376,7 @@ def cohorts_scatterbox():
 		for start_time in day_hours:
 			mky_sums = list()
 			for monkey in monkeys:
-				bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
+				bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
 				bout_vols = bouts.values_list('ebt_volume', flat=True)
 				mky_sum = numpy.array(bout_vols).sum()
 				mky_sums.append(mky_sum)
@@ -431,7 +431,7 @@ def cohorts_bec_stage_scatter(stage):
 		x_axis = list()
 		y_axis = list()
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-			becs = MonkeyBEC.objects.filter(monkey=monkey).filter(mtd__drinking_experiment__dex_type='Induction').order_by('pk')
+			becs = MonkeyBEC.objects.Ind().filter(monkey=monkey).order_by('pk')
 			becs = becs.filter(mtd__mtd_etoh_g_kg__gte=stage_start).filter(mtd__mtd_etoh_g_kg__lte=stage_end)
 			seconds = becs.values_list('mtd__mtd_seconds_to_stageone', flat=True)
 			try:
@@ -474,7 +474,7 @@ def cohort_etoh_gkg_histogram(cohort):
 	y_axes = list()
 	labels = list()
 	for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-		mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment__dex_type='Open Access', monkey=monkey)
+		mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
 		gkg_values = mtds.values_list('mtd_etoh_g_kg', flat=True)
 		gkg_values = numpy.array(gkg_values)
 		y_axes.append(gkg_values)
@@ -500,7 +500,7 @@ def cohort_etoh_quadbar(cohort):
 	subplots = [(i, j) for i in range(2) for j in range(2)]
 	for gkg, _sub in enumerate(subplots, 1):
 		main_plot = fig.add_subplot(main_gs[_sub], sharey=main_plot)
-		main_plot.set_title("Greater than %d g per kg Etoh" % gkg)
+		main_plot.set_title("Open Access, greater than %d g per kg Etoh" % gkg)
 
 		monkeys = cohort.monkey_set.filter(mky_drinking=True).values_list('pk', flat=True)
 		width = .9
@@ -508,7 +508,7 @@ def cohort_etoh_quadbar(cohort):
 		data = list()
 		colors = list()
 		for i, mky in enumerate(monkeys):
-			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, mtd_etoh_g_kg__gte=gkg).count()
+			mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=mky, mtd_etoh_g_kg__gte=gkg).count()
 			mtds = mtds if mtds else .001
 			data.append((mky, mtds))
 			colors.append(cohort_colors[i%2]) # we don't want the colors sorted.  It breaks if you try anyway.
@@ -544,7 +544,7 @@ def cohort_bec_day_distribution(cohort, stage):
 	stage_start = starts[stage]
 	stage_end = ends[stage]
 
-	becs = MonkeyBEC.objects.filter(monkey__cohort=cohort).filter(mtd__drinking_experiment__dex_type='Induction') # cohort and induction filter
+	becs = MonkeyBEC.objects.Ind().filter(monkey__cohort=cohort)# cohort and induction filter
 	becs = becs.filter(mtd__mtd_etoh_g_kg__gte=stage_start).filter(mtd__mtd_etoh_g_kg__lte=stage_end).order_by('bec_collect_date') # stage filter and ordering
 	dates = becs.dates('bec_collect_date', 'day').distinct()
 
@@ -631,7 +631,7 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 			if start_time >= lights_out and start_time <= lights_on:
 				night_time.append(index)
 			for monkey in monkeys:
-				bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
+				bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
 				if phase:
 					bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
 				bout_vols = bouts.values_list('ebt_volume', flat=True)
@@ -691,7 +691,7 @@ def cohorts_daytime_bouts_histogram_split(phase):
 		labels = list()
 		index = 0
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-			bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey)
+			bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
 			if phase:
 				bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
 			bout_starts = bouts.values_list('ebt_start_time', flat=True)
@@ -807,7 +807,7 @@ def cohorts_scatterbox_split(phase):
 		for start_time in day_hours:
 			mky_sums = list()
 			for monkey in monkeys:
-				bouts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_type='Open Access', mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
+				bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
 				bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
 				bout_vols = bouts.values_list('ebt_volume', flat=True)
 				mky_sum = numpy.array(bout_vols).sum()
@@ -863,7 +863,7 @@ def cohort_age_sessiontime(stage):
 		y = list()
 		for monkey in cohort.monkey_set.exclude(mky_age_at_intox=None).exclude(mky_age_at_intox=0):
 			age = monkey.mky_age_at_intox / 365.25
-			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment__dex_type='Induction')
+			mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=monkey)
 			mtds = mtds.filter(mtd_etoh_g_kg__gte=stage_start).filter(mtd_etoh_g_kg__lte=stage_end)
 			avg = mtds.aggregate(Avg('mtd_seconds_to_stageone'))['mtd_seconds_to_stageone__avg']
 			avg /= 3600
@@ -944,7 +944,7 @@ def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 		y = list()
 		for monkey in cohort.monkey_set.exclude(mky_age_at_intox=None).exclude(mky_age_at_intox=0):
 			age = monkey.mky_age_at_intox / 365.25
-			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment__dex_type='Open Access', monkey=monkey)
+			mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
 			if phase:
 				mtds = mtds.filter(**{oa_phases[phase]:cohort_1st_oa_end[cohort]})
 			x.append(age)
