@@ -816,7 +816,16 @@ class ExperimentDrink(models.Model):
 		db_table = 'edr_experiment_drinks'
 
 
+class EEVManager(models.Manager):
+	def Ind(self):
+		return self.get_query_set().filter(dex_type='Induction')
+
+	def OA(self):
+		return self.get_query_set().filter(dex_type='Open Access')
+
+
 class ExperimentEvent(models.Model):
+	objects = EEVManager()
 	eev_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, related_name='event_set', db_column='mky_id', editable=False)
 	dex_type = models.CharField('Experiment Type', choices=DexTypesChoices, max_length=100, help_text='The type of experiment. (ex. "Open Access")')
