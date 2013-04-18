@@ -738,7 +738,16 @@ class MonkeyToDrinkingExperiment(models.Model):
 		db_table = 'mtd_monkeys_to_drinking_experiments'
 
 
+class EBTManager(models.Manager):
+	def Ind(self):
+		return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
+
+	def OA(self):
+		return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Open Access')
+
+
 class ExperimentBout(models.Model):
+	objects = EBTManager()
 	ebt_id = models.AutoField(primary_key=True)
 	mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='bouts_set')
 	ebt_number = models.PositiveIntegerField('Bout number', blank=False, null=False)
@@ -791,7 +800,16 @@ class ExperimentBout(models.Model):
 		db_table = 'ebt_experiment_bouts'
 
 
+class EDRManager(models.Manager):
+	def Ind(self):
+		return self.get_query_set().filter(ebt__mtd__drinking_experiment__dex_type='Induction')
+
+	def OA(self):
+		return self.get_query_set().filter(ebt__mtd__drinking_experiment__dex_type='Open Access')
+
+
 class ExperimentDrink(models.Model):
+	objects = EDRManager()
 	edr_id = models.AutoField(primary_key=True)
 	ebt = models.ForeignKey(ExperimentBout, null=False, db_column='ebt_id', related_name='drinks_set')
 	edr_number = models.PositiveIntegerField('Drink number', blank=False, null=False)
@@ -2551,7 +2569,16 @@ class MonkeyHormone(models.Model):
 		db_table = 'mhm_monkey_hormone'
 
 
+class BECManager(models.Manager):
+	def Ind(self):
+		return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
+
+	def OA(self):
+		return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Open Access')
+
+
 class MonkeyBEC(models.Model):
+	objects = BECManager()
 	bec_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='bec_records', db_column='mky_id', editable=False)
 	mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='bec_record', editable=False, on_delete=models.SET_NULL)
