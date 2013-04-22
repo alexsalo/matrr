@@ -1862,14 +1862,16 @@ def load_hormone_data(file_name, overwrite=False, header=True):
 def load_bec_data(file_name, overwrite=False, header=True):
 	def format_time(unformatted):
 		""" Converts "hh:MM AM" into HH:MM """
-		time, afternoon = unformatted.split(' ')
-		hh, MM = time.split(":")
-		if afternoon.lower() == 'pm':
-			HH = int(hh) + 12
-		else:
-			HH = int(hh)
-		HH = 12 if HH == 24 else HH
-		return "%s:%s" % (str(HH), str(MM))
+		if 'am' in unformatted.lower() or 'pm' in unformatted.lower():
+			time, afternoon = unformatted.split(' ')
+			hh, MM = time.split(":")
+			if afternoon.lower() == 'pm':
+				HH = int(hh) + 12
+			else:
+				HH = int(hh)
+			HH = 12 if HH == 24 else HH
+			return "%s:%s" % (str(HH), str(MM))
+		return unformatted
 
 	fields = (
 		'mky_real_id',			# 0
@@ -1899,6 +1901,8 @@ def load_bec_data(file_name, overwrite=False, header=True):
 		offset = 1 if header else 0
 		for line_number, line in enumerate(read_data[offset:]):
 			data = line.split("\t")
+			if not data[0]:
+				continue
 			try:
 				monkey = Monkey.objects.get(mky_real_id=data[0])
 #				assert monkey.pk == int(data[1])
