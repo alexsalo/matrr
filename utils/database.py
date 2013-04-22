@@ -1901,7 +1901,7 @@ def load_bec_data(file_name, overwrite=False, header=True):
 			data = line.split("\t")
 			try:
 				monkey = Monkey.objects.get(mky_real_id=data[0])
-				assert monkey.pk == int(data[1])
+#				assert monkey.pk == int(data[1])
 			except Monkey.DoesNotExist:
 				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
 				continue
