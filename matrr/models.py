@@ -695,7 +695,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 	def get_etoh_ratio(self):
 		return self.mtd_etoh_intake * 0.4 / self.mtd_weight
 
-	def populate_max_bout_hours(self):
+	def _populate_max_bout_hours(self, save=True):
 		hour_const = 0
 		experiment_len = 22
 
@@ -717,9 +717,10 @@ class MonkeyToDrinkingExperiment(models.Model):
 				max_bout = None
 			field_name = "mtd_pct_max_bout_vol_total_etoh_hour_%d" % (hour_start/2)
 			self.__setattr__(field_name, max_bout)
-			self.save()
+			if save:
+				self.save()
 
-	def populate_mtd_seconds_to_stageone(self):
+	def _populate_mtd_seconds_to_stageone(self, save=True):
 		if self.drinking_experiment.dex_type == 'Open Access':
 			self.mtd_seconds_to_stageone = 0
 		else:
@@ -732,6 +733,12 @@ class MonkeyToDrinkingExperiment(models.Model):
 				self.mtd_seconds_to_stageone = -1
 			else:
 				self.mtd_seconds_to_stageone = eev.eev_session_time
+			if save:
+				self.save()
+
+	def populate_fields(self):
+		self._populate_max_bout_hours(save=False)
+		self._populate_mtd_seconds_to_stageone(save=False)
 		self.save()
 
 	class Meta:
@@ -764,27 +771,36 @@ class ExperimentBout(models.Model):
 		help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.', db_index=True)
 	ebt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, default=None, db_index=True)
 
-	def populate_pct_vol_total_etoh(self, recalculate=False):
+	def _populate_pct_vol_total_etoh(self, recalculate=False, save=True):
 		if recalculate or not self.ebt_pct_vol_total_etoh:
 			_pct = self.ebt_volume / self.mtd.mtd_etoh_intake
 			self.ebt_pct_vol_total_etoh = _pct if _pct > 0 else None
-			self.save()
+			if save:
+				self.save()
 
-	def populate_pellet_elapsed_time_since_last(self, recalculate=False):
+	def _populate_pellet_elapsed_time_since_last(self, recalculate=False, save=True):
 		if not self.ebt_pellet_elapsed_time_since_last or recalculate:
 			previous_events = ExperimentEvent.objects.filter(monkey=self.mtd.monkey, eev_session_time__lt=self.ebt_start_time)
 			previous_pellets = previous_events.filter(eev_event_type=ExperimentEventType.Pellet)
 			pellet_max = previous_pellets.aggregate(Max('eev_session_time'))['eev_session_time__max']
 			pellet_time = self.ebt_start_time - pellet_max if pellet_max else 0
 			self.ebt_pellet_elapsed_time_since_last = pellet_time
-			self.save()
+			if save:
+				self.save()
 
-	def populate_contains_pellet(self, recalculate=False):
+	def _populate_contains_pellet(self, recalculate=False, save=True):
 		if self.ebt_contains_pellet is None or recalculate:
 			bout_events = ExperimentEvent.objects.filter(monkey=self.mtd.monkey, eev_session_time__gte=self.ebt_start_time, eev_session_time__lte=self.ebt_end_time)
 			event_types = bout_events.values_list('eev_event_type', flat=True)
 			self.ebt_contains_pellet = ExperimentEventType.Pellet in event_types
-			self.save()
+			if save:
+				self.save()
+
+	def populate_fields(self, recalculate=False):
+		self._populate_pct_vol_total_etoh(recalculate=recalculate, save=False)
+		self._populate_pellet_elapsed_time_since_last(recalculate=recalculate, save=False)
+		self._populate_contains_pellet(recalculate=recalculate, save=False)
+		self.save()
 
 	def clean(self):
 		if self.ebt_end_time < self.ebt_start_time:
@@ -2479,7 +2495,7 @@ class MonkeyProtein(models.Model):
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
 
-	def populate_stdev(self, recalculate=False):
+	def _populate_stdev(self, recalculate=False, save=True):
 		if self.mpn_stdev is None or recalculate:
 			cohort_proteins = MonkeyProtein.objects.filter(protein=self.protein, mpn_date=self.mpn_date, monkey__in=self.monkey.cohort.monkey_set.all().exclude(mky_id=self.monkey.pk))
 			cp_values = numpy.array(cohort_proteins.values_list('mpn_value', flat=True))
@@ -2487,17 +2503,23 @@ class MonkeyProtein(models.Model):
 			mean = cp_values.mean()
 			diff = self.mpn_value - mean
 			self.mpn_stdev = diff / stdev
-			self.save()
+			if save:
+				self.save()
 
-	def populate_pctdev(self, recalculate=False):
+	def _populate_pctdev(self, recalculate=False, save=True):
 		if self.mpn_pctdev is None or recalculate:
 			cohort_proteins = MonkeyProtein.objects.filter(protein=self.protein, mpn_date=self.mpn_date, monkey__in=self.monkey.cohort.monkey_set.all().exclude(mky_id=self.monkey.pk))
 			cp_values = numpy.array(cohort_proteins.values_list('mpn_value', flat=True))
 			mean = cp_values.mean()
 			diff = self.mpn_value - mean
 			self.mpn_pctdev = diff / mean * 100
-			self.save()
+			if save:
+				self.save()
 
+	def populate_fields(self, recalculate=False):
+		self._populate_stdev(recalculate=recalculate, save=False)
+		self._populate_pctdev(recalculate=recalculate, save=False)
+		self.save()
 
 	class Meta:
 		db_table = 'mpn_monkey_protein'
@@ -2711,7 +2733,7 @@ class CohortMetaData(models.Model):
 	def __unicode__(self):
 		return "%s metadata" % str(self.cohort)
 
-	def populate_self(self):
+	def populate_fields(self):
 		becs = MonkeyBEC.objects.filter(monkey__cohort=self.cohort)
 		data = becs.aggregate(Min('bec_mg_pct'), Max('bec_mg_pct'), Avg('bec_mg_pct'))
 		self.cbc_bec_mg_pct_min = data['bec_mg_pct__min']
