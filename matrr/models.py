@@ -573,6 +573,9 @@ class DrinkingExperiment(models.Model):
 
 
 class MTDManager(models.Manager):
+	def get_query_set(self):
+		return MEXQuerySet(self.model, using=self._db)
+
 	def Ind(self):
 		return self.get_query_set().filter(drinking_experiment__dex_type='Induction')
 
@@ -687,7 +690,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 	mtd_pct_max_bout_vol_total_etoh_hour_10 = models.FloatField('Max Bout in 11th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
 
 	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=True, null=True, default=None, help_text="Seconds it took for monkey to reach day's ethanol allotment")
-	mtd_mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
+	mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	def __unicode__(self):
 		return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey)
@@ -851,6 +854,9 @@ class ExperimentDrink(models.Model):
 
 
 class EEVManager(models.Manager):
+	def get_query_set(self):
+		return MEXQuerySet(self.model, using=self._db)
+
 	def Ind(self):
 		return self.get_query_set().filter(dex_type='Induction')
 
@@ -891,7 +897,7 @@ class ExperimentEvent(models.Model):
 	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
 
 	eev_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, db_index=True)
-	eev_mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
+	mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	class Meta:
 		db_table = 'eev_experiment_events'
@@ -920,6 +926,10 @@ class CohortBout(models.Model):
 	class Meta:
 		db_table = 'cbt_cohort_bouts'
 
+
+class MEXQuerySet(models.query.QuerySet):
+	def exception_filter(self):
+		return self.exclude(mex_exclude=True)
 
 class MonkeyException(models.Model):
 	mex_id = models.AutoField(primary_key=True)
@@ -2607,6 +2617,9 @@ class MonkeyHormone(models.Model):
 
 
 class BECManager(models.Manager):
+	def get_query_set(self):
+		return MEXQuerySet(self.model, using=self._db)
+
 	def Ind(self):
 		return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
 
@@ -2632,7 +2645,7 @@ class MonkeyBEC(models.Model):
 	bec_mg_pct = models.FloatField("Blood Ethanol Conc., mg %", null=False, blank=False)
 
 	bec_pct_intake = models.FloatField("Sample Volume / Total Intake", null=True, blank=True)
-	bec_mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
+	mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.bec_collect_date), str(self.bec_mg_pct))
