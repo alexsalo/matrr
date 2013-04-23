@@ -1199,6 +1199,11 @@ def __mtd_call_max_bout_vol_pct(mtds):
 	return avg, "Average Maximum Bout, as % of total intake"
 #--
 
+rhesus_drinkers = dict()
+rhesus_drinkers['MD'] = [10082, 10057, 10087, 10088, 10059, 10054, 10086 ,10051, 10049, 10063, 10091, 10060, 10064, 10098, 10065, 10097, 10066, 10067, 10061, 10062]
+rhesus_drinkers['hD'] = [10082, 10049, 10064, 10063, 10097, 10091, 10065, 10066, 10067, 10088, 10098, 10061, 10062]
+rhesus_drinkers['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062]
+
 def rhesus_etoh_gkg_histogram():
 	cohorts = Cohort.objects.filter(pk__in=[5,6,10])
 	monkeys = Monkey.objects.none()
@@ -1260,7 +1265,7 @@ def rhesus_etoh_gkg_bargraph(limit_step=1):
 	return fig, None
 
 def rhesus_etoh_gkg_forced_histogram():
-	cohorts = Cohort.objects.filter(pk__in=[5,6,10])
+	cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
 	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	gs = gridspec.GridSpec(3, 3)
 	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
@@ -1283,7 +1288,7 @@ def rhesus_etoh_gkg_forced_histogram():
 		for index, limit in enumerate(limits):
 			if not limit:
 				continue
-			_count = mtds.filter(mtd_etoh_g_kg__gte=limits[index-1]).filter(mtd_etoh_g_kg__lt=limits[index]).count()
+			_count = mtds.filter(mtd_etoh_g_kg__gt=limits[index-1]).filter(mtd_etoh_g_kg__lte=limits[index]).count()
 			gkg_daycounts[index] += _count / days
 
 	gkg_daycounts = list(gkg_daycounts)
@@ -1295,7 +1300,7 @@ def rhesus_etoh_gkg_forced_histogram():
 
 	xmax = max(gkg_daycounts)*1.005
 	subplot.set_ylim(ymin=0, ymax=xmax)
-	subplot.set_title("Rhesus 4/5/7a, distribution of intakes")
+	subplot.set_title("Rhesus 4/5/7a/7b, distribution of intakes")
 	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake equaled x-value")
 	subplot.set_xlabel("Etoh intake, g/kg")
 	return fig, None
@@ -1305,7 +1310,7 @@ def rhesus_etoh_gkg_monkeybargraph():
 	gs = gridspec.GridSpec(3, 3)
 	gs.update(left=0.04, right=0.98, wspace=.08, hspace=0)
 
-	monkeys = Monkey.objects.Drinkers().filter(cohort__in=[5,6,10]).values_list('pk', flat=True).distinct()
+	monkeys = Monkey.objects.Drinkers().filter(cohort__in=[5,6,9,10]).values_list('pk', flat=True).distinct()
 	limits = range(2,5,1)
 	for index, limit in enumerate(limits):
 		keys = list()
@@ -1338,61 +1343,67 @@ def rhesus_etoh_gkg_monkeybargraph():
 		subplot.set_title("%% of days with intake over %d g/kg" % limit)
 	return fig, None
 
-def rhesus_discrete_minute_volumes(minutes, pct_limit, gkg_limit):
+def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation):
 	from utils import plotting
-	def oa_eev_volume_summation(monkey_set=(), minutes=20):
+	assert monkey_category in rhesus_drinkers.keys()
+	light_data, light_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=True)
+	heavy_data, heavy_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=False)
+	assert light_data.keys() == heavy_data.keys()
+	for x in light_data.keys():
+		# lower, light drinkers
+		_ld = light_data[x]/float(light_count)
+		subplot.bar(x, _ld, width=.5, color='navy', edgecolor='none')
+		# higher, heavy drinkers
+		subplot.bar(x+.5, heavy_data[x]/float(heavy_count), width=.5, color='slateblue', edgecolor='none')
+#	patches.append(Rectangle((0,0),1,1, color=value))
+	subplot.legend([plotting.Rectangle((0,0),1,1, color='slate_blue'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_category ,"Not %s" % monkey_category], title="Monkey Category", loc='upper left')
+	subplot.set_xlim(xmax=max(light_data.keys()))
+	subplot.set_title("Average intake by minute after pellet")
+	subplot.set_ylabel("Average volume, ml per monkey")
+	subplot.set_xlabel("Minutes since last pellet")
+	# rotate the xaxis labels
+	xticks = [x+.5 for x in light_data.keys()]
+	xtick_labels = ["%d" % x for x in light_data.keys() if x%5 == 0]
+	subplot.set_xticks(xticks)
+	subplot.set_xticklabels(xtick_labels)
+	return subplot
+
+def rhesus_oa_discrete_minute_volumes(minutes, monkey_category):
+	def _oa_eev_volume_summation(monkey_set=(), minutes=20, exclude=False):
 		data = dict()
-		eevs = ExperimentEvent.objects.OA().filter(monkey__in=monkey_set)
+		if exclude:
+			eevs = ExperimentEvent.objects.OA().filter(monkey__cohort__in=[5,6,9,10]).exclude(monkey__in=monkey_set)
+		else:
+			eevs = ExperimentEvent.objects.OA().filter(monkey__in=monkey_set)
 		for i in range(0, minutes):
 			_eevs = eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
 			data[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-		return data
-
-	def separate_heavy_light_drinkers(gkg_limit, pct_limit):
-		monkeys = Monkey.objects.Drinkers().filter(cohort__in=[5,6,10]).values_list('pk', flat=True).distinct()
-		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys)
-		heavy_monkeys = list()
-		light_monkeys = list()
-		for mky in monkeys:
-			_mtds = mtds.filter(monkey=mky)
-			max_date = _mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
-			min_date = _mtds.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
-			_mtds = _mtds.values('drinking_experiment__dex_date', 'mtd_etoh_g_kg', 'monkey')
-			days = float((max_date-min_date).days)
-
-			_count = _mtds.filter(monkey=mky).exclude(mtd_etoh_g_kg__lt=gkg_limit).count()
-			if _count / days > pct_limit:
-				heavy_monkeys.append(mky)
-			else:
-				light_monkeys.append(mky)
-		return light_monkeys, heavy_monkeys
+		return data, eevs.values_list('monkey', flat=True).distinct().count()
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 40)
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
-	main_plot = fig.add_subplot(main_gs[:,:])
+	subplot = fig.add_subplot(main_gs[:,:])
+	subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _oa_eev_volume_summation)
+	return fig
 
-	light, heavy = separate_heavy_light_drinkers(pct_limit, gkg_limit)
-	light_data = oa_eev_volume_summation(light, minutes)
-	heavy_data = oa_eev_volume_summation(heavy, minutes)
-	assert light_data.keys() == heavy_data.keys()
-	for x in light_data.keys():
-		# lower, light drinkers
-		_ld = light_data[x]/len(light)
-		main_plot.bar(x, _ld, width=.5, color='navy', edgecolor='none')
-		# higher, heavy drinkers
-		main_plot.bar(x+.5, heavy_data[x]/len(heavy), width=.5, color='slateblue', edgecolor='none')
-#	patches.append(Rectangle((0,0),1,1, color=value))
-	main_plot.legend([plotting.Rectangle((0,0),1,1, color='navy'), plotting.Rectangle((0,0),1,1, color='slateblue')], ["<%.2f over %dgkg" % (pct_limit, gkg_limit),">=%.2f over %dgkg" % (pct_limit, gkg_limit)], title="Monkey Category", loc='upper left')
-	main_plot.set_xlim(xmax=max(light_data.keys()))
-	main_plot.set_title("Average intake by minute after pellet")
-	main_plot.set_ylabel("Average volume, ml per monkey")
-	main_plot.set_xlabel("Minutes since last pellet")
-	# rotate the xaxis labels
-	xticks = [x+.5 for x in light_data.keys()]
-	xtick_labels = ["%d" % x for x in light_data.keys() if x%5 == 0]
-	main_plot.set_xticks(xticks)
-	main_plot.set_xticklabels(xtick_labels)
+def rhesus_3oa_discrete_minute_volumes(minutes, monkey_category):
+	def _oa_eev_volume_summation(monkey_set=(), minutes=20, exclude=False):
+		data = dict()
+		if exclude:
+			eevs = ExperimentEvent.objects.OA().filter(monkey__cohort__in=[5,6,9,10]).exclude(monkey__in=monkey_set)
+		else:
+			eevs = ExperimentEvent.objects.OA().filter(monkey__in=monkey_set)
+		for i in range(0, minutes):
+			_eevs = eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
+			data[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+		return data, eevs.values_list('monkey', flat=True).distinct().count()
+
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	subplot = fig.add_subplot(main_gs[:,:])
+	subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _oa_eev_volume_summation)
 	return fig
 
 #---
@@ -2002,11 +2013,11 @@ def create_erich_graphs():
 	output_path = settings.STATIC_ROOT
 	output_path = os.path.join(output_path, "images/erich/")
 
-	params = [(120, .5, 2), (120, .2, 3), (120, .1, 4)]
-	for _min, pct, cutoff in params:
-		fig = rhesus_discrete_minute_volumes(_min, pct, cutoff)
+	minutes = 120
+	for mky_cat in rhesus_drinkers.keys():
+		fig = rhesus_oa_discrete_minute_volumes(minutes, mky_cat)
 		DPI = fig.get_dpi()
-		filename = output_path + '%s-%d-%.2f-%d.png' % ("rhesus_discrete_minute_volumes", _min, pct, cutoff)
+		filename = output_path + '%s-%d-%s.png' % ("rhesus_discrete_minute_volumes", minutes, mky_cat)
 		fig.savefig(filename, dpi=DPI)
 
 	confed_boxplots = rhesus_confederate_boxplots()
