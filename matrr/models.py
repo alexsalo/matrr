@@ -686,8 +686,8 @@ class MonkeyToDrinkingExperiment(models.Model):
 	mtd_pct_max_bout_vol_total_etoh_hour_9  = models.FloatField('Max Bout in 10th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
 	mtd_pct_max_bout_vol_total_etoh_hour_10 = models.FloatField('Max Bout in 11th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
 
-	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=True, null=True, default=None,
-												  help_text="Seconds it took for monkey to reach day's ethanol allotment")
+	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=True, null=True, default=None, help_text="Seconds it took for monkey to reach day's ethanol allotment")
+	mtd_mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	def __unicode__(self):
 		return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey)
@@ -891,6 +891,7 @@ class ExperimentEvent(models.Model):
 	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
 
 	eev_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, db_index=True)
+	eev_mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	class Meta:
 		db_table = 'eev_experiment_events'
@@ -954,6 +955,16 @@ class MonkeyException(models.Model):
 			for mig in MonkeyImage.objects.filter(monkey=self.monkey):
 				mig.save(force_render=True)
 
+	def flag_own_data(self, flag_mtd=False, flag_bec=False, flag_eev=False):
+		if flag_mtd:
+			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey, drinking_experiment__dex_date=self.mex_date)
+			mtds.mtd_mex_excluded = True
+		if flag_bec:
+			becs = MonkeyBEC.objects.filter(monkey=self.monkey, bec_collect_date__year=self.mex_date.year, bec_collect_date__month=self.mex_date.month, bec_collect_date__day=self.mex_date.day)
+			becs.bec_mex_excluded = True
+		if flag_eev:
+			eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=self.mex_date.year, eev_occurred__month=self.mex_date.month, eev_occurred__day=self.mex_date.day)
+			eevs.eev_mex_excluded = True
 
 	def clean(self):
 		if not (self.mex_file_corrected or self.mex_excluded or self.mex_lifetime or self.mex_2pct):
@@ -2617,7 +2628,7 @@ class MonkeyBEC(models.Model):
 	bec_mg_pct = models.FloatField("Blood Ethanol Conc., mg %", null=False, blank=False)
 
 	bec_pct_intake = models.FloatField("Sample Volume / Total Intake", null=True, blank=True)
-
+	bec_mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	def __unicode__(self):
 		return "%s | %s | %s" % (str(self.monkey), str(self.bec_collect_date), str(self.bec_mg_pct))
