@@ -1200,6 +1200,7 @@ def __mtd_call_max_bout_vol_pct(mtds):
 #--
 
 rhesus_drinkers = dict()
+rhesus_drinkers['LD'] = [10048, 10050, 10052, 10053, 10055, 10056, 10058, 10083, 10084, 10085, 10089, 10090, 10092] # all drinking monkeys in 5,6,9,10 not listed below
 rhesus_drinkers['MD'] = [10082, 10057, 10087, 10088, 10059, 10054, 10086 ,10051, 10049, 10063, 10091, 10060, 10064, 10098, 10065, 10097, 10066, 10067, 10061, 10062]
 rhesus_drinkers['HD'] = [10082, 10049, 10064, 10063, 10097, 10091, 10065, 10066, 10067, 10088, 10098, 10061, 10062]
 rhesus_drinkers['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062]
@@ -1363,8 +1364,8 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
 	subplot.set_ylabel("Average volume, ml per monkey")
 	subplot.set_xlabel("Minutes since last pellet")
 	# rotate the xaxis labels
-	xticks = [x+.5 for x in light_data.keys()]
-	xtick_labels = ["%d" % x for x in light_data.keys() if x%5 == 0]
+	xticks = [x+.5 for x in light_data.keys()  if x % 5 == 0]
+	xtick_labels = ["%d" % x for x in light_data.keys()  if x % 5 == 0]
 	subplot.set_xticks(xticks)
 	subplot.set_xticklabels(xtick_labels)
 	return subplot
@@ -1373,7 +1374,7 @@ def rhesus_oa_discrete_minute_volumes(minutes, monkey_category):
 	def _oa_eev_volume_summation(monkey_set=(), minutes=20, exclude=False):
 		data = dict()
 		if exclude:
-			eevs = ExperimentEvent.objects.OA().filter(monkey__cohort__in=[5,6,9,10]).exclude(monkey__in=monkey_set)
+			eevs = ExperimentEvent.objects.OA().filter(monkey__cohort__in=[5,6,9,10]).filter(monkey__mky_drinking=True).exclude(monkey__in=monkey_set)
 		else:
 			eevs = ExperimentEvent.objects.OA().filter(monkey__in=monkey_set)
 		for i in range(0, minutes):
@@ -1393,20 +1394,22 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category):
 		cohort_starts = {5: datetime(2008, 10, 20), }#6:datetime(2009, 4, 13), 9:datetime(2011, 7, 12), 10:datetime(2011,01,03)}
 		monkeys = set()
 		data = dict()
-		for i in range(0, minutes):
-			data[i] = 0
+		for m in range(0, minutes):
+			data[m] = 0
 		for coh, start_date in cohort_starts.items():
 			if exclude:
-				eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__cohort=coh).exclude(monkey__in=monkey_set)
+				eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__mky_drinking=True).filter(monkey__cohort=coh).exclude(monkey__in=monkey_set)
 			else:
-				eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__cohort=coh).filter(monkey__in=monkey_set)
-
+				eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__mky_drinking=True).filter(monkey__cohort=coh).filter(monkey__in=monkey_set)
 			monkeys.update(eevs.values_list('monkey', flat=True).distinct())
+
 			start = start_date + timedelta(days=offset)
-			end = start + timedelta(days=120)
+			eevs = eevs.filter(eev_occurred__gte=start)
+			if offset <= 120:
+				end = start + timedelta(days=120)
+				eevs = eevs.filter(eev_occurred__lt=end)
 			for i in range(0, minutes):
-				_eevs = eevs.filter(eev_occurred__gte=start).filter(eev_occurred__lt=end)
-				_eevs = _eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
+				_eevs = eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
 				data[i] += _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
 		return data, len(monkeys)
 
@@ -1936,13 +1939,13 @@ def return_confeds(pk):
 				}
 #analyze data
 def analyze_MBA(pk):
-	confeds_10 = return_confeds(pk)
+	confeds = return_confeds(pk)
 	monkey_scores = dict()
 	weight_cause = 1
 	weight_effect = weight_cause * 1
 
-	for support in confeds_10.keys():
-		data = confeds_10[support]
+	for support in confeds.keys():
+		data = confeds[support]
 		for cause, effect, confidence in data:
 			for mky in cause:
 				try:
@@ -1958,7 +1961,8 @@ def analyze_MBA(pk):
 #build boxplots
 def rhesus_confederate_boxplots():
 	figs = list()
-	for i in [5, 6, 9, 10]:
+	# NO DATA FOR coh 9
+	for i in [5, 6, 10]:
 		scores = analyze_MBA(i)
 		confeds = list()
 		mean = numpy.array(scores.values()).mean()
@@ -2029,7 +2033,13 @@ def create_erich_graphs():
 	for mky_cat in rhesus_drinkers.keys():
 		fig = rhesus_oa_discrete_minute_volumes(minutes, mky_cat)
 		DPI = fig.get_dpi()
-		filename = output_path + '%s-%d-%s.png' % ("rhesus_discrete_minute_volumes", minutes, mky_cat)
+		filename = output_path + '%s-%d-%s.png' % ("rhesus_oa_discrete_minute_volumes", minutes, mky_cat)
+		fig.savefig(filename, dpi=DPI)
+
+	for mky_cat in rhesus_drinkers.keys():
+		fig = rhesus_thirds_oa_discrete_minute_volumes(minutes, mky_cat)
+		DPI = fig.get_dpi()
+		filename = output_path + '%s-%d-%s.png' % ("rhesus_thirds_oa_discrete_minute_volumes", minutes, mky_cat)
 		fig.savefig(filename, dpi=DPI)
 
 	confed_boxplots = rhesus_confederate_boxplots()
