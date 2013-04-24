@@ -1201,7 +1201,7 @@ def __mtd_call_max_bout_vol_pct(mtds):
 
 rhesus_drinkers = dict()
 rhesus_drinkers['MD'] = [10082, 10057, 10087, 10088, 10059, 10054, 10086 ,10051, 10049, 10063, 10091, 10060, 10064, 10098, 10065, 10097, 10066, 10067, 10061, 10062]
-rhesus_drinkers['hD'] = [10082, 10049, 10064, 10063, 10097, 10091, 10065, 10066, 10067, 10088, 10098, 10061, 10062]
+rhesus_drinkers['HD'] = [10082, 10049, 10064, 10063, 10097, 10091, 10065, 10066, 10067, 10088, 10098, 10061, 10062]
 rhesus_drinkers['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062]
 
 def rhesus_etoh_gkg_histogram():
@@ -1343,11 +1343,11 @@ def rhesus_etoh_gkg_monkeybargraph():
 		subplot.set_title("%% of days with intake over %d g/kg" % limit)
 	return fig, None
 
-def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation):
+def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, vs_kwargs=None):
 	from utils import plotting
 	assert monkey_category in rhesus_drinkers.keys()
-	light_data, light_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=True)
-	heavy_data, heavy_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=False)
+	light_data, light_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=True, **vs_kwargs)
+	heavy_data, heavy_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=False, **vs_kwargs)
 	assert light_data.keys() == heavy_data.keys()
 	for x in light_data.keys():
 		# lower, light drinkers
@@ -1387,23 +1387,34 @@ def rhesus_oa_discrete_minute_volumes(minutes, monkey_category):
 	subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _oa_eev_volume_summation)
 	return fig
 
-def rhesus_3oa_discrete_minute_volumes(minutes, monkey_category):
-	def _oa_eev_volume_summation(monkey_set=(), minutes=20, exclude=False):
+def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category):
+	def _thirds_oa_eev_volume_summation(monkey_set=(), minutes=20, exclude=False, offset=0):
+		cohort_starts = {5: datetime(2008, 10, 20), }#6:datetime(2009, 4, 13), 9:datetime(2011, 7, 12), 10:datetime(2011,01,03)}
+		monkeys = set()
 		data = dict()
-		if exclude:
-			eevs = ExperimentEvent.objects.OA().filter(monkey__cohort__in=[5,6,9,10]).exclude(monkey__in=monkey_set)
-		else:
-			eevs = ExperimentEvent.objects.OA().filter(monkey__in=monkey_set)
 		for i in range(0, minutes):
-			_eevs = eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
-			data[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-		return data, eevs.values_list('monkey', flat=True).distinct().count()
+			data[i] = 0
+		for coh, start_date in cohort_starts.items():
+			if exclude:
+				eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__cohort=coh).exclude(monkey__in=monkey_set)
+			else:
+				eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__cohort=coh).filter(monkey__in=monkey_set)
+
+			monkeys.update(eevs.values_list('monkey', flat=True).distinct())
+			start = start_date + timedelta(days=offset)
+			end = start + timedelta(days=120)
+			for i in range(0, minutes):
+				_eevs = eevs.filter(eev_occurred__gte=start).filter(eev_occurred__lt=end)
+				_eevs = _eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
+				data[i] += _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+		return data, len(monkeys)
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
-	main_gs = gridspec.GridSpec(3, 40)
-	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
-	subplot = fig.add_subplot(main_gs[:,:])
-	subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _oa_eev_volume_summation)
+	main_gs = gridspec.GridSpec(3, 3)
+	main_gs.update(left=0.04, right=0.98, wspace=.08, hspace=0)
+	for index, offset in enumerate([0, 120, 240]):
+		subplot = fig.add_subplot(main_gs[:,index])
+		subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _thirds_oa_eev_volume_summation, vs_kwargs={'offset':offset})
 	return fig
 
 #---
