@@ -1357,7 +1357,7 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
 		# higher, heavy drinkers
 		subplot.bar(x+.5, heavy_data[x]/float(heavy_count), width=.5, color='slateblue', edgecolor='none')
 #	patches.append(Rectangle((0,0),1,1, color=value))
-	subplot.legend([plotting.Rectangle((0,0),1,1, color='slate_blue'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_category ,"Not %s" % monkey_category], title="Monkey Category", loc='upper left')
+	subplot.legend([plotting.Rectangle((0,0),1,1, color='slateblue'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_category ,"Not %s" % monkey_category], title="Monkey Category", loc='upper left')
 	subplot.set_xlim(xmax=max(light_data.keys()))
 	subplot.set_title("Average intake by minute after pellet")
 	subplot.set_ylabel("Average volume, ml per monkey")
