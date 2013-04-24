@@ -971,13 +971,13 @@ class MonkeyException(models.Model):
 		update_count = 0
 		if flag_mtd:
 			mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey, drinking_experiment__dex_date=self.mex_date)
-			update_count += mtds.update(mtd_mex_excluded=True)
+			update_count += mtds.update(mex_excluded=True)
 		if flag_bec:
 			becs = MonkeyBEC.objects.filter(monkey=self.monkey, bec_collect_date__year=self.mex_date.year, bec_collect_date__month=self.mex_date.month, bec_collect_date__day=self.mex_date.day)
-			update_count += becs.update(bec_mex_excluded=True)
+			update_count += becs.update(mex_excluded=True)
 		if flag_eev:
 			eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=self.mex_date.year, eev_occurred__month=self.mex_date.month, eev_occurred__day=self.mex_date.day)
-			update_count += eevs.update(eev_mex_excluded=True)
+			update_count += eevs.update(mex_excluded=True)
 		print "Updated %d db rows" % update_count
 
 	def clean(self):
