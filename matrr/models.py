@@ -928,7 +928,7 @@ class CohortBout(models.Model):
 
 
 class MEXQuerySet(models.query.QuerySet):
-	def exception_filter(self):
+	def exclude_exceptions(self):
 		return self.exclude(mex_exclude=True)
 
 class MonkeyException(models.Model):
