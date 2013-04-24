@@ -929,7 +929,7 @@ class CohortBout(models.Model):
 
 class MEXQuerySet(models.query.QuerySet):
 	def exclude_exceptions(self):
-		return self.exclude(mex_exclude=True)
+		return self.exclude(mex_excluded=True)
 
 class MonkeyException(models.Model):
 	mex_id = models.AutoField(primary_key=True)
