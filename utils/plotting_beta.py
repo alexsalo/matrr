@@ -1346,6 +1346,7 @@ def rhesus_etoh_gkg_monkeybargraph():
 def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, vs_kwargs=None):
 	from utils import plotting
 	assert monkey_category in rhesus_drinkers.keys()
+	vs_kwargs = vs_kwargs if vs_kwargs is not None else dict()
 	light_data, light_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=True, **vs_kwargs)
 	heavy_data, heavy_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=False, **vs_kwargs)
 	assert light_data.keys() == heavy_data.keys()
