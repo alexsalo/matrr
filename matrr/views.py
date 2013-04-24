@@ -1385,17 +1385,18 @@ def shipping_history_user(request, user_id):
 	return render_to_response('matrr/shipping/shipping_history_user.html', {'user': user, 'shipped_requests': shipped_requests}, context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
 def shipping_overview(request):
 	#Requests Pending Shipment
 	accepted_requests = Request.objects.none()
 	for req_request in Request.objects.accepted_and_partially():
 		if req_request.is_missing_shipments():
-			accepted_requests |= Request.objects.filter(pk=req_request.pk)
+			if request.user.has_perm('matrr.change_shipment') or (req_request.contains_genetics() and request.user.has_perm('matrr.ship_genetics')):
+				accepted_requests |= Request.objects.filter(pk=req_request.pk)
 	# Pending Shipments
 	pending_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Unshipped)
 	if request.user.has_perm('matrr.ship_genetics'):
-		pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Genetics)
+		pending_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Genetics)
 	# Shipped Shipments
 	shipped_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Shipped).exclude(req_request__req_status=RequestStatus.Shipped)
 
