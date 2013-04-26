@@ -690,6 +690,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 	mtd_pct_max_bout_vol_total_etoh_hour_10 = models.FloatField('Max Bout in 11th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
 
 	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=True, null=True, default=None, help_text="Seconds it took for monkey to reach day's ethanol allotment")
+	mtd_mean_seconds_between_pellets = models.FloatField('Mean seconds between pellets.', blank=True, null=True, help_text='Average time between pellet distributions, in seconds')
 	mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	def __unicode__(self):
@@ -739,9 +740,19 @@ class MonkeyToDrinkingExperiment(models.Model):
 			if save:
 				self.save()
 
+	def _populate_mtd_mean_seconds_between_pellets(self, save=True):
+		dex_date = self.drinking_experiment.dex_date
+		eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=dex_date.year, eev_occurred__month=dex_date.month, eev_occurred__day=dex_date.day)
+		if not eevs:
+			return
+		self.mtd_mean_seconds_between_pellets = eevs.aggregate(Avg('eev_pellet_time'))['eev_pellet_time__avg']
+		if save:
+			self.save()
+
 	def populate_fields(self):
 		self._populate_max_bout_hours(save=False)
 		self._populate_mtd_seconds_to_stageone(save=False)
+		self._populate_mtd_mean_seconds_between_pellets(save=False)
 		self.save()
 
 	class Meta:
@@ -878,7 +889,7 @@ class ExperimentEvent(models.Model):
 	eev_event_type = models.CharField('Event type (Time/Pellet/Drink)', max_length=1, choices=ExperimentEventType, blank=False, null=False, db_index=True)
 	eev_session_time = models.PositiveIntegerField('Session time [s]', blank=False, null=False, db_index=True)
 	eev_segement_time = models.PositiveIntegerField('Segment time [s]', blank=False, null=False)
-	eev_pellet_time = models.PositiveIntegerField('Pellet time [s]', blank=False, null=False)
+	eev_pellet_time = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=False, null=False)
 	eev_etoh_side = models.CharField('EtOH side (Right/Left)', max_length=1, choices=LeftRight, blank=True, null=True)
 	eev_etoh_volume = models.FloatField('EtOH volume of most recent drink', blank=True, null=True)
 	eev_etoh_total = models.FloatField('EtOH total volume', blank=True, null=True)
@@ -896,7 +907,6 @@ class ExperimentEvent(models.Model):
 	eev_veh_drink_number = models.PositiveIntegerField('H20 drink number', blank=True, null=True)
 	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
 
-	eev_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, db_index=True)
 	mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	class Meta:
