@@ -2130,28 +2130,6 @@ def find_outlier_datapoints(cohort, stdev_min):
 
 	print 'done'
 
-def populate_seconds_since_pellet(monkeys=None):
-	if not monkeys:
-		monkeys = ExperimentEvent.objects.filter(eev_pellet_elapsed_time_since_last=None).values_list('monkey', flat=True).distinct()
-	for monkey in monkeys:
-		results = list()
-		eevs = ExperimentEvent.objects.filter(monkey=monkey, eev_pellet_elapsed_time_since_last=None).values('eev_id', 'eev_occurred', 'eev_event_type').order_by('eev_occurred')
-		last_pellet = None
-		for eev in eevs:
-			if last_pellet == None:
-				diff_seconds = 0
-			else:
-				diff_seconds = (eev['eev_occurred'] - last_pellet['eev_occurred']).seconds
-
-			results.append((eev['eev_id'], diff_seconds))
-
-			if eev['eev_event_type'] == ExperimentEventType.Pellet:
-				last_pellet = eev
-		for r in results:
-			eev = ExperimentEvent.objects.get(pk=r[0])
-			eev.eev_pellet_elapsed_time_since_last = r[1]
-			eev.save()
-
 def dump_tissue_inventory_csv(cohort):
 	"""
 		This function will dump the browse inventory page to CSV
