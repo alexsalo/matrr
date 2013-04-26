@@ -1362,12 +1362,9 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
 #	patches.append(Rectangle((0,0),1,1, color=value))
 	subplot.legend([plotting.Rectangle((0,0),1,1, color='gold'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_category ,"Not %s" % monkey_category], title="Monkey Category", loc='upper left')
 	subplot.set_xlim(xmax=max(light_data.keys()))
-	subplot.set_title("Average intake by minute after pellet")
-	subplot.set_ylabel("Average volume, ml per monkey")
-	subplot.set_xlabel("Minutes since last pellet")
 	# rotate the xaxis labels
-	xticks = [x+.5 for x in light_data.keys()  if x % 5 == 0]
-	xtick_labels = ["%d" % x for x in light_data.keys()  if x % 5 == 0]
+	xticks = [x+.5 for x in light_data.keys()  if x % 15 == 0]
+	xtick_labels = ["%d" % x for x in light_data.keys()  if x % 15 == 0]
 	subplot.set_xticks(xticks)
 	subplot.set_xticklabels(xtick_labels)
 	return subplot
@@ -1390,6 +1387,9 @@ def rhesus_oa_discrete_minute_volumes(minutes, monkey_category):
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 	subplot = fig.add_subplot(main_gs[:,:])
 	subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _oa_eev_volume_summation)
+	subplot.set_xlabel("Minutes since last pellet")
+	subplot.set_title("Average intake by minute after pellet")
+	subplot.set_ylabel("Average volume, ml per monkey")
 	return fig
 
 def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category):
@@ -1417,10 +1417,16 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category):
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 3)
 	main_gs.update(left=0.04, right=0.98, wspace=.08, hspace=0)
+	y_label = True
 	subplot = None
 	for index, offset in enumerate([0, 120, 240]):
 		subplot = fig.add_subplot(main_gs[:,index], sharey=subplot, sharex=subplot)
 		_rhesus_minute_volumes(subplot, minutes, monkey_category, _thirds_oa_eev_volume_summation, vs_kwargs={'offset':offset})
+		subplot.set_xlabel("Minutes since last pellet")
+		subplot.set_title("Average intake by minute after pellet")
+		if y_label:
+			subplot.set_ylabel("Average volume, ml per monkey")
+			y_label = False
 	return fig
 
 def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
