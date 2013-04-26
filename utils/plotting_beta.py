@@ -1204,7 +1204,15 @@ rhesus_drinkers['LD'] = [10048, 10052, 10055, 10056, 10058, 10083, 10084, 10085,
 rhesus_drinkers['MD'] = [10082, 10057, 10087, 10088, 10059, 10054, 10086 ,10051, 10049, 10063, 10091, 10060, 10064, 10098, 10065, 10097, 10066, 10067, 10061, 10062]
 rhesus_drinkers['HD'] = [10082, 10049, 10064, 10063, 10097, 10091, 10065, 10066, 10067, 10088, 10098, 10061, 10062]
 rhesus_drinkers['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062]
-all_rhesus_drinkers = set([x for d in rhesus_drinkers.itervalues() for x in d])
+
+rhesus_drinkers_distinct = dict()
+rhesus_drinkers_distinct['LD'] = [10048, 10052, 10055, 10056, 10058, 10083, 10084, 10085, 10089, 10090, 10092]
+rhesus_drinkers_distinct['MD'] = [10057, 10087, 10059, 10054, 10086 ,10051, 10060]
+rhesus_drinkers_distinct['HD'] = [10082, 10049, 10064, 10097, 10065, 10067]
+rhesus_drinkers_distinct['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062]
+
+all_rhesus_drinkers = [x for d in rhesus_drinkers_distinct.itervalues() for x in d]
+
 rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
 
 def rhesus_etoh_gkg_histogram():
@@ -1437,11 +1445,18 @@ def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
 		_x, _y = collect_xy_data(key, **xy_kwargs)
 		subplot.scatter(_x, _y, color=color, edgecolor='none', s=100, label=key, marker=rhesus_markers[key], alpha=1)
 		create_convex_hull_polygon(subplot, _x, _y, color)
+
+	handles, labels = subplot.get_legend_handles_labels()
+	_handles = list()
+	_labels = ['LD', 'MD', 'HD', 'VHD']
+	for _l in _labels:
+		_handles.append(handles[labels.index(_l)])
+	subplot.legend(_handles, _labels, scatterpoints=1)
 	return subplot
 
 def rhesus_oa_pelletvolume_perday_perkg():
 	def _oa_pelletvolume_perday_perkg(monkey_category):
-		monkey_set = rhesus_drinkers[monkey_category]
+		monkey_set = rhesus_drinkers_distinct[monkey_category]
 		mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
 		x_data = list()
 		y_data = list()
@@ -1459,7 +1474,6 @@ def rhesus_oa_pelletvolume_perday_perkg():
 	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
 	subplot = fig.add_subplot(main_gs[:])
 	_rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
-	subplot.legend(scatterpoints=1)
 	subplot.set_title("Intake vs pellets")
 	subplot.set_ylabel("Average pellet / Average weight, per monkey")
 	subplot.set_xlabel("Average volume / Average weight, per monkey")
@@ -1478,7 +1492,7 @@ def rhesus_thirds_oa_pelletvolume_perday_perkg():
 			if offset <= 120:
 				end = start + timedelta(days=120)
 				_mtds = _mtds.filter(drinking_experiment__dex_date__lt=end)
-			for monkey in rhesus_drinkers[monkey_category]:
+			for monkey in rhesus_drinkers_distinct[monkey_category]:
 				_data = _mtds.filter(monkey=monkey)
 				if not _data:
 					continue
@@ -1499,7 +1513,6 @@ def rhesus_thirds_oa_pelletvolume_perday_perkg():
 		subplot = fig.add_subplot(main_gs[:,index], sharey=subplot, sharex=subplot)
 
 		_rhesus_category_scatterplot(subplot, _thirds_oa_pelletvolume_perday_perkg, xy_kwargs={'offset':offset})
-		subplot.legend(scatterpoints=1)
 		subplot.set_title("Intake vs pellets")
 		subplot.set_xlabel("Average volume / Average weight, per monkey")
 		if y_label:
