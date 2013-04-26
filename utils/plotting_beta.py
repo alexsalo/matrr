@@ -5,7 +5,7 @@ from scipy import cluster
 import operator
 from matrr.models import *
 from utils import plotting
-
+from collections import defaultdict
 
 
 
@@ -474,7 +474,7 @@ def cohort_etoh_gkg_histogram(cohort):
 	y_axes = list()
 	labels = list()
 	for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-		mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
+		mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
 		gkg_values = mtds.values_list('mtd_etoh_g_kg', flat=True)
 		gkg_values = numpy.array(gkg_values)
 		y_axes.append(gkg_values)
@@ -508,7 +508,7 @@ def cohort_etoh_quadbar(cohort):
 		data = list()
 		colors = list()
 		for i, mky in enumerate(monkeys):
-			mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=mky, mtd_etoh_g_kg__gte=gkg).count()
+			mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=mky, mtd_etoh_g_kg__gte=gkg).count()
 			mtds = mtds if mtds else .001
 			data.append((mky, mtds))
 			colors.append(cohort_colors[i%2]) # we don't want the colors sorted.  It breaks if you try anyway.
@@ -1163,7 +1163,7 @@ def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 		y = list()
 		for monkey in cohort.monkey_set.exclude(mky_age_at_intox=None).exclude(mky_age_at_intox=0):
 			age = monkey.mky_age_at_intox / 365.25
-			mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
+			mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
 			if phase:
 				mtds = mtds.filter(**{oa_phases[phase]:cohort_1st_oa_end[cohort]})
 			x.append(age)
@@ -1200,17 +1200,19 @@ def __mtd_call_max_bout_vol_pct(mtds):
 #--
 
 rhesus_drinkers = dict()
-rhesus_drinkers['LD'] = [10048, 10050, 10052, 10053, 10055, 10056, 10058, 10083, 10084, 10085, 10089, 10090, 10092] # all drinking monkeys in 5,6,9,10 not listed below
+rhesus_drinkers['LD'] = [10048, 10052, 10055, 10056, 10058, 10083, 10084, 10085, 10089, 10090, 10092] # all drinking monkeys in 5,6,9,10 not listed below
 rhesus_drinkers['MD'] = [10082, 10057, 10087, 10088, 10059, 10054, 10086 ,10051, 10049, 10063, 10091, 10060, 10064, 10098, 10065, 10097, 10066, 10067, 10061, 10062]
 rhesus_drinkers['HD'] = [10082, 10049, 10064, 10063, 10097, 10091, 10065, 10066, 10067, 10088, 10098, 10061, 10062]
 rhesus_drinkers['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062]
+all_rhesus_drinkers = set([x for d in rhesus_drinkers.itervalues() for x in d])
+rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
 
 def rhesus_etoh_gkg_histogram():
-	cohorts = Cohort.objects.filter(pk__in=[5,6,10])
+	cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
 	monkeys = Monkey.objects.none()
 	for coh in cohorts:
 		monkeys |= coh.monkey_set.filter(mky_drinking=True)
-	mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey__in=monkeys)
+	mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys)
 	daily_gkgs = mtds.values_list('mtd_etoh_g_kg', flat=True)
 
 	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
@@ -1232,7 +1234,7 @@ def rhesus_etoh_gkg_histogram():
 	return fig, None
 
 def rhesus_etoh_gkg_bargraph(limit_step=1):
-	cohorts = Cohort.objects.filter(pk__in=[5,6,10])
+	cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
 	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	gs = gridspec.GridSpec(3, 3)
 	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
@@ -1242,11 +1244,11 @@ def rhesus_etoh_gkg_bargraph(limit_step=1):
 	for coh in cohorts:
 		monkeys |= coh.monkey_set.filter(mky_drinking=True)
 
-	width = .90 / (.95/limit_step)
+	width = 1 / (1./limit_step)
 	limits = numpy.arange(1,9, limit_step)
 	gkg_daycounts = numpy.zeros(len(limits))
 	for monkey in monkeys:
-		mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
+		mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
 		if not mtds.count():
 			continue
 		max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
@@ -1260,7 +1262,7 @@ def rhesus_etoh_gkg_bargraph(limit_step=1):
 	subplot.bar(limits, gkg_daycounts, width=width, color='navy')
 	xmax = max(gkg_daycounts)*1.005
 	subplot.set_ylim(ymin=0, ymax=xmax)
-	subplot.set_title("Rhesus 4/5/7a, distribution of intakes exceeding g/kg minimums")
+	subplot.set_title("Rhesus 4/5/7a/7b, distribution of intakes exceeding g/kg minimums")
 	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake exceeded x-value")
 	subplot.set_xlabel("Etoh intake, g/kg")
 	return fig, None
@@ -1280,7 +1282,7 @@ def rhesus_etoh_gkg_forced_histogram():
 	limits = numpy.arange(0, 8, increment)
 	gkg_daycounts = numpy.zeros(len(limits))
 	for monkey in monkeys:
-		mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
+		mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
 		if not mtds.count():
 			continue
 		max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
@@ -1317,7 +1319,7 @@ def rhesus_etoh_gkg_monkeybargraph():
 		keys = list()
 		values = list()
 		for monkey in monkeys:
-			mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
+			mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
 			if not mtds.count():
 				continue
 			max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
@@ -1348,17 +1350,17 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
 	from utils import plotting
 	assert monkey_category in rhesus_drinkers.keys()
 	vs_kwargs = vs_kwargs if vs_kwargs is not None else dict()
-	light_data, light_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=True, **vs_kwargs)
-	heavy_data, heavy_count = volume_summation(rhesus_drinkers[monkey_category], minutes, exclude=False, **vs_kwargs)
+	light_data, light_count = volume_summation(monkey_category, minutes, exclude=True, **vs_kwargs)
+	heavy_data, heavy_count = volume_summation(monkey_category, minutes, exclude=False, **vs_kwargs)
 	assert light_data.keys() == heavy_data.keys()
 	for x in light_data.keys():
 		# lower, light drinkers
 		_ld = light_data[x]/float(light_count)
 		subplot.bar(x, _ld, width=.5, color='navy', edgecolor='none')
 		# higher, heavy drinkers
-		subplot.bar(x+.5, heavy_data[x]/float(heavy_count), width=.5, color='slateblue', edgecolor='none')
+		subplot.bar(x+.5, heavy_data[x]/float(heavy_count), width=.5, color='gold', edgecolor='none')
 #	patches.append(Rectangle((0,0),1,1, color=value))
-	subplot.legend([plotting.Rectangle((0,0),1,1, color='slateblue'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_category ,"Not %s" % monkey_category], title="Monkey Category", loc='upper left')
+	subplot.legend([plotting.Rectangle((0,0),1,1, color='gold'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_category ,"Not %s" % monkey_category], title="Monkey Category", loc='upper left')
 	subplot.set_xlim(xmax=max(light_data.keys()))
 	subplot.set_title("Average intake by minute after pellet")
 	subplot.set_ylabel("Average volume, ml per monkey")
@@ -1371,16 +1373,17 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
 	return subplot
 
 def rhesus_oa_discrete_minute_volumes(minutes, monkey_category):
-	def _oa_eev_volume_summation(monkey_set=(), minutes=20, exclude=False):
-		data = dict()
+	def _oa_eev_volume_summation(monkey_category, minutes=20, exclude=False):
+		data = defaultdict(lambda: 0)
 		if exclude:
-			eevs = ExperimentEvent.objects.OA().filter(monkey__cohort__in=[5,6,9,10]).filter(monkey__mky_drinking=True).exclude(monkey__in=monkey_set)
+			monkey_set = [x for x in all_rhesus_drinkers if x not in rhesus_drinkers[monkey_category]]
 		else:
-			eevs = ExperimentEvent.objects.OA().filter(monkey__in=monkey_set)
+			monkey_set = rhesus_drinkers[monkey_category]
+		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
 		for i in range(0, minutes):
 			_eevs = eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
 			data[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-		return data, eevs.values_list('monkey', flat=True).distinct().count()
+		return data, len(monkey_set)
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 40)
@@ -1390,36 +1393,132 @@ def rhesus_oa_discrete_minute_volumes(minutes, monkey_category):
 	return fig
 
 def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category):
-	def _thirds_oa_eev_volume_summation(monkey_set=(), minutes=20, exclude=False, offset=0):
-		cohort_starts = {5: datetime(2008, 10, 20), }#6:datetime(2009, 4, 13), 9:datetime(2011, 7, 12), 10:datetime(2011,01,03)}
-		monkeys = set()
-		data = dict()
-		for m in range(0, minutes):
-			data[m] = 0
+	def _thirds_oa_eev_volume_summation(monkey_category, minutes=20, exclude=False, offset=0):
+		cohort_starts = {5: datetime(2008, 10, 20), 6:datetime(2009, 4, 13), 9:datetime(2011, 7, 12), 10:datetime(2011,01,03)}
+		data = defaultdict(lambda: 0)
+		if exclude:
+			monkey_set = [x for x in all_rhesus_drinkers if x not in rhesus_drinkers[monkey_category]]
+		else:
+			monkey_set = rhesus_drinkers[monkey_category]
+		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
 		for coh, start_date in cohort_starts.items():
-			if exclude:
-				eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__mky_drinking=True).filter(monkey__cohort=coh).exclude(monkey__in=monkey_set)
-			else:
-				eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__mky_drinking=True).filter(monkey__cohort=coh).filter(monkey__in=monkey_set)
-			monkeys.update(eevs.values_list('monkey', flat=True).distinct())
+			_eevs = eevs.filter(monkey__cohort=coh)
 
 			start = start_date + timedelta(days=offset)
-			eevs = eevs.filter(eev_occurred__gte=start)
+			_eevs = _eevs.filter(eev_occurred__gte=start)
 			if offset <= 120:
 				end = start + timedelta(days=120)
-				eevs = eevs.filter(eev_occurred__lt=end)
+				_eevs = _eevs.filter(eev_occurred__lt=end)
 			for i in range(0, minutes):
-				_eevs = eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
-				data[i] += _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-		return data, len(monkeys)
+				data = _eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
+				data[i] += data.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+		return data, len(monkey_set)
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 3)
 	main_gs.update(left=0.04, right=0.98, wspace=.08, hspace=0)
+	subplot = None
 	for index, offset in enumerate([0, 120, 240]):
-		subplot = fig.add_subplot(main_gs[:,index])
-		subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _thirds_oa_eev_volume_summation, vs_kwargs={'offset':offset})
+		subplot = fig.add_subplot(main_gs[:,index], sharey=subplot, sharex=subplot)
+		_rhesus_minute_volumes(subplot, minutes, monkey_category, _thirds_oa_eev_volume_summation, vs_kwargs={'offset':offset})
 	return fig
+
+def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
+	xy_kwargs = xy_kwargs if xy_kwargs is not None else dict()
+	cmap = plotting.get_cmap('gist_rainbow')
+	for idx, key in enumerate(rhesus_drinkers.keys()):
+		color = cmap(idx / (len(rhesus_drinkers.keys())-1.))
+		_x, _y = collect_xy_data(key, **xy_kwargs)
+		subplot.scatter(_x, _y, color=color, edgecolor='none', s=100, label=key, marker=rhesus_markers[key], alpha=1)
+		create_convex_hull_polygon(subplot, _x, _y, color)
+	return subplot
+
+def rhesus_oa_pelletvolume_perday_perkg():
+	def _oa_pelletvolume_perday_perkg(monkey_category):
+		monkey_set = rhesus_drinkers[monkey_category]
+		mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
+		x_data = list()
+		y_data = list()
+		for monkey in monkey_set:
+			_mtds = mtds.filter(monkey=monkey).aggregate(Avg('mtd_etoh_intake'), Avg('mtd_total_pellets'), Avg('mtd_weight'))
+			vol_avg = _mtds['mtd_etoh_intake__avg']
+			pel_avg = _mtds['mtd_total_pellets__avg']
+			wgt_avg = _mtds['mtd_weight__avg']
+			x_data.append(vol_avg / wgt_avg)
+			y_data.append(pel_avg / wgt_avg)
+		return x_data, y_data
+
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 3)
+	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
+	subplot = fig.add_subplot(main_gs[:])
+	_rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
+	subplot.legend(scatterpoints=1)
+	subplot.set_title("Intake vs pellets")
+	subplot.set_ylabel("Average pellet / Average weight, per monkey")
+	subplot.set_xlabel("Average volume / Average weight, per monkey")
+	return fig
+
+def rhesus_thirds_oa_pelletvolume_perday_perkg():
+	def _thirds_oa_pelletvolume_perday_perkg(monkey_category, offset=0):
+		cohort_starts = {5: datetime(2008, 10, 20), 6:datetime(2009, 4, 13), 9:datetime(2011, 7, 12), 10:datetime(2011,01,03)}
+		x_data = list()
+		y_data = list()
+		mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions()
+		for coh, start_date in cohort_starts.items():
+			_mtds = mtds.filter(monkey__cohort=coh)
+			start = start_date + timedelta(days=offset)
+			_mtds = _mtds.filter(drinking_experiment__dex_date__gte=start)
+			if offset <= 120:
+				end = start + timedelta(days=120)
+				_mtds = _mtds.filter(drinking_experiment__dex_date__lt=end)
+			for monkey in rhesus_drinkers[monkey_category]:
+				_data = _mtds.filter(monkey=monkey)
+				if not _data:
+					continue
+				_data = _data.aggregate(Avg('mtd_etoh_intake'), Avg('mtd_total_pellets'), Avg('mtd_weight'))
+				vol_avg = _data['mtd_etoh_intake__avg']
+				pel_avg = _data['mtd_total_pellets__avg']
+				wgt_avg = _data['mtd_weight__avg']
+				x_data.append(vol_avg / wgt_avg)
+				y_data.append(pel_avg / wgt_avg)
+		return x_data, y_data
+
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 3)
+	main_gs.update(left=0.04, right=0.98, wspace=.08, hspace=0)
+	y_label = True
+	subplot = None
+	for index, offset in enumerate([0, 120, 240]):
+		subplot = fig.add_subplot(main_gs[:,index], sharey=subplot, sharex=subplot)
+
+		_rhesus_category_scatterplot(subplot, _thirds_oa_pelletvolume_perday_perkg, xy_kwargs={'offset':offset})
+		subplot.legend(scatterpoints=1)
+		subplot.set_title("Intake vs pellets")
+		subplot.set_xlabel("Average volume / Average weight, per monkey")
+		if y_label:
+			subplot.set_ylabel("Average pellet / Average weight, per monkey")
+			y_label = False
+
+	return fig
+
+
+def create_convex_hull_polygon(subplot, xvalues, yvalues, color):
+	from matrr.helper import convex_hull
+	from matplotlib.path import Path
+	try:
+		hull = convex_hull(numpy.array(zip(xvalues, yvalues)).transpose())
+	except AssertionError: # usually means < 5 datapoints
+		return
+	path = Path(hull)
+	x, y = zip(*path.vertices)
+	x = list(x)
+	x.append(x[0])
+	y = list(y)
+	y.append(y[0])
+	line = subplot.plot(x, y, c=color, linewidth=3, alpha=.3)
+	return line
+
 
 #---
 #plot
@@ -1451,7 +1550,7 @@ def confederate_boxplots(confederates, bout_column):
 	confed_data = list()
 	monkey_data = list()
 	minutes = numpy.array([0,1,5,10,15,20])
-	min_oa_date = MonkeyToDrinkingExperiment.objects.OA().aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
+	min_oa_date = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
 	cbts = CohortBout.objects.filter(cohort=cohort).filter(dex_date__gte=min_oa_date)
 	for _min in minutes:
 		_cbts = cbts.filter(cbt_pellet_elapsed_time_since_last__gte=_min*60)
