@@ -1621,6 +1621,29 @@ def rhesus_bout_last_pellet_histogram(exclude_intrapellets=True, exclude_zero=Fa
 	subplot.set_xlabel("Seconds since last pellet")
 	return fig
 
+def _rhesus_minute_volumes_compare_categories(subplot, minutes, monkey_cat_one, monkey_cat_two, volume_summation):
+	from utils import plotting
+	assert monkey_cat_one in rhesus_drinkers.keys()
+	assert monkey_cat_two in rhesus_drinkers.keys()
+	a_data, a_count = volume_summation(monkey_cat_one, minutes)
+	b_data, b_count = volume_summation(monkey_cat_two, minutes)
+	assert a_data.keys() == b_data.keys()
+	for x in a_data.keys():
+		# lower, light drinkers
+		_ld = a_data[x]/float(a_count)
+		subplot.bar(x, _ld, width=.5, color='gold', edgecolor='none')
+		# higher, heavy drinkers
+		subplot.bar(x+.5, b_data[x]/float(b_count), width=.5, color='navy', edgecolor='none')
+#	patches.append(Rectangle((0,0),1,1, color=value))
+	subplot.legend([plotting.Rectangle((0,0),1,1, color='gold'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_cat_one,monkey_cat_two], title="Monkey Category", loc='upper left')
+	subplot.set_xlim(xmax=max(b_data.keys()))
+	# rotate the xaxis labels
+	xticks = [x+.5 for x in a_data.keys()  if x % 15 == 0]
+	xtick_labels = ["%d" % x for x in b_data.keys()  if x % 15 == 0]
+	subplot.set_xticks(xticks)
+	subplot.set_xticklabels(xtick_labels)
+	return subplot
+
 def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one, monkey_cat_two):
 	def _oa_eev_volume_summation(monkey_category, minutes=20):
 		data = defaultdict(lambda: 0)
@@ -1631,30 +1654,6 @@ def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one
 			data[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
 		return data, len(monkey_set)
 
-	def _rhesus_minute_volumes(subplot, minutes, monkey_cat_one, monkey_cat_two, volume_summation, vs_kwargs=None):
-		from utils import plotting
-		assert monkey_cat_one in rhesus_drinkers.keys()
-		assert monkey_cat_two in rhesus_drinkers.keys()
-		a_data, a_count = volume_summation(monkey_cat_one, minutes)
-		b_data, b_count = volume_summation(monkey_cat_two, minutes)
-		assert a_data.keys() == b_data.keys()
-		for x in a_data.keys():
-			# lower, light drinkers
-			_ld = a_data[x]/float(a_count)
-			subplot.bar(x, _ld, width=.5, color='gold', edgecolor='none')
-			# higher, heavy drinkers
-			subplot.bar(x+.5, b_data[x]/float(b_count), width=.5, color='navy', edgecolor='none')
-	#	patches.append(Rectangle((0,0),1,1, color=value))
-		subplot.legend([plotting.Rectangle((0,0),1,1, color='gold'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_cat_one,monkey_cat_two], title="Monkey Category", loc='upper left')
-		subplot.set_xlim(xmax=max(b_data.keys()))
-		# rotate the xaxis labels
-		xticks = [x+.5 for x in a_data.keys()  if x % 15 == 0]
-		xtick_labels = ["%d" % x for x in b_data.keys()  if x % 15 == 0]
-		subplot.set_xticks(xticks)
-		subplot.set_xticklabels(xtick_labels)
-		return subplot
-
-
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 40)
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
@@ -1663,6 +1662,28 @@ def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one
 	subplot.set_xlabel("Minutes since last pellet")
 	subplot.set_title("Average intake by minute after pellet")
 	subplot.set_ylabel("Average volume, ml per monkey")
+	return fig
+
+def rhesus_oa_pellettime_vs_gkg():
+	def _oa_pelletvolume_perday_perkg(monkey_category):
+		monkey_set = rhesus_drinkers_distinct[monkey_category]
+		mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
+		x_data = list()
+		y_data = list()
+		for monkey in monkey_set:
+			_mtds = mtds.filter(monkey=monkey).aggregate(Avg('mtd_mean_seconds_between_pellets'), Avg('mtd_etoh_g_kg'))
+			x_data.append(_mtds['mtd_etoh_g_kg__avg'])
+			y_data.append(_mtds['mtd_mean_seconds_between_pellets__avg'])
+		return x_data, y_data
+
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 3)
+	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
+	subplot = fig.add_subplot(main_gs[:])
+	_rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
+	subplot.set_title("Intake vs pellets")
+	subplot.set_ylabel("Average duration between pellets (seconds), per day, per monkey")
+	subplot.set_xlabel("Average ethanol intake (g/kg, per day, per monkey")
 	return fig
 
 #---
@@ -2273,6 +2294,13 @@ def create_erich_graphs():
 	output_path = settings.STATIC_ROOT
 	output_path = os.path.join(output_path, "images/erich/")
 
+	fig = rhesus_oa_pellettime_vs_gkg()
+	DPI = fig.get_dpi()
+	filename = output_path + '%s.png' % "rhesus_oa_pellettime_vs_gkg"
+	fig.savefig(filename, dpi=DPI)
+
+	already_created = \
+	"""
 	fig = rhesus_oa_pelletvolume_perday_perkg()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_oa_pelletvolume_perday_perkg"
@@ -2315,4 +2343,5 @@ def create_erich_graphs():
 			DPI = fig.get_dpi()
 			filename = output_path + '%s-%d-%s.png' % ("rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons", xkey, ykey)
 			fig.savefig(filename, dpi=DPI)
+	"""
 
