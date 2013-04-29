@@ -1250,7 +1250,7 @@ def rhesus_etoh_gkg_histogram():
 	subplot.set_title("Rhesus 4/5/7a/7b, g/kg per day")
 	subplot.set_ylabel("Day Count")
 	subplot.set_xlabel("Day's etoh intake, g/kg")
-	return fig, None
+	return fig
 
 def rhesus_etoh_gkg_bargraph(limit_step=1):
 	cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
@@ -1284,7 +1284,45 @@ def rhesus_etoh_gkg_bargraph(limit_step=1):
 	subplot.set_title("Rhesus 4/5/7a/7b, distribution of intakes exceeding g/kg minimums")
 	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake exceeded x-value")
 	subplot.set_xlabel("Etoh intake, g/kg")
-	return fig, None
+	return fig
+
+def rhesus_etoh_gkg_stackedbargraph(limit_step=.1):
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	gs = gridspec.GridSpec(3, 3)
+	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
+	subplot = fig.add_subplot(gs[:,:])
+
+	limits = numpy.arange(1,9, limit_step)
+	bottom = numpy.zeros(len(limits))
+	cmap = plotting.get_cmap('gist_rainbow')
+	color_index = 0
+	keys = ['VHD', 'HD', 'MD', 'LD']
+	for key in keys:
+		width = 1 / (1./limit_step)
+		gkg_daycounts = numpy.zeros(len(limits))
+		for monkey in rhesus_drinkers_distinct[key]:
+			mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
+			if not mtds.count():
+				continue
+			max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
+			min_date = mtds.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
+			days = float((max_date-min_date).days)
+			for index, limit in enumerate(limits):
+				_count = mtds.filter(mtd_etoh_g_kg__gt=limit).count()
+				gkg_daycounts[index] += _count / days
+
+		gkg_daycounts = list(gkg_daycounts)
+		color = cmap(color_index / (len(rhesus_drinkers_distinct.keys())-1.))
+		color_index += 1
+		subplot.bar(limits, gkg_daycounts, bottom=bottom, width=width, color=color, label=key, alpha=1)
+		bottom += gkg_daycounts
+	subplot.legend()
+#	xmax = max(gkg_daycounts)*1.005
+#	subplot.set_ylim(ymin=0, ymax=xmax)
+	subplot.set_title("Rhesus 4/5/7a/7b, distribution of intakes exceeding g/kg minimums")
+	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake exceeded x-value")
+	subplot.set_xlabel("Etoh intake, g/kg")
+	return fig
 
 def rhesus_etoh_gkg_forced_histogram():
 	cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
@@ -1325,7 +1363,7 @@ def rhesus_etoh_gkg_forced_histogram():
 	subplot.set_title("Rhesus 4/5/7a/7b, distribution of intakes")
 	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake equaled x-value")
 	subplot.set_xlabel("Etoh intake, g/kg")
-	return fig, None
+	return fig
 
 def rhesus_etoh_gkg_monkeybargraph():
 	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
@@ -1363,7 +1401,7 @@ def rhesus_etoh_gkg_monkeybargraph():
 		xtickNames = pyplot.setp(subplot, xticklabels=keys)
 		pyplot.setp(xtickNames, rotation=45, fontsize=8)
 		subplot.set_title("%% of days with intake over %d g/kg" % limit)
-	return fig, None
+	return fig
 
 def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, vs_kwargs=None):
 	from utils import plotting
@@ -1455,7 +1493,8 @@ def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
 	cmap = plotting.get_cmap('gist_rainbow')
 	all_x = list()
 	all_y = list()
-	for idx, key in enumerate(rhesus_drinkers.keys()):
+	keys = ['VHD', 'HD', 'MD', 'LD']
+	for idx, key in enumerate(keys):
 		color = cmap(idx / (len(rhesus_drinkers.keys())-1.))
 		_x, _y = collect_xy_data(key, **xy_kwargs)
 		all_x.extend(_x)
@@ -1477,14 +1516,14 @@ def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
 	m,c = numpy.linalg.lstsq(A, all_y)[0]
 
 	reg_label = "Fit: r = %f" % pearR
-	subplot.plot(all_x, all_x*m+c,color='purple', label=reg_label)
+	subplot.plot(all_x, all_x*m+c, color='black', label=reg_label)
 
 	handles, labels = subplot.get_legend_handles_labels()
 	_handles = list()
-	_labels = ['LD', 'MD', 'HD', 'VHD', reg_label]
-	for _l in _labels:
+	keys.append(reg_label)
+	for _l in keys:
 		_handles.append(handles[labels.index(_l)])
-	subplot.legend(_handles, _labels, scatterpoints=1)
+	subplot.legend(_handles, keys, scatterpoints=1)
 	return subplot
 
 def rhesus_oa_pelletvolume_perday_perkg():
@@ -1580,7 +1619,7 @@ def rhesus_bout_last_pellet_histogram(exclude_intrapellets=True, exclude_zero=Fa
 		subplot.legend((), title=key, loc=1, frameon=False, prop={'size':12})
 		subplot.set_ylabel("Bout Count")
 	subplot.set_xlabel("Seconds since last pellet")
-	return fig, None
+	return fig
 
 def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one, monkey_cat_two):
 	def _oa_eev_volume_summation(monkey_category, minutes=20):
@@ -2242,6 +2281,11 @@ def create_erich_graphs():
 	fig = rhesus_thirds_oa_pelletvolume_perday_perkg()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_thirds_oa_pelletvolume_perday_perkg"
+	fig.savefig(filename, dpi=DPI)
+
+	fig = rhesus_etoh_gkg_stackedbargraph()
+	DPI = fig.get_dpi()
+	filename = output_path + '%s.png' % "rhesus_etoh_gkg_stackedbargraph"
 	fig.savefig(filename, dpi=DPI)
 
 	minutes = 120
