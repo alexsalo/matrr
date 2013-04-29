@@ -7,6 +7,21 @@ from matrr.models import *
 from utils import plotting
 from collections import defaultdict
 
+def create_convex_hull_polygon(subplot, xvalues, yvalues, color):
+	from matrr.helper import convex_hull
+	from matplotlib.path import Path
+	try:
+		hull = convex_hull(numpy.array(zip(xvalues, yvalues)).transpose())
+	except AssertionError: # usually means < 5 datapoints
+		return
+	path = Path(hull)
+	x, y = zip(*path.vertices)
+	x = list(x)
+	x.append(x[0])
+	y = list(y)
+	y.append(y[0])
+	line = subplot.plot(x, y, c=color, linewidth=3, alpha=.3)
+	return line
 
 
 def cohorts_daytime_bouts_histogram():
@@ -930,7 +945,7 @@ def _cohort_etoh_cumsum_nofood(cohort, subplot, minutes_excluded=5):
 	mky_ymax = dict()
 	for idx, m in enumerate(mkys):
 		eevs = ExperimentEvent.objects.Ind().filter(monkey=m).exclude(eev_etoh_volume=None).order_by('eev_occurred')
-		eevs = eevs.exclude(eev_pellet_elapsed_time_since_last__gte=minutes_excluded*60)
+		eevs = eevs.exclude(eev_pellet_time__gte=minutes_excluded*60)
 		if not eevs.count():
 			continue
 		mky_colors[m] = cmap(idx / (mky_count-1.))
@@ -1216,11 +1231,7 @@ all_rhesus_drinkers = [x for d in rhesus_drinkers_distinct.itervalues() for x in
 rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
 
 def rhesus_etoh_gkg_histogram():
-	cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
-	monkeys = Monkey.objects.none()
-	for coh in cohorts:
-		monkeys |= coh.monkey_set.filter(mky_drinking=True)
-	mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys)
+	mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__cohort__in=[5,6,9,10])
 	daily_gkgs = mtds.values_list('mtd_etoh_g_kg', flat=True)
 
 	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
@@ -1236,7 +1247,7 @@ def rhesus_etoh_gkg_histogram():
 	newy = plotting.spline(bincenters, n, newx) # smooth out the y axis
 	subplot.plot(newx, newy, color='r', linewidth=5) # smoothed line
 	subplot.set_ylim(ymin=0)
-	subplot.set_title("Rhesus 4/5/7a, g/kg per day")
+	subplot.set_title("Rhesus 4/5/7a/7b, g/kg per day")
 	subplot.set_ylabel("Day Count")
 	subplot.set_xlabel("Day's etoh intake, g/kg")
 	return fig, None
@@ -1377,16 +1388,17 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
 	subplot.set_xticklabels(xtick_labels)
 	return subplot
 
-def rhesus_oa_discrete_minute_volumes(minutes, monkey_category):
-	def _oa_eev_volume_summation(monkey_category, minutes=20, exclude=False):
+def rhesus_oa_discrete_minute_volumes(minutes, monkey_category, distinct_monkeys=False):
+	def _oa_eev_volume_summation(monkey_category, minutes=20, exclude=False, distinct_monkeys=False):
 		data = defaultdict(lambda: 0)
+		_drinkers = rhesus_drinkers_distinct if distinct_monkeys else rhesus_drinkers
 		if exclude:
-			monkey_set = [x for x in all_rhesus_drinkers if x not in rhesus_drinkers[monkey_category]]
+			monkey_set = [x for x in all_rhesus_drinkers if x not in _drinkers[monkey_category]]
 		else:
-			monkey_set = rhesus_drinkers[monkey_category]
+			monkey_set = _drinkers[monkey_category]
 		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
 		for i in range(0, minutes):
-			_eevs = eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
+			_eevs = eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
 			data[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
 		return data, len(monkey_set)
 
@@ -1394,20 +1406,21 @@ def rhesus_oa_discrete_minute_volumes(minutes, monkey_category):
 	main_gs = gridspec.GridSpec(3, 40)
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 	subplot = fig.add_subplot(main_gs[:,:])
-	subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _oa_eev_volume_summation)
+	subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _oa_eev_volume_summation, vs_kwargs={'distinct_monkeys': distinct_monkeys})
 	subplot.set_xlabel("Minutes since last pellet")
 	subplot.set_title("Average intake by minute after pellet")
 	subplot.set_ylabel("Average volume, ml per monkey")
 	return fig
 
-def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category):
-	def _thirds_oa_eev_volume_summation(monkey_category, minutes=20, exclude=False, offset=0):
+def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category, distinct_monkeys=False):
+	def _thirds_oa_eev_volume_summation(monkey_category, minutes=20, exclude=False, offset=0, distinct_monkeys=False):
 		cohort_starts = {5: datetime(2008, 10, 20), 6:datetime(2009, 4, 13), 9:datetime(2011, 7, 12), 10:datetime(2011,01,03)}
 		data = defaultdict(lambda: 0)
+		_drinkers = rhesus_drinkers_distinct if distinct_monkeys else rhesus_drinkers
 		if exclude:
-			monkey_set = [x for x in all_rhesus_drinkers if x not in rhesus_drinkers[monkey_category]]
+			monkey_set = [x for x in all_rhesus_drinkers if x not in _drinkers[monkey_category]]
 		else:
-			monkey_set = rhesus_drinkers[monkey_category]
+			monkey_set = _drinkers[monkey_category]
 		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
 		for coh, start_date in cohort_starts.items():
 			_eevs = eevs.filter(monkey__cohort=coh)
@@ -1418,7 +1431,7 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category):
 				end = start + timedelta(days=120)
 				_eevs = _eevs.filter(eev_occurred__lt=end)
 			for i in range(0, minutes):
-				data = _eevs.filter(eev_pellet_elapsed_time_since_last__gte=i*60).filter(eev_pellet_elapsed_time_since_last__lt=(i+1)*60)
+				data = _eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
 				data[i] += data.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
 		return data, len(monkey_set)
 
@@ -1429,7 +1442,7 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category):
 	subplot = None
 	for index, offset in enumerate([0, 120, 240]):
 		subplot = fig.add_subplot(main_gs[:,index], sharey=subplot, sharex=subplot)
-		_rhesus_minute_volumes(subplot, minutes, monkey_category, _thirds_oa_eev_volume_summation, vs_kwargs={'offset':offset})
+		_rhesus_minute_volumes(subplot, minutes, monkey_category, _thirds_oa_eev_volume_summation, vs_kwargs={'offset':offset, 'distinct_monkeys': distinct_monkeys})
 		subplot.set_xlabel("Minutes since last pellet")
 		subplot.set_title("Average intake by minute after pellet")
 		if y_label:
@@ -1440,15 +1453,35 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category):
 def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
 	xy_kwargs = xy_kwargs if xy_kwargs is not None else dict()
 	cmap = plotting.get_cmap('gist_rainbow')
+	all_x = list()
+	all_y = list()
 	for idx, key in enumerate(rhesus_drinkers.keys()):
 		color = cmap(idx / (len(rhesus_drinkers.keys())-1.))
 		_x, _y = collect_xy_data(key, **xy_kwargs)
+		all_x.extend(_x)
+		all_y.extend(_y)
 		subplot.scatter(_x, _y, color=color, edgecolor='none', s=100, label=key, marker=rhesus_markers[key], alpha=1)
 		create_convex_hull_polygon(subplot, _x, _y, color)
 
+	# regression line
+#	fit = plotting.polyfit(all_x, all_y, 1)
+#	l = numpy.linspace(min(all_x), max(all_x), 100)
+#	xr = plotting.polyval(fit, l)
+#	subplot.plot(l, xr, '-', linewidth=3, alpha=1)
+	all_x = numpy.array(all_x)
+	all_y = numpy.array(all_y)
+	pearR = numpy.corrcoef(all_x, all_y)[1,0]
+	# least squares from:
+	# http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.lstsq.html
+	A = numpy.vstack([all_x, numpy.ones(len(all_x))]).T
+	m,c = numpy.linalg.lstsq(A, all_y)[0]
+
+	reg_label = "Fit: r = %f" % pearR
+	subplot.plot(all_x, all_x*m+c,color='purple', label=reg_label)
+
 	handles, labels = subplot.get_legend_handles_labels()
 	_handles = list()
-	_labels = ['LD', 'MD', 'HD', 'VHD']
+	_labels = ['LD', 'MD', 'HD', 'VHD', reg_label]
 	for _l in _labels:
 		_handles.append(handles[labels.index(_l)])
 	subplot.legend(_handles, _labels, scatterpoints=1)
@@ -1469,7 +1502,7 @@ def rhesus_oa_pelletvolume_perday_perkg():
 			y_data.append(pel_avg / wgt_avg)
 		return x_data, y_data
 
-	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 3)
 	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
 	subplot = fig.add_subplot(main_gs[:])
@@ -1504,7 +1537,7 @@ def rhesus_thirds_oa_pelletvolume_perday_perkg():
 				y_data.append(pel_avg / wgt_avg)
 		return x_data, y_data
 
-	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	fig = pyplot.figure(figsize=plotting.THIRDS_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 3)
 	main_gs.update(left=0.04, right=0.98, wspace=.08, hspace=0)
 	y_label = True
@@ -1518,26 +1551,80 @@ def rhesus_thirds_oa_pelletvolume_perday_perkg():
 		if y_label:
 			subplot.set_ylabel("Average pellet / Average weight, per monkey")
 			y_label = False
-
 	return fig
 
+def rhesus_bout_last_pellet_histogram(exclude_intrapellets=True, exclude_zero=False):
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	fig.suptitle("Bouts vs time since pellet")
+	gs = gridspec.GridSpec(4, 4)
+	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
 
-def create_convex_hull_polygon(subplot, xvalues, yvalues, color):
-	from matrr.helper import convex_hull
-	from matplotlib.path import Path
-	try:
-		hull = convex_hull(numpy.array(zip(xvalues, yvalues)).transpose())
-	except AssertionError: # usually means < 5 datapoints
-		return
-	path = Path(hull)
-	x, y = zip(*path.vertices)
-	x = list(x)
-	x.append(x[0])
-	y = list(y)
-	y.append(y[0])
-	line = subplot.plot(x, y, c=color, linewidth=3, alpha=.3)
-	return line
+	subplot = None
+	for index, key in enumerate(rhesus_drinkers_distinct.iterkeys()):
+		subplot = fig.add_subplot(gs[index,:], sharex=subplot, sharey=subplot)
+		ebts = ExperimentBout.objects.OA().filter(mtd__monkey__cohort__in=[5,6,9,10])
+		if exclude_intrapellets:
+			ebts = ebts.exclude(ebt_contains_pellet=True)
+		if exclude_zero:
+			ebts = ebts.exclude(ebt_pellet_elapsed_time_since_last__lte=3*60)
+		pellet_times = ebts.filter(mtd__monkey__in=rhesus_drinkers_distinct[key]).values_list('ebt_pellet_elapsed_time_since_last', flat=True)
+		bin_count = 250
+		linspace = numpy.linspace(0, max(pellet_times), bin_count) # defines number of bins in histogram
+		n, bins, patches = subplot.hist(pellet_times, bins=linspace, normed=False, alpha=.5, color='gold', log=True)
+		bincenters = 0.5*(bins[1:]+bins[:-1])
+		newx = numpy.linspace(min(bincenters), max(bincenters), bin_count/10) # smooth out the x axis
+		newy = plotting.spline(bincenters, n, newx) # smooth out the y axis
+		subplot.plot(newx, newy, color='r', linewidth=2) # smoothed line
+		subplot.set_ylim(ymin=1)
+		# title
+		subplot.legend((), title=key, loc=1, frameon=False, prop={'size':12})
+		subplot.set_ylabel("Bout Count")
+	subplot.set_xlabel("Seconds since last pellet")
+	return fig, None
 
+def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one, monkey_cat_two):
+	def _oa_eev_volume_summation(monkey_category, minutes=20):
+		data = defaultdict(lambda: 0)
+		monkey_set = rhesus_drinkers_distinct[monkey_category]
+		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
+		for i in range(0, minutes):
+			_eevs = eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
+			data[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+		return data, len(monkey_set)
+
+	def _rhesus_minute_volumes(subplot, minutes, monkey_cat_one, monkey_cat_two, volume_summation, vs_kwargs=None):
+		from utils import plotting
+		assert monkey_cat_one in rhesus_drinkers.keys()
+		assert monkey_cat_two in rhesus_drinkers.keys()
+		a_data, a_count = volume_summation(monkey_cat_one, minutes)
+		b_data, b_count = volume_summation(monkey_cat_two, minutes)
+		assert a_data.keys() == b_data.keys()
+		for x in a_data.keys():
+			# lower, light drinkers
+			_ld = a_data[x]/float(a_count)
+			subplot.bar(x, _ld, width=.5, color='gold', edgecolor='none')
+			# higher, heavy drinkers
+			subplot.bar(x+.5, b_data[x]/float(b_count), width=.5, color='navy', edgecolor='none')
+	#	patches.append(Rectangle((0,0),1,1, color=value))
+		subplot.legend([plotting.Rectangle((0,0),1,1, color='gold'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_cat_one,monkey_cat_two], title="Monkey Category", loc='upper left')
+		subplot.set_xlim(xmax=max(b_data.keys()))
+		# rotate the xaxis labels
+		xticks = [x+.5 for x in a_data.keys()  if x % 15 == 0]
+		xtick_labels = ["%d" % x for x in b_data.keys()  if x % 15 == 0]
+		subplot.set_xticks(xticks)
+		subplot.set_xticklabels(xtick_labels)
+		return subplot
+
+
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	subplot = fig.add_subplot(main_gs[:,:])
+	subplot = _rhesus_minute_volumes(subplot, 120, monkey_cat_one, monkey_cat_two, _oa_eev_volume_summation)
+	subplot.set_xlabel("Minutes since last pellet")
+	subplot.set_title("Average intake by minute after pellet")
+	subplot.set_ylabel("Average volume, ml per monkey")
+	return fig
 
 #---
 #plot
@@ -2166,3 +2253,21 @@ def create_erich_graphs():
 		filename = output_path + '%s-%d-%s.png' % ("rhesus_confederate_boxplots", coh_pk, column)
 		fig.savefig(filename, dpi=DPI)
 
+	for xkey in rhesus_drinkers_distinct.iterkeys():
+		for ykey in rhesus_drinkers_distinct.iterkeys():
+			if xkey == ykey:
+				continue
+			fig = rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(xkey, ykey)
+			DPI = fig.get_dpi()
+			filename = output_path + '%s-%d-%s.png' % ("rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons", xkey, ykey)
+			fig.savefig(filename, dpi=DPI)
+
+	fig = rhesus_oa_pelletvolume_perday_perkg()
+	DPI = fig.get_dpi()
+	filename = output_path + '%s.png' % "rhesus_oa_pelletvolume_perday_perkg"
+	fig.savefig(filename, dpi=DPI)
+
+	fig = rhesus_thirds_oa_pelletvolume_perday_perkg()
+	DPI = fig.get_dpi()
+	filename = output_path + '%s.png' % "rhesus_thirds_oa_pelletvolume_perday_perkg"
+	fig.savefig(filename, dpi=DPI)
