@@ -2234,6 +2234,16 @@ def create_erich_graphs():
 	output_path = settings.STATIC_ROOT
 	output_path = os.path.join(output_path, "images/erich/")
 
+	fig = rhesus_oa_pelletvolume_perday_perkg()
+	DPI = fig.get_dpi()
+	filename = output_path + '%s.png' % "rhesus_oa_pelletvolume_perday_perkg"
+	fig.savefig(filename, dpi=DPI)
+
+	fig = rhesus_thirds_oa_pelletvolume_perday_perkg()
+	DPI = fig.get_dpi()
+	filename = output_path + '%s.png' % "rhesus_thirds_oa_pelletvolume_perday_perkg"
+	fig.savefig(filename, dpi=DPI)
+
 	minutes = 120
 	for mky_cat in rhesus_drinkers.keys():
 		fig = rhesus_oa_discrete_minute_volumes(minutes, mky_cat)
@@ -2262,12 +2272,3 @@ def create_erich_graphs():
 			filename = output_path + '%s-%d-%s.png' % ("rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons", xkey, ykey)
 			fig.savefig(filename, dpi=DPI)
 
-	fig = rhesus_oa_pelletvolume_perday_perkg()
-	DPI = fig.get_dpi()
-	filename = output_path + '%s.png' % "rhesus_oa_pelletvolume_perday_perkg"
-	fig.savefig(filename, dpi=DPI)
-
-	fig = rhesus_thirds_oa_pelletvolume_perday_perkg()
-	DPI = fig.get_dpi()
-	filename = output_path + '%s.png' % "rhesus_thirds_oa_pelletvolume_perday_perkg"
-	fig.savefig(filename, dpi=DPI)
