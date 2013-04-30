@@ -1469,8 +1469,8 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category, distinct_
 				end = start + timedelta(days=120)
 				_eevs = _eevs.filter(eev_occurred__lt=end)
 			for i in range(0, minutes):
-				data = _eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
-				data[i] += data.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+				eev_data = _eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
+				data[i] += eev_data.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
 		return data, len(monkey_set)
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
@@ -2299,8 +2299,8 @@ def create_erich_graphs():
 	filename = output_path + '%s.png' % "rhesus_oa_pellettime_vs_gkg"
 	fig.savefig(filename, dpi=DPI)
 
-	already_created = \
-	"""
+#	already_created = \
+#	"""
 	fig = rhesus_oa_pelletvolume_perday_perkg()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_oa_pelletvolume_perday_perkg"
@@ -2343,5 +2343,5 @@ def create_erich_graphs():
 			DPI = fig.get_dpi()
 			filename = output_path + '%s-%d-%s.png' % ("rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons", xkey, ykey)
 			fig.savefig(filename, dpi=DPI)
-	"""
+#	"""
 
