@@ -43,7 +43,7 @@ def send_colliding_requests_info():
 
 			collision_text = collision_text + ("Request: %s\n" % req) + sub_text + acc_text
 		subject = 'Submitted requests with collisions'
-		body = 'Information from matrr.com\nSome requests submitted during last 24 hours collide with other requests.\n' + \
+		body = 'Information from matrr.com\nSome requests were submitted during the last 24 hours which collide with other requests.\n' + \
 				collision_text + \
 				'Please, do not respond. This is an automated message.\n'
 
@@ -64,7 +64,7 @@ def send_verify_tissues_info():
 	users = Account.objects.users_with_perm('can_verify_tissues')
 	time_now = datetime.now()
 	time_yesterday = time_now - timedelta(days=1)
-	requests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday, req_modified_date__lte=time_now)
+	requests = Request.objects.submitted().filter(req_request_date__gte=time_yesterday, req_request_date__lte=time_now)
 	requests = requests.exclude(user__username='matrr_admin')
 	requests = requests.exclude(cohort__coh_cohort_name__icontains='assay')
 
@@ -76,7 +76,7 @@ def send_verify_tissues_info():
 			recipients = list()
 			recipients.append(email)
 			subject = 'Tissues to be verified'
-			body = 'Information from matrr.com\n During last 24 hours new request(s) has (have) been submitted. Your account %s can verify tissues. Please, find some time to do so.\n' % user.username + \
+			body = 'Information from matrr.com\n During the last 24 hours new request(s) has (have) been submitted. Your account %s can verify tissues. Please, find some time to do so.\n' % user.username + \
 				'Please, do not respond. This is an automated message.\n'
 
 			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
@@ -96,7 +96,7 @@ def send_verify_tissues_info():
 			recipients = list()
 			recipients.append(email)
 			subject = 'Assay Tissues to be verified'
-			body = 'Information from matrr.com\n During last 24 hours new request(s) has (have) been submitted. Your account %s can verify tissues. Please, find some time to do so.\n' % user.username + \
+			body = 'Information from matrr.com\n During the last 24 hours new request(s) has (have) been submitted. Your account %s can verify tissues. Please, find some time to do so.\n' % user.username + \
 				'Please, do not respond. This is an automated message.\n'
 
 			ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
