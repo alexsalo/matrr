@@ -1523,8 +1523,7 @@ def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
 	keys.append(reg_label)
 	for _l in keys:
 		_handles.append(handles[labels.index(_l)])
-	subplot.legend(_handles, keys, scatterpoints=1)
-	return subplot
+	return subplot, _handles, keys
 
 def rhesus_oa_pelletvolume_perday_perkg():
 	def _oa_pelletvolume_perday_perkg(monkey_category):
@@ -1540,13 +1539,32 @@ def rhesus_oa_pelletvolume_perday_perkg():
 			x_data.append(vol_avg / wgt_avg)
 			y_data.append(pel_avg / wgt_avg)
 		return x_data, y_data
+	def _oa_pelletwater_perday_perkg(monkey_category):
+		monkey_set = rhesus_drinkers_distinct[monkey_category]
+		mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
+		x_data = list()
+		y_data = list()
+		for monkey in monkey_set:
+			_mtds = mtds.filter(monkey=monkey).aggregate(Avg('mtd_veh_intake'), Avg('mtd_total_pellets'), Avg('mtd_weight'))
+			vol_avg = _mtds['mtd_veh_intake__avg']
+			pel_avg = _mtds['mtd_total_pellets__avg']
+			wgt_avg = _mtds['mtd_weight__avg']
+			x_data.append(vol_avg / wgt_avg)
+			y_data.append(pel_avg / wgt_avg)
+		return x_data, y_data
 
 	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 3)
 	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
 	subplot = fig.add_subplot(main_gs[:])
-	_rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
-	subplot.set_title("Intake vs pellets")
+	inset_plot = fig.add_axes([0.6,0.7,0.37,0.23])
+	inset_plot, handles, labels = _rhesus_category_scatterplot(inset_plot, _oa_pelletwater_perday_perkg)
+	inset_plot.set_title("H20 Intake vs pellets")
+	inset_plot.set_ylabel("Pellets/Weight/Monkey")
+	inset_plot.set_xlabel("Water/Weight/Monkey")
+	subplot, handles, labels = _rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
+	subplot.legend(handles, labels, scatterpoints=1, loc='lower left')
+	subplot.set_title("EtOH Intake vs pellets")
 	subplot.set_ylabel("Average pellet / Average weight, per monkey")
 	subplot.set_xlabel("Average volume / Average weight, per monkey")
 	return fig
@@ -1584,7 +1602,8 @@ def rhesus_thirds_oa_pelletvolume_perday_perkg():
 	for index, offset in enumerate([0, 120, 240]):
 		subplot = fig.add_subplot(main_gs[:,index], sharey=subplot, sharex=subplot)
 
-		_rhesus_category_scatterplot(subplot, _thirds_oa_pelletvolume_perday_perkg, xy_kwargs={'offset':offset})
+		subplot, handles, labels = _rhesus_category_scatterplot(subplot, _thirds_oa_pelletvolume_perday_perkg, xy_kwargs={'offset':offset})
+		subplot.legend(handles, labels, scatterpoints=1)
 		subplot.set_title("Intake vs pellets")
 		subplot.set_xlabel("Average volume / Average weight, per monkey")
 		if y_label:
@@ -1658,7 +1677,7 @@ def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one
 	main_gs = gridspec.GridSpec(3, 40)
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 	subplot = fig.add_subplot(main_gs[:,:])
-	subplot = _rhesus_minute_volumes(subplot, 120, monkey_cat_one, monkey_cat_two, _oa_eev_volume_summation)
+	subplot = _rhesus_minute_volumes_compare_categories(subplot, 120, monkey_cat_one, monkey_cat_two, _oa_eev_volume_summation)
 	subplot.set_xlabel("Minutes since last pellet")
 	subplot.set_title("Average intake by minute after pellet")
 	subplot.set_ylabel("Average volume, ml per monkey")
@@ -1680,7 +1699,8 @@ def rhesus_oa_pellettime_vs_gkg():
 	main_gs = gridspec.GridSpec(3, 3)
 	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
 	subplot = fig.add_subplot(main_gs[:])
-	_rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
+	subplot, handles, labels = _rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
+	subplot.legend(handles, labels, scatterpoints=1)
 	subplot.set_title("Intake vs pellets")
 	subplot.set_ylabel("Average duration between pellets (seconds), per day, per monkey")
 	subplot.set_xlabel("Average ethanol intake (g/kg, per day, per monkey")
@@ -2293,14 +2313,15 @@ def create_erich_graphs():
 	import settings
 	output_path = settings.STATIC_ROOT
 	output_path = os.path.join(output_path, "images/erich/")
+	minutes = 120
 
 	fig = rhesus_oa_pellettime_vs_gkg()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_oa_pellettime_vs_gkg"
 	fig.savefig(filename, dpi=DPI)
 
-#	already_created = \
-#	"""
+	already_created = \
+	"""
 	fig = rhesus_oa_pelletvolume_perday_perkg()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_oa_pelletvolume_perday_perkg"
@@ -2316,23 +2337,23 @@ def create_erich_graphs():
 	filename = output_path + '%s.png' % "rhesus_etoh_gkg_stackedbargraph"
 	fig.savefig(filename, dpi=DPI)
 
-	minutes = 120
 	for mky_cat in rhesus_drinkers.keys():
 		fig = rhesus_oa_discrete_minute_volumes(minutes, mky_cat)
 		DPI = fig.get_dpi()
 		filename = output_path + '%s-%d-%s.png' % ("rhesus_oa_discrete_minute_volumes", minutes, mky_cat)
 		fig.savefig(filename, dpi=DPI)
 
-	for mky_cat in rhesus_drinkers.keys():
-		fig = rhesus_thirds_oa_discrete_minute_volumes(minutes, mky_cat)
-		DPI = fig.get_dpi()
-		filename = output_path + '%s-%d-%s.png' % ("rhesus_thirds_oa_discrete_minute_volumes", minutes, mky_cat)
-		fig.savefig(filename, dpi=DPI)
-
 	confed_boxplots = rhesus_confederate_boxplots()
 	for fig, coh_pk, column in confed_boxplots:
 		DPI = fig.get_dpi()
 		filename = output_path + '%s-%d-%s.png' % ("rhesus_confederate_boxplots", coh_pk, column)
+		fig.savefig(filename, dpi=DPI)
+
+	"""
+	for mky_cat in rhesus_drinkers.keys():
+		fig = rhesus_thirds_oa_discrete_minute_volumes(minutes, mky_cat)
+		DPI = fig.get_dpi()
+		filename = output_path + '%s-%d-%s.png' % ("rhesus_thirds_oa_discrete_minute_volumes", minutes, mky_cat)
 		fig.savefig(filename, dpi=DPI)
 
 	for xkey in rhesus_drinkers_distinct.iterkeys():
