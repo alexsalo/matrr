@@ -623,8 +623,6 @@ def create_TissueSamples(tissue_type=None):
 			if is_new:
 				sample.tss_freezer = "<new record, no data>"
 				sample.tss_location = "<new record, no data>"
-#				sample.tss_units = units
-#				sample.tss_sample_quantity = quantity
 				sample.save()
 				# Can be incredibly spammy
 				print "New tissue sample: " + sample.__unicode__()
@@ -640,8 +638,6 @@ def create_Assay_Development_tree():
 		tissue_sample[0].tss_freezer = "Assay Tissue"
 		tissue_sample[0].tss_location = "Assay Tissue"
 		tissue_sample[0].tss_details = "MATRR does not track assay inventory."
-
-
 
 ERROR_OUTPUT = "%d %s # %s"
 
@@ -2226,7 +2222,7 @@ def _create_cbt(bouts, date, cohort, cbt_number=0, overwrite=False, seconds_to_e
 				cbt.cbt_end_time = max(cbt.cbt_end_time, bout['ebt_end_time'])
 		cbt.save() # If we get here, we've run out of bouts to loop thru for this day.  This will end the recursion
 
-def create_cohort_bouts(cohort, overwrite=False, seconds_to_exclude=0):
+def _create_cohort_bouts(cohort, overwrite, seconds_to_exclude=0):
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -2249,3 +2245,7 @@ def create_cohort_bouts(cohort, overwrite=False, seconds_to_exclude=0):
 		for cbt in cbts:
 			# I didn't update the cbt fk in the recursion because this update should be faster
 			cbt.populate_ebt_set()
+
+def create_cohort_bouts(cohort, overwrite=False):
+	for seconds in [0, 60, 300, 600, 900, 1200]:
+		_create_cohort_bouts(cohort, overwrite, seconds)
