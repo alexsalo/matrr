@@ -23,23 +23,24 @@ def create_convex_hull_polygon(subplot, xvalues, yvalues, color):
 	line = subplot.plot(x, y, c=color, linewidth=3, alpha=.3)
 	return line
 
+_24_hour = 24*60*60
+_22_hour = 22*60*60
+_12_hour = 12*60*60
+_7_hour = 7*60*60
+_1_hour = 60*60
+_2_hour = 2*60*60
+session_start = 0
+session_end = session_start + _22_hour
+lights_out = session_start + _7_hour
+lights_on = lights_out + _12_hour
+diff = session_end - lights_on
+
 
 def cohorts_daytime_bouts_histogram():
 	cohorts = list()
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')) # adolescents
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')) # adults
-
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
 
 	main_plot = None
 	for cohort in cohorts:
@@ -73,17 +74,6 @@ def cohorts_daytime_volbouts_bargraph():
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')) # adolescents
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')) # adults
-
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
 
 	width = 1
 	main_plot = None
@@ -141,17 +131,6 @@ def cohorts_daytime_bouts_boxplot():
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 	main_plot = fig.add_subplot(main_gs[:,:])
 
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
-
 	x_axis = list()
 	y_axes = list()
 	labels = list()
@@ -184,17 +163,6 @@ def cohorts_daytime_bouts_boxplot_remix():
 	main_gs = gridspec.GridSpec(3, 40)
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 	main_plot = fig.add_subplot(main_gs[:,:])
-
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
 
 	x_axis = list()
 	y_axes = list()
@@ -237,18 +205,6 @@ def cohorts_daytime_bouts_boxplot_doubleremix():
 	main_gs = gridspec.GridSpec(3, 40)
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 	main_plot = fig.add_subplot(main_gs[:,:])
-
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_2_hour = 2*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
 
 	x_axis = list()
 	before_end = list()
@@ -303,18 +259,6 @@ def cohorts_daytime_bouts_boxplot_hattrick():
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 	main_plot = fig.add_subplot(main_gs[:,:])
 
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_2_hour = 2*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
-
 	x_axis = list()
 	before_end = list()
 	after_start = list()
@@ -362,17 +306,6 @@ def cohorts_scatterbox():
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
 	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')) # adults
 	colors = ['green', 'blue', 'red']
-
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 40)
@@ -607,17 +540,6 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	_phase = 'mtd__drinking_experiment__dex_date__gt' if phase == 2 else 'mtd__drinking_experiment__dex_date__lte'
 
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
-
 	title_append = " Phase %d Open Access" % phase if phase else " All Open Access"
 	width = 1
 	figures = list()
@@ -678,17 +600,6 @@ def cohorts_daytime_bouts_histogram_split(phase):
 	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	_phase = 'mtd__drinking_experiment__dex_date__gt' if phase == 2 else 'mtd__drinking_experiment__dex_date__lte'
 
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
-
 	title_append = " Phase %d Open Access" % phase if phase else " All Open Access"
 	figures = list()
 	main_plot = None
@@ -739,17 +650,6 @@ def cohorts_maxbouts_histogram(phase):
 	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	_phase = 'drinking_experiment__dex_date__gt' if phase == 2 else 'drinking_experiment__dex_date__lte'
 
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
-
 	title_append = " Phase %d Open Access" % phase if phase else " All Open Access"
 	figures = list()
 	main_plot = None
@@ -793,17 +693,6 @@ def cohorts_scatterbox_split(phase):
 	cohorts = [_7a, _5, _4]
 	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	_phase = 'mtd__drinking_experiment__dex_date__gt' if phase == 2 else 'mtd__drinking_experiment__dex_date__lte'
-
-	_24_hour = 24*60*60
-	_22_hour = 22*60*60
-	_12_hour = 12*60*60
-	_7_hour = 7*60*60
-	_1_hour = 60*60
-	session_start = 0
-	session_end = session_start + _22_hour
-	lights_out = session_start + _7_hour
-	lights_on = lights_out + _12_hour
-	diff = session_end - lights_on
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 40)
@@ -1470,7 +1359,10 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category, distinct_
 				_eevs = _eevs.filter(eev_occurred__lt=end)
 			for i in range(0, minutes):
 				eev_data = _eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
-				data[i] += eev_data.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+				sum_vol = eev_data.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+				if sum_vol is None:
+					continue
+				data[i] += sum_vol
 		return data, len(monkey_set)
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
@@ -1704,6 +1596,67 @@ def rhesus_oa_pellettime_vs_gkg():
 	subplot.set_title("Intake vs pellets")
 	subplot.set_ylabel("Average duration between pellets (seconds), per day, per monkey")
 	subplot.set_xlabel("Average ethanol intake (g/kg, per day, per monkey")
+	return fig
+
+def _rhesus_gkg_by_hour_boxplot(subplot, x_values, monkey_category, data_collection_method, width=1, extra_kwargs=None):
+	extra_kwargs = extra_kwargs if extra_kwargs else {}
+	data = list()
+	for start_time in range(session_start, session_end, _1_hour):
+		# Get all events that ever happened within this session hour
+		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(eev_session_time__gte=start_time).filter(eev_pellet_time__lt=start_time+_1_hour)
+		# pass these events into the data collection method.
+		# The data collection method is expected to produce a subset of boxplot-able data, filtered and normalized as the parent method intends
+		data.append(data_collection_method(eevs, monkey_category, **extra_kwargs))
+	bp = subplot.boxplot(data, positions=x_values, widths=width)
+
+	# shades the graph gray for light-out hours
+	subplot.axvspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
+
+	# defines X labels
+	x_labels = ['hr %d' % i for i in range(1,23)]
+	# centers xticks, so labels are place in the middle of the hour, rotated
+	new_xticks = range(0, _22_hour, _1_hour)
+	new_xticks = [_x + (_1_hour/2.) for _x in new_xticks]
+	subplot.set_xticks(new_xticks)
+	xtickNames = pyplot.setp(subplot, xticklabels=x_labels)
+	pyplot.setp(xtickNames, rotation=45)
+	return subplot
+
+def rhesus_hourly_gkg_boxplot_by_category():
+	def _hourly_eev_gkg_summation(eevs, monkey_category):
+		"""
+		This method will return a list of each monkey's gkg consumed within the events passed in (eevs), for each monkey in monkey_category
+		ex.
+		[3.2, 1.4, 5.7, 3.5, 2.9]
+		"""
+		events_gkg = list()
+		for monkey in rhesus_drinkers_distinct[monkey_category]:
+			# first, get the subset of events associated with this monkey
+			_eevs = eevs.filter(monkey=monkey)
+			# Next, get this monkey's average OPEN ACCESS weight
+			mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=eevs[0].monkey)
+			avg_weight = mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
+			# to get g/kg, aggregate the volume consumed, multiply by .04 and divide by weight
+			gkg = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] * .04 / avg_weight
+			events_gkg.append(gkg)
+		return events_gkg
+
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 3)
+	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
+	subplot = fig.add_subplot(main_gs[:,:])
+
+	monkey_categories = rhesus_drinkers_distinct.keys()
+	width = _1_hour / (len(monkey_categories) + 1)
+	offset = _1_hour / len(monkey_categories)
+	for index, mky_cat in enumerate(monkey_categories):
+		x_values = range(index*offset, _22_hour, _1_hour)
+		subplot = _rhesus_gkg_by_hour_boxplot(subplot, x_values, mky_cat, _hourly_eev_gkg_summation, width=width)
+
+#	subplot.legend(handles, labels, scatterpoints=1)
+	subplot.set_title("hourly gkg boxplot by category")
+	subplot.set_ylabel("gkg")
+	subplot.set_xlabel("Hour of session")
 	return fig
 
 #---
@@ -2362,7 +2315,7 @@ def create_erich_graphs():
 				continue
 			fig = rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(xkey, ykey)
 			DPI = fig.get_dpi()
-			filename = output_path + '%s-%d-%s.png' % ("rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons", xkey, ykey)
+			filename = output_path + '%s-%s-%s.png' % ("rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons", xkey, ykey)
 			fig.savefig(filename, dpi=DPI)
 #	"""
 
