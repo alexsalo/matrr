@@ -1103,6 +1103,8 @@ def __mtd_call_max_bout_vol_pct(mtds):
 	return avg, "Average Maximum Bout, as % of total intake"
 #--
 
+rhesus_keys = ['VHD', 'HD', 'MD', 'LD']
+
 rhesus_drinkers = dict()
 rhesus_drinkers['LD'] = [10048, 10052, 10055, 10056, 10058, 10083, 10084, 10085, 10089, 10090, 10092] # all drinking monkeys in 5,6,9,10 not listed below
 rhesus_drinkers['MD'] = [10082, 10057, 10087, 10088, 10059, 10054, 10086 ,10051, 10049, 10063, 10091, 10060, 10064, 10098, 10065, 10097, 10066, 10067, 10061, 10062]
@@ -1118,6 +1120,11 @@ rhesus_drinkers_distinct['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 100
 all_rhesus_drinkers = [x for d in rhesus_drinkers_distinct.itervalues() for x in d]
 
 rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
+rhesus_colors = dict()
+cmap = plotting.get_cmap('gist_rainbow')
+for idx, key in rhesus_keys:
+	rhesus_colors[key] = cmap(idx / (len(rhesus_drinkers.keys())-1.))
+
 
 def rhesus_etoh_gkg_histogram():
 	mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__cohort__in=[5,6,9,10])
@@ -1183,10 +1190,8 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1):
 
 	limits = numpy.arange(1,9, limit_step)
 	bottom = numpy.zeros(len(limits))
-	cmap = plotting.get_cmap('gist_rainbow')
 	color_index = 0
-	keys = ['VHD', 'HD', 'MD', 'LD']
-	for key in keys:
+	for key in rhesus_keys:
 		width = 1 / (1./limit_step)
 		gkg_daycounts = numpy.zeros(len(limits))
 		for monkey in rhesus_drinkers_distinct[key]:
@@ -1201,7 +1206,7 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1):
 				gkg_daycounts[index] += _count / days
 
 		gkg_daycounts = list(gkg_daycounts)
-		color = cmap(color_index / (len(rhesus_drinkers_distinct.keys())-1.))
+		color = rhesus_colors[key]
 		color_index += 1
 		subplot.bar(limits, gkg_daycounts, bottom=bottom, width=width, color=color, label=key, alpha=1)
 		bottom += gkg_daycounts
@@ -1382,12 +1387,10 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category, distinct_
 
 def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
 	xy_kwargs = xy_kwargs if xy_kwargs is not None else dict()
-	cmap = plotting.get_cmap('gist_rainbow')
 	all_x = list()
 	all_y = list()
-	keys = ['VHD', 'HD', 'MD', 'LD']
-	for idx, key in enumerate(keys):
-		color = cmap(idx / (len(rhesus_drinkers.keys())-1.))
+	for idx, key in enumerate(rhesus_keys):
+		color = rhesus_colors[key]
 		_x, _y = collect_xy_data(key, **xy_kwargs)
 		all_x.extend(_x)
 		all_y.extend(_y)
@@ -1412,10 +1415,11 @@ def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
 
 	handles, labels = subplot.get_legend_handles_labels()
 	_handles = list()
-	keys.append(reg_label)
-	for _l in keys:
+	_labels = rhesus_keys
+	_labels.append(reg_label)
+	for _l in _labels:
 		_handles.append(handles[labels.index(_l)])
-	return subplot, _handles, keys
+	return subplot, _handles, _labels
 
 def rhesus_oa_pelletvolume_perday_perkg():
 	def _oa_pelletvolume_perday_perkg(monkey_category):
@@ -1598,7 +1602,7 @@ def rhesus_oa_pellettime_vs_gkg():
 	subplot.set_xlabel("Average ethanol intake (g/kg, per day, per monkey")
 	return fig
 
-def _rhesus_gkg_by_hour_boxplot(subplot, x_values, monkey_category, data_collection_method, width=1, extra_kwargs=None):
+def _rhesus_gkg_by_hour_boxplot(subplot, x_values, monkey_category, data_collection_method, color, width=1, extra_kwargs=None):
 	extra_kwargs = extra_kwargs if extra_kwargs else {}
 	data = list()
 	for start_time in range(session_start, session_end, _1_hour):
@@ -1608,18 +1612,9 @@ def _rhesus_gkg_by_hour_boxplot(subplot, x_values, monkey_category, data_collect
 		# The data collection method is expected to produce a subset of boxplot-able data, filtered and normalized as the parent method intends
 		data.append(data_collection_method(eevs, monkey_category, **extra_kwargs))
 	bp = subplot.boxplot(data, positions=x_values, widths=width)
-
-	# shades the graph gray for light-out hours
-	subplot.axvspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
-
-	# defines X labels
-	x_labels = ['hr %d' % i for i in range(1,23)]
-	# centers xticks, so labels are place in the middle of the hour, rotated
-	new_xticks = range(0, _22_hour, _1_hour)
-	new_xticks = [_x + (_1_hour/2.) for _x in new_xticks]
-	subplot.set_xticks(new_xticks)
-	xtickNames = pyplot.setp(subplot, xticklabels=x_labels)
-	pyplot.setp(xtickNames, rotation=45)
+	for key in bp.keys():
+		if key != 'medians':
+			pyplot.setp(bp[key], color=color)
 	return subplot
 
 def rhesus_hourly_gkg_boxplot_by_category():
@@ -1651,7 +1646,20 @@ def rhesus_hourly_gkg_boxplot_by_category():
 	offset = _1_hour / len(monkey_categories)
 	for index, mky_cat in enumerate(monkey_categories):
 		x_values = range(index*offset, _22_hour, _1_hour)
-		subplot = _rhesus_gkg_by_hour_boxplot(subplot, x_values, mky_cat, _hourly_eev_gkg_summation, width=width)
+		subplot = _rhesus_gkg_by_hour_boxplot(subplot, x_values, mky_cat, _hourly_eev_gkg_summation, width=width, color=rhesus_colors[mky_cat])
+
+	# shades the graph gray for light-out hours
+	subplot.axvspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
+
+	# defines X labels
+	x_labels = ['hr %d' % i for i in range(1,23)]
+	# centers xticks, so labels are place in the middle of the hour, rotated
+	new_xticks = range(0, _22_hour, _1_hour)
+	#			  hour + 1hour / half the number of categories		# above, the number of categories defines the width of each 'hour' section
+	new_xticks = [_x + (_1_hour/(len(monkey_categories)/2)) for _x in new_xticks]
+	subplot.set_xticks(new_xticks)
+	xtickNames = pyplot.setp(subplot, xticklabels=x_labels)
+	pyplot.setp(xtickNames, rotation=45)
 
 #	subplot.legend(handles, labels, scatterpoints=1)
 	subplot.set_title("hourly gkg boxplot by category")
@@ -2268,13 +2276,13 @@ def create_erich_graphs():
 	output_path = os.path.join(output_path, "images/erich/")
 	minutes = 120
 
+	already_created = \
+	"""
 	fig = rhesus_oa_pellettime_vs_gkg()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_oa_pellettime_vs_gkg"
 	fig.savefig(filename, dpi=DPI)
 
-	already_created = \
-	"""
 	fig = rhesus_oa_pelletvolume_perday_perkg()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_oa_pelletvolume_perday_perkg"
@@ -2302,13 +2310,6 @@ def create_erich_graphs():
 		filename = output_path + '%s-%d-%s.png' % ("rhesus_confederate_boxplots", coh_pk, column)
 		fig.savefig(filename, dpi=DPI)
 
-	"""
-	for mky_cat in rhesus_drinkers.keys():
-		fig = rhesus_thirds_oa_discrete_minute_volumes(minutes, mky_cat)
-		DPI = fig.get_dpi()
-		filename = output_path + '%s-%d-%s.png' % ("rhesus_thirds_oa_discrete_minute_volumes", minutes, mky_cat)
-		fig.savefig(filename, dpi=DPI)
-
 	for xkey in rhesus_drinkers_distinct.iterkeys():
 		for ykey in rhesus_drinkers_distinct.iterkeys():
 			if xkey == ykey:
@@ -2317,5 +2318,17 @@ def create_erich_graphs():
 			DPI = fig.get_dpi()
 			filename = output_path + '%s-%s-%s.png' % ("rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons", xkey, ykey)
 			fig.savefig(filename, dpi=DPI)
+	"""
+
+	fig = rhesus_hourly_gkg_boxplot_by_category()
+	DPI = fig.get_dpi()
+	filename = output_path + '%s.png' % "rhesus_hourly_gkg_boxplot_by_category"
+	fig.savefig(filename, dpi=DPI)
+
+	for mky_cat in rhesus_drinkers.keys():
+		fig = rhesus_thirds_oa_discrete_minute_volumes(minutes, mky_cat)
+		DPI = fig.get_dpi()
+		filename = output_path + '%s-%d-%s.png' % ("rhesus_thirds_oa_discrete_minute_volumes", minutes, mky_cat)
+		fig.savefig(filename, dpi=DPI)
 #	"""
 
