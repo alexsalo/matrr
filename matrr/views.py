@@ -1394,9 +1394,11 @@ def shipping_overview(request):
 			if request.user.has_perm('matrr.change_shipment') or (req_request.contains_genetics() and request.user.has_perm('matrr.ship_genetics')):
 				accepted_requests |= Request.objects.filter(pk=req_request.pk)
 	# Pending Shipments
-	pending_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Unshipped)
+	pending_shipments = Shipment.objects.none()
+	if request.user.has_perm('matrr.change_shipment'):
+		pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Unshipped)
 	if request.user.has_perm('matrr.ship_genetics'):
-		pending_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Genetics)
+		pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Genetics)
 	# Shipped Shipments
 	shipped_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Shipped).exclude(req_request__req_status=RequestStatus.Shipped)
 
