@@ -2106,6 +2106,11 @@ class TissueRequest(models.Model):
 	def cart_display(self):
 		return self.tissue_type.tst_tissue_name
 
+	def contains_genetics(self):
+		if self.rtt_prep_type in ['RNA', 'DNA']:
+			return True
+		return False
+
 	def _migrate_fix_prep(self):
 		if self.rtt_fix_type == 'RNA':
 			self.rtt_prep_type = u'RNA'

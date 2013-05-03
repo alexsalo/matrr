@@ -1417,6 +1417,20 @@ def shipment_creator(request, req_request_id):
 	if request.method == 'POST':
 		tissue_shipment_form = TissueShipmentForm(acc_rtt_wo_shipment, data=request.POST)
 		if tissue_shipment_form.is_valid():
+			# Sanity check
+			# Do not allow the user to create a shipment with both tissues and genetics
+			contains_genetics = False
+			contains_tissues = False
+			for rtt in tissue_shipment_form.cleaned_data['tissue_requests']:
+				_genetics = rtt.contains_genetics()
+				contains_genetics = contains_genetics or _genetics
+				contains_tissues = contains_tissues or not _genetics
+				if contains_genetics and contains_tissues:
+					messages.error(request, "You cannot send tissues and genetics in the same shipment.  DNA/RNA tissue shipments must be built and shipped separately.")
+					return render_to_response('matrr/shipping/shipment_creator.html',
+						{'req_request': req_request, 'tissue_shipment_form': tissue_shipment_form},
+						context_instance=RequestContext(request))
+
 			shipment = Shipment()
 			shipment.user = request.user
 			shipment.req_request = req_request
@@ -1430,9 +1444,8 @@ def shipment_creator(request, req_request_id):
 
 	tissue_shipment_form = TissueShipmentForm(acc_rtt_wo_shipment)
 	return render_to_response('matrr/shipping/shipment_creator.html',
-			{'req_request': req_request,
-			 'tissue_shipment_form': tissue_shipment_form},
-							  context_instance=RequestContext(request))
+		{'req_request': req_request, 'tissue_shipment_form': tissue_shipment_form},
+		context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
@@ -1494,9 +1507,12 @@ def shipment_detail(request, shipment_id):
 					return redirect(reverse('shipping-overview'))
 
 		if 'delete_shipment' in request.POST:
-			messages.warning(request, "Are you sure you want to delete this shipment?  You will have to recreate it before shipping the tissue.")
-			confirm_delete_shipment = True
-			messages.info(request, "If you are certain you want to delete this shipment, click the delete button again to confirm.")
+			if shipment.shp_shipment_status == ShipmentStatus.Genetics:
+				messages.warning(request, "You cannot delete a shipment once it has been sent for genetics processing.")
+			else:
+				messages.warning(request, "Are you sure you want to delete this shipment?  You will have to recreate it before shipping the tissue.")
+				confirm_delete_shipment = True
+				messages.info(request, "If you are certain you want to delete this shipment, click the delete button again to confirm.")
 		if 'confirm_delete_shipment' in request.POST:
 			messages.success(request, "Shipment %d deleted." % shipment.pk)
 			shipment.delete() # super important that TissueRequest.shipment FK is set to on_delete=SET_NULL
