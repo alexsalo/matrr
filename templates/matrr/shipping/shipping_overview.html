@@ -31,7 +31,7 @@
 						{% if request.req_purchase_order %}<td style='color: #006400;'><b>Yes</b></td>{% else %}<td style='color: red;'><b>No</b></td>{% endif %}
 						{% if request.user.account.has_mta %}<td style='color: #006400;'><b>Yes</b></td>{% else %}<td style='color: red;'><b>No</b></td>{% endif %}
 						{% if request.user.account.has_overdue_rud %}<td style='color: red;'><b>Yes</b></td>{% else %}<td style='color: #006400;'><b>No</b></td>{% endif %}
-						{% if request.contains_genetics %}<td style='color: red;'><b>Yes</b></td>{% else %}<td style='color: #006400;'><b>No</b></td>{% endif %}
+						{% if request.contains_genetics %}<td style='color: #0000ff;'><b>Yes</b></td>{% else %}<td style='color: orange;'><b>No</b></td>{% endif %}
 						<td><a class='blockLinkButton' href='{% url shipment-creator request.req_request_id %}'>Build Shipment</a></td>
 					</tr>
 				{% endfor %}
@@ -64,7 +64,7 @@
 						<td><a href='{% url order-detail shipment.req_request.req_request_id %}'>{{ shipment.req_request.pk }}</a></td>
 						<td><a href="{% url account-reviewer-view shipment.req_request.user.id %}">{{ shipment.req_request.user }}</a></td>
 						<td>{{ shipment.req_request.cohort.coh_cohort_name }}</td>
-						{% if shipment.contains_genetics %}<td style='color: red;'><b>Yes</b></td>{% else %}<td style='color: #006400;'><b>No</b></td>{% endif %}
+						{% if shipment.contains_genetics %}<td style='color: #0000ff;'><b>Yes</b></td>{% else %}<td style='color: orange;'><b>No</b></td>{% endif %}
 						<td>{{ shipment.get_shp_shipment_status_display }}</td>
 						<td><a class='blockLinkButton' href='{% url shipment-detail shipment.pk %}'>Ship</a></td>
 					</tr>
