@@ -2340,17 +2340,16 @@ def create_erich_graphs():
 			DPI = fig.get_dpi()
 			filename = output_path + '%s-%s-%s.png' % ("rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons", xkey, ykey)
 			fig.savefig(filename, dpi=DPI)
-	"""
-
-	fig = rhesus_hourly_gkg_boxplot_by_category()
-	DPI = fig.get_dpi()
-	filename = output_path + '%s.png' % "rhesus_hourly_gkg_boxplot_by_category"
-	fig.savefig(filename, dpi=DPI)
 
 	for mky_cat in rhesus_drinkers.keys():
 		fig = rhesus_thirds_oa_discrete_minute_volumes(minutes, mky_cat)
 		DPI = fig.get_dpi()
 		filename = output_path + '%s-%d-%s.png' % ("rhesus_thirds_oa_discrete_minute_volumes", minutes, mky_cat)
 		fig.savefig(filename, dpi=DPI)
-#	"""
+	"""
+
+	fig = rhesus_hourly_gkg_boxplot_by_category()
+	DPI = fig.get_dpi()
+	filename = output_path + '%s.png' % "rhesus_hourly_gkg_boxplot_by_category"
+	fig.savefig(filename, dpi=DPI)
 
