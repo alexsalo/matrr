@@ -1605,15 +1605,13 @@ def rhesus_oa_pellettime_vs_gkg():
 def _rhesus_eev_by_hour_boxplot(subplot, x_values, monkey_category, data_collection_method, color, width=1, extra_kwargs=None):
 	extra_kwargs = extra_kwargs if extra_kwargs else {}
 	data = list()
-	"""
 	for start_time in range(session_start, session_end, _1_hour):
 		# Get all events that ever happened within this session hour
 		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(eev_session_time__gte=start_time).filter(eev_pellet_time__lt=start_time+_1_hour)
 		# pass these events into the data collection method.
 		# The data collection method is expected to produce a subset of boxplot-able data, filtered and normalized as the parent method intends
 		data.append(data_collection_method(eevs, monkey_category, **extra_kwargs))
-	"""
-	data = data_collection_method('', monkey_category)
+#	data = data_collection_method('', monkey_category) # when using _load_from_file_Hourly_eev_gkg_summations(), uncomment this line, comment the forloop above
 	bp = subplot.boxplot(data, positions=x_values, widths=width)
 	for key in bp.keys():
 		if key != 'medians':
