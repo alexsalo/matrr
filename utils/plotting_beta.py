@@ -1602,19 +1602,25 @@ def rhesus_oa_pellettime_vs_gkg():
 	subplot.set_xlabel("Average ethanol intake (g/kg, per day, per monkey")
 	return fig
 
-def _rhesus_gkg_by_hour_boxplot(subplot, x_values, monkey_category, data_collection_method, color, width=1, extra_kwargs=None):
+def _rhesus_eev_by_hour_boxplot(subplot, x_values, monkey_category, data_collection_method, color, width=1, extra_kwargs=None):
 	extra_kwargs = extra_kwargs if extra_kwargs else {}
 	data = list()
+	"""
 	for start_time in range(session_start, session_end, _1_hour):
 		# Get all events that ever happened within this session hour
 		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(eev_session_time__gte=start_time).filter(eev_pellet_time__lt=start_time+_1_hour)
 		# pass these events into the data collection method.
 		# The data collection method is expected to produce a subset of boxplot-able data, filtered and normalized as the parent method intends
 		data.append(data_collection_method(eevs, monkey_category, **extra_kwargs))
+	"""
+	data = data_collection_method('', monkey_category)
 	bp = subplot.boxplot(data, positions=x_values, widths=width)
 	for key in bp.keys():
 		if key != 'medians':
 			pyplot.setp(bp[key], color=color)
+	pyplot.setp(bp['boxes'], linewidth=2)
+	pyplot.setp(bp['whiskers'], linewidth=2)
+
 	return subplot
 
 def rhesus_hourly_gkg_boxplot_by_category():
@@ -1635,35 +1641,51 @@ def rhesus_hourly_gkg_boxplot_by_category():
 			gkg = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] * .04 / avg_weight
 			events_gkg.append(gkg)
 		return events_gkg
+	def _load_from_file_hourly_eev_gkg_summation(eevs, monkey_category):
+		import json
+		f = open("%s.json" % monkey_category, 'r')
+		json_string = f.readline()
+		data = json.loads(json_string)
+		return data
 
 	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 3)
 	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
 	subplot = fig.add_subplot(main_gs[:,:])
 
-	monkey_categories = rhesus_drinkers_distinct.keys()
-	width = _1_hour / (len(monkey_categories) + 1)
-	offset = _1_hour / len(monkey_categories)
-	for index, mky_cat in enumerate(monkey_categories):
+	width = _1_hour / (len(rhesus_keys)*2)
+	offset = _1_hour / len(rhesus_keys)
+	for index, mky_cat in enumerate(rhesus_keys):
 		x_values = range(index*offset, _22_hour, _1_hour)
-		subplot = _rhesus_gkg_by_hour_boxplot(subplot, x_values, mky_cat, _hourly_eev_gkg_summation, width=width, color=rhesus_colors[mky_cat])
+		subplot = _rhesus_eev_by_hour_boxplot(subplot, x_values, mky_cat, _hourly_eev_gkg_summation, width=width, color=rhesus_colors[mky_cat])
+#		subplot = _rhesus_eev_by_hour_boxplot(subplot, x_values, mky_cat, _load_from_file_hourly_eev_gkg_summation, width=width, color=rhesus_colors[mky_cat])
 
+	# Makes all boxplots fully visible
+	subplot.set_xlim(xmin=-.5*_1_hour, xmax=session_end+.5*_1_hour)
 	# shades the graph gray for light-out hours
-	subplot.axvspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
+	subplot.axvspan(lights_out-width, lights_on-width, color='black', alpha=.2, zorder=-100)
 
 	# defines X labels
 	x_labels = ['hr %d' % i for i in range(1,23)]
 	# centers xticks, so labels are place in the middle of the hour, rotated
 	new_xticks = range(0, _22_hour, _1_hour)
-	#			  hour + 1hour / half the number of categories		# above, the number of categories defines the width of each 'hour' section
-	new_xticks = [_x + (_1_hour/(len(monkey_categories)/2)) for _x in new_xticks]
 	subplot.set_xticks(new_xticks)
 	xtickNames = pyplot.setp(subplot, xticklabels=x_labels)
 	pyplot.setp(xtickNames, rotation=45)
 
+	# Create legend
+	handles = list()
+	labels = list()
+	for key in rhesus_keys:
+		color = rhesus_colors[key]
+		wrect = patches.Rectangle((0, 0), 1, 1, fc=color)
+		handles.append(wrect)
+		labels.append(key)
+	subplot.legend(handles, labels, loc='upper right')
+
 #	subplot.legend(handles, labels, scatterpoints=1)
-	subplot.set_title("hourly gkg boxplot by category")
-	subplot.set_ylabel("gkg")
+	subplot.set_title("Hourly g/kg, by category")
+	subplot.set_ylabel("g/kg")
 	subplot.set_xlabel("Hour of session")
 	return fig
 
