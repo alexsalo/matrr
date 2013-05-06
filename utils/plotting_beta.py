@@ -1,7 +1,8 @@
+import copy
 from django.db.models import Sum
 import numpy
 from matplotlib import pyplot, gridspec, ticker, cm, patches
-from scipy import cluster
+from scipy import cluster, stats
 import operator
 from matrr.models import *
 from utils import plotting
@@ -1398,24 +1399,16 @@ def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
 		create_convex_hull_polygon(subplot, _x, _y, color)
 
 	# regression line
-#	fit = plotting.polyfit(all_x, all_y, 1)
-#	l = numpy.linspace(min(all_x), max(all_x), 100)
-#	xr = plotting.polyval(fit, l)
-#	subplot.plot(l, xr, '-', linewidth=3, alpha=1)
 	all_x = numpy.array(all_x)
 	all_y = numpy.array(all_y)
-	pearR = numpy.corrcoef(all_x, all_y)[1,0]
-	# least squares from:
-	# http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.lstsq.html
-	A = numpy.vstack([all_x, numpy.ones(len(all_x))]).T
-	m,c = numpy.linalg.lstsq(A, all_y)[0]
+	slope, intercept, r_value, p_value, std_err = stats.linregress(all_x, all_y)
 
-	reg_label = "Fit: r = %f" % pearR
-	subplot.plot(all_x, all_x*m+c, color='black', label=reg_label)
+	reg_label = "Fit: r=%f, p=%f" % (r_value, p_value)
+	subplot.plot(all_x, all_x*slope+intercept, color='black', label=reg_label)
 
 	handles, labels = subplot.get_legend_handles_labels()
 	_handles = list()
-	_labels = rhesus_keys
+	_labels = copy.copy(rhesus_keys)
 	_labels.append(reg_label)
 	for _l in _labels:
 		_handles.append(handles[labels.index(_l)])
@@ -2299,8 +2292,6 @@ def create_erich_graphs():
 	output_path = os.path.join(output_path, "images/erich/")
 	minutes = 120
 
-	already_created = \
-	"""
 	fig = rhesus_oa_pellettime_vs_gkg()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_oa_pellettime_vs_gkg"
@@ -2316,6 +2307,8 @@ def create_erich_graphs():
 	filename = output_path + '%s.png' % "rhesus_thirds_oa_pelletvolume_perday_perkg"
 	fig.savefig(filename, dpi=DPI)
 
+	already_created = \
+	"""
 	fig = rhesus_etoh_gkg_stackedbargraph()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_etoh_gkg_stackedbargraph"
@@ -2347,10 +2340,10 @@ def create_erich_graphs():
 		DPI = fig.get_dpi()
 		filename = output_path + '%s-%d-%s.png' % ("rhesus_thirds_oa_discrete_minute_volumes", minutes, mky_cat)
 		fig.savefig(filename, dpi=DPI)
-	"""
 
 	fig = rhesus_hourly_gkg_boxplot_by_category()
 	DPI = fig.get_dpi()
 	filename = output_path + '%s.png' % "rhesus_hourly_gkg_boxplot_by_category"
 	fig.savefig(filename, dpi=DPI)
+	"""
 
