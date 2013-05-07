@@ -1,7 +1,9 @@
 from __future__ import division
-import numpy as np
+import collections
+import numpy
+from scipy import stats
 from matrr.models import *
-dot = np.dot
+dot = numpy.dot
 __author__ = 'jarquet'
 
 dict_header = "key=Monkey', columns=['hippocampus+allocortex','cortisol','ACTH','DOC','aldosterone','DHEAS','EtOH (vol)','H2O (vol)', 'isocortex','lateral ventricles']"
@@ -257,6 +259,108 @@ def dump_postprandial_matrices(monkeys_only=False):
 		for row in data:
 			dump.writerow(row)
 
+def dump_rhesus_category_comparison_ttests(minutes=120):
+	from utils import plotting_beta
+
+	def _thirds_oa_volume_summation_by_minute(monkey_category, offset=0):
+		"""
+		This method will return the volume of ethanol consumed during each minute after a pellet was distributed, splitting open access into 120minute thirds
+
+		Any monkey in monkey_category could be from any of the rhesus cohorts, so significant data filtering must be done before summing the ethanol volume data.
+		"""
+		cohort_starts = {5: datetime(2008, 10, 20), 6:datetime(2009, 4, 13), 9:datetime(2011, 7, 12), 10:datetime(2011,01,03)}
+		monkey_set = plotting_beta.rhesus_drinkers_distinct[monkey_category]
+		data = list()
+		base_eevs = ExperimentEvent.objects.OA().exclude_exceptions()
+		for i in range(0, minutes):
+			# in the end, we need to return a list of the summed volumes of each monkey in the category, for each minute since last pellet
+			# so for each minute, we need to sum the ethanol volumes of that minute
+			volume = 0
+			pellet_eevs = base_eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
+
+			# but, each category contains monkeys potentially from several cohorts, and each cohort has a different start date
+			# so to split the summation into 120 minute thirds...
+			for coh, start_date in cohort_starts.items():
+				# we have to split the category into each of its cohort subsets
+				cohort_eevs = pellet_eevs.filter(monkey__cohort=coh)
+				monkey_eevs = cohort_eevs.filter(monkey__in=monkey_set)
+
+				# With events only from one cohort, we can filter down to the events in the third we're looking for
+				# offset defines which third we're looking for
+				start = start_date + timedelta(days=offset)
+				third_eevs = monkey_eevs.filter(eev_occurred__gte=start)
+				if offset <= 120: # OA is only 1 year long.  if offset is > 120 (aka 240), assume we're looking at the last third and we don't need an end date filter
+					# but, if offset <= 120, we need an end date
+					end = start + timedelta(days=120)
+					third_eevs = third_eevs.filter(eev_occurred__lt=end)
+
+				# now that all of the filtering is done, we need to sum the volume of this cohort
+				volume += third_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+				# to the volume of any previous cohorts
+			data.append(volume)
+		# and after all the cohorts are finished contributing their volume, average the volume by the number of monkeys in the monkey_category
+		data = numpy.array(data)
+		data /= len(monkey_set)
+		return data
+
+	def _oa_volume_summation_by_minute(monkey_category, minutes=120):
+		data = list()
+		monkey_set = plotting_beta.rhesus_drinkers_distinct[monkey_category]
+		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
+		for i in range(0, minutes):
+			_eevs = eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
+			data.append(_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'])
+		data = numpy.array(data)
+		data /= len(monkey_set)
+		return data
+
+	keys = plotting_beta.rhesus_keys
+	all_data_dict = dict()
+	first_data_dict = dict()
+	second_data_dict = dict()
+	third_data_dict = dict()
+	for key in keys:
+		all_data_dict[key] = _oa_volume_summation_by_minute(key, minutes)
+		first_data_dict[key] = _thirds_oa_volume_summation_by_minute(key, 0)
+		second_data_dict[key] = _thirds_oa_volume_summation_by_minute(key, 120)
+		third_data_dict[key] = _thirds_oa_volume_summation_by_minute(key, 240)
+
+	labels = list()
+	for key in keys:
+		for third in range(1,4,1):
+			labels.append("%s-%d" % (key, third))
+			labels.append("%s-all" % key)
+	matrix = [labels]
+	for label in labels:
+		xkey, xthird = label.split('-')
+		row = list()
+		for label in labels:
+			ykey, ythird = label.split('-')
+			if xkey == ykey and xthird == ythird:
+				row.append(1)
+				continue
+			if xthird == 1:
+				xdata = first_data_dict[xkey]
+			elif xthird == 2:
+				xdata = second_data_dict[xkey]
+			elif xthird == 3:
+				xdata = third_data_dict[xkey]
+			else:
+				xdata = all_data_dict[xkey]
+
+			if ythird == 1:
+				ydata = first_data_dict[ykey]
+			elif ythird == 2:
+				ydata = second_data_dict[ykey]
+			elif ythird == 3:
+				ydata = third_data_dict[ykey]
+			else:
+				ydata = all_data_dict[ykey]
+		
+			t_stat, p_value = stats.ttest_ind(xdata, ydata)
+			row.append(p_value/2.)
+		matrix.append(row)
+	return matrix
 
 
 
