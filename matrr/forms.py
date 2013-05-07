@@ -772,3 +772,36 @@ class InventoryBrainForm(forms.Form):
 	right_tissues = forms.ModelMultipleChoiceField(queryset=models.TissueType.objects.filter(category__cat_name__icontains='brain').order_by('tst_tissue_name'), required=False, widget=widgets.CheckboxSelectMultiple_columns(columns=1))
 
 
+class GraphToolsMonkeySelectForm(forms.Form):
+	"""
+	IMPORTANT NOTE:
+	When using this form, you need to add the text below to the template in which it's used.  I haven't figured out why yet, but the Media class in the
+	CheckboxSelectMultipleSelectAll widget doesn't work.  I don't even know where to start debugging that.
+
+	{% block extra_js %}
+		{{ block.super }}
+		<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+	{% endblock %}
+	"""
+	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.CheckboxSelectMultipleSelectAll())
+
+	def __init__(self, monkey_queryset, *args, **kwargs):
+		super(GraphToolsMonkeySelectForm, self).__init__(*args, **kwargs)
+		self.fields['monkeys'].queryset = monkey_queryset
+
+	class Media:
+		js = (
+			'js/toggle-checked.js',
+			)
+
+
+
+class GraphSubjectSelectForm(GraphToolsMonkeySelectForm):
+	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
+	subject = forms.ChoiceField(choices=subject_choices,
+						  label='Subject',
+						  help_text="Choose what scope of subjects to analyze",
+						  widget=forms.RadioSelect(renderer=widgets.RadioFieldRendererSpecial_monkey),
+						  initial=subject_choices[0][0])
+
+
