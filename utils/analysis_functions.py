@@ -295,7 +295,10 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 					third_eevs = third_eevs.filter(eev_occurred__lt=end)
 
 				# now that all of the filtering is done, we need to sum the volume of this cohort
-				volume += third_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+				_vol = third_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+				if _vol:
+					# traps _vol = None exceptions
+					volume += _vol
 				# to the volume of any previous cohorts
 			data.append(volume)
 		# and after all the cohorts are finished contributing their volume, average the volume by the number of monkeys in the monkey_category
