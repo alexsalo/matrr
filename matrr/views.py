@@ -1,4 +1,5 @@
 # Create your views here.
+import json
 from django.db import DatabaseError
 from django.db.models import Q, Count
 from django.core.urlresolvers import reverse
@@ -21,7 +22,7 @@ from matrr.forms import *
 from matrr.models import *
 import math
 from datetime import date, timedelta
-from utils import plotting
+from utils import plotting, plotting_beta
 from matrr.decorators import user_owner_test
 import urllib
 
@@ -2553,6 +2554,90 @@ def tools_sandbox(request):
 			files.append(f)
 	files = sorted(files)
 	return render_to_response('matrr/tools/sandbox.html', {'files':files, 'append':append}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
+def tools_supersandbox(request):
+#	https://github.com/mbostock/d3/wiki/Gallery
+	dataset =\
+	{
+		"name": "flare",
+		"children": [
+			{
+				"name": "analytics",
+				"children": [
+					{
+						"name": "cluster",
+						"children": [
+							{"name": "AgglomerativeCluster", "size": 3938},
+							{"name": "MergeEdge", "size": 743}
+						]
+					},
+					{
+						"name": "graph",
+						"children": [
+							{"name": "BetweennessCentrality", "size": 3534},
+							{"name": "ShortestPaths", "size": 5914},
+							{"name": "SpanningTree", "size": 3416}
+						]
+					},
+					{
+						"name": "optimization",
+						"children": [
+							{"name": "AspectRatioBanker", "size": 7074}
+						]
+					}
+				]
+			},
+			{
+				"name": "physics",
+				"children": [
+					{"name": "DragForce", "size": 1082},
+					{"name": "GravityForce", "size": 1336},
+					{"name": "Simulation", "size": 9983},
+					{"name": "Spring", "size": 2213},
+					{"name": "SpringForce", "size": 1681}
+				]
+			},
+			{
+				"name": "vis",
+				"children": [
+					{
+						"name": "data",
+						"children": [
+							{"name": "Data", "size": 20544},
+							{"name": "EdgeSprite", "size": 3301},
+							{"name": "NodeSprite", "size": 19382},
+							{"name": "Tree", "size": 7147},
+							{"name": "TreeBuilder", "size": 9930}
+						]
+					},
+					{"name": "Visualization", "size": 16540}
+				]
+			}
+		]
+	}
+	dataset = {'name': 'Rhesus Cohorts', 'children': list()}
+
+
+
+	for i in [5,6]:
+		cohort = Cohort.objects.get(pk=i)
+		cohort_values = {'name': str(cohort), 'children': list()}
+		ap = plotting_beta.return_confeds(i, 15)
+		for support, values in ap.iteritems():
+			for occurance in values:
+				inner_circle = dict()
+				for cause in occurance:
+					inner_circle['name'] = cause
+				name = ''
+				value = support*occurance[2]
+				cohort_values['children'].append({'name': name, 'size': value})
+		dataset['children'].append(cohort_values)
+
+	filename = 'static/js/test.json'
+	f = open(filename, 'w')
+	f.write(json.dumps(dataset))
+	return render_to_response('matrr/tools/supersandbox.html', {'filename': filename}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):

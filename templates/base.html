@@ -109,6 +109,9 @@
 						{% if user.is_staff %}
 							<li class='drop-down'><a href="{% url tools-sandbox %}">Sandbox</a></li>
 						{% endif %}
+						{% if user.is_superuser %}
+							<li class='drop-down'><a href="{% url tools-supersandbox %}">SuperSandbox</a></li>
+						{% endif %}
 					</ul>
 				{% endif %}
 

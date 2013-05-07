@@ -146,6 +146,7 @@ urlpatterns += patterns('matrr.views',
 	# Tools
 	url(r'^tools/$', tools_landing, name='tools-landing'),
 	url(r'^tools/sandbox/$', tools_sandbox, name='tools-sandbox'),
+	url(r'^tools/supersandbox/$', tools_supersandbox, name='tools-supersandbox'),
 
 	url(r'^tools/protein/$', tools_protein, name='tools-protein'),
 	url(r'^tools/protein/cohort/(?P<coh_id>\d+)/$', tools_cohort_protein, name='tools-cohort-protein'),
