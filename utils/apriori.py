@@ -1,5 +1,7 @@
 #-*- coding:utf-8 - *-
 # http://aimotion.blogspot.com/2013/01/machine-learning-and-data-mining.html
+import json
+import os
 
 def createC1(dataset):
 	"Create a list of candidate item sets of size one."
@@ -75,7 +77,7 @@ def generateRules(L, support_data, min_confidence=0.7):
 		for conseq in H:
 			conf = support_data[freqSet] / support_data[freqSet - conseq]
 			if conf >= min_confidence:
-				print freqSet - conseq, '--->', conseq, 'conf:', conf
+#				print freqSet - conseq, '--->', conseq, 'conf:', conf
 				rules.append((freqSet - conseq, conseq, conf))
 				pruned_H.append(conseq)
 		return pruned_H
@@ -93,14 +95,14 @@ def generateRules(L, support_data, min_confidence=0.7):
 	for i in range(1, len(L)):
 		for freqSet in L[i]:
 			H1 = [frozenset([item]) for item in freqSet]
-			print "freqSet", freqSet, 'H1', H1
+#			print "freqSet", freqSet, 'H1', H1
 			if (i > 1):
 				rules_from_conseq(freqSet, H1, support_data, rules, min_confidence)
 			else:
 				calc_confidence(freqSet, H1, support_data, rules, min_confidence)
 	return rules
 
-def confederate_groups(cohort_pk, minutes, min_confidence=0):
+def confederate_groups(cohort_pk, minutes, min_confidence=0, serializable=False):
 	def load_dataset(cohort_pk, minutes=0):
 		from matrr.models import CohortBout
 		cbts = CohortBout.objects.filter(cohort=cohort_pk, cbt_pellet_elapsed_time_since_last=minutes*60)
@@ -116,6 +118,36 @@ def confederate_groups(cohort_pk, minutes, min_confidence=0):
 		l, sd = apriori(data, minsupport=_support)
 		rules = generateRules(l, sd, min_confidence)
 		supports[_support] = rules
+	if serializable:
+		supports = recreate_serializable_apriori_output(supports)
 	return supports
 
+def recreate_serializable_apriori_output(orig):
+	new_dict = dict()
+	for support, occurrences in orig.iteritems():
+		new_occ = list()
+		for cause, effect, confidence in occurrences:
+			cause = tuple(cause)
+			effect = tuple(effect)
+			new_occ.append( (cause, effect, confidence) )
+		new_dict[float(support)] = new_occ
+	return new_dict
 
+def get_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='utils/DATA/apriori/'):
+	file_name = "%d-%d-%.3f.json" % (cohort_pk, minutes, min_confidence)
+	try:
+		f = open(os.path.join(dir_path, file_name), 'r')
+	except IOError:
+		# pretty sure this will throw another IOException if dir_path doesn't exist
+		f = open(os.path.join(dir_path, file_name), 'w')
+	else:
+		s = f.read()
+		f.close()
+		d = json.loads(s)
+		return d
+
+	supports = confederate_groups(cohort_pk, minutes, min_confidence, serializable=True)
+	s = json.dumps(supports)
+	f.write(s)
+	f.close()
+	return supports

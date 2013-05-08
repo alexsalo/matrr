@@ -365,5 +365,3 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 		matrix.append(row)
 	return matrix
 
-
-

@@ -22,7 +22,7 @@ from matrr.forms import *
 from matrr.models import *
 import math
 from datetime import date, timedelta
-from utils import plotting, plotting_beta
+from utils import plotting, plotting_beta, apriori
 from matrr.decorators import user_owner_test
 import urllib
 
@@ -2557,6 +2557,15 @@ def tools_sandbox(request):
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_supersandbox(request):
+	min_conf = request.GET.get('min_conf', 0)
+	try:
+		min_conf = float(min_conf)
+	except ValueError:
+		messages.error(request, "ValueError you big dummy.  Enter a number, 1 > x > 0.")
+		min_conf = 0
+	if not 1 > min_conf >= 0:
+		messages.error(request, "Enter a number, 1 > x > 0, nerd.")
+		min_conf = 0
 #	https://github.com/mbostock/d3/wiki/Gallery
 	def reformat_apriori_output(cohort=None):
 		cohorts = [cohort] if cohort else [5,6,9,10]
@@ -2569,14 +2578,14 @@ def tools_supersandbox(request):
 			indices[monkey_pk] = index
 
 		for cohort_pk in cohorts:
-			orig = plotting_beta.return_confeds(cohort_pk, 15)
+			orig = apriori.get_confederate_groups(cohort_pk, minutes=15, min_confidence=min_conf)
 			for support, occurrences in orig.iteritems():
 				for cause, effect, confidence in occurrences:
 					if len(cause) > 1 or len(effect) > 1:
 						continue
 					cause = tuple(cause)[0]
 					effect = tuple(effect)[0]
-					matrix[indices[cause], indices[effect]] = support*confidence
+					matrix[indices[cause], indices[effect]] = float(support)*float(confidence)
 		list_matrix = list()
 		for row in matrix:
 			list_matrix.append(list(row))
@@ -2596,7 +2605,6 @@ def tools_supersandbox(request):
 		cohort = Cohort.objects.get(pk=coh)
 		data = {'dataset': dataset, 'labels_colors': labels_colors, 'cohort': cohort}
 		chord_data.append(data)
-
 	return render_to_response('matrr/tools/supersandbox.html', {'chord_data': chord_data}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')

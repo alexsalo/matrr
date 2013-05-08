@@ -28,6 +28,9 @@
 
 	</style>
 
+    <form method='GET'>
+    Min Confidence: <input type="text" name="min_conf"> <input type="submit" value="Submit"> <br>
+    </form>
 	{% for data in chord_data %}
 		<div id="coh_{{ data.cohort.pk }}" style="width: 70%;">
 			<center><h3>{{ data.cohort }} Confederate Drinkers</h3></center>
