@@ -2558,86 +2558,45 @@ def tools_sandbox(request):
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_supersandbox(request):
 #	https://github.com/mbostock/d3/wiki/Gallery
-	dataset =\
-	{
-		"name": "flare",
-		"children": [
-			{
-				"name": "analytics",
-				"children": [
-					{
-						"name": "cluster",
-						"children": [
-							{"name": "AgglomerativeCluster", "size": 3938},
-							{"name": "MergeEdge", "size": 743}
-						]
-					},
-					{
-						"name": "graph",
-						"children": [
-							{"name": "BetweennessCentrality", "size": 3534},
-							{"name": "ShortestPaths", "size": 5914},
-							{"name": "SpanningTree", "size": 3416}
-						]
-					},
-					{
-						"name": "optimization",
-						"children": [
-							{"name": "AspectRatioBanker", "size": 7074}
-						]
-					}
-				]
-			},
-			{
-				"name": "physics",
-				"children": [
-					{"name": "DragForce", "size": 1082},
-					{"name": "GravityForce", "size": 1336},
-					{"name": "Simulation", "size": 9983},
-					{"name": "Spring", "size": 2213},
-					{"name": "SpringForce", "size": 1681}
-				]
-			},
-			{
-				"name": "vis",
-				"children": [
-					{
-						"name": "data",
-						"children": [
-							{"name": "Data", "size": 20544},
-							{"name": "EdgeSprite", "size": 3301},
-							{"name": "NodeSprite", "size": 19382},
-							{"name": "Tree", "size": 7147},
-							{"name": "TreeBuilder", "size": 9930}
-						]
-					},
-					{"name": "Visualization", "size": 16540}
-				]
-			}
-		]
-	}
-	dataset = {'name': 'Rhesus Cohorts', 'children': list()}
+	def reformat_apriori_output(cohort=None):
+		cohorts = [cohort] if cohort else [5,6,9,10]
+		drinkers = Monkey.objects.Drinkers().filter(cohort__in=cohorts)
+		drinkers = drinkers.values_list('pk', flat=True)
+		matrix = numpy.zeros((drinkers.count(), drinkers.count()))
 
+		indices = dict()
+		for index, monkey_pk in enumerate(drinkers):
+			indices[monkey_pk] = index
 
+		for cohort_pk in cohorts:
+			orig = plotting_beta.return_confeds(cohort_pk, 15)
+			for support, occurrences in orig.iteritems():
+				for cause, effect, confidence in occurrences:
+					if len(cause) > 1 or len(effect) > 1:
+						continue
+					cause = tuple(cause)[0]
+					effect = tuple(effect)[0]
+					matrix[indices[cause], indices[effect]] = support*confidence
+		list_matrix = list()
+		for row in matrix:
+			list_matrix.append(list(row))
+		return list_matrix, drinkers
 
-	for i in [5,6]:
-		cohort = Cohort.objects.get(pk=i)
-		cohort_values = {'name': str(cohort), 'children': list()}
-		ap = plotting_beta.return_confeds(i, 15)
-		for support, values in ap.iteritems():
-			for occurance in values:
-				inner_circle = dict()
-				for cause in occurance:
-					inner_circle['name'] = cause
-				name = ''
-				value = support*occurance[2]
-				cohort_values['children'].append({'name': name, 'size': value})
-		dataset['children'].append(cohort_values)
+	matrix, labels = reformat_apriori_output(5)
 
-	filename = 'static/js/test.json'
-	f = open(filename, 'w')
-	f.write(json.dumps(dataset))
-	return render_to_response('matrr/tools/supersandbox.html', {'filename': filename}, context_instance=RequestContext(request))
+	from matplotlib.colors import rgb2hex
+	labels_colors = list()
+	cmap = plotting.get_cmap('jet')
+	for idx, key in enumerate(labels):
+		lc = {'name': key, 'color': rgb2hex(cmap(idx / (len(labels)-1.)))}
+		labels_colors.append(lc)
+
+	dataset = mark_safe(json.dumps(matrix))
+	labels_colors = mark_safe(json.dumps(labels_colors))
+#	filename = 'static/js/matrix.json'
+#	f = open(filename, 'w')
+#	f.write(json.dumps(dataset))
+	return render_to_response('matrr/tools/supersandbox.html', {'dataset': dataset, 'labels_colors': labels_colors}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):
