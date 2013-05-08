@@ -87,19 +87,19 @@ def pages_view(request, static_page):
 
 ### Handles the display of each cohort and the lists of cohorts
 def cohorts_view_available(request):
-	cohorts = Cohort.objects.filter(coh_upcoming=False).order_by('coh_cohort_name')
+	cohorts = Cohort.objects.nicotine_filter(request.user).filter(coh_upcoming=False).order_by('coh_cohort_name')
 	template_name = 'matrr/available_cohorts.html'
 	return __cohorts_view(request, cohorts, template_name)
 
 
 def cohorts_view_upcoming(request):
-	cohorts = Cohort.objects.filter(coh_upcoming=True).order_by('coh_cohort_name')
+	cohorts = Cohort.objects.nicotine_filter(request.user).filter(coh_upcoming=True).order_by('coh_cohort_name')
 	template_name = 'matrr/upcoming_cohorts.html'
 	return __cohorts_view(request, cohorts, template_name)
 
 
 def cohorts_view_all(request):
-	cohorts = Cohort.objects.order_by('coh_cohort_name')
+	cohorts = Cohort.objects.nicotine_filter(request.user).order_by('coh_cohort_name')
 	template_name = 'matrr/cohorts.html'
 	return __cohorts_view(request, cohorts, template_name)
 
@@ -503,7 +503,7 @@ def mta_upload(request):
 @user_passes_test(lambda u: u.has_perm('matrr.add_cohortdata'), login_url='/denied/')
 def cod_upload(request, coh_id=1):
 	if request.method == 'POST':
-		form = CodForm(request.POST, request.FILES)
+		form = CodForm(request.POST, request.FILES, user=request.user)
 		if form.is_valid():
 			# all the fields in the form are valid, so save the data
 			form.save()
@@ -511,7 +511,7 @@ def cod_upload(request, coh_id=1):
 			return redirect(reverse('cohort-details', args=[str(coh_id)]))
 	else:
 		cohort = Cohort.objects.get(pk=coh_id)
-		form = CodForm(cohort=cohort)
+		form = CodForm(cohort=cohort, user=request.user)
 	return render_to_response('matrr/upload_forms/cod_upload_form.html', {'form': form, }, context_instance=RequestContext(request))
 
 @staff_member_required
@@ -1020,7 +1020,7 @@ def order_duplicate(request, req_request_id):
 			if rtt.accepted_monkeys.all().count() == req.cohort.monkey_set.all().count():
 				tissues.append(rtt.tissue_type)
 
-	queryset = Cohort.objects.exclude(pk=req.cohort.pk).order_by('coh_cohort_name')
+	queryset = Cohort.objects.nicotine_filter(request.user).exclude(pk=req.cohort.pk).order_by('coh_cohort_name')
 	return render_to_response('matrr/order/order_duplicate.html', {'req_id': req_request_id, 'cohort_form': CohortSelectForm(subject_queryset=queryset, subject_widget=widgets.Select)}, context_instance=RequestContext(request))
 
 
@@ -1365,7 +1365,7 @@ def advanced_search(request):
 			 'monkey_auth': monkey_auth,
 			 'select_form': select_form,
 			 'filter_form': filter_form,
-			 'cohorts': Cohort.objects.all()},
+			 'cohorts': Cohort.objects.nicotine_filter(request.user)},
 							  context_instance=RequestContext(request))
 
 
@@ -2112,7 +2112,7 @@ def tools_protein(request): # pick a cohort
 			return redirect('tools-cohort-protein', cohort.pk)
 	else:
 		cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
-		cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
+		cohorts_with_protein_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
 		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
 	return render_to_response('matrr/tools/protein.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
@@ -2186,7 +2186,7 @@ def tools_cohort_protein_graphs(request, coh_id):
 			context['graphs'] = graphs
 
 	cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
-	cohorts_with_protein_data = Cohort.objects.filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
+	cohorts_with_protein_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
 
 	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_protein_data, horizontal=True, initial={'subject': coh_id})
 	context['protein_form'] = ProteinSelectForm(initial={'proteins': proteins})
@@ -2346,7 +2346,7 @@ def tools_cohort_etoh_graphs(request, cohort_method):
 			messages.error(request, subject_select_form.errors.as_text())
 			messages.error(request, experiment_range_form.errors.as_text())
 	cohorts_with_ethanol_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
-	cohorts_with_ethanol_data = Cohort.objects.filter(pk__in=cohorts_with_ethanol_data) # so get the queryset of cohorts
+	cohorts_with_ethanol_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_ethanol_data) # so get the queryset of cohorts
 
 	context['cohorts'] = cohorts_with_ethanol_data
 	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_ethanol_data, horizontal=True, initial=subject_initial)
@@ -2362,7 +2362,7 @@ def tools_monkey_etoh(request, monkey_method): # pick a cohort
 			return redirect('tools-monkey-etoh-graphs', monkey_method, cohort.pk)
 	else:
 		cohorts_with_etoh_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
-		cohorts_with_etoh_data = Cohort.objects.filter(pk__in=cohorts_with_etoh_data) # so get the queryset of cohorts
+		cohorts_with_etoh_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_etoh_data) # so get the queryset of cohorts
 		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_etoh_data)
 	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
@@ -2443,7 +2443,7 @@ def tools_cohort_bec_graphs(request, cohort_method):
 			messages.error(request, subject_select_form.errors.as_text())
 			messages.error(request, experiment_range_form.errors.as_text())
 	cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
-	cohorts_with_bec_data = Cohort.objects.filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
+	cohorts_with_bec_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
 
 	context['cohorts'] = cohorts_with_bec_data
 	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_bec_data, horizontal=True, initial=subject_initial)
@@ -2459,7 +2459,7 @@ def tools_monkey_bec(request, monkey_method): # pick a cohort
 			return redirect('tools-monkey-bec-graphs', monkey_method, cohort.pk)
 	else:
 		cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
-		cohorts_with_bec_data = Cohort.objects.filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
+		cohorts_with_bec_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
 		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_bec_data)
 	return render_to_response('matrr/tools/bec.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 

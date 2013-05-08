@@ -241,11 +241,10 @@ class MtaForm(forms.ModelForm):
 
 class CodForm(forms.ModelForm):
 	def __init__(self, *args, **kwargs):
-		cohort = ''
-		if 'cohort' in kwargs:
-			cohort = kwargs.pop('cohort')
+		cohort = kwargs.pop('cohort', '')
+		user = kwargs.pop('user', None)
 		super(CodForm, self).__init__(*args, **kwargs)
-		self.fields['cohort'].queryset = models.Cohort.objects.all()
+		self.fields['cohort'].queryset = models.Cohort.objects.nicotine_filter(user=user)()
 		self.fields['cohort'].initial = cohort
 
 	class Meta:
@@ -628,7 +627,7 @@ class SubjectSelectForm(forms.Form):
 		# horizontal will completely ignore subject_widget
 		# subject_widget kwarg will override the horizontal kwarg
 		super(SubjectSelectForm, self).__init__(*args, **kwargs)
-		queryset = subject_queryset if subject_queryset else models.Cohort.objects.all()
+		queryset = subject_queryset if subject_queryset else models.Cohort.objects.nicotine_filter()
 		widget = widgets.RadioSelect(renderer=widgets.HorizRadioRenderer) if horizontal else widgets.RadioSelect(renderer=widgets.RadioRenderer_nolist)
 		widget = subject_widget if subject_widget else widget
 		self.fields['subject'] = forms.ModelChoiceField(queryset=queryset.order_by('pk'), widget=widget, initial=queryset[0])
@@ -760,7 +759,7 @@ class AdvancedSearchSelectForm(forms.Form):
 class AdvancedSearchFilterForm(forms.Form):
 	control = forms.BooleanField(label="Control", required=False, widget=widgets.CheckboxInput(attrs={'onchange': 'post_adv_form()'}))
 	proteins = forms.ModelMultipleChoiceField(label="Proteins", required=False, queryset=models.Protein.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
-	cohorts = forms.ModelMultipleChoiceField(label="Cohorts", required=False, queryset=models.Cohort.objects.all(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
+	cohorts = forms.ModelMultipleChoiceField(label="Cohorts", required=False, queryset=models.Cohort.objects.nicotine_filter(), widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={'onchange': 'post_adv_form()'}))
 
 
 class InventoryBrainForm(forms.Form):

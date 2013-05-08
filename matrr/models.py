@@ -247,19 +247,33 @@ class EventType(models.Model):
 		db_table = 'evt_event_types'
 
 
+class CohortQuerySet(models.query.QuerySet):
+	def nicotine_filter(self, user=None):
+		if user and user.has_perm('matrr.view_nicotine_cohorts'):
+			return self
+		else:
+			return self.exclude(coh_cohort_name__icontains='nicotine')
+
+
+class CohortManager(models.Manager):
+	def get_query_set(self):
+		return CohortQuerySet(self.model, using=self._db)
+
+	def nicotine_filter(self, user=None):
+		return self.get_query_set().nicotine_filter(user)
+
+
+#  This model breaks MATRR field name scheme
 class Cohort(models.Model):
 	SPECIES = (('Rhesus', 'Rhesus'), ('Cyno', 'Cynomolgus'), ('Vervet', 'Vervet'))
+	objects = CohortManager()
 	coh_cohort_id = models.AutoField('ID', primary_key=True)
-	coh_cohort_name = models.CharField('Name', max_length=100, unique=True, null=False,
-									   help_text='Please enter the cohort\'s name')
-	coh_upcoming = models.BooleanField('Upcoming', null=False, default=True,
-									   help_text='Check this if the tissues from this cohort have not been harvested yet.')
+	coh_cohort_name = models.CharField('Name', max_length=100, unique=True, null=False, help_text='Please enter the cohort\'s name')
+	coh_upcoming = models.BooleanField('Upcoming', null=False, default=True, help_text='Check this if the tissues from this cohort have not been harvested yet.')
 	institution = models.ForeignKey(Institution, related_name='cohort_set', db_column='ins_institution_id',
-									verbose_name='Institution',
-									help_text='Please select the institution where this cohort was raised.')
+									verbose_name='Institution', help_text='Please select the institution where this cohort was raised.')
 	events = models.ManyToManyField(EventType, through='CohortEvent', related_name='cohort_set')
-	coh_species = models.CharField('Species', max_length=30,
-								   help_text='Please enter the species of the monkeys in this cohort.')
+	coh_species = models.CharField('Species', max_length=30, help_text='Please enter the species of the monkeys in this cohort.')
 
 	def __unicode__(self):
 		return self.coh_cohort_name
@@ -286,6 +300,9 @@ class Cohort(models.Model):
 
 	class Meta:
 		db_table = 'coh_cohorts'
+		permissions = ([
+			('view_nicotine_cohorts', 'Can view nicotine cohorts'),
+		])
 
 
 class CohortData(models.Model):
@@ -339,12 +356,9 @@ class Monkey(models.Model):
 	SPECIES = ( ('Rhesus', 'Rhesus'), ('Cyno', 'Cynomolgus'), ('Vervet', 'Vervet'))
 
 	mky_id = models.AutoField('Monkey ID', primary_key=True)
-	cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', verbose_name='Cohort',
-							   help_text='The cohort this monkey belongs to.')
-	mky_real_id = models.IntegerField('ID', unique=True,
-									  help_text='The ID of the monkey.')
-	mky_name = models.CharField('Name', max_length=100, blank=True, null=True,
-								help_text="The monkey's name.")
+	cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', verbose_name='Cohort', help_text='The cohort this monkey belongs to.')
+	mky_real_id = models.IntegerField('ID', unique=True, help_text='The ID of the monkey.')
+	mky_name = models.CharField('Name', max_length=100, blank=True, null=True, help_text="The monkey's name.")
 	# Legacy note about the mky_gender field
 	# It was decided sometime 2011 that 'gender' is an inaccurate representation of a monkey's sex.
 	# It should (justly) be 'sex'.
@@ -352,26 +366,17 @@ class Monkey(models.Model):
 	# So, instead of a massively trivial refactoring of a single database field
 	# We changed any public-facing use of this field to read 'sex', primarily in templates.
 	# I have no intention of ever renaming this field.  -JF
-	mky_gender = models.CharField('Sex', max_length=1, choices=SEX_CHOICES, blank=True, null=True,
-								  help_text='The sex of the monkey.')
-	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True, max_length=20,
-									 help_text='Please enter the date the monkey was born on.')
-	mky_weight = models.FloatField('Weight', blank=True, null=True,
-								   help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
-	mky_drinking = models.BooleanField('Is Drinking', null=False,
-									   help_text='Was this monkey given alcohol?')
-	mky_housing_control = models.BooleanField('Housing Control', null=False, default=False,
-											  help_text='Was this monkey part of a housing control group?')
-	mky_necropsy_start_date = models.DateField('Necropsy Start Date', null=True, blank=True,
-											   help_text='Please enter the date the necropsy was performed on (or was started on).')
+	mky_gender = models.CharField('Sex', max_length=1, choices=SEX_CHOICES, blank=True, null=True, help_text='The sex of the monkey.')
+	mky_birthdate = models.DateField('Date of Birth', blank=True, null=True, max_length=20, help_text='Please enter the date the monkey was born on.')
+	mky_weight = models.FloatField('Weight', blank=True, null=True, help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
+	mky_drinking = models.BooleanField('Is Drinking', null=False, help_text='Was this monkey given alcohol?')
+	mky_housing_control = models.BooleanField('Housing Control', null=False, default=False, help_text='Was this monkey part of a housing control group?')
+	mky_necropsy_start_date = models.DateField('Necropsy Start Date', null=True, blank=True, help_text='Please enter the date the necropsy was performed on (or was started on).')
 	mky_necropsy_start_date_comments = models.TextField('Necropsy Start Date Comments', null=True, blank=True)
-	mky_necropsy_end_date = models.DateField('Necropsy End Date', null=True, blank=True,
-											 help_text='Please enter the end date of the necropsy.')
+	mky_necropsy_end_date = models.DateField('Necropsy End Date', null=True, blank=True, help_text='Please enter the end date of the necropsy.')
 	mky_necropsy_end_date_comments = models.TextField('Necropsy End Date Comments', null=True, blank=True)
-	mky_study_complete = models.BooleanField('Complete Study Performed', null=False, default=False,
-											 help_text='Did this monkey complete all stages of the experiment?')
-	mky_stress_model = models.CharField('Stress Model', null=True, blank=True, max_length=30,
-										help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
+	mky_study_complete = models.BooleanField('Complete Study Performed', null=False, default=False, help_text='Did this monkey complete all stages of the experiment?')
+	mky_stress_model = models.CharField('Stress Model', null=True, blank=True, max_length=30, help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
 	mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
 	mky_notes = models.CharField('Monkey Notes', null=True, blank=True, max_length=1000, )
 	mky_species = models.CharField('Species', max_length=30, choices=SPECIES, help_text='Please select the species of the monkey.')
@@ -3065,7 +3070,7 @@ def cohort_post_save(**kwargs):
 	cohort = kwargs['instance']
 	if not CohortMetaData.objects.filter(cohort=cohort).count():
 		cbc = CohortMetaData(cohort=cohort)
-		cbc.populate_self()
+		cbc.populate_fields()
 
 # This will delete MATRRImage's FileField's files from media before deleting the database entry.
 # Helps keep the media folder pretty.

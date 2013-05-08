@@ -499,6 +499,28 @@ def load_monkey_data(input_file):
 		monkey.save()
 	print "Success"
 
+def load_nicotine_monkey_data(input_file):
+	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+	columns = input_data.next()
+	ins = Institution.objects.get(ins_institution_name='Oregon Health Sciences University')
+	cohort, is_new = Cohort.objects.get_or_create(coh_cohort_name='INIA Nicotine Cyno 11', institution=ins, coh_species='Cyno')
+	for row in input_data:
+		mky = dict()
+		mky['cohort'] = cohort
+		mky['mky_species'] = 'Cyno'
+		mky['mky_real_id'] = row[3]
+		mky['mky_name'] = row[5]
+		mky['mky_gender'] = row[6]
+		mky['mky_birthdate'] = __get_datetime_from_steve(row[7])
+		mky['mky_drinking'] = row[8] == 'TRUE'
+		mky['mky_housing_control'] = row[8] == 'TRUE'
+		if row[9]:
+			mky['mky_necropsy_start_date'] = __get_datetime_from_steve(row[9])
+		monkey, is_new = Monkey.objects.get_or_create(**mky)
+		monkey.save()
+	print 'Success'
+
+
 # Creates Tissue Types from following format:
 # each tissue on a separate line
 # first group of tissues are loaded under category brain tissues
