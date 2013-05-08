@@ -2582,21 +2582,22 @@ def tools_supersandbox(request):
 			list_matrix.append(list(row))
 		return list_matrix, drinkers
 
-	matrix, labels = reformat_apriori_output(5)
-
+	chord_data = list()
 	from matplotlib.colors import rgb2hex
-	labels_colors = list()
-	cmap = plotting.get_cmap('jet')
-	for idx, key in enumerate(labels):
-		lc = {'name': key, 'color': rgb2hex(cmap(idx / (len(labels)-1.)))}
-		labels_colors.append(lc)
+	for coh in [5,6,9,10]:
+		matrix, labels = reformat_apriori_output(coh)
+		labels_colors = list()
+		cmap = plotting.get_cmap('jet')
+		for idx, key in enumerate(labels):
+			lc = {'name': key, 'color': rgb2hex(cmap(idx / (len(labels)-1.)))}
+			labels_colors.append(lc)
+		dataset = mark_safe(json.dumps(matrix))
+		labels_colors = mark_safe(json.dumps(labels_colors))
+		cohort = Cohort.objects.get(pk=coh)
+		data = {'dataset': dataset, 'labels_colors': labels_colors, 'cohort': cohort}
+		chord_data.append(data)
 
-	dataset = mark_safe(json.dumps(matrix))
-	labels_colors = mark_safe(json.dumps(labels_colors))
-#	filename = 'static/js/matrix.json'
-#	f = open(filename, 'w')
-#	f.write(json.dumps(dataset))
-	return render_to_response('matrr/tools/supersandbox.html', {'dataset': dataset, 'labels_colors': labels_colors}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/supersandbox.html', {'chord_data': chord_data}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):

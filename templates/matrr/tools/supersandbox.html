@@ -1,289 +1,40 @@
 {% extends "base.html" %}
+
 {% block extra_js %}
-	{% if PRODUCTION %}
-		<script src="/static/js/d3.v3.min.js" charset="utf-8"></script>
-	{% else %}
-		<script src="/static/js/d3.v3.js" charset="utf-8"></script>
-	{% endif %}
+    <script src="/static/js/d3.v3.min.js" charset="utf-8"></script>
+    <script src="/static/js/d3_plots.js" charset="utf-8"></script>
 {% endblock %}
 
 {% block content %}
 	<div class=clearfix></div>
+	<style>
+		.circle circle {
+			fill: none;
+			pointer-events: all;
+		}
 
-<!--
-	<div id=d3_div style="width: 70%;">
+		.group path {
+			fill-opacity: .5;
+		}
 
-		<h1>Rhesus Apriori Results</h1>
+		path.chord {
+			stroke: #000;
+			stroke-width: .25px;
+		}
 
-		<style>
+		.circle:hover path.fade {
+			display: none;
+		}
 
-			.chord path {
-				fill-opacity: .67;
-				stroke: #000;
-				stroke-width: .5px;
-			}
+	</style>
 
-		</style>
-		<body>
-		<script src="http://d3js.org/d3.v3.min.js"></script>
-		<script>
-
-			// From http://mkweb.bcgsc.ca/circos/guide/tables/
-			var matrix = {{ dataset }};
-
-			var chord = d3.layout.chord()
-					.padding(.05)
-					.sortSubgroups(d3.descending)
-					.matrix(matrix);
-
-			var width = 500,
-					height = 500,
-					innerRadius = Math.min(width, height) * .41,
-					outerRadius = innerRadius * 1.1;
-
-			var fill = d3.scale.ordinal()
-					.domain(d3.range(4))
-					.range(["#000000", "#FFDD89", "#957244", "#F26223"]);
-
-			var svg = d3.select("#d3_div").append("svg")
-					.attr("width", width)
-					.attr("height", height)
-					.append("g")
-					.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-			svg.append("g").selectAll("path")
-					.data(chord.groups)
-					.enter().append("path")
-					.style("fill", function (d) {
-							   return fill(d.index);
-						   })
-					.style("stroke", function (d) {
-							   return fill(d.index);
-						   })
-					.attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
-					.on("mouseover", fade(.1))
-					.on("mouseout", fade(1));
-
-			var ticks = svg.append("g").selectAll("g")
-					.data(chord.groups)
-					.enter().append("g").selectAll("g")
-					.data(groupTicks)
-					.enter().append("g")
-					.attr("transform", function (d) {
-							  return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
-									  + "translate(" + outerRadius + ",0)";
-						  });
-
-			ticks.append("line")
-					.attr("x1", 1)
-					.attr("y1", 0)
-					.attr("x2", 5)
-					.attr("y2", 0)
-					.style("stroke", "#000");
-
-			ticks.append("text")
-					.attr("x", 8)
-					.attr("dy", ".35em")
-					.attr("transform", function (d) {
-							  return d.angle > Math.PI ? "rotate(180)translate(-16)" : null;
-						  })
-					.style("text-anchor", function (d) {
-							   return d.angle > Math.PI ? "end" : null;
-						   })
-					.text(function (d) {
-							  return d.label;
-						  });
-
-			svg.append("g")
-					.attr("class", "chord")
-					.selectAll("path")
-					.data(chord.chords)
-					.enter().append("path")
-					.attr("d", d3.svg.chord().radius(innerRadius))
-					.style("fill", function (d) {
-							   return fill(d.target.index);
-						   })
-					.style("opacity", 1);
-
-			// Returns an array of tick angles and labels, given a group.
-			function groupTicks(d) {
-				var k = (d.endAngle - d.startAngle) / d.value;
-				return d3.range(0, d.value, 1000).map(function (v, i) {
-					return {
-						angle:v * k + d.startAngle,
-						label:i % 5 ? null : v / 1000 + "k"
-					};
-				});
-			}
-
-			// Returns an event handler for fading a given chord group.
-			function fade(opacity) {
-				return function (g, i) {
-					svg.selectAll(".chord path")
-							.filter(function (d) {
-										return d.source.index != i && d.target.index != i;
-									})
-							.transition()
-							.style("opacity", opacity);
-				};
-			}
-
-		</script>
-	</div>
--->
-
-	<div id=d3_div_two style="width: 70%;">
-
-		<h1>Rhesus Apriori Results</h1>
-
-		<style>
-			#circle circle {
-				fill: none;
-				pointer-events: all;
-			}
-
-			.group path {
-				fill-opacity: .5;
-			}
-
-			path.chord {
-				stroke: #000;
-				stroke-width: .25px;
-			}
-
-			#circle:hover path.fade {
-				display: none;
-			}
-
-		</style>
-
-		<script>
-
-			var width = 500,
-					height = 500,
-					outerRadius = Math.min(width, height) / 2 - 10,
-					innerRadius = outerRadius - 24;
-
-			var formatPercent = d3.format(".1%");
-
-			var arc = d3.svg.arc()
-					.innerRadius(innerRadius)
-					.outerRadius(outerRadius);
-
-			var layout = d3.layout.chord()
-					.padding(.04)
-					.sortSubgroups(d3.descending)
-					.sortChords(d3.ascending);
-
-			var path = d3.svg.chord()
-					.radius(innerRadius);
-
-			var svg = d3.select("#d3_div_two").append("svg")
-					.attr("width", width)
-					.attr("height", height)
-					.append("g")
-					.attr("id", "circle")
-					.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-			svg.append("circle")
-					.attr("r", outerRadius);
-
-
-			var matrix = {{ dataset }};
-            var name_color = {{ labels_colors }};
-/*
-d3.csv() input:
-
-Year,Make,Model,Length
-1997,Ford,E350,2.34
-2000,Mercury,Cougar,2.38
-The resulting JavaScript array is:
-
-
-resulting javascript array:
-[
-  {"Year": "1997", "Make": "Ford", "Model": "E350", "Length": "2.34"},
-  {"Year": "2000", "Make": "Mercury", "Model": "Cougar", "Length": "2.38"}
-]
-
-
-*/
-
-
-            // Compute the chord layout.
-            layout.matrix(matrix);
-
-            // Add a group per neighborhood.
-            var group = svg.selectAll(".group")
-                    .data(layout.groups)
-                    .enter().append("g")
-                    .attr("class", "group")
-                    .on("mouseover", mouseover);
-
-            // Add a mouseover title.
-            group.append("title").text(function (d, i) {
-                return name_color[i].name + ": " + formatPercent(d.value) + " of origins";
-            });
-
-            // Add the group arc.
-            var groupPath = group.append("path")
-                    .attr("id", function (d, i) {
-                              return "group" + i;
-                          })
-                    .attr("d", arc)
-                    .style("fill", function (d, i) {
-                               return name_color[i].color;
-                           });
-
-            // Add a text label.
-            var groupText = group.append("text")
-                    .attr("x", 6)
-                    .attr("dy", 15);
-
-            groupText.append("textPath")
-                    .attr("xlink:href", function (d, i) {
-                              return "#group" + i;
-                          })
-                    .text(function (d, i) {
-                              return name_color[i].name;
-                          });
-
-            // Remove the labels that don't fit. :(
-            groupText.filter(function (d, i) {
-                return groupPath[0][i].getTotalLength() / 2 - 16 < this.getComputedTextLength();
-            })
-                    .remove();
-
-            // Add the chords.
-            var chord = svg.selectAll(".chord")
-                    .data(layout.chords)
-                    .enter().append("path")
-                    .attr("class", "chord")
-                    .style("fill", function (d) {
-                               return name_color[d.source.index].color;
-                           })
-                    .attr("d", path);
-
-            // Add an elaborate mouseover title for each chord.
-            chord.append("title").text(function (d) {
-                return name_color[d.source.index].name
-                        + " → " + name_color[d.target.index].name
-                        + ": " + formatPercent(d.source.value)
-                        + "\n" + name_color[d.target.index].name
-                        + " → " + name_color[d.source.index].name
-                        + ": " + formatPercent(d.target.value);
-            });
-
-            function mouseover(d, i) {
-                chord.classed("fade", function (p) {
-                    return p.source.index != i
-                            && p.target.index != i;
-                });
-            }
-
-		</script>
-
-	</div>
-
+	{% for data in chord_data %}
+		<div id="coh_{{ data.cohort.pk }}" style="width: 70%;">
+			<center><h3>{{ data.cohort }} Confederate Drinkers</h3></center>
+			<script type="text/javascript">
+				draw_chord_plot({{ data.cohort.pk }}, {{ data.dataset }}, {{ data.labels_colors }})
+			</script>
+		</div>
+	{% endfor %}
 
 {% endblock %}
