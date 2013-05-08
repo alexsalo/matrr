@@ -1,4 +1,5 @@
 # Create your views here.
+import json
 from django.db import DatabaseError
 from django.db.models import Q, Count
 from django.core.urlresolvers import reverse
@@ -21,7 +22,7 @@ from matrr.forms import *
 from matrr.models import *
 import math
 from datetime import date, timedelta
-from utils import plotting
+from utils import plotting, plotting_beta
 from matrr.decorators import user_owner_test
 import urllib
 
@@ -2553,6 +2554,50 @@ def tools_sandbox(request):
 			files.append(f)
 	files = sorted(files)
 	return render_to_response('matrr/tools/sandbox.html', {'files':files, 'append':append}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
+def tools_supersandbox(request):
+#	https://github.com/mbostock/d3/wiki/Gallery
+	def reformat_apriori_output(cohort=None):
+		cohorts = [cohort] if cohort else [5,6,9,10]
+		drinkers = Monkey.objects.Drinkers().filter(cohort__in=cohorts)
+		drinkers = drinkers.values_list('pk', flat=True)
+		matrix = numpy.zeros((drinkers.count(), drinkers.count()))
+
+		indices = dict()
+		for index, monkey_pk in enumerate(drinkers):
+			indices[monkey_pk] = index
+
+		for cohort_pk in cohorts:
+			orig = plotting_beta.return_confeds(cohort_pk, 15)
+			for support, occurrences in orig.iteritems():
+				for cause, effect, confidence in occurrences:
+					if len(cause) > 1 or len(effect) > 1:
+						continue
+					cause = tuple(cause)[0]
+					effect = tuple(effect)[0]
+					matrix[indices[cause], indices[effect]] = support*confidence
+		list_matrix = list()
+		for row in matrix:
+			list_matrix.append(list(row))
+		return list_matrix, drinkers
+
+	chord_data = list()
+	from matplotlib.colors import rgb2hex
+	for coh in [5,6,9,10]:
+		matrix, labels = reformat_apriori_output(coh)
+		labels_colors = list()
+		cmap = plotting.get_cmap('jet')
+		for idx, key in enumerate(labels):
+			lc = {'name': key, 'color': rgb2hex(cmap(idx / (len(labels)-1.)))}
+			labels_colors.append(lc)
+		dataset = mark_safe(json.dumps(matrix))
+		labels_colors = mark_safe(json.dumps(labels_colors))
+		cohort = Cohort.objects.get(pk=coh)
+		data = {'dataset': dataset, 'labels_colors': labels_colors, 'cohort': cohort}
+		chord_data.append(data)
+
+	return render_to_response('matrr/tools/supersandbox.html', {'chord_data': chord_data}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):
