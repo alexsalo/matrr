@@ -29,7 +29,8 @@
 	</style>
 
     <form method='GET'>
-    Min Confidence: <input type="text" name="min_conf"> <input type="submit" value="Submit"> <br>
+    Min Confidence: <input type="text" name="min_conf"><br>
+    Include NtoN relationships: <input type="checkbox" name="NtoN"> <input type="submit" value="Submit"> <br>
     </form>
 	{% for data in chord_data %}
 		<div id="coh_{{ data.cohort.pk }}" style="width: 70%;">

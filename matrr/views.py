@@ -2566,8 +2566,8 @@ def tools_supersandbox(request):
 	if not 1 > min_conf >= 0:
 		messages.error(request, "Enter a number, 1 > x > 0, nerd.")
 		min_conf = 0
-#	https://github.com/mbostock/d3/wiki/Gallery
-	def reformat_apriori_output(cohort=None):
+
+	def reformat_apriori_output_1to1(cohort=None):
 		cohorts = [cohort] if cohort else [5,6,9,10]
 		drinkers = Monkey.objects.Drinkers().filter(cohort__in=cohorts)
 		drinkers = drinkers.values_list('pk', flat=True)
@@ -2591,10 +2591,36 @@ def tools_supersandbox(request):
 			list_matrix.append(list(row))
 		return list_matrix, drinkers
 
+	def reformat_apriori_output_NtoN(cohort=None):
+		cohorts = [cohort] if cohort else [5,6,9,10]
+		drinkers = Monkey.objects.Drinkers().filter(cohort__in=cohorts)
+		drinkers = drinkers.values_list('pk', flat=True)
+		matrix = numpy.zeros((drinkers.count(), drinkers.count()))
+
+		indices = dict()
+		for index, monkey_pk in enumerate(drinkers):
+			indices[monkey_pk] = index
+
+		for cohort_pk in cohorts:
+			orig = apriori.get_confederate_groups(cohort_pk, minutes=15, min_confidence=min_conf)
+			for support, occurrences in orig.iteritems():
+				for cause_monkeys, effect_monkeys, confidence in occurrences:
+					cause_value = float(support) * float(confidence) / len(cause_monkeys) / len(effect_monkeys)
+					for _cause in cause_monkeys:
+						for _effect in effect_monkeys:
+							matrix[indices[_cause], indices[_effect]] += cause_value
+		list_matrix = list()
+		for row in matrix:
+			list_matrix.append(list(row))
+		return list_matrix, drinkers
+
+	NtoN = request.GET.get('NtoN', False)
+	reformat_method = reformat_apriori_output_NtoN if NtoN else reformat_apriori_output_1to1
+
 	chord_data = list()
 	from matplotlib.colors import rgb2hex
 	for coh in [5,6,9,10]:
-		matrix, labels = reformat_apriori_output(coh)
+		matrix, labels = reformat_method(coh)
 		labels_colors = list()
 		cmap = plotting.get_cmap('jet')
 		for idx, key in enumerate(labels):
@@ -2605,6 +2631,7 @@ def tools_supersandbox(request):
 		cohort = Cohort.objects.get(pk=coh)
 		data = {'dataset': dataset, 'labels_colors': labels_colors, 'cohort': cohort}
 		chord_data.append(data)
+#	https://github.com/mbostock/d3/wiki/Gallery
 	return render_to_response('matrr/tools/supersandbox.html', {'chord_data': chord_data}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
