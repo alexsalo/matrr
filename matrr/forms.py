@@ -131,9 +131,14 @@ class TissueRequestForm(forms.ModelForm):
 			if cleaned_data['rtt_units'] != 'ul':
 				raise forms.ValidationError("Units of bone marrow must be in microliters.")
 
-		rtt_count = models.TissueRequest.objects.filter(req_request=self.req_request, tissue_type=self.tissue, rtt_prep_type=prep_type).count()
-		if self.req_request and self.req_request.req_status == models.RequestStatus.Cart and self.tissue and prep_type and rtt_count > 0:
-			raise forms.ValidationError("You already have this tissue and prep in your cart.")
+		if not 'be specific' in self.tissue.tst_tissue_name.lower():
+			# this will ensure that a user is only adding 1 tissue to the cart of any gives tissue::prep_type combination
+			# I don't know why this is a restriction, but it is so I enforce it with a validation error.
+			#
+			# tissue types such as "Bone (be specific)" and "Muscle (be specific)" are not subject to this restriction.
+			rtt_count = models.TissueRequest.objects.filter(req_request=self.req_request, tissue_type=self.tissue, rtt_prep_type=prep_type).count()
+			if self.req_request and self.req_request.req_status == models.RequestStatus.Cart and self.tissue and prep_type and rtt_count > 0:
+				raise forms.ValidationError("You already have this tissue and prep in your cart.")
 
 		# Always return the full collection of cleaned data.
 		return cleaned_data
