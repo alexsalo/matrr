@@ -332,7 +332,8 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 	for key in keys:
 		for third in range(1,4,1):
 			labels.append("%s-%d" % (key, third))
-			labels.append("%s-all" % key)
+		labels.append("%s-all" % key)
+
 	matrix = [labels]
 	for label in labels:
 		xkey, xthird = label.split('-')
@@ -342,20 +343,20 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 			if xkey == ykey and xthird == ythird:
 				row.append(1)
 				continue
-			if xthird == 1:
+			if xthird == '1':
 				xdata = first_data_dict[xkey]
-			elif xthird == 2:
+			elif xthird == '2':
 				xdata = second_data_dict[xkey]
-			elif xthird == 3:
+			elif xthird == '3':
 				xdata = third_data_dict[xkey]
 			else:
 				xdata = all_data_dict[xkey]
 
-			if ythird == 1:
+			if ythird == '1':
 				ydata = first_data_dict[ykey]
-			elif ythird == 2:
+			elif ythird == '2':
 				ydata = second_data_dict[ykey]
-			elif ythird == 3:
+			elif ythird == '3':
 				ydata = third_data_dict[ykey]
 			else:
 				ydata = all_data_dict[ykey]
