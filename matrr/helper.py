@@ -337,19 +337,12 @@ Recursively eliminates points that lie inside two neighbouring points until only
 
 class RhesusAdjacencyNetwork():
 	network = None
-	cohort = None
 	__monkeys = None
 
-	def __init__(self, cohort, graph=None):
-		from matrr.models import Cohort, Monkey
-		if not isinstance(cohort, Cohort):
-			try:
-				cohort = Cohort.objects.get(pk=cohort)
-			except Cohort.DoesNotExist:
-				raise Exception("cohort is not an instance of matrr.models.Cohort or a PK of one.")
-		self.cohort = cohort
+	def __init__(self, cohorts, graph=None):
+		from matrr.models import Monkey
 		self.network = graph if graph else nx.Graph()
-		self.__monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
+		self.__monkeys = Monkey.objects.Drinkers().filter(cohort__in=cohorts)
 
 		self.construct_network()
 
@@ -417,9 +410,12 @@ class RhesusAdjacencyNetwork():
 		self.network.add_edge(source, target, **self._construct_edge_data(source, target))
 
 
-def dump_RAN_json(cohort_pk):
-	ran = RhesusAdjacencyNetwork(cohort=cohort_pk)
+def dump_RAN_json(cohort_pk=0, cohorts_pks=None):
+	cohorts = [cohort_pk] if cohort_pk else cohorts_pks
+	ran = RhesusAdjacencyNetwork(cohorts=cohorts)
 	json = ran.dump_JSON()
-	f = open('static/js/%d.RAN.json' % cohort_pk, 'w')
+	cohorts = [str(cohort) for cohort in cohorts]
+	cohorts = '_'.join(cohorts)
+	f = open('static/js/%s.RAN.json' % cohorts, 'w')
 	f.write(json)
 	f.close()

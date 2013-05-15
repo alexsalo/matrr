@@ -110,8 +110,8 @@ function draw_chord_plot(cohort_pk, matrix, name_color) {
 function draw_adjacency_matrix(cohort_pk) {
 // Be sure to include {% block extra_js %}<script src="/static/js/d3.v3.min.js" charset="utf-8"></script>{% endblock %}
 	var margin = {top:80, right:0, bottom:10, left:160},
-			width = 350,
-			height = 350;
+			width = 500,
+			height = 500;
 
 	var x = d3.scale.ordinal().rangeBands([0, width]),
 			c = {4: '#ff0029', 3: '#5cff00', 2: '#008fff', 1: '#ff00bf'};
@@ -161,7 +161,12 @@ function draw_adjacency_matrix(cohort_pk) {
 				return nodes[b].count - nodes[a].count;
 			}),
 			group:d3.range(nodes_length).sort(function (a, b) {
-				return nodes[b].group - nodes[a].group;
+				var group_diff = nodes[b].group - nodes[a].group;
+				if (group_diff == 0)
+					return nodes[b].count - nodes[a].count;
+				else
+					return group_diff
+
 			})
 		};
 
@@ -230,7 +235,10 @@ function draw_adjacency_matrix(cohort_pk) {
 							   return z(d.z);
 						   })
 					.style("fill", function (d) {
-							   return c[nodes[d.x].group];
+								if (nodes[d.x].group == nodes[d.y].group)
+									return c[nodes[d.x].group];
+								else
+									return '#000'
 						   })
 					.on("mouseover", mouseover)
 					.on("mouseout", mouseout);
@@ -243,6 +251,12 @@ function draw_adjacency_matrix(cohort_pk) {
 			d3.selectAll(".column text").classed("active", function (d, i) {
 				return i == p.x;
 			});
+			var nx = nodes[p.x];
+			var ny = nodes[p.y];
+			var pct_x = (100*p.z / nx.count).toFixed(2);
+			var title = "Percent of " + nx.monkey + ": " + pct_x;
+			d3.select(this).attr("title", title);
+
 		}
 
 		function mouseout() {

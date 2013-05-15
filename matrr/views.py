@@ -2545,6 +2545,11 @@ def tools_cohort_genealogy(request, coh_id):
 
 @user_passes_test(lambda u: u.is_staff, login_url='/denied/')
 def tools_sandbox(request):
+	d3_redirect = request.GET.get('d3_redirect', '')
+	if d3_redirect == 'chord':
+		return redirect(reverse('tools-sandbox-chord'))
+	if d3_redirect == 'adjacency':
+		return redirect(reverse('tools-sandbox-adjacency'))
 	append = request.GET.get('append', "christa")
 	base = settings.STATIC_ROOT + '/images/%s/' % append
 	_files = os.listdir(base)
@@ -2555,19 +2560,14 @@ def tools_sandbox(request):
 	files = sorted(files)
 	return render_to_response('matrr/tools/sandbox.html', {'files':files, 'append':append}, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
-def tools_supersandbox(request):
-	plot = request.GET.get('plot', '')
-	if plot == 'adjacency':
-		return _tools_supersandbox_adjacency(request)
-	elif plot == 'chord':
-		return _tools_supersandbox_chord(request)
-	else:
-		return render_to_response('matrr/tools/supersandbox.html', {}, context_instance=RequestContext(request))
-
-@user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
-def _tools_supersandbox_chord(request):
+@user_passes_test(lambda u: u.is_staff, login_url='/denied/')
+def tools_sandbox_chord_diagram(request):
 #	https://github.com/mbostock/d3/wiki/Gallery
+	d3_redirect = request.GET.get('d3_redirect', '')
+	if d3_redirect == 'chord':
+		return redirect(reverse('tools-sandbox-chord'))
+	if d3_redirect == 'adjacency':
+		return redirect(reverse('tools-sandbox-adjacency'))
 	min_conf = request.GET.get('min_conf', 0)
 	try:
 		min_conf = float(min_conf)
@@ -2642,14 +2642,29 @@ def _tools_supersandbox_chord(request):
 		cohort = Cohort.objects.get(pk=coh)
 		data = {'dataset': dataset, 'labels_colors': labels_colors, 'cohort': cohort}
 		chord_data.append(data)
-	return render_to_response('matrr/tools/supersandbox.html', {'chord_data': chord_data}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/sandbox_chord_diagram.html', {'chord_data': chord_data}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.is_staff, login_url='/denied/')
+def tools_sandbox_adjacency_matrix(request):
+	""" http://bost.ocks.org/mike/miserables/ """
+	d3_redirect = request.GET.get('d3_redirect', '')
+	if d3_redirect == 'chord':
+		return redirect(reverse('tools-sandbox-chord'))
+	if d3_redirect == 'adjacency':
+		return redirect(reverse('tools-sandbox-adjacency'))
+	cohort_pk = request.GET.get('cohort', 0)
+	if cohort_pk == 'all':
+		cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
+		multiple_cohorts = '5_6_9_10'
+	else:
+		cohorts = Cohort.objects.filter(pk=cohort_pk)
+		multiple_cohorts = ''
+
+	return render_to_response('matrr/tools/sandbox_adjacency_matrix.html', {'network_data': True, 'cohorts': cohorts, 'multiple_cohorts': multiple_cohorts}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
-def _tools_supersandbox_adjacency(request):
-	""" http://bost.ocks.org/mike/miserables/ """
-	cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
-	network_data = True
-	return render_to_response('matrr/tools/supersandbox.html', {'network_data': network_data, 'cohorts': cohorts}, context_instance=RequestContext(request))
+def tools_supersandbox(request):
+	return render_to_response('matrr/tools/supersandbox.html', {}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):
