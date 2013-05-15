@@ -2572,10 +2572,10 @@ def tools_sandbox_chord_diagram(request):
 	try:
 		min_conf = float(min_conf)
 	except ValueError:
-		messages.error(request, "ValueError you big dummy.  Enter a number, 1 > x > 0.")
+		messages.error(request, "Enter a number, 1 > x > 0.")
 		min_conf = 0
 	if not 1 > min_conf >= 0:
-		messages.error(request, "Enter a number, 1 > x > 0, nerd.")
+		messages.error(request, "Enter a number, 1 > x > 0.")
 		min_conf = 0
 
 	def reformat_apriori_output_1to1(cohort=None):
