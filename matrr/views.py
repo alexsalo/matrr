@@ -2647,11 +2647,9 @@ def _tools_supersandbox_chord(request):
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def _tools_supersandbox_adjacency(request):
 	""" http://bost.ocks.org/mike/miserables/ """
-	cohort = Cohort.objects.get(pk=10)
-	dataset = []
-	network_data = {'cohort': cohort, 'dataset': dataset}
-
-	return render_to_response('matrr/tools/supersandbox.html', {'network_data': network_data}, context_instance=RequestContext(request))
+	cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
+	network_data = True
+	return render_to_response('matrr/tools/supersandbox.html', {'network_data': network_data, 'cohorts': cohorts}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):

@@ -1121,10 +1121,12 @@ rhesus_drinkers_distinct['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 100
 all_rhesus_drinkers = [x for d in rhesus_drinkers_distinct.itervalues() for x in d]
 
 rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
-rhesus_colors = dict()
+
 cmap = plotting.get_cmap('gist_rainbow')
+rhesus_colors = dict()
 for idx, key in enumerate(rhesus_keys):
 	rhesus_colors[key] = cmap(idx / (len(rhesus_drinkers.keys())-1.))
+rhesus_colors_hex = {'VHD': '#ff0029', 'LD': '#ff00bf', 'HD': '#5cff00', 'MD': '#008fff'}
 
 
 def rhesus_etoh_gkg_histogram():

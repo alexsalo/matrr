@@ -109,12 +109,12 @@ function draw_chord_plot(cohort_pk, matrix, name_color) {
 // Be sure to include {% block extra_js %}<script src="/static/js/d3.v3.min.js" charset="utf-8"></script>{% endblock %}
 function draw_adjacency_matrix(cohort_pk) {
 // Be sure to include {% block extra_js %}<script src="/static/js/d3.v3.min.js" charset="utf-8"></script>{% endblock %}
-	var margin = {top:80, right:0, bottom:10, left:80},
-			width = 720,
-			height = 720;
+	var margin = {top:80, right:0, bottom:10, left:160},
+			width = 350,
+			height = 350;
 
 	var x = d3.scale.ordinal().rangeBands([0, width]),
-			c = d3.scale.category10().domain(d3.range(10));
+			c = {4: '#ff0029', 3: '#5cff00', 2: '#008fff', 1: '#ff00bf'};
 
 	var svg = d3.select("#coh_" + cohort_pk).append("svg")
 			.attr("width", width + margin.left + margin.right)
@@ -123,16 +123,16 @@ function draw_adjacency_matrix(cohort_pk) {
 			.append("g")
 			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-	d3.json("/static/js/10.RAN.json", function (miserables) {
+	d3.json("/static/js/" + cohort_pk + ".RAN.json", function (cooccurency_matrix) {
 		var matrix = [],
-				nodes = miserables.nodes,
-				n = nodes.length;
+				nodes = cooccurency_matrix.nodes,
+				nodes_length = nodes.length;
 
 		// Compute index per node.
 		nodes.forEach(function (node, i) {
 			node.index = i;
 			node.count = 0;
-			matrix[i] = d3.range(n).map(function (j) {
+			matrix[i] = d3.range(nodes_length).map(function (j) {
 				return {x:j, y:i, z:0};
 			});
 		});
@@ -140,7 +140,7 @@ function draw_adjacency_matrix(cohort_pk) {
 		// Convert links to matrix; count character occurrences.
 		var min_cbt_count = 1000000;
 		var max_cbt_count = 0;
-		miserables.links.forEach(function (link) {
+		cooccurency_matrix.links.forEach(function (link) {
 			matrix[link.source][link.target].z += link.cbt_count;
 			matrix[link.target][link.source].z += link.cbt_count;
 			matrix[link.source][link.source].z += link.cbt_count;
@@ -154,13 +154,13 @@ function draw_adjacency_matrix(cohort_pk) {
 
 		// Precompute the orders.
 		var orders = {
-			monkey:d3.range(n).sort(function (a, b) {
+			monkey:d3.range(nodes_length).sort(function (a, b) {
 				return d3.ascending(nodes[a].monkey, nodes[b].monkey);
 			}),
-			count:d3.range(n).sort(function (a, b) {
+			count:d3.range(nodes_length).sort(function (a, b) {
 				return nodes[b].count - nodes[a].count;
 			}),
-			group:d3.range(n).sort(function (a, b) {
+			group:d3.range(nodes_length).sort(function (a, b) {
 				return nodes[b].group - nodes[a].group;
 			})
 		};
@@ -230,7 +230,7 @@ function draw_adjacency_matrix(cohort_pk) {
 							   return z(d.z);
 						   })
 					.style("fill", function (d) {
-							   return nodes[d.x].group == nodes[d.y].group ? c(nodes[d.x].group) : null;
+							   return c[nodes[d.x].group];
 						   })
 					.on("mouseover", mouseover)
 					.on("mouseout", mouseout);
