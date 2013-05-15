@@ -272,17 +272,17 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 		monkey_set = plotting_beta.rhesus_drinkers_distinct[monkey_category]
 		data = list()
 		base_eevs = ExperimentEvent.objects.OA().exclude_exceptions()
-		for i in range(0, minutes):
+		for minute in range(0, minutes):
 			# in the end, we need to return a list of the summed volumes of each monkey in the category, for each minute since last pellet
 			# so for each minute, we need to sum the ethanol volumes of that minute
 			volume = 0
-			pellet_eevs = base_eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
+			pellet_eevs = base_eevs.filter(eev_pellet_time__gte=minute*60).filter(eev_pellet_time__lt=(minute+1)*60)
 
 			# but, each category contains monkeys potentially from several cohorts, and each cohort has a different start date
 			# so to split the summation into 120 minute thirds...
-			for coh, start_date in cohort_starts.items():
+			for cohort_pk, start_date in cohort_starts.items():
 				# we have to split the category into each of its cohort subsets
-				cohort_eevs = pellet_eevs.filter(monkey__cohort=coh)
+				cohort_eevs = pellet_eevs.filter(monkey__cohort=cohort_pk)
 				monkey_eevs = cohort_eevs.filter(monkey__in=monkey_set)
 
 				# With events only from one cohort, we can filter down to the events in the third we're looking for
@@ -296,10 +296,9 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 
 				# now that all of the filtering is done, we need to sum the volume of this cohort
 				_vol = third_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-				if _vol:
-					# traps _vol = None exceptions
-					volume += _vol
 				# to the volume of any previous cohorts
+				if _vol: # traps _vol = None exceptions
+					volume += _vol
 			data.append(volume)
 		# and after all the cohorts are finished contributing their volume, average the volume by the number of monkeys in the monkey_category
 		data = numpy.array(data)
@@ -307,11 +306,14 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 		return data
 
 	def _oa_volume_summation_by_minute(monkey_category, minutes=120):
+		"""
+		This method will return the volume of ethanol consumed during each minute after a pellet was distributed
+		"""
 		data = list()
 		monkey_set = plotting_beta.rhesus_drinkers_distinct[monkey_category]
 		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
-		for i in range(0, minutes):
-			_eevs = eevs.filter(eev_pellet_time__gte=i*60).filter(eev_pellet_time__lt=(i+1)*60)
+		for minute in range(0, minutes):
+			_eevs = eevs.filter(eev_pellet_time__gte=minute*60).filter(eev_pellet_time__lt=(minute+1)*60)
 			data.append(_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'])
 		data = numpy.array(data)
 		data /= len(monkey_set)
