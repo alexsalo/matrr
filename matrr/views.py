@@ -2654,7 +2654,7 @@ def tools_sandbox_adjacency_matrix(request):
 		return redirect(reverse('tools-sandbox-adjacency'))
 	cohort_pk = request.GET.get('cohort', 0)
 	if cohort_pk == 'all':
-		cohorts = Cohort.objects.filter(pk__in=[5,6,9,10])
+		cohorts = Cohort.objects.none()
 		multiple_cohorts = '5_6_9_10'
 	else:
 		cohorts = Cohort.objects.filter(pk=cohort_pk)
