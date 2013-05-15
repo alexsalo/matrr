@@ -2557,6 +2557,17 @@ def tools_sandbox(request):
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_supersandbox(request):
+	plot = request.GET.get('plot', '')
+	if plot == 'adjacency':
+		return _tools_supersandbox_adjacency(request)
+	elif plot == 'chord':
+		return _tools_supersandbox_chord(request)
+	else:
+		return render_to_response('matrr/tools/supersandbox.html', {}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
+def _tools_supersandbox_chord(request):
+#	https://github.com/mbostock/d3/wiki/Gallery
 	min_conf = request.GET.get('min_conf', 0)
 	try:
 		min_conf = float(min_conf)
@@ -2631,8 +2642,16 @@ def tools_supersandbox(request):
 		cohort = Cohort.objects.get(pk=coh)
 		data = {'dataset': dataset, 'labels_colors': labels_colors, 'cohort': cohort}
 		chord_data.append(data)
-#	https://github.com/mbostock/d3/wiki/Gallery
 	return render_to_response('matrr/tools/supersandbox.html', {'chord_data': chord_data}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
+def _tools_supersandbox_adjacency(request):
+	""" http://bost.ocks.org/mike/miserables/ """
+	cohort = Cohort.objects.get(pk=10)
+	dataset = []
+	network_data = {'cohort': cohort, 'dataset': dataset}
+
+	return render_to_response('matrr/tools/supersandbox.html', {'network_data': network_data}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):

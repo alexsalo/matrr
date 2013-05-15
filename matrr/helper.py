@@ -2,7 +2,7 @@ import StringIO, random, numpy, pylab, time
 from django.template import loader, Context
 from ho import pisa
 import networkx as nx
-from matrr.models import FamilyNode, FamilyRelationship
+from utils import plotting_beta
 
 class CytoVisualStyle():
 #	family_graph = None
@@ -98,6 +98,7 @@ class FamilyTree(object):
 	visual_style = None
 
 	def __init__(self, family_node, graph=None, depth=3, visual_style=None):
+		from matrr.models import FamilyNode
 		if isinstance(family_node, FamilyNode):
 			self.me = family_node
 		else:
@@ -112,6 +113,7 @@ class FamilyTree(object):
 		return "".join(nx.generate_graphml(self.family_graph))
 
 	def plant_tree(self):
+		from matrr.models import FamilyRelationship
 		self._add_family_node(self.me)
 		self._add_family_node(self.me.sire)
 		self._add_family_node(self.me.dam)
@@ -180,7 +182,8 @@ class ExampleFamilyTree(FamilyTree):
 
 def family_tree():
 	import settings
-	from matrr.models import Monkey, Cohort, Institution
+	from matrr.models import Monkey, Cohort, Institution, FamilyNode, FamilyRelationship
+
 
 	if not settings.PRODUCTION:
 		import random
@@ -330,3 +333,93 @@ Recursively eliminates points that lie inside two neighbouring points until only
 			n_pts = len(pts)
 		k += 1
 	return numpy.asarray(pts)
+
+
+class RhesusAdjacencyNetwork():
+	network = None
+	cohort = None
+	__monkeys = None
+
+	def __init__(self, cohort, graph=None):
+		from matrr.models import Cohort, Monkey
+		if not isinstance(cohort, Cohort):
+			try:
+				cohort = Cohort.objects.get(pk=cohort)
+			except Cohort.DoesNotExist:
+				raise Exception("cohort is not an instance of matrr.models.Cohort or a PK of one.")
+		self.cohort = cohort
+		self.network = graph if graph else nx.Graph()
+		self.__monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
+
+		self.construct_network()
+
+	def dump_graphml(self):
+		return "".join(nx.generate_graphml(self.network))
+
+	def dump_JSON(self):
+		from networkx.readwrite import json_graph
+		return json_graph.dumps(self.network)
+
+	def construct_network(self):
+		self.build_nodes()
+		self.build_edges()
+		print 'Finished'
+
+	def build_nodes(self):
+		for mky in self.__monkeys:
+			self.add_node(mky)
+
+	def build_edges(self):
+		if not self.network.nodes():
+			raise Exception("Build nodes first")
+		for source_id in self.network.nodes():
+			for target_id in self.network.nodes():
+				if target_id == source_id:
+					continue
+				self.add_edge(source_id, target_id)
+
+	def _construct_node_data(self, mky, data=None):
+		#  IMPORTANT NOTE
+		# Data put in here _will_ be visible in the GraphML, and in turn the web page's source code
+		data = data if data else dict()
+		data['monkey'] = mky.pk
+		group = None
+		for key in plotting_beta.rhesus_drinkers_distinct.iterkeys():
+			if mky.pk in plotting_beta.rhesus_drinkers_distinct[key]:
+				break
+		if key == 'VHD':
+			group =  4
+		if key == 'HD':
+			group =  3
+		if key == 'MD':
+			group =  2
+		if key == 'LD':
+			group =  1
+
+		data['group'] = group
+		return data
+
+	def _construct_edge_data(self, source, target, data=None):
+		from matrr.models import CohortBout
+		#  IMPORTANT NOTE
+		# Data put in here _will_ be visible in the GraphML, and in turn the web page's source code
+		data = data if data else dict()
+#		data['source'] = source
+#		data['target'] = target
+		cbt_count = CohortBout.objects.filter(ebt_set__mtd__monkey=source).filter(ebt_set__mtd__monkey=target).distinct().count()
+		data['cbt_count'] = cbt_count
+		return data
+
+	def add_node(self, mky):
+		self.network.add_node(mky.pk, **self._construct_node_data(mky))
+
+	def add_edge(self, source, target):
+		self.network.add_edge(source, target, **self._construct_edge_data(source, target))
+
+
+def dump_RAN_json(cohort_pk):
+	ran = RhesusAdjacencyNetwork(cohort=cohort_pk)
+	json = ran.dump_JSON()
+	f = open('static/js/%d.RAN.json' % cohort_pk, 'w')
+	f.write(json)
+	f.close()
