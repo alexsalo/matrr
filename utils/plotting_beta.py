@@ -1682,6 +1682,46 @@ def rhesus_hourly_gkg_boxplot_by_category():
 	subplot.set_xlabel("Hour of session")
 	return fig
 
+def _rhesus_gkg_age_mtd_general(subplot, phase, gkg_onset, mtd_callable_yvalue_generator): # phase = 0-2
+	cohort_1st_oa_end = {10: "2011-08-01", 9: '2012-01-08', 6:"2009-10-13", 5:"2009-05-24"}
+	oa_phases = ['', 'drinking_experiment__dex_date__lte', 'drinking_experiment__dex_date__gt']
+	cohort_markers = {10:'s', 9:'D', 6:'v', 5:'x'}
+
+	label = ''
+	for i, key in enumerate(rhesus_keys):
+		x = list()
+		y = list()
+		for monkey_pk in rhesus_drinkers_distinct[key]:
+			monkey = Monkey.objects.get(pk=monkey_pk)
+			monkey_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
+			min_gkg_onset_date = monkey_mtds.filter(mtd_etoh_g_kg__gte=gkg_onset).aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
+			if not min_gkg_onset_date:
+				continue
+			age_at_gkg_onset = (min_gkg_onset_date - monkey.mky_birthdate).days / 365.25
+			if phase:
+				monkey_mtds = monkey_mtds.filter(**{oa_phases[phase]:cohort_1st_oa_end[monkey.cohort.pk]})
+			x.append(age_at_gkg_onset)
+			value, label = mtd_callable_yvalue_generator(monkey_mtds)
+			y.append(value)
+		color = rhesus_colors[key]
+		subplot.scatter(x, y, label=key, color=color, s=150)
+		create_convex_hull_polygon(subplot, x, y, color)
+	return subplot, label
+
+def rhesus_gkg_onset_age_category(phase, gkg_onset):
+	assert 0 <= phase <= 2
+	titles = ["Open Access, 12 months", "Open Access, 1st Six Months", "Open Access, 2nd Six Months"]
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot.set_title(titles[phase])
+	main_plot.set_xlabel("Age at first %d gkg consumption" % gkg_onset)
+	main_plot, label = _rhesus_gkg_age_mtd_general(main_plot, phase, gkg_onset, __mtd_call_gkg_etoh)
+	main_plot.set_ylabel(label)
+	main_plot.legend(loc=0, scatterpoints=1)
+	return fig
+
 #---
 #plot
 def confederate_boxplots(confederates, bout_column):
@@ -1830,6 +1870,13 @@ def create_age_graphs():
 			DPI = fig.get_dpi()
 			filename = output_path + '%s.Phase%d.Hour%d.png' % ("cohort_age_vol_hour", phase, hour)
 			fig.savefig(filename, dpi=DPI)
+	for phase in range(3):
+		for gkg in range(6):
+			fig = rhesus_gkg_onset_age_category(phase, gkg)
+			DPI = fig.get_dpi()
+			filename = output_path + '%s.Phase%d.gkg%d.png' % ("rhesus_gkg_onset_age_category", phase, gkg)
+			fig.savefig(filename, dpi=DPI)
+
 
 def create_christa_graphs():
 	import settings
