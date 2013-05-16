@@ -1079,27 +1079,27 @@ def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 	main_plot.legend(loc=0, scatterpoints=1)
 	return fig
 
-def __mtd_call_gkg_etoh(mtds):
+def _mtd_call_gkg_etoh(mtds):
 	avg = mtds.aggregate(Avg('mtd_etoh_g_kg'))['mtd_etoh_g_kg__avg']
 	return avg, "Average daily ethanol intake, g/kg"
 
-def __mtd_call_bec(mtds):
+def _mtd_call_bec(mtds):
 	avg = mtds.aggregate(Avg('bec_record__bec_mg_pct'))['bec_record__bec_mg_pct__avg']
 	return avg, "Average BEC value"
 
-def __mtd_call_over_3gkg(mtds):
+def _mtd_call_over_3gkg(mtds):
 	count = mtds.filter(mtd_etoh_g_kg__gte=3).count()
 	return count, "Days over 3 g/kg"
 
-def __mtd_call_over_4gkg(mtds):
+def _mtd_call_over_4gkg(mtds):
 	count = mtds.filter(mtd_etoh_g_kg__gte=4).count()
 	return count, "Days over 4 g/kg"
 
-def __mtd_call_max_bout_vol(mtds):
+def _mtd_call_max_bout_vol(mtds):
 	avg = mtds.aggregate(Avg('mtd_max_bout_vol'))['mtd_max_bout_vol__avg']
 	return avg, "Average Maximum Bout Volume"
 
-def __mtd_call_max_bout_vol_pct(mtds):
+def _mtd_call_max_bout_vol_pct(mtds):
 	avg = mtds.aggregate(Avg('mtd_pct_max_bout_vol_total_etoh'))['mtd_pct_max_bout_vol_total_etoh__avg']
 	return avg, "Average Maximum Bout, as % of total intake"
 #--
@@ -1717,7 +1717,7 @@ def rhesus_gkg_onset_age_category(phase, gkg_onset):
 	main_plot = fig.add_subplot(main_gs[:,:])
 	main_plot.set_title(titles[phase])
 	main_plot.set_xlabel("Age at first %d gkg consumption" % gkg_onset)
-	main_plot, label = _rhesus_gkg_age_mtd_general(main_plot, phase, gkg_onset, __mtd_call_gkg_etoh)
+	main_plot, label = _rhesus_gkg_age_mtd_general(main_plot, phase, gkg_onset, _mtd_call_gkg_etoh)
 	main_plot.set_ylabel(label)
 	main_plot.legend(loc=0, scatterpoints=1)
 	return fig
@@ -1852,7 +1852,7 @@ def create_age_graphs():
 	output_path = settings.STATIC_ROOT
 	output_path = os.path.join(output_path, "images/christa/")
 	cohort_age_mtd_general_sets = \
-	[__mtd_call_gkg_etoh, __mtd_call_bec, __mtd_call_over_3gkg, __mtd_call_over_4gkg, __mtd_call_max_bout_vol, __mtd_call_max_bout_vol_pct]
+	[_mtd_call_gkg_etoh, _mtd_call_bec, _mtd_call_over_3gkg, _mtd_call_over_4gkg, _mtd_call_max_bout_vol, _mtd_call_max_bout_vol_pct]
 	for method in cohort_age_mtd_general_sets:
 		for phase in range(3):
 			fig = cohort_age_mtd_general(phase, method)
