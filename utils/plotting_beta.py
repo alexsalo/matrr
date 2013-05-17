@@ -1447,17 +1447,28 @@ def rhesus_oa_pelletvolume_perday_perkg():
 	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 3)
 	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
+
+	# main scatterplot, pellet vs etoh
 	subplot = fig.add_subplot(main_gs[:])
-	inset_plot = fig.add_axes([0.6,0.7,0.37,0.23])
-	inset_plot, handles, labels = _rhesus_category_scatterplot(inset_plot, _oa_pelletwater_perday_perkg)
-	inset_plot.set_title("H20 Intake vs pellets")
-	inset_plot.set_ylabel("Pellets/Weight/Monkey")
-	inset_plot.set_xlabel("Water/Weight/Monkey")
 	subplot, handles, labels = _rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
 	subplot.legend(handles, labels, scatterpoints=1, loc='lower left')
 	subplot.set_title("EtOH Intake vs pellets")
 	subplot.set_ylabel("Average pellet / Average weight, per monkey")
 	subplot.set_xlabel("Average volume / Average weight, per monkey")
+
+	# inset scatterplot, pellet vs water
+	inset_plot = fig.add_axes([0.6,0.7,0.37,0.23])
+	inset_plot, handles, labels = _rhesus_category_scatterplot(inset_plot, _oa_pelletwater_perday_perkg)
+	inset_plot.set_title("H20 Intake vs pellets")
+	inset_plot.set_ylabel("Pellets/Weight/Monkey")
+	inset_plot.set_xlabel("Water/Weight/Monkey")
+	## Because the legend is almost the same as the main subplot's legend, we dont need to show most of the keys
+	## but we do want to show the regression fit, and large enough to read without hiding the scatterplot
+	for index, label in enumerate(labels):
+		if 'Fit' in label:
+			break
+	inset_legend = inset_plot.legend([handles[index]], [labels[index]], scatterpoints=1, loc='upper right')
+	inset_legend.get_frame().set_alpha(0) # hide the legend's background, so it doesn't hide the scatterplot
 	return fig
 
 def rhesus_thirds_oa_pelletvolume_perday_perkg():
