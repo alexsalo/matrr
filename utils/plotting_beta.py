@@ -1727,9 +1727,9 @@ def rhesus_gkg_onset_age_category(phase, gkg_onset):
 	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
 	main_plot = fig.add_subplot(main_gs[:,:])
 	main_plot.set_title(titles[phase])
-	main_plot.set_xlabel("Age at first %d gkg consumption" % gkg_onset)
+	main_plot.set_ylabel("Age at first %d gkg consumption" % gkg_onset)
 	main_plot, label = _rhesus_gkg_age_mtd_general(main_plot, phase, gkg_onset, _mtd_call_gkg_etoh)
-	main_plot.set_ylabel(label)
+	main_plot.set_xlabel(label)
 	main_plot.legend(loc=0, scatterpoints=1)
 	return fig
 
