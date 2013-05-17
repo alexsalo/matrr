@@ -1711,9 +1711,9 @@ def _rhesus_gkg_age_mtd_general(subplot, phase, gkg_onset, mtd_callable_yvalue_g
 			age_at_gkg_onset = (min_gkg_onset_date - monkey.mky_birthdate).days / 365.25
 			if phase:
 				monkey_mtds = monkey_mtds.filter(**{oa_phases[phase]:cohort_1st_oa_end[monkey.cohort.pk]})
-			x.append(age_at_gkg_onset)
+			y.append(age_at_gkg_onset)
 			value, label = mtd_callable_yvalue_generator(monkey_mtds)
-			y.append(value)
+			x.append(value)
 		color = rhesus_colors[key]
 		subplot.scatter(x, y, label=key, color=color, s=150)
 		create_convex_hull_polygon(subplot, x, y, color)
