@@ -729,7 +729,7 @@ def review_history_list(request):
 def review_overview_list(request):
 	# get a list of all tissue requests that are submitted, but not accepted or rejected
 
-	req_requests = Request.objects.submitted()
+	req_requests = Request.objects.submitted().order_by('req_request_date')
 	# get a list of all reviewers
 	overviewers = Account.objects.users_with_perm('change_review')
 	for req_request in req_requests:
@@ -1390,7 +1390,7 @@ def shipping_history_user(request, user_id):
 def shipping_overview(request):
 	#Requests Pending Shipment
 	accepted_requests = Request.objects.none()
-	for req_request in Request.objects.accepted_and_partially():
+	for req_request in Request.objects.accepted_and_partially().order_by('req_request_date'):
 		if req_request.is_missing_shipments():
 			if request.user.has_perm('matrr.change_shipment') or (req_request.contains_genetics() and request.user.has_perm('matrr.ship_genetics')):
 				accepted_requests |= Request.objects.filter(pk=req_request.pk)
