@@ -1146,7 +1146,7 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 	ax1 = fig.add_subplot(111)
 
 
-	mkys = cohort.monkey_set.exclude(mky_drinking=False).values_list('pk', flat=True) # I'd rather have used bec_records to pull the monkey ids, but .distinct() was returning distinct bec records, not distinct monkeys
+	mkys = bec_records.order_by().values_list('monkey__pk', flat=True).distinct()
 	mky_count = float(mkys.count())
 
 	cmap = get_cmap('jet')
@@ -1169,6 +1169,9 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 			ax1.scatter(res[:,0],res[:,1], marker='x', s=300, linewidths=3, c=color)
 			centeroids.append([res[:,0][0], res[:,1][0]])
 		except LinAlgError as e: # I'm not sure what about kmeans2() causes this, or how to avoid it
+			# todo: logging.error('blah')
+			pass
+		except ValueError as e: # "Input has 0 items" has occurred
 			# todo: logging.error('blah')
 			pass
 
