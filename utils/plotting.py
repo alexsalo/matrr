@@ -807,7 +807,7 @@ def cohort_etoh_bihourly_treemap(cohort, from_date=None, to_date=None, dex_type=
 	tree = list()
 	color_tree = list()
 
-	monkeys = cohort.monkey_set.filter(mky_drinking=True)
+	monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
 	mtd_count = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys).count()
 	if not mtd_count:
 		print 'This cohort has no MTDs'
@@ -912,7 +912,7 @@ def cohort_etoh_induction_cumsum(cohort, stage=1):
 		except Cohort.DoesNotExist:
 			print("That's not a valid cohort.")
 			return False, False
-	monkeys = cohort.monkey_set.filter(mky_drinking=True)
+	monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
 
 	stages = dict()
 	stages[0] = Q(eev_dose__lte=1.5)
@@ -969,7 +969,7 @@ def cohort_etoh_gkg_quadbar(cohort):
 		main_plot = fig.add_subplot(main_gs[_sub], sharey=main_plot)
 		main_plot.set_title("Greater than %d g per kg Etoh" % gkg)
 
-		monkeys = cohort.monkey_set.filter(mky_drinking=True).values_list('pk', flat=True)
+		monkeys = Monkey.objects.Drinkers().filter(cohort=cohort).values_list('pk', flat=True)
 		data = list()
 		colors = list()
 		for i, mky in enumerate(monkeys):
@@ -1031,7 +1031,7 @@ def cohort_bec_bout_general(cohort, x_axis, x_axis_label, from_date=None, to_dat
 	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = fig.add_subplot(111)
 
-	mkys = cohort.monkey_set.filter(mky_drinking=True).values_list('pk', flat=True)
+	mkys = Monkey.objects.Drinkers().filter(cohort=cohort).values_list('pk', flat=True)
 	mky_count = float(mkys.count())
 
 	cmap = get_cmap('jet')
@@ -1261,7 +1261,7 @@ def cohort_bec_monthly_centroid_distance_general(cohort, mtd_x_axis, mtd_y_axis,
 	else:
 		return False, False
 
-	monkeys = cohort.monkey_set.exclude(mky_drinking=False)
+	monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
 
 	cmap = get_cmap('jet')
 	month_count = float(len(dates))
@@ -3264,7 +3264,7 @@ def create_daily_cumsum_graphs():
 			plot_method = 'cohort_etoh_induction_cumsum'
 			params = str({'stage': stage})
 			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=plot_method, title=COHORT_PLOTS[plot_method][1], parameters=params, canonical=True)
-		for monkey in cohort.monkey_set.filter(mky_drinking=True):
+		for monkey in Monkey.objects.Drinkers().filter(cohort=cohort):
 			plot_method = 'monkey_etoh_induction_cumsum'
 			monkey_image, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method=plot_method, title=MONKEY_PLOTS[plot_method][1], canonical=True)
 
