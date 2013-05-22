@@ -1493,7 +1493,7 @@ def shipment_detail(request, shipment_id):
 								 					  4) User has no pending research update requests.")
 			else:
 				try:
-					shipment_status = shipment.ship(request.user)
+					shipment_status = shipment.ship_to_user(request.user)
 				except PermissionDenied as pd:
 					messages.error(request, str(pd))
 				else:

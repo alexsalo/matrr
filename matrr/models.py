@@ -8,7 +8,7 @@ import settings
 from django.core.files.base import File
 from django.core.mail.message import EmailMessage
 from django.db import models
-from django.db.models import Q, Min, Max, Avg, Sum
+from django.db.models import Q, Min, Max, Avg, Sum, Count
 from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, pre_delete, pre_save
@@ -1859,26 +1859,25 @@ class Shipment(models.Model):
 			return True
 		return False
 
-
-	def ship(self, user):
+	def ship_to_user(self, sending_user):
 		if self.contains_genetics():
 			if self.shp_shipment_status == ShipmentStatus.Unshipped:
-				return self._send(user) # staff user sent the tissue to the DNA/RNA processing facility
+				return self._send_to_DNA_processing(sending_user) # staff user sent the tissue to the DNA/RNA processing facility
 			if self.shp_shipment_status == ShipmentStatus.Genetics:
 				# if the user isn't part of the DNA processing facility, raise a permission exception
-				if not user.has_perm('matrr.ship_genetics'):
+				if not sending_user.has_perm('matrr.ship_genetics'):
 					raise PermissionDenied("User does not have permission to ship genetic tissues.")
 				# otherwise behave normally, because this tissue is either not genetic, or is being shipped with appropriate permissions.
 		self.shp_shipment_date = datetime.today()
-		self.user = user
+		self.user = sending_user
 		self.shp_shipment_status = ShipmentStatus.Shipped
 		self.save()
 		return self.shp_shipment_status
 
-	def _send(self, user):
+	def _send_to_DNA_processing(self, sending_user):
 		# updates self to indicate it has been sent to the DNA processing facility
 		self.shp_shipment_date = datetime.today()
-		self.user = user
+		self.user = sending_user
 		self.shp_shipment_status = ShipmentStatus.Genetics
 		self.save()
 		return self.shp_shipment_status
