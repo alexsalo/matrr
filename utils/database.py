@@ -468,6 +468,75 @@ def dump_monkey_protein_data(queryset, output_file):
 	else:
 		raise Exception("queryset kwarg can only be a QuerySet of MonkeyProteins.")
 
+def dump_MATRR_stats():
+	"""
+	Returns a string
+
+	String contains MATRR stats for each year (ending May 31) since project launch (2010)
+
+	Stats include:
+	New user signups
+	Submitted+ request count
+	Requested tissue count
+	Accepted tissue count
+	Rejected tissue count
+	Shipped shipment count
+	Shipped tissue count
+	Cohort count
+	Monkey count
+	Brain tissue inventory count (total)
+	Peripheral tissue inventory count (total)
+	"""
+	accepted = ['AC', 'PA','SH']
+	official = ['SB', 'RJ', 'AC', 'PA','SH']
+	project_start = 2010
+	current_year = datetime.now().year if datetime.now().month < 6 else datetime.now().year+1
+	dates = [("%s-06-01" % `year`,"%s-05-31" % `year+1`) for year in range(project_start, current_year)]
+
+	requests = Request.objects.filter(req_status__in=official)
+
+	output = ''
+	for start_date, end_date in dates:
+		output += "For the daterange %s -> %s:\n" % (start_date, end_date)
+		yearly_requests = requests.filter(req_request_date__gte=start_date).filter(req_request_date__lte=end_date)
+		# User stats
+		output += "Users joined: %d\n" % User.objects.filter(date_joined__gte=start_date).filter(date_joined__lte=end_date).count()
+		# Request stats
+		for o in official:
+			output += "%s Requests: %d\n"% (o, yearly_requests.filter(req_status=o).count())
+		# requested tissue stats
+		requested_tissues = yearly_requests.aggregate(Count('tissue_request_set__monkeys'))['tissue_request_set__monkeys__count']
+		output += "Requested Tissues: %d\n" % requested_tissues
+		# accepted tissue stats
+		approved_yearly_requests = yearly_requests.filter(req_status__in=accepted)
+		approved_tissues = approved_yearly_requests.aggregate(Count('tissue_request_set__monkeys'))['tissue_request_set__monkeys__count']
+		output += "Accepted Tissues: %d\n" % approved_tissues
+		# rejected tissue stats
+		rejected_yearly_requests = yearly_requests.filter(req_status='RJ')
+		rejected_tissues = rejected_yearly_requests.aggregate(Count('tissue_request_set__monkeys'))['tissue_request_set__monkeys__count']
+		partially_requested = 0
+		partially_accepted = 0
+		for part_acc in yearly_requests.filter(req_status="PA"):
+			partially_requested += part_acc.tissue_request_set.all().aggregate(Count('monkeys'))['monkeys__count']
+			partially_accepted += part_acc.tissue_request_set.all().aggregate(Count('accepted_monkeys'))['accepted_monkeys__count']
+		rejected_tissues += (partially_requested - partially_accepted)
+		output += "Rejcted Tissues: %d\n" % rejected_tissues
+		# shipment stats
+		yearly_shipments = Shipment.objects.filter(shp_shipment_date__gte=start_date).filter(shp_shipment_date__lte=end_date)
+		output += "Shipped Shipments: %d\n" % yearly_shipments.count()
+		output += "Shipped Tissues: %d\n" % yearly_shipments.aggregate(Count('tissue_request_set__monkeys'))['tissue_request_set__monkeys__count']
+		output += '-------\n'
+	# Cohort/Monkey stats
+	output += "Number of Cohorts:  %d\n" % Cohort.objects.all().count()
+	output += "Number of Monkeys:  %d\n" % Monkey.objects.all().count()
+	# inventory stats
+	available_monkey_count = Monkey.objects.filter(cohort__coh_upcoming=False).count()
+	brain_tissue_count = TissueType.objects.filter(category__cat_name='Brain Tissues').count()
+	peripheral_tissue_count = TissueType.objects.filter(category__cat_name="Peripheral Tissues").count() + 1 # +1 is an internal 'serum' tissue in the "Interal Peripheral Tissue" category
+	output += "Brain Tissue Inventory: %d tissues\n" % (brain_tissue_count * available_monkey_count)
+	output += "Peripheral Tissue Inventory: %d tissues\n" % (peripheral_tissue_count * available_monkey_count)
+	return output
+
 def load_monkey_data(input_file):
 	input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
 	columns = input_data.next()
