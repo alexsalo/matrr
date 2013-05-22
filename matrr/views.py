@@ -2369,7 +2369,7 @@ def tools_monkey_etoh(request, monkey_method): # pick a cohort
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_monkey_etoh_graphs(request, monkey_method, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
-	drinking_monkeys = cohort.monkey_set.filter(mky_drinking=True)
+	drinking_monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
 	context = {'cohort': cohort}
 
 	if request.method == 'POST':
@@ -2466,7 +2466,7 @@ def tools_monkey_bec(request, monkey_method): # pick a cohort
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
 def tools_monkey_bec_graphs(request, monkey_method, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
-	drinking_monkeys = cohort.monkey_set.filter(mky_drinking=True)
+	drinking_monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
 	context = {'cohort': cohort}
 
 	if request.method == 'POST':
