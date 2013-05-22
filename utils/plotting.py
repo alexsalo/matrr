@@ -804,50 +804,49 @@ def cohort_etoh_bihourly_treemap(cohort, from_date=None, to_date=None, dex_type=
 		except TypeError:
 			return 'white'
 
+	monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
+
+	cohort_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys)
+	from_date, to_date = validate_dates(from_date, to_date)
+	if from_date:
+		cohort_mtds = cohort_mtds.filter(drinking_experiment__dex_date__gte=from_date)
+	if to_date:
+		cohort_mtds = cohort_mtds.filter(drinking_experiment__dex_date__lte=to_date)
+	if dex_type:
+		cohort_mtds = cohort_mtds.filter(drinking_experiment__dex_type=dex_type)
+	cohort_bouts = ExperimentBout.objects.filter(mtd__in=cohort_mtds)
+
+	if not cohort_mtds.count() or not cohort_bouts.count():
+		return False, False
+
+	monkey_pks = []
+	hour_const = 0
+	experiment_len = 22
+	block_len = 2
 	tree = list()
 	color_tree = list()
-
-	monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
-	mtd_count = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys).count()
-	if not mtd_count:
-		print 'This cohort has no MTDs'
-		return False, False
-	monkey_pks = []
 	for monkey in monkeys:
 		monkey_pks.append(str(monkey.pk))
-		hour_const = 0
-		experiment_len = 22
-		block_len = 2
-
-		monkey_exp = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
-
-		from_date, to_date = validate_dates(from_date, to_date)
-		if from_date:
-			monkey_exp = monkey_exp.filter(drinking_experiment__dex_date__gte=from_date)
-		if to_date:
-			monkey_exp = monkey_exp.filter(drinking_experiment__dex_date__lte=to_date)
-		if dex_type:
-			monkey_exp = monkey_exp.filter(drinking_experiment__dex_type=dex_type)
+		monkey_mtds = cohort_mtds.filter(monkey=monkey)
+		num_days = monkey_mtds.order_by().values_list('drinking_experiment__dex_date').distinct().count()
 
 		monkey_bar = list()
 		color_monkey_bar = list()
 		for hour_start in range(hour_const,hour_const + experiment_len, block_len ):
-
 			hour_end = hour_start + block_len
-
 			fraction_start = (hour_start-hour_const)*60*60
 			fraction_end = (hour_end-hour_const)*60*60
 
-			bouts_in_fraction = ExperimentBout.objects.filter(mtd__in=monkey_exp, ebt_start_time__gte=fraction_start, ebt_start_time__lte=fraction_end)
+			bouts_in_fraction = cohort_bouts.filter(mtd__in=monkey_mtds, ebt_start_time__gte=fraction_start, ebt_start_time__lte=fraction_end)
 			mtds_in_fraction = MonkeyToDrinkingExperiment.objects.filter(mtd_id__in=bouts_in_fraction.values_list('mtd', flat=True).distinct())
 			volume_sum = bouts_in_fraction.aggregate(Sum('ebt_volume'))['ebt_volume__sum']
 
 			field_name = 'mtd_pct_max_bout_vol_total_etoh_hour_%d' % (hour_start/2)
-			bout_pct_total = mtds_in_fraction.exclude(**{field_name:None}).values_list(field_name, flat=True)
+			max_bout_pct_total = mtds_in_fraction.exclude(**{field_name:None}).values_list(field_name, flat=True)
 
-			if bout_pct_total:
-				bout_pct_total = numpy.array(bout_pct_total)
-				avg_max_bout_pct_total = numpy.mean(bout_pct_total)
+			if max_bout_pct_total:
+				max_bout_pct_total = numpy.array(max_bout_pct_total)
+				avg_max_bout_pct_total = numpy.mean(max_bout_pct_total)
 			else:
 				avg_max_bout_pct_total = 0
 
@@ -856,7 +855,6 @@ def cohort_etoh_bihourly_treemap(cohort, from_date=None, to_date=None, dex_type=
 			if not avg_max_bout_pct_total:
 				avg_max_bout_pct_total = 0.01
 
-			num_days = monkey_exp.values_list('drinking_experiment__dex_date').distinct().count()
 			if (num_days * block_len) == 0:
 				avg_vol_per_hour = 0.01
 			else:
@@ -864,8 +862,7 @@ def cohort_etoh_bihourly_treemap(cohort, from_date=None, to_date=None, dex_type=
 
 			monkey_bar.append(avg_vol_per_hour)
 			color_monkey_bar.append(avg_max_bout_pct_total)
-			if avg_max_bout_pct_total > max_color:
-				max_color = avg_max_bout_pct_total
+			max_color = max(max_color, avg_max_bout_pct_total)
 		tree.append(tuple(monkey_bar))
 		color_tree.append(tuple(color_monkey_bar))
 	tree = tuple(tree)
