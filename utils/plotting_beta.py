@@ -4,6 +4,7 @@ import numpy
 from matplotlib import pyplot, gridspec, ticker, cm, patches
 from scipy import cluster, stats
 import operator
+from numpy.linalg import LinAlgError
 from matrr.models import *
 from utils import plotting, apriori
 from collections import defaultdict
@@ -538,7 +539,6 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
 	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
 	cohorts = [_7a, _5, _4]
-	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	_phase = 'mtd__drinking_experiment__dex_date__gt' if phase == 2 else 'mtd__drinking_experiment__dex_date__lte'
 
 	title_append = " Phase %d Open Access" % phase if phase else " All Open Access"
@@ -571,7 +571,7 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
 			for monkey in monkeys:
 				bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
 				if phase:
-					bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
+					bouts = bouts.filter(**{_phase:rhesus_1st_oa_end[cohort.pk]})
 				bout_vols = bouts.values_list('ebt_volume', flat=True)
 				bouts_sum = numpy.array(bout_vols).sum()
 	#			bout_starts = bout_starts - diff
@@ -598,7 +598,6 @@ def cohorts_daytime_bouts_histogram_split(phase):
 	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
 	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
 	cohorts = [_7a, _5, _4]
-	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	_phase = 'mtd__drinking_experiment__dex_date__gt' if phase == 2 else 'mtd__drinking_experiment__dex_date__lte'
 
 	title_append = " Phase %d Open Access" % phase if phase else " All Open Access"
@@ -620,7 +619,7 @@ def cohorts_daytime_bouts_histogram_split(phase):
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
 			bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
 			if phase:
-				bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
+				bouts = bouts.filter(**{_phase:rhesus_1st_oa_end[cohort.pk]})
 			bout_starts = bouts.values_list('ebt_start_time', flat=True)
 			bout_starts = numpy.array(bout_starts)
 			y_axes.append(bout_starts)
@@ -648,7 +647,6 @@ def cohorts_maxbouts_histogram(phase):
 	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
 	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
 	cohorts = [_7a, _5, _4]
-	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	_phase = 'drinking_experiment__dex_date__gt' if phase == 2 else 'drinking_experiment__dex_date__lte'
 
 	title_append = " Phase %d Open Access" % phase if phase else " All Open Access"
@@ -669,7 +667,7 @@ def cohorts_maxbouts_histogram(phase):
 		for monkey in cohort.monkey_set.exclude(mky_drinking=False):
 			mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment__dex_type='Open Access', monkey=monkey)
 			if phase:
-				mtds = mtds.filter(**{_phase:cohort_1st_oa_end[cohort]})
+				mtds = mtds.filter(**{_phase:rhesus_1st_oa_end[cohort.pk]})
 			mtd_maxes = mtds.values_list('mtd_max_bout_vol', flat=True)
 			mtd_maxes = numpy.array(mtd_maxes)
 			try:
@@ -692,7 +690,6 @@ def cohorts_scatterbox_split(phase):
 	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
 	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
 	cohorts = [_7a, _5, _4]
-	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	_phase = 'mtd__drinking_experiment__dex_date__gt' if phase == 2 else 'mtd__drinking_experiment__dex_date__lte'
 
 	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
@@ -713,7 +710,7 @@ def cohorts_scatterbox_split(phase):
 			mky_sums = list()
 			for monkey in monkeys:
 				bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time+_1_hour)
-				bouts = bouts.filter(**{_phase:cohort_1st_oa_end[cohort]})
+				bouts = bouts.filter(**{_phase:rhesus_1st_oa_end[cohort.pk]})
 				bout_vols = bouts.values_list('ebt_volume', flat=True)
 				mky_sum = numpy.array(bout_vols).sum()
 				mky_sums.append(mky_sum)
@@ -789,7 +786,6 @@ def cohort_age_vol_hour(phase, hours): # phase = 0-2
 	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
 	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
 	cohorts = [_7a, _5, _4]
-	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	oa_phases = ['', 'eev_occurred__lte', 'eev_occurred__gt']
 	colors = ["orange", 'blue', 'green']
 	scatter_markers = ['s', 'D', 'v']
@@ -813,7 +809,7 @@ def cohort_age_vol_hour(phase, hours): # phase = 0-2
 
 			eevs = ExperimentEvent.objects.filter(dex_type='Open Access', monkey=monkey).exclude(eev_etoh_volume=None).exclude(eev_etoh_volume=0)
 			if phase:
-				eevs = eevs.filter(**{oa_phases[phase]: cohort_1st_oa_end[cohort]})
+				eevs = eevs.filter(**{oa_phases[phase]:rhesus_1st_oa_end[cohort.pk]})
 			eevs = eevs.filter(eev_session_time__lt=hours*60*60)
 			eev_count = eevs.dates('eev_occurred', 'day').count()*1.
 			eev_vol = eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
@@ -1049,7 +1045,6 @@ def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 	_5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5') # young adults
 	_4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4') # adults
 	cohorts = [_7a, _5, _4]
-	cohort_1st_oa_end = {_7a: "2011-08-01", _5:"2009-10-13", _4:"2009-05-24"}
 	oa_phases = ['', 'drinking_experiment__dex_date__lte', 'drinking_experiment__dex_date__gt']
 	colors = ["orange", 'blue', 'green']
 	scatter_markers = ['s', 'D', 'v']
@@ -1070,7 +1065,7 @@ def cohort_age_mtd_general(phase, mtd_callable_yvalue_generator): # phase = 0-2
 			age = monkey.mky_age_at_intox / 365.25
 			mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
 			if phase:
-				mtds = mtds.filter(**{oa_phases[phase]:cohort_1st_oa_end[cohort]})
+				mtds = mtds.filter(**{oa_phases[phase]:rhesus_1st_oa_end[cohort.pk]})
 			x.append(age)
 			value, label = mtd_callable_yvalue_generator(mtds)
 			y.append(value)
@@ -1105,6 +1100,7 @@ def _mtd_call_max_bout_vol_pct(mtds):
 #--
 
 rhesus_keys = ['VHD', 'HD', 'MD', 'LD']
+rhesus_1st_oa_end = {10: "2011-08-01", 9: '2012-01-08', 6:"2009-10-13", 5:"2009-05-24"}
 
 rhesus_drinkers = dict()
 rhesus_drinkers['LD'] = [10048, 10052, 10055, 10056, 10058, 10083, 10084, 10085, 10089, 10090, 10092] # all drinking monkeys in 5,6,9,10 not listed below
@@ -1118,7 +1114,7 @@ rhesus_drinkers_distinct['MD'] = [10057, 10087, 10059, 10054, 10086 ,10051, 1006
 rhesus_drinkers_distinct['HD'] = [10082, 10049, 10064, 10097, 10065, 10067]
 rhesus_drinkers_distinct['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062]
 
-all_rhesus_drinkers = [x for d in rhesus_drinkers_distinct.itervalues() for x in d]
+all_rhesus_drinkers = [__x for __d in rhesus_drinkers_distinct.itervalues() for __x in __d]
 
 rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
 
@@ -1693,13 +1689,11 @@ def rhesus_hourly_gkg_boxplot_by_category():
 	subplot.set_xlabel("Hour of session")
 	return fig
 
-def _rhesus_gkg_age_mtd_general(subplot, phase, gkg_onset, mtd_callable_yvalue_generator): # phase = 0-2
-	cohort_1st_oa_end = {10: "2011-08-01", 9: '2012-01-08', 6:"2009-10-13", 5:"2009-05-24"}
+def _rhesus_gkg_age_mtd_general(subplot, phase, gkg_onset, mtd_callable_xvalue_generator): # phase = 0-2
 	oa_phases = ['', 'drinking_experiment__dex_date__lte', 'drinking_experiment__dex_date__gt']
-	cohort_markers = {10:'s', 9:'D', 6:'v', 5:'x'}
 
 	label = ''
-	for i, key in enumerate(rhesus_keys):
+	for key in rhesus_keys:
 		x = list()
 		y = list()
 		for monkey_pk in rhesus_drinkers_distinct[key]:
@@ -1710,9 +1704,9 @@ def _rhesus_gkg_age_mtd_general(subplot, phase, gkg_onset, mtd_callable_yvalue_g
 				continue
 			age_at_gkg_onset = (min_gkg_onset_date - monkey.mky_birthdate).days / 365.25
 			if phase:
-				monkey_mtds = monkey_mtds.filter(**{oa_phases[phase]:cohort_1st_oa_end[monkey.cohort.pk]})
+				monkey_mtds = monkey_mtds.filter(**{oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
 			y.append(age_at_gkg_onset)
-			value, label = mtd_callable_yvalue_generator(monkey_mtds)
+			value, label = mtd_callable_xvalue_generator(monkey_mtds)
 			x.append(value)
 		color = rhesus_colors[key]
 		subplot.scatter(x, y, label=key, color=color, s=150)
@@ -1732,6 +1726,144 @@ def rhesus_gkg_onset_age_category(phase, gkg_onset):
 	main_plot.set_xlabel(label)
 	main_plot.legend(loc=0, scatterpoints=1)
 	return fig
+
+def _rhesus_bec_age_mtd_general(subplot, phase, bec_onset, mtd_callable_xvalue_generator): # phase = 0-2
+	mtd_oa_phases = ['', 'drinking_experiment__dex_date__lte', 'drinking_experiment__dex_date__gt']
+	bec_oa_phases = ['', 'bec_collect_date__lte', 'bec_collect_date__gt']
+
+	label = ''
+	for key in rhesus_keys:
+		x = list()
+		y = list()
+		for monkey_pk in rhesus_drinkers_distinct[key]:
+			monkey = Monkey.objects.get(pk=monkey_pk)
+			monkey_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
+			monkey_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
+			if phase:
+				monkey_becs = monkey_becs.filter(**{mtd_oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
+				monkey_mtds = monkey_mtds.filter(**{bec_oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
+
+			min_bec_onset_date = monkey_becs.filter(bec_mg_pct__gte=bec_onset).aggregate(Min('bec_collect_date'))['bec_collect_date__min']
+			if not min_bec_onset_date:
+				continue
+			age_at_bec_onset = (min_bec_onset_date.date() - monkey.mky_birthdate).days / 365.25
+			y.append(age_at_bec_onset)
+
+			value, label = mtd_callable_xvalue_generator(monkey_mtds)
+			x.append(value)
+		color = rhesus_colors[key]
+		subplot.scatter(x, y, label=key, color=color, s=150)
+		if len(x) > 1:
+			create_convex_hull_polygon(subplot, x, y, color)
+	return subplot, label
+
+def rhesus_bec_onset_age_category(phase, bec_onset):
+	assert 0 <= phase <= 2
+	titles = ["Open Access, 12 months", "Open Access, 1st Six Months", "Open Access, 2nd Six Months"]
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot.set_title(titles[phase])
+	main_plot.set_ylabel("Age at first %d bec reading" % bec_onset)
+	main_plot, label = _rhesus_bec_age_mtd_general(main_plot, phase, bec_onset, _mtd_call_gkg_etoh)
+	main_plot.set_xlabel(label)
+	main_plot.legend(loc=0, scatterpoints=1)
+	return fig
+
+def rhesus_OA_bec_pellettime_scatter(phase): # phase = 0-2
+	oa_phases = ['', 'bec_collect_date__lte', 'bec_collect_date__gt']
+
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot.set_title("BEC vs Time Between Pellets")
+	main_plot.set_xlabel("BEC")
+	main_plot.set_ylabel("Daily Average Hours Between Pellets")
+
+	for key in rhesus_keys:
+		x_axis = list()
+		y_axis = list()
+		for monkey_pk in rhesus_drinkers_distinct[key]:
+			monkey = Monkey.objects.get(pk=monkey_pk)
+			becs = MonkeyBEC.objects.OA().filter(monkey=monkey_pk).order_by('pk')
+			if phase:
+				becs = becs.filter(**{oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
+			seconds = numpy.array(becs.values_list('mtd__mtd_mean_seconds_between_pellets', flat=True))
+			try:
+#				y_axis.extend([(s-sample_time[stage])/(60*60) for s in seconds]) # time between end of drinking and sample taken
+				y_axis.extend(seconds/(60*60)) # time between end of drinking and sample taken
+			except:
+				print "skipping monkey %d" % monkey.pk
+				continue
+			x_axis.extend(becs.values_list('bec_mg_pct', flat=True))
+
+
+		color = rhesus_colors[key]
+		main_plot.scatter(x_axis, y_axis, label=key, color=color, s=15, alpha=.1)
+		create_convex_hull_polygon(main_plot, x_axis, y_axis, color)
+		try:
+			res, idx = cluster.vq.kmeans2(numpy.array(zip(x_axis, y_axis)), 1)
+			main_plot.scatter(res[:,0][0], res[:,1][0], color=color, marker=rhesus_markers[key], alpha=1, s=300, label="%s Centroid" % key, zorder=5)
+		except LinAlgError as e: # I'm not sure what about kmeans2() causes this, or how to avoid it
+			# todo: logging.error('blah')
+			pass
+		except ValueError as e: # "Input has 0 items" has occurred
+			# todo: logging.error('blah')
+			pass
+
+	main_plot.legend(loc=9, ncol=4, scatterpoints=1)
+	main_plot.set_xlim(xmin=0)
+	main_plot.set_ylim(ymin=0)
+	return fig
+
+def rhesus_OA_bec_pelletcount_scatter(phase): # phase = 0-2
+	oa_phases = ['', 'bec_collect_date__lte', 'bec_collect_date__gt']
+
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot.set_title("BEC vs Total Pellets")
+	main_plot.set_xlabel("BEC")
+	main_plot.set_ylabel("Daily Total Pellets")
+
+	for key in rhesus_keys:
+		x_axis = list()
+		y_axis = list()
+		for monkey_pk in rhesus_drinkers_distinct[key]:
+			monkey = Monkey.objects.get(pk=monkey_pk)
+			becs = MonkeyBEC.objects.OA().filter(monkey=monkey_pk).order_by('pk')
+			if phase:
+				becs = becs.filter(**{oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
+			pellet_count = numpy.array(becs.values_list('mtd__mtd_total_pellets', flat=True))
+			try:
+				y_axis.extend(pellet_count)
+			except:
+				print "skipping monkey %d" % monkey.pk
+				continue
+			x_axis.extend(becs.values_list('bec_mg_pct', flat=True))
+
+
+		color = rhesus_colors[key]
+		main_plot.scatter(x_axis, y_axis, label=key, color=color, s=15, alpha=.1)
+#		create_convex_hull_polygon(main_plot, x_axis, y_axis, color)
+		try:
+			res, idx = cluster.vq.kmeans2(numpy.array(zip(x_axis, y_axis)), 1)
+			main_plot.scatter(res[:,0][0], res[:,1][0], color=color, marker=rhesus_markers[key], alpha=1, s=300, label="%s Centroid" % key, zorder=5)
+		except LinAlgError as e: # I'm not sure what about kmeans2() causes this, or how to avoid it
+			# todo: logging.error('blah')
+			pass
+		except ValueError as e: # "Input has 0 items" has occurred
+			# todo: logging.error('blah')
+			pass
+
+	main_plot.legend(loc=9, ncol=4, scatterpoints=1)
+	main_plot.set_xlim(xmin=0)
+	main_plot.set_ylim(ymin=0)
+	return fig
+
 
 #---
 #plot
@@ -1818,7 +1950,7 @@ def confederate_boxplots(confederates, bout_column):
 #data
 def return_confeds(pk, minutes):
 	return apriori.get_confederate_groups(pk, minutes, min_confidence=0)
-#analyze data
+#analyze datas
 def analyze_MBA(pk, minutes):
 	confeds = return_confeds(pk, minutes)
 	monkey_scores = dict()
