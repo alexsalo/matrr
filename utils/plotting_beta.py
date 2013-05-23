@@ -1771,6 +1771,130 @@ def rhesus_bec_onset_age_category(phase, bec_onset):
 	main_plot.legend(loc=0, scatterpoints=1)
 	return fig
 
+def _rhesus_bec_age_mtd_regression(phase, bec_onset, mtd_callable_xvalue_generator): # phase = 0-2
+	mtd_oa_phases = ['', 'drinking_experiment__dex_date__lte', 'drinking_experiment__dex_date__gt']
+	bec_oa_phases = ['', 'bec_collect_date__lte', 'bec_collect_date__gt']
+
+	x = list()
+	y = list()
+	label = ''
+	for key in rhesus_keys:
+		for monkey_pk in rhesus_drinkers_distinct[key]:
+			monkey = Monkey.objects.get(pk=monkey_pk)
+			monkey_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
+			monkey_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
+			if phase:
+				monkey_becs = monkey_becs.filter(**{mtd_oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
+				monkey_mtds = monkey_mtds.filter(**{bec_oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
+
+			min_bec_onset_date = monkey_becs.filter(bec_mg_pct__gte=bec_onset).aggregate(Min('bec_collect_date'))['bec_collect_date__min']
+			if not min_bec_onset_date:
+				continue
+			age_at_bec_onset = (min_bec_onset_date.date() - monkey.mky_birthdate).days / 365.25
+			y.append(age_at_bec_onset)
+
+			value, label = mtd_callable_xvalue_generator(monkey_mtds)
+			x.append(value)
+	x = numpy.array(x)
+	y = numpy.array(y)
+	regression_data = stats.linregress(x, y) # slope, intercept, r_value, p_value, std_err = regression_data
+	regression = (x, regression_data)
+	return regression, label
+
+def _rhesus_bec_age_mtd_regression_centroids(phase, bec_onset, mtd_callable_xvalue_generator): # phase = 0-2
+	mtd_oa_phases = ['', 'drinking_experiment__dex_date__lte', 'drinking_experiment__dex_date__gt']
+	bec_oa_phases = ['', 'bec_collect_date__lte', 'bec_collect_date__gt']
+
+	centroid_x = list()
+	centroid_y = list()
+	label = ''
+	for key in rhesus_keys:
+		data_x = list()
+		data_y = list()
+		for monkey_pk in rhesus_drinkers_distinct[key]:
+			monkey = Monkey.objects.get(pk=monkey_pk)
+			monkey_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
+			monkey_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
+			if phase:
+				monkey_becs = monkey_becs.filter(**{mtd_oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
+				monkey_mtds = monkey_mtds.filter(**{bec_oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
+
+			min_bec_onset_date = monkey_becs.filter(bec_mg_pct__gte=bec_onset).aggregate(Min('bec_collect_date'))['bec_collect_date__min']
+			if not min_bec_onset_date:
+				continue
+			age_at_bec_onset = (min_bec_onset_date.date() - monkey.mky_birthdate).days / 365.25
+			data_y.append(age_at_bec_onset)
+
+			value, label = mtd_callable_xvalue_generator(monkey_mtds)
+			data_x.append(value)
+		try:
+			res, idx = cluster.vq.kmeans2(numpy.array(zip(data_x, data_y)), 1)
+		except Exception as e:
+			print e
+			continue
+		centroid_x.append(res[:,0][0])
+		centroid_y.append(res[:,1][0])
+	x = numpy.array(centroid_x)
+	y = numpy.array(centroid_y)
+
+	regression_data = stats.linregress(x, y) # slope, intercept, r_value, p_value, std_err = regression_data
+	regression = (x, regression_data)
+	return regression, label
+
+def rhesus_bec_onset_age_category_regressions(phase):
+	assert 0 <= phase <= 2
+	titles = ["BEC Regression Comparison, Open Access, 12 months", "BEC Regression Comparison, Open Access, 1st Six Months", "BEC Regression Comparison, Open Access, 2nd Six Months"]
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot.set_title(titles[phase])
+	main_plot.set_ylabel("Age at first bec reading")
+
+	cmap = plotting.get_cmap('jet')
+	bec_values = range(40, 260, 20)
+	bec_colors = dict()
+	for idx, bec in enumerate(bec_values):
+		bec_colors[bec] = cmap(idx / (len(bec_values)-1.))
+	xlabel = ''
+	for bec_onset in range(40, 260, 20):
+		regression, xlabel = _rhesus_bec_age_mtd_regression(phase, bec_onset, _mtd_call_gkg_etoh)
+		x_values, regression_data = regression
+		slope, intercept, r_value, p_value, std_err = regression_data
+		reg_label = "BEC Onset=%d, Fit: r=%f, p=%f" % (bec_onset, r_value, p_value)
+		main_plot.plot(x_values, x_values*slope+intercept, color=bec_colors[bec_onset], label=reg_label, linewidth=5, alpha=.7)
+
+	main_plot.set_xlabel(xlabel)
+	main_plot.legend(loc=0, scatterpoints=1)
+	return fig
+
+def rhesus_bec_onset_age_category_regressions_centroids(phase):
+	assert 0 <= phase <= 2
+	titles = ["BEC Centroid Regression Comparison, Open Access, 12 months", "BEC Centroid Regression Comparison, Open Access, 1st Six Months", "BEC Centroid Regression Comparison, Open Access, 2nd Six Months"]
+	fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(3, 40)
+	main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot.set_title(titles[phase])
+	main_plot.set_ylabel("Age at first bec reading")
+
+	cmap = plotting.get_cmap('jet')
+	bec_values = range(40, 260, 20)
+	bec_colors = dict()
+	for idx, bec in enumerate(bec_values):
+		bec_colors[bec] = cmap(idx / (len(bec_values)-1.))
+	xlabel = ''
+	for bec_onset in range(40, 260, 20):
+		regression, xlabel = _rhesus_bec_age_mtd_regression_centroids(phase, bec_onset, _mtd_call_gkg_etoh)
+		x_values, regression_data = regression
+		slope, intercept, r_value, p_value, std_err = regression_data
+		reg_label = "BEC Onset=%d, Fit: r=%f, p=%f" % (bec_onset, r_value, p_value)
+		main_plot.plot(x_values, x_values*slope+intercept, color=bec_colors[bec_onset], label=reg_label, linewidth=5, alpha=.7)
+
+	main_plot.set_xlabel(xlabel)
+	main_plot.legend(loc=0, scatterpoints=1)
+	return fig
+
 def rhesus_OA_bec_pellettime_scatter(phase): # phase = 0-2
 	oa_phases = ['', 'bec_collect_date__lte', 'bec_collect_date__gt']
 
