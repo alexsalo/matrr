@@ -1118,12 +1118,15 @@ all_rhesus_drinkers = [__x for __d in rhesus_drinkers_distinct.itervalues() for 
 
 rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
 
-cmap = plotting.get_cmap('gist_rainbow')
+cmap = plotting.get_cmap('cool_r')
 rhesus_colors = dict()
 for idx, key in enumerate(rhesus_keys):
 	rhesus_colors[key] = cmap(idx / (len(rhesus_drinkers.keys())-1.))
 rhesus_colors_hex = {'VHD': '#ff0029', 'LD': '#ff00bf', 'HD': '#5cff00', 'MD': '#008fff'}
-
+rhesus_monkey_colors = dict()
+for key in rhesus_keys:
+	for monkey_pk in rhesus_drinkers_distinct[key]:
+		rhesus_monkey_colors[monkey_pk] = rhesus_colors[key]
 
 def rhesus_etoh_gkg_histogram():
 	mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__cohort__in=[5,6,9,10])
@@ -1987,6 +1990,155 @@ def rhesus_OA_bec_pelletcount_scatter(phase): # phase = 0-2
 	main_plot.set_xlim(xmin=0)
 	main_plot.set_ylim(ymin=0)
 	return fig
+
+def _rhesus_etoh_max_bout_cumsum(subplot):
+#	VHD_LD = rhesus_drinkers_distinct['VHD']
+#	VHD_LD.extend(rhesus_drinkers_distinct['LD'])
+#	mkys = Monkey.objects.filter(pk__in=VHD_LD)
+	mkys = Monkey.objects.filter(pk__in=all_rhesus_drinkers)
+
+	subplot.set_title("Induction St. 3 Cumulative Max Bout EtOH Intake for cohorts 4/5/7a/7b")
+	subplot.set_ylabel("Volume EtOH / Monkey Weight, ml/kg")
+
+	mky_ymax = dict()
+	for idx, m in enumerate(mkys):
+		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m, drinking_experiment__dex_type="Induction").exclude(mtd_max_bout_vol=None).order_by('drinking_experiment__dex_date')
+		mtds = mtds.filter(mtd_etoh_g_kg__gte=1.4).filter(mtd_etoh_g_kg__lte=1.6)
+		if not mtds.count():
+			continue
+		volumes = numpy.array(mtds.values_list('mtd_max_bout_vol', flat=True))
+		weights = numpy.array(mtds.values_list('mtd_weight', flat=True))
+		vw_div = volumes / weights
+		yaxis = numpy.cumsum(vw_div)
+		mky_ymax[m] = yaxis[-1]
+		xaxis = numpy.arange(mtds.values_list('drinking_experiment__dex_date', flat=True).distinct().count())
+		subplot.plot(xaxis, yaxis, alpha=1, linewidth=3, color=rhesus_monkey_colors[m.pk], label=str(m.pk))
+	pyplot.setp(subplot.xaxis.get_majorticklabels(), rotation=45 )
+	if not len(mky_ymax.values()):
+		raise Exception("no MTDs found")
+	return subplot, mky_ymax
+
+def _rhesus_etoh_horibar_ltgkg(subplot, mky_ymax):
+	subplot.set_title("Lifetime EtOH Intake for cohorts 4/5/7a/7b")
+	subplot.set_xlabel("EtOH Intake, g/kg")
+
+	sorted_ymax = sorted(mky_ymax.iteritems(), key=operator.itemgetter(1))
+
+	bar_height = max(mky_ymax.itervalues()) / len(mky_ymax.keys()) / 5.
+	bar_widths = list()
+	bar_y = list()
+	bar_colors = list()
+	for mky, ymax in sorted_ymax:
+		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_intake=None)
+		etoh_sum = mtds.aggregate(Sum('mtd_etoh_g_kg'))['mtd_etoh_g_kg__sum']
+		bar_widths.append(etoh_sum)
+		bar_colors.append(rhesus_monkey_colors[mky.pk])
+		if len(bar_y):
+			highest_bar = bar_y[len(bar_y)-1]+bar_height
+		else:
+			highest_bar = 0+bar_height
+		if ymax > highest_bar:
+			bar_y.append(ymax)
+		else:
+			bar_y.append(highest_bar)
+	subplot.barh(bar_y, bar_widths, height=bar_height, color=bar_colors)
+	subplot.set_yticks([])
+	subplot.xaxis.set_major_locator(plotting.MaxNLocator(4, prune='lower'))
+	pyplot.setp(subplot.xaxis.get_majorticklabels(), rotation=45 )
+	return subplot
+
+def _rhesus_etoh_horibar_3gkg(subplot, mky_ymax):
+	subplot.set_title("# days over 3 g/kg")
+
+	sorted_ymax = sorted(mky_ymax.iteritems(), key=operator.itemgetter(1))
+
+	bar_height = max(mky_ymax.itervalues()) / len(mky_ymax.keys()) / 5.
+	bar_3widths = list()
+	bar_y = list()
+	bar_colors = list()
+	for mky, ymax in sorted_ymax:
+		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_intake=None)
+		bar_3widths.append(mtds.filter(mtd_etoh_g_kg__gt=3).count())
+		bar_colors.append(rhesus_monkey_colors[mky.pk])
+		if len(bar_y):
+			highest_bar = bar_y[len(bar_y)-1]+bar_height
+		else:
+			highest_bar = 0+bar_height
+		if ymax > highest_bar:
+			bar_y.append(ymax)
+		else:
+			bar_y.append(highest_bar)
+	subplot.barh(bar_y, bar_3widths, height=bar_height, color=bar_colors)
+	subplot.set_yticks([])
+	subplot.xaxis.set_major_locator(plotting.MaxNLocator(4, prune='lower'))
+	pyplot.setp(subplot.xaxis.get_majorticklabels(), rotation=45 )
+	return subplot
+
+def _rhesus_etoh_horibar_4gkg(subplot, mky_ymax):
+	subplot.set_title("# days over 4 g/kg")
+	sorted_ymax = sorted(mky_ymax.iteritems(), key=operator.itemgetter(1))
+	bar_height = max(mky_ymax.itervalues()) / len(mky_ymax.keys()) / 5.
+	bar_4widths = list()
+	bar_y = list()
+	bar_colors = list()
+	for mky, ymax in sorted_ymax:
+		mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_intake=None)
+		bar_4widths.append(mtds.filter(mtd_etoh_g_kg__gt=4).count())
+		bar_colors.append(rhesus_monkey_colors[mky.pk])
+		if len(bar_y):
+			highest_bar = bar_y[len(bar_y)-1]+bar_height
+		else:
+			highest_bar = 0+bar_height
+		if ymax > highest_bar:
+			bar_y.append(ymax)
+		else:
+			bar_y.append(highest_bar)
+	subplot.barh(bar_y, bar_4widths, height=bar_height, color=bar_colors)
+	subplot.set_yticks([])
+	subplot.xaxis.set_major_locator(plotting.MaxNLocator(4, prune='lower'))
+	pyplot.setp(subplot.xaxis.get_majorticklabels(), rotation=45 )
+	return subplot
+
+def rhesus_etoh_max_bout_cumsum_horibar_3gkg():
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	gs = gridspec.GridSpec(3, 3)
+	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
+	line_subplot = fig.add_subplot(gs[:,:2])
+	try:
+		line_subplot, mky_ymax = _rhesus_etoh_max_bout_cumsum(line_subplot)
+	except:
+		return None, False
+	bar_subplot = fig.add_subplot(gs[:,2:], sharey=line_subplot)
+	bar_subplot = _rhesus_etoh_horibar_3gkg(bar_subplot, mky_ymax)
+	return fig, None
+
+def rhesus_etoh_max_bout_cumsum_horibar_4gkg():
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	gs = gridspec.GridSpec(3, 3)
+	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
+	line_subplot = fig.add_subplot(gs[:,:2])
+	try:
+		line_subplot, mky_ymax = _rhesus_etoh_max_bout_cumsum(line_subplot)
+	except:
+		return None, False
+	bar_subplot = fig.add_subplot(gs[:,2:], sharey=line_subplot)
+	bar_subplot = _rhesus_etoh_horibar_4gkg(bar_subplot, mky_ymax)
+	return fig, None
+
+def rhesus_etoh_max_bout_cumsum_horibar_ltgkg():
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	gs = gridspec.GridSpec(3, 3)
+	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
+	line_subplot = fig.add_subplot(gs[:,:2])
+	try:
+		line_subplot, mky_ymax = _rhesus_etoh_max_bout_cumsum(line_subplot)
+	except:
+		return None, False
+	bar_subplot = fig.add_subplot(gs[:,2:], sharey=line_subplot)
+	bar_subplot = _rhesus_etoh_horibar_ltgkg(bar_subplot, mky_ymax)
+	return fig, None
+
+
 
 
 #---
