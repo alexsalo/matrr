@@ -2673,7 +2673,7 @@ def tools_sandbox_familytree(request):
 		shape = 'circle' if node[1]['shape_input'] == 'F' else 'square'
 		return shape
 
-	me = FamilyNode.objects.exclude(sire=None, dam=None)[0]
+	me = FamilyNode.objects.get(pk=12)
 	tree = ExampleFamilyTree(me)
 
 	tree.visual_style.discrete_node_shapes(shape_method=male_female_shape)

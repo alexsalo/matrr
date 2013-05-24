@@ -148,6 +148,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^tools/sandbox/$', tools_sandbox, name='tools-sandbox'),
 	url(r'^tools/sandbox/chord$', tools_sandbox_chord_diagram, name='tools-sandbox-chord'),
 	url(r'^tools/sandbox/adjacency$', tools_sandbox_adjacency_matrix, name='tools-sandbox-adjacency'),
+	url(r'^tools/sandbox/genealogy/$', tools_sandbox_familytree, name='tools-genealogy'),
 	url(r'^tools/supersandbox/$', tools_supersandbox, name='tools-supersandbox'),
 
 	url(r'^tools/protein/$', tools_protein, name='tools-protein'),
