@@ -1591,9 +1591,9 @@ def rhesus_oa_pellettime_vs_gkg():
 		x_data = list()
 		y_data = list()
 		for monkey in monkey_set:
-			_mtds = mtds.filter(monkey=monkey).aggregate(Avg('mtd_mean_seconds_between_pellets'), Avg('mtd_etoh_g_kg'))
+			_mtds = mtds.filter(monkey=monkey).aggregate(Avg('mtd_mean_seconds_between_meals'), Avg('mtd_etoh_g_kg'))
 			x_data.append(_mtds['mtd_etoh_g_kg__avg'])
-			y_data.append(_mtds['mtd_mean_seconds_between_pellets__avg'])
+			y_data.append(_mtds['mtd_mean_seconds_between_meals__avg'])
 		return x_data, y_data
 
 	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
@@ -1917,7 +1917,7 @@ def rhesus_OA_bec_pellettime_scatter(phase): # phase = 0-2
 			becs = MonkeyBEC.objects.OA().filter(monkey=monkey_pk).order_by('pk')
 			if phase:
 				becs = becs.filter(**{oa_phases[phase]:rhesus_1st_oa_end[monkey.cohort.pk]})
-			seconds = numpy.array(becs.values_list('mtd__mtd_mean_seconds_between_pellets', flat=True))
+			seconds = numpy.array(becs.values_list('mtd__mtd_mean_seconds_between_meals', flat=True))
 			try:
 #				y_axis.extend([(s-sample_time[stage])/(60*60) for s in seconds]) # time between end of drinking and sample taken
 				y_axis.extend(seconds/(60*60)) # time between end of drinking and sample taken

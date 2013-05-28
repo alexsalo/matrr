@@ -918,7 +918,26 @@ class ExperimentEvent(models.Model):
 	eev_veh_drink_number = models.PositiveIntegerField('H20 drink number', blank=True, null=True)
 	eev_timing_comment = models.CharField('Timing comment or possibly post pellet flag', max_length=50, blank=True, null=True)
 
+	eev_pct_etoh = models.FloatField('EtOH %', help_text="EtOH intake at event as a percentage of total drinking.", default=None, blank=False, null=True)
 	mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
+
+	def _populate_eev_pct_etoh(self, recalculate=False, save=True):
+		if self.eev_pct_etoh is None or recalculate:
+			my_eevs = ExperimentEvent.objects.filter(monkey=self.monkey)
+			todays_eevs = my_eevs.filter(eev_occurred__year=self.eev_occurred.year, eev_occurred__month=self.eev_occurred.month, eev_occurred__day=self.eev_occurred.day)
+			earlier_eevs = todays_eevs.filter(eev_session_time__lt=self.eev_session_time)
+			todays_volume = todays_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+			current_volume = earlier_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+			if current_volume and todays_volume:
+				self.eev_pct_etoh = current_volume / todays_volume
+			else:
+				self.eev_pct_etoh = 0
+			if save:
+				self.save()
+
+	def populate_fields(self, recalculate=False):
+		self._populate_eev_pct_etoh(recalculate=recalculate, save=False)
+		self.save()
 
 	class Meta:
 		db_table = 'eev_experiment_events'
