@@ -695,7 +695,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 	mtd_pct_max_bout_vol_total_etoh_hour_10 = models.FloatField('Max Bout in 11th hour, as Volume % of Total Etoh', blank=True, null=True, help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
 
 	mtd_seconds_to_stageone = models.IntegerField('Stage One Time (s)', blank=True, null=True, default=None, help_text="Seconds it took for monkey to reach day's ethanol allotment")
-	mtd_mean_seconds_between_pellets = models.FloatField('Mean seconds between pellets.', blank=True, null=True, help_text='Average time between pellet distributions, in seconds')
+	mtd_mean_seconds_between_meals = models.FloatField('Mean seconds between meals.', blank=True, null=True, help_text='Average time between pellet meals, in seconds')
 	mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	def __unicode__(self):
@@ -745,12 +745,18 @@ class MonkeyToDrinkingExperiment(models.Model):
 			if save:
 				self.save()
 
-	def _populate_mtd_mean_seconds_between_pellets(self, save=True):
+	def _populate_mtd_mean_seconds_between_meals(self, save=True):
 		dex_date = self.drinking_experiment.dex_date
+		# eevs == All monkey events on this date
 		eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=dex_date.year, eev_occurred__month=dex_date.month, eev_occurred__day=dex_date.day)
+		# pellet_eevs = all monkey pellet events on this date
+		pellet_eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
+		# meal_pellets = monkey pellets whose time since last pellet > 117 minutes.
+		# meal_pellets is the first pellet of a meal, after the 2 hour timeout
+		meal_pellets = pellet_eevs.exclude(eev_pellet_time__lte=7020)
 		if not eevs:
 			return
-		self.mtd_mean_seconds_between_pellets = eevs.aggregate(Avg('eev_pellet_time'))['eev_pellet_time__avg']
+		self.mtd_mean_seconds_between_pellets = meal_pellets.aggregate(Avg('eev_pellet_time'))['eev_pellet_time__avg']
 		if save:
 			self.save()
 
