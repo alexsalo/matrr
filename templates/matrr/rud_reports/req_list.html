@@ -19,7 +19,7 @@
 			<td style='text-align:center'><a href="{% url cohort-details req.cohort.pk %}">{{ req.cohort }}</a></td>
 			<td style='text-align:center'>{{ req.get_max_shipment.shp_shipment_date|date:"SHORT_DATE_FORMAT" }}</td>
 			<td style='text-align:center'>{% for shipment in req.shipments.all %}<a href="{% url shipment-detail shipment.pk %}">{{ shipment.pk }}</a>,{% endfor %}</td>
-			<td style="text-align:center;background-color:{{ req.get_overdue_rud_color }}">{{ req.req_report_asked_count }}</td>
+			<td style="text-align:center;background-color:{{ req.get_overdue_rud_color }}">{{ req.req.get_rud_weeks_overdue  }}</td>
 		</tr>
 	{% endfor %}
 	</table>
