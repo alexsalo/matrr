@@ -120,8 +120,8 @@ urlpatterns += patterns('matrr.views',
 	# Research update pages
 	url(r'^rud/$', rud_update, name='rud-upload'),
 	url(r'^rud/(?P<rud_id>\d+)', rud_detail, name='rud-detail'),
-	url(r'^rud/list$', research_update_list, name='rud-list'),
-	url(r'^rud/overdue$', research_update_overdue, name='rud-overdue'),
+	url(r'^rud/list$', rud_list, name='rud-list'),
+	url(r'^rud/overdue$', rud_overdue, name='rud-overdue'),
 	url(r'^rud/in_progress$', rud_progress, name='rud-in-progress'),
 	url(r'^rud/complete$', rud_progress, name='rud-complete'),
 

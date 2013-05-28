@@ -1950,7 +1950,7 @@ def rud_detail(request, rud_id):
 	return render_to_response('matrr/rud_reports/rud_detail.html', {'rud': rud}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
-def research_update_list(request):
+def rud_list(request):
 	pending_ruds = ResearchUpdate.objects.all().order_by('req_request', 'rud_date')
 	paginator = Paginator(pending_ruds, 20)
 
@@ -1969,7 +1969,7 @@ def research_update_list(request):
 	return render_to_response('matrr/rud_reports/rud_list.html', {'rud_list': rud_list}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
-def research_update_overdue(request):
+def rud_overdue(request):
 	pending_ruds = Request.objects.shipped().filter(rud_set=None).order_by('-req_report_asked_count', 'req_request_date')
 	paginator = Paginator(pending_ruds, 20)
 
