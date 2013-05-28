@@ -1970,7 +1970,10 @@ def rud_list(request):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
 def rud_overdue(request):
-	pending_ruds = Request.objects.shipped().filter(rud_set=None).order_by('-req_report_asked_count', 'req_request_date')
+	pending_ruds = list()
+	for req in Request.objects.shipped().order_by('-req_report_asked_count', 'req_request_date'):
+		if req.is_rud_overdue():
+			pending_ruds.append(req)
 	paginator = Paginator(pending_ruds, 20)
 
 	if request.GET and 'page' in request.GET:

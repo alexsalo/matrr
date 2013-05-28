@@ -141,7 +141,7 @@ def urge_po_mta():
 # regular_tasks
 def urge_progress_reports():
 	way_overdue = False
-	shipped_requests = Request.objects.shipped().exclude(rud_set__rud_progress=ResearchProgress.Complete)
+	shipped_requests = Request.objects.shipped()
 	for req in shipped_requests:
 		if not req.is_rud_overdue():
 			continue
