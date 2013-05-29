@@ -756,7 +756,7 @@ class MonkeyToDrinkingExperiment(models.Model):
 		meal_pellets = pellet_eevs.exclude(eev_pellet_time__lte=7020)
 		if not eevs:
 			return
-		self.mtd_mean_seconds_between_pellets = meal_pellets.aggregate(Avg('eev_pellet_time'))['eev_pellet_time__avg']
+		self.mtd_mean_seconds_between_meals= meal_pellets.aggregate(Avg('eev_pellet_time'))['eev_pellet_time__avg']
 		if save:
 			self.save()
 
