@@ -922,6 +922,12 @@ class ExperimentEvent(models.Model):
 	mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
 	def _populate_eev_pct_etoh(self, recalculate=False, save=True):
+		"""
+		rhesus_meal_pellets = ExperimentEvent.objects.filter(eev_event_type=ExperimentEventType.Pellet, monkey__cohort__in=[5,6,9,10]).filter(eev_pellet_time__gt=1.95*60*60)
+
+		for eev in rhesus_meal_pellets:
+			eev.populate_fields()
+		"""
 		if self.eev_pct_etoh is None or recalculate:
 			my_eevs = ExperimentEvent.objects.filter(monkey=self.monkey)
 			todays_eevs = my_eevs.filter(eev_occurred__year=self.eev_occurred.year, eev_occurred__month=self.eev_occurred.month, eev_occurred__day=self.eev_occurred.day)
