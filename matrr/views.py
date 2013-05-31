@@ -2649,7 +2649,15 @@ def tools_sandbox_chord_diagram(request):
 
 @user_passes_test(lambda u: u.is_staff, login_url='/denied/')
 def tools_sandbox_adjacency_matrix(request):
-	""" http://bost.ocks.org/mike/miserables/ """
+	"""
+	Based on: http://bost.ocks.org/mike/miserables/
+
+	Important Note:
+	The data to create the adjacency matrix is pre-rendered and stored in the /static/js/ folder, filename="%d.RAN.json" % cohort_pk.
+
+	The data is rendered using the utils/plotting_beta/RhesusAdjacencyNetwork() object.  This class was moved here from the matrr/helper.py file
+	to alleviate a circular reference.
+	"""
 	d3_redirect = request.GET.get('d3_redirect', '')
 	if d3_redirect == 'chord':
 		return redirect(reverse('tools-sandbox-chord'))
