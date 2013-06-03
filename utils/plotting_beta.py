@@ -1,5 +1,6 @@
 import copy
 from django.db.models import Sum
+import itertools
 import numpy
 from matplotlib import pyplot, gridspec, ticker, cm, patches
 from scipy import cluster, stats
@@ -8,6 +9,7 @@ from numpy.linalg import LinAlgError
 from matrr.models import *
 from utils import plotting, apriori
 from collections import defaultdict
+import networkx as nx
 
 def create_convex_hull_polygon(subplot, xvalues, yvalues, color):
 	from matrr.helper import convex_hull
@@ -1118,11 +1120,8 @@ all_rhesus_drinkers = [__x for __d in rhesus_drinkers_distinct.itervalues() for 
 
 rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
 
-cmap = plotting.get_cmap('cool_r')
-rhesus_colors = dict()
-for idx, key in enumerate(rhesus_keys):
-	rhesus_colors[key] = cmap(idx / (len(rhesus_drinkers.keys())-1.))
-rhesus_colors_hex = {'VHD': '#ff0029', 'LD': '#ff00bf', 'HD': '#5cff00', 'MD': '#008fff'}
+rhesus_colors = {'LD': 'orange', 'MD': 'blue', "HD": "green", 'VHD': 'red'}
+rhesus_colors_hex = {'LD': '#FF6600', 'MD': '#0000FF', 'HD': '#008000', 'VHD': '#FF0000'}
 rhesus_monkey_colors = dict()
 for key in rhesus_keys:
 	for monkey_pk in rhesus_drinkers_distinct[key]:
@@ -2138,7 +2137,141 @@ def rhesus_etoh_max_bout_cumsum_horibar_ltgkg():
 	bar_subplot = _rhesus_etoh_horibar_ltgkg(bar_subplot, mky_ymax)
 	return fig, None
 
+def rhesus_etoh_pellettime_bec():
+	size_min = plotting.DEFAULT_CIRCLE_MIN
+	size_scale = plotting.DEFAULT_CIRCLE_MAX*2 - size_min
 
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	gs = gridspec.GridSpec(3, 3)
+	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
+	scatter_subplot = fig.add_subplot(gs[:,:])
+
+	all_x = list()
+	all_y = list()
+	all_size = list()
+	max_size = 0
+	for key in rhesus_keys:
+		monkeys = Monkey.objects.filter(pk__in=rhesus_drinkers_distinct[key])
+		x_values = list()
+		y_values = list()
+		size_values = list()
+		for mky in monkeys:
+			_mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=mky).aggregate(Avg('mtd_mean_seconds_between_meals'), Avg('mtd_etoh_g_kg'))
+			_becs = MonkeyBEC.objects.OA().filter(monkey=mky).aggregate(Avg('bec_mg_pct'))
+			x_values.append(_mtds['mtd_etoh_g_kg__avg'])
+			y_values.append(_mtds['mtd_mean_seconds_between_meals__avg'])
+			size = _becs['bec_mg_pct__avg']
+			size_values.append(size)
+			max_size = max(size, max_size)
+		all_x.append(x_values)
+		all_y.append(y_values)
+		all_size.append(size_values)
+	for key, x_values, y_values, size_values in zip(rhesus_keys, all_x, all_y, all_size):
+		rescaled_sizes = [ (b/max_size)*size_scale+size_min for b in size_values ] # exaggerated and rescaled, so that circles will be in range (size_min, size_scale)
+		scatter_subplot.scatter(x_values, y_values, c=rhesus_colors[key], s=rescaled_sizes, alpha=1, label=key)
+		create_convex_hull_polygon(scatter_subplot, x_values, y_values, rhesus_colors[key])
+
+	all_x_values = numpy.hstack(all_x)
+	all_y_values = numpy.hstack(all_y)
+	slope, intercept, r_value, p_value, std_err = stats.linregress(all_x_values, all_y_values)
+	reg_label = "Fit: r=%f, p=%f" % (r_value, p_value)
+	scatter_subplot.plot(all_x_values, all_x_values*slope+intercept, color='black', label=reg_label)
+	scatter_subplot.legend(loc=0, scatterpoints=1)
+
+	scatter_subplot.set_ylabel("Mean Seconds Between Meals, per day, per monkey")
+	scatter_subplot.set_xlabel("Ethanol Intake, in g/kg, per day, per monkey")
+
+	# size legend
+	x = numpy.array(range(1,6))
+	y = numpy.array([1,1,1,1,1])
+
+	size_m = size_scale/(len(y)-1)
+	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
+	size.insert(0,1+size_min)
+	size = numpy.array(size)
+
+	m = max_size/(len(y)-1)
+	size_labels = [ int(round(i*m)) for i in range(1, len(y))] # labels in the range as number of bouts
+	size_labels.insert(0,"1")
+	size_labels.insert(0, "")
+	size_labels.append("")
+
+	size_legend_subplot = fig.add_subplot(931)
+	size_legend_subplot.set_position((0.06, .90, .3, .06))
+	size_legend_subplot.scatter(x, y, s=size, alpha=0.4)
+	size_legend_subplot.set_xlabel("Average BEC, mg percent")
+	size_legend_subplot.yaxis.set_major_locator(plotting.NullLocator())
+	pyplot.setp(size_legend_subplot, xticklabels=size_labels)
+	#
+	return fig
+
+def rhesus_etoh_pellettime_pctetohmeal():
+	size_min = plotting.DEFAULT_CIRCLE_MIN
+	size_scale = plotting.DEFAULT_CIRCLE_MAX*2 - size_min
+
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	gs = gridspec.GridSpec(3, 3)
+	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
+	scatter_subplot = fig.add_subplot(gs[:,:])
+
+	all_x = list()
+	all_y = list()
+	all_size = list()
+	max_size = 0
+	for key in rhesus_keys:
+		monkeys = Monkey.objects.filter(pk__in=rhesus_drinkers_distinct[key])
+		x_values = list()
+		y_values = list()
+		size_values = list()
+		for mky in monkeys:
+			_mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=mky).aggregate(Avg('mtd_mean_seconds_between_meals'), Avg('mtd_etoh_g_kg'))
+			_eevs = ExperimentEvent.objects.OA().filter(monkey=mky).exclude(eev_pct_etoh=None).aggregate(Avg('eev_pct_etoh'))
+			x_values.append(_mtds['mtd_etoh_g_kg__avg'])
+			y_values.append(_mtds['mtd_mean_seconds_between_meals__avg'])
+			size = _eevs['eev_pct_etoh__avg']
+			size_values.append(size)
+			max_size = max(size, max_size)
+		all_x.append(x_values)
+		all_y.append(y_values)
+		all_size.append(size_values)
+	for key, x_values, y_values, size_values in zip(rhesus_keys, all_x, all_y, all_size):
+		rescaled_sizes = [ (b/max_size)*size_scale+size_min for b in size_values ] # exaggerated and rescaled, so that circles will be in range (size_min, size_scale)
+		scatter_subplot.scatter(x_values, y_values, c=rhesus_colors[key], s=rescaled_sizes, alpha=1, label=key)
+		create_convex_hull_polygon(scatter_subplot, x_values, y_values, rhesus_colors[key])
+
+	all_x_values = numpy.hstack(all_x)
+	all_y_values = numpy.hstack(all_y)
+	slope, intercept, r_value, p_value, std_err = stats.linregress(all_x_values, all_y_values)
+	reg_label = "Fit: r=%f, p=%f" % (r_value, p_value)
+	scatter_subplot.plot(all_x_values, all_x_values*slope+intercept, color='black', label=reg_label)
+	scatter_subplot.legend(loc=0, scatterpoints=1)
+
+	scatter_subplot.set_ylabel("Mean Seconds Between Meals, per day, per monkey")
+	scatter_subplot.set_xlabel("Ethanol Intake, in g/kg, per day, per monkey")
+
+	# size legend
+	x = numpy.array(range(1,6))
+	y = numpy.array([1,1,1,1,1])
+
+	size_m = size_scale/(len(y)-1)
+	size = [ int(round(i*size_m))+size_min for i in range(1, len(y))] # rescaled, so that circles will be in range (size_min, size_scale)
+	size.insert(0,1+size_min)
+	size = numpy.array(size)
+
+	m = max_size/(len(y)-1)
+	size_labels = [ "%.02f" % (100*m*i) for i in range(1, len(y))] # labels in the range as number of bouts
+	size_labels.insert(0,"0")
+	size_labels.insert(0, "")
+	size_labels.append("")
+
+	size_legend_subplot = fig.add_subplot(931)
+	size_legend_subplot.set_position((0.06, .90, .3, .06))
+	size_legend_subplot.scatter(x, y, s=size, alpha=0.4)
+	size_legend_subplot.set_xlabel("Average Percent of EtOH at meal pellet")
+	size_legend_subplot.yaxis.set_major_locator(plotting.NullLocator())
+	pyplot.setp(size_legend_subplot, xticklabels=size_labels)
+	#
+	return fig
 
 
 #---
@@ -2264,6 +2397,181 @@ def rhesus_confederate_boxplots(minutes):
 #--
 
 
+class RhesusAdjacencyNetwork():
+	network = None
+	__monkeys = None
+
+	def __init__(self, cohorts, graph=None):
+		self.network = graph if graph else nx.Graph()
+		self.__monkeys = Monkey.objects.Drinkers().filter(cohort__in=cohorts)
+
+		self.construct_network()
+
+	def dump_graphml(self):
+		return "".join(nx.generate_graphml(self.network))
+
+	def dump_JSON(self):
+		from networkx.readwrite import json_graph
+		return json_graph.dumps(self.network)
+
+	def construct_network(self):
+		self.build_nodes()
+		self.build_edges()
+		print 'Finished'
+
+	def build_nodes(self):
+		for mky in self.__monkeys:
+			self.add_node(mky)
+
+	def build_edges(self):
+		if not self.network.nodes():
+			raise Exception("Build nodes first")
+		for source_id in self.network.nodes():
+			for target_id in self.network.nodes():
+				if target_id == source_id:
+					continue
+				self.add_edge(source_id, target_id)
+
+	def _construct_node_data(self, mky, data=None):
+		#  IMPORTANT NOTE
+		# Data put in here _will_ be visible in the GraphML, and in turn the web page's source code
+		data = data if data else dict()
+		data['monkey'] = mky.pk
+		group = None
+		for key in rhesus_drinkers_distinct.iterkeys():
+			if mky.pk in rhesus_drinkers_distinct[key]:
+				break
+		if key == 'VHD':
+			group =  4
+		if key == 'HD':
+			group =  3
+		if key == 'MD':
+			group =  2
+		if key == 'LD':
+			group =  1
+
+		data['group'] = group
+		return data
+
+	def _construct_edge_data(self, source, target, data=None):
+		from matrr.models import CohortBout
+		#  IMPORTANT NOTE
+		# Data put in here _will_ be visible in the GraphML, and in turn the web page's source code
+		data = data if data else dict()
+#		data['source'] = source
+#		data['target'] = target
+		cbt_count = CohortBout.objects.filter(ebt_set__mtd__monkey=source).filter(ebt_set__mtd__monkey=target).distinct().count()
+		data['cbt_count'] = cbt_count
+		return data
+
+	def add_node(self, mky):
+		self.network.add_node(mky.pk, **self._construct_node_data(mky))
+
+	def add_edge(self, source, target):
+		self.network.add_edge(source, target, **self._construct_edge_data(source, target))
+
+
+def dump_RAN_json(cohort_pk=0, cohorts_pks=None):
+	cohorts = [cohort_pk] if cohort_pk else cohorts_pks
+	ran = RhesusAdjacencyNetwork(cohorts=cohorts)
+	json = ran.dump_JSON()
+	cohorts = [str(cohort) for cohort in cohorts]
+	cohorts = '_'.join(cohorts)
+	f = open('static/js/%s.RAN.json' % cohorts, 'w')
+	f.write(json)
+	f.close()
+
+
+def _kathy_correlation_bec_max_bout_general(subplot, becs, color='black', subject_title=''):
+	title = "Correlation between Max Bout Volume and BEC%s" % subject_title
+	x_label = "Max Bout Volume (ml), before BEC sample"
+	y_label = "BEC (mg pct)"
+	subplot.set_title(title)
+	subplot.set_xlabel(x_label)
+	subplot.set_ylabel(y_label)
+
+	x80_data = list()
+	y80_data = list()
+	x0_data = list()
+	y0_data = list()
+	for bec in becs:
+		try:
+			session_time_of_bec_sample = (datetime.combine(date.today(), bec.bec_sample) - datetime.combine(date.today(),bec.bec_session_start)).seconds
+		except TypeError as e:
+			continue
+		bouts_before_sample = bec.mtd.bouts_set.filter(ebt_start_time__lt=session_time_of_bec_sample, ebt_end_time__lt=session_time_of_bec_sample)
+		max_before_sample_bout_vol = bouts_before_sample.aggregate(Max('ebt_volume'))['ebt_volume__max']
+		if max_before_sample_bout_vol is None:
+			continue
+		if bec.bec_mg_pct > 80:
+			x80_data.append(max_before_sample_bout_vol)
+			y80_data.append(bec.bec_mg_pct)
+		else:
+			x0_data.append(max_before_sample_bout_vol)
+			y0_data.append(bec.bec_mg_pct)
+
+	subplot.scatter(x80_data, y80_data, c=color, alpha=.2, s=10, label='')
+	slope, intercept, r_value, p_value, std_err = stats.linregress(x80_data, y80_data)
+	reg_label = "Fit >80: r=%f, p=%f" % (r_value, p_value)
+	subplot.plot(x80_data, numpy.array(x80_data)*slope+intercept, color=color, label=reg_label, lw=3)
+
+	subplot.scatter(x0_data, y0_data, c=color, alpha=.2, s=10, label='')
+	slope, intercept, r_value, p_value, std_err = stats.linregress(x0_data, y0_data)
+	reg_label = "Fit <80: r=%f, p=%f" % (r_value, p_value)
+	subplot.plot(x0_data, numpy.array(x0_data)*slope+intercept, color=color, label=reg_label, lw=3, ls='dashdot')
+
+	subplot.axhspan(0, 81, color='black', alpha=.4, zorder=-100)
+	subplot.text(0, 82, "80 mg pct")
+	subplot.legend(loc=0, scatterpoints=1)
+	subplot.set_xlim(xmin=0)
+	subplot.set_ylim(ymin=0)
+	return subplot
+
+def kathy_correlation_bec_maxbout_pairwise_drinkinggroup():
+	figures = list()
+	labels = list()
+	for key1, key2 in itertools.combinations(rhesus_keys, 2):
+		fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+		gs = gridspec.GridSpec(3, 3)
+		gs.update(left=0.08, right=0.98, wspace=.00, hspace=0)
+		subplot = fig.add_subplot(gs[:,:])
+		subject_title = " for %s vs %s" % (key1, key2)
+		vhd_becs = MonkeyBEC.objects.filter(monkey__in=rhesus_drinkers_distinct[key1]).exclude(mtd=None)
+		subplot = _kathy_correlation_bec_max_bout_general(subplot, vhd_becs, rhesus_colors[key1], subject_title)
+		ld_becs = MonkeyBEC.objects.filter(monkey__in=rhesus_drinkers_distinct[key2]).exclude(mtd=None)
+		subplot = _kathy_correlation_bec_max_bout_general(subplot, ld_becs, rhesus_colors[key2], subject_title)
+		figures.append(fig)
+		labels.append("%s-%s" % (key1, key2))
+	return figures, labels
+
+def kathy_correlation_bec_maxbout_cohort(cohort=5):
+	figures = list()
+	subject_labels = list()
+	cohort_monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
+
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	gs = gridspec.GridSpec(3, 3)
+	gs.update(left=0.08, right=0.98, wspace=.00, hspace=0)
+	subplot = fig.add_subplot(gs[:,:])
+
+	subject_title = " for %s" % cohort_monkeys[0].cohort.coh_cohort_name
+	coh_becs = MonkeyBEC.objects.filter(monkey__in=cohort_monkeys).exclude(mtd=None)
+	subplot = _kathy_correlation_bec_max_bout_general(subplot, coh_becs, 'black', subject_title)
+	figures.append(fig)
+	subject_labels.append('cohort')
+	for mky in cohort_monkeys:
+		fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+		gs = gridspec.GridSpec(3, 3)
+		gs.update(left=0.08, right=0.98, wspace=.00, hspace=0)
+		subplot = fig.add_subplot(gs[:,:])
+
+		subject_title = " for Monkey %d" % mky.pk
+		mky_becs = MonkeyBEC.objects.filter(monkey=mky).exclude(mtd=None)
+		subplot = _kathy_correlation_bec_max_bout_general(subplot, mky_becs, rhesus_monkey_colors[mky.pk], subject_title)
+		figures.append(fig)
+		subject_labels.append(mky.pk)
+	return figures, subject_labels
+
 
 #----------------------
 def create_age_graphs():
@@ -2379,4 +2687,21 @@ def create_erich_graphs():
 	filename = output_path + '%s.png' % "rhesus_hourly_gkg_boxplot_by_category"
 	fig.savefig(filename, dpi=DPI)
 	"""
+
+def create_kathy_graphs():
+	import settings
+	output_path = settings.STATIC_ROOT
+	output_path = os.path.join(output_path, "images/kathy/")
+	for coh in [5,6,9,10]:
+		figures, labels = kathy_correlation_bec_maxbout_cohort(coh)
+		for fig, label in zip(figures, labels):
+			DPI = fig.get_dpi()
+			filename = output_path + '%s.%s.%s.png' % (str(coh), 'kathy_correlation_bec_maxbout_cohort', label)
+			fig.savefig(filename, dpi=DPI)
+
+	figures, labels = kathy_correlation_bec_maxbout_pairwise_drinkinggroup()
+	for fig, label in zip(figures, labels):
+		DPI = fig.get_dpi()
+		filename = output_path + '%s.%s.png' % ("kathy_correlation_bec_maxbout_pairwise_drinkinggroup", label)
+		fig.savefig(filename, dpi=DPI)
 
