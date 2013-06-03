@@ -2511,14 +2511,22 @@ def _kathy_correlation_bec_max_bout_general(subplot, becs, color='black', subjec
 			y0_data.append(bec.bec_mg_pct)
 
 	subplot.scatter(x80_data, y80_data, c=color, alpha=.2, s=10, label='')
-	slope, intercept, r_value, p_value, std_err = stats.linregress(x80_data, y80_data)
-	reg_label = "Fit >80: r=%f, p=%f" % (r_value, p_value)
-	subplot.plot(x80_data, numpy.array(x80_data)*slope+intercept, color=color, label=reg_label, lw=3)
+	try:
+		slope, intercept, r_value, p_value, std_err = stats.linregress(x80_data, y80_data)
+	except ValueError as e:
+		print e
+	else:
+		reg_label = "Fit >80: r=%f, p=%f" % (r_value, p_value)
+		subplot.plot(x80_data, numpy.array(x80_data)*slope+intercept, color=color, label=reg_label, lw=3)
 
 	subplot.scatter(x0_data, y0_data, c=color, alpha=.2, s=10, label='')
-	slope, intercept, r_value, p_value, std_err = stats.linregress(x0_data, y0_data)
-	reg_label = "Fit <80: r=%f, p=%f" % (r_value, p_value)
-	subplot.plot(x0_data, numpy.array(x0_data)*slope+intercept, color=color, label=reg_label, lw=3, ls='dashdot')
+	try:
+		slope, intercept, r_value, p_value, std_err = stats.linregress(x0_data, y0_data)
+	except ValueError as e:
+		print e
+	else:
+		reg_label = "Fit <80: r=%f, p=%f" % (r_value, p_value)
+		subplot.plot(x0_data, numpy.array(x0_data)*slope+intercept, color=color, label=reg_label, lw=3, ls='dashdot')
 
 	subplot.axhspan(0, 81, color='black', alpha=.4, zorder=-100)
 	subplot.text(0, 82, "80 mg pct")
