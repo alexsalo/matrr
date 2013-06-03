@@ -2679,7 +2679,7 @@ class MonkeyBEC(models.Model):
 	bec_exper = models.CharField('Experiment Type', max_length=20, null=True, blank=True)
 	bec_exper_day = models.IntegerField('Experiment Day', editable=False, null=True, blank=False)
 	bec_session_start = models.TimeField("Session Start", editable=False, null=True, blank=False)
-	bec_sample = models.TimeField("Session Start", editable=False, null=True, blank=False)
+	bec_sample = models.TimeField("Time of Sample", editable=False, null=True, blank=False)
 	bec_weight = models.FloatField("Monkey Weight (week)", null=True, blank=True)
 	bec_vol_etoh = models.FloatField("Etoh at sample time, ml", null=True, blank=True)
 	bec_gkg_etoh = models.FloatField("Etoh at sample time, g/kg", null=True, blank=True)
