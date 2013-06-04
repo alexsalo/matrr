@@ -1122,9 +1122,11 @@ rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
 
 rhesus_colors = {'LD': 'orange', 'MD': 'blue', "HD": "green", 'VHD': 'red'}
 rhesus_colors_hex = {'LD': '#FF6600', 'MD': '#0000FF', 'HD': '#008000', 'VHD': '#FF0000'}
+rhesus_monkey_category = dict()
 rhesus_monkey_colors = dict()
 for key in rhesus_keys:
 	for monkey_pk in rhesus_drinkers_distinct[key]:
+		rhesus_monkey_category[monkey_pk] = key
 		rhesus_monkey_colors[monkey_pk] = rhesus_colors[key]
 
 def rhesus_etoh_gkg_histogram():
@@ -2136,6 +2138,57 @@ def rhesus_etoh_max_bout_cumsum_horibar_ltgkg():
 	bar_subplot = fig.add_subplot(gs[:,2:], sharey=line_subplot)
 	bar_subplot = _rhesus_etoh_horibar_ltgkg(bar_subplot, mky_ymax)
 	return fig, None
+
+def rhesus_pellet_time_histogram():
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	fig.suptitle("Meal Distribution")
+	gs = gridspec.GridSpec(2, 2)
+	gs.update(left=0.05, right=0.985, wspace=.05, hspace=0.08)
+
+	subplot = fig.add_subplot(gs[:,:])
+	eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=all_rhesus_drinkers)
+	eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
+	eevs = eevs.exclude(eev_pellet_time__lte=1.95*60*60)
+	data = eevs.values_list('eev_pellet_time', flat=True)
+
+	data = numpy.array(data)
+	data = data / 60.
+	bin_edges = range(min(data), max(data), 5)
+	subplot.hist(data, bins=bin_edges, normed=False, histtype='bar', log=True, color='gold')
+	subplot.set_xlim(xmin=1.95*60)
+	subplot.set_ylabel("Meal Count")
+	subplot.set_xlabel("Time Since Last Meal")
+	return fig
+
+def rhesus_pellet_time_histogram_grid():
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	fig.suptitle("Meal Distribution")
+	gs = gridspec.GridSpec(2, 2)
+	gs.update(left=0.05, right=0.985, wspace=.05, hspace=0.08)
+
+	subplot = None
+	for grid_index, rhesus_key in enumerate(rhesus_keys):
+		subplot = fig.add_subplot(gs[grid_index], sharex=subplot)
+		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=rhesus_drinkers_distinct[rhesus_key])
+		eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
+		eevs = eevs.exclude(eev_pellet_time__lte=1.95*60*60)
+		data = eevs.values_list('eev_pellet_time', flat=True)
+
+		data = numpy.array(data)
+		data /= 60.
+		bin_edges = range(min(data), max(data), 5)
+		subplot.hist(data, bins=bin_edges, normed=False, histtype='bar', log=True, color=rhesus_colors[rhesus_key])
+		subplot.legend((), title=rhesus_key, loc=1, frameon=False, prop={'size':12})
+		subplot.set_xlim(xmin=1.95*60)
+		if grid_index % 2:
+			subplot.set_yticklabels([])
+		else:
+			subplot.set_ylabel("Meal Count")
+		if grid_index < 2:
+			subplot.set_xticklabels([])
+		else:
+			subplot.set_xlabel("Time Since Last Meal")
+	return fig
 
 def rhesus_etoh_pellettime_bec():
 	size_min = plotting.DEFAULT_CIRCLE_MIN
