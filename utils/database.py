@@ -1944,6 +1944,7 @@ def load_hormone_data(file_name, overwrite=False, header=True):
 			except Exception as e:
 				print ERROR_OUTPUT % (line_number, e, line)
 				continue
+			mhm.save()
 	print "Data load complete."
 
 def load_bec_data(file_name, overwrite=False, header=True):
