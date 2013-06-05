@@ -2643,6 +2643,7 @@ class FamilyRelationship(models.Model):
 class MonkeyHormone(models.Model):
 	mhm_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='hormone_records', db_column='mky_id', editable=False)
+	mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='mhm_record', editable=False, on_delete=models.SET_NULL)
 	mhm_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
 	mhm_cort = models.FloatField("Cortisol", null=True, blank=True)
 	mhm_acth = models.FloatField("ACTH", null=True, blank=True)
@@ -2653,6 +2654,16 @@ class MonkeyHormone(models.Model):
 
 	def __unicode__(self):
 		return "%s | %s" % (str(self.monkey), str(self.mhm_date))
+
+	def populate_fields(self, repopulate=True):
+		save = False
+		if not self.mtd or repopulate:
+			mtd = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey, drinking_experiment__dex_date=self.mhm_date)
+			if mtd.count() is 1:
+				self.mtd = mtd[0]
+				save = True
+		if save:
+			self.save()
 
 	class Meta:
 		db_table = 'mhm_monkey_hormone'
