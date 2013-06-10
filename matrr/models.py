@@ -2960,7 +2960,7 @@ class MonkeyBrainBlock(models.Model):
 	tissue_types = models.ManyToManyField(TissueType, symmetrical=False, null=True, blank=True, related_name='brainblock_set')
 	mbb_block_name = models.CharField(max_length=20)
 	mbb_hemisphere = models.CharField('Hemisphere', max_length=5, choices=(('L', 'Left'), ('R', 'Right')))
-	brain_image = models.ForeignKey(MonkeyImage, null=True, blank=True, related_name='brainblock_set', on_delete=models.SET_NULL)
+	brain_image = models.ForeignKey(MonkeyImage, null=True, blank=False, related_name='brainblock_set', on_delete=models.SET_NULL)
 
 
 	def __unicode__(self):
