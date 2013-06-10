@@ -2973,7 +2973,7 @@ class MonkeyBrainBlock(models.Model):
 		self.update_tss_sample_quantity()
 
 	def update_tss_sample_quantity(self):
-		for tst in TissueType.objects.filter(category__cat_name__icontains='brain'):
+		for tst in TissueType.objects.filter(category__cat_name='Brain Tissues'):
 			tss = TissueSample.objects.get(monkey=self.monkey, tissue_type=tst)
 			tss.update_brain_quantity()
 
