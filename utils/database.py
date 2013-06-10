@@ -1874,6 +1874,7 @@ def populate_mtd_fields(queryset=None):
 
 def load_brain_monkeyimages(directory):
 	import os
+	loaded_migs = dict()
 	for file in os.listdir(directory):
 		if file[-3:].lower() == 'png':
 			upload_date, mky_number, extension = file.split('.')
@@ -1882,6 +1883,20 @@ def load_brain_monkeyimages(directory):
 			except Monkey.DoesNotExist:
 				print "Monkey does not exist:  " + mky_number
 				continue
+
+			dupe_mig = loaded_migs.get(monkey.pk, None)
+			if dupe_mig:
+				try:
+					last_date = dt.strptime(dupe_mig[1], "%Y-%m-%d-%H-%M-%S")
+					this_date = dt.strptime(upload_date, "%Y-%m-%d-%H-%M-%S")
+				except ValueError as ve:
+					last_date = dt.strptime(dupe_mig[1], "%m-%d-%Y-%H-%M-%S")
+					this_date = dt.strptime(upload_date, "%m-%d-%Y-%H-%M-%S")
+				if last_date > this_date:
+					continue # skip this brain image, it was uploaded after one uploaded for this monkey in the current batch.
+				else:
+					# delete the 'old' mig
+					dupe_mig[0].delete()
 
 			mig = MonkeyImage.objects.create(monkey=monkey, method='__brain_image')
 
@@ -1898,6 +1913,7 @@ def load_brain_monkeyimages(directory):
 			html_frag = mig._build_html_fragment('NO MAP', add_footer=False)
 			mig.html_fragment = File(open(html_frag))
 			mig.save()
+			loaded_migs[monkey.pk] = (mig, upload_date)
 
 def create_7b_control_monkeys():
 	import datetime

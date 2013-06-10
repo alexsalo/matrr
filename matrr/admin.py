@@ -31,10 +31,6 @@ class TissueSampleAdmin(admin.ModelAdmin):
 			model.save()
 
 
-class RequestAdmin(admin.ModelAdmin):
-	readonly_fields = ('req_report_asked',)
-
-
 class UserAdmin(admin.ModelAdmin):
 	model = User
 	list_display = ['username', 'email', 'first_name', 'last_name', 'date_joined']
@@ -75,7 +71,7 @@ admin.site.register(TissueSample, TissueSampleAdmin)
 admin.site.register(Publication)
 admin.site.register(Mta)
 admin.site.register(Account, VerificationAccountAdmin)
-admin.site.register(Request, RequestAdmin)
+admin.site.register(Request)
 admin.site.register(TissueInventoryVerification)
 admin.site.register(TissueRequest)
 admin.site.register(TissueRequestReview)
