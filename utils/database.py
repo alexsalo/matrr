@@ -383,6 +383,44 @@ def load_cohort_7b_inventory(input_file):
 			unmatched_output.writerow(row)
 			print error
 
+# dumps the monkey table to a csv
+def dump_monkey_data():
+	f = open('MATRR_Monkeys.csv', 'w')
+	output = csv.writer(f, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	columns = [
+		'mky_id',
+		'cohort', # doesnt work with getattr()
+		'mky_real_id',
+		'mky_name',
+		'mky_gender',
+		'mky_birthdate',
+		'mky_weight',
+		'mky_drinking',
+		'mky_housing_control',
+		'mky_necropsy_start_date',
+		'mky_necropsy_start_date_comments',
+		'mky_necropsy_end_date',
+		'mky_necropsy_end_date_comments',
+		'mky_study_complete',
+		'mky_stress_model',
+		'mky_age_at_necropsy',
+		'mky_notes',
+		'mky_species',
+		'mky_high_drinker',
+		'mky_low_drinker',
+		'mky_age_at_intox'
+	]
+	output.writerow(columns)
+	for mky in Monkey.objects.all().order_by('cohort', 'pk'):
+		row = list()
+		for col in columns:
+			if col == 'cohort':
+				row.append(mky.cohort.coh_cohort_name)
+			else:
+				row.append(getattr(mky, col))
+		output.writerow(row)
+	f.flush()
+	f.close()
 
 ## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
 ## -jf
@@ -1838,9 +1876,7 @@ def load_brain_monkeyimages(directory):
 	import os
 	for file in os.listdir(directory):
 		if file[-3:].lower() == 'png':
-			filename, extension = file.split('.')
-			mky_number_ish = filename.split('-')[-1]
-			mky_number = mky_number_ish[-5:]
+			upload_date, mky_number, extension = file.split('.')
 			try:
 				monkey = Monkey.objects.get(mky_real_id=mky_number)
 			except Monkey.DoesNotExist:
@@ -1849,7 +1885,7 @@ def load_brain_monkeyimages(directory):
 
 			mig = MonkeyImage.objects.create(monkey=monkey, method='__brain_image')
 
-			filename = '/tmp/' + filename
+			filename = '/tmp/' + upload_date + mky_number
 			thumb_path = filename + '-thumb.jpg'
 			image_file = Image.open(directory+file)
 			image_file.thumbnail((240, 240), Image.ANTIALIAS)
