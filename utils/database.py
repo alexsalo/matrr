@@ -1872,49 +1872,6 @@ def populate_mtd_fields(queryset=None):
 	for mtd in qs:
 		mtd.populate_max_bout_hours()
 
-def load_brain_monkeyimages(directory):
-	import os
-	loaded_migs = dict()
-	for file in os.listdir(directory):
-		if file[-3:].lower() == 'png':
-			upload_date, mky_number, extension = file.split('.')
-			try:
-				monkey = Monkey.objects.get(mky_real_id=mky_number)
-			except Monkey.DoesNotExist:
-				print "Monkey does not exist:  " + mky_number
-				continue
-
-			dupe_mig = loaded_migs.get(monkey.pk, None)
-			if dupe_mig:
-				try:
-					last_date = dt.strptime(dupe_mig[1], "%Y-%m-%d-%H-%M-%S")
-					this_date = dt.strptime(upload_date, "%Y-%m-%d-%H-%M-%S")
-				except ValueError as ve:
-					last_date = dt.strptime(dupe_mig[1], "%m-%d-%Y-%H-%M-%S")
-					this_date = dt.strptime(upload_date, "%m-%d-%Y-%H-%M-%S")
-				if last_date > this_date:
-					continue # skip this brain image, it was uploaded after one uploaded for this monkey in the current batch.
-				else:
-					# delete the 'old' mig
-					dupe_mig[0].delete()
-
-			mig = MonkeyImage.objects.create(monkey=monkey, method='__brain_image')
-
-			filename = '/tmp/' + upload_date + mky_number
-			thumb_path = filename + '-thumb.jpg'
-			image_file = Image.open(directory+file)
-			image_file.thumbnail((240, 240), Image.ANTIALIAS)
-			image_file.save(thumb_path)
-
-			mig.image = File(open(directory+file, 'r'))
-			mig.save()
-			mig.thumbnail = File(open(thumb_path, 'r'))
-			mig.save()
-			html_frag = mig._build_html_fragment('NO MAP', add_footer=False)
-			mig.html_fragment = File(open(html_frag))
-			mig.save()
-			loaded_migs[monkey.pk] = (mig, upload_date)
-
 def create_7b_control_monkeys():
 	import datetime
 	cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
@@ -2120,11 +2077,26 @@ def load_mbb_images(image_dir):
 		mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block 15')
 		mbb.assign_tissues(brain_tissues)
 
-	recomp = re.compile('^.*([0-9]{5}).png$')
+	mbbs_to_load = dict()
 	files = os.listdir(image_dir)
 	for file in files:
+		upload_date, mky_number, extension = file.split('.')
+		dupe_mbb = mbbs_to_load.get(mky_number, None)
+		if dupe_mbb:
+			dupe_upload_date, mky_number, extension = file.split('.')
+			try:
+				dupe_date = dt.strptime(dupe_upload_date, "%Y-%m-%d-%H-%M-%S")
+				this_date = dt.strptime(upload_date, "%Y-%m-%d-%H-%M-%S")
+			except ValueError as ve:
+				dupe_date = dt.strptime(dupe_upload_date, "%m-%d-%Y-%H-%M-%S")
+				this_date = dt.strptime(upload_date, "%m-%d-%Y-%H-%M-%S")
+			if dupe_date > this_date:
+				continue # skip this brain image, is not the most recent uploaded brain image for this monkey
+		mbbs_to_load[mky_number] = file
+
+
+	for real_id, file in mbbs_to_load.iteritems():
 		if file.endswith('.png'):
-			real_id = recomp.match(file).group(1)
 			create_mbb(real_id, os.path.join(image_dir, file))
 
 def load_monkey_exceptions(file_name, overwrite=False, header=True):
