@@ -2974,14 +2974,17 @@ class MonkeyBrainBlock(models.Model):
 
 	def update_tss_sample_quantity(self):
 		for tst in TissueType.objects.filter(category__cat_name='Brain Tissues'):
-			tss = TissueSample.objects.get(monkey=self.monkey, tissue_type=tst)
+			tss, is_new = TissueSample.objects.get_or_create(monkey=self.monkey, tissue_type=tst)
 			tss.update_brain_quantity()
 
 	def image_url(self):
-		return self.brain_image.image.url
+		if self.brain_image:
+			return self.brain_image.image.url
 
 	def fragment_url(self):
-		return self.brain_image.html_fragment.url
+		if self.brain_image:
+			return self.brain_image.html_fragment.url
+
 
 	def assign_tissues(self, iterable):
 		self.tissue_types.clear()
