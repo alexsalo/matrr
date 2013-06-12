@@ -1140,7 +1140,7 @@ def rhesus_etoh_gkg_histogram():
 
 	_bins = 150
 	linspace = numpy.linspace(0, max(daily_gkgs), _bins) # defines number of bins in histogram
-	n, bins, patches = subplot.hist(daily_gkgs, bins=linspace, normed=False, alpha=.5, color='gold')
+	n, bins, patches = subplot.hist(daily_gkgs, bins=linspace, normed=False, alpha=.5, color='slateblue')
 	bincenters = 0.5*(bins[1:]+bins[:-1])
 	newx = numpy.linspace(min(bincenters), max(bincenters), _bins/8) # smooth out the x axis
 	newy = plotting.spline(bincenters, n, newx) # smooth out the y axis
@@ -1249,7 +1249,7 @@ def rhesus_etoh_gkg_forced_histogram():
 			gkg_daycounts[index] += _count / days
 
 	gkg_daycounts = list(gkg_daycounts)
-	subplot.bar(limits, gkg_daycounts, width=increment, color='gold')
+	subplot.bar(limits, gkg_daycounts, width=increment, color='slateblue')
 
 	newx = numpy.linspace(min(limits), max(limits), 60) # smooth out the x axis
 	newy = plotting.spline(limits, gkg_daycounts, newx) # smooth out the y axis
@@ -1312,9 +1312,9 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
 		_ld = light_data[x]/float(light_count)
 		subplot.bar(x, _ld, width=.5, color='navy', edgecolor='none')
 		# higher, heavy drinkers
-		subplot.bar(x+.5, heavy_data[x]/float(heavy_count), width=.5, color='gold', edgecolor='none')
+		subplot.bar(x+.5, heavy_data[x]/float(heavy_count), width=.5, color='slateblue', edgecolor='none')
 #	patches.append(Rectangle((0,0),1,1, color=value))
-	subplot.legend([plotting.Rectangle((0,0),1,1, color='gold'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_category ,"Not %s" % monkey_category], title="Monkey Category", loc='upper left')
+	subplot.legend([plotting.Rectangle((0,0),1,1, color='slateblue'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_category ,"Not %s" % monkey_category], title="Monkey Category", loc='upper left')
 	subplot.set_xlim(xmax=max(light_data.keys()))
 	# rotate the xaxis labels
 	xticks = [x+.5 for x in light_data.keys()  if x % 15 == 0]
@@ -1530,7 +1530,7 @@ def rhesus_bout_last_pellet_histogram(exclude_intrapellets=True, exclude_zero=Fa
 		pellet_times = ebts.filter(mtd__monkey__in=rhesus_drinkers_distinct[key]).values_list('ebt_pellet_elapsed_time_since_last', flat=True)
 		bin_count = 250
 		linspace = numpy.linspace(0, max(pellet_times), bin_count) # defines number of bins in histogram
-		n, bins, patches = subplot.hist(pellet_times, bins=linspace, normed=False, alpha=.5, color='gold', log=True)
+		n, bins, patches = subplot.hist(pellet_times, bins=linspace, normed=False, alpha=.5, color='slateblue', log=True)
 		bincenters = 0.5*(bins[1:]+bins[:-1])
 		newx = numpy.linspace(min(bincenters), max(bincenters), bin_count/10) # smooth out the x axis
 		newy = plotting.spline(bincenters, n, newx) # smooth out the y axis
@@ -1552,11 +1552,11 @@ def _rhesus_minute_volumes_compare_categories(subplot, minutes, monkey_cat_one, 
 	for x in a_data.keys():
 		# lower, light drinkers
 		_ld = a_data[x]/float(a_count)
-		subplot.bar(x, _ld, width=.5, color='gold', edgecolor='none')
+		subplot.bar(x, _ld, width=.5, color='slateblue', edgecolor='none')
 		# higher, heavy drinkers
 		subplot.bar(x+.5, b_data[x]/float(b_count), width=.5, color='navy', edgecolor='none')
 #	patches.append(Rectangle((0,0),1,1, color=value))
-	subplot.legend([plotting.Rectangle((0,0),1,1, color='gold'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_cat_one,monkey_cat_two], title="Monkey Category", loc='upper left')
+	subplot.legend([plotting.Rectangle((0,0),1,1, color='slateblue'), plotting.Rectangle((0,0),1,1, color='navy')], [monkey_cat_one,monkey_cat_two], title="Monkey Category", loc='upper left')
 	subplot.set_xlim(xmax=max(b_data.keys()))
 	# rotate the xaxis labels
 	xticks = [x+.5 for x in a_data.keys()  if x % 15 == 0]
@@ -2148,14 +2148,14 @@ def rhesus_pellet_time_histogram():
 	subplot = fig.add_subplot(gs[:,:])
 	eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=all_rhesus_drinkers)
 	eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
-	eevs = eevs.exclude(eev_pellet_time__lte=1.95*60*60)
+#	eevs = eevs.exclude(eev_pellet_time__lte=1.95*60*60)
 	data = eevs.values_list('eev_pellet_time', flat=True)
 
 	data = numpy.array(data)
 	data = data / 60.
 	bin_edges = range(min(data), max(data), 5)
-	subplot.hist(data, bins=bin_edges, normed=False, histtype='bar', log=True, color='gold')
-	subplot.set_xlim(xmin=1.95*60)
+	subplot.hist(data, bins=bin_edges, normed=False, histtype='bar', log=True, color='slateblue')
+	subplot.set_xlim(xmin=0)
 	subplot.set_ylabel("Meal Count")
 	subplot.set_xlabel("Time Since Last Meal")
 	return fig
@@ -2171,7 +2171,7 @@ def rhesus_pellet_time_histogram_grid():
 		subplot = fig.add_subplot(gs[grid_index], sharex=subplot)
 		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=rhesus_drinkers_distinct[rhesus_key])
 		eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
-		eevs = eevs.exclude(eev_pellet_time__lte=1.95*60*60)
+#		eevs = eevs.exclude(eev_pellet_time__lte=1.95*60*60)
 		data = eevs.values_list('eev_pellet_time', flat=True)
 
 		data = numpy.array(data)
@@ -2179,7 +2179,8 @@ def rhesus_pellet_time_histogram_grid():
 		bin_edges = range(min(data), max(data), 5)
 		subplot.hist(data, bins=bin_edges, normed=False, histtype='bar', log=True, color=rhesus_colors[rhesus_key])
 		subplot.legend((), title=rhesus_key, loc=1, frameon=False, prop={'size':12})
-		subplot.set_xlim(xmin=1.95*60)
+#		subplot.set_xlim(xmin=1.95*60)
+		subplot.set_xlim(xmin=0)
 		if grid_index % 2:
 			subplot.set_yticklabels([])
 		else:
@@ -2326,12 +2327,51 @@ def rhesus_etoh_pellettime_pctetohmeal():
 	#
 	return fig
 
+def rhesus_pellet_sessiontime_distribution():
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	fig.suptitle("Pellet Distribution")
+	gs = gridspec.GridSpec(4, 1)
+	gs.update(left=0.05, right=0.985, wspace=.05, hspace=0.02)
+	common_subplot = fig.add_subplot(gs[:,:])
+
+	subplot = None
+	for grid_index, rhesus_key in enumerate(rhesus_keys):
+		subplot = fig.add_subplot(gs[grid_index], sharex=subplot, sharey=subplot)
+		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=rhesus_drinkers_distinct[rhesus_key])
+		eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
+#		eevs = eevs.exclude(eev_pellet_time__lte=1.95*60*60)
+		data = eevs.values_list('eev_session_time', flat=True)
+
+		data = numpy.array(data)
+		data /= 60.
+		bin_edges = range(min(data), max(data), 5)
+		subplot.hist(data, bins=bin_edges, normed=False, histtype='bar', log=True, color=rhesus_colors[rhesus_key])
+		subplot.legend((), title=rhesus_key, loc=1, frameon=False, prop={'size':12})
+#		subplot.set_xlim(xmin=1.95*60)
+		subplot.set_xlim(xmin=0)
+		pyplot.setp(subplot.get_xticklabels(), visible=False)
+	pyplot.setp(subplot.get_xticklabels(), visible=True)
+	subplot.set_yticks([10**i for i in range(6) if i%2])
+	subplot.set_xticks([i for i in range(0, 23*60, 60)])
+	subplot.set_xticklabels([str(i) for i in range(23)])
+	subplot.set_xlim(xmax=22*60)
+
+	common_subplot.spines['top'].set_color('none')
+	common_subplot.spines['bottom'].set_color('none')
+	common_subplot.spines['left'].set_color('none')
+	common_subplot.spines['right'].set_color('none')
+	common_subplot.patch.set_alpha(0)
+	common_subplot.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+	common_subplot.set_ylabel("Pellet Count")
+	common_subplot.set_xlabel("Session Time")
+	return fig
 
 #---
 #plot
 def confederate_boxplots(confederates, bout_column):
 	from utils import plotting
 	confeds = list()
+	mky = None
 	for c in confederates:
 		if not isinstance(c, Monkey):
 			try:
@@ -2345,6 +2385,8 @@ def confederate_boxplots(confederates, bout_column):
 		else:
 			mky = c
 		confeds.append(mky)
+	if not mky:
+		return False, False
 	cohort = mky.cohort
 	monkeys = cohort.monkey_set.exclude(mky_drinking=False).exclude(pk__in=[c.pk for c in confeds])
 
@@ -2410,11 +2452,11 @@ def confederate_boxplots(confederates, bout_column):
 	return fig
 
 #data
-def return_confeds(pk, minutes):
-	return apriori.get_confederate_groups(pk, minutes, min_confidence=0)
+def return_confeds(pk, minutes, nighttime_only=False):
+	return apriori.get_confederate_groups(pk, minutes, min_confidence=0, nighttime_only=nighttime_only)
 #analyze datas
-def analyze_MBA(pk, minutes):
-	confeds = return_confeds(pk, minutes)
+def analyze_MBA(pk, minutes, nighttime_only=False):
+	confeds = return_confeds(pk, minutes, nighttime_only=nighttime_only)
 	monkey_scores = dict()
 	weight_cause = 1
 	weight_effect = weight_cause * 1
@@ -2424,20 +2466,20 @@ def analyze_MBA(pk, minutes):
 		for cause, effect, confidence in data:
 			for mky in cause:
 				try:
-					monkey_scores[mky] += weight_cause * confidence * support
+					monkey_scores[mky] += weight_cause * float(confidence) * float(support)
 				except KeyError:
-					monkey_scores[mky] = weight_cause * confidence * support
+					monkey_scores[mky] = weight_cause * float(confidence) * float(support)
 			for mky in effect:
 				try:
-					monkey_scores[mky] += weight_effect * confidence * support
+					monkey_scores[mky] += weight_effect * float(confidence) * float(support)
 				except KeyError:
-					monkey_scores[mky] = weight_effect * confidence * support
+					monkey_scores[mky] = weight_effect * float(confidence) * float(support)
 	return monkey_scores
 #build boxplots
-def rhesus_confederate_boxplots(minutes):
+def rhesus_confederate_boxplots(minutes, nighttime_only=False):
 	figs = list()
 	for i in [5, 6, 9, 10]:
-		scores = analyze_MBA(i, minutes)
+		scores = analyze_MBA(i, minutes, nighttime_only=nighttime_only)
 		confeds = list()
 		mean = numpy.array(scores.values()).mean()
 		for key in scores.keys():

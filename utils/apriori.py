@@ -102,15 +102,7 @@ def generateRules(L, support_data, min_confidence=0.7):
 				calc_confidence(freqSet, H1, support_data, rules, min_confidence)
 	return rules
 
-def confederate_groups(cohort_pk, minutes, min_confidence=0, serializable=False):
-	def load_dataset(cohort_pk, minutes=0):
-		from matrr.models import CohortBout
-		cbts = CohortBout.objects.filter(cohort=cohort_pk, cbt_pellet_elapsed_time_since_last=minutes*60)
-		bout_groups = list()
-		for cbt in cbts:
-			monkeys = cbt.ebt_set.all().values_list('mtd__monkey', flat=True).distinct()
-			bout_groups.append(set(monkeys))
-		return bout_groups
+def confederate_groups(cohort_pk, minutes, load_dataset, min_confidence=0, serializable=False):
 	import numpy
 	supports = dict()
 	for _support in numpy.arange(.05, .96, .05):
@@ -133,7 +125,17 @@ def recreate_serializable_apriori_output(orig):
 		new_dict[float(support)] = new_occ
 	return new_dict
 
-def get_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='utils/DATA/apriori/'):
+def get_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='utils/DATA/apriori/', nighttime_only=False):
+	def load_all_data(cohort_pk, minutes=0):
+		from matrr.models import CohortBout
+		cbts = CohortBout.objects.filter(cohort=cohort_pk, cbt_pellet_elapsed_time_since_last=minutes*60)
+		bout_groups = list()
+		for cbt in cbts:
+			monkeys = cbt.ebt_set.all().values_list('mtd__monkey', flat=True).distinct()
+			bout_groups.append(set(monkeys))
+		return bout_groups
+	if nighttime_only:
+		return get_nighttime_confederate_groups(cohort_pk, minutes, min_confidence, dir_path)
 	file_name = "%d-%d-%.3f.json" % (cohort_pk, minutes, min_confidence)
 	try:
 		f = open(os.path.join(dir_path, file_name), 'r')
@@ -146,8 +148,40 @@ def get_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='utils
 		d = json.loads(s)
 		return d
 
-	supports = confederate_groups(cohort_pk, minutes, min_confidence, serializable=True)
+	supports = confederate_groups(cohort_pk, minutes, load_all_data, min_confidence=min_confidence, serializable=True)
 	s = json.dumps(supports)
 	f.write(s)
 	f.close()
 	return supports
+
+def get_nighttime_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='utils/DATA/apriori/'):
+	def load_nighttime_data(cohort_pk, minutes=0):
+		from matrr.models import CohortBout
+		lights_out = 7*60*60
+		lights_on = lights_out + 12*60*60
+		cbts = CohortBout.objects.filter(cohort=cohort_pk, cbt_pellet_elapsed_time_since_last=minutes*60)
+		cbts = cbts.filter(cbt_start_time__gte=lights_out).filter(cbt_start_time__lt=lights_on)
+		bout_groups = list()
+		for cbt in cbts:
+			monkeys = cbt.ebt_set.all().values_list('mtd__monkey', flat=True).distinct()
+			bout_groups.append(set(monkeys))
+		return bout_groups
+	file_name = "%d-%d-%.3f-nighttime.json" % (cohort_pk, minutes, min_confidence)
+	try:
+		f = open(os.path.join(dir_path, file_name), 'r')
+	except IOError:
+		# pretty sure this will throw another IOException if dir_path doesn't exist
+		f = open(os.path.join(dir_path, file_name), 'w')
+	else:
+		s = f.read()
+		f.close()
+		d = json.loads(s)
+		return d
+
+	supports = confederate_groups(cohort_pk, minutes, load_nighttime_data, min_confidence=min_confidence, serializable=True)
+	s = json.dumps(supports)
+	f.write(s)
+	f.close()
+	return supports
+
+
