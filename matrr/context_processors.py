@@ -1,6 +1,5 @@
 from matrr.models import *
 from django.contrib.auth.views import AuthenticationForm
-from string import lower, replace
 from settings import PRODUCTION, GLEEK, DEVELOPMENT, DEBUG
 
 def cart(request):
