@@ -2766,7 +2766,7 @@ def sendfile(request, id):
 				file = getattr(r[0], f)
 			break
 	if not file:
-		raise HttpResponseRedirect('/static/images/MATRR_logo.png')
+		return HttpResponseRedirect('/static/images/MATRR_logo.png')
 
 	if file.url.count('/media') > 0:
 		file_url = file.url.replace('/media/', '')
