@@ -172,7 +172,6 @@ def urge_progress_reports():
 		body += "This is an automated message."
 
 		ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-		req.save()
 		if ret > 0:
 			print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
 
