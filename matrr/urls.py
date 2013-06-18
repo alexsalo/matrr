@@ -163,15 +163,12 @@ urlpatterns += patterns('matrr.views',
 
 	url(r'^tools/etoh/monkey/(?P<monkey_method>[a-zA-Z_]+)/$', tools_monkey_etoh, name='tools-monkey-etoh'),
 	url(r'^tools/etoh/monkey/(?P<monkey_method>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh-graphs'),
-#	url(r'^tools/etoh/monkey/(?P<monkey_method>[a-zA-Z_]+)/(?P<coh_id>\d+)/(?P<mky_id>\d+)/$', tools_monkey_etoh_graphs, name='tools-monkey-etoh-graphs'),
 
 
 	url(r'^tools/bec/cohort/(?P<cohort_method>.+)/$', tools_cohort_bec_graphs, name='tools-cohort-bec-graphs'),
 
 	url(r'^tools/bec/monkey/(?P<monkey_method>[a-zA-Z_]+)/$', tools_monkey_bec, name='tools-monkey-bec'),
 	url(r'^tools/bec/monkey/(?P<monkey_method>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', tools_monkey_bec_graphs, name='tools-monkey-bec-graphs'),
-#	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
-#	url(r'^tools/bec/cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', tools_monkey_bec_graphs, name='tools-monkey-bec'),
 
 	url(r'^tools/graph-as-pdf/$', create_pdf_fragment, name='pdf-fragment'),
 	url(r'^tools/graph-as-svg/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', create_svg_fragment, name='svg-fragment'),
