@@ -11,9 +11,9 @@ class Dataset(object):
 	data = list()
 	target = list()
 
-def collect_oa_drinking_of_cohort(cohort):
+def collect_oa_drinking_of_monkeys(monkeys):
 	values = list()
-	for m in cohort.monkey_set.all():
+	for m in monkeys:
 		v =  m.mtd_set.filter(~Q(drinking_experiment__dex_type='Induction')).filter(~Q(mtd_etoh_g_kg=None)).values_list('mtd_etoh_g_kg', flat=True)
 		if len(v) > 0:
 #			v = [value[0]/value[1] for value in v]
@@ -22,21 +22,21 @@ def collect_oa_drinking_of_cohort(cohort):
 			values.append((m, mean, median))
 	return values
 
-def collect_reg_of_cohort(cohort):
-	values = collect_oa_drinking_of_cohort(cohort)
+def collect_reg_of_monkeys(monkeys):
+	values = collect_oa_drinking_of_monkeys(monkeys)
 	mky_reg = dict()
 	for m, mean, median in values:
 		mky_reg[m.mky_id] = mean
 	return mky_reg
 	
-def collect_3class_of_cohort(cohort):
+def collect_3class_of_monkeys(monkeys):
 	light_class = 0
 	medium_class = 1
 	heavy_class = 2
 	
 	heavy = 4
 	light = 2
-	values = collect_oa_drinking_of_cohort(cohort)
+	values = collect_oa_drinking_of_monkeys(monkeys)
 	monkey_classes = dict()
 	for m, mean, median in values:
 		used_value = median
@@ -49,7 +49,7 @@ def collect_3class_of_cohort(cohort):
 		monkey_classes[m.mky_id] = mky_class
 	return monkey_classes
 
-def collect_4class_of_cohort(cohort):
+def collect_4class_of_monkeys(monkeys):
 	light_class = 0
 	avg_class = 1
 	medium_class = 2
@@ -59,7 +59,7 @@ def collect_4class_of_cohort(cohort):
 	med = 2.5
 	avg = 2
 	
-	values = collect_oa_drinking_of_cohort(cohort)
+	values = collect_oa_drinking_of_monkeys(monkeys)
 	monkey_classes = dict()
 	for m, mean, median in values:
 		used_value = median
@@ -74,9 +74,9 @@ def collect_4class_of_cohort(cohort):
 		monkey_classes[m.mky_id] = mky_class
 	return monkey_classes
 		
-def collect_features_pca_by_grant_of_cohort(cohort):
+def collect_features_pca_by_grant_of_monkeys(monkeys):
 	values = dict()
-	for m in cohort.monkey_set.all():
+	for m in monkeys:
 		v = m.mtd_set.filter(drinking_experiment__dex_type='Induction').filter(~Q(mtd_max_bout_vol=None)).order_by(
 				'drinking_experiment__dex_date')[59:].values_list('mtd_weight', 'mtd_max_bout_vol', 'mtd_max_bout_length',
 				'mtd_pct_max_bout_vol_total_etoh')
@@ -92,9 +92,9 @@ def collect_features_pca_by_grant_of_cohort(cohort):
 			values[m.mky_id] = (vol/mtds_len, length/mtds_len, pct/mtds_len)
 	return values
 
-def create_dataset(cohort, feature_fce, class_fce, normalize=True):
-	monkey_data = feature_fce(cohort)
-	monkey_classes = class_fce(cohort)
+def create_dataset(monkeys, feature_fce, class_fce, normalize=True):
+	monkey_data = feature_fce(monkeys)
+	monkey_classes = class_fce(monkeys)
 	data = list()
 	klass =  list()
 	for mky, mky_class in monkey_classes.iteritems():

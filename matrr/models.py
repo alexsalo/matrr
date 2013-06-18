@@ -8,7 +8,7 @@ import settings
 from django.core.files.base import File
 from django.core.mail.message import EmailMessage
 from django.db import models
-from django.db.models import Q, Min, Max, Avg, Sum, Count
+from django.db.models import Q, Min, Max, Avg, Sum, Count, StdDev
 from django.contrib.auth.models import User, Group, Permission
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, pre_delete, pre_save
