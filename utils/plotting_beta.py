@@ -1120,8 +1120,8 @@ all_rhesus_drinkers = [__x for __d in rhesus_drinkers_distinct.itervalues() for 
 
 rhesus_markers = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
 
-rhesus_colors = {'LD': 'orange', 'MD': 'blue', "HD": "green", 'VHD': 'red'}
-rhesus_colors_hex = {'LD': '#FF6600', 'MD': '#0000FF', 'HD': '#008000', 'VHD': '#FF0000'}
+rhesus_colors = {'LD': '#0052CC', 'MD': 'green', "HD": "orange", 'VHD': 'red'}
+rhesus_colors_hex = {'LD': '#0052CC', 'MD': '#008000', 'HD': '#FF6600', 'VHD': '#FF0000'}
 rhesus_monkey_category = dict()
 rhesus_monkey_colors = dict()
 for key in rhesus_keys:
@@ -2361,6 +2361,65 @@ def rhesus_pellet_sessiontime_distribution():
 	common_subplot.patch.set_alpha(0)
 	common_subplot.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
 	common_subplot.set_ylabel("Pellet Count")
+	common_subplot.set_xlabel("Session Time")
+	return fig
+
+def rhesus_pellet_sessiontime_percent_distribution():
+	def damnit_this_sucks(eevs):
+		list_of_percents = list()
+		monkeys = eevs.values_list('monkey', flat=True).distinct()
+		dates = eevs.dates('eev_occurred', 'day').distinct()
+		for date in dates:
+			for monkey in monkeys:
+				pellet_count = eevs.filter(eev_occurred__year=date.year, eev_occurred__month=date.month, eev_occurred__day=date.day, monkey=monkey).count()
+				if pellet_count:
+					mtd = MonkeyToDrinkingExperiment.objects.get(monkey=monkey, drinking_experiment__dex_date=date)
+					day_pellet_count = mtd.mtd_total_pellets
+					percent = float(pellet_count) / day_pellet_count
+					list_of_percents.append(percent)
+		return list_of_percents
+
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	fig.suptitle("Pellet Distribution")
+	gs = gridspec.GridSpec(4, 1)
+	gs.update(left=0.05, right=0.985, wspace=.05, hspace=0.02)
+	common_subplot = fig.add_subplot(gs[:,:])
+
+	subplot = None
+	for grid_index, rhesus_key in enumerate(rhesus_keys):
+		subplot = fig.add_subplot(gs[grid_index], sharex=subplot, sharey=subplot)
+		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=rhesus_drinkers_distinct[rhesus_key])
+		eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
+		eevs = eevs.filter(eev_session_time__lte=8*60*60)
+
+
+		bin_edges = range(0, 8*60*60, 5*60)
+		all_data = dict()
+		for start in bin_edges:
+			all_data[start] = damnit_this_sucks(eevs.filter(eev_session_time__gte=start).filter(eev_session_time__lt=start+5*60))
+
+		x_data = list()
+		y_data = list()
+		for edge, percents in all_data.iteritems():
+			x_data.append(edge)
+			y_data.append(numpy.mean(percents))
+		subplot.bar(x_data, y_data, width=5*60, color=rhesus_colors[rhesus_key])
+#		subplot.hist(data, bins=bin_edges, normed=False, histtype='bar', log=True, color=rhesus_colors[rhesus_key])
+		subplot.legend((), title=rhesus_key, loc=1, frameon=False, prop={'size':12})
+		pyplot.setp(subplot.get_xticklabels(), visible=False)
+	pyplot.setp(subplot.get_xticklabels(), visible=True)
+	subplot.set_yticks([10**i for i in range(6) if i%2])
+	subplot.set_xticks([i for i in range(0, 9*60, 60)])
+	subplot.set_xticklabels([str(i) for i in range(9)])
+	subplot.set_xlim(xmin=0, xmax=8*60)
+
+	common_subplot.spines['top'].set_color('none')
+	common_subplot.spines['bottom'].set_color('none')
+	common_subplot.spines['left'].set_color('none')
+	common_subplot.spines['right'].set_color('none')
+	common_subplot.patch.set_alpha(0)
+	common_subplot.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+	common_subplot.set_ylabel("Average Percent of Pellet Intake")
 	common_subplot.set_xlabel("Session Time")
 	return fig
 
