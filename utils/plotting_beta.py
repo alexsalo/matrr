@@ -849,7 +849,7 @@ def _cohort_etoh_cumsum_nofood(cohort, subplot, minutes_excluded=5):
 	return subplot, mky_ymax, mky_colors
 
 def _cohort_etoh_max_bout_cumsum(cohort, subplot):
-	mkys = cohort.monkey_set.filter(mky_drinking=True)
+	mkys = Monkey.objects.Drinkers().filter(cohort=cohort).values_list('pk', flat=True)
 	mky_count = mkys.count()
 
 	subplot.set_title("Induction St. 3 Cumulative Max Bout EtOH Intake for %s" % str(cohort))
@@ -863,16 +863,17 @@ def _cohort_etoh_max_bout_cumsum(cohort, subplot):
 		mtds = mtds.filter(mtd_etoh_g_kg__gte=1.4).filter(mtd_etoh_g_kg__lte=1.6)
 		if not mtds.count():
 			continue
-		mky_colors[m] = cmap(idx / (mky_count-1.))
+		mky_colors[m] = rhesus_monkey_colors[m]
 		volumes = numpy.array(mtds.values_list('mtd_max_bout_vol', flat=True))
 		weights = numpy.array(mtds.values_list('mtd_weight', flat=True))
 		vw_div = volumes / weights
 		yaxis = numpy.cumsum(vw_div)
 		mky_ymax[m] = yaxis[-1]
 		xaxis = numpy.array(mtds.values_list('drinking_experiment__dex_date', flat=True))
-		subplot.plot(xaxis, yaxis, alpha=1, linewidth=3, color=mky_colors[m], label=str(m.pk))
+		subplot.plot(xaxis, yaxis, alpha=1, linewidth=3, color=mky_colors[m], label=str(m))
 	pyplot.setp(subplot.xaxis.get_majorticklabels(), rotation=45 )
-	subplot.legend(loc=2)
+	legend = subplot.legend(loc=2)
+	pyplot.setp(legend.legendHandles, lw=15)
 	if not len(mky_ymax.values()):
 		raise Exception("no MTDs found")
 	return subplot, mky_ymax, mky_colors
