@@ -276,7 +276,7 @@ class RhesusMonkeyBeyesDataset():
 			 'mhm_ald',
 			 'mhm_dheas'
 			 ]
-		loop_mtd_columns = data_columns[0:40]
+		loop_mtd_columns = data_columns[:40]
 		loop_mhm_columns = data_columns[40:]
 
 		means = list()
@@ -284,7 +284,8 @@ class RhesusMonkeyBeyesDataset():
 			mean = self.monkey_mtds.aggregate(Avg(col))[col+'__avg']
 			means.append(mean)
 
-		mtd_dates = self.monkey_mtds.values_list('drinking_experiment__dex_date', flat=True).distinct()
+		mtd_dates = self.monkey_mtds.dates('drinking_experiment__dex_date', 'day').distinct()
+		mtd_dates = list(mtd_dates)
 		mhms = MonkeyHormone.objects.filter(monkey=self.monkey_pk, mhm_date__in=mtd_dates)
 		for col in loop_mhm_columns:
 			mean = mhms.aggregate(Avg(col))[col+'__avg']
@@ -293,22 +294,24 @@ class RhesusMonkeyBeyesDataset():
 
 
 class RhesusBeyesDataset():
+	monkey_ids = None
 	monkey_datasets = list()
 	training_dataset = None
 	training_targetset = None
 
-	def __init__(self, train_split=.8):
+	def __init__(self, train_split=.8, monkey_ids=None):
 		assert 0 < train_split < 1
 		self.train_split = .8
+		if monkey_ids:
+			self.monkey_ids = monkey_ids
 		self.create_datasets()
 
 	def create_datasets(self):
 		from matrr.models import MonkeyToDrinkingExperiment
-		from utils import plotting_beta
 
 		training_dataset = list()
 		training_targetset = list()
-		for monkey_pk in plotting_beta.all_rhesus_drinkers:
+		for monkey_pk in self.monkey_ids:
 			induction_mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=monkey_pk).order_by('?')
 			data_divider = int(induction_mtds.count()*self.train_split)
 			training_mtds = induction_mtds[:data_divider]
@@ -319,4 +322,31 @@ class RhesusBeyesDataset():
 			training_targetset.extend(target)
 		self.training_dataset = numpy.array(training_dataset)
 		self.training_targetset = numpy.array(training_targetset)
+
+
+class RhesusBeyesDataset_Stage3():
+	monkey_ids = None
+	monkey_datasets = list()
+	training_dataset = None
+	training_targetset = None
+
+	def __init__(self, monkey_ids=None):
+		if monkey_ids:
+			self.monkey_ids = monkey_ids
+		self.create_datasets()
+
+	def create_datasets(self):
+		from matrr.models import MonkeyToDrinkingExperiment
+
+		training_dataset = list()
+		training_targetset = list()
+		for monkey_pk in self.monkey_ids:
+			stage_3_induction_mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=monkey_pk, mtd_etoh_g_kg__gt=1.3)
+			self.monkey_datasets.append(RhesusMonkeyBeyesDataset(stage_3_induction_mtds))
+			data, target = create_dataset_from_mtds(stage_3_induction_mtds)
+			training_dataset.extend(data)
+			training_targetset.extend(target)
+		self.training_dataset = numpy.array(training_dataset)
+		self.training_targetset = numpy.array(training_targetset)
+
 
