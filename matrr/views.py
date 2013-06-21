@@ -2474,7 +2474,7 @@ def tools_monkey_bec_graphs(request, monkey_method, coh_id):
 
 	if request.method == 'POST':
 		monkey_select_form = GraphToolsMonkeySelectForm(drinking_monkeys, data=request.POST)
-		experiment_range_form = BECRangeForm(data=request.POST)
+		experiment_range_form = ExperimentRangeForm(data=request.POST)
 		if experiment_range_form.is_valid() and monkey_select_form.is_valid():
 			from_date = to_date = ''
 			experiment_range = experiment_range_form.cleaned_data['range']
@@ -2482,13 +2482,6 @@ def tools_monkey_bec_graphs(request, monkey_method, coh_id):
 				from_date = str(experiment_range_form.cleaned_data['from_date'])
 				to_date = str(experiment_range_form.cleaned_data['to_date'])
 				experiment_range = None
-
-			sample_before = sample_after = ''
-			sample_range = experiment_range_form.cleaned_data['sample_range']
-			if sample_range == 'morning':
-				sample_before = '14:00'
-			if sample_range == 'afternoon':
-				sample_after = '14:00'
 
 			monkeys = monkey_select_form.cleaned_data['monkeys']
 			title = plotting.MONKEY_PLOTS[monkey_method][1]
@@ -2507,7 +2500,7 @@ def tools_monkey_bec_graphs(request, monkey_method, coh_id):
 		context['experiment_range_form'] = experiment_range_form
 	else:
 		context['monkey_select_form'] = GraphToolsMonkeySelectForm(drinking_monkeys)
-		context['experiment_range_form'] = BECRangeForm()
+		context['experiment_range_form'] = ExperimentRangeForm()
 
 	return render_to_response('matrr/tools/bec_monkey.html', context, context_instance=RequestContext(request))
 
