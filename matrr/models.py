@@ -1,9 +1,12 @@
 #encoding=utf-8
+import logging
 import os
 import ast
 import Image
+import traceback
 import numpy
 import dbarray
+import sys
 import settings
 from django.core.files.base import File
 from django.core.mail.message import EmailMessage
@@ -1182,12 +1185,18 @@ class MTDImage(MATRRImage):
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
-		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(mtd=self.monkey_to_drinking_experiment)
-		else:
-			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(mtd=self.monkey_to_drinking_experiment, **params)
-
+		try:
+			if self.parameters == 'defaults' or self.parameters == '':
+				mpl_figure, data_map = spiffy_method(mtd=self.monkey_to_drinking_experiment)
+			else:
+				params = ast.literal_eval(self.parameters)
+				mpl_figure, data_map = spiffy_method(mtd=self.monkey_to_drinking_experiment, **params)
+		except Exception as e:
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.error(log_output)
+			mpl_figure = data_map = None
 		super(MTDImage, self)._construct_filefields(mpl_figure, data_map)
 
 	def _plot_picker(self):
@@ -1223,12 +1232,18 @@ class MonkeyImage(MATRRImage):
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
-		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(monkey=self.monkey)
-		else:
-			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(monkey=self.monkey, **params)
-
+		try:
+			if self.parameters == 'defaults' or self.parameters == '':
+				mpl_figure, data_map = spiffy_method(monkey=self.monkey)
+			else:
+				params = ast.literal_eval(self.parameters)
+				mpl_figure, data_map = spiffy_method(monkey=self.monkey, **params)
+		except Exception as e:
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.error(log_output)
+			mpl_figure = data_map = None
 		super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
 
 	def _plot_picker(self):
@@ -1270,12 +1285,18 @@ class CohortImage(MATRRImage):
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
-		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(cohort=self.cohort)
-		else:
-			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(cohort=self.cohort, **params)
-
+		try:
+			if self.parameters == 'defaults' or self.parameters == '':
+				mpl_figure, data_map = spiffy_method(cohort=self.cohort)
+			else:
+				params = ast.literal_eval(self.parameters)
+				mpl_figure, data_map = spiffy_method(cohort=self.cohort, **params)
+		except Exception as e:
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.error(log_output)
+			mpl_figure = data_map = None
 		super(CohortImage, self)._construct_filefields(mpl_figure, data_map)
 
 	def _plot_picker(self):
@@ -1313,8 +1334,14 @@ class CohortProteinImage(MATRRImage):
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
-		mpl_figure, data_map = spiffy_method(cohort=self.cohort, protein=self.protein)
-
+		try:
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort, protein=self.protein)
+		except Exception as e:
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.error(log_output)
+			mpl_figure = data_map = None
 		super(CohortProteinImage, self)._construct_filefields(mpl_figure, data_map)
 
 	def _plot_picker(self):
@@ -1353,13 +1380,18 @@ class MonkeyProteinImage(MATRRImage):
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
-
-		if self.parameters == 'defaults' or self.parameters == '':
-			mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all())
-		else:
-			params = ast.literal_eval(self.parameters)
-			mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all(), **params)
-
+		try:
+			if self.parameters == 'defaults' or self.parameters == '':
+				mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all())
+			else:
+				params = ast.literal_eval(self.parameters)
+				mpl_figure, data_map = spiffy_method(monkey=self.monkey, proteins=self.proteins.all(), **params)
+		except Exception as e:
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.error(log_output)
+			mpl_figure = data_map = None
 		super(MonkeyProteinImage, self)._construct_filefields(mpl_figure, data_map)
 
 	def _plot_picker(self):
