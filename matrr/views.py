@@ -2389,15 +2389,21 @@ def tools_monkey_etoh_graphs(request, monkey_method, coh_id):
 			monkeys = monkey_select_form.cleaned_data['monkeys']
 			title = plotting.MONKEY_PLOTS[monkey_method][1]
 			params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range}
+			render_failed = False
 			graphs = list()
 			for monkey in monkeys:
 				mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, title=title, method=monkey_method, parameters=str(params))
 				if mig.pk:
 					graphs.append(mig)
+				else:
+					render_failed = True
 			if not graphs:
 				messages.info(request, "No graphs could be made with these settings.")
+				render_failed = False # dont give them two messages
 			else:
 				context['graphs'] = graphs
+			if render_failed:
+				messages.info(request, "Some graphs failed to render. This issue will be investigated.")
 
 		context['monkey_select_form'] = monkey_select_form
 		context['experiment_range_form'] = experiment_range_form
@@ -2486,15 +2492,21 @@ def tools_monkey_bec_graphs(request, monkey_method, coh_id):
 			monkeys = monkey_select_form.cleaned_data['monkeys']
 			title = plotting.MONKEY_PLOTS[monkey_method][1]
 			params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range}
+			render_failed = False
 			graphs = list()
 			for monkey in monkeys:
 				mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, title=title, method=monkey_method, parameters=str(params))
 				if mig.pk:
 					graphs.append(mig)
+				else:
+					render_failed = True
 			if not graphs:
 				messages.info(request, "No graphs could be made with these settings.")
+				render_failed = False # dont give them two messages
 			else:
 				context['graphs'] = graphs
+			if render_failed:
+				messages.info(request, "Some graphs failed to render. This issue will be investigated.")
 
 		context['monkey_select_form'] = monkey_select_form
 		context['experiment_range_form'] = experiment_range_form
