@@ -2196,13 +2196,8 @@ def tools_cohort_protein_graphs(request, coh_id):
 	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
 
 def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
-	proteins = None
-	#	old_post = request.session.get('_old_post')
-	#	monkey = Monkey.objects.get(pk=mky_id) if mky_id else None
 	cohort = get_object_or_404(Cohort, pk=coh_id)
-
 	context = {'cohort': cohort}
-
 	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
 		try:
 			monkeys = _verify_monkeys(request.GET['monkeys'])
@@ -2220,7 +2215,6 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 		context['protein_form'] = ProteinSelectForm()
 
 	elif request.method == 'POST':
-	#		post = request.POST if request.POST else old_post
 		protein_form = ProteinSelectForm(data=request.POST)
 		graph_form = MonkeyProteinGraphAppearanceForm(data=request.POST)
 
@@ -2244,7 +2238,6 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 				for mon in monkeys:
 					mpis = MonkeyProteinImage.objects.filter(monkey=mon,
 															 method=yaxis,
-															 #						 proteins = proteins,
 															 parameters=`{'afternoon_reading': afternoon_reading}`)
 					mpis = mpis.annotate(count=Count("proteins")).filter(count=len(proteins))
 					for protein in proteins:
@@ -2445,7 +2438,7 @@ def tools_cohort_bec_graphs(request, cohort_method):
 			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date, 'sample_before': sample_before, 'sample_after': sample_after})
 			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=cohort_method, title=plotting.COHORT_PLOTS[cohort_method][1], parameters=params)
 			if is_new and not cohort_image.pk:
-				messages.error(request, 'Image file not created.  This is usually caused by requesting insufficient or non-existant data.')
+				messages.error(request, 'Image file not created.  This is usually caused by requesting insufficient or non-existent data.')
 			else:
 				context['graph'] = cohort_image
 		else:
