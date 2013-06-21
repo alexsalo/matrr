@@ -27,7 +27,7 @@ def modified_slavka_code():
 	svr.fit(d.data[2:], d.target[2:])
 	print svr.predict(d.data[1])
 
-	print cross_val_score(svr, d.data, d.target, cv = len(d.target))
+	print cross_val_score(svr, d.data, numpy.asarray(d.target))
 
 def GaussianNB_demo():
 	from sklearn import datasets

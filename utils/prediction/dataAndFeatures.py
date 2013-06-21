@@ -12,6 +12,13 @@ class Dataset(object):
 	target = list()
 
 def collect_oa_drinking_of_monkeys(monkeys):
+	"""
+	Returns a list() of tuple()
+	tuple:
+		0: Monkey
+		1: mean OA daily gkg etoh intake
+		2: median OA daily gkg etoh intake
+	"""
 	values = list()
 	for m in monkeys:
 		v =  m.mtd_set.filter(~Q(drinking_experiment__dex_type='Induction')).filter(~Q(mtd_etoh_g_kg=None)).values_list('mtd_etoh_g_kg', flat=True)
@@ -23,6 +30,9 @@ def collect_oa_drinking_of_monkeys(monkeys):
 	return values
 
 def collect_reg_of_monkeys(monkeys):
+	"""
+	Returns a dict(), keys = Monkey.pk, values = mean OA daily gkg etoh intake
+	"""
 	values = collect_oa_drinking_of_monkeys(monkeys)
 	mky_reg = dict()
 	for m, mean, median in values:
@@ -75,20 +85,29 @@ def collect_4class_of_monkeys(monkeys):
 	return monkey_classes
 		
 def collect_features_pca_by_grant_of_monkeys(monkeys):
+	"""
+	Returns a dict(),
+	keys = Monkey.pk
+	value = tuple()
+		0: daily average mtd_max_bout_vol/mtd_weight
+		1: daily average mtd_max_bout_vol
+		2: daily average mtd_pct_max_bout_vol_total_etoh
+	"""
 	values = dict()
 	for m in monkeys:
 		v = m.mtd_set.filter(drinking_experiment__dex_type='Induction').filter(~Q(mtd_max_bout_vol=None)).order_by(
 				'drinking_experiment__dex_date')[59:].values_list('mtd_weight', 'mtd_max_bout_vol', 'mtd_max_bout_length',
 				'mtd_pct_max_bout_vol_total_etoh')
 		if len(v) > 0:
-			vol = 0
-			length = 0
-			pct = 0
+			vol = 0 # sum of all day's (max_bout_vol / weight), units= ml/kg
+			length = 0 # sum of all day's max_bout_length
+			pct = 0 # sum of all day's pct_max_bout_vol_total_etoh
 			for value in v:		
 				vol += value[1]/value[0]
 				length += value[2]
 				pct += value[3] 
 			mtds_len = len(v)
+			# store the sums averaged by number of days
 			values[m.mky_id] = (vol/mtds_len, length/mtds_len, pct/mtds_len)
 	return values
 
