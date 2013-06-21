@@ -720,7 +720,7 @@ class ProteinGraphSubjectSelectForm(forms.Form):
 						  help_text="Choose what scope of subjects to analyze",
 						  widget=widgets.RadioSelect(renderer=widgets.RadioFieldRendererSpecial_monkey),
 						  initial=subject_choices[0][0])
-	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.MonkeyCheckboxSelectMultipleSelectAll())
+	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.MonkeyCheckboxSelectMultipleSelectAll_DefaultHidden())
 
 	def __init__(self, monkey_queryset, **kwargs):
 		super(ProteinGraphSubjectSelectForm, self).__init__(**kwargs)
@@ -787,7 +787,7 @@ class GraphToolsMonkeySelectForm(forms.Form):
 		<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
 	{% endblock %}
 	"""
-	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.MonkeyCheckboxSelectMultipleSelectAll())
+	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.MonkeyCheckboxSelectMultipleSelectAll_DefaultShown())
 
 	def __init__(self, monkey_queryset, *args, **kwargs):
 		super(GraphToolsMonkeySelectForm, self).__init__(*args, **kwargs)
