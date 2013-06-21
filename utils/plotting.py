@@ -1,4 +1,3 @@
-from datetime import timedelta, datetime, date, time
 from matplotlib import pyplot, cm, gridspec, colors, cm
 from django.db.models.aggregates import Sum, Max, Avg
 from matplotlib.cm import get_cmap
@@ -1768,9 +1767,13 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 	pyplot.setp(etoh_bout_vol_size, xticklabels=size_labels)
 
 #	regression line
-	fit = polyfit(xaxis, scatter_y, 3)
-	xr=polyval(fit, xaxis)
-	etoh_bout_vol_main.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
+	try:
+		fit = polyfit(xaxis, scatter_y, 3)
+	except TypeError as e: # "unsupported operand type(s) for +: 'NoneType' and 'float'"
+		pass
+	else:
+		xr=polyval(fit, xaxis)
+		etoh_bout_vol_main.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
 	hist_gs = gridspec.GridSpec(4, 1)
 	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
