@@ -230,7 +230,7 @@ def create_dataset_from_mtd_values(monkey_pk, mtd_values):
 			if row[col]:
 				_count += 1
 				_sum += row[col]
-		_avg = _sum / float(_count)
+		_avg = _sum / float(_count) if _count else 0
 		means[col] = _avg
 
 	target = list()
