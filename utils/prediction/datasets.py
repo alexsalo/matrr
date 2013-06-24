@@ -271,7 +271,7 @@ class RhesusMonkeyBeyesDataset():
 		return means
 
 
-class RhesusBeyesDataset():
+class RhesusBeyesDataset(object):
 	__mtds = None
 	_monkey_mtd_values= dict()
 	monkey_ids = None
