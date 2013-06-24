@@ -259,15 +259,16 @@ class RhesusMonkeyBeyesDataset():
 		self.monkey_pk = monkey_pk
 
 	def get_aggregate_dataset(self):
-		means = dict()
+		means = list()
 		for col in mtd_columns:
-			if col == 'mhm_record':
-				continue
 			_sum = 0
+			_count = 0
 			for row in self.monkey_values:
-				_sum += row[col] if row[col] else 0
-			avg = _sum / float(len(self.monkey_values))
-			means[col] = avg
+				if row[col]:
+					_count += 1
+					_sum += row[col]
+			_avg = _sum / float(_count)
+			means.append(_avg)
 		return means
 
 
