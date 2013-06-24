@@ -295,6 +295,7 @@ class RhesusBeyesDataset(object):
 
 	def sample_dataset(self):
 		import random
+		self.testing_datasets = list()
 		self.training_dataset = None
 		self.training_targetset = None # clear any current datasets
 		training_dataset = list()
