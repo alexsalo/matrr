@@ -267,7 +267,7 @@ class RhesusMonkeyBeyesDataset():
 				if row[col]:
 					_count += 1
 					_sum += row[col]
-			_avg = _sum / float(_count)
+			_avg = _sum / float(_count) if _count else 0
 			means.append(_avg)
 		return means
 
