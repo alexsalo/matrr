@@ -97,3 +97,74 @@ def MultinomialNB_rhesus_trainHormone_predictAll():
 	print "Number of points : %d" % len(with_hormone.target) # 2958
 	print "Number of mislabeled points : %d" % (with_hormone.target != y_pred).sum() # 2008
 
+def _bernoulli_beyes_RBD_sample(rhesus_beyes_dataset):
+	from sklearn.naive_bayes import BernoulliNB
+	from utils import plotting_beta
+	gnb = BernoulliNB()
+	rhesus_beyes_dataset.sample_dataset()
+	trained = gnb.fit(rhesus_beyes_dataset.training_dataset, rhesus_beyes_dataset.training_targetset)
+
+	truePositiveCount = 0
+	falsePositiveCount = 0
+	for rmbd in rhesus_beyes_dataset.testing_datasets:
+		test_data = rmbd.get_aggregate_dataset()
+		y_pred = trained.predict(test_data)
+		if y_pred == plotting_beta.rhesus_monkey_category[rmbd.monkey_pk]:
+			truePositiveCount += 1
+		else:
+			falsePositiveCount += 1
+	return truePositiveCount, falsePositiveCount
+
+def bootstrap_bernouli_beyes_RBD(first_key, second_key, loop_count=10, all_monkeys=False):
+	import gc
+	from utils import plotting_beta
+	from utils.prediction.datasets import RhesusBeyesDataset
+	monkey_ids = plotting_beta.rhesus_drinkers_distinct[first_key]
+	monkey_ids.extend(plotting_beta.rhesus_drinkers_distinct[second_key])
+	if all_monkeys:
+		monkey_ids = plotting_beta.all_rhesus_drinkers
+
+	rbd = RhesusBeyesDataset(monkey_ids=monkey_ids)
+	tpc = 0
+	fpc = 0
+	for i in range(loop_count):
+		print "Loop %d of %d" % (i+1, loop_count)
+		tp, fp = _bernoulli_beyes_RBD_sample(rbd)
+		print "TruePositiveCount: %d" % tp
+		print "FalseCount: %d" % fp
+		print '---'
+		tpc += tp
+		fpc += fp
+		gc.collect()
+	print "Looping finished! All stages"
+	print "Total TruePositive Count:"
+	print tpc
+	print "Total FalsePositive Count:"
+	print fpc
+
+def bootstrap_bernouli_beyes_RBD_Stage3(first_key, second_key, loop_count=10, all_monkeys=False):
+	import gc
+	from utils import plotting_beta
+	from utils.prediction.datasets import RhesusBeyesDataset_Stage3
+	monkey_ids = plotting_beta.rhesus_drinkers_distinct[first_key]
+	monkey_ids.extend(plotting_beta.rhesus_drinkers_distinct[second_key])
+	if all_monkeys:
+		monkey_ids = plotting_beta.all_rhesus_drinkers
+
+	rbd = RhesusBeyesDataset_Stage3(monkey_ids=monkey_ids)
+	tpc = 0
+	fpc = 0
+	for i in range(loop_count):
+		print "Loop %d of %d" % (i+1, loop_count)
+		tp, fp = _bernoulli_beyes_RBD_sample(rbd)
+		print "TruePositiveCount: %d" % tp
+		print "FalseCount: %d" % fp
+		print '---'
+		tpc += tp
+		fpc += fp
+		gc.collect()
+	print "Looping finished!"
+	print "Total TruePositive Count:"
+	print tpc
+	print "Total FalsePositive Count:"
+	print fpc
