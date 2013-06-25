@@ -6,10 +6,7 @@
 {% endblock %}
 
 {% block content %}
-    <a href="?d3_redirect=chord">Rhesus Confederate Chord Diagrams</a>
-	<br>
-    <a href="?d3_redirect=adjacency">Rhesus Confederate Adjacency Matrices</a>
-	<br>
+    {% include "matrr/tools/confederates/_confederates_menu.html" %}
 	<div class=clearfix></div>
 	<style>
         .background {
@@ -42,20 +39,6 @@
               <option value="count">by Frequency</option>
               <option value="group">by Cluster</option>
             </select>
-			<table>
-				<tr style="font-size: 20px; font-weight: bold;">
-                    <td bgcolor="#ff0029">VHD</td>
-                    <td bgcolor="#5cff00">HD</td>
-                    <td bgcolor="#008fff">MD</td>
-                    <td bgcolor="#ff00bf">LD</td>
-                </tr>
-			    <tr>
-                    <td colspan=4>Darker shading indicates more frequent co-occurences</td>
-				</tr>
-				<tr>
-					<td colspan=4>(both monkeys participating in the same CohortBout)</td>
-			    </tr>
-			</table>
 
 		{% endif %}
 		{% for cohort in cohorts %}

@@ -146,10 +146,12 @@ urlpatterns += patterns('matrr.views',
 	# Tools
 	url(r'^tools/$', tools_landing, name='tools-landing'),
 	url(r'^tools/sandbox/$', tools_sandbox, name='tools-sandbox'),
-	url(r'^tools/sandbox/chord$', tools_sandbox_chord_diagram, name='tools-sandbox-chord'),
-	url(r'^tools/sandbox/adjacency$', tools_sandbox_adjacency_matrix, name='tools-sandbox-adjacency'),
 	url(r'^tools/sandbox/genealogy/$', tools_sandbox_familytree, name='tools-genealogy'),
 	url(r'^tools/supersandbox/$', tools_supersandbox, name='tools-supersandbox'),
+
+	url(r'^tools/confederates/$', tools_confederates, name='tools-confederates'),
+	url(r'^tools/confederates/chord$', tools_confederates_chord_diagram, name='tools-confederates-chord'),
+	url(r'^tools/confederates/adjacency$', tools_confederates_adjacency_matrix, name='tools-confederates-adjacency'),
 
 	url(r'^tools/protein/$', tools_protein, name='tools-protein'),
 	url(r'^tools/protein/cohort/(?P<coh_id>\d+)/$', tools_cohort_protein, name='tools-cohort-protein'),

@@ -106,7 +106,10 @@
 							<li class='drop-down'><a href="{% url tools-bec %}">BEC</a></li>
 						{% endif %}
 {% endcomment %}
-						{% if user.is_staff %}
+						{% if perms.matrr.view_confederates %}
+							<li class='drop-down'><a href="{% url tools-confederates %}">Confederates</a></li>
+						{% endif %}
+						{% if perms.matrr.view_sandbox %}
 							<li class='drop-down'><a href="{% url tools-sandbox %}">Sandbox</a></li>
 						{% endif %}
 						{% if user.is_superuser %}

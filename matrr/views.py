@@ -2509,66 +2509,18 @@ def tools_monkey_bec_graphs(request, monkey_method, coh_id):
 
 	return render_to_response('matrr/tools/bec_monkey.html', context, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.has_perm('matrr.genealogy_tools'), login_url='/denied/')
-def tools_genealogy(request):
-	if request.method == 'POST':
-		cohort_form = CohortSelectForm(data=request.POST)
-		if cohort_form.is_valid():
-			return HttpResponseRedirect(reverse('tools-cohort-genealogy', args=[cohort_form.cleaned_data['subject'].pk]))
-		else:
-			messages.error(request, "Invalid form submission")
-	return render_to_response('matrr/tools/genealogy/subject_select.html', {'subject_select_form': CohortSelectForm()}, context_instance=RequestContext(request))
+@user_passes_test(lambda u: u.has_perm('matrr.view_confederates'), login_url='/denied/')
+def tools_confederates(request):
+	return render_to_response('matrr/tools/confederates/confederates.html', {}, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.has_perm('matrr.access_genealogy_tools'), login_url='/denied/')
-def tools_cohort_genealogy(request, coh_id):
-	cohort = get_object_or_404(Cohort, pk=coh_id)
-	cohort_monkeys = cohort.monkey_set.all()
-
-	if request.method == 'POST':
-		genealogy_form = GenealogyParentsForm(subject_queryset=cohort_monkeys, data=request.POST)
-		if genealogy_form.is_valid():
-			me = FamilyNode.objects.get(monkey=genealogy_form.cleaned_data['subject'])
-			dad = FamilyNode.objects.get(monkey=genealogy_form.cleaned_data['father'])
-			mom = FamilyNode.objects.get(monkey=genealogy_form.cleaned_data['mother'])
-
-			me.sire = dad
-			me.dam = mom
-			me.save()
-
-			messages.success(request, "Parentage for monkey %d saved." % me.monkey.pk)
-			return redirect(reverse('tools-cohort-genealogy', args=[coh_id]))
-		else:
-			messages.error(request, "Invalid form submission")
-
-	context = dict()
-	context['genealogy_form'] = GenealogyParentsForm(subject_queryset=cohort_monkeys)
-	return render_to_response('matrr/tools/genealogy/parent_select.html', context, context_instance=RequestContext(request))
-
-@user_passes_test(lambda u: u.is_staff, login_url='/denied/')
-def tools_sandbox(request):
-	d3_redirect = request.GET.get('d3_redirect', '')
-	if d3_redirect == 'chord':
-		return redirect(reverse('tools-sandbox-chord'))
-	if d3_redirect == 'adjacency':
-		return redirect(reverse('tools-sandbox-adjacency'))
-	append = request.GET.get('append', "christa")
-	base = settings.STATIC_ROOT + '/images/%s/' % append
-	_files = os.listdir(base)
-	files = list()
-	for f in _files:
-		if not os.path.isdir(base+f):
-			files.append(f)
-	files = sorted(files)
-	return render_to_response('matrr/tools/sandbox.html', {'files':files, 'append':append}, context_instance=RequestContext(request))
-
-@user_passes_test(lambda u: u.is_staff, login_url='/denied/')
-def tools_sandbox_chord_diagram(request):
+@user_passes_test(lambda u: u.has_perm('matrr.view_confederates'), login_url='/denied/')
+def tools_confederates_chord_diagram(request):
 #	https://github.com/mbostock/d3/wiki/Gallery
 	d3_redirect = request.GET.get('d3_redirect', '')
 	if d3_redirect == 'chord':
-		return redirect(reverse('tools-sandbox-chord'))
+		return redirect(reverse('tools-confederates-chord'))
 	if d3_redirect == 'adjacency':
-		return redirect(reverse('tools-sandbox-adjacency'))
+		return redirect(reverse('tools-confederates-adjacency'))
 	min_conf = request.GET.get('min_conf', 0)
 	try:
 		min_conf = float(min_conf)
@@ -2630,23 +2582,21 @@ def tools_sandbox_chord_diagram(request):
 	reformat_method = reformat_apriori_output_NtoN if NtoN else reformat_apriori_output_1to1
 
 	chord_data = list()
-	from matplotlib.colors import rgb2hex
 	for coh in [5,6,9,10]:
 		matrix, labels = reformat_method(coh)
 		labels_colors = list()
-		cmap = plotting.get_cmap('jet')
-		for idx, key in enumerate(labels):
-			lc = {'name': key, 'color': rgb2hex(cmap(idx / (len(labels)-1.)))}
+		for key in labels:
+			lc = {'name': key, 'color': plotting_beta.rhesus_monkey_colors_hex[key]}
 			labels_colors.append(lc)
 		dataset = mark_safe(json.dumps(matrix))
 		labels_colors = mark_safe(json.dumps(labels_colors))
 		cohort = Cohort.objects.get(pk=coh)
 		data = {'dataset': dataset, 'labels_colors': labels_colors, 'cohort': cohort}
 		chord_data.append(data)
-	return render_to_response('matrr/tools/sandbox_chord_diagram.html', {'chord_data': chord_data}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/confederates/chord_diagram.html', {'chord_data': chord_data}, context_instance=RequestContext(request))
 
-@user_passes_test(lambda u: u.is_staff, login_url='/denied/')
-def tools_sandbox_adjacency_matrix(request):
+@user_passes_test(lambda u: u.has_perm('matrr.view_confederates'), login_url='/denied/')
+def tools_confederates_adjacency_matrix(request):
 	"""
 	Based on: http://bost.ocks.org/mike/miserables/
 
@@ -2658,9 +2608,9 @@ def tools_sandbox_adjacency_matrix(request):
 	"""
 	d3_redirect = request.GET.get('d3_redirect', '')
 	if d3_redirect == 'chord':
-		return redirect(reverse('tools-sandbox-chord'))
+		return redirect(reverse('tools-confederates-chord'))
 	if d3_redirect == 'adjacency':
-		return redirect(reverse('tools-sandbox-adjacency'))
+		return redirect(reverse('tools-confederates-adjacency'))
 	cohort_pk = request.GET.get('cohort', 0)
 	if cohort_pk == 'all':
 		cohorts = Cohort.objects.none()
@@ -2668,8 +2618,54 @@ def tools_sandbox_adjacency_matrix(request):
 	else:
 		cohorts = Cohort.objects.filter(pk=cohort_pk)
 		multiple_cohorts = ''
+	return render_to_response('matrr/tools/confederates/adjacency_matrix.html', {'network_data': True, 'cohorts': cohorts, 'multiple_cohorts': multiple_cohorts}, context_instance=RequestContext(request))
 
-	return render_to_response('matrr/tools/sandbox_adjacency_matrix.html', {'network_data': True, 'cohorts': cohorts, 'multiple_cohorts': multiple_cohorts}, context_instance=RequestContext(request))
+@user_passes_test(lambda u: u.has_perm('matrr.genealogy_tools'), login_url='/denied/')
+def tools_genealogy(request):
+	if request.method == 'POST':
+		cohort_form = CohortSelectForm(data=request.POST)
+		if cohort_form.is_valid():
+			return HttpResponseRedirect(reverse('tools-cohort-genealogy', args=[cohort_form.cleaned_data['subject'].pk]))
+		else:
+			messages.error(request, "Invalid form submission")
+	return render_to_response('matrr/tools/genealogy/subject_select.html', {'subject_select_form': CohortSelectForm()}, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('matrr.access_genealogy_tools'), login_url='/denied/')
+def tools_cohort_genealogy(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
+	cohort_monkeys = cohort.monkey_set.all()
+
+	if request.method == 'POST':
+		genealogy_form = GenealogyParentsForm(subject_queryset=cohort_monkeys, data=request.POST)
+		if genealogy_form.is_valid():
+			me = FamilyNode.objects.get(monkey=genealogy_form.cleaned_data['subject'])
+			dad = FamilyNode.objects.get(monkey=genealogy_form.cleaned_data['father'])
+			mom = FamilyNode.objects.get(monkey=genealogy_form.cleaned_data['mother'])
+
+			me.sire = dad
+			me.dam = mom
+			me.save()
+
+			messages.success(request, "Parentage for monkey %d saved." % me.monkey.pk)
+			return redirect(reverse('tools-cohort-genealogy', args=[coh_id]))
+		else:
+			messages.error(request, "Invalid form submission")
+
+	context = dict()
+	context['genealogy_form'] = GenealogyParentsForm(subject_queryset=cohort_monkeys)
+	return render_to_response('matrr/tools/genealogy/parent_select.html', context, context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.has_perm('matrr.view_sandbox'), login_url='/denied/')
+def tools_sandbox(request):
+	append = request.GET.get('append', "christa")
+	base = settings.STATIC_ROOT + '/images/%s/' % append
+	_files = os.listdir(base)
+	files = list()
+	for f in _files:
+		if not os.path.isdir(base+f):
+			files.append(f)
+	files = sorted(files)
+	return render_to_response('matrr/tools/sandbox.html', {'files':files, 'append':append}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_supersandbox(request):

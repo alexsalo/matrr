@@ -6,11 +6,7 @@
 {% endblock %}
 
 {% block content %}
-    <a href="?d3_redirect=chord">Rhesus Confederate Chord Diagrams</a>
-	<br>
-    <a href="?d3_redirect=adjacency">Rhesus Confederate Adjacency Matrices</a>
-	<br>
-    <div class="headline"></div>
+    {% include "matrr/tools/confederates/_confederates_menu.html" %}
 	<div class=clearfix></div>
 	<style>
 		.circle circle {

@@ -114,7 +114,7 @@ function draw_adjacency_matrix(cohort_pk) {
 			height = 500;
 
 	var x = d3.scale.ordinal().rangeBands([0, width]),
-			c = {4: '#ff0029', 3: '#5cff00', 2: '#008fff', 1: '#ff00bf'};
+			c = {4: '#FF0000', 3: '#FF6600', 2: '#008000', 1: '#0052CC'};
 
 	var svg = d3.select("#coh_" + cohort_pk).append("svg")
 			.attr("width", width + margin.left + margin.right)

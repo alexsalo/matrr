@@ -1125,10 +1125,12 @@ rhesus_colors = {'LD': '#0052CC', 'MD': 'green', "HD": "orange", 'VHD': 'red'}
 rhesus_colors_hex = {'LD': '#0052CC', 'MD': '#008000', 'HD': '#FF6600', 'VHD': '#FF0000'}
 rhesus_monkey_category = dict()
 rhesus_monkey_colors = dict()
+rhesus_monkey_colors_hex = dict()
 for key in rhesus_keys:
 	for monkey_pk in rhesus_drinkers_distinct[key]:
 		rhesus_monkey_category[monkey_pk] = key
 		rhesus_monkey_colors[monkey_pk] = rhesus_colors[key]
+		rhesus_monkey_colors_hex[monkey_pk] = rhesus_colors_hex[key]
 
 def rhesus_etoh_gkg_histogram():
 	mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__cohort__in=[5,6,9,10])
