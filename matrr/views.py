@@ -169,9 +169,10 @@ def __monkey_detail(request, mky_id, coh_id=0):
 	return render_to_response('matrr/monkey.html', {'monkey': monkey, 'images': images, 'plot_gallery': True},
 							  context_instance=RequestContext(request))
 
-#todo: change the urls file to handle these in the same view, if possible
+
 def monkey_cohort_detail_view(request, coh_id, mky_id):
 	return __monkey_detail(request, mky_id, coh_id=coh_id)
+
 
 def monkey_detail_view(request, mky_id):
 	return __monkey_detail(request, mky_id)
@@ -2050,10 +2051,16 @@ def rna_display(request, coh_id):
 def __gather_cohort_protein_images(cohort, proteins):
 	images = []
 	for protein in proteins:
-		pcimage, isnew = CohortProteinImage.objects.get_or_create(protein=protein, cohort=cohort)
-		if isnew:
-			pcimage.save()
-		images.append(pcimage)
+		cpi_image, is_new = CohortProteinImage.objects.get_or_create(protein=protein, cohort=cohort)
+		images.append(cpi_image)
+	return images
+
+def __gather_cohort_hormone_images(cohort, hormones):
+	images = []
+	for hormone in hormones:
+		# testthis: test CohortHormoneImage
+		chi_image, is_new = CohortHormoneImage.objects.get_or_create(hormones=hormone, cohort=cohort)
+		images.append(chi_image)
 	return images
 
 def tools_landing(request):
@@ -2116,8 +2123,8 @@ def tools_protein(request): # pick a cohort
 	else:
 		cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
 		cohorts_with_protein_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
-		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
-	return render_to_response('matrr/tools/protein.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
+		subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
+	return render_to_response('matrr/tools/protein/protein.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
 def tools_cohort_protein(request, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
@@ -2125,7 +2132,7 @@ def tools_cohort_protein(request, coh_id):
 	monkey_queryset = Monkey.objects.filter(pk__in=monkey_keys)
 
 	if request.method == 'POST':
-		subject_select_form = ProteinGraphSubjectSelectForm(monkey_queryset, data=request.POST)
+		subject_select_form = GraphSubjectSelectForm(monkey_queryset, download_option=True, data=request.POST)
 		if subject_select_form.is_valid():
 			subject = subject_select_form.cleaned_data['subject']
 			if subject == 'monkey':
@@ -2136,7 +2143,6 @@ def tools_cohort_protein(request, coh_id):
 				get_m = "-".join(get_m)
 				if not monkeys:
 					messages.error(request, "You have to select at least one monkey.")
-					return render_to_response('matrr/tools/protein.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
 				return redirect_with_get('tools-monkey-protein', coh_id, monkeys=get_m)
 			elif subject == 'cohort':
@@ -2159,7 +2165,8 @@ def tools_cohort_protein(request, coh_id):
 						messages.warning(request, "This data file has already been created for you.  It is available to download on your account page.")
 				else:
 					messages.warning(request, "You must have a valid MTA on record to download data.  MTA information can be updated on your account page.")
-	return render_to_response('matrr/tools/protein.html', {'subject_select_form': ProteinGraphSubjectSelectForm(monkey_queryset)}, context_instance=RequestContext(request))
+	subject_select_form = GraphSubjectSelectForm(monkey_queryset, download_option=True)
+	return render_to_response('matrr/tools/protein/protein.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
 def _verify_monkeys(text_monkeys):
 	monkey_keys = text_monkeys.split('-')
@@ -2193,7 +2200,7 @@ def tools_cohort_protein_graphs(request, coh_id):
 
 	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_protein_data, horizontal=True, initial={'subject': coh_id})
 	context['protein_form'] = ProteinSelectForm(initial={'proteins': proteins})
-	return render_to_response('matrr/tools/protein_cohort.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/protein/protein_cohort.html', context, context_instance=RequestContext(request))
 
 def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
@@ -2234,7 +2241,25 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 			else:
 				afternoon_reading = None
 			mpi = ''
-			if yaxis != 'monkey_protein_value':
+			if yaxis == 'monkey_value':
+				for protein in proteins:
+					for mon in monkeys:
+						mpis = MonkeyProteinImage.objects.filter(monkey=mon,
+																 method=yaxis,
+																 proteins__in=[protein, ],
+																 parameters=`{'afternoon_reading': afternoon_reading}`)
+						if mpis.count() == 0:
+							mpi = MonkeyProteinImage(monkey=mon,
+													 method=yaxis,
+													 parameters=`{'afternoon_reading': afternoon_reading}`)
+							mpi.save()
+							mpi.proteins.add(protein)
+							mpi.save()
+						if mpis.count() > 0:
+							mpi = mpis[0]
+
+						graphs.append(mpi)
+			else:
 				for mon in monkeys:
 					mpis = MonkeyProteinImage.objects.filter(monkey=mon,
 															 method=yaxis,
@@ -2254,24 +2279,6 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 					if len(mpis) > 0:
 						mpi = mpis[0]
 					graphs.append(mpi)
-			else:
-				for protein in proteins:
-					for mon in monkeys:
-						mpis = MonkeyProteinImage.objects.filter(monkey=mon,
-																 method=yaxis,
-																 proteins__in=[protein, ],
-																 parameters=`{'afternoon_reading': afternoon_reading}`)
-						if mpis.count() == 0:
-							mpi = MonkeyProteinImage(monkey=mon,
-													 method=yaxis,
-													 parameters=`{'afternoon_reading': afternoon_reading}`)
-							mpi.save()
-							mpi.proteins.add(protein)
-							mpi.save()
-						if mpis.count() > 0:
-							mpi = mpis[0]
-
-						graphs.append(mpi)
 			context['graphs'] = graphs
 		else:
 			if 'proteins' not in protein_form.data:
@@ -2296,7 +2303,148 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 		context['graph_form'] = MonkeyProteinGraphAppearanceForm(text_monkeys)
 		context['protein_form'] = ProteinSelectForm()
 
-	return render_to_response('matrr/tools/protein_monkey.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/protein/protein_monkey.html', context, context_instance=RequestContext(request))
+
+def tools_hormone(request): # pick a cohort
+	if request.method == 'POST':
+		cohort_form = CohortSelectForm(data=request.POST)
+		if cohort_form.is_valid():
+			cohort = cohort_form.cleaned_data['subject']
+			return redirect('tools-cohort-hormone', cohort.pk)
+	else:
+		cohorts_with_hormone_data = MonkeyHormone.objects.all().values_list('monkey__cohort__pk', flat=True).distinct()
+		cohorts_with_hormone_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_hormone_data) # get the queryset of cohorts
+		subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_hormone_data)
+	return render_to_response('matrr/tools/hormone/hormone.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
+
+def tools_cohort_hormone(request, coh_id):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
+	monkey_pks = MonkeyHormone.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
+	monkey_queryset = Monkey.objects.filter(pk__in=monkey_pks)
+
+	# WARNING
+	# If hormone data is for-download, replace the raise Http404() with code from tools_cohort_protein, modified for hormones
+	subject_select_form = GraphSubjectSelectForm(monkey_queryset)
+	if request.method == 'POST':
+		subject_select_form = GraphSubjectSelectForm(monkey_queryset, data=request.POST)
+		if subject_select_form.is_valid():
+			subject = subject_select_form.cleaned_data['subject']
+			if subject == 'monkey':
+				monkeys = subject_select_form.cleaned_data['monkeys']
+				get_m = list()
+				for m in monkeys:
+					get_m.append(`m.mky_id`)
+				get_m = "-".join(get_m)
+				if not monkeys:
+					messages.error(request, "You have to select at least one monkey.")
+				return redirect_with_get('tools-monkey-hormone', coh_id, monkeys=get_m)
+			elif subject == 'cohort':
+				return redirect('tools-cohort-hormone-graphs', coh_id)
+			else: # assumes subject == 'download'
+				# WARNING
+				# If hormone data is for-download, replace the raise Http404() with code from tools_cohort_protein, modified for hormones
+				raise Http404()
+	return render_to_response('matrr/tools/hormone/hormone.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
+
+def tools_cohort_hormone_graphs(request, coh_id):
+	old_post = request.session.get('_old_post')
+	cohort = Cohort.objects.get(pk=coh_id)
+	context = {'cohort': cohort}
+	if request.method == "POST" or old_post:
+		post = request.POST if request.POST else old_post
+		hormone_form = HormoneSelectForm(data=post)
+		subject_select_form = CohortSelectForm(data=post)
+		if hormone_form.is_valid() and subject_select_form.is_valid():
+			if int(coh_id) != subject_select_form.cleaned_data['subject'].pk:
+				request.session['_old_post'] = request.POST
+				return redirect(tools_cohort_hormone_graphs, subject_select_form.cleaned_data['subject'].pk)
+			hormones = hormone_form.cleaned_data['hormones']
+			graphs = __gather_cohort_hormone_images(cohort, hormones)
+			context['graphs'] = graphs
+
+	cohorts_with_hormone_data = MonkeyHormone.objects.all().values_list('monkey__cohort__pk', flat=True).distinct()
+	cohorts_with_hormone_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_hormone_data) # get the queryset of cohorts
+
+	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_hormone_data, horizontal=True, initial={'subject': coh_id})
+	context['hormone_form'] = HormoneSelectForm()
+	return render_to_response('matrr/tools/hormone/hormone_cohort.html', context, context_instance=RequestContext(request))
+
+def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
+	cohort = get_object_or_404(Cohort, pk=coh_id)
+	context = {'cohort': cohort}
+	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
+		try:
+			monkeys = _verify_monkeys(request.GET['monkeys'])
+		except ValueError:
+			monkeys = _verify_monkeys(mky_id)
+		get_m = list()
+		if monkeys:
+			for m in monkeys.values_list('mky_id', flat=True):
+				get_m.append(`m`)
+
+			text_monkeys = "-".join(get_m)
+		else:
+			text_monkeys = ""
+		context['graph_form'] = MonkeyHormoneGraphAppearanceForm(text_monkeys)
+		context['hormone_form'] = HormoneSelectForm()
+
+	elif request.method == 'POST':
+		graph_form = MonkeyHormoneGraphAppearanceForm(data=request.POST)
+		hormone_form = HormoneSelectForm(data=request.POST)
+
+		if hormone_form.is_valid() and graph_form.is_valid():
+			try:
+				monkeys = _verify_monkeys(graph_form.cleaned_data['monkeys'])
+			except ValueError:
+				monkeys = _verify_monkeys(mky_id)
+			yaxis = graph_form.cleaned_data['yaxis_units']
+			data_filter = graph_form.cleaned_data['data_filter']
+			hormones = hormone_form.cleaned_data['hormones']
+			graphs = list()
+			if data_filter == "morning":
+				afternoon_reading = False
+			elif data_filter == 'afternoon':
+				afternoon_reading = True
+			else:
+				afternoon_reading = None
+			mpi = ''
+			if yaxis == 'monkey_value':
+				for hormone in hormones:
+					hormone_json = json.dumps([hormone,])
+					for mon in monkeys:
+						# testthis: test MonkeyHormoneImage
+						mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis,hormone=hormone_json, parameters=str({'afternoon_reading': afternoon_reading}))
+						graphs.append(mpi)
+			else:
+				hormone_json = json.dumps(list(hormones))
+				for mon in monkeys:
+					mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis,hormone=hormone_json, parameters=str({'afternoon_reading': afternoon_reading}))
+					graphs.append(mpi)
+			context['graphs'] = graphs
+		else:
+			if 'hormones' not in hormone_form.data:
+				messages.error(request, "You have to select at least one hormone.")
+
+			if len(graph_form.errors) + len(hormone_form.errors) > 1:
+				raise Http404()
+			monkeys = hormone_form.data['monkeys']
+
+		context['monkeys'] = monkeys
+		context['graph_form'] = graph_form
+		context['hormone_form'] = hormone_form
+
+	else:
+		# function lands here when directed to hormone tools from monkey detail page
+		get_m = list()
+		if mky_id:
+			get_m.append(`mky_id`)
+			text_monkeys = "-".join(get_m)
+		else:
+			text_monkeys = ""
+		context['graph_form'] = MonkeyHormoneGraphAppearanceForm(text_monkeys)
+		context['hormone_form'] = HormoneSelectForm()
+
+	return render_to_response('matrr/tools/hormone/hormone_monkey.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_etoh_mtd(request, mtd_id):
@@ -2347,7 +2495,7 @@ def tools_cohort_etoh_graphs(request, cohort_method):
 	context['cohorts'] = cohorts_with_ethanol_data
 	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_ethanol_data, horizontal=True, initial=subject_initial)
 	context['experiment_range_form'] = ExperimentRangeForm(initial=range_initial)
-	return render_to_response('matrr/tools/ethanol_cohort.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/ethanol/ethanol_cohort.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_monkey_etoh(request, monkey_method): # pick a cohort
@@ -2360,7 +2508,7 @@ def tools_monkey_etoh(request, monkey_method): # pick a cohort
 		cohorts_with_etoh_data = MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 		cohorts_with_etoh_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_etoh_data) # so get the queryset of cohorts
 		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_etoh_data)
-	return render_to_response('matrr/tools/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/ethanol/ethanol.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
 def tools_monkey_etoh_graphs(request, monkey_method, coh_id):
@@ -2404,7 +2552,7 @@ def tools_monkey_etoh_graphs(request, monkey_method, coh_id):
 		context['monkey_select_form'] = GraphToolsMonkeySelectForm(drinking_monkeys)
 		context['experiment_range_form'] = ExperimentRangeForm()
 
-	return render_to_response('matrr/tools/ethanol_monkey.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/ethanol/ethanol_monkey.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
 def tools_cohort_bec_graphs(request, cohort_method):
@@ -2450,7 +2598,7 @@ def tools_cohort_bec_graphs(request, cohort_method):
 	context['cohorts'] = cohorts_with_bec_data
 	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_bec_data, horizontal=True, initial=subject_initial)
 	context['experiment_range_form'] = BECRangeForm(initial=range_initial)
-	return render_to_response('matrr/tools/bec_cohort.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/bec/bec_cohort.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
 def tools_monkey_bec(request, monkey_method): # pick a cohort
@@ -2463,7 +2611,7 @@ def tools_monkey_bec(request, monkey_method): # pick a cohort
 		cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
 		cohorts_with_bec_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
 		cohort_form = CohortSelectForm(subject_queryset=cohorts_with_bec_data)
-	return render_to_response('matrr/tools/bec.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/bec/bec.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
 def tools_monkey_bec_graphs(request, monkey_method, coh_id):
@@ -2507,7 +2655,7 @@ def tools_monkey_bec_graphs(request, monkey_method, coh_id):
 		context['monkey_select_form'] = GraphToolsMonkeySelectForm(drinking_monkeys)
 		context['experiment_range_form'] = ExperimentRangeForm()
 
-	return render_to_response('matrr/tools/bec_monkey.html', context, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/bec/bec_monkey.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_confederates'), login_url='/denied/')
 def tools_confederates(request):
@@ -2665,11 +2813,11 @@ def tools_sandbox(request):
 		if not os.path.isdir(base+f):
 			files.append(f)
 	files = sorted(files)
-	return render_to_response('matrr/tools/sandbox.html', {'files':files, 'append':append}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/sandbox/sandbox.html', {'files':files, 'append':append}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_supersandbox(request):
-	return render_to_response('matrr/tools/supersandbox.html', {}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/sandbox/supersandbox.html', {}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):
@@ -2693,7 +2841,7 @@ def tools_sandbox_familytree(request):
 	draw_options['network'] = tree.dump_graphml()
 	draw_options['visualStyle'] = tree.visual_style.get_visual_style()
 	draw_options = mark_safe(str(draw_options))
-	return render_to_response('matrr/tools/sandbox_familytree.html', {'monkey': me.monkey, 'draw_options': draw_options}, context_instance=RequestContext(request))
+	return render_to_response('matrr/tools/sandbox/sandbox_familytree.html', {'monkey': me.monkey, 'draw_options': draw_options}, context_instance=RequestContext(request))
 
 ### End tools
 

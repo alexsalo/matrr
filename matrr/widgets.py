@@ -378,9 +378,6 @@ class FixTypeSelection(Input):
 		if value is None:
 			value = ''
 		output = []
-		# build a select field to choose between the provided choices
-		#TODO
-
 		# build the final text field
 		final_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
 		if value != '':

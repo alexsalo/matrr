@@ -1,4 +1,5 @@
 #encoding=utf-8
+import json
 import logging
 import os
 import ast
@@ -1420,6 +1421,115 @@ class MonkeyProteinImage(MATRRImage):
 
 	class Meta:
 		db_table = 'mpi_monkey_protein_image'
+
+
+#  This model breaks MATRR field name scheme
+class CohortHormoneImage(MATRRImage):
+	chi_id = models.AutoField(primary_key=True)
+	cohort = models.ForeignKey(Cohort, null=False, related_name='chi_image_set', editable=False)
+	hormone = models.CharField("Hormone", max_length=20, null=False, blank=False, help_text="This is the field name of a MonkeyHormone column")
+	# this model does not use MATRRImage.parameters
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		try:
+			mpl_figure, data_map = spiffy_method(cohort=self.cohort, hormone=self.hormone)
+		except Exception as e:
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.error(log_output)
+			mpl_figure = data_map = None
+		super(CohortHormoneImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+
+		PLOTS = plotting.COHORT_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.COHORT_PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, force_render=False, *args, **kwargs):
+		super(CohortHormoneImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		if self.cohort and self.hormone:
+			if not self.image or force_render:
+				# todo; write utils.plotting.cohort_hormone_boxplot(cohort, hormone)
+				self.method = 'cohort_hormone_boxplot'
+				# todo: the MHM field name is stored in self.hormone. try to get the field's verbose name from the field name
+				self.title = '%s : %s' % (str(self.cohort), str(self.hormone))
+				self._construct_filefields()
+
+	def __unicode__(self):
+		# todo: the MHM field name is stored in self.hormone. try to get the field's verbose name from the field name
+		return "%s: %s.%s" % (str(self.pk), str(self.cohort), str(self.hormone))
+
+	class Meta:
+		db_table = 'chi_cohort_hormone_image'
+
+
+#  This model breaks MATRR field name scheme
+class MonkeyHormoneImage(MATRRImage):
+	mhi_id = models.AutoField(primary_key=True)
+	monkey = models.ForeignKey(Monkey, null=False, related_name='mhi_image_set', editable=False)
+	hormones = models.TextField('Hormones', null=False, blank=False,  help_text="This field is a json array of strings.  Each string is a MonkeyHormone field name")
+
+	def _construct_filefields(self, *args, **kwargs):
+		# fetch the plotting method and build the figure, map
+		spiffy_method = self._plot_picker()
+		try:
+			hormone_list = json.loads(self.hormones)
+		except Exception as e:
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.error(log_output)
+			mpl_figure = data_map = None
+		else:
+			try:
+				if self.parameters == 'defaults' or self.parameters == '':
+					mpl_figure, data_map = spiffy_method(monkey=self.monkey, hormones=self.hormones)
+				else:
+					params = ast.literal_eval(self.parameters)
+					mpl_figure, data_map = spiffy_method(monkey=self.monkey, hormones=self.hormones, **params)
+			except Exception as e:
+				exc_type, exc_value, exc_traceback = sys.exc_info()
+				lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+				log_output = ''.join('!! ' + line for line in lines)
+				logging.error(log_output)
+				mpl_figure = data_map = None
+		super(MonkeyHormoneImage, self)._construct_filefields(mpl_figure, data_map)
+
+	def _plot_picker(self):
+		from utils import plotting
+
+		PLOTS = plotting.MONKEY_PLOTS
+
+		if not self.method:
+			return "My plot method field has not been populated.  I don't know what I am."
+		if not self.method in PLOTS:
+			return "My method field doesn't match any keys in plotting.MONKEY_PLOTS"
+
+		return PLOTS[self.method][0]
+
+	def save(self, force_render=False, *args, **kwargs):
+		super(MonkeyHormoneImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
+		# todo: find out which model method (Model.clean()?)to override to catch integrity errors for self.hormones not being json-parse-able
+		if self.monkey and self.hormones and self.method:
+			if not self.image or force_render:
+				self.title = '%s : %s' % (str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbrev',flat=True)))
+				self._construct_filefields()
+
+	def __unicode__(self):
+		return "%s- %s" % (str(self.pk), str(self.monkey))
+
+	class Meta:
+		db_table = 'mhi_monkey_hormone_image'
 
 
 class DataFile(models.Model):

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class=large-headline>Cohort Hormone Tools</div>
+	<br>
+	{% if graphs %}
+		{% for graph in graphs %}
+			<div class="image_container">
+				<div class="image_thumbnail left">
+					<center>{{ graph.title }}</center>
+					<a rel="plot_gallery" title="{{ graph.title }}" href="{% if graph.html_fragment %}{{ graph.html_fragment.url }}{% else %}{{ graph.image.url }}{% endif %}" target="_blank">
+						<img src="{{ graph.thumbnail.url }}">
+					</a>
+				</div>
+			</div>
+		{% endfor %}
+		
+	{% endif %}
+	<div class=clearfix></div>
+	<form action='' method='post'>
+		{% csrf_token %}
+		<div class=headline>{{ subject_select_form.subject.label }}</div>
+		<div class=small>{{ subject_select_form.subject.help_text }}</div>
+		{{ subject_select_form.subject }}
+		<br><br>
+		<div class=headline>{{ hormone_form.hormones.label }}</div>
+		<div class=small>{{ hormone_form.hormones.help_text }}</div>
+		{{ hormone_form.hormones }}
+		<br>
+		<button type='submit' name='submit' class="blockLinkCheckoutButton">Submit</button>
+	</form>
+
+
+
+{% endblock %}

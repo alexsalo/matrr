@@ -1938,10 +1938,16 @@ def rhesus_OA_bec_pellettime_scatter(phase): # phase = 0-2
 			res, idx = cluster.vq.kmeans2(numpy.array(zip(x_axis, y_axis)), 1)
 			main_plot.scatter(res[:,0][0], res[:,1][0], color=color, marker=rhesus_markers[key], alpha=1, s=300, label="%s Centroid" % key, zorder=5)
 		except LinAlgError as e: # I'm not sure what about kmeans2() causes this, or how to avoid it
-			# todo: logging.error('blah')
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.warning(log_output)
 			pass
 		except ValueError as e: # "Input has 0 items" has occurred
-			# todo: logging.error('blah')
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.warning(log_output)
 			pass
 
 	main_plot.legend(loc=9, ncol=4, scatterpoints=1)
@@ -1984,10 +1990,16 @@ def rhesus_OA_bec_pelletcount_scatter(phase): # phase = 0-2
 			res, idx = cluster.vq.kmeans2(numpy.array(zip(x_axis, y_axis)), 1)
 			main_plot.scatter(res[:,0][0], res[:,1][0], color=color, marker=rhesus_markers[key], alpha=1, s=300, label="%s Centroid" % key, zorder=5)
 		except LinAlgError as e: # I'm not sure what about kmeans2() causes this, or how to avoid it
-			# todo: logging.error('blah')
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.warning(log_output)
 			pass
 		except ValueError as e: # "Input has 0 items" has occurred
-			# todo: logging.error('blah')
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.warning(log_output)
 			pass
 
 	main_plot.legend(loc=9, ncol=4, scatterpoints=1)

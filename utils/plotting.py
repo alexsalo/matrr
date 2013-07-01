@@ -933,10 +933,16 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
 			ax1.scatter(res[:,0],res[:,1], marker='x', s=300, linewidths=3, c=color)
 			centeroids.append([res[:,0][0], res[:,1][0]])
 		except LinAlgError as e: # I'm not sure what about kmeans2() causes this, or how to avoid it
-			# todo: logging.error('blah')
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.warning(log_output)
 			pass
 		except ValueError as e: # "Input has 0 items" has occurred
-			# todo: logging.error('blah')
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('!! ' + line for line in lines)
+			logging.warning(log_output)
 			pass
 
 		mky_datas.append((mky, zip(xaxis, yaxis), color))

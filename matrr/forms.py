@@ -683,6 +683,15 @@ class RNASubmitForm(forms.ModelForm):
 		fields = ('tissue_type', 'monkey', 'rna_min', 'rna_max')
 
 
+class HormoneSelectForm(forms.Form):
+	def __init__(self, columns=3, *args, **kwargs):
+		super(HormoneSelectForm, self).__init__(*args, **kwargs)
+		hormone_choices = [('mhm_cort', "Cortisol"), ('mhm_acth', "ACTH"), ('mhm_t', "Testosterone"), ('mhm_doc', "Deoxycorticosterone"), ('mhm_ald', "Aldosterone"), ('mhm_dheas', "DHEAS")]
+		self.fields['hormones'] = forms.MultipleChoiceField(choices=hormone_choices, widget=widgets.CheckboxSelectMultiple_columns(columns=columns))
+		self.fields['hormones'].label = "Hormones"
+		self.fields['hormones'].help_text = "Select hormones to display"
+
+
 class ProteinSelectForm(forms.Form):
 	def __init__(self, protein_queryset=None, columns=3, *args, **kwargs):
 		super(ProteinSelectForm, self).__init__(*args, **kwargs)
@@ -699,6 +708,7 @@ class ProteinSelectForm_advSearch(ProteinSelectForm):
 
 
 class MonkeyProteinGraphAppearanceForm(forms.Form):
+	# y_choices field names are names of plot methods in utils.plotting.  They are used by the MATRRImage framework to construct the images
 	y_choices = (('monkey_protein_pctdev', 'Percent deviation from cohort mean'), ('monkey_protein_stdev',
 				 'Standard deviation from cohort mean'), ('monkey_protein_value', 'Actual value'))
 	yaxis_units = forms.ChoiceField(choices = y_choices, label='Y axis', help_text="Select data to display on y axis",
@@ -713,8 +723,25 @@ class MonkeyProteinGraphAppearanceForm(forms.Form):
 			self.fields['monkeys'].initial = monkeys
 
 
-class ProteinGraphSubjectSelectForm(forms.Form):
-	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
+class MonkeyHormoneGraphAppearanceForm(forms.Form):
+	# y_choices field names are names of plot methods in utils.plotting.  They are used by the MATRRImage framework to construct the images
+	# todo: build the monkey_hormone_pctdev, monkey_hormone_stdev, and monkey_hormone_value plotting methods
+	y_choices = (('monkey_hormone_pctdev', 'Percent deviation from cohort mean'), ('monkey_hormone_stdev',
+				 'Standard deviation from cohort mean'), ('monkey_hormone_value', 'Actual value'))
+	yaxis_units = forms.ChoiceField(choices = y_choices, label='Y axis', help_text="Select data to display on y axis",
+							initial=y_choices[2][0])
+	filter_choices = (('all', 'All values'), ('morning','Only values collected before noon'), ('afternoon', 'Only values collected after noon'))
+	data_filter = forms.ChoiceField(choices = filter_choices, label="Data filter", help_text="Limit data to display based on time of day collected",
+							initial=filter_choices[0][0])
+	monkeys = forms.CharField(widget=widgets.HiddenInput())
+	def __init__(self, monkeys=None, *args, **kwargs):
+		super(MonkeyHormoneGraphAppearanceForm, self).__init__(*args, **kwargs)
+		if monkeys:
+			self.fields['monkeys'].initial = monkeys
+
+
+class GraphSubjectSelectForm(forms.Form):
+	subject_choices = [('cohort', 'Cohorts'), ('monkey', 'Monkeys')]
 	subject = forms.ChoiceField(choices=subject_choices,
 						  label='Subject',
 						  help_text="Choose what scope of subjects to analyze",
@@ -722,9 +749,11 @@ class ProteinGraphSubjectSelectForm(forms.Form):
 						  initial=subject_choices[0][0])
 	monkeys = forms.ModelMultipleChoiceField(queryset=models.Monkey.objects.all(), required=False, widget=widgets.MonkeyCheckboxSelectMultipleSelectAll_DefaultHidden())
 
-	def __init__(self, monkey_queryset, **kwargs):
-		super(ProteinGraphSubjectSelectForm, self).__init__(**kwargs)
+	def __init__(self, monkey_queryset, download_option=False,  **kwargs):
+		super(GraphSubjectSelectForm, self).__init__(**kwargs)
 		self.fields['monkeys'].queryset = monkey_queryset
+		if download_option:
+			self.subject_choices.append(('download', 'Download all data'))
 
 
 class TissueShipmentForm(forms.Form):
@@ -797,15 +826,4 @@ class GraphToolsMonkeySelectForm(forms.Form):
 		js = (
 			'js/toggle-checked.js',
 			)
-
-
-
-class GraphSubjectSelectForm(GraphToolsMonkeySelectForm):
-	subject_choices = (('cohort', 'Cohorts'), ('monkey', 'Monkeys'), ('download', 'Download all data'))
-	subject = forms.ChoiceField(choices=subject_choices,
-						  label='Subject',
-						  help_text="Choose what scope of subjects to analyze",
-						  widget=forms.RadioSelect(renderer=widgets.RadioFieldRendererSpecial_monkey),
-						  initial=subject_choices[0][0])
-
 
