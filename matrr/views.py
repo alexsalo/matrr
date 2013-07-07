@@ -2897,6 +2897,19 @@ def sendfile(request, id):
 	files.append((r, 'thumbnail'))
 	r = MonkeyProteinImage.objects.filter(svg_image=id)
 #	files.append((r, 'svg_image'))
+	## Hormone tools
+	r = CohortHormoneImage.objects.filter(image=id)
+	files.append((r, 'image'))
+	r = CohortHormoneImage.objects.filter(thumbnail=id)
+	files.append((r, 'thumbnail'))
+	r = CohortHormoneImage.objects.filter(svg_image=id)
+	files.append((r, 'svg_image'))
+	r = MonkeyHormoneImage.objects.filter(image=id)
+	files.append((r, 'image'))
+	r = MonkeyHormoneImage.objects.filter(thumbnail=id)
+	files.append((r, 'thumbnail'))
+	r = MonkeyHormoneImage.objects.filter(svg_image=id)
+	files.append((r, 'svg_image'))
 
 	#	this will work for all listed files
 	file = None
