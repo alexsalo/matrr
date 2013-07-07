@@ -1419,27 +1419,36 @@ def shipment_creator(request, req_request_id):
 	if request.method == 'POST':
 		tissue_shipment_form = TissueShipmentForm(acc_rtt_wo_shipment, data=request.POST)
 		if tissue_shipment_form.is_valid():
-			# Sanity check
-			# Do not allow the user to create a shipment with both tissues and genetics
-			contains_genetics = False
-			contains_tissues = False
-			for rtt in tissue_shipment_form.cleaned_data['tissue_requests']:
-				_genetics = rtt.contains_genetics()
-				contains_genetics = contains_genetics or _genetics
-				contains_tissues = contains_tissues or not _genetics
-				if contains_genetics and contains_tissues:
-					messages.error(request, "You cannot send tissues and genetics in the same shipment.  DNA/RNA tissue shipments must be built and shipped separately.")
-					return render_to_response('matrr/shipping/shipment_creator.html',
-						{'req_request': req_request, 'tissue_shipment_form': tissue_shipment_form},
-						context_instance=RequestContext(request))
+			# Do sanity checks
+			if not req_request.can_be_shipped(): # do a sanity check
+				messages.warning(request,
+								 "A request can only be shipped if all of the following are true:\
+									  1) the request has been accepted and not yet shipped, \
+									  2) user has submitted a Purchase Order number, \
+									  3) User has submitted a valid MTA, \
+									  4) User has no pending research update requests.")
+				return redirect(reverse('shipment-creator', args=[req_request_id]))
+			else:
+				# Do not allow the user to create a shipment with both tissues and genetics
+				contains_genetics = False
+				contains_tissues = False
+				for rtt in tissue_shipment_form.cleaned_data['tissue_requests']:
+					_genetics = rtt.contains_genetics()
+					contains_genetics = contains_genetics or _genetics
+					contains_tissues = contains_tissues or not _genetics
+					if contains_genetics and contains_tissues:
+						messages.error(request, "You cannot send tissues and genetics in the same shipment.  DNA/RNA tissue shipments must be built and shipped separately.")
+						return render_to_response('matrr/shipping/shipment_creator.html',
+							{'req_request': req_request, 'tissue_shipment_form': tissue_shipment_form},
+							context_instance=RequestContext(request))
 
-			shipment = Shipment()
-			shipment.user = request.user
-			shipment.req_request = req_request
-			shipment.save()
-			for rtt in tissue_shipment_form.cleaned_data['tissue_requests']:
-				rtt.shipment = shipment
-				rtt.save()
+				shipment = Shipment()
+				shipment.user = request.user
+				shipment.req_request = req_request
+				shipment.save()
+				for rtt in tissue_shipment_form.cleaned_data['tissue_requests']:
+					rtt.shipment = shipment
+					rtt.save()
 			return redirect(reverse('shipment-detail', args=[shipment.pk]))
 		else:
 			messages.error(request, "There was an error processing this form.  If this continues to occur please notify a MATRR admin.")
@@ -1473,40 +1482,24 @@ def shipment_detail(request, shipment_id):
 				messages.success(request, "Tracking number has been saved.")
 
 		if 'ship' in request.POST:
-			if not req_request.can_be_shipped(): # do a sanity check
-				messages.warning(request,
-								 "A request can only be shipped if all of the following are true:\
-													  1) the request has been accepted and not yet shipped, \
-													  2) user has submitted a Purchase Order number, \
-													  3) User has submitted a valid MTA, \
-								 					  4) User has no pending research update requests.")
-			else:
-				confirm_ship = True
-				messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
-				An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
+			confirm_ship = True
+			messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
+			An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
 		if 'confirm_ship' in request.POST:
-			if not req_request.can_be_shipped(): # do a sanity check
-				messages.warning(request,
-								 "A request can only be shipped if all of the following are true:\
-													  1) the request has been accepted and not yet shipped, \
-													  2) user has submitted a Purchase Order number, \
-													  3) User has submitted a valid MTA.\
-								 					  4) User has no pending research update requests.")
+			try:
+				shipment_status = shipment.ship_to_user(request.user)
+			except PermissionDenied as pd:
+				messages.error(request, str(pd))
 			else:
-				try:
-					shipment_status = shipment.ship_to_user(request.user)
-				except PermissionDenied as pd:
-					messages.error(request, str(pd))
-				else:
-					if shipment_status == ShipmentStatus.Shipped:
-						messages.success(request, "Shipment #%d has been shipped." % shipment.pk)
-						if settings.PRODUCTION:
-							emails.send_po_manifest_upon_shipment(shipment)
-							emails.notify_user_upon_shipment(shipment)
-					if shipment_status == ShipmentStatus.Genetics:
-						messages.success(request, "Shipment #%d has been sent to the DNA processing facility." % shipment.pk)
-					req_request.ship_request()
-					return redirect(reverse('shipping-overview'))
+				if shipment_status == ShipmentStatus.Shipped:
+					messages.success(request, "Shipment #%d has been shipped." % shipment.pk)
+					if settings.PRODUCTION:
+						emails.send_po_manifest_upon_shipment(shipment)
+						emails.notify_user_upon_shipment(shipment)
+				if shipment_status == ShipmentStatus.Genetics:
+					messages.success(request, "Shipment #%d has been sent to the DNA processing facility." % shipment.pk)
+				req_request.ship_request()
+				return redirect(reverse('shipping-overview'))
 
 		if 'delete_shipment' in request.POST:
 			if shipment.shp_shipment_status == ShipmentStatus.Genetics:
