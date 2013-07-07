@@ -154,18 +154,25 @@ VIP_IMAGES_LIST = (
 'monkey_etoh_bouts_drinks_intraday',
 'monkey_etoh_first_max_bout',
 'monkey_etoh_bouts_vol',
+'monkey_etoh_induction_cumsum',
+
 'monkey_bec_bubble',
 'monkey_bec_consumption',
 'monkey_bec_monthly_centroids',
-'monkey_etoh_induction_cumsum',
+
+'monkey_hormone_stdev',
+'monkey_hormone_pctdev',
+'monkey_hormone_value',
+
+'cohort_etoh_induction_cumsum',
+'cohort_etoh_gkg_quadbar',
 
 'cohort_bec_maxbout',
 'cohort_bec_firstbout',
 'cohort_bec_firstbout_monkeycluster',
-'cohort_etoh_induction_cumsum',
-'cohort_etoh_gkg_quadbar',
 
-'monkey_errorbox_etoh', # deprecated
+'cohort_hormone_boxplot',
+
 '__vip',
 '__brain_image',
 )
@@ -1430,6 +1437,12 @@ class CohortHormoneImage(MATRRImage):
 	hormone = models.CharField("Hormone", max_length=20, null=False, blank=False, help_text="This is the field name of a MonkeyHormone column")
 	# this model does not use MATRRImage.parameters
 
+	def clean(self):
+		from django.core.exceptions import ValidationError
+		hormone_fieldnames = [f.name for f in MonkeyHormone._meta.fields]
+		if name not in hormone_fieldnames:
+			raise ValidationError('chi.hormone must be a MonkeyHormone fieldname')
+
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
@@ -1459,14 +1472,12 @@ class CohortHormoneImage(MATRRImage):
 		super(CohortHormoneImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
 		if self.cohort and self.hormone:
 			if not self.image or force_render:
-				# todo; write utils.plotting.cohort_hormone_boxplot(cohort, hormone)
 				self.method = 'cohort_hormone_boxplot'
-				# todo: the MHM field name is stored in self.hormone. try to get the field's verbose name from the field name
-				self.title = '%s : %s' % (str(self.cohort), str(self.hormone))
+				verbose_name = MonkeyHormone._meta.get_field_by_name(self.hormone)[0].verbose_name
+				self.title = '%s : %s' % (str(self.cohort), verbose_name)
 				self._construct_filefields()
 
 	def __unicode__(self):
-		# todo: the MHM field name is stored in self.hormone. try to get the field's verbose name from the field name
 		return "%s: %s.%s" % (str(self.pk), str(self.cohort), str(self.hormone))
 
 	class Meta:
@@ -1478,6 +1489,17 @@ class MonkeyHormoneImage(MATRRImage):
 	mhi_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='mhi_image_set', editable=False)
 	hormones = models.TextField('Hormones', null=False, blank=False,  help_text="This field is a json array of strings.  Each string is a MonkeyHormone field name")
+
+	def clean(self):
+		from django.core.exceptions import ValidationError
+		try:
+			fieldnames = json.loads(self.hormones)
+		except:
+			raise ValidationError('mhi.hormones textfield must be a valid JSON string.')
+		hormone_fieldnames = [f.name for f in MonkeyHormone._meta.fields]
+		for name in fieldnames:
+			if name not in hormone_fieldnames:
+				raise ValidationError('Each value in the JSON array must be a MonkeyHormone fieldname')
 
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
@@ -1491,18 +1513,18 @@ class MonkeyHormoneImage(MATRRImage):
 			logging.error(log_output)
 			mpl_figure = data_map = None
 		else:
-			try:
-				if self.parameters == 'defaults' or self.parameters == '':
-					mpl_figure, data_map = spiffy_method(monkey=self.monkey, hormones=self.hormones)
-				else:
-					params = ast.literal_eval(self.parameters)
-					mpl_figure, data_map = spiffy_method(monkey=self.monkey, hormones=self.hormones, **params)
-			except Exception as e:
-				exc_type, exc_value, exc_traceback = sys.exc_info()
-				lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-				log_output = ''.join('!! ' + line for line in lines)
-				logging.error(log_output)
-				mpl_figure = data_map = None
+#			try:
+			if self.parameters == 'defaults' or self.parameters == '':
+				mpl_figure, data_map = spiffy_method(monkey=self.monkey, hormone_fieldnames=hormone_list)
+			else:
+				params = ast.literal_eval(self.parameters)
+				mpl_figure, data_map = spiffy_method(monkey=self.monkey, hormone_fieldnames=hormone_list, **params)
+#			except Exception as e:
+#				exc_type, exc_value, exc_traceback = sys.exc_info()
+#				lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+#				log_output = ''.join('!! ' + line for line in lines)
+#				logging.error(log_output)
+#				mpl_figure = data_map = None
 		super(MonkeyHormoneImage, self)._construct_filefields(mpl_figure, data_map)
 
 	def _plot_picker(self):
@@ -1518,11 +1540,23 @@ class MonkeyHormoneImage(MATRRImage):
 		return PLOTS[self.method][0]
 
 	def save(self, force_render=False, *args, **kwargs):
+		self.clean()
 		super(MonkeyHormoneImage, self).save(*args, **kwargs) # Can cause integrity error if not called first.
-		# todo: find out which model method (Model.clean()?)to override to catch integrity errors for self.hormones not being json-parse-able
 		if self.monkey and self.hormones and self.method:
 			if not self.image or force_render:
-				self.title = '%s : %s' % (str(self.monkey), ",".join(self.proteins.all().values_list('pro_abbrev',flat=True)))
+				# build the title from the json fieldnames
+				labels = list()
+				hormone_fieldnames = json.loads(self.hormones)
+				for hormone in hormone_fieldnames:
+					verbose_hormone = MonkeyHormone._meta.get_field_by_name(hormone)[0].verbose_name
+					labels.append(verbose_hormone)
+				hormone_title = ", ".join(labels)
+				if len(hormone_title) > 30: #  title's too long.  got some work to do
+					title_abbrev = hormone_title[:40].split(', ') # first, chop it to a good length and split it into a list
+					title_abbrev.pop(len(title_abbrev)-1) # now, pop off the last value in the list, since its probably a randomly cut string, like "Washi" instead of "Washington"
+					hormone_title = ", ".join(title_abbrev) # and join the remainders back together
+					hormone_title += "..." # and tell people we chopped it
+				self.title = '%s : %s' % (str(self.monkey), hormone_title)
 				self._construct_filefields()
 
 	def __unicode__(self):
@@ -2789,12 +2823,12 @@ class MonkeyHormone(models.Model):
 	monkey = models.ForeignKey(Monkey, null=False, related_name='hormone_records', db_column='mky_id', editable=False)
 	mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='mhm_record', editable=False, on_delete=models.SET_NULL)
 	mhm_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
-	mhm_cort = models.FloatField("Cortisol", null=True, blank=True)
-	mhm_acth = models.FloatField("ACTH", null=True, blank=True)
-	mhm_t = models.FloatField("Testosterone", null=True, blank=True)
-	mhm_doc = models.FloatField("Deoxycorticosterone", null=True, blank=True)
-	mhm_ald = models.FloatField("Aldosterone", null=True, blank=True)
-	mhm_dheas = models.FloatField("DHEAS", null=True, blank=True)
+	mhm_cort = models.FloatField("Cortisol", null=True, blank=False)
+	mhm_acth = models.FloatField("ACTH", null=True, blank=False)
+	mhm_t = models.FloatField("Testosterone", null=True, blank=False)
+	mhm_doc = models.FloatField("Deoxycorticosterone", null=True, blank=False)
+	mhm_ald = models.FloatField("Aldosterone", null=True, blank=False)
+	mhm_dheas = models.FloatField("DHEAS", null=True, blank=False)
 
 	def __unicode__(self):
 		return "%s | %s" % (str(self.monkey), str(self.mhm_date))
@@ -2810,6 +2844,9 @@ class MonkeyHormone(models.Model):
 			self.save()
 
 	class Meta:
+		permissions = (
+		('view_hormone_tools', 'Can view hormone tools'),
+		)
 		db_table = 'mhm_monkey_hormone'
 
 
@@ -3069,9 +3106,8 @@ class RNARecord(models.Model):
 	rna_id = models.AutoField(primary_key=True)
 	tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id', related_name='rna_set', blank=False, null=False)
 	cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', related_name='rna_set', editable=False, blank=False, null=False)
-	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET(get_sentinel_user), related_name='rna_set', editable=False, null=False)
+	user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='rna_set', editable=False, null=True)
 	monkey = models.ForeignKey(Monkey, db_column='mky_id', related_name='rna_set', blank=True, null=True)
-
 	rna_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
 	rna_min = models.IntegerField("Minimum yield (in micrograms)", "Min Yield", blank=False, null=False)
 	rna_max = models.IntegerField("Maximum yield (in micrograms)", "Max Yield", blank=False, null=False)

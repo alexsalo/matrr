@@ -603,8 +603,35 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 		formatted_monkeys[monkey] = [ convert_timedelta(event_dates[key]) for key in sorted(event_dates.keys()) ]
 	return formatted_monkeys
 
+def _cohort_tools_boxplot(data, title, x_label, y_label):
+	tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = tool_figure.add_subplot(111)
+	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+	ax1.set_axisbelow(True)
+	ax1.set_title(title)
+	ax1.set_xlabel(x_label)
+	ax1.set_ylabel(y_label)
+
+	sorted_keys = [item[0] for item in sorted(data.items())]
+	sorted_values = [item[1] for item in sorted(data.items())]
+	scatter_y = []
+	scatter_x = []
+	for index, dataset in enumerate(sorted_values):
+		for data in dataset:
+			scatter_x.append(index+1)
+			scatter_y.append(data)
+
+	ax1.scatter(scatter_x, scatter_y, marker='+', color='purple', s=80)
+	bp = ax1.boxplot(sorted_values)
+	pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
+	pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
+	pyplot.setp(bp['fliers'], color='red', marker='o', markersize=10)
+	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
+	pyplot.setp(xtickNames, rotation=45)
+	return tool_figure
+
 def cohort_protein_boxplot(cohort=None, protein=None):
-	from matrr.models import Cohort, Protein, MonkeyProtein
+#	from matrr.models import Cohort, Protein, MonkeyProtein
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -620,39 +647,51 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 
 	monkey_proteins = MonkeyProtein.objects.filter(monkey__in=cohort.monkey_set.all(), protein=protein).order_by('mpn_date')
 	if monkey_proteins.count() > 0:
-		fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-		ax1 = fig.add_subplot(111)
-		ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-		ax1.set_axisbelow(True)
-		ax1.set_title('%s : %s' % (str(cohort), str(protein)))
-		ax1.set_xlabel("Date of sample")
-		ax1.set_ylabel("Sample Value, in %s" % str(protein.pro_units))
-
+		title = '%s : %s' % (str(cohort), str(protein))
+		x_label = "Date of sample"
+		y_label = "Sample Value, in %s" % str(protein.pro_units)
 		dates = monkey_proteins.values_list('mpn_date', flat=True)
 		data = dict()
 		for date in dates:
 			data[str(date.date())] = monkey_proteins.filter(mpn_date=date).values_list('mpn_value')
-
-		sorted_keys = [item[0] for item in sorted(data.items())]
-		sorted_values = [item[1] for item in sorted(data.items())]
-		scatter_y = []
-		scatter_x = []
-		for index, dataset in enumerate(sorted_values):
-			for data in dataset:
-				scatter_x.append(index+1)
-				scatter_y.append(data)
-
-		bp = ax1.boxplot(sorted_values)
-		scat = ax1.scatter(scatter_x, scatter_y, marker='+', color='purple', s=80)
-		pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
-		pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
-		pyplot.setp(bp['fliers'], color='red', marker='o', markersize=10)
-		xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
-		pyplot.setp(xtickNames, rotation=45)
+		fig = _cohort_tools_boxplot(data, title, x_label, y_label)
 		return fig, False
 
 	else:
-		print "No MonkeyProteins for this cohort."
+		msg = "No MonkeyProteins for cohort %s, pk=%d." % (str(cohort), cohort.pk)
+		logging.warning(msg)
+		return False, False
+
+def cohort_hormone_boxplot(cohort=None, hormone=""):
+	if not isinstance(cohort, Cohort):
+		try:
+			cohort = Cohort.objects.get(pk=cohort)
+		except Cohort.DoesNotExist:
+			msg = "That's not a valid cohort: %s" % str(cohort)
+			logging.warning(msg)
+			return False, False
+	hormone_field_names = [f.name for f in MonkeyHormone._meta.fields]
+	if not hormone in hormone_field_names:
+		msg = "That's not a MonkeyHormone field name: %s." % hormone
+		logging.warning(msg)
+		return False, False
+
+	cohort_hormones = MonkeyHormone.objects.filter(monkey__in=cohort.monkey_set.all()).order_by('mhm_date')
+	cohort_hormones = cohort_hormones.exclude(Q(**{hormone: None}))
+	if cohort_hormones.count() > 0:
+		title = '%s : %s' % (str(cohort), hormone)
+		x_label = "Date of sample"
+		y_label = "Sample Value"
+		dates = cohort_hormones.values_list('mhm_date', flat=True)
+		data = dict()
+		for date in dates:
+			data[str(date.date())] = cohort_hormones.filter(mhm_date=date).values_list(hormone)
+		fig = _cohort_tools_boxplot(data, title, x_label, y_label)
+		return fig, False
+
+	else:
+		msg = "No MonkeyHormones for cohort %s, pk=%d." % (str(cohort), cohort.pk)
+		logging.warning(msg)
 		return False, False
 
 def cohort_etoh_bihourly_treemap(cohort, from_date=None, to_date=None, dex_type=''):
@@ -1142,18 +1181,19 @@ COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_etoh_bihourly
 COHORT_BEC_TOOLS_PLOTS = {'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),}
 # Dictionary of protein cohort plots VIPs can customize
 COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}
+# Dictionary of hormone cohort plots VIPs can customize
+COHORT_HORMONE_TOOLS_PLOTS = {"cohort_hormone_boxplot": (cohort_hormone_boxplot, "Cohort Hormone Boxplot")}
 
 # Dictionary of Monkey Tools' plots
 COHORT_TOOLS_PLOTS = dict()
 COHORT_TOOLS_PLOTS.update(COHORT_ETOH_TOOLS_PLOTS)
 COHORT_TOOLS_PLOTS.update(COHORT_BEC_TOOLS_PLOTS)
 COHORT_TOOLS_PLOTS.update(COHORT_PROTEIN_TOOLS_PLOTS)
+COHORT_TOOLS_PLOTS.update(COHORT_HORMONE_TOOLS_PLOTS)
 
 # Dictionary of all cohort plots
 COHORT_PLOTS = {}
-COHORT_PLOTS.update(COHORT_ETOH_TOOLS_PLOTS)
-COHORT_PLOTS.update(COHORT_BEC_TOOLS_PLOTS)
-COHORT_PLOTS.update(COHORT_PROTEIN_TOOLS_PLOTS)
+COHORT_PLOTS.update(COHORT_TOOLS_PLOTS)
 COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake, 22hr'),
 					 "cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, "Total Ethanol Intake, ml"),
 					 "cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake, g per kg"),
@@ -1271,48 +1311,60 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 	return fig, 'map'
 
 
-def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
-	try: # silly hack to enforce ability to forloop
-		iter(proteins)
-	except TypeError:
-		proteins = [proteins]
+def _monkey_tools_single_line(x_values, y_values, title, x_label, y_label):
+	"""
+	x_values = list of datetime.datetime() objects
+	y_values = list of y values for each x_value date.
+	title = title of the plot
+	x_label = x axis label
+	y_label = y axis label
 
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-	ax1 = fig.add_subplot(111)
+	This is used by monkey_protein_value() and monkey_hormone_value() tools plot.  These methods collect the data passed
+	to this method.  This method plots that data.
+	"""
+	value_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = value_figure.add_subplot(111)
 	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
 	ax1.set_axisbelow(True)
 
-	protein_abbrevs = []
-	for protein in proteins:
-		protein_abbrevs.append(protein.pro_abbrev)
-	protein_title = ", ".join(protein_abbrevs)
-	if len(protein_title) > 30: #  title's too long.  got some work to do
-		title_abbrev = protein_title[:40].split(', ') # first, chop it to a good length and split it into a list
-		title_abbrev.pop(len(title_abbrev)-1) # now, pop off the last value in the list, since its probably a randomly cut string, like "Washi" instead of "Washington"
-		protein_title = ", ".join(title_abbrev) # and join the remainders back together
-		protein_title += "..." # and tell people we chopped it
-	ax1.set_title('Monkey %s: %s' % (str(monkey.pk), protein_title))
-	ax1.set_xlabel("Date of sample")
-	ax1.set_ylabel("Standard deviation from cohort mean")
+	ax1.set_title(title)
+	ax1.set_xlabel(x_label)
+	ax1.set_ylabel(y_label)
 
-	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
-	for index, protein in enumerate(proteins):
-		dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
-		y_values = []
-		for date in dates:
-			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
-			if afternoon_reading is None:
-				y_values.append(monkey_protein.mpn_stdev)
-			elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
-				y_values.append(monkey_protein.mpn_stdev)
-			elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
-				y_values.append(monkey_protein.mpn_stdev)
-			else:
-				dates = dates.exclude(mpn_date=date)
+	ax1.plot(x_values, y_values, alpha=1, linewidth=4, color='black', marker='o', markersize=10) # I removed label="blah" in refactor
 
-		color_map = get_cmap('gist_rainbow')
-		color = color_map(1.*index/len(proteins))
-		ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=8, markeredgecolor=color, label=str(protein.pro_abbrev))
+	# rotate the xaxis labels
+	xticks = [date.date() for date in x_values]
+	xtick_labels = [str(date.date()) for date in x_values]
+	ax1.set_xticks(xticks)
+	ax1.set_xticklabels(xtick_labels, rotation=45)
+
+	""" I don't think I need the legend for value plots with 1 protein/hormone
+	# Shink current axis by width% to fit the legend
+	box = ax1.get_position()
+	width = 0.8
+	ax1.set_position([box.x0, box.y0, box.width * width, box.height])
+
+	# Put a legend to the right of the current axis
+	ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+	"""
+	return value_figure
+
+def _monkey_tools_multiple_lines(list_of_xvalues, list_of_yvalues, list_of_colors, list_of_labels, title, x_label, y_label):
+	figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	ax1 = figure.add_subplot(111)
+	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+	ax1.set_axisbelow(True)
+
+	ax1.set_title(title)
+	ax1.set_xlabel(x_label)
+	ax1.set_ylabel(y_label)
+
+	dates = list()
+	for x_values, y_values, color, label in zip(list_of_xvalues, list_of_yvalues, list_of_colors, list_of_labels):
+		dates.extend(x_values)
+		ax1.plot(x_values, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=8, markeredgecolor=color, label=label)
+	dates = sorted(set(dates))
 
 	oldylims = ax1.get_ylim()
 	y_min = min(oldylims[0], -1 * oldylims[1])
@@ -1331,6 +1383,52 @@ def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
 
 	# Put a legend to the right of the current axis
 	ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+	return figure
+
+def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
+	try: # silly hack to enforce ability to forloop
+		iter(proteins)
+	except TypeError:
+		proteins = [proteins]
+
+	protein_abbrevs = []
+	for protein in proteins:
+		protein_abbrevs.append(protein.pro_abbrev)
+	protein_title = ", ".join(protein_abbrevs)
+	if len(protein_title) > 30: #  title's too long.  got some work to do
+		title_abbrev = protein_title[:40].split(', ') # first, chop it to a good length and split it into a list
+		title_abbrev.pop(len(title_abbrev)-1) # now, pop off the last value in the list, since its probably a randomly cut string, like "Washi" instead of "Washington"
+		protein_title = ", ".join(title_abbrev) # and join the remainders back together
+		protein_title += "..." # and tell people we chopped it
+	title = 'Monkey %s: %s' % (str(monkey.pk), protein_title)
+	x_label = "Date of sample"
+	y_label = "Standard deviation from cohort mean"
+
+	color_map = get_cmap('gist_rainbow')
+	x_values = list()
+	y_values = list()
+	colors = list()
+	labels = list()
+	for index, protein in enumerate(proteins):
+		mpn_dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
+		y_val = []
+		dates = []
+		for date in mpn_dates:
+			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
+			if afternoon_reading is None:
+				y_val.append(monkey_protein.mpn_stdev)
+				dates.append(date)
+			elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
+				y_val.append(monkey_protein.mpn_stdev)
+				dates.append(date)
+			elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
+				y_val.append(monkey_protein.mpn_stdev)
+				dates.append(date)
+		x_values.append(dates)
+		y_values.append(y_val)
+		colors.append(color_map(1.*index/len(proteins)))
+		labels.append(str(protein.pro_abbrev))
+	fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
 	return fig, False
 
 def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
@@ -1339,11 +1437,6 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 	except TypeError:
 		proteins = [proteins]
 
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-	ax1 = fig.add_subplot(111)
-	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
-	ax1.set_axisbelow(True)
-
 	protein_abbrevs = []
 	for protein in proteins:
 		protein_abbrevs.append(protein.pro_abbrev)
@@ -1353,74 +1446,45 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 		title_abbrev.pop(len(title_abbrev)-1) # now, pop off the last value in the list, since its probably a randomly cut string, like "Washi" instead of "Washington"
 		protein_title = ", ".join(title_abbrev) # and join the remainders back together
 		protein_title += "..." # and tell people we chopped it
-	ax1.set_title('Monkey %s: %s' % (str(monkey.pk), protein_title))
-	ax1.set_xlabel("Date of sample")
-	ax1.set_ylabel("Percent deviation from cohort mean")
+	title = 'Monkey %s: %s' % (str(monkey.pk), protein_title)
+	x_label = "Date of sample"
+	y_label = "Percent deviation from cohort mean"
 
-	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
+	color_map = get_cmap('gist_rainbow')
+	x_values = list()
+	y_values = list()
+	colors = list()
+	labels = list()
 	for index, protein in enumerate(proteins):
-		dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
-		y_values = []
-		for date in dates:
+		mpn_dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
+		y_val = []
+		dates = []
+		for date in mpn_dates:
 			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
 			if afternoon_reading is None:
-				y_values.append(monkey_protein.mpn_pctdev)
+				y_val.append(monkey_protein.mpn_pctdev)
 			elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
-				y_values.append(monkey_protein.mpn_pctdev)
+				y_val.append(monkey_protein.mpn_pctdev)
 			elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
-				y_values.append(monkey_protein.mpn_pctdev)
-			else:
-				dates = dates.exclude(mpn_date=date)
-
-		color_map = get_cmap('gist_rainbow')
-		color = color_map(1.*index/len(proteins))
-		ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=8, markeredgecolor=color, label=str(protein.pro_abbrev))
-
-	oldylims = ax1.get_ylim()
-	y_min = min(oldylims[0], -1 * oldylims[1])
-	y_max = max(oldylims[1], -1 * oldylims[0])
-	ax1.set_ylim(ymin=y_min, ymax=y_max) #  add some spacing, keeps the boxplots from hugging teh axis
-
-	# rotate the xaxis labels
-	xticks = [date.date() for date in dates]
-	xtick_labels = [str(date.date()) for date in dates]
-	ax1.set_xticks(xticks)
-	ax1.set_xticklabels(xtick_labels, rotation=45)
-
-	# Shink current axis by 20%
-	box = ax1.get_position()
-	ax1.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-
-	# Put a legend to the right of the current axis
-	ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+				y_val.append(monkey_protein.mpn_pctdev)
+		x_values.append(dates)
+		y_values.append(y_val)
+		colors.append(color_map(1.*index/len(proteins)))
+		labels.append(str(protein.pro_abbrev))
+	fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
 	return fig, False
 
 def monkey_protein_value(monkey, proteins, afternoon_reading=None):
-#	try: # silly hack to enforce 1 protein
-#		iter(protein)
-#		raise Exception("This method CANNOT be called with multiple proteins.  You must create these images individually.")
-#	except TypeError:
-#		pass
-
 	protein = proteins[0]
 	print "This method CANNOT be called with multiple proteins.  You must create these images individually."
-#		raise Exception("This method CANNOT be called with multiple proteins.  You must create these images individually.")
-
-
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-	ax1 = fig.add_subplot(111)
-	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
-	ax1.set_axisbelow(True)
 
 	protein_title = protein.pro_name
 	if len(protein_title) > 30: #  title's too long.  got some work to do
 		protein_title = protein.pro_abbrev
 
-	ax1.set_title('Monkey %s: %s' % (str(monkey.pk), protein_title))
-	ax1.set_xlabel("Date of sample")
-	ax1.set_ylabel("Protein Value (in %s)" % protein.pro_units)
-
-#	dates = MonkeyProtein.objects.all().values_list('mpn_date', flat=True).distinct().order_by('mpn_date')
+	title = 'Monkey %s: %s' % (str(monkey.pk), protein_title)
+	x_label = "Date of sample"
+	y_label = "Protein Value (in %s)" % protein.pro_units
 
 	dates = MonkeyProtein.objects.filter(monkey=monkey, protein=protein).order_by('mpn_date').values_list('mpn_date', flat=True).distinct()
 	y_values = []
@@ -1435,24 +1499,131 @@ def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 		else:
 			dates = dates.exclude(mpn_date=date)
 
-	color = 'black'
-	ax1.plot(dates, y_values, alpha=1, linewidth=4, color=color, marker='o', markersize=10, label=str(protein.pro_abbrev))
-
-	# rotate the xaxis labels
-	xticks = [date.date() for date in dates]
-	xtick_labels = [str(date.date()) for date in dates]
-	ax1.set_xticks(xticks)
-	ax1.set_xticklabels(xtick_labels, rotation=45)
-
-	# Shink current axis by width% to fit the legend
-	box = ax1.get_position()
-	width = 0.8
-	ax1.set_position([box.x0, box.y0, box.width * width, box.height])
-
-	# Put a legend to the right of the current axis
-	ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+	fig = _monkey_tools_single_line(dates, y_values, title, x_label, y_label)
 	return fig, False
 
+def monkey_hormone_stdev(monkey, hormone_fieldnames):
+	def _calculate_stdev(monkey_hormone, mhm_fieldname):
+		cohort_monkeys = monkey_hormone.monkey.cohort.monkey_set.all().exclude(mky_id=monkey_hormone.monkey.pk)
+		cohort_hormones = MonkeyHormone.objects.filter(mhm_date=monkey_hormone.mhm_date, monkey__in=cohort_monkeys)
+		cohort_hormones = cohort_hormones.exclude(Q(**{mhm_fieldname:None})) # numpy.array().mean() blows up with None values in the array.
+		ch_values = numpy.array(cohort_hormones.values_list(mhm_fieldname, flat=True))
+		stdev = ch_values.std()
+		mean = ch_values.mean()
+		value = getattr(monkey_hormone, mhm_fieldname)
+		if not mean or not value:
+			return None
+		diff = value - mean
+		return diff / stdev
+
+	fieldname_count = len(hormone_fieldnames)
+	color_map = get_cmap('gist_rainbow')
+	x_values = list()
+	y_values = list()
+	colors = list()
+	labels = list()
+	for index, hormone in enumerate(hormone_fieldnames):
+		mhm_dates = MonkeyHormone.objects.filter(monkey=monkey).order_by('mhm_date').values_list('mhm_date', flat=True).distinct()
+		y_val = []
+		dates = []
+		for date in mhm_dates:
+			monkey_hormone = MonkeyHormone.objects.get(monkey=monkey, mhm_date=date)
+			y_val.append(_calculate_stdev(monkey_hormone, hormone))
+			dates.append(date)
+		if len(y_val) == 0:
+			continue
+		x_values.append(dates)
+		y_values.append(y_val)
+		colors.append(color_map(float(index)/fieldname_count))
+		verbose_hormone = MonkeyHormone._meta.get_field(hormone).verbose_name
+		labels.append(verbose_hormone)
+
+	if len(y_val) == 0:
+		return False, False
+	x_label = "Date of sample"
+	y_label = "Standard deviation from cohort mean"
+	hormone_title = ", ".join(labels)
+	if len(hormone_title) > 30: #  title's too long.  got some work to do
+		title_abbrev = hormone_title[:40].split(', ') # first, chop it to a good length and split it into a list
+		title_abbrev.pop(len(title_abbrev)-1) # now, pop off the last value in the list, since its probably a randomly cut string, like "Washi" instead of "Washington"
+		hormone_title = ", ".join(title_abbrev) # and join the remainders back together
+		hormone_title += "..." # and tell people we chopped it
+	title = 'Monkey %s: %s' % (str(monkey.pk), hormone_title)
+	fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
+	return fig, False
+
+def monkey_hormone_pctdev(monkey, hormone_fieldnames):
+	def _populate_pctdev(monkey_hormone, mhm_fieldname):
+		cohort_monkeys = monkey_hormone.monkey.cohort.monkey_set.all().exclude(mky_id=monkey_hormone.monkey.pk)
+		cohort_hormones = MonkeyHormone.objects.filter(mhm_date=monkey_hormone.mhm_date, monkey__in=cohort_monkeys)
+		cohort_hormones = cohort_hormones.exclude(Q(**{mhm_fieldname:None})) # numpy.array().mean() blows up with None values in the array.
+		ch_values = numpy.array(cohort_hormones.values_list(mhm_fieldname, flat=True))
+		mean = ch_values.mean()
+		value = getattr(monkey_hormone, mhm_fieldname)
+		if not mean or not value:
+			return None
+		diff = value - mean
+		return diff / mean * 100
+
+	fieldname_count = len(hormone_fieldnames)
+	color_map = get_cmap('gist_rainbow')
+	x_values = list()
+	y_values = list()
+	colors = list()
+	labels = list()
+	for index, hormone in enumerate(hormone_fieldnames):
+		mhm_dates = MonkeyHormone.objects.filter(monkey=monkey).order_by('mhm_date').values_list('mhm_date', flat=True).distinct()
+		y_val = []
+		dates = []
+		for date in mhm_dates:
+			monkey_hormone = MonkeyHormone.objects.get(monkey=monkey, mhm_date=date)
+			y_val.append(_populate_pctdev(monkey_hormone, hormone))
+			dates.append(date)
+		if len(y_val) == 0:
+			continue
+		x_values.append(dates)
+		y_values.append(y_val)
+		colors.append(color_map(float(index)/fieldname_count))
+		verbose_hormone = MonkeyHormone._meta.get_field(hormone).verbose_name
+		labels.append(verbose_hormone)
+
+	if len(y_val) == 0:
+		return False, False
+	x_label = "Date of sample"
+	y_label = "Standard deviation from cohort mean"
+	hormone_title = ", ".join(labels)
+	if len(hormone_title) > 30: #  title's too long.  got some work to do
+		title_abbrev = hormone_title[:40].split(', ') # first, chop it to a good length and split it into a list
+		title_abbrev.pop(len(title_abbrev)-1) # now, pop off the last value in the list, since its probably a randomly cut string, like "Washi" instead of "Washington"
+		hormone_title = ", ".join(title_abbrev) # and join the remainders back together
+		hormone_title += "..." # and tell people we chopped it
+	title = 'Monkey %s: %s' % (str(monkey.pk), hormone_title)
+	fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
+	return fig, False
+
+def monkey_hormone_value(monkey, hormone_fieldnames):
+	"""
+	monkey = Monkey Instance or pk or mky_real_id
+	hormones = list of MonkeyHormone fieldnames.  Only the first is used.
+	afternoon_reading = boolean indicating the hormones should be filtered to exclude morning/afternoon readings
+	"""
+	hormone = hormone_fieldnames[0]
+	verbose_hormone = MonkeyHormone._meta.get_field(hormone).verbose_name
+	title = 'Monkey %s: %s' % (str(monkey.pk), verbose_hormone)
+	x_label = "Date of sample"
+	y_label = "Protein Value"
+
+	monkey_hormones = MonkeyHormone.objects.filter(monkey=monkey)
+	monkey_hormones = monkey_hormones.exclude(**{hormone:None})
+	dates = monkey_hormones.order_by('mhm_date').values_list('mhm_date', flat=True).distinct()
+	y_values = []
+	for date in dates:
+		monkey_hormone = monkey_hormones.get(mhm_date=date)
+		y_values.append(getattr(monkey_hormone, hormone))
+	if not len(y_values):
+		return False, False
+	fig = _monkey_tools_single_line(dates, y_values, title, x_label, y_label)
+	return fig, False
 
 def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
@@ -2564,17 +2735,21 @@ MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': (monkey_protein_stdev, "Pr
 							  'monkey_protein_pctdev': (monkey_protein_pctdev, "Protein Value (percent deviation)"),
 							  'monkey_protein_value': (monkey_protein_value, "Protein Value (raw value)"),
 							  }
+# Dictionary of hormone monkey plots VIPs can customize
+MONKEY_HORMONE_TOOLS_PLOTS = {'monkey_hormone_stdev': (monkey_hormone_stdev, "Hormone Value (standard deviation)"),
+							  'monkey_hormone_pctdev': (monkey_hormone_pctdev, "Hormone Value (percent deviation)"),
+							  'monkey_hormone_value': (monkey_hormone_value, "Hormone Value (raw value)"),
+							  }
 # Dictionary of Monkey Tools' plots
 MONKEY_TOOLS_PLOTS = dict()
 MONKEY_TOOLS_PLOTS.update(MONKEY_ETOH_TOOLS_PLOTS)
 MONKEY_TOOLS_PLOTS.update(MONKEY_BEC_TOOLS_PLOTS)
 MONKEY_TOOLS_PLOTS.update(MONKEY_PROTEIN_TOOLS_PLOTS)
+MONKEY_TOOLS_PLOTS.update(MONKEY_HORMONE_TOOLS_PLOTS)
 
 # Dictionary of all cohort plots
 MONKEY_PLOTS = {}
-MONKEY_PLOTS.update(MONKEY_ETOH_TOOLS_PLOTS)
-MONKEY_PLOTS.update(MONKEY_BEC_TOOLS_PLOTS)
-MONKEY_PLOTS.update(MONKEY_PROTEIN_TOOLS_PLOTS)
+MONKEY_PLOTS.update(MONKEY_TOOLS_PLOTS)
 MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg, "Average Monkey Ethanol Intake, 22hr"),
 					 "monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, "Total Monkey Ethanol Intake, ml"),
 					 "monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, "Total Monkey Ethanol Intake, g per kg"),

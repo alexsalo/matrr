@@ -725,14 +725,10 @@ class MonkeyProteinGraphAppearanceForm(forms.Form):
 
 class MonkeyHormoneGraphAppearanceForm(forms.Form):
 	# y_choices field names are names of plot methods in utils.plotting.  They are used by the MATRRImage framework to construct the images
-	# todo: build the monkey_hormone_pctdev, monkey_hormone_stdev, and monkey_hormone_value plotting methods
 	y_choices = (('monkey_hormone_pctdev', 'Percent deviation from cohort mean'), ('monkey_hormone_stdev',
 				 'Standard deviation from cohort mean'), ('monkey_hormone_value', 'Actual value'))
 	yaxis_units = forms.ChoiceField(choices = y_choices, label='Y axis', help_text="Select data to display on y axis",
 							initial=y_choices[2][0])
-	filter_choices = (('all', 'All values'), ('morning','Only values collected before noon'), ('afternoon', 'Only values collected after noon'))
-	data_filter = forms.ChoiceField(choices = filter_choices, label="Data filter", help_text="Limit data to display based on time of day collected",
-							initial=filter_choices[0][0])
 	monkeys = forms.CharField(widget=widgets.HiddenInput())
 	def __init__(self, monkeys=None, *args, **kwargs):
 		super(MonkeyHormoneGraphAppearanceForm, self).__init__(*args, **kwargs)

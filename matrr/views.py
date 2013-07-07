@@ -2052,15 +2052,17 @@ def __gather_cohort_protein_images(cohort, proteins):
 	images = []
 	for protein in proteins:
 		cpi_image, is_new = CohortProteinImage.objects.get_or_create(protein=protein, cohort=cohort)
-		images.append(cpi_image)
+		if cpi_image.pk:
+			images.append(cpi_image)
 	return images
 
 def __gather_cohort_hormone_images(cohort, hormones):
 	images = []
 	for hormone in hormones:
 		# testthis: test CohortHormoneImage
-		chi_image, is_new = CohortHormoneImage.objects.get_or_create(hormones=hormone, cohort=cohort)
-		images.append(chi_image)
+		chi_image, is_new = CohortHormoneImage.objects.get_or_create(hormone=hormone, cohort=cohort)
+		if chi_image.pk:
+			images.append(chi_image)
 	return images
 
 def tools_landing(request):
@@ -2305,6 +2307,7 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 
 	return render_to_response('matrr/tools/protein/protein_monkey.html', context, context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.view_hormone_tools'), login_url='/denied/')
 def tools_hormone(request): # pick a cohort
 	if request.method == 'POST':
 		cohort_form = CohortSelectForm(data=request.POST)
@@ -2317,6 +2320,7 @@ def tools_hormone(request): # pick a cohort
 		subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_hormone_data)
 	return render_to_response('matrr/tools/hormone/hormone.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.view_hormone_tools'), login_url='/denied/')
 def tools_cohort_hormone(request, coh_id):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
 	monkey_pks = MonkeyHormone.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct()
@@ -2346,6 +2350,7 @@ def tools_cohort_hormone(request, coh_id):
 				raise Http404()
 	return render_to_response('matrr/tools/hormone/hormone.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.view_hormone_tools'), login_url='/denied/')
 def tools_cohort_hormone_graphs(request, coh_id):
 	old_post = request.session.get('_old_post')
 	cohort = Cohort.objects.get(pk=coh_id)
@@ -2360,6 +2365,8 @@ def tools_cohort_hormone_graphs(request, coh_id):
 				return redirect(tools_cohort_hormone_graphs, subject_select_form.cleaned_data['subject'].pk)
 			hormones = hormone_form.cleaned_data['hormones']
 			graphs = __gather_cohort_hormone_images(cohort, hormones)
+			if len(graphs) < len(hormones):
+				messages.info(request, 'Some image files not created.  This is usually caused by requesting insufficient or non-existant data.')
 			context['graphs'] = graphs
 
 	cohorts_with_hormone_data = MonkeyHormone.objects.all().values_list('monkey__cohort__pk', flat=True).distinct()
@@ -2369,6 +2376,7 @@ def tools_cohort_hormone_graphs(request, coh_id):
 	context['hormone_form'] = HormoneSelectForm()
 	return render_to_response('matrr/tools/hormone/hormone_cohort.html', context, context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.view_hormone_tools'), login_url='/denied/')
 def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
 	context = {'cohort': cohort}
@@ -2398,28 +2406,23 @@ def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
 			except ValueError:
 				monkeys = _verify_monkeys(mky_id)
 			yaxis = graph_form.cleaned_data['yaxis_units']
-			data_filter = graph_form.cleaned_data['data_filter']
 			hormones = hormone_form.cleaned_data['hormones']
 			graphs = list()
-			if data_filter == "morning":
-				afternoon_reading = False
-			elif data_filter == 'afternoon':
-				afternoon_reading = True
-			else:
-				afternoon_reading = None
-			mpi = ''
-			if yaxis == 'monkey_value':
+			if yaxis == 'monkey_hormone_value':
 				for hormone in hormones:
 					hormone_json = json.dumps([hormone,])
 					for mon in monkeys:
-						# testthis: test MonkeyHormoneImage
-						mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis,hormone=hormone_json, parameters=str({'afternoon_reading': afternoon_reading}))
-						graphs.append(mpi)
+						mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis, hormones=hormone_json)
+						if mpi.pk:
+							graphs.append(mpi)
 			else:
 				hormone_json = json.dumps(list(hormones))
 				for mon in monkeys:
-					mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis,hormone=hormone_json, parameters=str({'afternoon_reading': afternoon_reading}))
-					graphs.append(mpi)
+					mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis, hormones=hormone_json)
+					if mpi.pk:
+						graphs.append(mpi)
+			if len(graphs) < len(hormones):
+				messages.info(request, 'Some image files not created.  This is usually caused by requesting insufficient or non-existant data.')
 			context['graphs'] = graphs
 		else:
 			if 'hormones' not in hormone_form.data:
