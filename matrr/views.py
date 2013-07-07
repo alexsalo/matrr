@@ -2171,7 +2171,7 @@ def _verify_monkeys(text_monkeys):
 			query_keys.append(int(mk))
 		return Monkey.objects.filter(mky_id__in=query_keys)
 	else:
-		return list()
+		return Monkey.objects.none()
 
 def tools_cohort_protein_graphs(request, coh_id):
 	proteins = None
@@ -2359,7 +2359,7 @@ def tools_cohort_hormone_graphs(request, coh_id):
 			hormones = hormone_form.cleaned_data['hormones']
 			graphs = __gather_cohort_hormone_images(cohort, hormones)
 			if len(graphs) < len(hormones):
-				messages.info(request, 'Some image files not created.  This is usually caused by requesting insufficient or non-existant data.')
+				messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existant data.')
 			context['graphs'] = graphs
 
 	cohorts_with_hormone_data = MonkeyHormone.objects.all().values_list('monkey__cohort__pk', flat=True).distinct()
@@ -2408,14 +2408,16 @@ def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
 						mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis, hormones=hormone_json)
 						if mpi.pk:
 							graphs.append(mpi)
+				if len(graphs) < len(hormones):
+					messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existant data.')
 			else:
 				hormone_json = json.dumps(list(hormones))
 				for mon in monkeys:
 					mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis, hormones=hormone_json)
 					if mpi.pk:
 						graphs.append(mpi)
-			if len(graphs) < len(hormones):
-				messages.info(request, 'Some image files not created.  This is usually caused by requesting insufficient or non-existant data.')
+				if len(graphs) < len(monkeys):
+					messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existant data.')
 			context['graphs'] = graphs
 		else:
 			if 'hormones' not in hormone_form.data:
@@ -2479,7 +2481,7 @@ def tools_cohort_etoh_graphs(request, cohort_method):
 			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=cohort_method, title=plotting.COHORT_PLOTS[cohort_method][1], parameters=params)
 
 			if is_new and not cohort_image.pk:
-				messages.error(request, 'Image file not created.  This is usually caused by requesting insufficient or non-existant data.')
+				messages.error(request, 'Image file could not be created.  This is usually caused by requesting insufficient or non-existant data.')
 			else:
 				context['graph'] = cohort_image
 		else:
@@ -2582,7 +2584,7 @@ def tools_cohort_bec_graphs(request, cohort_method):
 			params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date, 'sample_before': sample_before, 'sample_after': sample_after})
 			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=cohort_method, title=plotting.COHORT_PLOTS[cohort_method][1], parameters=params)
 			if is_new and not cohort_image.pk:
-				messages.error(request, 'Image file not created.  This is usually caused by requesting insufficient or non-existent data.')
+				messages.error(request, 'Image file could not be created.  This is usually caused by requesting insufficient or non-existent data.')
 			else:
 				context['graph'] = cohort_image
 		else:
