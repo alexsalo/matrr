@@ -299,9 +299,13 @@ class Cohort(models.Model):
 		return url
 
 	def has_protein_data(self):
-		for monkey in self.monkey_set.all():
-			if MonkeyProtein.objects.filter(monkey=monkey):
-				return True
+		if MonkeyProtein.objects.filter(monkey__cohort=self):
+			return True
+		return False
+
+	def has_hormone_data(self):
+		if MonkeyHormone.objects.filter(monkey__cohort=self):
+			return True
 		return False
 
 	def has_brain_images(self):
@@ -406,6 +410,11 @@ class Monkey(models.Model):
 
 	def has_protein_data(self):
 		if MonkeyProtein.objects.filter(monkey=self):
+			return True
+		return False
+
+	def has_hormone_data(self):
+		if MonkeyHormone.objects.filter(monkey=self):
 			return True
 		return False
 

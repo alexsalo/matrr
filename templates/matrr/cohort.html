@@ -31,6 +31,13 @@
 					&nbsp;View Protein Tools
 				</a>
 			{% endif %}
+			{% if cohort.has_hormone_data and perms.matrr.view_hormone_tools%}
+				<br>
+				<a href="{% url tools-cohort-hormone cohort.pk %}">
+					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+					&nbsp;View hormone Tools
+				</a>
+			{% endif %}
 
 			<!--link back to cohort list-->
 			{% if cohort.coh_upcoming %}

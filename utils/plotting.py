@@ -1428,8 +1428,10 @@ def monkey_protein_stdev(monkey, proteins, afternoon_reading=None):
 		y_values.append(y_val)
 		colors.append(color_map(1.*index/len(proteins)))
 		labels.append(str(protein.pro_abbrev))
-	fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
-	return fig, False
+	if any(x_values):
+		fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
+		return fig, False
+	return False, False
 
 def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 	try: # silly hack to enforce ability to forloop
@@ -1463,16 +1465,21 @@ def monkey_protein_pctdev(monkey, proteins, afternoon_reading=None):
 			monkey_protein = MonkeyProtein.objects.get(monkey=monkey, protein=protein, mpn_date=date)
 			if afternoon_reading is None:
 				y_val.append(monkey_protein.mpn_pctdev)
+				dates.append(date)
 			elif afternoon_reading is True and monkey_protein.mpn_date.hour > 12:
 				y_val.append(monkey_protein.mpn_pctdev)
+				dates.append(date)
 			elif afternoon_reading is False and monkey_protein.mpn_date.hour <= 12:
 				y_val.append(monkey_protein.mpn_pctdev)
+				dates.append(date)
 		x_values.append(dates)
 		y_values.append(y_val)
 		colors.append(color_map(1.*index/len(proteins)))
 		labels.append(str(protein.pro_abbrev))
-	fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
-	return fig, False
+	if any(x_values):
+		fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
+		return fig, False
+	return False, False
 
 def monkey_protein_value(monkey, proteins, afternoon_reading=None):
 	protein = proteins[0]
@@ -1549,8 +1556,10 @@ def monkey_hormone_stdev(monkey, hormone_fieldnames):
 		hormone_title = ", ".join(title_abbrev) # and join the remainders back together
 		hormone_title += "..." # and tell people we chopped it
 	title = 'Monkey %s: %s' % (str(monkey.pk), hormone_title)
-	fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
-	return fig, False
+	if any(x_values):
+		fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
+		return fig, False
+	return False, False
 
 def monkey_hormone_pctdev(monkey, hormone_fieldnames):
 	def _populate_pctdev(monkey_hormone, mhm_fieldname):
@@ -1598,8 +1607,10 @@ def monkey_hormone_pctdev(monkey, hormone_fieldnames):
 		hormone_title = ", ".join(title_abbrev) # and join the remainders back together
 		hormone_title += "..." # and tell people we chopped it
 	title = 'Monkey %s: %s' % (str(monkey.pk), hormone_title)
-	fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
-	return fig, False
+	if any(x_values):
+		fig = _monkey_tools_multiple_lines(x_values, y_values, colors, labels, title, x_label, y_label)
+		return fig, False
+	return False, False
 
 def monkey_hormone_value(monkey, hormone_fieldnames):
 	"""

@@ -2052,7 +2052,6 @@ def __gather_cohort_protein_images(cohort, proteins):
 def __gather_cohort_hormone_images(cohort, hormones):
 	images = []
 	for hormone in hormones:
-		# testthis: test CohortHormoneImage
 		chi_image, is_new = CohortHormoneImage.objects.get_or_create(hormone=hormone, cohort=cohort)
 		if chi_image.pk:
 			images.append(chi_image)
@@ -2096,29 +2095,15 @@ def tools_landing(request):
 			pass
 	return render_to_response('matrr/tools/landing.html', {'mky_images': mky_images, 'coh_images': coh_images}, context_instance=RequestContext(request))
 
-def __tools_landing(request): # deprecated
-	if request.method == "POST":
-		dataset = request.POST.get('dataset')
-		if dataset == 'etoh':
-			return redirect('tools-etoh')
-		elif dataset == 'protein':
-			return redirect('tools-protein')
-		elif dataset == 'bec':
-			return redirect('tools-bec')
-		else:
-			messages.error(request, "Form submission was invalid.  Please try again.")
-	return render_to_response('matrr/tools/landing.html', {}, context_instance=RequestContext(request))
-
 def tools_protein(request): # pick a cohort
 	if request.method == 'POST':
 		cohort_form = CohortSelectForm(data=request.POST)
 		if cohort_form.is_valid():
 			cohort = cohort_form.cleaned_data['subject']
 			return redirect('tools-cohort-protein', cohort.pk)
-	else:
-		cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
-		cohorts_with_protein_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
-		subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
+	cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
+	cohorts_with_protein_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
+	subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
 	return render_to_response('matrr/tools/protein/protein.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
 def tools_cohort_protein(request, coh_id):
@@ -2165,8 +2150,8 @@ def tools_cohort_protein(request, coh_id):
 
 def _verify_monkeys(text_monkeys):
 	monkey_keys = text_monkeys.split('-')
-	query_keys = list()
 	if len(monkey_keys) > 0:
+		query_keys = list()
 		for mk in monkey_keys:
 			query_keys.append(int(mk))
 		return Monkey.objects.filter(mky_id__in=query_keys)
@@ -2200,11 +2185,17 @@ def tools_cohort_protein_graphs(request, coh_id):
 def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
 	context = {'cohort': cohort}
+	try:
+		# The monkeys to graph are passed to this view thru request.GET, from tools_cohort_protein
+		monkeys = _verify_monkeys(request.GET['monkeys'])
+	except ValueError:
+		# the mky_id kwarg is present when directed here from monkey detail pages
+		monkeys = _verify_monkeys(mky_id)
+	context['monkeys'] = monkeys
 	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
-		try:
-			monkeys = _verify_monkeys(request.GET['monkeys'])
-		except ValueError:
-			monkeys = _verify_monkeys(mky_id)
+		# We land here when directed from tools_cohort_protein, where we should have monkey_pks from request.GET.
+		# After we've parsed the GET monkeys above, we format the monkeys into a '-'-separated string of pks
+		# These are stored in a hidden CharField within MonkeyProteinGraphAppearanceForm() for no reason, pretty much.
 		get_m = list()
 		if monkeys:
 			for m in monkeys.values_list('mky_id', flat=True):
@@ -2213,18 +2204,15 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 			text_monkeys = "-".join(get_m)
 		else:
 			text_monkeys = ""
-		context['graph_form'] = MonkeyProteinGraphAppearanceForm(text_monkeys)
-		context['protein_form'] = ProteinSelectForm()
-
+		graph_form = MonkeyProteinGraphAppearanceForm(text_monkeys)
+		protein_form = ProteinSelectForm()
 	elif request.method == 'POST':
+		# We land here after submitting POST data of the form, after selecting which graphs to create and what should be in them.
+		# We need to parse out the relevant data from the forms
+		# Once collected, we build the graphs and add them to the graphs list()
 		protein_form = ProteinSelectForm(data=request.POST)
 		graph_form = MonkeyProteinGraphAppearanceForm(data=request.POST)
-
 		if protein_form.is_valid() and graph_form.is_valid():
-			try:
-				monkeys = _verify_monkeys(graph_form.cleaned_data['monkeys'])
-			except ValueError:
-				monkeys = _verify_monkeys(mky_id)
 			yaxis = graph_form.cleaned_data['yaxis_units']
 			data_filter = graph_form.cleaned_data['data_filter']
 			proteins = protein_form.cleaned_data['proteins']
@@ -2236,7 +2224,7 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 			else:
 				afternoon_reading = None
 			mpi = ''
-			if yaxis == 'monkey_value':
+			if yaxis == 'monkey_protein_value':
 				for protein in proteins:
 					for mon in monkeys:
 						mpis = MonkeyProteinImage.objects.filter(monkey=mon,
@@ -2252,52 +2240,50 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
 							mpi.save()
 						if mpis.count() > 0:
 							mpi = mpis[0]
-
-						graphs.append(mpi)
+						if mpi.pk:
+							graphs.append(mpi)
+				if len(graphs) < len(proteins):
+					messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existent data.')
 			else:
 				for mon in monkeys:
 					mpis = MonkeyProteinImage.objects.filter(monkey=mon,
 															 method=yaxis,
 															 parameters=`{'afternoon_reading': afternoon_reading}`)
-					mpis = mpis.annotate(count=Count("proteins")).filter(count=len(proteins))
 					for protein in proteins:
 						mpis = mpis.filter(proteins=protein)
 
 					if len(mpis) == 0:
-						mpi = MonkeyProteinImage(monkey=mon,
-												 method=yaxis,
-												 parameters=str({'afternoon_reading': afternoon_reading})
-						)
+						mpi = MonkeyProteinImage.objects.create(monkey=mon,
+																method=yaxis,
+																parameters=str({'afternoon_reading': afternoon_reading}))
 						mpi.save()
 						mpi.proteins.add(*proteins)
 						mpi.save()
-					if len(mpis) > 0:
+					elif len(mpis) > 0:
 						mpi = mpis[0]
-					graphs.append(mpi)
+					else:
+						raise Exception("How did you get a length less than 0?")
+					if mpi.pk:
+						graphs.append(mpi)
+				if len(graphs) < len(monkeys):
+					messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existent data.')
 			context['graphs'] = graphs
 		else:
 			if 'proteins' not in protein_form.data:
 				messages.error(request, "You have to select at least one protein.")
 
 			if len(graph_form.errors) + len(protein_form.errors) > 1:
-				raise Http404()
-			monkeys = protein_form.data['monkeys']
-
-		context['monkeys'] = monkeys
-		context['graph_form'] = graph_form
-		context['protein_form'] = protein_form
-
+				messages.error(request, "There was an error processing this form.  If this continues to occur please notify a MATRR admin.")
 	else:
 		# function lands here when directed to protein tools from monkey detail page
-		get_m = list()
 		if mky_id:
-			get_m.append(`mky_id`)
-			text_monkeys = "-".join(get_m)
+			text_monkeys = "-".join([str(mky_id),])
 		else:
 			text_monkeys = ""
-		context['graph_form'] = MonkeyProteinGraphAppearanceForm(text_monkeys)
-		context['protein_form'] = ProteinSelectForm()
-
+		graph_form = MonkeyProteinGraphAppearanceForm(text_monkeys)
+		protein_form = ProteinSelectForm()
+	context['graph_form'] = graph_form
+	context['protein_form'] = protein_form
 	return render_to_response('matrr/tools/protein/protein_monkey.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_hormone_tools'), login_url='/denied/')
@@ -2307,10 +2293,9 @@ def tools_hormone(request): # pick a cohort
 		if cohort_form.is_valid():
 			cohort = cohort_form.cleaned_data['subject']
 			return redirect('tools-cohort-hormone', cohort.pk)
-	else:
-		cohorts_with_hormone_data = MonkeyHormone.objects.all().values_list('monkey__cohort__pk', flat=True).distinct()
-		cohorts_with_hormone_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_hormone_data) # get the queryset of cohorts
-		subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_hormone_data)
+	cohorts_with_hormone_data = MonkeyHormone.objects.all().values_list('monkey__cohort__pk', flat=True).distinct()
+	cohorts_with_hormone_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_hormone_data) # get the queryset of cohorts
+	subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_hormone_data)
 	return render_to_response('matrr/tools/hormone/hormone.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_hormone_tools'), login_url='/denied/')
@@ -2340,18 +2325,20 @@ def tools_cohort_hormone(request, coh_id):
 			else: # assumes subject == 'download'
 				# WARNING
 				# If hormone data is for-download, replace the raise Http404() with code from tools_cohort_protein, modified for hormones
-				raise Http404()
+				raise Http404("Hormone data is not available for download at the moment.")
 	return render_to_response('matrr/tools/hormone/hormone.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_hormone_tools'), login_url='/denied/')
 def tools_cohort_hormone_graphs(request, coh_id):
 	old_post = request.session.get('_old_post')
 	cohort = Cohort.objects.get(pk=coh_id)
+	cohorts_with_hormone_data = MonkeyHormone.objects.all().values_list('monkey__cohort__pk', flat=True).distinct()
+	cohorts_with_hormone_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_hormone_data) # get the queryset of cohorts
 	context = {'cohort': cohort}
 	if request.method == "POST" or old_post:
 		post = request.POST if request.POST else old_post
 		hormone_form = HormoneSelectForm(data=post)
-		subject_select_form = CohortSelectForm(data=post)
+		subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_hormone_data, horizontal=True, initial={'subject': coh_id}, data=post)
 		if hormone_form.is_valid() and subject_select_form.is_valid():
 			if int(coh_id) != subject_select_form.cleaned_data['subject'].pk:
 				request.session['_old_post'] = request.POST
@@ -2359,25 +2346,26 @@ def tools_cohort_hormone_graphs(request, coh_id):
 			hormones = hormone_form.cleaned_data['hormones']
 			graphs = __gather_cohort_hormone_images(cohort, hormones)
 			if len(graphs) < len(hormones):
-				messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existant data.')
+				messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existent data.')
 			context['graphs'] = graphs
-
-	cohorts_with_hormone_data = MonkeyHormone.objects.all().values_list('monkey__cohort__pk', flat=True).distinct()
-	cohorts_with_hormone_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_hormone_data) # get the queryset of cohorts
-
-	context['subject_select_form'] = CohortSelectForm(subject_queryset=cohorts_with_hormone_data, horizontal=True, initial={'subject': coh_id})
-	context['hormone_form'] = HormoneSelectForm()
+	else:
+		subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_hormone_data, horizontal=True, initial={'subject': coh_id})
+		hormone_form = HormoneSelectForm()
+	context['subject_select_form'] = subject_select_form
+	context['hormone_form'] = hormone_form
 	return render_to_response('matrr/tools/hormone/hormone_cohort.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_hormone_tools'), login_url='/denied/')
 def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
 	cohort = get_object_or_404(Cohort, pk=coh_id)
 	context = {'cohort': cohort}
+	try:
+		monkeys = _verify_monkeys(request.GET['monkeys'])
+	except ValueError:
+		monkeys = _verify_monkeys(mky_id)
+	context['monkeys'] = monkeys
+
 	if request.method == 'GET' and 'monkeys' in request.GET and request.method != 'POST':
-		try:
-			monkeys = _verify_monkeys(request.GET['monkeys'])
-		except ValueError:
-			monkeys = _verify_monkeys(mky_id)
 		get_m = list()
 		if monkeys:
 			for m in monkeys.values_list('mky_id', flat=True):
@@ -2386,18 +2374,13 @@ def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
 			text_monkeys = "-".join(get_m)
 		else:
 			text_monkeys = ""
-		context['graph_form'] = MonkeyHormoneGraphAppearanceForm(text_monkeys)
-		context['hormone_form'] = HormoneSelectForm()
-
+		graph_form = MonkeyHormoneGraphAppearanceForm(text_monkeys)
+		hormone_form = HormoneSelectForm()
 	elif request.method == 'POST':
 		graph_form = MonkeyHormoneGraphAppearanceForm(data=request.POST)
 		hormone_form = HormoneSelectForm(data=request.POST)
 
 		if hormone_form.is_valid() and graph_form.is_valid():
-			try:
-				monkeys = _verify_monkeys(graph_form.cleaned_data['monkeys'])
-			except ValueError:
-				monkeys = _verify_monkeys(mky_id)
 			yaxis = graph_form.cleaned_data['yaxis_units']
 			hormones = hormone_form.cleaned_data['hormones']
 			graphs = list()
@@ -2409,7 +2392,7 @@ def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
 						if mpi.pk:
 							graphs.append(mpi)
 				if len(graphs) < len(hormones):
-					messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existant data.')
+					messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existent data.')
 			else:
 				hormone_json = json.dumps(list(hormones))
 				for mon in monkeys:
@@ -2417,20 +2400,14 @@ def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
 					if mpi.pk:
 						graphs.append(mpi)
 				if len(graphs) < len(monkeys):
-					messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existant data.')
+					messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existent data.')
 			context['graphs'] = graphs
 		else:
 			if 'hormones' not in hormone_form.data:
 				messages.error(request, "You have to select at least one hormone.")
 
 			if len(graph_form.errors) + len(hormone_form.errors) > 1:
-				raise Http404()
-			monkeys = hormone_form.data['monkeys']
-
-		context['monkeys'] = monkeys
-		context['graph_form'] = graph_form
-		context['hormone_form'] = hormone_form
-
+				messages.error(request, "There was an error processing this form.  If this continues to occur please notify a MATRR admin.")
 	else:
 		# function lands here when directed to hormone tools from monkey detail page
 		get_m = list()
@@ -2439,9 +2416,11 @@ def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
 			text_monkeys = "-".join(get_m)
 		else:
 			text_monkeys = ""
-		context['graph_form'] = MonkeyHormoneGraphAppearanceForm(text_monkeys)
-		context['hormone_form'] = HormoneSelectForm()
+		graph_form = MonkeyHormoneGraphAppearanceForm(text_monkeys)
+		hormone_form = HormoneSelectForm()
 
+	context['graph_form'] = graph_form
+	context['hormone_form'] = hormone_form
 	return render_to_response('matrr/tools/hormone/hormone_monkey.html', context, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_etoh_data'), login_url='/denied/')
@@ -2481,7 +2460,7 @@ def tools_cohort_etoh_graphs(request, cohort_method):
 			cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=cohort_method, title=plotting.COHORT_PLOTS[cohort_method][1], parameters=params)
 
 			if is_new and not cohort_image.pk:
-				messages.error(request, 'Image file could not be created.  This is usually caused by requesting insufficient or non-existant data.')
+				messages.error(request, 'Image file could not be created.  This is usually caused by requesting insufficient or non-existent data.')
 			else:
 				context['graph'] = cohort_image
 		else:
