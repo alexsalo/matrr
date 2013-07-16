@@ -684,6 +684,9 @@ class RNASubmitForm(forms.ModelForm):
 
 
 class HormoneSelectForm(forms.Form):
+	scaled = forms.BooleanField(required=False, label="Scale Y-axis", help_text="Scale the Y-axis window of each plot so that the plot's minimum and maximum value "
+																				"represent the min/max value for all record of the hormone found in MATRR.")
+
 	def __init__(self, columns=3, *args, **kwargs):
 		super(HormoneSelectForm, self).__init__(*args, **kwargs)
 		hormone_choices = [('mhm_cort', "Cortisol"), ('mhm_acth', "ACTH"), ('mhm_t', "Testosterone"), ('mhm_doc', "Deoxycorticosterone"), ('mhm_ald', "Aldosterone"), ('mhm_dheas', "DHEAS")]

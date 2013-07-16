@@ -603,7 +603,7 @@ def cohort_drinking_speed(cohort, dex_type, from_date=None, to_date=None):
 		formatted_monkeys[monkey] = [ convert_timedelta(event_dates[key]) for key in sorted(event_dates.keys()) ]
 	return formatted_monkeys
 
-def _cohort_tools_boxplot(data, title, x_label, y_label):
+def _cohort_tools_boxplot(data, title, x_label, y_label, scale_x=(), scale_y=()):
 	tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = tool_figure.add_subplot(111)
 	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
@@ -611,6 +611,11 @@ def _cohort_tools_boxplot(data, title, x_label, y_label):
 	ax1.set_title(title)
 	ax1.set_xlabel(x_label)
 	ax1.set_ylabel(y_label)
+
+	if scale_x:
+		ax1.set_xlim(scale_x)
+	if scale_y:
+		ax1.set_ylim(scale_y)
 
 	sorted_keys = [item[0] for item in sorted(data.items())]
 	sorted_values = [item[1] for item in sorted(data.items())]
@@ -662,7 +667,7 @@ def cohort_protein_boxplot(cohort=None, protein=None):
 		logging.warning(msg)
 		return False, False
 
-def cohort_hormone_boxplot(cohort=None, hormone=""):
+def cohort_hormone_boxplot(cohort=None, hormone="", scaled=False):
 	if not isinstance(cohort, Cohort):
 		try:
 			cohort = Cohort.objects.get(pk=cohort)
@@ -686,7 +691,15 @@ def cohort_hormone_boxplot(cohort=None, hormone=""):
 		data = dict()
 		for date in dates:
 			data[str(date.date())] = cohort_hormones.filter(mhm_date=date).values_list(hormone)
-		fig = _cohort_tools_boxplot(data, title, x_label, y_label)
+
+		scale_y = ()
+		if scaled:
+			min_field = "cbc_%s_min" % hormone
+			max_field = "cbc_%s_max" % hormone
+			cbcs = CohortMetaData.objects.exclude(Q(**{min_field: None})).exclude(Q(**{max_field: None}))
+			cbc_scales = cbcs.aggregate(Min(min_field), Max(max_field))
+			scale_y = (cbc_scales[min_field+"__min"], cbc_scales[max_field+'__max'])
+		fig = _cohort_tools_boxplot(data, title, x_label, y_label, scale_y=scale_y)
 		return fig, False
 
 	else:
@@ -1311,7 +1324,7 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 	return fig, 'map'
 
 
-def _monkey_tools_single_line(x_values, y_values, title, x_label, y_label):
+def _monkey_tools_single_line(x_values, y_values, title, x_label, y_label, scale_x=(), scale_y=()):
 	"""
 	x_values = list of datetime.datetime() objects
 	y_values = list of y values for each x_value date.
@@ -1330,6 +1343,11 @@ def _monkey_tools_single_line(x_values, y_values, title, x_label, y_label):
 	ax1.set_title(title)
 	ax1.set_xlabel(x_label)
 	ax1.set_ylabel(y_label)
+
+	if scale_x:
+		ax1.set_xlim(scale_x)
+	if scale_y:
+		ax1.set_ylim(scale_y)
 
 	ax1.plot(x_values, y_values, alpha=1, linewidth=4, color='black', marker='o', markersize=10) # I removed label="blah" in refactor
 
@@ -1350,7 +1368,7 @@ def _monkey_tools_single_line(x_values, y_values, title, x_label, y_label):
 	"""
 	return value_figure
 
-def _monkey_tools_multiple_lines(list_of_xvalues, list_of_yvalues, list_of_colors, list_of_labels, title, x_label, y_label):
+def _monkey_tools_multiple_lines(list_of_xvalues, list_of_yvalues, list_of_colors, list_of_labels, title, x_label, y_label, scale_x=(), scale_y=()):
 	figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
 	ax1 = figure.add_subplot(111)
 	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
@@ -1359,6 +1377,11 @@ def _monkey_tools_multiple_lines(list_of_xvalues, list_of_yvalues, list_of_color
 	ax1.set_title(title)
 	ax1.set_xlabel(x_label)
 	ax1.set_ylabel(y_label)
+
+	if scale_x:
+		ax1.set_xlim(scale_x)
+	if scale_y:
+		ax1.set_ylim(scale_y)
 
 	dates = list()
 	for x_values, y_values, color, label in zip(list_of_xvalues, list_of_yvalues, list_of_colors, list_of_labels):
@@ -1612,7 +1635,7 @@ def monkey_hormone_pctdev(monkey, hormone_fieldnames):
 		return fig, False
 	return False, False
 
-def monkey_hormone_value(monkey, hormone_fieldnames):
+def monkey_hormone_value(monkey, hormone_fieldnames, scaled=False):
 	"""
 	monkey = Monkey Instance or pk or mky_real_id
 	hormones = list of MonkeyHormone fieldnames.  Only the first is used.
@@ -1633,7 +1656,15 @@ def monkey_hormone_value(monkey, hormone_fieldnames):
 		y_values.append(getattr(monkey_hormone, hormone))
 	if not len(y_values):
 		return False, False
-	fig = _monkey_tools_single_line(dates, y_values, title, x_label, y_label)
+
+	scale_y = ()
+	if scaled:
+		min_field = "cbc_%s_min" % hormone
+		max_field = "cbc_%s_max" % hormone
+		cbcs = CohortMetaData.objects.exclude(Q(**{min_field: None})).exclude(Q(**{max_field: None}))
+		cbc_scales = cbcs.aggregate(Min(min_field), Max(max_field))
+		scale_y = (cbc_scales[min_field+"__min"], cbc_scales[max_field+'__max'])
+	fig = _monkey_tools_single_line(dates, y_values, title, x_label, y_label, scale_y=scale_y)
 	return fig, False
 
 def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):

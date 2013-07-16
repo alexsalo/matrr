@@ -2049,10 +2049,10 @@ def __gather_cohort_protein_images(cohort, proteins):
 			images.append(cpi_image)
 	return images
 
-def __gather_cohort_hormone_images(cohort, hormones):
+def __gather_cohort_hormone_images(cohort, hormones, params):
 	images = []
 	for hormone in hormones:
-		chi_image, is_new = CohortHormoneImage.objects.get_or_create(hormone=hormone, cohort=cohort)
+		chi_image, is_new = CohortHormoneImage.objects.get_or_create(hormone=hormone, cohort=cohort, parameters=params)
 		if chi_image.pk:
 			images.append(chi_image)
 	return images
@@ -2344,7 +2344,9 @@ def tools_cohort_hormone_graphs(request, coh_id):
 				request.session['_old_post'] = request.POST
 				return redirect(tools_cohort_hormone_graphs, subject_select_form.cleaned_data['subject'].pk)
 			hormones = hormone_form.cleaned_data['hormones']
-			graphs = __gather_cohort_hormone_images(cohort, hormones)
+			scaled = hormone_form.cleaned_data['scaled']
+			params = str({'scaled': scaled})
+			graphs = __gather_cohort_hormone_images(cohort, hormones, params)
 			if len(graphs) < len(hormones):
 				messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existent data.')
 			context['graphs'] = graphs
@@ -2383,12 +2385,14 @@ def tools_monkey_hormone_graphs(request, coh_id, mky_id=None):
 		if hormone_form.is_valid() and graph_form.is_valid():
 			yaxis = graph_form.cleaned_data['yaxis_units']
 			hormones = hormone_form.cleaned_data['hormones']
+			scaled = hormone_form.cleaned_data['scaled']
+			params = str({'scaled': scaled}) # only used for monkey_hormone_value.  pctdev/stdev don't scale
 			graphs = list()
 			if yaxis == 'monkey_hormone_value':
 				for hormone in hormones:
 					hormone_json = json.dumps([hormone,])
 					for mon in monkeys:
-						mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis, hormones=hormone_json)
+						mpi, is_new  = MonkeyHormoneImage.objects.get_or_create(monkey=mon, method=yaxis, hormones=hormone_json, parameters=params)
 						if mpi.pk:
 							graphs.append(mpi)
 				if len(graphs) < len(hormones):

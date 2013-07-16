@@ -1444,19 +1444,22 @@ class CohortHormoneImage(MATRRImage):
 	chi_id = models.AutoField(primary_key=True)
 	cohort = models.ForeignKey(Cohort, null=False, related_name='chi_image_set', editable=False)
 	hormone = models.CharField("Hormone", max_length=20, null=False, blank=False, help_text="This is the field name of a MonkeyHormone column")
-	# this model does not use MATRRImage.parameters
 
 	def clean(self):
 		from django.core.exceptions import ValidationError
 		hormone_fieldnames = [f.name for f in MonkeyHormone._meta.fields]
-		if name not in hormone_fieldnames:
+		if self.hormone not in hormone_fieldnames:
 			raise ValidationError('chi.hormone must be a MonkeyHormone fieldname')
 
 	def _construct_filefields(self, *args, **kwargs):
 		# fetch the plotting method and build the figure, map
 		spiffy_method = self._plot_picker()
 		try:
-			mpl_figure, data_map = spiffy_method(cohort=self.cohort, hormone=self.hormone)
+			if self.parameters == 'defaults' or self.parameters == '':
+				mpl_figure, data_map = spiffy_method(cohort=self.cohort, hormone=self.hormone)
+			else:
+				params = ast.literal_eval(self.parameters)
+				mpl_figure, data_map = spiffy_method(cohort=self.cohort, hormone=self.hormone, **params)
 		except Exception as e:
 			exc_type, exc_value, exc_traceback = sys.exc_info()
 			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
