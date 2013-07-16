@@ -3001,6 +3001,25 @@ class CohortMetaData(models.Model):
 	cbc_ebt_volume_max = models.FloatField('Maximum Etoh Bout volume per day', null=True, blank=True)
 	cbc_ebt_volume_avg = models.FloatField('Average Etoh Bout volume per day', null=True, blank=True)
 
+	cbc_mhm_cort_min = models.FloatField("Minimum Cortisol value", null=True, blank=False)
+	cbc_mhm_cort_max = models.FloatField("Maximum Cortisol value", null=True, blank=False)
+	cbc_mhm_cort_avg = models.FloatField("Average Cortisol value", null=True, blank=False)
+	cbc_mhm_acth_min = models.FloatField("Minimum ACTH value", null=True, blank=False)
+	cbc_mhm_acth_max = models.FloatField("Maximum ACTH value", null=True, blank=False)
+	cbc_mhm_acth_avg = models.FloatField("Average ACTH value", null=True, blank=False)
+	cbc_mhm_t_min = models.FloatField("Minimum Testosterone value", null=True, blank=False)
+	cbc_mhm_t_max = models.FloatField("Maximum Testosterone value", null=True, blank=False)
+	cbc_mhm_t_avg = models.FloatField("Average Testosterone value", null=True, blank=False)
+	cbc_mhm_doc_min = models.FloatField("Minimum Deoxycorticosterone value", null=True, blank=False)
+	cbc_mhm_doc_max = models.FloatField("Maximum Deoxycorticosterone value", null=True, blank=False)
+	cbc_mhm_doc_avg = models.FloatField("Average Deoxycorticosterone value", null=True, blank=False)
+	cbc_mhm_ald_min = models.FloatField("Minimum Aldosterone value", null=True, blank=False)
+	cbc_mhm_ald_max = models.FloatField("Maximum Aldosterone value", null=True, blank=False)
+	cbc_mhm_ald_avg = models.FloatField("Average Aldosterone value", null=True, blank=False)
+	cbc_mhm_dheas_min = models.FloatField("Minimum DHEAS value", null=True, blank=False)
+	cbc_mhm_dheas_max = models.FloatField("Maximum DHEAS value", null=True, blank=False)
+	cbc_mhm_dheas_avg = models.FloatField("Average DHEAS value", null=True, blank=False)
+
 
 	def __unicode__(self):
 		return "%s metadata" % str(self.cohort)
@@ -3105,6 +3124,38 @@ class CohortMetaData(models.Model):
 		self.cbc_ebt_volume_min = data['ebt_volume__min']
 		self.cbc_ebt_volume_max = data['ebt_volume__max']
 		self.cbc_ebt_volume_avg = data['ebt_volume__avg']
+
+		data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
+		data = data.aggregate(Min('mhm_cort'), Max('mhm_cort'), Avg('mhm_cort'))
+		self.cbc_mhm_cort_min = data['mhm_cort__min']
+		self.cbc_mhm_cort_max = data['mhm_cort__max']
+		self.cbc_mhm_cort_avg = data['mhm_cort__avg']
+		data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
+		data = data.aggregate(Min('mhm_acth'), Max('mhm_acth'), Avg('mhm_acth'))
+		self.cbc_mhm_acth_min = data['mhm_acth__min']
+		self.cbc_mhm_acth_max = data['mhm_acth__max']
+		self.cbc_mhm_acth_avg = data['mhm_acth__avg']
+		data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
+		data = data.aggregate(Min('mhm_t'), Max('mhm_t'), Avg('mhm_t'))
+		self.cbc_mhm_t_min = data['mhm_t__min']
+		self.cbc_mhm_t_max = data['mhm_t__max']
+		self.cbc_mhm_t_avg = data['mhm_t__avg']
+		data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
+		data = data.aggregate(Min('mhm_doc'), Max('mhm_doc'), Avg('mhm_doc'))
+		self.cbc_mhm_doc_min = data['mhm_doc__min']
+		self.cbc_mhm_doc_max = data['mhm_doc__max']
+		self.cbc_mhm_doc_avg = data['mhm_doc__avg']
+		data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
+		data = data.aggregate(Min('mhm_ald'), Max('mhm_ald'), Avg('mhm_ald'))
+		self.cbc_mhm_ald_min = data['mhm_ald__min']
+		self.cbc_mhm_ald_max = data['mhm_ald__max']
+		self.cbc_mhm_ald_avg = data['mhm_ald__avg']
+		data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
+		data = data.aggregate(Min('mhm_dheas'), Max('mhm_dheas'), Avg('mhm_dheas'))
+		self.cbc_mhm_dheas_min = data['mhm_dheas__min']
+		self.cbc_mhm_dheas_max = data['mhm_dheas__max']
+		self.cbc_mhm_dheas_avg = data['mhm_dheas__avg']
+
 
 		self.save()
 
