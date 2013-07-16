@@ -31,14 +31,23 @@ class TissueSampleAdmin(admin.ModelAdmin):
 			model.save()
 
 
+class MonkeyAdmin(admin.ModelAdmin):
+	list_display = ['mky_id','cohort', 'mky_real_id', 'mky_name', 'mky_species', 'mky_gender', 'mky_drinking']
+	list_filter = ('cohort', 'mky_gender', 'mky_species', 'mky_drinking', )
+
+
+class RequestAdmin(admin.ModelAdmin):
+	list_display = ['req_request_id', 'cohort', 'user', 'req_request_date', 'req_status']
+	list_filter = ('cohort', 'req_status', 'req_request_date', 'user')
+
+
 class UserAdmin(admin.ModelAdmin):
 	model = User
 	list_display = ['username', 'email', 'first_name', 'last_name', 'date_joined']
 
+
 class VerificationAccountAdmin(admin.ModelAdmin):
-
 	form = OtOAcountForm
-
 	readonly_fields = ['username','verified', 'first_name', 'last_name','act_real_address1','act_real_address1', 'act_real_address2', 'act_real_city', 'act_real_state', 'act_real_country', 'act_shipping_name','email', 'phone_number', 'institution','act_address1', 'act_address2', 'act_city', 'act_state', 'act_country', 'act_fedex']
 	fieldsets = (
 				('Account information',{
@@ -53,6 +62,7 @@ class VerificationAccountAdmin(admin.ModelAdmin):
 										}),
 				)
 
+
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(TissueType, TissueAdmin)
@@ -61,7 +71,7 @@ admin.site.register(Cohort)
 admin.site.register(CohortEvent)
 admin.site.register(CohortData)
 admin.site.register(EventType)
-admin.site.register(Monkey)
+admin.site.register(Monkey, MonkeyAdmin)
 admin.site.register(Shipment)
 admin.site.register(DrinkingExperiment)
 admin.site.register(MonkeyToDrinkingExperiment)
@@ -71,7 +81,7 @@ admin.site.register(TissueSample, TissueSampleAdmin)
 admin.site.register(Publication)
 admin.site.register(Mta)
 admin.site.register(Account, VerificationAccountAdmin)
-admin.site.register(Request)
+admin.site.register(Request, RequestAdmin)
 admin.site.register(TissueInventoryVerification)
 admin.site.register(TissueRequest)
 admin.site.register(TissueRequestReview)
