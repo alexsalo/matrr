@@ -2828,6 +2828,7 @@ class FamilyRelationship(models.Model):
 
 
 class MonkeyHormone(models.Model):
+	UNITS = {'mhm_cort':'micrograms/dl', 'mhm_acth':'pg/ml', 'mhm_t':'ng/ml', 'mhm_doc': 'pg/ml', 'mhm_ald': 'ng/ml','mhm_dheas':'micrograms/ml'}
 	mhm_id = models.AutoField(primary_key=True)
 	monkey = models.ForeignKey(Monkey, null=False, related_name='hormone_records', db_column='mky_id', editable=False)
 	mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='mhm_record', editable=False, on_delete=models.SET_NULL)

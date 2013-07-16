@@ -681,7 +681,7 @@ def cohort_hormone_boxplot(cohort=None, hormone=""):
 	if cohort_hormones.count() > 0:
 		title = '%s : %s' % (str(cohort), hormone)
 		x_label = "Date of sample"
-		y_label = "Sample Value"
+		y_label = "Hormone Value, %s" % MonkeyHormone.UNITS[hormone]
 		dates = cohort_hormones.values_list('mhm_date', flat=True)
 		data = dict()
 		for date in dates:
@@ -1599,7 +1599,7 @@ def monkey_hormone_pctdev(monkey, hormone_fieldnames):
 	if len(y_val) == 0:
 		return False, False
 	x_label = "Date of sample"
-	y_label = "Standard deviation from cohort mean"
+	y_label = "Standard deviations from cohort mean"
 	hormone_title = ", ".join(labels)
 	if len(hormone_title) > 30: #  title's too long.  got some work to do
 		title_abbrev = hormone_title[:40].split(', ') # first, chop it to a good length and split it into a list
@@ -1622,7 +1622,7 @@ def monkey_hormone_value(monkey, hormone_fieldnames):
 	verbose_hormone = MonkeyHormone._meta.get_field(hormone).verbose_name
 	title = 'Monkey %s: %s' % (str(monkey.pk), verbose_hormone)
 	x_label = "Date of sample"
-	y_label = "Protein Value"
+	y_label = "Hormone Value, %s" % MonkeyHormone.UNITS[hormone]
 
 	monkey_hormones = MonkeyHormone.objects.filter(monkey=monkey)
 	monkey_hormones = monkey_hormones.exclude(**{hormone:None})
