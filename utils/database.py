@@ -1956,6 +1956,54 @@ def load_hormone_data(file_name, overwrite=False, header=True):
 			mhm.save()
 	print "Data load complete."
 
+def load_hormone_data__cyno1(file_name, overwrite=False, header=True):
+	fields = (
+		'monkey', # mky_real_id
+		'mhm_date',
+		'mhm_cort',
+		'mhm_acth',
+		)
+	csv_infile = csv.reader(open(file_name, 'rU'), delimiter=",")
+	offset = 0
+	if header:
+		columns = csv_infile.next()
+		offset += 1
+	for line_number, row in enumerate(csv_infile, offset):
+		if all(row[:2]) and any(row[2:]):
+			try:
+				monkey = Monkey.objects.get(mky_real_id=row[0])
+			except Monkey.DoesNotExist:
+				print ERROR_OUTPUT % (line_number, "Monkey does not exist.", str(row))
+				continue
+			try:
+				mhm_date = dt.strptime(row[1], "%m/%d/%y")
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, "Wrong date format", str(row))
+				continue
+			mhm, is_new = MonkeyHormone.objects.get_or_create(monkey=monkey, mhm_date=mhm_date)
+			if not is_new and not overwrite:
+				print ERROR_OUTPUT % (line_number, "Monkey+Date exists", str(row))
+				continue
+			try:
+				float(row[2])
+			except ValueError:
+				pass
+			else:
+				mhm.mhm_cort = row[2]
+			try:
+				float(row[3])
+			except ValueError:
+				pass
+			else:
+				mhm.mhm_acth = row[3]
+			try:
+				mhm.full_clean()
+			except Exception as e:
+				print ERROR_OUTPUT % (line_number, e, str(row))
+				continue
+			mhm.save()
+	print "Data load complete."
+
 def load_bec_data(file_name, overwrite=False, header=True):
 	def format_time(unformatted):
 		""" Converts "hh:MM AM" into HH:MM """
