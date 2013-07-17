@@ -32,6 +32,7 @@ class TissueSampleAdmin(admin.ModelAdmin):
 
 
 class MonkeyAdmin(admin.ModelAdmin):
+	readonly_fields = ('mky_age_at_intox',)
 	list_display = ['mky_id','cohort', 'mky_real_id', 'mky_name', 'mky_species', 'mky_gender', 'mky_drinking']
 	list_filter = ('cohort', 'mky_gender', 'mky_species', 'mky_drinking', )
 
