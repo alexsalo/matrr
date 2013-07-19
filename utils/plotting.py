@@ -26,20 +26,21 @@ DEFAULT_FIG_SIZE = (10,10)
 HISTOGRAM_FIG_SIZE = (15,10)
 THIRDS_FIG_SIZE = (20,8)
 DEFAULT_DPI = 80
-COLORS = {'monkey' : "#01852F", 'cohort' : 'black'}
 
 def validate_dates(from_date=False, to_date=False):
-	import traceback
 	if from_date and not isinstance(from_date, (datetime, date)):
 		try:
 			#maybe its a str(datetime)
 			from_date = dateutil.parser.parse(from_date)
 		except:
 			#otherwise give up
-			print "Invalid parameter, from_date"
-			print '>>> traceback <<<'
-			traceback.print_exc()
-			print '>>> end of traceback <<<'
+			logging.warning("Invalid parameter, from_date")
+			logging.warning('>>> traceback <<<')
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('-- ' + line for line in lines)
+			logging.warning(log_output)
+			logging.warning('>>> end of traceback <<<')
 			from_date = None
 	if to_date and not isinstance(to_date, (datetime, date)):
 		try:
@@ -47,10 +48,13 @@ def validate_dates(from_date=False, to_date=False):
 			to_date = dateutil.parser.parse(to_date)
 		except:
 			#otherwise give up
-			print "Invalid parameter, to_date"
-			print '>>> traceback <<<'
-			traceback.print_exc()
-			print '>>> end of traceback <<<'
+			logging.warning("Invalid parameter, to_date")
+			logging.warning('>>> traceback <<<')
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+			log_output = ''.join('-- ' + line for line in lines)
+			logging.warning(log_output)
+			logging.warning('>>> end of traceback <<<')
 			to_date = None
 	return from_date, to_date
 
@@ -133,7 +137,8 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
 
 def _lifetime_cumsum_etoh(eevs, subplot, color_monkey=True):
 	"""
-
+	This is used by monkey_etoh_lifetime_cumsum.  It will extract the ethanol events from the eevs arg
+	and create a cumulative summation plot of the ethanol intake.
 	"""
 	colors = ['navy', 'goldenrod']
 	volumes = numpy.array(eevs.values_list('eev_etoh_volume', flat=True))
@@ -145,7 +150,8 @@ def _lifetime_cumsum_etoh(eevs, subplot, color_monkey=True):
 
 def _days_cumsum_etoh(eevs, subplot):
 	"""
-	This fn is used by cohort_etoh_induction_cumsum and monky_etoh_induction_cumsum.  It plots the eev cumsum lines on the gives subplot.
+	This fn is used by cohort_etoh_induction_cumsum and monky_etoh_induction_cumsum.  It will extract the ethanol event data
+	from the eevs argand plot the cumulative summation line for each day's intake, resetting the line to 0 each new day.
 	"""
 	colors = ['navy', 'goldenrod']
 	dates = eevs.dates('eev_occurred', 'day')
@@ -188,6 +194,12 @@ def _days_cumsum_etoh(eevs, subplot):
 
 # histograms
 def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend):
+	"""
+	A generalized histogram function, used to add context to complex graphs by plotting the histogram distribution of
+	values being displayed in the graph.  This will draw 4 lines onto the axis arg, lines for monkey, cohort, high_drinking_monkey,
+	and low_drinking_monkey. Each line shows the distribution of values for that subject, providing quick comparison of
+	the subject monkey to its peers and high/low drinking monkeys.
+	"""
 	maxes = [monkey_values.max(), cohort_values.max(), high_values.max(), low_values.max()]
 	linspace = numpy.linspace(0, max(maxes), 15) # defines number of bins in histogram
 
@@ -206,14 +218,14 @@ def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_va
 	axis.plot(newx, newy, color='purple', linewidth=2, label=str(monkey.cohort)) # smoothed line
 
 	# high-drinker histogram spline
-	n, bins, patches = axis.hist(high_values, bins=linspace, normed=True, alpha=0, color='purple')
+	n, bins, patches = axis.hist(high_values, bins=linspace, normed=True, alpha=0, color='red')
 	bincenters = 0.5*(bins[1:]+bins[:-1])
 	newx = numpy.linspace(min(bincenters), max(bincenters), 100) # smooth out the x axis
 	newy = spline(bincenters, n, newx) # smooth out the y axis
 	axis.plot(newx, newy, color='red', ls='--', linewidth=2, label="HD") # smoothed line
 
 	# low-drinker histogram spline
-	n, bins, patches = axis.hist(low_values, bins=linspace, normed=True, alpha=0, color='purple')
+	n, bins, patches = axis.hist(low_values, bins=linspace, normed=True, alpha=0, color='blue')
 	bincenters = 0.5*(bins[1:]+bins[:-1])
 	newx = numpy.linspace(min(bincenters), max(bincenters), 100) # smooth out the x axis
 	newy = spline(bincenters, n, newx) # smooth out the y axis
@@ -230,6 +242,28 @@ def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_va
 	return axis
 
 def _histogram_legend(monkey, axis):
+	"""
+	Creates a legend subplot for the histograms that are created by _general_histogram().
+
+	Example of use inside a plotting method:
+	# create the grid spec for the histograms (and legend)
+	hist_gs = gridspec.GridSpec(4, 1)
+	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
+
+	# create the first subplot
+	bec_bub_hist = fig.add_subplot(hist_gs[0, :])
+	# and add the this legend to that subplot
+	bec_bub_hist = _histogram_legend(monkey, bec_bub_hist)
+	# add a new subplot
+	bec_bub_hist = fig.add_subplot(hist_gs[1, :])
+	# and create the histogram in that subplot
+	bec_bub_hist = _bec_histogram(monkey, 'bec_mg_pct', bec_bub_hist, from_date=from_date, to_date=to_date, sample_before=None, sample_after=None, dex_type=dex_type)
+	# repeat
+	bec_bub_hist = fig.add_subplot(hist_gs[2, :])
+	bec_bub_hist = _bec_histogram(monkey, 'bec_pct_intake', bec_bub_hist, from_date=from_date, to_date=to_date, sample_before=None, sample_after=None, dex_type=dex_type)
+	bec_bub_hist = fig.add_subplot(hist_gs[3, :])
+	bec_bub_hist = _bec_histogram(monkey, 'bec_gkg_etoh', bec_bub_hist, from_date=from_date, to_date=to_date, sample_before=None, sample_after=None, dex_type=dex_type)
+	"""
 	from matplotlib.lines import Line2D
 	lines = list()
 	labels = list()
@@ -258,6 +292,12 @@ def _histogram_legend(monkey, axis):
 	axis.set_xticks([])
 
 def _bec_histogram(monkey, column_name, axis, from_date=None, to_date=None, sample_before=None, sample_after=None, dex_type='', verbose_name='', hide_xticks=False, show_legend=False):
+	"""
+	This will collect data about the distribution of BEC values in the [column_name] MonkeyBEC column for the monkey, its
+	cohort and the high/low drinking benchmark monkeys.
+
+	Once collected, this data is passed to _general_histogram() to plot the histograms onto [axis].
+	"""
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(pk=monkey)
@@ -303,6 +343,12 @@ def _bec_histogram(monkey, column_name, axis, from_date=None, to_date=None, samp
 	return _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend)
 
 def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_type='', verbose_name='', hide_xticks=False, show_legend=False):
+	"""
+	This will collect data about the distribution of MTD values in the [column_name] MonkeyToDrinkingExperiment column
+	for the monkey, its cohort and the high/low drinking benchmark monkeys.
+
+	Once collected, this data is passed to _general_histogram() to plot the histograms onto [axis].
+	"""
 	if not isinstance(monkey, Monkey):
 		try:
 			monkey = Monkey.objects.get(pk=monkey)
@@ -343,65 +389,6 @@ def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_
 	low_values = numpy.array(low_dex.values_list(column_name, flat=True))
 	return _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend)
 
-def bec_histogram_general(monkey, column_name, dex_type=''):
-	if not isinstance(monkey, Monkey):
-		try:
-			monkey = Monkey.objects.get(pk=monkey)
-		except Monkey.DoesNotExist:
-			try:
-				monkey = Monkey.objects.get(mky_real_id=monkey)
-			except Monkey.DoesNotExist:
-				print("That's not a valid monkey.")
-				return False, False
-
-	bec_records = MonkeyBEC.objects.filter(monkey=monkey)
-	if dex_type:
-		bec_records = bec_records.filter(drinking_experiment__dex_type=dex_type)
-
-	if not bec_records:
-		return False, False
-
-	field = bec_records[0]._meta.get_field(column_name)
-	if not isinstance(field, (models.FloatField, models.IntegerField, models.BigIntegerField, models.SmallIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField)):
-		return False, False
-
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-	main_gs = gridspec.GridSpec(1, 1)
-	main_gs.update(left=0.05, right=0.95, wspace=0, hspace=0)
-	main_plot = fig.add_subplot(main_gs[:,:])
-	main_plot = _bec_histogram(monkey, column_name, main_plot, dex_type=dex_type, show_legend=True)
-	return fig, True
-
-def mtd_histogram_general(monkey, column_name, dex_type=''):
-	if not isinstance(monkey, Monkey):
-		try:
-			monkey = Monkey.objects.get(pk=monkey)
-		except Monkey.DoesNotExist:
-			try:
-				monkey = Monkey.objects.get(mky_real_id=monkey)
-			except Monkey.DoesNotExist:
-				print("That's not a valid monkey.")
-				return False, False
-
-	mtd_records = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
-	if dex_type:
-		mtd_records = mtd_records.filter(drinking_experiment__dex_type=dex_type)
-
-	if not mtd_records:
-		return False, False
-
-	field = mtd_records[0]._meta.get_field(column_name)
-	if not isinstance(field, (models.FloatField, models.IntegerField, models.BigIntegerField, models.SmallIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField)):
-		return False, False
-
-	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-	main_gs = gridspec.GridSpec(1, 1)
-	main_gs.update(left=0.05, right=0.95, wspace=0, hspace=0)
-	main_plot = fig.add_subplot(main_gs[:,:])
-	main_plot = _mtd_histogram(monkey, column_name, main_plot, dex_type=dex_type, show_legend=True)
-	return fig, True
-
-
 ### Specific Callables ###
 def etoh_intake(queryset):
 	return queryset.exclude(mtd_etoh_intake=None).values_list('mtd_etoh_intake')
@@ -416,87 +403,83 @@ def mtd_weight(queryset):
 	return queryset.exclude(mtd_weight=None).values_list('mtd_weight')
 
 def necropsy_summary_avg_22hr_g_per_kg(queryset):
+	"""
+	This method, used by necropsy graphs, will collect 12 month and 6 month average g/kg etoh intake for the [queryset]
+
+	Args:
+	queryset is expected to be a queryset of monkeys
+
+	return:
+	tuple, ( list of 6 month averages, list of 12 month averages, list of monkey pk labels )
+	"""
 	summaries = []
 	raw_labels = []
 	for mky in queryset.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
 		try:
 			summaries.append(mky.necropsy_summary)
-			raw_labels.append(str(mky.pk))
-		except: # really only catching mky.necropsy_summary == None
+		except NecropsySummary.DoesNotExist:
 			continue
+		raw_labels.append(str(mky.pk))
 	return [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries], [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries], raw_labels
 
 def necropsy_summary_etoh_4pct(queryset):
+	"""
+	This method, used by necropsy graphs, will collect 22hr and lifetime etoh intake (in ml) for the [queryset]
+
+	Args:
+	queryset is expected to be a queryset of monkeys
+
+	return:
+	tuple, ( list of open access total intakes, list of lifetime total intakes, list of monkey pk labels )
+	"""
 	summaries = []
 	raw_labels = []
 	for mky in queryset.order_by("necropsy_summary__ncm_etoh_4pct_lifetime", "necropsy_summary__ncm_etoh_4pct_22hr"):
 		try:
 			summaries.append(mky.necropsy_summary)
-			raw_labels.append(str(mky.pk))
-		except: # really only catching mky.necropsy_summary == None
+		except NecropsySummary.DoesNotExist:
 			continue
+		raw_labels.append(str(mky.pk))
 	return [summary.ncm_etoh_4pct_22hr for summary in summaries], [summary.ncm_etoh_4pct_lifetime for summary in summaries], raw_labels
 
 def necropsy_summary_sum_g_per_kg(queryset):
+	"""
+	This method, used by necropsy graphs, will collect 22hr and lifetime etoh intake (in g/kg) for the [queryset]
+
+	Args:
+	queryset is expected to be a queryset of monkeys
+
+	return:
+	tuple, ( list of open access total intakes, list of lifetime total intakes, list of monkey pk labels )
+	"""
 	summaries = []
 	raw_labels = []
 	for mky in queryset.order_by("necropsy_summary__ncm_sum_g_per_kg_22hr", "necropsy_summary__ncm_sum_g_per_kg_lifetime"):
 		try:
 			summaries.append(mky.necropsy_summary)
-			raw_labels.append(str(mky.pk))
-		except: # really only catching mky.necropsy_summary == None
+		except NecropsySummary.DoesNotExist:
 			continue
+		raw_labels.append(str(mky.pk))
 	return [summary.ncm_sum_g_per_kg_22hr for summary in summaries], [summary.ncm_sum_g_per_kg_lifetime for summary in summaries], raw_labels
 ### End Specific Callables ###
 
 
-def cohort_necropsy_avg_22hr_g_per_kg(cohort):
-	nec_sums = []
-	for monkey in cohort.monkey_set.all():
-		try:
-			nec_sums.append(monkey.necropsy_summary)
-		except NecropsySummary.DoesNotExist:
-			continue
-	if nec_sums:
-		graph_title = 'Average Daily Ethanol Intake for cohort %s during 22 Hour Free Access Phase' % str(cohort)
-		x_label = "Average Daily Ethanol Intake (in g/kg)"
-		legend_labels = ('12 Month Average', '6 Month Average')
-		return cohort_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
-	else:
-		return False, False
+def _cohort_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
+	"""
+	This generalized method will create the necropsy summary graph using the parameters passed it.  These parameters
+	are used to collect the graph's data and customize the labels/appearance to match that data.
 
-def cohort_necropsy_etoh_4pct(cohort):
-	nec_sums = []
-	for monkey in cohort.monkey_set.all():
-		try:
-			nec_sums.append(monkey.necropsy_summary)
-		except NecropsySummary.DoesNotExist:
-			continue
-	if nec_sums:
-		graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
-		x_label = "Ethanol Intake (in 4% ml)"
-		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
-		return cohort_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
-	else:
-		return False, False
-
-def cohort_necropsy_sum_g_per_kg(cohort):
-	nec_sums = []
-	for monkey in cohort.monkey_set.all():
-		try:
-			nec_sums.append(monkey.necropsy_summary)
-		except NecropsySummary.DoesNotExist:
-			continue
-	if nec_sums:
-		graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
-		x_label = "Ethanol Intake (in g/kg)"
-		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
-		return cohort_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
-	else:
-		return False, False
-
-def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
-	from matrr.models import Cohort
+	Args:
+	specific_callable: a callable method expected to return a tuple of 3 lists, coh_data_1, coh_data_2, cohort_labels
+					   coh_data_N values are used as Y values for horizontal bar graphs in the plot.  The cohort_labels
+					   are assumed to be ordered the same as the coh_data_N values.
+	x_label: label of the x axis.  As this is a horizontal bar graph, the x axis represents the dependent variable, the
+			 data value of interest.  The Y axis is treated as the independent variable (monkey name/label)
+	graph_title:  Title of the graph
+	legend_labels: specific_callable will return 2 datasets.  legend_labels will be the label (in the legend) for these
+				   datasets.
+	cohort: the subject cohort for which this graph is being made.
+	"""
 	##  Verify argument is actually a cohort
 	if not isinstance(cohort, Cohort):
 		try:
@@ -509,7 +492,6 @@ def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 	ax1 = fig.add_subplot(111)
 	ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
 	ax1.set_axisbelow(True)
-#	ax1.set_title('Average Ethanol Intake for Monkey %s during 22 Hour Free Access Phase' % str(monkey.pk))
 	ax1.set_title(graph_title)
 	ax1.set_ylabel("Monkey")
 	ax1.set_xlabel(x_label)
@@ -519,7 +501,7 @@ def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 	coh_data_1, coh_data_2, cohort_labels = specific_callable(cohort.monkey_set.all())
 
 	if not coh_data_1:
-		print("Cohort doesn't have any necropsy summary data for this callable")
+		logging.warning("Cohort pk=%d doesn't have any necropsy summary data for this callable" % cohort.pk)
 		return False, False
 
 	idx = numpy.arange(len(coh_data_1))
@@ -550,6 +532,45 @@ def cohort_necropsy_summary_general(specific_callable, x_label, graph_title, leg
 	ax1.set_yticks(idx+width)
 	ax1.set_yticklabels(cohort_labels)
 	return fig, 'map'
+
+def cohort_necropsy_avg_22hr_g_per_kg(cohort):
+	"""
+	This method will create a cohort graph (horizontal bar graph) showing each monkey's average open access etoh intake
+	in g/kg.
+	"""
+	if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
+		graph_title = 'Average Daily Ethanol Intake for cohort %s during 22 Hour Free Access Phase' % str(cohort)
+		x_label = "Average Daily Ethanol Intake (in g/kg)"
+		legend_labels = ('12 Month Average', '6 Month Average')
+		return _cohort_necropsy_summary_general(necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
+	else:
+		return False, False
+
+def cohort_necropsy_etoh_4pct(cohort):
+	"""
+	This method will create a cohort graph (horizontal bar graph) showing each monkey's open access and lifetime ethanol
+	 intake, in ml.
+	"""
+	if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
+		graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
+		x_label = "Ethanol Intake (in 4% ml)"
+		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
+		return _cohort_necropsy_summary_general(necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
+	else:
+		return False, False
+
+def cohort_necropsy_sum_g_per_kg(cohort):
+	"""
+	This method will create a cohort graph (horizontal bar graph) showing each monkey's total etoh intake during lifetime
+	and open access, in g/kg.
+	"""
+	if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
+		graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
+		x_label = "Ethanol Intake (in g/kg)"
+		legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
+		return _cohort_necropsy_summary_general(necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
+	else:
+		return False, False
 
 def convert_timedelta(t):
 	if t:
@@ -628,8 +649,8 @@ def _cohort_tools_boxplot(data, title, x_label, y_label, scale_x=(), scale_y=())
 
 	ax1.scatter(scatter_x, scatter_y, marker='+', color='purple', s=80)
 	bp = ax1.boxplot(sorted_values)
-	pyplot.setp(bp['boxes'], linewidth=3, color=COLORS['cohort'])
-	pyplot.setp(bp['whiskers'], linewidth=3, color=COLORS['cohort'])
+	pyplot.setp(bp['boxes'], linewidth=3, color='black')
+	pyplot.setp(bp['whiskers'], linewidth=3, color='black')
 	pyplot.setp(bp['fliers'], color='red', marker='o', markersize=10)
 	xtickNames = pyplot.setp(ax1, xticklabels=sorted_keys)
 	pyplot.setp(xtickNames, rotation=45)
@@ -2281,6 +2302,63 @@ def monkey_etoh_lifetime_cumsum(monkey):
 	lifetime_plot.get_xaxis().set_visible(False)
 	return fig, True
 
+def mtd_histogram_general(monkey, column_name, dex_type=''):
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return False, False
+
+	mtd_records = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
+	if dex_type:
+		mtd_records = mtd_records.filter(drinking_experiment__dex_type=dex_type)
+
+	if not mtd_records:
+		return False, False
+
+	field = mtd_records[0]._meta.get_field(column_name)
+	if not isinstance(field, (models.FloatField, models.IntegerField, models.BigIntegerField, models.SmallIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+		return False, False
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(1, 1)
+	main_gs.update(left=0.05, right=0.95, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot = _mtd_histogram(monkey, column_name, main_plot, dex_type=dex_type, show_legend=True)
+	return fig, True
+
+def bec_histogram_general(monkey, column_name, dex_type=''):
+	if not isinstance(monkey, Monkey):
+		try:
+			monkey = Monkey.objects.get(pk=monkey)
+		except Monkey.DoesNotExist:
+			try:
+				monkey = Monkey.objects.get(mky_real_id=monkey)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return False, False
+
+	bec_records = MonkeyBEC.objects.filter(monkey=monkey)
+	if dex_type:
+		bec_records = bec_records.filter(drinking_experiment__dex_type=dex_type)
+
+	if not bec_records:
+		return False, False
+
+	field = bec_records[0]._meta.get_field(column_name)
+	if not isinstance(field, (models.FloatField, models.IntegerField, models.BigIntegerField, models.SmallIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+		return False, False
+
+	fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+	main_gs = gridspec.GridSpec(1, 1)
+	main_gs.update(left=0.05, right=0.95, wspace=0, hspace=0)
+	main_plot = fig.add_subplot(main_gs[:,:])
+	main_plot = _bec_histogram(monkey, column_name, main_plot, dex_type=dex_type, show_legend=True)
+	return fig, True
 
 def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
 	"""
