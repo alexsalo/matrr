@@ -2339,12 +2339,21 @@ def load_tissue_inventory_csv(filename):
 			monkeys.append(m)
 
 	for row in csv_infile:
-		tst = TissueType.objects.get(tst_tissue_name=row.pop(0))
+		_tst = row.pop(0)
+		if not _tst:
+			continue
+		try:
+			tst = TissueType.objects.get(tst_tissue_name=_tst)
+		except TissueType.DoesNotExist:
+			print "TST not found:  %s" % str(_tst)
+			continue
 		for mky, cell in zip(monkeys, row):
-			tss = TissueSample.objects.get(monkey=mky, tissue_type=tst)
+			tss, is_new = TissueSample.objects.get_or_create(monkey=mky, tissue_type=tst)
 			tss.tss_sample_quantity = 1 if bool(cell) else 0
 			tss.tss_units = Units[2][0]
 			tss.save()
+			if is_new:
+				print "New TissueSample record: %s" % str(tss)
 	print "Success."
 
 def _create_cbt(bouts, date, cohort, cbt_number=0, overwrite=False, seconds_to_exclude=0):
