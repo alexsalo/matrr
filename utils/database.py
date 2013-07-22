@@ -2341,11 +2341,10 @@ def load_tissue_inventory_csv(filename):
 	for row in csv_infile:
 		tst = TissueType.objects.get(tst_tissue_name=row.pop(0))
 		for mky, cell in zip(monkeys, row):
-			if bool(cell):
-				tss = TissueSample.objects.get(monkey=mky, tissue_type=tst)
-				tss.tss_sample_quantity = 1
-				tss.tss_units = Units[2][0]
-				tss.save()
+			tss = TissueSample.objects.get(monkey=mky, tissue_type=tst)
+			tss.tss_sample_quantity = 1 if bool(cell) else 0
+			tss.tss_units = Units[2][0]
+			tss.save()
 	print "Success."
 
 def _create_cbt(bouts, date, cohort, cbt_number=0, overwrite=False, seconds_to_exclude=0):
