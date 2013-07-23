@@ -200,7 +200,10 @@ def _general_histogram(monkey, monkey_values, cohort_values, high_values, low_va
 	and low_drinking_monkey. Each line shows the distribution of values for that subject, providing quick comparison of
 	the subject monkey to its peers and high/low drinking monkeys.
 	"""
-	maxes = [monkey_values.max(), cohort_values.max(), high_values.max(), low_values.max()]
+	data_arrays = [monkey_values, cohort_values, high_values, low_values]
+	maxes = list()
+	for d in data_arrays:
+		maxes.append(d.mean()+ 2*d.std()) # "max" == 3 standard deviations from the mean
 	linspace = numpy.linspace(0, max(maxes), 15) # defines number of bins in histogram
 
 	# Monkey histogram spline
@@ -325,6 +328,7 @@ def _bec_histogram(monkey, column_name, axis, from_date=None, to_date=None, samp
 		q_filter = q_filter & Q(bec_sample__lte=sample_before)
 	if sample_after:
 		q_filter = q_filter & Q(bec_sample__gte=sample_after)
+	q_filter = q_filter & ~Q(**{column_name: None})
 
 	cohort_bec = cohort_bec.filter(q_filter)
 	monkey_bec = cohort_bec.filter(monkey=monkey)
@@ -336,10 +340,10 @@ def _bec_histogram(monkey, column_name, axis, from_date=None, to_date=None, samp
 	if not label:
 		label = monkey_bec[0]._meta.get_field(column_name).verbose_name
 
-	monkey_values = numpy.array(monkey_bec.values_list(column_name, flat=True))
-	cohort_values = numpy.array(cohort_bec.values_list(column_name, flat=True))
-	high_values = numpy.array(high_bec.values_list(column_name, flat=True))
-	low_values = numpy.array(low_bec.values_list(column_name, flat=True))
+	monkey_values = numpy.array(monkey_bec.values_list(column_name, flat=True), dtype=float)
+	cohort_values = numpy.array(cohort_bec.values_list(column_name, flat=True), dtype=float)
+	high_values = numpy.array(high_bec.values_list(column_name, flat=True), dtype=float)
+	low_values = numpy.array(low_bec.values_list(column_name, flat=True), dtype=float)
 	return _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend)
 
 def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_type='', verbose_name='', hide_xticks=False, show_legend=False):
@@ -372,6 +376,7 @@ def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_
 		q_filter = q_filter & Q(drinking_experiment__dex_date__lte=to_date)
 	if dex_type:
 		q_filter = q_filter & Q(drinking_experiment__dex_type=dex_type)
+	q_filter = q_filter & ~Q(**{column_name: None})
 
 	cohort_dex = cohort_dex.filter(q_filter)
 	monkey_dex = cohort_dex.filter(monkey=monkey)
@@ -383,10 +388,10 @@ def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_
 	if not label:
 		label = monkey_dex[0]._meta.get_field(column_name).verbose_name
 
-	monkey_values = numpy.array(monkey_dex.values_list(column_name, flat=True))
-	cohort_values = numpy.array(cohort_dex.values_list(column_name, flat=True))
-	high_values = numpy.array(high_dex.values_list(column_name, flat=True))
-	low_values = numpy.array(low_dex.values_list(column_name, flat=True))
+	monkey_values = numpy.array(monkey_dex.values_list(column_name, flat=True), dtype=float)
+	cohort_values = numpy.array(cohort_dex.values_list(column_name, flat=True), dtype=float)
+	high_values = numpy.array(high_dex.values_list(column_name, flat=True), dtype=float)
+	low_values = numpy.array(low_dex.values_list(column_name, flat=True), dtype=float)
 	return _general_histogram(monkey, monkey_values, cohort_values, high_values, low_values, label, axis, hide_xticks, show_legend)
 
 ### Specific Callables ###
@@ -2015,6 +2020,7 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
 		xr=polyval(fit, xaxis)
 		etoh_bout_vol_main.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
+#	histograms
 	hist_gs = gridspec.GridSpec(4, 1)
 	hist_gs.update(left=0.8, right=.97, wspace=0, hspace=.5)
 	etoh_bout_vol_hist = fig.add_subplot(hist_gs[0, :])
