@@ -179,7 +179,6 @@ def create_dataset_from_mtds(mtds):
 	from matrr.models import MonkeyHormone, Avg
 	from utils import plotting_beta
 	loop_mtd_columns = mtd_columns
-	loop_mhm_columns = mhm_columns
 
 	means = dict()
 	for col in loop_mtd_columns:
@@ -209,14 +208,10 @@ def create_dataset_from_mtds(mtds):
 			if not value:
 				value = means[col]
 			if value is None:
-				value = 0
+#				value = 0
+				value = .001
 			row.append(value)
 
-		for col in loop_mhm_columns:
-			if mhm == None:
-				row.append(0)
-			else:
-				row.append(getattr(mhm, col))
 		data.append(row)
 	return data, target
 

@@ -29,14 +29,6 @@ def modified_slavka_code():
 
 	print cross_val_score(svr, d.data, numpy.asarray(d.target))
 
-def GaussianNB_demo():
-	from sklearn import datasets
-	iris = datasets.load_iris()
-	from sklearn.naive_bayes import GaussianNB
-	gnb = GaussianNB()
-	y_pred = gnb.fit(iris.data, iris.target).predict(iris.data)
-	print "Number of mislabeled points : %d" % (iris.target != y_pred).sum()
-
 def GaussianNB_rhesus():
 	from utils.prediction.datasets import RhesusPCADataset
 	pca_data = RhesusPCADataset()
