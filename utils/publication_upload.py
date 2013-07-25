@@ -13,7 +13,7 @@ logging.getLogger('suds.client').setLevel(logging.CRITICAL)
 #  From the look of it, this method takes a csv file where the first column is the PMID (not pmcid) and the 2nd column is a list of cohorts used in the publication
 @transaction.commit_on_success
 def add_publications_from_csv(file):
-	input = csv.reader(open(file, 'rU'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+	input = csv.reader(open(file, 'rU'), delimiter=',')#, quoting=csv.QUOTE_NONNUMERIC)
 	# get the column headers
 	columns = input.next()
 
@@ -23,6 +23,7 @@ def add_publications_from_csv(file):
 	results = []
 	for row in input:
 		pmid = row[0]
+		print pmid
 		result = client.service.run_eFetch(id=int(pmid), retmax=1, email='nicholas.soltau@gmail.com')
 		result.cohorts = row[1]
 		results.append(result)
