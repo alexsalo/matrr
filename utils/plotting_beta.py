@@ -27,15 +27,16 @@ def create_convex_hull_polygon(subplot, xvalues, yvalues, color):
 	line = subplot.plot(x, y, c=color, linewidth=3, alpha=.3)
 	return line
 
-_24_hour = 24*60*60
-_22_hour = 22*60*60
-_12_hour = 12*60*60
-_7_hour = 7*60*60
 _1_hour = 60*60
-_2_hour = 2*60*60
+_2_hour = 2*_1_hour
+_6_hour = 6*_1_hour # time before lights out
+_12_hour = 12*_1_hour # duration of lights out
+_22_hour = 22*_1_hour # duration of drinking day
+_24_hour = 24*_1_hour # full day
+
 session_start = 0
 session_end = session_start + _22_hour
-lights_out = session_start + _7_hour
+lights_out = session_start + _6_hour
 lights_on = lights_out + _12_hour
 diff = session_end - lights_on
 
@@ -1190,8 +1191,8 @@ def rhesus_etoh_gkg_bargraph(limit_step=1):
 	subplot.set_xlabel("Etoh intake, g/kg")
 	return fig
 
-def rhesus_etoh_gkg_stackedbargraph(limit_step=.1):
-	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=plotting.HISTOGRAM_FIG_SIZE):
+	fig = pyplot.figure(figsize=fig_size, dpi=plotting.DEFAULT_DPI)
 	gs = gridspec.GridSpec(3, 3)
 	gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
 	subplot = fig.add_subplot(gs[:,:])
@@ -1218,20 +1219,22 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1):
 		color_index += 1
 		subplot.bar(limits, gkg_daycounts, bottom=bottom, width=width, color=color, label=key, alpha=1)
 		bottom += gkg_daycounts
-	subplot.legend()
 
+	subplot.set_xlim(xmin=1, xmax=7)
 	tick_size = 20
 	title_size = 26
 	label_size = 24
+	legend_size = 20
+	subplot.legend(prop={'size':legend_size})
 	subplot.tick_params(axis='both', which='major', labelsize=tick_size)
 	subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
 	subplot.set_title("Rhesus 4/5/7a/7b, distribution of intakes exceeding g/kg minimums", size=title_size)
-	subplot.set_ylabel("Summation of each monkey's percentage of days where EtoH intake exceeded x-value", size=label_size)
+	subplot.set_ylabel("Aggregate percent days of EtOH intake exceeding x-value", size=label_size)
 	subplot.set_xlabel("Etoh intake, g/kg", size=label_size)
 	return fig
 
-def rhesus_etoh_gkg_forced_monkeybargraphhistogram():
-	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=plotting.HISTOGRAM_FIG_SIZE):
+	fig = pyplot.figure(figsize=fig_size, dpi=plotting.DEFAULT_DPI)
 	gs = gridspec.GridSpec(1, 6)
 	gs.update(left=0.05, right=0.95, top=.95, wspace=.15, hspace=0)
 
@@ -1679,7 +1682,7 @@ def _rhesus_eev_by_hour_boxplot(subplot, x_values, monkey_category, data_collect
 
 	return subplot
 
-def rhesus_hourly_gkg_boxplot_by_category():
+def rhesus_hourly_gkg_boxplot_by_category(fig_size=plotting.HISTOGRAM_FIG_SIZE):
 	def _hourly_eev_gkg_summation(eevs, monkey_category):
 		"""
 		This method will return a list of each monkey's gkg consumed within the events passed in (eevs), for each monkey in monkey_category
@@ -1704,7 +1707,7 @@ def rhesus_hourly_gkg_boxplot_by_category():
 		data = json.loads(json_string)
 		return data
 
-	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	fig = pyplot.figure(figsize=fig_size, dpi=plotting.DEFAULT_DPI)
 	main_gs = gridspec.GridSpec(3, 3)
 	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
 	subplot = fig.add_subplot(main_gs[:,:])
@@ -1738,12 +1741,18 @@ def rhesus_hourly_gkg_boxplot_by_category():
 		wrect = patches.Rectangle((0, 0), 1, 1, fc=color)
 		handles.append(wrect)
 		labels.append(key)
-	subplot.legend(handles, labels, loc='upper right')
 
-#	subplot.legend(handles, labels, scatterpoints=1)
-	subplot.set_title("Hourly g/kg, by category")
-	subplot.set_ylabel("g/kg")
-	subplot.set_xlabel("Hour of session")
+
+	tick_size = 20
+	title_size = 26
+	label_size = 24
+	legend_size = 20
+	subplot.legend(handles, labels, loc='upper right', prop={'size':legend_size})
+	subplot.tick_params(axis='both', which='major', labelsize=tick_size)
+	subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
+	subplot.set_title("Hourly g/kg, by category", size=title_size)
+	subplot.set_ylabel("g/kg", size=label_size)
+	subplot.set_xlabel("Hour of session", size=label_size)
 	return fig
 
 def _rhesus_gkg_age_mtd_general(subplot, phase, gkg_onset, mtd_callable_xvalue_generator): # phase = 0-2
@@ -2613,6 +2622,93 @@ def rhesus_confederate_boxplots(minutes, nighttime_only=False):
 	return figs
 #--
 
+#---# Confederate histograms and scatterplots
+def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_data=None):
+	def _bout_startdiff_volumesum(subplot, monkey_one, monkey_two):
+		if False:
+			f = open('utils/DATA/test%s.json' % 0, 'r')
+			x = json.loads(f.readline())
+			f.close()
+			f = open('utils/DATA/test%s.json' % 1, 'r')
+			y = json.loads(f.readline())
+			f.close()
+			return subplot, x, y
+
+		one_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_one).order_by('drinking_experiment__dex_date')
+		one_dates = one_mtds.values_list('drinking_experiment__dex_date', flat=True).distinct()
+
+		x_data = list()
+		y_data = list()
+		for date in one_dates:
+			one_values = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
+			two_bouts = ExperimentBout.objects.filter(mtd__monkey=monkey_two, mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
+			if not one_values or not two_bouts:
+				continue
+			two_starts = numpy.array(two_bouts)[:,0]
+
+			for one_start_time, one_volume in one_values:
+				two_closest_start = min(two_starts, key=lambda x:abs(x-one_start_time))
+				two_closest_bout = two_bouts.get(ebt_start_time=two_closest_start)
+				x_data.append(one_start_time - two_closest_bout[0])
+				y_data.append(one_volume + two_closest_bout[1])
+		subplot.set_ylabel("Summed volume of adjacent bouts")
+		subplot.set_xlabel("Bout start time difference")
+		return subplot, x_data, y_data
+
+	if not isinstance(monkey_one, Monkey):
+		try:
+			monkey_one = Monkey.objects.get(pk=monkey_one)
+		except Monkey.DoesNotExist:
+			try:
+				monkey_one = Monkey.objects.get(mky_real_id=monkey_one)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
+	if not isinstance(monkey_two, Monkey):
+		try:
+			monkey_two = Monkey.objects.get(pk=monkey_two)
+		except Monkey.DoesNotExist:
+			try:
+				monkey_two = Monkey.objects.get(mky_real_id=monkey_two)
+			except Monkey.DoesNotExist:
+				print("That's not a valid monkey.")
+				return
+	assert monkey_one.cohort == monkey_two.cohort
+	fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+	fig.suptitle("Monkey %s - Monkey %s" % (str(monkey_one), str(monkey_two)))
+	main_gs = gridspec.GridSpec(10, 10)
+	main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0.08)
+	subplot = fig.add_subplot(main_gs[1:,:9])
+	axHistx = fig.add_subplot(main_gs[:1,:9], sharex=subplot)
+	axHisty = fig.add_subplot(main_gs[1:10,9:], sharey=subplot)
+
+	collect_xy_data = collect_xy_data if collect_xy_data else _bout_startdiff_volumesum
+
+	colors = ['navy', 'gold', 'green', 'blue', 'orange']
+	subplot, _x, _y = collect_xy_data(subplot, monkey_one, monkey_two)
+	_x = numpy.array(_x)
+	_y = numpy.array(_y)
+
+	subplot.scatter(_x, _y, color=colors.pop(0), edgecolor='none', alpha=.2)
+
+	# make some labels invisible
+	pyplot.setp(axHistx.get_xticklabels() + axHistx.get_yticklabels(), visible=False)
+	pyplot.setp(axHisty.get_xticklabels() + axHisty.get_yticklabels(), visible=False)
+
+	axHistx.hist(_x, bins=150, alpha=1, log=True)
+	axHisty.hist(_y, bins=150, alpha=1, log=True, orientation='horizontal')
+	
+	"""
+	subplot.scatter(_x, _y, color='orange', edgecolor='none', alpha=1)
+	# regression line
+	slope, intercept, r_value, p_value, std_err = stats.linregress(_x, _y)
+	reg_label = "Fit: r=%f, p=%f" % (r_value, p_value)
+	subplot.plot(_x, _x*slope+intercept, color='black', label=reg_label)
+	"""
+	return fig
+
+
+#---#
 
 class RhesusAdjacencyNetwork():
 	network = None
@@ -2829,7 +2925,6 @@ def create_age_graphs():
 			filename = output_path + '%s.Phase%d.gkg%d.png' % ("rhesus_gkg_onset_age_category", phase, gkg)
 			fig.savefig(filename, dpi=DPI)
 
-
 def create_christa_graphs():
 	import settings
 	output_path = settings.STATIC_ROOT
@@ -2930,9 +3025,9 @@ def create_kathy_graphs():
 		filename = output_path + '%s.%s.png' % ("kathy_correlation_bec_maxbout_pairwise_drinkinggroup", label)
 		fig.savefig(filename, dpi=DPI)
 
-def create_manuscript_graphs():
-	def etoh_bec_scatter(HD_monkey=10065, LD_monkey=10052):
-		fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+def create_manuscript_graphs(save=False, fig_size=(25,15)):
+	def etoh_bec_scatter(HD_monkey=10065, LD_monkey=10052, fig_size=plotting.HISTOGRAM_FIG_SIZE):
+		fig = pyplot.figure(figsize=fig_size, dpi=plotting.DEFAULT_DPI)
 		gs = gridspec.GridSpec(1, 2)
 		gs.update(left=0.06, right=0.98, wspace=.12, hspace=0, top=.92)
 		left_subplot = fig.add_subplot(gs[0])
@@ -2940,6 +3035,7 @@ def create_manuscript_graphs():
 
 		monkey_ids = [LD_monkey, HD_monkey]
 
+		marker_size = 90
 		xmax_bec = 0
 		xmax_mtd = 0
 		for monkey in monkey_ids:
@@ -2948,21 +3044,22 @@ def create_manuscript_graphs():
 			xmax_mtd = max(xaxis_length, xmax_mtd)
 			x_axis = range(xaxis_length)
 			y_axis = mtds.values_list('mtd_etoh_g_kg', flat=True)
-			left_subplot.scatter(x_axis, y_axis, color=rhesus_monkey_colors[monkey], marker=rhesus_monkey_markers[monkey])
+			left_subplot.scatter(x_axis, y_axis, color=rhesus_monkey_colors[monkey], marker=rhesus_monkey_markers[monkey], s=marker_size)
 			becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).order_by('bec_collect_date')
 			xaxis_length = becs.count()
 			xmax_bec = max(xaxis_length, xmax_bec)
 			x_axis = range(xaxis_length)
 			y_axis = becs.values_list('bec_mg_pct', flat=True)
-			right_subplot.scatter(x_axis, y_axis, color=rhesus_monkey_colors[monkey], marker=rhesus_monkey_markers[monkey])
+			right_subplot.scatter(x_axis, y_axis, color=rhesus_monkey_colors[monkey], marker=rhesus_monkey_markers[monkey], s=marker_size)
 
 		left_subplot.set_ylim(ymin=0)
 		left_subplot.set_xlim(xmin=0, xmax=xmax_mtd)
 		right_subplot.set_ylim(ymin=0)
 		right_subplot.set_xlim(xmin=0, xmax=xmax_bec)
 		tick_size = 20
+		legend_size = 20
 		for subplot in [left_subplot, right_subplot]:
-			subplot.legend(["Monkey %d" % m for m in monkey_ids])
+			subplot.legend(["Monkey %d" % m for m in monkey_ids], prop={'size':legend_size})
 			subplot.tick_params(axis='both', which='major', labelsize=tick_size)
 			subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
 
@@ -2979,12 +3076,13 @@ def create_manuscript_graphs():
 		return fig
 
 	figures = list()
-	figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram())
-	figures.append(rhesus_etoh_gkg_stackedbargraph())
-	figures.append(rhesus_hourly_gkg_boxplot_by_category())
-	figures.append(etoh_bec_scatter())
-	output_path = '/home/developer/Desktop/_graphs/manuscript/'
-	for index, fig in enumerate(figures):
-		filename = output_path + 'Figure-%d.png' % index
-		fig.savefig(filename, dpi=300)
+	figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=fig_size))
+	figures.append(rhesus_etoh_gkg_stackedbargraph(fig_size=fig_size))
+	figures.append(rhesus_hourly_gkg_boxplot_by_category(fig_size=fig_size))
+	figures.append(etoh_bec_scatter(fig_size=fig_size))
+	if save:
+		output_path = '/home/developer/Desktop/_graphs/manuscript/'
+		for index, fig in enumerate(figures):
+			filename = output_path + 'Figure-%d.png' % index
+			fig.savefig(filename, dpi=300)
 
