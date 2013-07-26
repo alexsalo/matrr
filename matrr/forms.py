@@ -642,12 +642,20 @@ class SubjectSelectForm(forms.Form):
 
 class CohortSelectForm(SubjectSelectForm):
 	def __init__(self, *args, **kwargs):
-		super(CohortSelectForm, self).__init__(subject_label='Cohort', subject_helptext='Select a cohort', *args, **kwargs)
+		super(CohortSelectForm, self).__init__(subject_label='Cohort', subject_helptext='Select a cohort', **kwargs)
 
 
 class MonkeySelectForm(SubjectSelectForm):
 	def __init__(self, 	*args, **kwargs):
 		super(MonkeySelectForm, self).__init__(subject_label='Monkey', subject_helptext='Select a monkey', **kwargs)
+
+
+class PublicationCohortSelectForm(forms.Form):
+	def __init__(self,queryset, *args, **kwargs):
+		super(PublicationCohortSelectForm, self).__init__(*args, **kwargs)
+		self.fields['subject'] = forms.ModelMultipleChoiceField(queryset=queryset.order_by('pk'), widget=widgets.CheckboxSelectMultipleSelectAll_columns(columns=5))
+		self.fields['subject'].label = "Cohort"
+		self.fields['subject'].help_text = "Filter publications by cohorts. Submitting 0 cohorts will show only publications which did not use MATRR tissues."
 
 
 class GenealogyParentsForm(MonkeySelectForm):

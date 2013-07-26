@@ -32,14 +32,6 @@ urlpatterns = patterns('matrr.views',
 			context_object_name='cohort',
 			template_name='matrr/publications.html',
 			), name='cohort-publications'),
-
-	url(r'^publications/$',
-		ListView.as_view(
-			queryset=Publication.objects.all().annotate(non_date=Count('pub_date')).order_by('-non_date', '-pub_date'),
-			context_object_name='publications',
-			template_name='matrr/all_publications.html',
-			paginate_by=15,
-			), name='publications'),
 )
 # Real views
 urlpatterns += patterns('matrr.views',
@@ -50,6 +42,7 @@ urlpatterns += patterns('matrr.views',
 	url(r'^contact_us/$', contact_us),
 	url(r'^search/?$', search, name='search'),
 	url(r'^advanced_search/?$', advanced_search, name='advanced-search'),
+	url(r'^publications/$', publications, name='publications'),
 
 	## Monkey/Cohort/Tissue display views
 	url(r'^available/$', 	cohorts_view_available, name='available'),

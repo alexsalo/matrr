@@ -1369,6 +1369,25 @@ def advanced_search(request):
 			 'cohorts': Cohort.objects.nicotine_filter(request.user)},
 							  context_instance=RequestContext(request))
 
+def publications(request):
+	cohorts = Cohort.objects.exclude(publication_set=None)
+	subject = PublicationCohortSelectForm(queryset=cohorts)
+	pubs = None
+	if request.POST:
+		subject = PublicationCohortSelectForm(queryset=cohorts, data=request.POST)
+		if subject.is_valid():
+			cohorts = subject.cleaned_data['subject']
+			if cohorts:
+				pubs = Publication.objects.filter(cohorts__in=cohorts)
+		else:
+			pubs = Publication.objects.filter(cohorts=None)
+	if pubs == None:
+		pubs = Publication.objects.all()
+		page_obj = __paginator_stuff(request=request, queryset=pubs, count=15)
+		pubs = page_obj.object_list
+	else:
+		page_obj = None
+	return render_to_response('matrr/all_publications.html', {'publications': pubs, 'page_obj': page_obj, 'subject_select_form': subject}, context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
 def shipping_history(request):

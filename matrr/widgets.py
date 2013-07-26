@@ -111,7 +111,7 @@ class CheckboxSelectMultipleSelectAll(CheckboxSelectMultiple):
 		has_id = attrs and 'id' in attrs
 		final_attrs = self.build_attrs(attrs, name=name)
 
-		output = [u'<fieldset"><legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (
+		output = [u'<fieldset"><legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All</label></legend>' % (
 		attrs['id'], name, attrs['id'])]
 
 		str_values = set([force_unicode(v) for v in value])

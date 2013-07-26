@@ -1,25 +1,42 @@
 {% extends "base.html" %}
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+{% endblock %}
 
 {% block content %}
+    <div class='center' style='padding-right:20px;'>
+        <form action='' method='post'>
+            {% csrf_token %}
+            <div class=headline>{{ subject_select_form.subject.label }}</div>
+            <div class=small>{{ subject_select_form.subject.help_text }}</div>
+            <button type='submit' name='submit' class="blockLinkCheckoutButton right">Submit</button>
+            {{ subject_select_form.subject }}
+            <br>
+        </form>
+    </div>
+    <div class='clearfix'>
+    </div>
     <div class='headline'>
         Publications
     </div>
-				<center>
-					
-					{% load inclusion_tags %}
-					{% pagination page_obj %}
-					<br/>	
-				</center>
+    <center>
+    {% if page_obj %}
+        {% load inclusion_tags %}
+        {% pagination page_obj %}
+    {% endif %}
+    </center>
 
 
     {% include "matrr/publication_table.html" %}
 
+    <center>
+        {% if page_obj %}
+            {% load inclusion_tags %}
+            {% pagination page_obj %}
+            <br/>
+        {% endif %}
+    </center>
 
-
-					<center>
-					{% load inclusion_tags %}
-					{% pagination page_obj %}
-					</center>
-
-
+<br><br>
 {% endblock %}
