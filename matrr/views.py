@@ -1372,7 +1372,7 @@ def advanced_search(request):
 def publications(request):
 	cohorts = Cohort.objects.exclude(publication_set=None)
 	subject = PublicationCohortSelectForm(queryset=cohorts)
-	pubs = Publication.objects.all()
+	pubs = Publication.objects.all().order_by('-published_year', '-published_month')
 #	session = getattr(request, 'session', '')
 	if request.session and request.session.has_key('old_post') and not request.GET:
 		request.session.pop('old_post')
@@ -1387,9 +1387,11 @@ def publications(request):
 			request.session['old_post'] = post
 			cohorts = subject.cleaned_data['subject']
 			if cohorts:
-				pubs = Publication.objects.filter(cohorts__in=cohorts)
+				pubs = Publication.objects.filter(cohorts__in=cohorts).order_by('-published_year', '-published_month')
 		else:
-			pubs = Publication.objects.filter(cohorts=None)
+			# The invalid form, of only checkboxes, is assumed invalid because it is blank.
+			# Blank forms, when submitted, should display cohort-less publications.
+			pubs = Publication.objects.filter(cohorts=None).order_by('-published_year', '-published_month')
 			request.session['old_post'] = post
 	if pubs.count() > 15:
 		page_obj = __paginator_stuff(request=request, queryset=pubs, count=15)
