@@ -1372,17 +1372,26 @@ def advanced_search(request):
 def publications(request):
 	cohorts = Cohort.objects.exclude(publication_set=None)
 	subject = PublicationCohortSelectForm(queryset=cohorts)
-	pubs = None
-	if request.POST:
-		subject = PublicationCohortSelectForm(queryset=cohorts, data=request.POST)
+	pubs = Publication.objects.all()
+#	session = getattr(request, 'session', '')
+	if request.session and request.session.has_key('old_post') and not request.GET:
+		request.session.pop('old_post')
+	if request.POST or request.session.has_key('old_post'):
+		if request.POST:
+			post = request.POST
+			request.GET = {}
+		else:
+			post = request.session.pop('old_post')
+		subject = PublicationCohortSelectForm(queryset=cohorts, data=post)
 		if subject.is_valid():
+			request.session['old_post'] = post
 			cohorts = subject.cleaned_data['subject']
 			if cohorts:
 				pubs = Publication.objects.filter(cohorts__in=cohorts)
 		else:
 			pubs = Publication.objects.filter(cohorts=None)
-	if pubs == None:
-		pubs = Publication.objects.all()
+			request.session['old_post'] = post
+	if pubs.count() > 15:
 		page_obj = __paginator_stuff(request=request, queryset=pubs, count=15)
 		pubs = page_obj.object_list
 	else:
