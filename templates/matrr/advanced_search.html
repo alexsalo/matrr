@@ -45,6 +45,11 @@
 				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in any of the selected proteins.</div>
 				{{ filter_form.proteins }}
 			</div>
+			<div class=headline><a onclick="javascript:toggle_visibility('hormones');"><img src='{{ STATIC_URL }}images/expand.gif'> Hormones</a></div>
+			<div id='hormones' class="hidden">
+				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in all of the selected hormones.</div>
+				{{ filter_form.hormones }}
+			</div>
 		</form>
 
 

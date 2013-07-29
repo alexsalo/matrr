@@ -40,22 +40,26 @@ function collectTRToShowOrHide(show_or_hide) {
 	var sexes = [];
 	var species = [];
 	var proteins = [];
+	var hormones = [];
 	for (var cb = 0; cb < boxes.length; cb++) {
+		if (boxes[cb].name == 'control')
+			control.push("_".concat(boxes[cb].value));
+		if (boxes[cb].name == 'cohort')
+			cohort.push("_".concat(boxes[cb].value));
 		if (boxes[cb].name == 'sex')
 			sexes.push("_".concat(boxes[cb].value));
 		if (boxes[cb].name == 'species')
 			species.push("_".concat(boxes[cb].value));
 		if (boxes[cb].name == 'proteins')
 			proteins.push("_".concat(boxes[cb].value));
-		if (boxes[cb].name == 'control')
-			control.push("_".concat(boxes[cb].value));
-		if (boxes[cb].name == 'cohort')
-			cohort.push("_".concat(boxes[cb].value));
+		if (boxes[cb].name == 'hormones')
+			hormones.push("_".concat(boxes[cb].value));
 	}
 
 	var toShow = [];
 	var toHide = [];
 	var proteins_selected = proteins.length != 0;
+	var hormones_selected = proteins.length != 0;
 	var control_selected = control.length != 0;
 	var cohort_selected = cohort.length != 0;
 	for (var tr = 0; tr < monkey_trs.length; tr++) {
@@ -63,6 +67,7 @@ function collectTRToShowOrHide(show_or_hide) {
 		var display_sex = false;
 		var display_species = false;
 		var display_protein = false;
+		var display_hormone = false;
 		var display_control = false;
 		var display_cohort = false;
 		if (sexes.length > 0)
@@ -81,6 +86,11 @@ function collectTRToShowOrHide(show_or_hide) {
 			for (var p = 0; p < proteins.length; p++) {
 				if (mky.className.indexOf(proteins[p]) != -1)
 					display_protein = true;
+			}
+		if (hormones.length > 0)
+			for (var p = 0; p < hormones.length; p++) {
+				if (mky.className.indexOf(hormones[p]) != -1)
+					display_hormone = true;
 			}
 		if (cohort.length > 0)
 			for (var p = 0; p < cohort.length; p++) {
@@ -104,6 +114,8 @@ function collectTRToShowOrHide(show_or_hide) {
 		}
 		if (proteins_selected)
 			_show = display_protein && _show;
+		if (hormones_selected)
+			_show = display_hormone && _show;
 		if (control_selected)
 			_show = display_control && _show;
 

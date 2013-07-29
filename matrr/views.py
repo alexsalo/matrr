@@ -1557,7 +1557,7 @@ def shipment_detail(request, shipment_id):
         if 'ship' in request.POST:
             confirm_ship = True
             messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
-			An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
+            An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
         if 'confirm_ship' in request.POST:
             try:
                 shipment_status = shipment.ship_to_user(request.user)
@@ -3237,6 +3237,10 @@ def ajax_advanced_search(request):
                                                     protein_set__protein__in=filters['proteins'])
                 if filters['cohorts']:
                     select_query = select_query & Q(cohort__in=filters['cohorts'])
+                if filters['hormones']:
+                    for hormone in filters['hormones']:
+                        _query = "hormone_records__%s_stdev__gte" % hormone
+                        select_query = select_query & Q(**{_query:1})
 
             if select_query:
                 show_ids = Monkey.objects.filter(select_query).values_list('mky_id', flat=True).distinct()

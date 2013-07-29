@@ -3041,16 +3041,46 @@ class MonkeyHormone(models.Model):
     mhm_ald = models.FloatField("Aldosterone", null=True, blank=True)
     mhm_dheas = models.FloatField("DHEAS", null=True, blank=True)
 
+    mhm_cort_stdev = models.FloatField("Cortisol's Standard Deviations from cohort mean", null=True, blank=False)
+    mhm_acth_stdev = models.FloatField("ACTH's Standard Deviations from cohort mean", null=True, blank=False)
+    mhm_t_stdev = models.FloatField("Testosterone's Standard Deviations from cohort mean", null=True, blank=False)
+    mhm_doc_stdev = models.FloatField("Deoxycorticosterone's Standard Deviations from cohort mean", null=True, blank=False)
+    mhm_ald_stdev = models.FloatField("Aldosterone's Standard Deviations from cohort mean", null=True, blank=False)
+    mhm_dheas_stdev = models.FloatField("DHEAS's Standard Deviations from cohort mean", null=True, blank=False)
+
     def __unicode__(self):
         return "%s | %s" % (str(self.monkey), str(self.mhm_date))
 
-    def populate_fields(self, repopulate=True):
+
+    def populate_fields(self, repopulate=False):
+        self._populate_mtd(repopulate=repopulate)
+        self._populate_stdevs(repopulate=repopulate)
+
+    def _populate_mtd(self, repopulate=False):
         save = False
         if not self.mtd or repopulate:
             mtd = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey,
                                                             drinking_experiment__dex_date=self.mhm_date)
             if mtd.count() is 1:
                 self.mtd = mtd[0]
+                save = True
+        if save:
+            self.save()
+
+    def _populate_stdevs(self, repopulate=False):
+        save = False
+        mhms = MonkeyHormone.objects.filter(monkey=self.monkey)
+        for field in self.UNITS.iterkeys():
+            field_std = field + "_stdev"
+            current_value = getattr(self, field)
+            current_std = getattr(self, field_std)
+            if current_value and (not current_std or repopulate):
+                _mhms = mhms.exclude(Q(**{field:None}))
+                values = numpy.array(_mhms.values_list(field, flat=True))
+                stdev = values.std()
+                mean = values.mean()
+                diff = getattr(self, field) - mean
+                setattr(self, field_std, (diff / stdev))
                 save = True
         if save:
             self.save()
