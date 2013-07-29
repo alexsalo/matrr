@@ -3069,18 +3069,18 @@ class MonkeyHormone(models.Model):
 
     def _populate_stdevs(self, repopulate=False):
         save = False
-        mhms = MonkeyHormone.objects.filter(monkey=self.monkey)
+        mhms = MonkeyHormone.objects.filter(monkey__cohort=self.monkey.cohort).exclude(monkey=self.monkey)
         for field in self.UNITS.iterkeys():
             field_std = field + "_stdev"
             current_value = getattr(self, field)
             current_std = getattr(self, field_std)
             if current_value and (not current_std or repopulate):
                 _mhms = mhms.exclude(Q(**{field:None}))
-                values = numpy.array(_mhms.values_list(field, flat=True))
-                stdev = values.std()
-                mean = values.mean()
-                diff = getattr(self, field) - mean
-                setattr(self, field_std, (diff / stdev))
+                cohort_values = numpy.array(_mhms.values_list(field, flat=True))
+                cohort_stdev = cohort_values.std()
+                cohort_mean = cohort_values.mean()
+                diff = getattr(self, field) - cohort_mean
+                setattr(self, field_std, (diff / cohort_stdev))
                 save = True
         if save:
             self.save()
