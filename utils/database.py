@@ -2516,3 +2516,29 @@ def _create_cohort_bouts(cohort, overwrite, seconds_to_exclude=0):
 def create_cohort_bouts(cohort, overwrite=False):
     for seconds in [0, 60, 300, 600, 900, 1200]:
         _create_cohort_bouts(cohort, overwrite, seconds)
+
+def load_rna_records(filename):
+    csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+    columns = csv_infile.next() # junk
+    db_columns = ['rna_value_a', 'rna_a260_280', 'rna_value_b', 'rna_rin', 'rna_vol', 'rna_total_ug', 'rna_10_ug']
+    for row in csv_infile:
+        if row[0]:
+            junk = row.pop(1) # junk cohort shortname column
+            junk = row.pop(2) # junk "amount used" column
+            rna_record = {}
+            monkey = Monkey.objects.get(mky_real_id=row.pop(0))
+            cohort = monkey.cohort
+            rna_record['monkey'] = monkey
+            rna_record['cohort'] = cohort
+            rna_record['tissue_type'] = TissueType.objects.get(tst_tissue_name=row.pop(0))
+            rna_record['rna_extracted'] = __get_datetime_from_steve(row.pop(0))
+            for column, cell in zip(db_columns, row):
+                if cell:
+                    rna_record[column] = cell
+            try:
+                rna_record, isnew = RNARecord.objects.get_or_create(**rna_record)
+            except Exception as e:
+                print e
+                print row
+                print ''
+

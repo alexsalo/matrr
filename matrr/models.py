@@ -3419,26 +3419,23 @@ class RNARecord(models.Model):
                              editable=False, null=True)
     monkey = models.ForeignKey(Monkey, db_column='mky_id', related_name='rna_set', blank=True, null=True)
     rna_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
-    rna_min = models.IntegerField("Minimum yield (in micrograms)", "Min Yield", blank=False, null=False)
-    rna_max = models.IntegerField("Maximum yield (in micrograms)", "Max Yield", blank=False, null=False)
+    rna_extracted = models.DateField('Date Extracted', blank=False, null=True)
+    rna_value_a = models.FloatField("RNA Value (ng/ul)", blank=False, null=False, default=0)# I don't understand why there are 2 rna values in this spreadsheet
+    rna_a260_280 = models.FloatField("'A260/280'", blank=False, null=False, default=0)
+    rna_value_b = models.FloatField("RNA Value (ng/ul)", blank=False, null=False, default=0) # I don't understand why there are 2 rna values in this spreadsheet
+    rna_rin = models.FloatField("RIN", blank=False, null=False, default=0)
+    rna_vol = models.FloatField("vol", blank=False, null=False, default=0)
+    rna_total_ug = models.FloatField("Total ug", blank=False, null=False, default=0)
+    rna_10_ug = models.FloatField("for 10 ug", blank=False, null=False, default=0)
+    rna_min = models.IntegerField("Minimum yield (in micrograms)", "Min Yield", blank=False, null=False, default=0)
+    rna_max = models.IntegerField("Maximum yield (in micrograms)", "Max Yield", blank=False, null=False, default=0)
 
     def __unicode__(self):
-        return "%s | %s | %.2f-%.2f" % (str(self.cohort), str(self.tissue_type), self.rna_min, self.rna_max)
-
-    def clean(self):
-        # Don't allow user to select a monkey not in the (previously) chosen cohort.
-        if self.monkey and self.cohort != self.monkey.cohort:
-            raise Exception('The selected monkey is not part of the chosen cohort')
-        # And invert the min/max if they're not correctly labeled
-        if self.rna_min > self.rna_max:
-            min = self.rna_max
-            self.rna_max = self.rna_min
-            self.rna_min = min
-
+        return "%s-%s | %s" % (str(self.cohort), str(self.monkey), str(self.tissue_type))
 
     class Meta:
         db_table = 'rna_rnarecord'
-        ordering = ['cohort__coh_cohort_name', 'tissue_type', 'monkey']
+        ordering = ['cohort', 'tissue_type', 'monkey']
         permissions = ([
                            ('rna_submit', 'Can submit RNA yields'),
                            ('rna_display', 'Can view RNA yields'),
