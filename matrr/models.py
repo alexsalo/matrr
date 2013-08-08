@@ -3224,6 +3224,7 @@ class CohortMetaData(models.Model):
     cbc_mtd_etoh_mean_bout_vol_max = models.FloatField('Maximum EtOH Mean Bout Vol', null=True, blank=True)
     cbc_mtd_etoh_mean_bout_vol_avg = models.FloatField('Average EtOH Mean Bout Vol', null=True, blank=True)
 
+    # todo: fix these fields.  I can derive these accuratly by counting the drink records.
     cbc_total_drinks_min = models.FloatField('Minimum total drinks per day', null=True,
                                              blank=True) # this field is fuzzy.  It's a guestimate derived from an average
     cbc_total_drinks_max = models.FloatField('Maximum total drinks per day', null=True,
@@ -3456,7 +3457,6 @@ class MonkeyBrainBlock(models.Model):
     def fragment_url(self):
         if self.brain_image:
             return self.brain_image.html_fragment.url
-
 
     def assign_tissues(self, iterable):
         self.tissue_types.clear()
