@@ -2158,6 +2158,11 @@ def rna_display(request, coh_id):
     return render_to_response('matrr/rna/display.html', {'rna_list': rna_list, 'cohort': cohort},
                               context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.rna_display'), login_url='/denied/')
+def rna_detail(request, rna_id):
+    rna_record = get_object_or_404(RNARecord, pk=rna_id)
+    return render_to_response('matrr/rna/detail.html', {'rna_record': rna_record}, context_instance=RequestContext(request))
+
 ### Tools
 def __gather_cohort_protein_images(cohort, proteins):
     images = []

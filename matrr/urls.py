@@ -154,6 +154,7 @@ urlpatterns += patterns('matrr.views',
                         url(r'^rna/$', rna_landing, name='rna-landing'),
                         url(r'^rna/(?P<coh_id>\d+)/submit$', rna_submit, name='rna-submit'),
                         url(r'^rna/(?P<coh_id>\d+)/display$', rna_display, name='rna-display'),
+                        url(r'^rna/detail/(?P<rna_id>\d+)$', rna_detail, name='rna-detail'),
 
                         ## Tools views
                         url(r'^tools/$', tools_landing, name='tools-landing'),
