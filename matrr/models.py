@@ -3224,13 +3224,9 @@ class CohortMetaData(models.Model):
     cbc_mtd_etoh_mean_bout_vol_max = models.FloatField('Maximum EtOH Mean Bout Vol', null=True, blank=True)
     cbc_mtd_etoh_mean_bout_vol_avg = models.FloatField('Average EtOH Mean Bout Vol', null=True, blank=True)
 
-    # todo: fix these fields.  I can derive these accuratly by counting the drink records.
-    cbc_total_drinks_min = models.FloatField('Minimum total drinks per day', null=True,
-                                             blank=True) # this field is fuzzy.  It's a guestimate derived from an average
-    cbc_total_drinks_max = models.FloatField('Maximum total drinks per day', null=True,
-                                             blank=True) # this field is fuzzy.  It's a guestimate derived from an average
-    cbc_total_drinks_avg = models.FloatField('Average total drinks per day', null=True,
-                                             blank=True) # this field is fuzzy.  It's a guestimate derived from an average
+    cbc_total_drinks_min = models.FloatField('Minimum total drinks per day', null=True, blank=True)
+    cbc_total_drinks_max = models.FloatField('Maximum total drinks per day', null=True, blank=True)
+    cbc_total_drinks_avg = models.FloatField('Average total drinks per day', null=True, blank=True)
 
     cbc_ebt_volume_min = models.FloatField('Minimum Etoh Bout volume per day', null=True, blank=True)
     cbc_ebt_volume_max = models.FloatField('Maximum Etoh Bout volume per day', null=True, blank=True)
@@ -3260,6 +3256,14 @@ class CohortMetaData(models.Model):
         return "%s metadata" % str(self.cohort)
 
     def populate_fields(self):
+        self._populate_bec_fields()
+        self._populate_mtd_fields()
+        self._populate_ebt_fields()
+        self._populate_mhm_fields()
+        self.save()
+        print "Model saved"
+
+    def _populate_bec_fields(self):
         becs = MonkeyBEC.objects.filter(monkey__cohort=self.cohort)
         data = becs.aggregate(Min('bec_mg_pct'), Max('bec_mg_pct'), Avg('bec_mg_pct'))
         self.cbc_bec_mg_pct_min = data['bec_mg_pct__min']
@@ -3280,7 +3284,9 @@ class CohortMetaData(models.Model):
         self.cbc_bec_pct_intake_min = data['bec_pct_intake__min']
         self.cbc_bec_pct_intake_max = data['bec_pct_intake__max']
         self.cbc_bec_pct_intake_avg = data['bec_pct_intake__avg']
+        print "Model not yet saved"
 
+    def _populate_mtd_fields(self):
         mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=self.cohort)
         data = mtds.aggregate(Min('mtd_etoh_g_kg'), Max('mtd_etoh_g_kg'), Avg('mtd_etoh_g_kg'))
         self.cbc_mtd_etoh_g_kg_min = data['mtd_etoh_g_kg__min']
@@ -3341,19 +3347,25 @@ class CohortMetaData(models.Model):
         self.cbc_mtd_etoh_mean_bout_vol_max = data['mtd_etoh_mean_bout_vol__max']
         self.cbc_mtd_etoh_mean_bout_vol_avg = data['mtd_etoh_mean_bout_vol__avg']
 
-        _data = mtds.values_list('mtd_etoh_drink_bout', 'mtd_etoh_bout')
-        data = numpy.array([d[0] * d[1] if all(d) else 0 for d in _data])
+        drink_counts = list()
+        for mtd in mtds:
+            drink_counts.append(mtd.bouts_set.aggregate(Count('drinks_set'))['drinks_set__count'])
+        data = numpy.array(drink_counts)
         if data.any():
             self.cbc_total_drinks_min = data.min()
             self.cbc_total_drinks_max = data.max()
             self.cbc_total_drinks_avg = data.mean()
+        print "Model not yet saved"
 
+    def _populate_ebt_fields(self):
         bouts = ExperimentBout.objects.filter(mtd__monkey__cohort=self.cohort)
         data = bouts.aggregate(Min('ebt_volume'), Max('ebt_volume'), Avg('ebt_volume'))
         self.cbc_ebt_volume_min = data['ebt_volume__min']
         self.cbc_ebt_volume_max = data['ebt_volume__max']
         self.cbc_ebt_volume_avg = data['ebt_volume__avg']
+        print "Model not yet saved"
 
+    def _populate_mhm_fields(self):
         data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
         data = data.aggregate(Min('mhm_cort'), Max('mhm_cort'), Avg('mhm_cort'))
         self.cbc_mhm_cort_min = data['mhm_cort__min']
@@ -3384,8 +3396,7 @@ class CohortMetaData(models.Model):
         self.cbc_mhm_dheas_min = data['mhm_dheas__min']
         self.cbc_mhm_dheas_max = data['mhm_dheas__max']
         self.cbc_mhm_dheas_avg = data['mhm_dheas__avg']
-
-        self.save()
+        print "Model not yet saved"
 
 
     class Meta:
