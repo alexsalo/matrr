@@ -3185,9 +3185,9 @@ class CohortMetaData(models.Model):
     cbc_mtd_etoh_bout_max = models.FloatField('Maximum Etoh Bouts per day', null=True, blank=True)
     cbc_mtd_etoh_bout_avg = models.FloatField('Average Etoh Bouts per day', null=True, blank=True)
 
-    cbc_mtd_etoh_drink_bout_min = models.FloatField('Minimum Etoh Bouts per bout per day', null=True, blank=True)
-    cbc_mtd_etoh_drink_bout_max = models.FloatField('Maximum Etoh Bouts per bout per day', null=True, blank=True)
-    cbc_mtd_etoh_drink_bout_avg = models.FloatField('Average Etoh Bouts per bout per day', null=True, blank=True)
+    cbc_mtd_etoh_drink_bout_min = models.FloatField('Minimum Avg Etoh Bouts per bout per day', null=True, blank=True)
+    cbc_mtd_etoh_drink_bout_max = models.FloatField('Maximum Avg Etoh Bouts per bout per day', null=True, blank=True)
+    cbc_mtd_etoh_drink_bout_avg = models.FloatField('Average Avg Etoh Bouts per bout per day', null=True, blank=True)
 
     cbc_mtd_pct_max_bout_vol_total_etoh_min = models.FloatField('Minimum Max Bout Volume as % of Total Etoh per day',
                                                                 null=True, blank=True)
@@ -3215,14 +3215,6 @@ class CohortMetaData(models.Model):
     cbc_mtd_etoh_intake_min = models.FloatField('Minimum Etoh Intake', null=True, blank=True)
     cbc_mtd_etoh_intake_max = models.FloatField('Maximum Etoh Intake', null=True, blank=True)
     cbc_mtd_etoh_intake_avg = models.FloatField('Average Etoh Intake', null=True, blank=True)
-
-    cbc_mtd_etoh_bout_min = models.FloatField('Minimum EtOH Bout', null=True, blank=True)
-    cbc_mtd_etoh_bout_max = models.FloatField('Maximum EtOH Bout', null=True, blank=True)
-    cbc_mtd_etoh_bout_avg = models.FloatField('Average EtOH Bout', null=True, blank=True)
-
-    cbc_mtd_etoh_drink_bout_min = models.FloatField('Minimum EtOH Drink/Bout', null=True, blank=True)
-    cbc_mtd_etoh_drink_bout_max = models.FloatField('Maximum EtOH Drink/Bout', null=True, blank=True)
-    cbc_mtd_etoh_drink_bout_avg = models.FloatField('Average EtOH Drink/Bout', null=True, blank=True)
 
     cbc_mtd_etoh_mean_drink_vol_min = models.FloatField('Minimum EtOH Mean Drink Vol', null=True, blank=True)
     cbc_mtd_etoh_mean_drink_vol_max = models.FloatField('Maximum EtOH Mean Drink Vol', null=True, blank=True)
@@ -3335,16 +3327,6 @@ class CohortMetaData(models.Model):
         self.cbc_mtd_etoh_intake_min = data['mtd_etoh_intake__min']
         self.cbc_mtd_etoh_intake_max = data['mtd_etoh_intake__max']
         self.cbc_mtd_etoh_intake_avg = data['mtd_etoh_intake__avg']
-
-        data = mtds.aggregate(Min('mtd_etoh_bout'), Max('mtd_etoh_bout'), Avg('mtd_etoh_bout'))
-        self.cbc_mtd_etoh_bout_min = data['mtd_etoh_bout__min']
-        self.cbc_mtd_etoh_bout_max = data['mtd_etoh_bout__max']
-        self.cbc_mtd_etoh_bout_avg = data['mtd_etoh_bout__avg']
-
-        data = mtds.aggregate(Min('mtd_etoh_drink_bout'), Max('mtd_etoh_drink_bout'), Avg('mtd_etoh_drink_bout'))
-        self.cbc_mtd_etoh_drink_bout_min = data['mtd_etoh_drink_bout__min']
-        self.cbc_mtd_etoh_drink_bout_max = data['mtd_etoh_drink_bout__max']
-        self.cbc_mtd_etoh_drink_bout_avg = data['mtd_etoh_drink_bout__avg']
 
         data = mtds.aggregate(Min('mtd_etoh_mean_drink_vol'), Max('mtd_etoh_mean_drink_vol'),
                               Avg('mtd_etoh_mean_drink_vol'))
