@@ -2031,7 +2031,8 @@ def rud_progress(request):
                     rud.rud_grant = progress_cd['grants']
                     rud.save()
                 messages.success(request, "Your research update was successfully submitted.  Thank you.")
-                messages.info(request, "You will be emailed again in 90 days to provide another research update.")
+                if update_cd['progress'] != ResearchProgress.Complete:
+                    messages.info(request, "You will be emailed again in 90 days to provide another research update.")
                 return redirect(reverse('account-view'))
 
     form = progress_form if progress_form else RudProgressForm(initial={'progress': update_cd['progress']})
