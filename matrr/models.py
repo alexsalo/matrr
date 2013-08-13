@@ -2632,7 +2632,7 @@ class TissueSample(models.Model):
         return self.tss_modified
 
     def __unicode__(self):
-        return "%s %s %s:%s" % (str(self.monkey), str(self.tissue_type), self.tss_freezer, self.tss_location)
+        return "%s %s" % (str(self.monkey), str(self.tissue_type))
 
     def get_location(self):
         if self.monkey.cohort.coh_upcoming:
