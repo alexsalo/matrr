@@ -11,20 +11,39 @@ from utils import plotting, apriori
 from collections import defaultdict
 import networkx as nx
 
+doc_snippet = \
+    """
+    NOTES ABOUT THIS METHOD
+
+    Main subplot:
+        Xaxis:
+        Yaxis:
+        Color:
+        Size:
+
+        Notes: NOTES ABOUT THIS SUBPLOT
+    """
+
 
 def create_convex_hull_polygon(subplot, xvalues, yvalues, color):
+    """
+    This method will draw several lines around the provided x-y values, onto 'subplot', colored by 'color'.
+    """
     from matrr.helper import convex_hull
     from matplotlib.path import Path
 
     try:
         hull = convex_hull(numpy.array(zip(xvalues, yvalues)).transpose())
+        # hull == numpy array of exterior points
     except AssertionError: # usually means < 5 datapoints
         return
-    path = Path(hull)
-    x, y = zip(*path.vertices)
-    x = list(x)
+    path = Path(hull) # I think Path() just sorts the points such that it goes around the perimeter
+
+    # path.verticies is the a 2d array of points.  But this array doesn't complete the perimeter.
+    # so you need to append the first point to the end of the array to close the polygon
+    x = list(path.vertices[:,0])
+    y = list(path.vertices[:,1])
     x.append(x[0])
-    y = list(y)
     y.append(y[0])
     line = subplot.plot(x, y, c=color, linewidth=3, alpha=.3)
     return line
@@ -45,6 +64,21 @@ diff = session_end - lights_on
 
 
 def cohorts_daytime_bouts_histogram():
+    """
+    This plot creates a histogram of the number of bouts in each hour, for each monkey in the cohort.
+
+    Shaded hours indicate lights out. Monkeys are colored randomly.
+
+    Main subplot:
+        Xaxis:  Seconds of day.  These are binned by hour, so only 22 x-values are truly shown
+        Yaxis:  Total bout count the monkey consumed in that hour of day during open access
+        Color:  Differentiates monkeys from one another
+        Size:  n/a
+
+        Notes:
+        yaxis limit is set to 1600.  I chose this value after rendering the image for three rhesus cohorts and eyeballing a max.
+    """
+    # collect cohorts to plot
     cohorts = list()
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')) # adolescents
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
@@ -52,6 +86,7 @@ def cohorts_daytime_bouts_histogram():
 
     main_plot = None
     for cohort in cohorts:
+        # create a figure for each cohort
         fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
         main_gs = gridspec.GridSpec(3, 40)
         main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
@@ -59,26 +94,47 @@ def cohorts_daytime_bouts_histogram():
         main_plot.set_title(cohort.coh_cohort_name + " Open Access Only")
         main_plot.set_xlabel("Seconds of day, binned by hour")
         main_plot.set_ylabel("Total bout count during hour")
-        x_axis = list()
+
+        monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
+        mky_count = monkeys.count()
+        mky_color = list()
+        cmap = cm.get_cmap('jet')
+        for idx, key in enumerate(monkeys):
+            mky_color.append(cmap(idx / (mky_count - 1.)))
         y_axes = list()
         labels = list()
         index = 0
-        for monkey in cohort.monkey_set.exclude(mky_drinking=False):
+        for monkey in monkeys:
             bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
             bout_starts = bouts.values_list('ebt_start_time', flat=True)
             bout_starts = numpy.array(bout_starts)
             y_axes.append(bout_starts)
-            x_axis.append(index)
             labels.append(str(monkey.pk))
             index += 1
-        bin_edges = range(0, _22_hour, _1_hour)
-        n, bins, patches = main_plot.hist(y_axes, bins=bin_edges, normed=False, histtype='bar', alpha=.7, label=labels)
+
+        bin_edges = range(0, _22_hour+_1_hour, _1_hour) # forces histogram to be binned by hour
+        main_plot.hist(y_axes, bins=bin_edges, normed=False, histtype='bar', alpha=1, label=labels, color=mky_color)
         main_plot.axvspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
-        main_plot.legend(ncol=5, loc=9)
-        main_plot.set_ylim(ymax=1600)
+        main_plot.legend(ncol=5, loc=9) # places the legend at the center-top, with 5 columns
+        main_plot.set_ylim(ymax=1600) # manually chosen max y value, to scale the plots the same
 
 
 def cohorts_daytime_volbouts_bargraph():
+    """
+    This plot creates a bargraph histogram of the volume of ethanol consumed in each hour, for each monkey in the cohort.
+
+    Shaded hours indicate lights out. Monkeys are colored randomly.
+
+    Main subplot:
+        Xaxis:  Seconds of day.  These are binned by hour, so only 22 x-values are truly shown
+        Yaxis:  Sum of volumes of all bouts the monkey consumed in that hour of day during open access
+        Color:  Differentiates monkeys from one another
+        Size:  n/a
+
+        Notes:
+        yaxis limit is set to 100k.  I chose this value after rendering the image for three rhesus cohorts and eyeballing a max.
+        The x labels don't quite align with the xaxis.  I haven't fixed it because it's just a sandbox image.
+    """
     cohorts = list()
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')) # adolescents
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
@@ -87,9 +143,9 @@ def cohorts_daytime_volbouts_bargraph():
     width = 1
     main_plot = None
     for cohort in cohorts:
-        index = 0
-        night_time = list()
-        labels = set()
+        index = 0 # used as the x location of each bar
+        labels = set() # labels for
+
         fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
         main_gs = gridspec.GridSpec(3, 40)
         main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
@@ -98,31 +154,35 @@ def cohorts_daytime_volbouts_bargraph():
         main_plot.set_xlabel("Hour of day")
         main_plot.set_ylabel("Total vol etoh consumed during hour")
 
-        monkeys = cohort.monkey_set.exclude(mky_drinking=False)
+        monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
         mky_count = float(monkeys.count())
         cmap = cm.get_cmap('jet')
         mky_color = list()
         for idx, key in enumerate(monkeys):
             mky_color.append(cmap(idx / (mky_count - 1)))
+            labels.add(str(key.pk))
+
+        lights_out_index = _22_hour
+        lights_on_index = _22_hour
         for start_time in range(0, _22_hour, _1_hour):
             x_axis = list()
             y_axis = list()
-            if start_time >= lights_out and start_time <= lights_on:
-                night_time.append(index)
+            if start_time >= lights_out:
+                lights_out_index = min(lights_out_index, index)
+            if start_time >= lights_on:
+                lights_on_index = min(lights_on_index, index)
             for monkey in monkeys:
-                bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey, ebt_start_time__gte=start_time,
-                                                           ebt_start_time__lt=start_time + _1_hour)
-                bout_vols = bouts.values_list('ebt_volume', flat=True)
-                bouts_sum = numpy.array(bout_vols).sum()
-                #			bout_starts = bout_starts - diff
-                y_axis.append(bouts_sum)
+                bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey, ebt_start_time__gte=start_time, ebt_start_time__lt=start_time + _1_hour)
+                bout_volume_sum = bouts.aggregate(Sum('ebt_volume'))['ebt_volume__sum']
+                if bout_volume_sum == None:
+                    continue
+                y_axis.append(bout_volume_sum)
                 x_axis.append(index)
                 index += 1
-                labels.add(str(monkey.pk))
             rects1 = main_plot.bar(x_axis, y_axis, width, color=mky_color, alpha=.7)
             index += 2
         main_plot.legend(rects1, labels, ncol=5, loc=9)
-        main_plot.axvspan(min(night_time), max(night_time), color='black', alpha=.2, zorder=-100)
+        main_plot.axvspan(lights_out_index, lights_on_index, color='black', alpha=.2, zorder=-100)
         x_labels = ['hr %d' % i for i in range(1, 23)]
         main_plot.set_xlim(xmax=index - 2)
         main_plot.xaxis.set_major_locator(ticker.LinearLocator(22))
@@ -132,138 +192,27 @@ def cohorts_daytime_volbouts_bargraph():
 
 
 def cohorts_daytime_bouts_boxplot():
-    cohorts = list()
-    cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')) # adolescents
-    cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
-    cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')) # adults
+    """
+    This will create a boxplot graph showing three rhesus cohorts' and the distribution of the start time of their bouts
 
-    fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
-    main_gs = gridspec.GridSpec(3, 40)
-    main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
-    main_plot = fig.add_subplot(main_gs[:, :])
+    The major lacking of this plot is that there is no dimension showing the volume consumed during the bouts.
 
-    x_axis = list()
-    y_axes = list()
-    labels = list()
-    index = 0
-    for cohort in cohorts:
-        for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-            bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
-            bout_starts = bouts.values_list('ebt_start_time', flat=True)
-            bout_starts = numpy.array(bout_starts)
-            y_axes.append(bout_starts)
-            x_axis.append(index)
-            labels.append(str(monkey.pk))
-            index += 1
-        index += 3
+    Main subplot:
+        Xaxis: A rhesus monkey
+        Yaxis: Time of bouts' starts, in seconds.
+        Color: n/a
+        Size:  n/a
 
-    bp = main_plot.boxplot(y_axes, positions=x_axis, whis=2, sym='.')
-    main_plot.axvspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
+        Notes: There are two boxplots for each monkey.
 
-    xtickNames = pyplot.setp(main_plot, xticklabels=labels)
-    pyplot.setp(xtickNames, rotation=45)
-    return fig, False
+        The positive y-value boxplot shows the distribution of bout start times between session start and lights on.
+        This represents the majority of the 22 hour open access drinking day.
 
+        The negative y-value boxplot shows the distribution of bout start times between lights on and session end.
+        Think of these boxplots as representing the distribution of bout starts in the morning.
 
-def cohorts_daytime_bouts_boxplot_remix():
-    cohorts = list()
-    cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')) # adolescents
-    #	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
-    #	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')) # adults
-
-    fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
-    main_gs = gridspec.GridSpec(3, 40)
-    main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
-    main_plot = fig.add_subplot(main_gs[:, :])
-
-    x_axis = list()
-    y_axes = list()
-    labels = list()
-    index = 0
-    for cohort in cohorts:
-        for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-            bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
-            night_bouts = bouts.filter(ebt_start_time__gte=lights_out).filter(ebt_start_time__lt=lights_on).values_list(
-                'ebt_start_time', flat=True)
-            day_bouts = bouts.filter(ebt_start_time__gte=lights_on) | bouts.filter(ebt_start_time__lt=lights_out)
-            day_bouts = day_bouts.values_list('ebt_start_time', flat=True)
-            new_bouts = list(night_bouts)
-            for v in day_bouts:
-                if v >= lights_on:
-                    new_v = v - _24_hour
-                    new_bouts.append(new_v)
-                else:
-                    new_bouts.append(v)
-                #			new_bouts.extend(new_bouts)
-            y_axes.append(new_bouts)
-            x_axis.append(index)
-            labels.append(str(monkey.pk))
-            index += 1
-        index += 3
-
-    bp = main_plot.boxplot(y_axes, positions=x_axis, whis=1.5, sym='.')
-    main_plot.axhspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
-
-    xtickNames = pyplot.setp(main_plot, xticklabels=labels)
-    pyplot.setp(xtickNames, rotation=45)
-    return fig, False
-
-
-def cohorts_daytime_bouts_boxplot_doubleremix():
-    cohorts = list()
-    cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')) # adolescents
-    #	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
-    #	cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')) # adults
-
-    fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
-    main_gs = gridspec.GridSpec(3, 40)
-    main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
-    main_plot = fig.add_subplot(main_gs[:, :])
-
-    x_axis = list()
-    before_end = list()
-    after_start = list()
-    night_y = list()
-    labels = list()
-    index = 0
-    for cohort in cohorts:
-        for monkey in cohort.monkey_set.exclude(mky_drinking=False):
-            bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey)
-            night_bouts = bouts.filter(ebt_start_time__gte=lights_out).filter(ebt_start_time__lt=lights_on).values_list(
-                'ebt_start_time', flat=True)
-            day_bouts = bouts.filter(ebt_start_time__gte=lights_on) | bouts.filter(ebt_start_time__lt=lights_out)
-            day_bouts = day_bouts.values_list('ebt_start_time', flat=True)
-
-            b4_end = list()
-            _after_start = list()
-            for v in day_bouts:
-                if v >= lights_on:
-                    new_v = v - _24_hour
-                    b4_end.append(new_v)
-                else:
-                    _after_start.append(v)
-
-            night_y.append(night_bouts)
-            before_end.append(b4_end)
-            after_start.append(_after_start)
-            x_axis.append(index)
-            labels.append(str(monkey.pk))
-            index += 1
-        index += 3
-
-    bp = main_plot.boxplot(before_end, positions=x_axis, whis=1.5, sym='.')
-    bp = main_plot.boxplot(after_start, positions=x_axis, whis=1.5, sym='.')
-    bp = main_plot.boxplot(night_y, positions=x_axis, whis=1.5, sym='.')
-
-    main_plot.axhspan(lights_out, lights_on, color='black', alpha=.2, zorder=-100)
-    main_plot.axhspan(session_start, session_start - _2_hour, color='red', alpha=.2, zorder=-100)
-
-    xtickNames = pyplot.setp(main_plot, xticklabels=labels)
-    pyplot.setp(xtickNames, rotation=45)
-    return fig, False
-
-
-def cohorts_daytime_bouts_boxplot_hattrick():
+        The horizontal red bar just below 0 indicates the two hours where monkeys do not have access to alcohol.
+    """
     cohorts = list()
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')) # adolescents
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
@@ -318,6 +267,23 @@ def cohorts_daytime_bouts_boxplot_hattrick():
 
 
 def cohorts_scatterbox():
+    """
+    This plot attempts to compare three rhesus cohorts to each other across all volume consumed in each hour, by each monkey.
+
+    This is another plot that proved not to be super helpful.  At best it poorly illustrates the hourly cycle of ethanol consumption
+    during daylight hours and the general lack of drinking during nighttime hours.
+
+    Main subplot:
+        Xaxis: Hour of day
+        Yaxis: Total volume of ethanol a monkey consumed within an hour, during open access
+        Color: Distinguishes a cohort's boxplot from the other cohorts
+        Size: n/a
+
+        Notes: The datapoints contained in each boxplot are each monkey's total volume of ethanol consumed during open access within
+        an hour.  The boxplot summarizes the distribution of these values for comparison with other cohorts.
+
+        The xlabels don't line up right, but the graph sucks so I never fixed it.
+    """
     cohorts = list()
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')) # adolescents
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
@@ -333,10 +299,10 @@ def cohorts_scatterbox():
     main_plot.set_ylabel("Total vol etoh consumed during hour")
 
     width = 1
-    day_hours = range(0, _22_hour, _1_hour)
+    day_hours = range(0, _22_hour+_1_hour, _1_hour)
     cohort_hours = list()
     for cohort in cohorts:
-        monkeys = cohort.monkey_set.exclude(mky_drinking=False)
+        monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
         monkey_hours = list()
         for start_time in day_hours:
             mky_sums = list()
@@ -363,8 +329,10 @@ def cohorts_scatterbox():
 
     main_plot.legend(wrecktangles, (wrect.get_label() for wrect in wrecktangles), loc=0)
 
-    main_plot.set_xlim(xmin=-1) # i don't understand why i need this
-    main_plot.axvspan(7 * (2 + len(cohorts)) - 1, 19 * (2 + len(cohorts)) - 1, color='black', alpha=.2, zorder=-100)
+    main_plot.set_xlim(xmin=-1, xmax=x_position.max()) # i don't understand why i need this
+    lights_out_xvalue = 6 * (2 + len(cohorts)) - 1
+    lights_on_xvalue = 18 * (2 + len(cohorts)) - 1
+    main_plot.axvspan(lights_out_xvalue, lights_on_xvalue, color='black', alpha=.2, zorder=-100)
 
     x_labels = ['hr %d' % i for i in range(1, 23)]
     main_plot.xaxis.set_major_locator(ticker.LinearLocator(22))
