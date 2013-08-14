@@ -2791,36 +2791,45 @@ def rhesus_confederate_boxplots(minutes, nighttime_only=False):
 
 #---# Confederate histograms and scatterplots
 def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_data=None):
-    def _bout_startdiff_volumesum(subplot, monkey_one, monkey_two):
-        if False:
-            f = open('utils/DATA/test%s.json' % 0, 'r')
-            x = json.loads(f.readline())
-            f.close()
-            f = open('utils/DATA/test%s.json' % 1, 'r')
-            y = json.loads(f.readline())
-            f.close()
+    def _bout_startdiff_volsum(subplot, monkey_one, monkey_two):
+        try:
+            fx = open('utils/DATA/_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+            fy = open('utils/DATA/_bout_startdiff_volsum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+        except:
+            one_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_one).order_by('drinking_experiment__dex_date')
+            one_dates = one_mtds.values_list('drinking_experiment__dex_date', flat=True).distinct()
+            x_data = list()
+            y_data = list()
+            for date in one_dates:
+                one_values = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
+                two_bouts = ExperimentBout.objects.filter(mtd__monkey=monkey_two, mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
+                if not one_values or not two_bouts:
+                    continue
+                two_starts = numpy.array(two_bouts)[:,0]
+                for one_start_time, one_volume in one_values:
+                    two_closest_start = min(two_starts, key=lambda x:abs(x-one_start_time))
+                    two_closest_bout = two_bouts.get(ebt_start_time=two_closest_start)
+                    x_value = float(numpy.abs(one_start_time - two_closest_bout[0]))
+                    y_value = float(one_volume + two_closest_bout[1])
+                    x_data.append(x_value)
+                    y_data.append(y_value)
+            subplot.set_ylabel("Summed volume of adjacent bouts")
+            subplot.set_xlabel("Bout start time difference")
+            fx = open('utils/DATA/_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
+            fy = open('utils/DATA/_bout_startdiff_volsum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
+            fx.write(json.dumps(x_data))
+            fy.write(json.dumps(y_data))
+            fx.close()
+            fy.close()
+            return subplot, x_data, y_data
+        else:
+            x = json.loads(fx.readline())
+            y = json.loads(fy.readline())
+            fx.close()
+            fy.close()
+            subplot.set_ylabel("Summed volume of adjacent bouts")
+            subplot.set_xlabel("Bout start time difference")
             return subplot, x, y
-
-        one_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_one).order_by('drinking_experiment__dex_date')
-        one_dates = one_mtds.values_list('drinking_experiment__dex_date', flat=True).distinct()
-
-        x_data = list()
-        y_data = list()
-        for date in one_dates:
-            one_values = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
-            two_bouts = ExperimentBout.objects.filter(mtd__monkey=monkey_two, mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
-            if not one_values or not two_bouts:
-                continue
-            two_starts = numpy.array(two_bouts)[:,0]
-
-            for one_start_time, one_volume in one_values:
-                two_closest_start = min(two_starts, key=lambda x:abs(x-one_start_time))
-                two_closest_bout = two_bouts.get(ebt_start_time=two_closest_start)
-                x_data.append(one_start_time - two_closest_bout[0])
-                y_data.append(one_volume + two_closest_bout[1])
-        subplot.set_ylabel("Summed volume of adjacent bouts")
-        subplot.set_xlabel("Bout start time difference")
-        return subplot, x_data, y_data
 
     if not isinstance(monkey_one, Monkey):
         try:
@@ -2849,7 +2858,7 @@ def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_
     axHistx = fig.add_subplot(main_gs[:1,:9], sharex=subplot)
     axHisty = fig.add_subplot(main_gs[1:10,9:], sharey=subplot)
 
-    collect_xy_data = collect_xy_data if collect_xy_data else _bout_startdiff_volumesum
+    collect_xy_data = collect_xy_data if collect_xy_data else _bout_startdiff_volsum
 
     colors = ['navy', 'gold', 'green', 'blue', 'orange']
     subplot, _x, _y = collect_xy_data(subplot, monkey_one, monkey_two)
@@ -2857,11 +2866,15 @@ def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_
     _y = numpy.array(_y)
 
     subplot.scatter(_x, _y, color=colors.pop(0), edgecolor='none', alpha=.2)
+    subplot.set_xlim(xmin=0)
+    xticks = range(2*60*60, int(_x.max()), 2*60*60)
+    xtick_labels = ["%d hours" % (x/60/60) for x in xticks]
+    subplot.set_xticks(xticks)
+    subplot.set_xticklabels(xtick_labels)
 
-    # make some labels invisible
+    # make the histogram's labels invisible
     pyplot.setp(axHistx.get_xticklabels() + axHistx.get_yticklabels(), visible=False)
     pyplot.setp(axHisty.get_xticklabels() + axHisty.get_yticklabels(), visible=False)
-
     axHistx.hist(_x, bins=150, alpha=1, log=True)
     axHisty.hist(_y, bins=150, alpha=1, log=True, orientation='horizontal')
     return fig
