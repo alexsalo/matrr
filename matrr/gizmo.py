@@ -3,7 +3,7 @@ from datetime import datetime
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
-from matrr.models import Request, RequestStatus
+from matrr.models import Request, RequestStatus, CohortProteinImage, CohortHormoneImage
 
 
 def redirect_with_get(url_name, *args, **kwargs):
@@ -66,20 +66,17 @@ def get_or_create_cart(request, cohort):
 
 
 def create_paginator_instance(request, queryset, count):
-    if len(queryset) > 0:
-        paginator = Paginator(queryset, count)
-        # Make sure page request is an int. If not, deliver first page.
-        try:
-            page = int(request.GET.get('page', '1'))
-        except ValueError:
-            page = 1
-        # If page request (9999) is out of range, deliver last page of results.
-        try:
-            paged = paginator.page(page)
-        except (EmptyPage, InvalidPage):
-            paged = paginator.page(paginator.num_pages)
-    else:
-        paged = queryset
+    paginator = Paginator(queryset, count)
+    # Make sure page request is an int. If not, deliver first page.
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+    # If page request is out of range, deliver last page of results.
+    try:
+        paged = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        paged = paginator.page(paginator.num_pages)
     return paged
 
 
