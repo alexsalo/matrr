@@ -1755,15 +1755,18 @@ class TissueType(models.Model):
     tst_description = models.TextField('Description', null=True,
                                        blank=True,
                                        help_text='The description of the tissue type.')
+    # todo: I don't think this is used.  need to make sure and remove.
     tst_count_per_monkey = models.IntegerField('Units per Monkey',
                                                blank=True,
                                                null=True,
                                                help_text='The maximum number of samples that can be harvested from a typical monkey.  Leave this blank if there is no limit.')
+    # todo: I don't think this is used.  need to make sure and remove.
     unavailable_list = models.ManyToManyField(Monkey, db_table='ttu_tissue_types_unavailable',
                                               verbose_name='Unavailable For',
                                               related_name='unavailable_tissue_type_set',
                                               blank=True,
                                               help_text='The monkeys this tissue type is not available for.')
+    # todo: I don't think this is used.  need to make sure and remove.
     tst_cost = models.FloatField('Cost', default=0.00)
     tst_sex_relevant = models.CharField('Sex relevant tissue type', max_length=1, choices=TissueTypeSexRelevant,
                                         default=TissueTypeSexRelevant.Both)
