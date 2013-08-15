@@ -93,7 +93,7 @@
 	<div style='margin-top: 20px;'>
 		<div class='headline'>Requested Tissues</div>
 		{% for item in order.tissue_request_set.all %}
-			{% include 'matrr/order/order_item_detail.html' %}
+			{% include 'matrr/orders/order_item_detail.html' %}
 			{% if not forloop.last %}<hr>{% endif %}
 		{% endfor %}
 	</div>
