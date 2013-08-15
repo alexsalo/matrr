@@ -15,10 +15,15 @@ doc_snippet = \
     """
     NOTES ABOUT THIS METHOD
 
+    Arguments:
+        arg1name:
+        arg2name:
+
     Main subplot:
         Xaxis:
         Yaxis:
         Color:
+        Shape:
         Size:
 
         Notes: NOTES ABOUT THIS SUBPLOT
@@ -341,6 +346,27 @@ def cohorts_scatterbox():
 
 
 def cohorts_bec_stage_scatter(stage):
+    """
+    Graph is a scatterplot of the time since last etoh intake vs the BEC value collected during induction.
+
+    This graph will plot 6 types of points, 3 cohort centroids and N monkey points.  The monkey points plot the data point
+    of each BEC record collected within the given stage.  Each centroid is the k-means cluster centroid of that cohort's
+    monkey's data points.
+
+    Arguments:
+        stage:  Integer 0-2.  0 = .5 gkg stage of induction, 1 = 1.0 gkg stage of induction.  2 = 1.5 stage of induction.
+
+    Main subplot:
+        Xaxis: BEC value, in mg pct etoh
+        Yaxis: Number of hours between the time the blood sample was taken and the time taken to drink the ethanol quota.
+        Color: Differentiates cohorts
+        Shape: Differentiates centroids vs monkey data points
+        Size: n/a
+
+        Notes: A y-value of zero indicates that the monkey drank its last bit of alcohol quota when the blood sample was taken.
+        Negative y-values indicate the monkey finished its quota BEFORE the blood sample was taken.
+        Positive y-values indicate the monkey finished its quote AFTER the blood sample was taken.
+    """
     cohorts = list()
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')) # adults
     cohorts.append(Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')) # young adults
@@ -365,23 +391,19 @@ def cohorts_bec_stage_scatter(stage):
     for index, cohort in enumerate(cohorts):
         x_axis = list()
         y_axis = list()
-        for monkey in cohort.monkey_set.exclude(mky_drinking=False):
+        for monkey in Monkey.objects.Drinkers().filter(cohort=cohort):
             becs = MonkeyBEC.objects.Ind().filter(monkey=monkey).order_by('pk')
             becs = becs.filter(mtd__mtd_etoh_g_kg__gte=stage_start).filter(mtd__mtd_etoh_g_kg__lte=stage_end)
             seconds = becs.values_list('mtd__mtd_seconds_to_stageone', flat=True)
             try:
-                y_axis.extend([(s - sample_time[stage]) / (60 * 60) for s in
-                               seconds]) # time between end of drinking and sample taken
+                y_axis.extend([(s - sample_time[stage]) / (60 * 60) for s in seconds]) # time between end of drinking and sample taken
             except:
-                print "skipping monkey %d" % monkey.pk
                 continue
             x_axis.extend(becs.values_list('bec_mg_pct', flat=True))
 
-        scatter = main_plot.scatter(x_axis, y_axis, color=colors[index], marker=scatter_markers[index], alpha=1, s=150,
-                                    label=str(cohort))
+        main_plot.scatter(x_axis, y_axis, color=colors[index], marker=scatter_markers[index], alpha=1, s=150, label=str(cohort))
         res, idx = cluster.vq.kmeans2(numpy.array(zip(x_axis, y_axis)), 1)
-        scatter = main_plot.scatter(res[:, 0][0], res[:, 1][0], color=colors[index], marker=centroid_markers[index],
-                                    alpha=1, s=250, label=str(cohort) + " Centroid")
+        main_plot.scatter(res[:, 0][0], res[:, 1][0], color=colors[index], marker=centroid_markers[index], alpha=1, s=250, label=str(cohort) + " Centroid")
 
     main_plot.axhspan(0, 0, color='black', alpha=.4, zorder=-100)
     main_plot.text(0, 0, "Blood Sample Taken")
