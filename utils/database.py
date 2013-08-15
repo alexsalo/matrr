@@ -510,12 +510,12 @@ def dump_distinct_TissueType(output_file):
 
 def dump_monkey_protein_data(queryset, output_file):
     if isinstance(queryset, QuerySet) and isinstance(queryset[0], MonkeyProtein):
-        output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-        columns = ['monkey', 'protein', 'mpn_date', 'mpn_value']
-        output.writerow(columns)
-        for mpn in queryset:
-            output.writerow([mpn.monkey, "%s" % mpn.protein.pro_name, mpn.mpn_date, mpn.mpn_value])
-        return output
+        with open(output_file, 'w') as f:
+            output = csv.writer(f, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
+            columns = ['monkey', 'protein', 'mpn_date', 'mpn_value']
+            output.writerow(columns)
+            for mpn in queryset:
+                output.writerow([mpn.monkey, "%s" % mpn.protein.pro_name, mpn.mpn_date, mpn.mpn_value])
     else:
         raise Exception("queryset kwarg can only be a QuerySet of MonkeyProteins.")
 
