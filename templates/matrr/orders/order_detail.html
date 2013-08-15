@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class='large-headline' xmlns="http://www.w3.org/1999/html">
+		{% block title %}{% if edit %}Edit Order{% else %}Order Detail{% endif %}{% endblock %}
+	</div>
+
+	<br/>
+	{% if edit %}
+		<center>
+			<div class='blockLinkButton' style=''>This part of order can be edited only during checkout.</div>
+		</center>
+	{% endif %}
+	<table class="common_right" style="margin: auto; width:95%">
+		<tr>
+			<th>User:</th>
+			<td><a href='{% url account-reviewer-view order.user.id %}'>{{ order.user }}</a></td>
+			<th>Cohort:</th>
+			<td><a href='{% url cohort-details order.cohort.coh_cohort_id %}'>{{ order.cohort }}</a></td>
+		</tr>
+		<tr>
+			<th>Requested On:</th>
+			<td>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
+			<th>Status:</th>
+			<td id="{{ order.req_status|lower }}">{{ order.get_req_status_display }}</td>
+
+		</tr>
+		<tr>
+			<th>Referred By:</th>
+			<td>{{ order.req_referred_by }}</td>
+			<th>Progress Agreement:</th>
+			<td>{{ order.req_progress_agreement }}</td>
+		</tr>
+		<tr>
+			<th>Project Title:</th>
+			<td colspan='1'>{{ order.req_project_title }}</td>
+			{% if order.parent_request %}
+				<th>Parent Request:</th>
+				<td><a href='{% url order-detail order.parent_request.pk %}'>{{ order.parent_request.pk }}</a></td>
+			{% endif %}
+		</tr>
+		<tr>
+			<th>Experimental Plan:</th>
+			{% if order.req_experimental_plan %}
+				<td colspan='3'><a href='{{ MEDIA_URL }}{{ order.req_experimental_plan }}'>{{ order.req_experimental_plan }}</a></td>
+			{% else %}
+				<td colspan='3'>None uploaded</td>
+			{% endif %}
+		</tr>
+		<tr>
+			<th>Purpose:</th>
+			<td colspan='3'>{{ order.req_reason }}</td>
+		</tr>
+		{% if order.req_notes %}
+			<tr>
+				<th>Extra Notes:</th>
+				<td colspan='3'>{{ order.req_notes }}</td>
+			</tr>
+		{% endif %}
+
+		{% if po_form %}
+			<tr>
+				<th>Purchase Order:</th>
+				<form action='' method='post'>
+					{% csrf_token %}
+					<td colspan='3'>{{ po_form.req_purchase_order }} <button class='blockLinkCheckoutButton' type='submit' value='Submit'>Save</button> </td>
+				</form>
+			<tr>
+		{% else %}
+			<tr>
+				<th>Purchase Order:</th>
+				<td colspan='3'>{{ order.req_purchase_order }}</td>
+			<tr>
+		{% endif %}
+
+	</table>
+
+	{% if order.shipment.shp_shipment_date %}
+		<div class='small'>
+			Shipped On: {{ order.shipment.shp_shipment_date|date:"m/d/Y" }}
+		</div>
+	{% endif %}
+	{% if edit %}
+		<div class="messages">
+			<div class="warning">A Revised order is just your draft, <strong>it has to be checked out (submitted).</strong> Only then can the MATRR team process it.</div>
+		</div>
+		<div class="messages">
+			<div class="info">
+				For instructions on how to revise previous requests, see our <u><a href="/faq/#ReviseRequest">FAQ page.</a></u>
+			</div>
+		</div>
+	{% endif %}
+	<div style='margin-top: 20px;'>
+		<div class='headline'>Requested Tissues</div>
+		{% for item in order.tissue_request_set.all %}
+			{% include 'matrr/order/order_item_detail.html' %}
+			{% if not forloop.last %}<hr>{% endif %}
+		{% endfor %}
+	</div>
+
+	{% if shipments %}
+		<div class='headline'>Shipments:</div>
+		{% for shipment in shipments %}
+			<table class="common_center" style="margin: auto; width:95%">
+				<tr>
+					<th>Shipment</th>
+					<th>Shipment Date</th>
+					<th>FedEx Tracking Number</th>
+				</tr>
+				<tr>
+					<td><a href="{% url shipment-detail shipment.pk %}">{{ shipment.pk }}</a></td>
+					<td>{% if shipment.shp_shipment_date %}{{ shipment.shp_shipment_date }}{% else %}Not yet shipped{% endif %}</td>
+					<td>{% if shipment.shp_tracking %}{{ shipment.shp_tracking }}{% else %}None{% endif %}</td>
+				</tr>
+			</table>
+		{% endfor %}
+	{% endif %}
+	<div class='headline'> </div>
+
+	{% if not edit %}
+		<a href='{% if request.META.HTTP_REFERER %}{{ request.META.HTTP_REFERER }}{% else %}{% url order-list %}{% endif %}' class='blockLinkButton' style="float:left">Back</a>
+	{% endif %}
+	{% if edit %}
+		<a href='{% url order-list %}' class='blockLinkButton' style="float:left">Finish Editing</a>
+	{% endif %}
+	{% if shipped %}
+		<div class='left'>
+			<a href='{% url shipment-manifest order.req_request_id %}' style="float:left" class='blockLinkButton'>Download Shipping Manifest</a>
+		</div>
+	{% else %}
+		{% if not after_submitted %}
+			<div>
+				<a href='{% url order-delete order.req_request_id %}' style="float:left" class='blockLinkDeleteButton'>Delete</a>
+			</div>
+		{% endif %}
+	{% endif %}
+	{% if edit %}
+		<a href='{% url order-checkout order.req_request_id %}' class='blockLinkCheckoutButton' style="float:right">Proceed to checkout</a>
+	{% endif %}
+	{% if order.can_be_revised and request.user == order.user %}
+		<a href='{% url order-revise order.req_request_id %}' class='blockLinkCheckoutButton' style="float:right">Revise</a>
+	{% endif %}
+	{% if order.req_status == RequestStatus.Accepted or order.req_status == RequestStatus.Partially or order.req_status == RequestStatus.Shipped %}
+		<a href='{% url order-detail order.pk %}?export=True' class='blockLinkButton' style="float:right">Download Invoice</a>
+	{% endif %}
+{% endblock %}
