@@ -14,7 +14,7 @@ from matrr.views.basic import sendfile
 from matrr.forms import CohortSelectForm, GraphSubjectSelectForm, ProteinSelectForm, MonkeyProteinGraphAppearanceForm, HormoneSelectForm, MonkeyHormoneGraphAppearanceForm
 from matrr.forms import ExperimentRangeForm, BECRangeForm, GenealogyParentsForm, GraphToolsMonkeySelectForm
 from matrr.models import Cohort, Monkey, CohortImage, MonkeyImage, MonkeyProtein, MonkeyBEC, DataFile, MonkeyProteinImage, MonkeyHormone, MonkeyHormoneImage, FamilyNode, MATRRImage
-from matrr.models import MonkeyToDrinkingExperiment, MTDImage
+from matrr.models import MonkeyToDrinkingExperiment, MTDImage, CohortProteinImage, CohortHormoneImage
 from utils import plotting, plotting_beta, apriori
 
 # todo: there are things in plotting_beta that need to be moved out into a more centralized location.  References in this file are a good place to start
@@ -143,8 +143,12 @@ def tools_cohort_protein_graphs(request, coh_id):
             if int(coh_id) != subject_select_form.cleaned_data['subject'].pk:
                 request.session['_old_post'] = request.POST
                 return redirect(tools_cohort_protein_graphs, subject_select_form.cleaned_data['subject'].pk)
-            proteins = protein_form.cleaned_data['proteins']
-            graphs = gizmo.gather_cohort_protein_images(cohort, proteins)
+            proteins = protein_form.cleaned_data['proteins'] # overwrite proteins=None
+            graphs = []
+            for protein in proteins:
+                cpi_image, is_new = CohortProteinImage.objects.get_or_create(protein=protein, cohort=cohort)
+                if cpi_image.pk:
+                    graphs.append(cpi_image)
             context['graphs'] = graphs
 
     cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort',
@@ -336,10 +340,13 @@ def tools_cohort_hormone_graphs(request, coh_id):
             hormones = hormone_form.cleaned_data['hormones']
             scaled = hormone_form.cleaned_data['scaled']
             params = str({'scaled': scaled})
-            graphs = gizmo.gather_cohort_hormone_images(cohort, hormones, params)
+            graphs = []
+            for hormone in hormones:
+                chi_image, is_new = CohortHormoneImage.objects.get_or_create(hormone=hormone, cohort=cohort, parameters=params)
+                if chi_image.pk:
+                    graphs.append(chi_image)
             if len(graphs) < len(hormones):
-                messages.info(request,
-                              'Some image files could not be created.  This is usually caused by requesting insufficient or non-existent data.')
+                messages.info(request, 'Some image files could not be created.  This is usually caused by requesting insufficient or non-existent data.')
             context['graphs'] = graphs
     else:
         subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_hormone_data, horizontal=True,

@@ -2590,11 +2590,11 @@ class TissueRequestReview(models.Model):
     def get_quantity(self, css=False):
         if css:
             if self.vtr_quantity == "Too little":
-                return 0
+                return 1
             elif self.vtr_quantity == "Too much":
-                return 10
+                return 1
             else:
-                return 5
+                return 10
         else:
             return self.vtr_quantity
 
