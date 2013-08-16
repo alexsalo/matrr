@@ -1,9 +1,11 @@
-import settings, os, math, urllib
+import settings, os, math, urllib, StringIO
 from datetime import datetime
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
-from matrr.models import Request, RequestStatus, CohortProteinImage, CohortHormoneImage
+from matrr.models import Request, RequestStatus
+from django.template import loader, Context
+from ho import pisa
 
 
 def redirect_with_get(url_name, *args, **kwargs):
@@ -25,7 +27,6 @@ def redirect_with_get(url_name, *args, **kwargs):
     url = reverse(url_name, args=args)
     params = urllib.urlencode(kwargs)
     return HttpResponseRedirect(url + "?%s" % params)
-
 
 def fetch_resources(uri, rel):
     """
@@ -52,7 +53,6 @@ def remove_values_from_list(base_list, removal_list):
     """
     return [value for value in base_list if value not in removal_list]
 
-
 def sort_tissues_and_add_quantity_css_value(tissue_request_formset):
     """
     This is used in the review overview process.
@@ -76,7 +76,6 @@ def sort_tissues_and_add_quantity_css_value(tissue_request_formset):
             if tissue_request_review.is_finished():
                 # then give that review a property (later used by the template) representing the integer equivalent of the quantity review
                 tissue_request_review.quantity_css_value = tissue_request_review.get_quantity(css=True)
-
 
 def get_or_create_cart(request, cohort):
     """
@@ -125,7 +124,6 @@ def get_or_create_cart(request, cohort):
 
     return cart_request
 
-
 def create_paginator_instance(request, queryset, count):
     """
     This is a handy little code snippet.  It ought to be used by any view which uses pagination.  It does some basic
@@ -153,3 +151,21 @@ def create_paginator_instance(request, queryset, count):
     except (EmptyPage, InvalidPage):
         paged = paginator.page(paginator.num_pages)
     return paged
+
+def export_template_to_pdf(template, context={}, outfile=None, return_pisaDocument=False):
+    t = loader.get_template(template)
+    c = Context(context)
+    r = t.render(c)
+
+    result = outfile if outfile else StringIO.StringIO()
+    pdf = pisa.pisaDocument(StringIO.StringIO(r.encode("UTF-8")), dest=result)
+
+    if not pdf.err:
+        if return_pisaDocument:
+            return pdf
+        else:
+            return result
+    else:
+        raise Exception(pdf.err)
+
+

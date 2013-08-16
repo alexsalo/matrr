@@ -856,7 +856,7 @@ def tools_supersandbox(request):
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):
-    from matrr.helper import ExampleFamilyTree
+    from utils.network_tools import ExampleFamilyTree
 
     def male_female_shape(node):
         shape = 'circle' if node[1]['shape_input'] == 'F' else 'square'
