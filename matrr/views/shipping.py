@@ -7,7 +7,7 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from settings import PRODUCTION
-from matrr import helper, emails
+from matrr import gizmo, emails
 from matrr.forms import TissueShipmentForm, TrackingNumberForm
 from matrr.models import Request, User, Shipment, ShipmentStatus, RequestStatus
 
@@ -190,6 +190,6 @@ def shipment_manifest_export(request, shipment_id):
 
     context = {'shipment': shipment, 'req_request': req_request, 'account': req_request.user.account,
                'time': datetime.today()}
-    return helper.export_template_to_pdf('pdf_templates/shipment_manifest.html', context, outfile=response)
+    return gizmo.export_template_to_pdf('pdf_templates/shipment_manifest.html', context, outfile=response)
 
 

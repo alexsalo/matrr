@@ -5,7 +5,7 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib import messages
 from django.forms import widgets
-from matrr import helper, gizmo
+from matrr import gizmo
 from matrr.decorators import user_owner_test
 from matrr.forms import PurchaseOrderForm, CohortSelectForm, CartCheckoutForm, TissueRequestForm
 from matrr.models import Request, RequestStatus, Acceptance, Cohort, TissueRequest
@@ -47,7 +47,7 @@ def order_detail(request, req_request_id, edit=False):
         response = HttpResponse(mimetype='application/pdf')
         response['Content-Disposition'] = 'attachment; filename=Invoice-%d.pdf' % req_request.pk
         context = {'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
-        helper.export_template_to_pdf('pdf_templates/invoice.html', context, outfile=response)
+        gizmo.export_template_to_pdf('pdf_templates/invoice.html', context, outfile=response)
         return response
 
     return render_to_response('matrr/orders/order_detail.html',

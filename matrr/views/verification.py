@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib import messages
-from matrr import helper, gizmo
+from matrr import gizmo
 from matrr.forms import TissueInventoryVerificationForm, TissueInventoryVerificationShippedForm, TissueInventoryVerificationDetailForm
 from matrr.models import TissueInventoryVerification, Request
 
@@ -33,7 +33,7 @@ def tissue_verification_export(request, req_request_id):
     response = HttpResponse(mimetype='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
     context = {'tiv_list': tiv_list, 'user': request.user, 'date': datetime.today()}
-    return helper.export_template_to_pdf('pdf_templates/tissue_verification.html', context, outfile=response)
+    return gizmo.export_template_to_pdf('pdf_templates/tissue_verification.html', context, outfile=response)
 
 
 def tissue_verification_list(request, req_request_id):

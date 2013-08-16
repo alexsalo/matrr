@@ -7,7 +7,7 @@ from matrr import gizmo
 import settings, re
 from datetime import datetime, timedelta, date
 from django.core.mail import send_mail
-from matrr.models import Request, User, Shipment, Account, RequestStatus, ResearchUpdate, ResearchProgress, Acceptance, Group, Review
+from matrr.models import Request, User, Shipment, Account, RequestStatus, Acceptance, Group, Review
 
 # regular_tasks
 def send_colliding_requests_info():
@@ -36,12 +36,12 @@ def send_colliding_requests_info():
             if sub:
                 sub_text = "	has collision with following submitted requests:\n"
                 for s in sub:
-                    sub_text = sub_text + ("		%s\n" % s)
+                    sub_text += ("		%s\n" % s)
             acc_text = ""
             if acc:
                 acc_text = "	has collision with following accepted requests:\n"
                 for a in acc:
-                    acc_text = acc_text + ("		%s\n" % a)
+                    acc_text += ("		%s\n" % a)
 
             collision_text = collision_text + ("Request: %s\n" % req) + sub_text + acc_text
         subject = 'Submitted requests with collisions'
