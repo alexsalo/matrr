@@ -756,7 +756,7 @@ def tools_confederates_chord_diagram(request):
         matrix, labels = reformat_method(coh)
         labels_colors = list()
         for key in labels:
-            lc = {'name': key, 'color': plotting_beta.rhesus_monkey_colors_hex[key]}
+            lc = {'name': key, 'color': plotting_beta.RHESUS_MONKEY_COLORS[key]}
             labels_colors.append(lc)
         dataset = mark_safe(json.dumps(matrix))
         labels_colors = mark_safe(json.dumps(labels_colors))

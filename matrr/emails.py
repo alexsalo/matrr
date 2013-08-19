@@ -1,13 +1,18 @@
+import re
+from datetime import datetime, timedelta, date
+
 from django.contrib.auth.models import Permission
 from django.core.mail.message import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db.models.query_utils import Q
 from django.template.loader import render_to_string
-from matrr import gizmo
-import settings, re
-from datetime import datetime, timedelta, date
 from django.core.mail import send_mail
-from matrr.models import Request, User, Shipment, Account, RequestStatus, Acceptance, Group, Review
+from django.contrib.auth.models import Group
+
+from matrr import gizmo
+import settings
+from matrr.models import Request, User, Shipment, Account, RequestStatus, Acceptance, Review
+
 
 # regular_tasks
 def send_colliding_requests_info():

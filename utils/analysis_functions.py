@@ -269,7 +269,7 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 		Any monkey in monkey_category could be from any of the rhesus cohorts, so significant data filtering must be done before summing the ethanol volume data.
 		"""
 		cohort_starts = {5: datetime(2008, 10, 20), 6:datetime(2009, 4, 13), 9:datetime(2011, 7, 12), 10:datetime(2011,01,03)}
-		monkey_set = plotting_beta.rhesus_drinkers_distinct[monkey_category]
+		monkey_set = plotting_beta.RHESUS_DRINKERS_DISTINCT[monkey_category]
 		data = list()
 		base_eevs = ExperimentEvent.objects.OA().exclude_exceptions()
 		for minute in range(0, minutes):
@@ -310,7 +310,7 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 		This method will return the volume of ethanol consumed during each minute after a pellet was distributed
 		"""
 		data = list()
-		monkey_set = plotting_beta.rhesus_drinkers_distinct[monkey_category]
+		monkey_set = plotting_beta.RHESUS_DRINKERS_DISTINCT[monkey_category]
 		eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
 		for minute in range(0, minutes):
 			_eevs = eevs.filter(eev_pellet_time__gte=minute*60).filter(eev_pellet_time__lt=(minute+1)*60)
@@ -319,7 +319,7 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 		data /= len(monkey_set)
 		return data
 
-	keys = plotting_beta.rhesus_keys
+	keys = plotting_beta.DRINKING_CATEGORIES
 	all_data_dict = dict()
 	first_data_dict = dict()
 	second_data_dict = dict()

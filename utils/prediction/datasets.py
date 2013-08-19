@@ -109,7 +109,7 @@ class RhesusPCADataset():
 		loop_mtd_columns = data_columns[1:41]
 		loop_mhm_columns = data_columns[41:]
 
-		monkeys = [monkey_pk,] if monkey_pk else plotting_beta.all_rhesus_drinkers
+		monkeys = [monkey_pk,] if monkey_pk else plotting_beta.ALL_RHESUS_DRINKERS
 		mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey__in=monkeys).order_by('monkey', 'mtd_etoh_g_kg')
 
 		outlier_multiple = 5
@@ -143,7 +143,7 @@ class RhesusPCADataset():
 				else:
 					mhm = None
 
-			target.append(plotting_beta.rhesus_monkey_category[mtd.monkey.pk])
+			target.append(plotting_beta.RHESUS_MONKEY_CATEGORY[mtd.monkey.pk])
 
 			row = list()
 
@@ -200,7 +200,7 @@ def create_dataset_from_mtds(mtds):
 		except IndexError as e:
 			mhm = None
 
-		target.append(plotting_beta.rhesus_monkey_category[mtd.monkey.pk])
+		target.append(plotting_beta.RHESUS_MONKEY_CATEGORY[mtd.monkey.pk])
 
 		row = list()
 		for col in loop_mtd_columns:
@@ -231,7 +231,7 @@ def create_dataset_from_mtd_values(monkey_pk, mtd_values):
 	target = list()
 	data = list()
 	for mtd_row in mtd_values:
-		target.append(plotting_beta.rhesus_monkey_category[monkey_pk])
+		target.append(plotting_beta.RHESUS_MONKEY_CATEGORY[monkey_pk])
 
 		data_row = list()
 		for col in mtd_columns:

@@ -6,22 +6,20 @@ import ast
 import Image
 import traceback
 import numpy
-import dbarray
 import sys
-import settings
-from django.core.files.base import File
-from django.core.mail.message import EmailMessage
-from django.db import models
-from django.db.models import Q, Min, Max, Avg, Sum, Count, StdDev
-from django.contrib.auth.models import User, Group, Permission
-from django.db.models.query import QuerySet
-from django.db.models.signals import post_save, pre_delete, pre_save
-from django.core.urlresolvers import reverse
-from django.dispatch import receiver
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from string import lower, replace
+
+from django.core.files.base import File
+from django.db import models
+from django.db.models import Q, Min, Max, Avg, Sum, Count
+from django.contrib.auth.models import User, Permission
+from django.db.models.signals import post_save, pre_delete, pre_save
+from django.dispatch import receiver
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError, PermissionDenied
+
+import settings
 
 
 def get_sentinel_user():
@@ -56,7 +54,7 @@ class Enumeration(object):
             self.enum_dict[item[1]] = item[0]
 
     def __contains__(self, v):
-        return (v in self.enum_list)
+        return v in self.enum_list
 
     def __len__(self):
         return len(self.enum_list)
@@ -183,25 +181,25 @@ VIP_IMAGES_LIST = (
 
 
 class Availability:
-    '''
+    """
     This class is an enumeration for the availability statuses.
-    '''
+    """
     Available, In_Stock, Unavailable = range(3)
 
 
 class Acceptance:
-    '''
+    """
     This class is an enumeration for the acceptance statuses.
-    '''
+    """
     Rejected, Partially_Accepted, Accepted = range(3)
 
 
 class DiffingMixin(object):
-    '''
+    """
     this is a snippet from http://djangosnippets.org/snippets/1683/
 
     This class provides functions that add state monitoring to subclasses.
-    '''
+    """
 
     def __init__(self):
         super(DiffingMixin, self).__init__()
@@ -516,7 +514,7 @@ class AccountManager(models.Manager):
     def users_with_perm(self, perm_string):
         try:
             p = Permission.objects.get(codename=perm_string)
-        except:
+        except Permission.DoesNotExist:
             return Permission.objects.filter(codename=perm_string)
         users = p.user_set.all()
         groups = p.group_set.all()
@@ -733,7 +731,7 @@ class MonkeyToDrinkingExperiment(models.Model):
     mtd_pct_max_bout_vol_total_etoh = models.FloatField('% Etoh in Max Bout', blank=True, null=True,
                                                         help_text='Maximum bout volume as a percentage of total ethanol consumed that day')
 
-    # It might be ugly but being able to query this will speed up plotting.cohort_bihourly_etoh_treemap() a LOT
+    # It might be ugly but being able to query this will speed up plotting.cohort_plots.cohort_bihourly_etoh_treemap() a LOT
     mtd_pct_max_bout_vol_total_etoh_hour_0 = models.FloatField('Max Bout in 1st hour, as Volume % of Total Etoh',
                                                                blank=True, null=True,
                                                                help_text='Bihourly maximum bout volume as a percentage of total ethanol consumed that day')
@@ -797,7 +795,7 @@ class MonkeyToDrinkingExperiment(models.Model):
             if self.mtd_etoh_intake > 0:
                 try:
                     max_bout = 1. * bouts_in_fraction.order_by('-ebt_volume')[0].ebt_volume / self.mtd_etoh_intake
-                except:
+                except IndexError:
                     max_bout = None
             else:
                 max_bout = None
@@ -842,7 +840,7 @@ class MonkeyToDrinkingExperiment(models.Model):
     def populate_fields(self):
         self._populate_max_bout_hours(save=False)
         self._populate_mtd_seconds_to_stageone(save=False)
-        self._populate_mtd_mean_seconds_between_pellets(save=False)
+        self._populate_mtd_mean_seconds_between_meals(save=False)
         self.save()
 
 
@@ -1331,14 +1329,14 @@ class MTDImage(MATRRImage):
         super(MTDImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from utils import plotting
+        from matrr.plotting import plot_tools
 
-        PLOTS = plotting.MONKEY_PLOTS
+        PLOTS = plot_tools.MONKEY_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
         if not self.method in PLOTS:
-            return "My method field doesn't match any keys in plotting.MONKEY_PLOTS"
+            return "My method field doesn't match any keys in plot_tools.MONKEY_PLOTS"
 
         return PLOTS[self.method][0]
 
@@ -1379,14 +1377,14 @@ class MonkeyImage(MATRRImage):
         super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from utils import plotting
+        from matrr.plotting import plot_tools
 
-        PLOTS = plotting.MONKEY_PLOTS
+        PLOTS = plot_tools.MONKEY_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
         if not self.method in PLOTS:
-            return "My method field doesn't match any keys in plotting.MONKEY_PLOTS"
+            return "My method field doesn't match any keys in plot_tools.MONKEY_PLOTS"
 
         return PLOTS[self.method][0]
 
@@ -1433,14 +1431,14 @@ class CohortImage(MATRRImage):
         super(CohortImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from utils import plotting
+        from matrr.plotting import plot_tools
 
-        PLOTS = plotting.COHORT_PLOTS
+        PLOTS = plot_tools.COHORT_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
         if not self.method in PLOTS:
-            return "My method field doesn't match any keys in plotting.COHORT_PLOTS"
+            return "My method field doesn't match any keys in plot_tools.COHORT_PLOTS"
 
         return PLOTS[self.method][0]
 
@@ -1473,20 +1471,21 @@ class CohortProteinImage(MATRRImage):
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-            log_output = ''.join('!! ' + line for line in lines)
+            log_output = "!! Error:  %s\n" % e.message
+            log_output += ''.join('!! ' + line for line in lines)
             logging.error(log_output)
             mpl_figure = data_map = None
         super(CohortProteinImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from utils import plotting
+        from matrr.plotting import plot_tools
 
-        PLOTS = plotting.COHORT_PLOTS
+        PLOTS = plot_tools.COHORT_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
         if not self.method in PLOTS:
-            return "My method field doesn't match any keys in plotting.COHORT_PLOTS"
+            return "My method field doesn't match any keys in plot_tools.COHORT_PLOTS"
 
         return PLOTS[self.method][0]
 
@@ -1530,14 +1529,14 @@ class MonkeyProteinImage(MATRRImage):
         super(MonkeyProteinImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from utils import plotting
+        from matrr.plotting import plot_tools
 
-        PLOTS = plotting.MONKEY_PLOTS
+        PLOTS = plot_tools.MONKEY_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
         if not self.method in PLOTS:
-            return "My method field doesn't match any keys in plotting.MONKEY_PLOTS"
+            return "My method field doesn't match any keys in plot_tools.MONKEY_PLOTS"
 
         return PLOTS[self.method][0]
 
@@ -1589,14 +1588,14 @@ class CohortHormoneImage(MATRRImage):
         super(CohortHormoneImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from utils import plotting
+        from matrr.plotting import plot_tools
 
-        PLOTS = plotting.COHORT_PLOTS
+        PLOTS = plot_tools.COHORT_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
         if not self.method in PLOTS:
-            return "My method field doesn't match any keys in plotting.COHORT_PLOTS"
+            return "My method field doesn't match any keys in plot_tools.COHORT_PLOTS"
 
         return PLOTS[self.method][0]
 
@@ -1644,7 +1643,8 @@ class MonkeyHormoneImage(MATRRImage):
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-            log_output = ''.join('!! ' + line for line in lines)
+            log_output = "!! Error:  %s" % e.message
+            log_output += ''.join('!! ' + line for line in lines)
             logging.error(log_output)
             mpl_figure = data_map = None
         else:
@@ -1663,14 +1663,14 @@ class MonkeyHormoneImage(MATRRImage):
         super(MonkeyHormoneImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from utils import plotting
+        from matrr.plotting import plot_tools
 
-        PLOTS = plotting.MONKEY_PLOTS
+        PLOTS = plot_tools.MONKEY_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
         if not self.method in PLOTS:
-            return "My method field doesn't match any keys in plotting.MONKEY_PLOTS"
+            return "My method field doesn't match any keys in plot_tools.MONKEY_PLOTS"
 
         return PLOTS[self.method][0]
 
@@ -2982,17 +2982,11 @@ class FamilyNode(models.Model):
 
     def create_parent_relationships(self):
         if self.sire:
-            fathers_son = FamilyRelationship.objects.get_or_create(me=self, relative=self.sire,
-                                                                   fmr_type=FamilyRelationship.RELATIONSHIP.Offspring)[
-                0]
-            sons_father = FamilyRelationship.objects.get_or_create(relative=self, me=self.sire,
-                                                                   fmr_type=FamilyRelationship.RELATIONSHIP.Parent)[0]
+            FamilyRelationship.objects.get_or_create(me=self, relative=self.sire, fmr_type=FamilyRelationship.RELATIONSHIP.Offspring)
+            FamilyRelationship.objects.get_or_create(relative=self, me=self.sire, fmr_type=FamilyRelationship.RELATIONSHIP.Parent)
         if self.dam:
-            mothers_son = FamilyRelationship.objects.get_or_create(me=self, relative=self.dam,
-                                                                   fmr_type=FamilyRelationship.RELATIONSHIP.Offspring)[
-                0]
-            sons_mother = FamilyRelationship.objects.get_or_create(relative=self, me=self.dam,
-                                                                   fmr_type=FamilyRelationship.RELATIONSHIP.Parent)[0]
+            FamilyRelationship.objects.get_or_create(me=self, relative=self.dam, fmr_type=FamilyRelationship.RELATIONSHIP.Offspring)
+            FamilyRelationship.objects.get_or_create(relative=self, me=self.dam, fmr_type=FamilyRelationship.RELATIONSHIP.Parent)
         return
 
     def __unicode__(self):

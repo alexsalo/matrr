@@ -1,22 +1,26 @@
 import numpy, pylab
+from matplotlib.patches import Rectangle
+from matplotlib.ticker import FixedLocator
+
 
 def convex_hull(points, graphic=False, smidgen=0.0075):
-    '''Calculate subset of points that make a convex hull around points
+    """
+    Calculate subset of points that make a convex hull around points
 
-Recursively eliminates points that lie inside two neighbouring points until only convex hull is remaining.
+    Recursively eliminates points that lie inside two neighbouring points until only convex hull is remaining.
 
-:Parameters:
-    points : ndarray (2 x m)
-        array of points for which to find hull
-    graphic : bool
-        use pylab to show progress?
-    smidgen : float
-        offset for graphic number labels - useful values depend on your data range
+    :Parameters:
+        points : ndarray (2 x m)
+            array of points for which to find hull
+        graphic : bool
+            use pylab to show progress?
+        smidgen : float
+            offset for graphic number labels - useful values depend on your data range
 
-:Returns:
-    hull_points : ndarray (2 x n)
-        convex hull surrounding points
-    '''
+    :Returns:
+        hull_points : ndarray (2 x n)
+            convex hull surrounding points
+    """
 
     def _angle_to_point(point, centre):
         '''calculate angle in 2-D between points and x axis'''
@@ -77,3 +81,60 @@ Recursively eliminates points that lie inside two neighbouring points until only
             n_pts = len(pts)
         k += 1
     return numpy.asarray(pts)
+
+
+def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None):
+    def addnode(ax, node, color, lower=[0, 0], upper=[1, 1], axis=0):
+        axis %= 2
+        draw_rectangle(ax, lower, upper, node, color)
+        width = upper[axis] - lower[axis]
+        try:
+            for child, color in zip(node, color):
+                upper[axis] = lower[axis] + (width * float(size_method(child))) / size_method(node)
+                addnode(ax, child, color, list(lower), list(upper), axis + 1)
+                lower[axis] = upper[axis]
+        except TypeError:
+            pass
+
+    def draw_rectangle(ax, lower, upper, node, color):
+        c = color_method(color)
+        r = Rectangle(lower, upper[0] - lower[0], upper[1] - lower[1],
+                      edgecolor='k',
+                      facecolor=c)
+        ax.add_patch(r)
+
+    def assign_x_labels(ax, labels):
+        def sort_patches_by_xcoords(patches):
+            sorted_patches = []
+            # This method returns a list of patches sorted by each patch's X coordinate
+            xcoords = sorted([patch.get_x() for patch in patches])
+            for x in xcoords:
+                for patch in patches:
+                    if patch.get_x() == x:
+                        sorted_patches.append(patch)
+            return sorted_patches
+
+        patches = ax.patches
+        # A primary_patch is a Rectangle which takes up the full height of the treemap.  In the cohort treemap implementation, a primary patch is a monkey
+        primary_patches = [patch for patch in patches if patch.get_height() == 1 and patch.get_width() != 1]
+        sorted_patches = sort_patches_by_xcoords(primary_patches)
+
+        label_locations = []
+        patch_edge = 0
+        for patch in sorted_patches:
+            width = patch.get_width()
+            _location = patch_edge + (width / 2.)
+            label_locations.append(_location)
+            patch_edge += width
+
+        Axis_Locator = FixedLocator(label_locations)
+        ax.xaxis.set_major_locator(Axis_Locator)
+        ax.set_xticklabels(labels, rotation=45)
+
+
+    addnode(ax, node_tree, color_tree)
+    if x_labels:
+        assign_x_labels(ax, x_labels)
+    else:
+        ax.set_xticks([])
+

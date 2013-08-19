@@ -101,7 +101,7 @@ def _bernoulli_beyes_RBD_sample(rhesus_beyes_dataset):
 	for rmbd in rhesus_beyes_dataset.testing_datasets:
 		test_data = rmbd.get_aggregate_dataset()
 		y_pred = trained.predict(test_data)
-		if y_pred == plotting_beta.rhesus_monkey_category[rmbd.monkey_pk]:
+		if y_pred == plotting_beta.RHESUS_MONKEY_CATEGORY[rmbd.monkey_pk]:
 			truePositiveCount += 1
 		else:
 			falsePositiveCount += 1
@@ -111,10 +111,10 @@ def bootstrap_bernouli_beyes_RBD(first_key, second_key, loop_count=10, all_monke
 	import gc
 	from utils import plotting_beta
 	from utils.prediction.datasets import RhesusBeyesDataset
-	monkey_ids = plotting_beta.rhesus_drinkers_distinct[first_key]
-	monkey_ids.extend(plotting_beta.rhesus_drinkers_distinct[second_key])
+	monkey_ids = plotting_beta.RHESUS_DRINKERS_DISTINCT[first_key]
+	monkey_ids.extend(plotting_beta.RHESUS_DRINKERS_DISTINCT[second_key])
 	if all_monkeys:
-		monkey_ids = plotting_beta.all_rhesus_drinkers
+		monkey_ids = plotting_beta.ALL_RHESUS_DRINKERS
 
 	rbd = RhesusBeyesDataset(monkey_ids=monkey_ids)
 	tpc = 0
@@ -138,10 +138,10 @@ def bootstrap_bernouli_beyes_RBD_Stage3(first_key, second_key, loop_count=10, al
 	import gc
 	from utils import plotting_beta
 	from utils.prediction.datasets import RhesusBeyesDataset_Stage3
-	monkey_ids = plotting_beta.rhesus_drinkers_distinct[first_key]
-	monkey_ids.extend(plotting_beta.rhesus_drinkers_distinct[second_key])
+	monkey_ids = plotting_beta.RHESUS_DRINKERS_DISTINCT[first_key]
+	monkey_ids.extend(plotting_beta.RHESUS_DRINKERS_DISTINCT[second_key])
 	if all_monkeys:
-		monkey_ids = plotting_beta.all_rhesus_drinkers
+		monkey_ids = plotting_beta.ALL_RHESUS_DRINKERS
 
 	rbd = RhesusBeyesDataset_Stage3(monkey_ids=monkey_ids)
 	tpc = 0

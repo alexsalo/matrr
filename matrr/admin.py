@@ -2,7 +2,6 @@ from matrr.models import *
 from django.contrib import admin
 from django.contrib.auth.models import User
 from matrr.forms import OtOAcountForm
-from django.forms import CharField
 
 
 class TissueAdmin(admin.ModelAdmin):
