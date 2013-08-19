@@ -1,6 +1,7 @@
 from __future__ import division
 import collections
 import numpy
+from datetime import timedelta
 from scipy import stats
 from matrr.models import *
 dot = numpy.dot
