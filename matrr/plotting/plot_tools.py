@@ -504,6 +504,8 @@ def create_bec_tools_canonicals(cohort, create_monkey_plots=True):
                     gc.collect()
 
 def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
+    from matrr.plotting.cohort_plots import COHORT_PLOTS
+    from matrr.plotting.monkey_plots import MONKEY_PLOTS
     if not isinstance(cohort, Cohort):
         try:
             cohort = Cohort.objects.get(pk=cohort)
@@ -519,7 +521,7 @@ def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
     for dex_type in dex_types:
         params = str({'dex_type': dex_type})
         for method in cohort_plots:
-            CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=cohort_plots.COHORT_PLOTS[method][1], canonical=True)
+            CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=COHORT_PLOTS[method][1], canonical=True)
 
     if create_monkey_plots:
         monkey_plots = ['monkey_etoh_bouts_vol',
@@ -533,5 +535,5 @@ def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
             for dex_type in dex_types:
                 params = str({'dex_type': dex_type})
                 for method in monkey_plots:
-                    MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=monkey_plots.MONKEY_PLOTS[method][1], canonical=True)
+                    MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=MONKEY_PLOTS[method][1], canonical=True)
                     gc.collect()
