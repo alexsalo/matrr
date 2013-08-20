@@ -15,134 +15,7 @@ from matplotlib.cm import get_cmap
 from matplotlib.ticker import MaxNLocator
 
 from matrr.models import Monkey, MonkeyToDrinkingExperiment, MonkeyBEC, MonkeyImage, Cohort, CohortImage, ExperimentEvent, NecropsySummary, Q
-from matrr.plotting import cohort_plots, monkey_plots
-
-
-###############  matplotlibrc settings
-matplotlib.rcParams['figure.subplot.left'] 	= 0.1	# the left side of the subplots of the figure
-matplotlib.rcParams['figure.subplot.right'] 	= 0.98	# the right side of the subplots of the figure
-matplotlib.rcParams['figure.subplot.bottom'] 	= 0.12	# the bottom of the subplots of the figure
-matplotlib.rcParams['figure.subplot.top'] 	= 0.96	# the top of the subplots of the figure
-matplotlib.rcParams['figure.subplot.wspace'] 	= 0.05	# the amount of width reserved for blank space between subplots
-matplotlib.rcParams['figure.subplot.hspace'] 	= 0.05	# the amount of height reserved for white space between subplots
-############### end
-
-DEFAULT_CIRCLE_MAX = 280
-DEFAULT_CIRCLE_MIN = 20
-DEFAULT_FIG_SIZE = (10,10)
-HISTOGRAM_FIG_SIZE = (15,10)
-THIRDS_FIG_SIZE = (20,8)
-DEFAULT_DPI = 80
-
-ONE_HOUR = 60 * 60
-TWO_HOUR = 2 * ONE_HOUR
-SIX_HOUR = 6 * ONE_HOUR # time before lights out
-TWELVE_HOUR = 12 * ONE_HOUR # duration of lights out
-TWENTYTWO_HOUR = 22 * ONE_HOUR # duration of drinking day
-TWENTYFOUR_HOUR = 24 * ONE_HOUR # full day
-
-SESSION_START = 0
-SESSION_END = SESSION_START + TWENTYTWO_HOUR
-LIGHTS_OUT = SESSION_START + SIX_HOUR
-LIGHTS_ON = LIGHTS_OUT + TWELVE_HOUR
-
-
-DRINKING_CATEGORIES = ['VHD', 'HD', 'MD', 'LD']
-COHORT_END_FIRST_OPEN_ACCESS = {10: "2011-08-01", 9: '2012-01-08', 6: "2009-10-13", 5: "2009-05-24"}
-
-RHESUS_DRINKERS = dict()
-RHESUS_DRINKERS['LD'] = [10048, 10052, 10055, 10056, 10058, 10083, 10084, 10085, 10089, 10090, 10092] # all drinking monkeys in 5,6,9,10 not listed below
-RHESUS_DRINKERS['MD'] = [10082, 10057, 10087, 10088, 10059, 10054, 10086, 10051, 10049, 10063, 10091, 10060, 10064, 10098, 10065, 10097, 10066, 10067, 10061, 10062]
-RHESUS_DRINKERS['HD'] = [10082, 10049, 10064, 10063, 10097, 10091, 10065, 10066, 10067, 10088, 10098, 10061, 10062]
-RHESUS_DRINKERS['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062]
-
-RHESUS_DRINKERS_DISTINCT = dict()
-RHESUS_DRINKERS_DISTINCT['LD'] = [10048, 10052, 10055, 10056, 10058, 10083, 10084, 10085, 10089, 10090, 10092]
-RHESUS_DRINKERS_DISTINCT['MD'] = [10057, 10087, 10059, 10054, 10086, 10051, 10060]
-RHESUS_DRINKERS_DISTINCT['HD'] = [10082, 10049, 10064, 10097, 10065, 10067]
-RHESUS_DRINKERS_DISTINCT['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062]
-
-ALL_RHESUS_DRINKERS = [__x for __d in RHESUS_DRINKERS_DISTINCT.itervalues() for __x in __d]
-
-DRINKING_CATEGORY_MARKER = {'LD': 'v', 'MD': '<', 'HD': '>', 'VHD': '^'}
-
-RHESUS_COLORS = {'LD': '#0052CC', 'MD': '#008000', 'HD': '#FF6600', 'VHD': '#FF0000'}
-RHESUS_MONKEY_CATEGORY = dict()
-RHESUS_MONKEY_COLORS = dict()
-RHESUS_MONKEY_MARKERS = dict()
-for key in DRINKING_CATEGORIES:
-    for monkey_pk in RHESUS_DRINKERS_DISTINCT[key]:
-        RHESUS_MONKEY_CATEGORY[monkey_pk] = key
-        RHESUS_MONKEY_COLORS[monkey_pk] = RHESUS_COLORS[key]
-        RHESUS_MONKEY_MARKERS[monkey_pk] = DRINKING_CATEGORY_MARKER[key]
-
-
-
-
-# Dictionary of ethanol cohort plots VIPs can customize
-COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_plots.cohort_etoh_bihourly_treemap, "Cohort Bihourly Drinking Pattern"),}
-# BEC plots
-COHORT_BEC_TOOLS_PLOTS = {'cohort_bec_firstbout_monkeycluster': (cohort_plots.cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),}
-# Dictionary of protein cohort plots VIPs can customize
-COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_plots.cohort_protein_boxplot, "Cohort Protein Boxplot")}
-# Dictionary of hormone cohort plots VIPs can customize
-COHORT_HORMONE_TOOLS_PLOTS = {"cohort_hormone_boxplot": (cohort_plots.cohort_hormone_boxplot, "Cohort Hormone Boxplot")}
-
-# Dictionary of Monkey Tools' plots
-COHORT_TOOLS_PLOTS = dict()
-COHORT_TOOLS_PLOTS.update(COHORT_ETOH_TOOLS_PLOTS)
-COHORT_TOOLS_PLOTS.update(COHORT_BEC_TOOLS_PLOTS)
-COHORT_TOOLS_PLOTS.update(COHORT_PROTEIN_TOOLS_PLOTS)
-COHORT_TOOLS_PLOTS.update(COHORT_HORMONE_TOOLS_PLOTS)
-
-# Dictionary of all cohort plots
-COHORT_PLOTS = {}
-COHORT_PLOTS.update(COHORT_TOOLS_PLOTS)
-COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_plots.cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake, 22hr'),
-                     "cohort_necropsy_etoh_4pct": (cohort_plots.cohort_necropsy_etoh_4pct, "Total Ethanol Intake, ml"),
-                     "cohort_necropsy_sum_g_per_kg": (cohort_plots.cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake, g per kg"),
-                     'cohort_etoh_induction_cumsum': (cohort_plots.cohort_etoh_induction_cumsum, 'Cohort Induction Daily Ethanol Intake'),
-                     'cohort_etoh_gkg_quadbar': (cohort_plots.cohort_etoh_gkg_quadbar, "Cohort Daily Ethanol Intake Counts"),
-})
-
-# Dictionary of ethanol monkey plots VIPs can customize
-MONKEY_ETOH_TOOLS_PLOTS = {'monkey_etoh_bouts_vol': (monkey_plots.monkey_etoh_bouts_vol, 'Ethanol Consumption'),
-                           'monkey_etoh_first_max_bout': (monkey_plots.monkey_etoh_first_max_bout, 'First Bout and Max Bout Details'),
-                           'monkey_etoh_bouts_drinks': (monkey_plots.monkey_etoh_bouts_drinks, 'Drinking Pattern'),
-                           }
-# BEC-related plots
-MONKEY_BEC_TOOLS_PLOTS = { 'monkey_bec_bubble': (monkey_plots.monkey_bec_bubble, 'BEC Plot'),
-                           'monkey_bec_consumption': (monkey_plots.monkey_bec_consumption, "BEC Consumption "),
-                           'monkey_bec_monthly_centroids': (monkey_plots.monkey_bec_monthly_centroids, "BEC Monthly Centroid Distance"),
-                           }
-# Dictionary of protein monkey plots VIPs can customize
-MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': (monkey_plots.monkey_protein_stdev, "Protein Value (standard deviation)"),
-                              'monkey_protein_pctdev': (monkey_plots.monkey_protein_pctdev, "Protein Value (percent deviation)"),
-                              'monkey_protein_value': (monkey_plots.monkey_protein_value, "Protein Value (raw value)"),
-                              }
-# Dictionary of hormone monkey plots VIPs can customize
-MONKEY_HORMONE_TOOLS_PLOTS = {'monkey_hormone_stdev': (monkey_plots.monkey_hormone_stdev, "Hormone Value (standard deviation)"),
-                              'monkey_hormone_pctdev': (monkey_plots.monkey_hormone_pctdev, "Hormone Value (percent deviation)"),
-                              'monkey_hormone_value': (monkey_plots.monkey_hormone_value, "Hormone Value (raw value)"),
-                              }
-# Dictionary of Monkey Tools' plots
-MONKEY_TOOLS_PLOTS = dict()
-MONKEY_TOOLS_PLOTS.update(MONKEY_ETOH_TOOLS_PLOTS)
-MONKEY_TOOLS_PLOTS.update(MONKEY_BEC_TOOLS_PLOTS)
-MONKEY_TOOLS_PLOTS.update(MONKEY_PROTEIN_TOOLS_PLOTS)
-MONKEY_TOOLS_PLOTS.update(MONKEY_HORMONE_TOOLS_PLOTS)
-
-# Dictionary of all cohort plots
-MONKEY_PLOTS = {}
-MONKEY_PLOTS.update(MONKEY_TOOLS_PLOTS)
-MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_plots.monkey_necropsy_avg_22hr_g_per_kg, "Average Monkey Ethanol Intake, 22hr"),
-                     "monkey_necropsy_etoh_4pct": (monkey_plots.monkey_necropsy_etoh_4pct, "Total Monkey Ethanol Intake, ml"),
-                     "monkey_necropsy_sum_g_per_kg": (monkey_plots.monkey_necropsy_sum_g_per_kg, "Total Monkey Ethanol Intake, g per kg"),
-                     'monkey_etoh_bouts_drinks_intraday': (monkey_plots.monkey_etoh_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
-                     'mtd_histogram_general': (monkey_plots.monkey_mtd_histogram_general, 'Monkey Histogram'),
-                     'bec_histogram_general': (monkey_plots.monkey_bec_histogram_general, 'Monkey Histogram'),
-                     'monkey_etoh_induction_cumsum': (monkey_plots.monkey_etoh_induction_cumsum, 'Monkey Induction Daily Ethanol Intake'),
-                     })
+#from matrr.plotting import cohort_plots, monkey_plots
 
 def validate_dates(from_date=False, to_date=False):
     if from_date and not isinstance(from_date, (datetime, date)):
@@ -487,6 +360,8 @@ def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_
 
 
 def fetch_plot_choices(subject, user, cohort, tool):
+    from matrr.plotting.cohort_plots import COHORT_ETOH_TOOLS_PLOTS, COHORT_BEC_TOOLS_PLOTS
+    from matrr.plotting.monkey_plots import MONKEY_ETOH_TOOLS_PLOTS, MONKEY_BEC_TOOLS_PLOTS
     plot_choices = []
     if subject == 'monkey':
         if user.has_perm('matrr.view_etoh_data'):
@@ -516,7 +391,7 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
         for monkey in NecropsySummary.objects.all().values_list('monkey', flat=True).distinct():
             monkey = Monkey.objects.get(pk=monkey)
             for graph in monkey_plots:
-                MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=MONKEY_PLOTS[graph][1], canonical=True)
+                MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=monkey_plots.MONKEY_PLOTS[graph][1], canonical=True)
                 gc.collect()
 
     if cohorts:
@@ -532,7 +407,7 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
             print cohort
             for graph in cohort_plots:
                 gc.collect()
-                CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=COHORT_PLOTS[graph][1], canonical=True)
+                CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
 
 def create_mtd_histograms():
     names = [
@@ -572,6 +447,7 @@ def create_bec_histograms():
             MonkeyImage.objects.get_or_create(method='monkey_bec_histogram_general', monkey=m, parameters=params, title=title, canonical=True)
 
 def create_quadbar_graphs():
+    from matrr.plotting.cohort_plots import COHORT_PLOTS
     plot_method = 'cohort_etoh_gkg_quadbar'
     for cohort in MonkeyToDrinkingExperiment.objects.all().values_list('monkey__cohort', flat=True).distinct():
         cohort = Cohort.objects.get(pk=cohort)
@@ -581,6 +457,8 @@ def create_quadbar_graphs():
 
 
 def create_daily_cumsum_graphs():
+    from matrr.plotting.cohort_plots import COHORT_PLOTS
+    from matrr.plotting.monkey_plots import MONKEY_PLOTS
     cohorts = ExperimentEvent.objects.all().values_list('monkey__cohort', flat=True).distinct()
     for cohort in cohorts:
         cohort = Cohort.objects.get(pk=cohort)
@@ -595,6 +473,8 @@ def create_daily_cumsum_graphs():
             MonkeyImage.objects.get_or_create(monkey=monkey, method=plot_method, title=MONKEY_PLOTS[plot_method][1], canonical=True)
 
 def create_bec_tools_canonicals(cohort, create_monkey_plots=True):
+    from matrr.plotting.cohort_plots import COHORT_PLOTS
+    from matrr.plotting.monkey_plots import MONKEY_PLOTS
     if not isinstance(cohort, Cohort):
         try:
             cohort = Cohort.objects.get(pk=cohort)
@@ -602,28 +482,24 @@ def create_bec_tools_canonicals(cohort, create_monkey_plots=True):
             print "That's not a valid cohort."
             return
 
-    cohort_plots = ['cohort_bec_firstbout_monkeycluster',
-                    ]
+    cohort_plot_methods = ['cohort_bec_firstbout_monkeycluster',]
     dex_types = ["", "Induction", "Open Access"]
 
     print "Creating bec cohort plots for %s." % str(cohort)
     for dex_type in dex_types:
         params = str({'dex_type': dex_type})
-        for method in cohort_plots:
+        for method in cohort_plot_methods:
             CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=COHORT_PLOTS[method][1], canonical=True)
 
     if create_monkey_plots:
-        monkey_plots = ['monkey_bec_bubble',
-                        'monkey_bec_consumption',
-                        'monkey_bec_monthly_centroids',
-                        ]
+        monkey_plot_methods = ['monkey_bec_bubble', 'monkey_bec_consumption', 'monkey_bec_monthly_centroids', ]
         dex_types = ["", "Induction", "Open Access"]
 
         print "Creating bec monkey plots."
         for monkey in cohort.monkey_set.all():
             for dex_type in dex_types:
                 params = str({'dex_type': dex_type})
-                for method in monkey_plots:
+                for method in monkey_plot_methods:
                     MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=MONKEY_PLOTS[method][1], canonical=True)
                     gc.collect()
 
@@ -643,7 +519,7 @@ def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
     for dex_type in dex_types:
         params = str({'dex_type': dex_type})
         for method in cohort_plots:
-            CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=COHORT_PLOTS[method][1], canonical=True)
+            CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=cohort_plots.COHORT_PLOTS[method][1], canonical=True)
 
     if create_monkey_plots:
         monkey_plots = ['monkey_etoh_bouts_vol',
@@ -657,5 +533,5 @@ def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
             for dex_type in dex_types:
                 params = str({'dex_type': dex_type})
                 for method in monkey_plots:
-                    MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=MONKEY_PLOTS[method][1], canonical=True)
+                    MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=monkey_plots.MONKEY_PLOTS[method][1], canonical=True)
                     gc.collect()

@@ -18,6 +18,7 @@ from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError, PermissionDenied
+#from matrr.plotting import cohort_plots
 
 import settings
 
@@ -1329,9 +1330,9 @@ class MTDImage(MATRRImage):
         super(MTDImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from matrr.plotting import plot_tools
+        from matrr.plotting import monkey_plots
 
-        PLOTS = plot_tools.MONKEY_PLOTS
+        PLOTS = monkey_plots.MONKEY_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
@@ -1377,9 +1378,9 @@ class MonkeyImage(MATRRImage):
         super(MonkeyImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from matrr.plotting import plot_tools
+        from matrr.plotting import monkey_plots
 
-        PLOTS = plot_tools.MONKEY_PLOTS
+        PLOTS = monkey_plots.MONKEY_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
@@ -1431,9 +1432,9 @@ class CohortImage(MATRRImage):
         super(CohortImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from matrr.plotting import plot_tools
+        from matrr.plotting import cohort_plots
 
-        PLOTS = plot_tools.COHORT_PLOTS
+        PLOTS = cohort_plots.COHORT_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
@@ -1478,9 +1479,9 @@ class CohortProteinImage(MATRRImage):
         super(CohortProteinImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from matrr.plotting import plot_tools
+        from matrr.plotting import cohort_plots
 
-        PLOTS = plot_tools.COHORT_PLOTS
+        PLOTS = cohort_plots.COHORT_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
@@ -1529,9 +1530,9 @@ class MonkeyProteinImage(MATRRImage):
         super(MonkeyProteinImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from matrr.plotting import plot_tools
+        from matrr.plotting import monkey_plots
 
-        PLOTS = plot_tools.MONKEY_PLOTS
+        PLOTS = monkey_plots.MONKEY_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
@@ -1588,9 +1589,9 @@ class CohortHormoneImage(MATRRImage):
         super(CohortHormoneImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from matrr.plotting import plot_tools
+        from matrr.plotting import cohort_plots
 
-        PLOTS = plot_tools.COHORT_PLOTS
+        PLOTS = cohort_plots.COHORT_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."
@@ -1663,9 +1664,9 @@ class MonkeyHormoneImage(MATRRImage):
         super(MonkeyHormoneImage, self)._construct_filefields(mpl_figure, data_map)
 
     def _plot_picker(self):
-        from matrr.plotting import plot_tools
+        from matrr.plotting import monkey_plots
 
-        PLOTS = plot_tools.MONKEY_PLOTS
+        PLOTS = monkey_plots.MONKEY_PLOTS
 
         if not self.method:
             return "My plot method field has not been populated.  I don't know what I am."

@@ -12,7 +12,7 @@ import matplotlib
 
 from matrr.models import *
 from matrr.plotting import specific_callables, plot_tools
-
+from matrr.plotting import *
 
 def monkey_necropsy_avg_22hr_g_per_kg(monkey):
     try:
@@ -72,7 +72,7 @@ def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, leg
     else:
         cohort = monkey.cohort
 
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     ax1 = fig.add_subplot(111)
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
     ax1.set_axisbelow(True)
@@ -141,7 +141,7 @@ def _monkey_tools_single_line(x_values, y_values, title, x_label, y_label, scale
     This is used by monkey_protein_value() and monkey_hormone_value() tools plot.  These methods collect the data passed
     to this method.  This method plots that data.
     """
-    value_figure = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    value_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     ax1 = value_figure.add_subplot(111)
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
     ax1.set_axisbelow(True)
@@ -168,7 +168,7 @@ def _monkey_tools_single_line(x_values, y_values, title, x_label, y_label, scale
 
 
 def _monkey_tools_multiple_lines(list_of_xvalues, list_of_yvalues, list_of_colors, list_of_labels, title, x_label, y_label, scale_x=(), scale_y=()):
-    figure = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     ax1 = figure.add_subplot(111)
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
     ax1.set_axisbelow(True)
@@ -485,7 +485,7 @@ def monkey_hormone_value(monkey, hormone_fieldnames, scaled=False):
     return fig, False
 
 
-def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=plot_tools.DEFAULT_CIRCLE_MAX, circle_min=plot_tools.DEFAULT_CIRCLE_MIN):
+def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
     """
         Scatter plot for monkey
                 x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
@@ -506,13 +506,14 @@ def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type
     cbc = monkey.cohort.cbc
 
     if circle_max < circle_min:
-        circle_max = plot_tools.DEFAULT_CIRCLE_MAX
-        circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+        temp = circle_max
+        circle_max = circle_min
+        circle_min = circle_max
     else:
         if circle_max < 10:
-            circle_max = plot_tools.DEFAULT_CIRCLE_MAX
+            circle_max = DEFAULT_CIRCLE_MAX
         if circle_min < 1:
-            circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+            circle_min = DEFAULT_CIRCLE_MIN
 
     drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
     from_date, to_date = plot_tools.validate_dates(from_date, to_date)
@@ -556,7 +557,7 @@ def monkey_etoh_bouts_drinks(monkey=None, from_date=None, to_date=None, dex_type
     scatter_color = numpy.array(scatter_color)
     induction_days = numpy.array(induction_days)
 
-    fig = pyplot.figure(figsize=plot_tools.HISTOGRAM_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
     #   main graph
     main_gs = gridspec.GridSpec(3, 40)
     main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
@@ -654,7 +655,7 @@ def monkey_etoh_bouts_drinks_intraday(mtd=None):
             print("That's not a valid MonkeyToDrinkingExperiment.")
             return False, False
 
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     ax1 = fig.add_subplot(111)
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
     ax1.set_axisbelow(True)
@@ -693,7 +694,7 @@ def monkey_etoh_bouts_drinks_intraday(mtd=None):
         return False, False
 
 
-def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=plot_tools.DEFAULT_CIRCLE_MAX, circle_min=plot_tools.DEFAULT_CIRCLE_MIN):
+def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
     """
         Scatter plot for monkey
             x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
@@ -715,13 +716,13 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
     cbc = monkey.cohort.cbc
 
     if circle_max < circle_min:
-        circle_max = plot_tools.DEFAULT_CIRCLE_MAX
-        circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+        circle_max = DEFAULT_CIRCLE_MAX
+        circle_min = DEFAULT_CIRCLE_MIN
     else:
         if circle_max < 10:
-            circle_max = plot_tools.DEFAULT_CIRCLE_MAX
+            circle_max = DEFAULT_CIRCLE_MAX
         if circle_min < 1:
-            circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+            circle_min = DEFAULT_CIRCLE_MIN
 
     drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
     from_date, to_date = plot_tools.validate_dates(from_date, to_date)
@@ -772,7 +773,7 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
     rescaled_volumes = [(vol / volume_max) * size_scale + size_min for vol in
                         scatter_size] # rescaled, so that circles will be in range (size_min, size_scale)
 
-    fig = pyplot.figure(figsize=plot_tools.HISTOGRAM_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
     #   main graph
     main_gs = gridspec.GridSpec(3, 40)
     main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
@@ -854,7 +855,7 @@ def monkey_etoh_bouts_vol(monkey=None, from_date=None, to_date=None, dex_type=''
     return fig, datapoint_map
 
 
-def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=plot_tools.DEFAULT_CIRCLE_MAX, circle_min=plot_tools.DEFAULT_CIRCLE_MIN):
+def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_type='', circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
     """
         Scatter plot for monkey
             x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
@@ -874,13 +875,13 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
                 return False, False
     cbc = monkey.cohort.cbc
     if circle_max < circle_min:
-        circle_max = plot_tools.DEFAULT_CIRCLE_MAX
-        circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+        circle_max = DEFAULT_CIRCLE_MAX
+        circle_min = DEFAULT_CIRCLE_MIN
     else:
         if circle_max < 10:
-            circle_max = plot_tools.DEFAULT_CIRCLE_MAX
+            circle_max = DEFAULT_CIRCLE_MAX
         if circle_min < 1:
-            circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+            circle_min = DEFAULT_CIRCLE_MIN
 
     drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
     from_date, to_date = plot_tools.validate_dates(from_date, to_date)
@@ -942,7 +943,7 @@ def monkey_etoh_first_max_bout(monkey=None, from_date=None, to_date=None, dex_ty
     rescaled_bouts = [(bout / max_bout_length_max) * size_scale + size_min for bout in
                       scatter_size] # rescaled, so that circles will be in range (size_min, size_scale)
 
-    fig = pyplot.figure(figsize=plot_tools.HISTOGRAM_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
     #   main graph
     main_gs = gridspec.GridSpec(3, 40)
     main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
@@ -1071,7 +1072,7 @@ def monkey_etoh_induction_cumsum(monkey):
     stages[2] = Q(eev_dose=1)
     stages[3] = Q(eev_dose=1.5)
 
-    fig = pyplot.figure(figsize=plot_tools.HISTOGRAM_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
 
     #   main graph
     main_gs = gridspec.GridSpec(3, 40)
@@ -1114,7 +1115,7 @@ def monkey_etoh_lifetime_cumsum(monkey):
                 print("That's not a valid monkey.")
                 return False, False
 
-    fig = pyplot.figure(figsize=plot_tools.HISTOGRAM_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
 
     #   main graph
     main_gs = gridspec.GridSpec(1, 40)
@@ -1156,7 +1157,7 @@ def monkey_mtd_histogram_general(monkey, column_name, dex_type=''):
         models.PositiveSmallIntegerField)):
         return False, False
 
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(1, 1)
     main_gs.update(left=0.05, right=0.95, wspace=0, hspace=0)
     main_plot = fig.add_subplot(main_gs[:, :])
@@ -1188,7 +1189,7 @@ def monkey_bec_histogram_general(monkey, column_name, dex_type=''):
         models.PositiveSmallIntegerField)):
         return False, False
 
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(1, 1)
     main_gs.update(left=0.05, right=0.95, wspace=0, hspace=0)
     main_plot = fig.add_subplot(main_gs[:, :])
@@ -1196,7 +1197,7 @@ def monkey_bec_histogram_general(monkey, column_name, dex_type=''):
     return fig, True
 
 
-def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=plot_tools.DEFAULT_CIRCLE_MAX, circle_min=plot_tools.DEFAULT_CIRCLE_MIN):
+def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
     """
         Scatter plot for monkey
             x axis - dates of monkey experiments in 1) dex_type, 2)range [from_date, to_date] or 3) all possible, in that priority
@@ -1217,13 +1218,13 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
                 return False, False
 
     if circle_max < circle_min:
-        circle_max = plot_tools.DEFAULT_CIRCLE_MAX
-        circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+        circle_max = DEFAULT_CIRCLE_MAX
+        circle_min = DEFAULT_CIRCLE_MIN
     else:
         if circle_max < 10:
-            circle_max = plot_tools.DEFAULT_CIRCLE_MAX
+            circle_max = DEFAULT_CIRCLE_MAX
         if circle_min < 1:
-            circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+            circle_min = DEFAULT_CIRCLE_MIN
 
     cbc = monkey.cohort.cbc
     bec_records = monkey.bec_records.all()
@@ -1277,7 +1278,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
     rescaled_volumes = [(w / max_intake) * size_scale + size_min for w in
                         scatter_size] # rescaled, so that circles will be in range (size_min, size_scale)
 
-    fig = pyplot.figure(figsize=plot_tools.HISTOGRAM_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
     #   main graph
     main_gs = gridspec.GridSpec(3, 40)
     main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
@@ -1343,7 +1344,7 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
     return fig, True
 
 
-def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=plot_tools.DEFAULT_CIRCLE_MAX, circle_min=plot_tools.DEFAULT_CIRCLE_MIN):
+def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=DEFAULT_CIRCLE_MAX, circle_min=DEFAULT_CIRCLE_MIN):
     if not isinstance(monkey, Monkey):
         try:
             monkey = Monkey.objects.get(pk=monkey)
@@ -1356,13 +1357,13 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
     cbc = monkey.cohort.cbc
     if circle_max < circle_min:
-        circle_max = plot_tools.DEFAULT_CIRCLE_MAX
-        circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+        circle_max = DEFAULT_CIRCLE_MAX
+        circle_min = DEFAULT_CIRCLE_MIN
     else:
         if circle_max < 10:
-            circle_max = plot_tools.DEFAULT_CIRCLE_MAX
+            circle_max = DEFAULT_CIRCLE_MAX
         if circle_min < 1:
-            circle_min = plot_tools.DEFAULT_CIRCLE_MIN
+            circle_min = DEFAULT_CIRCLE_MIN
 
     drinking_experiments = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)
     bec_records = monkey.bec_records.all()
@@ -1439,7 +1440,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     bar_color = numpy.array(bar_color)
     induction_days = numpy.array(induction_days)
 
-    fig = pyplot.figure(figsize=plot_tools.HISTOGRAM_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
     #   main graph
     main_gs = gridspec.GridSpec(3, 40)
     main_gs.update(left=0.05, right=0.75, wspace=0, hspace=0)
@@ -1645,7 +1646,7 @@ def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type=
                     mky_centroids.append([res[:, 0][0], res[:, 1][0]])
 
     gs = gridspec.GridSpec(30, 30)
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     bec_cen_dist_mainplot = fig.add_subplot(gs[0:22, 0:30])
 
     bar_x_labels = [date.strftime('%h %Y') for date in bar_x]
@@ -1695,3 +1696,44 @@ def monkey_bec_monthly_centroids(monkey, from_date=None, to_date=None, dex_type=
     bec_cen_dist_barplot.set_xticks(bar_x)
     bec_cen_dist_barplot.set_xticklabels(bar_x_labels, rotation=45)
     return fig, True
+
+
+# Dictionary of ethanol monkey plots VIPs can customize
+MONKEY_ETOH_TOOLS_PLOTS = {'monkey_etoh_bouts_vol': (monkey_etoh_bouts_vol, 'Ethanol Consumption'),
+                           'monkey_etoh_first_max_bout': (monkey_etoh_first_max_bout, 'First Bout and Max Bout Details'),
+                           'monkey_etoh_bouts_drinks': (monkey_etoh_bouts_drinks, 'Drinking Pattern'),
+                           }
+# BEC-related plots
+MONKEY_BEC_TOOLS_PLOTS = { 'monkey_bec_bubble': (monkey_bec_bubble, 'BEC Plot'),
+                           'monkey_bec_consumption': (monkey_bec_consumption, "BEC Consumption "),
+                           'monkey_bec_monthly_centroids': (monkey_bec_monthly_centroids, "BEC Monthly Centroid Distance"),
+                           }
+# Dictionary of protein monkey plots VIPs can customize
+MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': (monkey_protein_stdev, "Protein Value (standard deviation)"),
+                              'monkey_protein_pctdev': (monkey_protein_pctdev, "Protein Value (percent deviation)"),
+                              'monkey_protein_value': (monkey_protein_value, "Protein Value (raw value)"),
+                              }
+# Dictionary of hormone monkey plots VIPs can customize
+MONKEY_HORMONE_TOOLS_PLOTS = {'monkey_hormone_stdev': (monkey_hormone_stdev, "Hormone Value (standard deviation)"),
+                              'monkey_hormone_pctdev': (monkey_hormone_pctdev, "Hormone Value (percent deviation)"),
+                              'monkey_hormone_value': (monkey_hormone_value, "Hormone Value (raw value)"),
+                              }
+# Dictionary of Monkey Tools' plots
+MONKEY_TOOLS_PLOTS = dict()
+MONKEY_TOOLS_PLOTS.update(MONKEY_ETOH_TOOLS_PLOTS)
+MONKEY_TOOLS_PLOTS.update(MONKEY_BEC_TOOLS_PLOTS)
+MONKEY_TOOLS_PLOTS.update(MONKEY_PROTEIN_TOOLS_PLOTS)
+MONKEY_TOOLS_PLOTS.update(MONKEY_HORMONE_TOOLS_PLOTS)
+
+# Dictionary of all cohort plots
+MONKEY_PLOTS = {}
+MONKEY_PLOTS.update(MONKEY_TOOLS_PLOTS)
+MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg, "Average Monkey Ethanol Intake, 22hr"),
+                     "monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, "Total Monkey Ethanol Intake, ml"),
+                     "monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, "Total Monkey Ethanol Intake, g per kg"),
+                     'monkey_etoh_bouts_drinks_intraday': (monkey_etoh_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
+                     'mtd_histogram_general': (monkey_mtd_histogram_general, 'Monkey Histogram'),
+                     'bec_histogram_general': (monkey_bec_histogram_general, 'Monkey Histogram'),
+                     'monkey_etoh_induction_cumsum': (monkey_etoh_induction_cumsum, 'Monkey Induction Daily Ethanol Intake'),
+                     })
+

@@ -9,13 +9,13 @@
 	<script type="text/javascript" src="/static/js/jquery-1.8.2.js"></script>
 	<script type="text/javascript">function post_adv_form()
 	{	var response = $.ajax
-		    ({
-		        type: "POST",
-		        url: '{% url ajax-advanced-search %}',
-		        dataType: 'json',
-		        async: false,
-		        data: $("#adv_form").serialize()
-		    })
+    ({
+        type: "POST",
+        url: '{% url ajax-advanced-search %}',
+        dataType: 'json',
+        async: false,
+        data: $("#adv_form").serialize()
+    });
 		parse_json_response(response)
     }
 	</script>

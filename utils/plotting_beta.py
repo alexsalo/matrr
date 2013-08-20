@@ -1,15 +1,18 @@
 import copy
 import itertools
+import logging
 import numpy
 import json
 import operator
 import os
-from datetime import timedelta
+from datetime import timedelta, datetime, date
 from collections import defaultdict
 from numpy.linalg import LinAlgError
 from matplotlib import pyplot, gridspec, ticker, cm, patches
 from scipy import cluster, stats
 from scipy.interpolate import spline
+import traceback
+import sys
 
 from django.db.models import Sum, Avg, Min, Max
 from matplotlib.cm import get_cmap
@@ -17,10 +20,10 @@ from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator, NullLocator
 import networkx as nx
 
-from matrr.models import ExperimentBout, ExperimentEventType, CohortBout
+from matrr.models import ExperimentEvent, ExperimentBout, ExperimentEventType, CohortBout, Cohort, Monkey, MonkeyBEC, MonkeyToDrinkingExperiment
 from utils import apriori
-from matrr.plotting import monkey_plots
-from matrr.plotting.plot_tools import *
+from matrr.plotting import monkey_plots, plot_tools
+from matrr.plotting import *
 
 
 doc_snippet = \
@@ -1455,7 +1458,7 @@ def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
         all_x.extend(_x)
         all_y.extend(_y)
         subplot.scatter(_x, _y, color=color, edgecolor='none', s=100, label=key, marker=DRINKING_CATEGORY_MARKER[key], alpha=1)
-        create_convex_hull_polygon(subplot, _x, _y, color)
+        plot_tools.create_convex_hull_polygon(subplot, _x, _y, color)
 
     # regression line
     all_x = numpy.array(all_x)
@@ -1802,7 +1805,7 @@ def _rhesus_gkg_age_mtd_general(subplot, phase, gkg_onset, mtd_callable_xvalue_g
             x.append(value)
         color = RHESUS_COLORS[key]
         subplot.scatter(x, y, label=key, color=color, s=150)
-        create_convex_hull_polygon(subplot, x, y, color)
+        plot_tools.create_convex_hull_polygon(subplot, x, y, color)
     return subplot, label
 
 
@@ -1849,7 +1852,7 @@ def _rhesus_bec_age_mtd_general(subplot, phase, bec_onset, mtd_callable_xvalue_g
         color = RHESUS_COLORS[key]
         subplot.scatter(x, y, label=key, color=color, s=150)
         if len(x) > 1:
-            create_convex_hull_polygon(subplot, x, y, color)
+            plot_tools.create_convex_hull_polygon(subplot, x, y, color)
     return subplot, label
 
 
@@ -2034,7 +2037,7 @@ def rhesus_OA_bec_pellettime_scatter(phase): # phase = 0-2
 
         color = RHESUS_COLORS[key]
         main_plot.scatter(x_axis, y_axis, label=key, color=color, s=15, alpha=.1)
-        create_convex_hull_polygon(main_plot, x_axis, y_axis, color)
+        plot_tools.create_convex_hull_polygon(main_plot, x_axis, y_axis, color)
         try:
             res, idx = cluster.vq.kmeans2(numpy.array(zip(x_axis, y_axis)), 1)
             main_plot.scatter(res[:, 0][0], res[:, 1][0], color=color, marker=DRINKING_CATEGORY_MARKER[key], alpha=1, s=300,
@@ -2354,7 +2357,7 @@ def rhesus_etoh_pellettime_bec():
         rescaled_sizes = [(b / max_size) * size_scale + size_min for b in
                           size_values] # exaggerated and rescaled, so that circles will be in range (size_min, size_scale)
         scatter_subplot.scatter(x_values, y_values, c=RHESUS_COLORS[key], s=rescaled_sizes, alpha=1, label=key)
-        create_convex_hull_polygon(scatter_subplot, x_values, y_values, RHESUS_COLORS[key])
+        plot_tools.create_convex_hull_polygon(scatter_subplot, x_values, y_values, RHESUS_COLORS[key])
 
     all_x_values = numpy.hstack(all_x)
     all_y_values = numpy.hstack(all_y)
@@ -2427,7 +2430,7 @@ def rhesus_etoh_pellettime_pctetohmeal():
         rescaled_sizes = [(b / max_size) * size_scale + size_min for b in
                           size_values] # exaggerated and rescaled, so that circles will be in range (size_min, size_scale)
         scatter_subplot.scatter(x_values, y_values, c=RHESUS_COLORS[key], s=rescaled_sizes, alpha=1, label=key)
-        create_convex_hull_polygon(scatter_subplot, x_values, y_values, RHESUS_COLORS[key])
+        plot_tools.create_convex_hull_polygon(scatter_subplot, x_values, y_values, RHESUS_COLORS[key])
 
     all_x_values = numpy.hstack(all_x)
     all_y_values = numpy.hstack(all_y)

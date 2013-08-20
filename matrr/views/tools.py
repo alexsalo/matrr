@@ -15,28 +15,29 @@ from matrr.forms import CohortSelectForm, GraphSubjectSelectForm, ProteinSelectF
 from matrr.forms import ExperimentRangeForm, BECRangeForm, GenealogyParentsForm, GraphToolsMonkeySelectForm
 from matrr.models import Cohort, Monkey, CohortImage, MonkeyImage, MonkeyProtein, MonkeyBEC, DataFile, MonkeyProteinImage, MonkeyHormone, MonkeyHormoneImage, FamilyNode, MATRRImage
 from matrr.models import MonkeyToDrinkingExperiment, MTDImage, CohortProteinImage, CohortHormoneImage
-from utils import plotting, plotting_beta, apriori
+from matrr.plotting import cohort_plots, monkey_plots
+#from utils import plotting_beta, apriori
 
 # todo: there are things in plotting_beta that need to be moved out into a more centralized location.  References in this file are a good place to start
 
 def tools_landing(request):
-    cohort_methods = plotting.COHORT_TOOLS_PLOTS.keys()
-    monkey_methods = plotting.MONKEY_TOOLS_PLOTS.keys()
+    cohort_methods = cohort_plots.COHORT_TOOLS_PLOTS.keys()
+    monkey_methods = monkey_plots.MONKEY_TOOLS_PLOTS.keys()
 
     if request.method == 'POST':
         _method = request.POST.get('cohort_method', '')
         if _method:
-            if _method in plotting.COHORT_BEC_TOOLS_PLOTS.keys():
+            if _method in cohort_plots.COHORT_BEC_TOOLS_PLOTS.keys():
                 return redirect('tools-cohort-bec-graphs', _method)
-            elif _method in plotting.COHORT_ETOH_TOOLS_PLOTS.keys():
+            elif _method in cohort_plots.COHORT_ETOH_TOOLS_PLOTS.keys():
                 return redirect('tools-cohort-etoh-graphs', _method)
             else:
                 raise Http404("There is no '%s' method in the MATRR BEC or ETOH toolboxs." % _method)
         _method = request.POST.get('monkey_method', '')
         if _method:
-            if _method in plotting.MONKEY_BEC_TOOLS_PLOTS.keys():
+            if _method in monkey_plots.MONKEY_BEC_TOOLS_PLOTS.keys():
                 return redirect('tools-monkey-bec', _method)
-            elif _method in plotting.MONKEY_ETOH_TOOLS_PLOTS.keys():
+            elif _method in monkey_plots.MONKEY_ETOH_TOOLS_PLOTS.keys():
                 return redirect('tools-monkey-etoh', _method)
             else:
                 raise Http404("There is no '%s' method in the MATRR BEC or ETOH toolboxs." % _method)
@@ -472,7 +473,7 @@ def tools_cohort_etoh_graphs(request, cohort_method):
 
             params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date})
             cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=cohort_method,
-                                                                     title=plotting.COHORT_PLOTS[cohort_method][1],
+                                                                     title=cohort_plots.COHORT_PLOTS[cohort_method][1],
                                                                      parameters=params)
 
             if is_new and not cohort_image.pk:
@@ -531,7 +532,7 @@ def tools_monkey_etoh_graphs(request, monkey_method, coh_id):
                 experiment_range = None
 
             monkeys = monkey_select_form.cleaned_data['monkeys']
-            title = plotting.MONKEY_PLOTS[monkey_method][1]
+            title = monkey_plots.MONKEY_PLOTS[monkey_method][1]
             params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range}
             render_failed = False
             graphs = list()
@@ -592,7 +593,7 @@ def tools_cohort_bec_graphs(request, cohort_method):
             params = str({'dex_type': experiment_range, 'from_date': from_date, 'to_date': to_date,
                           'sample_before': sample_before, 'sample_after': sample_after})
             cohort_image, is_new = CohortImage.objects.get_or_create(cohort=cohort, method=cohort_method,
-                                                                     title=plotting.COHORT_PLOTS[cohort_method][1],
+                                                                     title=cohort_plots.COHORT_PLOTS[cohort_method][1],
                                                                      parameters=params)
             if is_new and not cohort_image.pk:
                 messages.error(request,
@@ -649,7 +650,7 @@ def tools_monkey_bec_graphs(request, monkey_method, coh_id):
                 experiment_range = None
 
             monkeys = monkey_select_form.cleaned_data['monkeys']
-            title = plotting.MONKEY_PLOTS[monkey_method][1]
+            title = monkey_plots.MONKEY_PLOTS[monkey_method][1]
             params = {'from_date': str(from_date), 'to_date': str(to_date), 'dex_type': experiment_range}
             render_failed = False
             graphs = list()
@@ -756,7 +757,7 @@ def tools_confederates_chord_diagram(request):
         matrix, labels = reformat_method(coh)
         labels_colors = list()
         for key in labels:
-            lc = {'name': key, 'color': plotting_beta.RHESUS_MONKEY_COLORS[key]}
+            lc = {'name': key, 'color': RHESUS_MONKEY_COLORS[key]}
             labels_colors.append(lc)
         dataset = mark_safe(json.dumps(matrix))
         labels_colors = mark_safe(json.dumps(labels_colors))

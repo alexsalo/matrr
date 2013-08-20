@@ -704,3 +704,28 @@ def cohort_bec_mcd_beta(cohort, from_date=None, to_date=None, dex_type='', sampl
                                                         from_date, to_date, dex_type, sample_before, sample_after)
 
 
+# Dictionary of ethanol cohort plots VIPs can customize
+COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_etoh_bihourly_treemap, "Cohort Bihourly Drinking Pattern"),}
+# BEC plots
+COHORT_BEC_TOOLS_PLOTS = {'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),}
+# Dictionary of protein cohort plots VIPs can customize
+COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}
+# Dictionary of hormone cohort plots VIPs can customize
+COHORT_HORMONE_TOOLS_PLOTS = {"cohort_hormone_boxplot": (cohort_hormone_boxplot, "Cohort Hormone Boxplot")}
+
+# Dictionary of Monkey Tools' plots
+COHORT_TOOLS_PLOTS = dict()
+COHORT_TOOLS_PLOTS.update(COHORT_ETOH_TOOLS_PLOTS)
+COHORT_TOOLS_PLOTS.update(COHORT_BEC_TOOLS_PLOTS)
+COHORT_TOOLS_PLOTS.update(COHORT_PROTEIN_TOOLS_PLOTS)
+COHORT_TOOLS_PLOTS.update(COHORT_HORMONE_TOOLS_PLOTS)
+
+# Dictionary of all cohort plots
+COHORT_PLOTS = {}
+COHORT_PLOTS.update(COHORT_TOOLS_PLOTS)
+COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake, 22hr'),
+                     "cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, "Total Ethanol Intake, ml"),
+                     "cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake, g per kg"),
+                     'cohort_etoh_induction_cumsum': (cohort_etoh_induction_cumsum, 'Cohort Induction Daily Ethanol Intake'),
+                     'cohort_etoh_gkg_quadbar': (cohort_etoh_gkg_quadbar, "Cohort Daily Ethanol Intake Counts"),
+})

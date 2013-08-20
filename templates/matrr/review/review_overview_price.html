@@ -19,13 +19,13 @@
 			<div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
 			{% else %}
 				{% if not forloop.last %}
-				<div  text-align: left; color: #4E4E4E; clear:left; width:25%">{{ datum.0 }} : {{ datum.1 }}</div>
+                    <div  style="text-align: left; color: #4E4E4E; clear:left; width:25%">{{ datum.0 }} : {{ datum.1 }}</div>
 				{% endif %}
 			{% endif %}
 		{% endfor %}
-		<div  text-align: left; color: #4E4E4E; clear:left; width:25%">Monkeys : {% for monkey in form.instance.accepted_monkeys.all %}{{ monkey.mky_id }}{% if not forloop.last %}, {% endif%}{% endfor%}</div>
+		<div style="text-align: left; color: #4E4E4E; clear:left; width:25%">Monkeys : {% for monkey in form.instance.accepted_monkeys.all %}{{ monkey.mky_id }}{% if not forloop.last %}, {% endif%}{% endfor%}</div>
 		
-		<div  text-align: left; color: #4E4E4E; clear:left; width:25%">{{ form.rtt_estimated_cost.label }} : {{ form.rtt_estimated_cost }}</div>
+		<div style="text-align: left; color: #4E4E4E; clear:left; width:25%">{{ form.rtt_estimated_cost.label }} : {{ form.rtt_estimated_cost }}</div>
 		{{ form.rtt_tissue_request_id }}
 		<br/>
 		{% endfor %}
