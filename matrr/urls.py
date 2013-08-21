@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import patterns, url
-from matrr.views import cart, account, orders, review, rna, rud_reports, shipping, uploads, verification, inventory, ajax, basic, tools, display
+from matrr.views import cart, account, orders, review, rna, rud_reports, shipping, uploads, verification, inventory, ajax, basic, tools, display, data
 from settings import MEDIA_URL, MEDIA_ROOT, PRODUCTION
 
 urlpatterns = patterns('',
@@ -164,6 +164,12 @@ urlpatterns += patterns('',
     # Exports
     url(r'^tools/graph-as-pdf/$', tools.create_pdf_fragment, name='pdf-fragment'),
     url(r'^tools/graph-as-svg/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', tools.create_svg_fragment, name='svg-fragment'),
+)
+urlpatterns += patterns('',
+    ## data views
+    url(r'^tools/data/$', data.data_landing, name='data-landing'),
+    url(r'^tools/data/(?P<data_type>[a-zA-Z_]+)/$', data.data_cohort, name='data-cohort'),
+    url(r'^tools/data/(?P<data_type>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', data.data_cohort_dates, name='data-cohort-submit'),
 )
 
 urlpatterns += patterns('',

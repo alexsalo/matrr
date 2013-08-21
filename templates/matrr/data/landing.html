@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+    <form action='' method='post'>
+        {% csrf_token %}
+        <div class=large-headline>Data Type</div>
+        <div class=small>{{ data_form.data_type.help_text }}</div>
+        <br>
+        {{ data_form.data_type }}
+        <div class=clearfix></div><br>
+        <button type='submit' class="left blockLinkToolsButton">Next</button>
+    </form>
+{% endblock %}

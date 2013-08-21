@@ -15,10 +15,9 @@ from matrr.forms import CohortSelectForm, GraphSubjectSelectForm, ProteinSelectF
 from matrr.forms import ExperimentRangeForm, BECRangeForm, GenealogyParentsForm, GraphToolsMonkeySelectForm
 from matrr.models import Cohort, Monkey, CohortImage, MonkeyImage, MonkeyProtein, MonkeyBEC, DataFile, MonkeyProteinImage, MonkeyHormone, MonkeyHormoneImage, FamilyNode, MATRRImage
 from matrr.models import MonkeyToDrinkingExperiment, MTDImage, CohortProteinImage, CohortHormoneImage
-from matrr.plotting import cohort_plots, monkey_plots
-#from utils import plotting_beta, apriori
+from matrr.plotting import cohort_plots, monkey_plots, RHESUS_MONKEY_COLORS
+from utils import apriori
 
-# todo: there are things in plotting_beta that need to be moved out into a more centralized location.  References in this file are a good place to start
 
 def tools_landing(request):
     cohort_methods = cohort_plots.COHORT_TOOLS_PLOTS.keys()
@@ -32,7 +31,7 @@ def tools_landing(request):
             elif _method in cohort_plots.COHORT_ETOH_TOOLS_PLOTS.keys():
                 return redirect('tools-cohort-etoh-graphs', _method)
             else:
-                raise Http404("There is no '%s' method in the MATRR BEC or ETOH toolboxs." % _method)
+                raise Http404("There is no '%s' method in the MATRR BEC or ETOH toolboxes." % _method)
         _method = request.POST.get('monkey_method', '')
         if _method:
             if _method in monkey_plots.MONKEY_BEC_TOOLS_PLOTS.keys():
@@ -40,7 +39,7 @@ def tools_landing(request):
             elif _method in monkey_plots.MONKEY_ETOH_TOOLS_PLOTS.keys():
                 return redirect('tools-monkey-etoh', _method)
             else:
-                raise Http404("There is no '%s' method in the MATRR BEC or ETOH toolboxs." % _method)
+                raise Http404("There is no '%s' method in the MATRR BEC or ETOH toolboxes." % _method)
 
     coh_images = list()
     for method in cohort_methods:
@@ -65,10 +64,8 @@ def tools_protein(request): # pick a cohort
         if cohort_form.is_valid():
             cohort = cohort_form.cleaned_data['subject']
             return redirect('tools-cohort-protein', cohort.pk)
-    cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort',
-                                                                        flat=True).distinct() # for some reason this only returns the pk int
-    cohorts_with_protein_data = Cohort.objects.nicotine_filter(request.user).filter(
-        pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
+    cohorts_with_protein_data = MonkeyProtein.objects.all().values_list('monkey__cohort', flat=True).distinct() # for some reason this only returns the pk int
+    cohorts_with_protein_data = Cohort.objects.nicotine_filter(request.user).filter( pk__in=cohorts_with_protein_data) # so get the queryset of cohorts
     subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_protein_data)
     return render_to_response('matrr/tools/protein/protein.html', {'subject_select_form': subject_select_form},
                               context_instance=RequestContext(request))
