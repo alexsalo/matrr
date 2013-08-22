@@ -2566,6 +2566,7 @@ def rhesus_pellet_sessiontime_percent_distribution():
     common_subplot.set_xlabel("Session Time")
     return fig
 
+
 def rhesus_etoh_bec_scatter(HD_monkey=10065, LD_monkey=10052, fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(1, 2)

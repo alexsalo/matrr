@@ -1095,8 +1095,7 @@ class MonkeyException(models.Model):
     mex_etoh_intake = models.FloatField("Ethanol Intake", blank=False, null=False, default=0,
                                         help_text="Need to find out from steve _exactly_ what this is.")
 
-    def purge_own_data(self, delete_mtd=False, delete_bec=False, delete_eev=False, render_images=True,
-                       delete_for_serious=False):
+    def purge_own_data(self, delete_mtd=False, delete_bec=False, delete_eev=False, delete_mhm=False, delete_mpn=False, render_images=True, delete_for_serious=False):
         if delete_mtd:
             mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey,
                                                              drinking_experiment__dex_date=self.mex_date)
@@ -1120,28 +1119,54 @@ class MonkeyException(models.Model):
                 eevs.delete()
             elif eevs.count():
                 print "%d eev records would have been deleted." % eevs.count()
+        if delete_mhm:
+            mhms = MonkeyHormone.objects.filter(monkey=self.monkey, mhm_date__year=self.mex_date.year,
+                                                mhm_date__month=self.mex_date.month,
+                                                mhm_date__day=self.mex_date.day)
+            if delete_for_serious:
+                mhms.delete()
+            elif mhms.count():
+                print "%d mhm records would have been deleted." % mhms.count()
+        if delete_mpn:
+            mpns = MonkeyProtein.objects.filter(monkey=self.monkey, mpn_date__year=self.mex_date.year,
+                                                mpn_date__month=self.mex_date.month,
+                                                mpn_date__day=self.mex_date.day)
+            if delete_for_serious:
+                mpns.delete()
+            elif mpns.count():
+                print "%d mpn records would have been deleted." % mpns.count()
         if (delete_mtd or delete_bec or delete_eev) and render_images:
             for mig in MonkeyImage.objects.filter(monkey=self.monkey):
                 mig.save(force_render=True)
 
-    def flag_own_data(self, flag_mtd=False, flag_bec=False, flag_eev=False):
-        if not any([flag_mtd, flag_bec, flag_eev]):
+    def flag_own_data(self, flag_mtd=False, flag_bec=False, flag_eev=False, flag_mhm=False, flag_mpn=False):
+        if not any([flag_mtd, flag_bec, flag_eev, flag_mhm]):
             print "Nothing updated"
         update_count = 0
         if flag_mtd:
             mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey,
                                                              drinking_experiment__dex_date=self.mex_date)
             update_count += mtds.update(mex_excluded=True)
-        if flag_bec:
-            becs = MonkeyBEC.objects.filter(monkey=self.monkey, bec_collect_date__year=self.mex_date.year,
-                                            bec_collect_date__month=self.mex_date.month,
-                                            bec_collect_date__day=self.mex_date.day)
-            update_count += becs.update(mex_excluded=True)
         if flag_eev:
             eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=self.mex_date.year,
                                                   eev_occurred__month=self.mex_date.month,
                                                   eev_occurred__day=self.mex_date.day)
             update_count += eevs.update(mex_excluded=True)
+        if flag_bec:
+            becs = MonkeyBEC.objects.filter(monkey=self.monkey, bec_collect_date__year=self.mex_date.year,
+                                            bec_collect_date__month=self.mex_date.month,
+                                            bec_collect_date__day=self.mex_date.day)
+            update_count += becs.update(mex_excluded=True)
+        if flag_mhm:
+            mhms = MonkeyHormone.objects.filter(monkey=self.monkey, mhm_date__year=self.mex_date.year,
+                                                mhm_date__month=self.mex_date.month,
+                                                mhm_date__day=self.mex_date.day)
+            update_count += mhms.update(mex_excluded=True)
+        if flag_mpn:
+            mpns = MonkeyProtein.objects.filter(monkey=self.monkey, mpn_date__year=self.mex_date.year,
+                                                mpn_date__month=self.mex_date.month,
+                                                mpn_date__day=self.mex_date.day)
+            update_count += mpns.update(mex_excluded=True)
         print "Updated %d db rows" % update_count
 
     def clean(self):
@@ -2926,17 +2951,44 @@ class Protein(models.Model):
         db_table = 'pro_protein'
 
 
+class MPNManager(models.Manager):
+    def get_query_set(self):
+        return MEXQuerySet(self.model, using=self._db)
+
+    def Ind(self):
+        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
+
+    def OA(self):
+        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Open Access')
+
+
 class MonkeyProtein(models.Model):
+    objects = MPNManager()
     mpn_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='protein_set', db_column='mky_id', editable=False)
+    mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=True, related_name='mpn_record', editable=False, on_delete=models.SET_NULL)
     protein = models.ForeignKey(Protein, null=False, related_name='monkey_set', db_column='pro_id', editable=False)
     mpn_date = models.DateTimeField("Date Collected", editable=False)
     mpn_value = models.FloatField(null=True)
     mpn_stdev = models.FloatField("Standard Deviation from Cohort mean", null=True)
     mpn_pctdev = models.FloatField("Percent Deviation from Cohort mean", null=True)
 
+    mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
+
+
     def __unicode__(self):
         return "%s | %s | %s" % (str(self.monkey), str(self.protein), str(self.mpn_date))
+
+    def _populate_mtd(self, recalculate=False):
+        save = False
+        if not self.mtd or recalculate:
+            mtd = MonkeyToDrinkingExperiment.objects.filter(monkey=self.monkey, drinking_experiment__dex_date__year=self.mpn_date.year,
+                                                            drinking_experiment__dex_date__month=self.mpn_date.month, drinking_experiment__dex_date__day=self.mpn_date.day)
+            if mtd.count() is 1:
+                self.mtd = mtd[0]
+                save = True
+        if save:
+            self.save()
 
     def _populate_stdev(self, recalculate=False, save=True):
         if self.mpn_stdev is None or recalculate:
@@ -2964,6 +3016,7 @@ class MonkeyProtein(models.Model):
                 self.save()
 
     def populate_fields(self, recalculate=False):
+        self._populate_mtd(recalculate=recalculate)
         self._populate_stdev(recalculate=recalculate, save=False)
         self._populate_pctdev(recalculate=recalculate, save=False)
         self.save()
@@ -3024,7 +3077,19 @@ class FamilyRelationship(models.Model):
         db_table = 'fmr_family_relationship'
 
 
+class MHMManager(models.Manager):
+    def get_query_set(self):
+        return MEXQuerySet(self.model, using=self._db)
+
+    def Ind(self):
+        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
+
+    def OA(self):
+        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Open Access')
+
+
 class MonkeyHormone(models.Model):
+    objects = MHMManager()
     UNITS = {'mhm_cort': 'micrograms/dl', 'mhm_acth': 'pg/ml', 'mhm_t': 'ng/ml', 'mhm_doc': 'pg/ml', 'mhm_ald': 'ng/ml',
              'mhm_dheas': 'micrograms/ml'}
     mhm_id = models.AutoField(primary_key=True)
@@ -3039,12 +3104,14 @@ class MonkeyHormone(models.Model):
     mhm_ald = models.FloatField("Aldosterone", null=True, blank=True)
     mhm_dheas = models.FloatField("DHEAS", null=True, blank=True)
 
-    mhm_cort_stdev = models.FloatField("Cortisol's Standard Deviations from cohort mean", null=True, blank=False)
-    mhm_acth_stdev = models.FloatField("ACTH's Standard Deviations from cohort mean", null=True, blank=False)
-    mhm_t_stdev = models.FloatField("Testosterone's Standard Deviations from cohort mean", null=True, blank=False)
-    mhm_doc_stdev = models.FloatField("Deoxycorticosterone's Standard Deviations from cohort mean", null=True, blank=False)
-    mhm_ald_stdev = models.FloatField("Aldosterone's Standard Deviations from cohort mean", null=True, blank=False)
-    mhm_dheas_stdev = models.FloatField("DHEAS's Standard Deviations from cohort mean", null=True, blank=False)
+    mhm_cort_stdev = models.FloatField("Cortisol's Cohort STDEV", null=True, blank=False)
+    mhm_acth_stdev = models.FloatField("ACTH's Cohort STDEV", null=True, blank=False)
+    mhm_t_stdev = models.FloatField("Testosterone's Cohort STDEV", null=True, blank=False)
+    mhm_doc_stdev = models.FloatField("Deoxycorticosterone's Cohort STDEV", null=True, blank=False)
+    mhm_ald_stdev = models.FloatField("Aldosterone's Cohort STDEV", null=True, blank=False)
+    mhm_dheas_stdev = models.FloatField("DHEAS's Cohort STDEV", null=True, blank=False)
+
+    mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
     def __unicode__(self):
         return "%s | %s" % (str(self.monkey), str(self.mhm_date))
@@ -3665,3 +3732,27 @@ def rud_pre_save(**kwargs):
         from matrr import emails
 
         emails.send_rud_data_available_email(new_rud)
+
+
+#### Model utilty functions
+def get_model_by_fieldname(fieldname):
+    """
+    If you pass in a foreign key field name, you should receive the referenced object.  Probably. Foreign key fieldnames aren't consistent.
+
+    This should work for the majority of models, but some don't fit Erich's naming scheme.
+    """
+    if 'mtd' in fieldname:
+        return MonkeyToDrinkingExperiment
+    elif 'bec' in fieldname:
+        return MonkeyBEC
+    elif 'mhm' in fieldname:
+        return MonkeyHormone
+    else:
+        raise Exception("No such model found")
+
+def get_verbosename_by_fieldname(fieldname):
+    model = get_model_by_fieldname(fieldname)
+    for field in model._meta.fields:
+        if field.name == fieldname:
+            return field.verbose_name
+    return "Fieldname '%s' not found." % fieldname

@@ -38,7 +38,7 @@ def queryset_iterator(queryset, chunksize=5000):
         gc.collect()
 
 
-def __get_datetime_from_steve(steve_date):
+def get_datetime_from_steve(steve_date):
     def minimalist_xldate_as_datetime(xldate, datemode):
         # datemode: 0 for 1900-based, 1 for 1904-based
         return datetime.datetime(1899, 12, 30) + datetime.timedelta(days=int(xldate) + 1462 * datemode)
@@ -638,8 +638,7 @@ def load_nicotine_monkey_data(input_file):
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
     columns = input_data.next()
     ins = Institution.objects.get(ins_institution_name='Oregon Health Sciences University')
-    cohort, is_new = Cohort.objects.get_or_create(coh_cohort_name='INIA Nicotine Cyno 11', institution=ins,
-                                                  coh_species='Cyno')
+    cohort, is_new = Cohort.objects.get_or_create(coh_cohort_name='INIA Nicotine Cyno 11', institution=ins, coh_species='Cyno')
     for row in input_data:
         mky = dict()
         mky['cohort'] = cohort
@@ -647,13 +646,35 @@ def load_nicotine_monkey_data(input_file):
         mky['mky_real_id'] = row[3]
         mky['mky_name'] = row[5]
         mky['mky_gender'] = row[6]
-        mky['mky_birthdate'] = __get_datetime_from_steve(row[7])
+        mky['mky_birthdate'] = get_datetime_from_steve(row[7])
         mky['mky_drinking'] = row[8] == 'TRUE'
         mky['mky_housing_control'] = row[8] == 'TRUE'
         if row[9]:
-            mky['mky_necropsy_start_date'] = __get_datetime_from_steve(row[9])
+            mky['mky_necropsy_start_date'] = get_datetime_from_steve(row[9])
         monkey, is_new = Monkey.objects.get_or_create(**mky)
         monkey.save()
+    print 'Success'
+
+
+def load_cyno_9_data(input_file):
+    input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+    columns = input_data.next()
+    ins = Institution.objects.get(ins_institution_name='Oregon Health Sciences University')
+    cohort, is_new = Cohort.objects.get_or_create(coh_cohort_name='INIA Cyno 9', institution=ins, coh_species='Cyno')
+    for row in input_data:
+        if row[0]:
+            mky = dict()
+            mky['cohort'] = cohort
+            mky['mky_species'] = 'Cyno'
+            mky['mky_real_id'] = row[0]
+            mky['mky_name'] = ''
+            mky['mky_gender'] = row[4]
+            mky['mky_birthdate'] = get_datetime_from_steve(row[5])
+            mky['mky_drinking'] = row[10] != 'control'
+            mky['mky_housing_control'] = False
+            mky['mky_necropsy_start_date'] = get_datetime_from_steve(row[6])
+            monkey, is_new = Monkey.objects.get_or_create(**mky)
+            monkey.save()
     print 'Success'
 
 
@@ -893,7 +914,7 @@ def load_mtd(file_name, dex_type, cohort_name, dump_duplicates=True, has_headers
                 data_fields.extend(data[40:truncate_data_columns])
 
             # create or get experiment - date, cohort, dex_type
-            dex_date = __get_datetime_from_steve(data[0])
+            dex_date = get_datetime_from_steve(data[0])
             if not dex_date:
                 err = ERROR_OUTPUT % (line_number, "Wrong date format", line)
                 if dump_file:
@@ -1316,7 +1337,7 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
             entry = line.split("\t")
             if entry[1] == 'Date':
                 continue
-            date = __get_datetime_from_steve(entry[1])
+            date = get_datetime_from_steve(entry[1])
             if last_date != date:
                 dexs = DrinkingExperiment.objects.filter(cohort=cohort, dex_type=dex_type, dex_date=date)
                 if dexs.count() == 0:
@@ -2136,8 +2157,8 @@ def load_bec_data(file_name, overwrite=False, header=True):
                 print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
                 continue
 
-            bec_collect_date = __get_datetime_from_steve(data[2])
-            bec_run_date = __get_datetime_from_steve(data[3])
+            bec_collect_date = get_datetime_from_steve(data[2])
+            bec_run_date = get_datetime_from_steve(data[3])
             if not bec_collect_date or not bec_run_date:
                 print ERROR_OUTPUT % (line_number, "Wrong date format", line)
                 continue
@@ -2282,7 +2303,7 @@ def load_monkey_exceptions(file_name, overwrite=False, header=True):
             print msg
             continue
 
-        date = __get_datetime_from_steve(row[5])
+        date = get_datetime_from_steve(row[5])
         if date is None:
             msg = ERROR_OUTPUT % (line_number, "Unknown Date Format", str(row))
             logging.error(msg)
@@ -2537,7 +2558,7 @@ def load_rna_records(filename):
             rna_record['monkey'] = monkey
             rna_record['cohort'] = cohort
             rna_record['tissue_type'] = TissueType.objects.get(tst_tissue_name=row.pop(0))
-            rna_record['rna_extracted'] = __get_datetime_from_steve(row.pop(0))
+            rna_record['rna_extracted'] = get_datetime_from_steve(row.pop(0))
             for column, cell in zip(db_columns, row):
                 if cell:
                     rna_record[column] = cell
