@@ -3414,9 +3414,9 @@ class RNARecord(models.Model):
     monkey = models.ForeignKey(Monkey, db_column='mky_id', related_name='rna_set', blank=True, null=True)
     rna_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
     rna_extracted = models.DateField('Date Extracted', blank=False, null=True)
-    rna_value_a = models.FloatField("RNA Value (ng/ul)", blank=False, null=False, default=0)# I don't understand why there are 2 rna values in this spreadsheet
+    rna_value_a = models.FloatField("RNA Value, Nanodrop (ng/ul)", blank=False, null=False, default=0)
     rna_a260_280 = models.FloatField("'A260/280'", blank=False, null=False, default=0)
-    rna_value_b = models.FloatField("RNA Value (ng/ul)", blank=False, null=False, default=0) # I don't understand why there are 2 rna values in this spreadsheet
+    rna_value_b = models.FloatField("RNA Value, Bioanalyzer (ng/ul)", blank=False, null=False, default=0)
     rna_rin = models.FloatField("RIN", blank=False, null=False, default=0)
     rna_vol = models.FloatField("vol", blank=False, null=False, default=0)
     rna_total_ug = models.FloatField("Total ug", blank=False, null=False, default=0)
