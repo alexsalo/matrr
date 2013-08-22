@@ -178,7 +178,7 @@ urlpatterns += patterns('',
 )
 
 if PRODUCTION:
-    urlpatterns += patterns('', url(r'^media/(?P<id>.*)$', basic.sendfile), )
+    urlpatterns += patterns('', url(r'^media/(?P<pk>.*)$', basic.sendfile), )
 else:
     from django.views.static import serve
     _media_url = MEDIA_URL
