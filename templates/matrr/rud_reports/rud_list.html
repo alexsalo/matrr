@@ -8,6 +8,7 @@
 			<th>Request</th>
 			<th>User</th>
 			<th>Progress</th>
+			<th>Data</th>
 			<th> </th>
 		</tr>
 	{% for rud in rud_list.object_list %}
@@ -16,6 +17,7 @@
             <td class='text-center-common-td'><a href='{% url order-detail rud.req_request.pk %}'>{{ rud.req_request.pk }}</a></td>
             <td class='text-center-common-td'><a href='{% url account-reviewer-view rud.req_request.user.id %}'>{{ rud.req_request.user.username }}</a></td>
             <td class='text-center-common-td'>{{ rud.get_rud_progress_display }}</td>
+            <td class='text-center-common-td'>{% if rud.rud_data_available %}Yes{% endif %}</td>
             <td class='text-center-common-td'><a href='{% url rud-detail rud.pk %}'>View Research Update</a></td>
         </tr>
     {% endfor %}
