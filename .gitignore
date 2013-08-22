@@ -1,6 +1,12 @@
 
 # /
 /.gitignore
+/.bash_history
+/.bash_profile
+/.fontconfig
+/.gitconfig
+/.ipython
+/.matplotlib
 /.idea/
 /.DS_Store
 /.komodotools/
@@ -14,3 +20,5 @@
 /matrr/migrations
 /MATRR.log
 /utils/DATA/
+/log_archive
+
