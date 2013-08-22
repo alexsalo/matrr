@@ -2986,9 +2986,7 @@ class MonkeyProtein(models.Model):
                                                             drinking_experiment__dex_date__month=self.mpn_date.month, drinking_experiment__dex_date__day=self.mpn_date.day)
             if mtd.count() is 1:
                 self.mtd = mtd[0]
-                save = True
-        if save:
-            self.save()
+                self.save()
 
     def _populate_stdev(self, recalculate=False, save=True):
         if self.mpn_stdev is None or recalculate:
@@ -3128,9 +3126,7 @@ class MonkeyHormone(models.Model):
                                                             drinking_experiment__dex_date=self.mhm_date)
             if mtd.count() is 1:
                 self.mtd = mtd[0]
-                save = True
-        if save:
-            self.save()
+                self.save()
 
     def _populate_stdevs(self, repopulate=False):
         save = False
