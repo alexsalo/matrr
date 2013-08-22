@@ -1564,7 +1564,7 @@ def load_eevs(file_dir, dex_type):
             load_eev_one_file(file_name, dex_type, day)
 
 
-def load_necropsy_summary(filename):
+def load_necropsy_summary(filename, six_month_cohort=False):
     """
         This function will load a csv file in the format:
         row[0]	= matrr_number or mky_real_id
@@ -1587,10 +1587,10 @@ def load_necropsy_summary(filename):
         row[16]	= lifetime_sum_g/kg
         row[17]	= 6 mos start (string, in format '%m/%d/%y' = 1/1/01)
         row[18]	= 6 mos end (string, in format '%m/%d/%y' = 1/1/01)
-        row[19]	= 12 mos end (string, in format '%m/%d/%y' = 1/1/01)
+        row[19]	= 12 mos end (string, in format '%m/%d/%y' = 1/1/01) # not included if six_month_cohort=True
         row[20]	= 22hr_6mos_avg_g/kg
-        (row[21] = '22hr_2nd_6mos_avg_g/kg' if present, column_offset += 1 starting from this row)
-        row[21]	= 22hr_12mos_avg_g/kg
+        (row[21] = '22hr_2nd_6mos_avg_g/kg' if present, column_offset += 1 starting from this row) # not included if six_month_cohort=True
+        row[21]	= 22hr_12mos_avg_g/kg # not included if six_month_cohort=True
     """
     csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
     columns = csv_infile.next()
@@ -1599,6 +1599,8 @@ def load_necropsy_summary(filename):
     try:
         if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
             pre_columns_offset = 2
+        elif six_month_cohort:
+            pass
         else:
             unsure = True
     except:
@@ -1609,10 +1611,11 @@ def load_necropsy_summary(filename):
     if unsure:
         raise Exception("Unsure of format, investigate further and update this function.")
 
-    if columns[21 + pre_columns_offset] == '22hr_2nd_6mos_avg_g/kg':
-        extra_22hr_column = True
-    else:
-        extra_22hr_column = False
+    if not six_month_cohort:
+        if columns[21 + pre_columns_offset] == '22hr_2nd_6mos_avg_g/kg':
+            extra_22hr_column = True
+        else:
+            extra_22hr_column = False
 
     for row in csv_infile:
         columns_offset = pre_columns_offset
@@ -1647,14 +1650,14 @@ def load_necropsy_summary(filename):
             nec_sum.ncm_sum_g_per_kg_lifetime = row[16 + columns_offset] if row[16 + columns_offset] != "control" else 0
             nec_sum.ncm_6_mo_start = datetime.datetime.strptime(row[17 + columns_offset], '%m/%d/%y')
             nec_sum.ncm_6_mo_end = datetime.datetime.strptime(row[18 + columns_offset], '%m/%d/%y')
-            nec_sum.ncm_12_mo_end = datetime.datetime.strptime(row[19 + columns_offset], '%m/%d/%y')
-            nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
-            if extra_22hr_column:
-                nec_sum.ncm_22hr_2nd_6mos_avg_g_per_kg = row[21 + columns_offset] if row[
-                                                                                         21 + columns_offset] != "control" else 0
-                columns_offset += 1
-            nec_sum.ncm_22hr_12mo_avg_g_per_kg = row[21 + columns_offset] if row[
-                                                                                 21 + columns_offset] != "control" else 0
+            nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[19 + columns_offset] if row[19 + columns_offset] != "control" else 0
+            if not six_month_cohort:
+                nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
+                nec_sum.ncm_12_mo_end = datetime.datetime.strptime(row[19 + columns_offset], '%m/%d/%y')
+                if extra_22hr_column:
+                    nec_sum.ncm_22hr_2nd_6mos_avg_g_per_kg = row[21 + columns_offset] if row[21 + columns_offset] != "control" else 0
+                    columns_offset += 1
+                nec_sum.ncm_22hr_12mo_avg_g_per_kg = row[21 + columns_offset] if row[21 + columns_offset] != "control" else 0
             nec_sum.save()
 
 
