@@ -266,7 +266,7 @@ class CodForm(forms.ModelForm):
         cohort = kwargs.pop('cohort', '')
         user = kwargs.pop('user', None)
         super(CodForm, self).__init__(*args, **kwargs)
-        self.fields['cohort'].queryset = models.Cohort.objects.nicotine_filter(user=user)()
+        self.fields['cohort'].queryset = models.Cohort.objects.nicotine_filter(user=user)
         self.fields['cohort'].initial = cohort
 
 
