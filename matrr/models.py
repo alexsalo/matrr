@@ -235,6 +235,40 @@ Permission._meta.permissions = ([
                                 ])
 
 
+class MEXQuerySet(models.query.QuerySet):
+    def exclude_exceptions(self):
+        return self.exclude(mex_excluded=True)
+
+
+class MTDQuerySet(MEXQuerySet):
+    def __split_oa(self):
+        # First, make sure all the MTDs we're working with are OA MTDs
+        oa_mtds = self.filter(drinking_experiment__dex_type="Open Access") # Even though I wrote it, I'm not sure how much I trust DexType
+        # Collect the cohorts we need to sort thru
+        cohorts = self.values_list('monkey__cohort', flat=True).distinct()
+        # Collect the cohort events for our cohorts that mark the end of the first 6 months
+        event = EventType.objects.get(evt_name='6 mo Open Access End')
+        cohort_events = CohortEvent.objects.filter(cohort__in=cohorts, event=event).values('cohort', 'cev_date').distinct()
+
+        # Instantiate an empty MTDQueryset, into which we store all our first six month oa MTDs
+        return_queryset = MTDQuerySet(self.model, using=self._db).none()
+        return cohort_events, oa_mtds, return_queryset
+
+    def first_six_months_oa(self):
+        cohort_events, oa_mtds, return_queryset = self.__split_oa()
+        for cev in cohort_events:
+            # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(drinking_experiment__dex_date__lte=cev['cev_date'])
+        return return_queryset
+
+    def second_six_months_oa(self):
+        cohort_events, oa_mtds, return_queryset = self.__split_oa()
+        for cev in cohort_events:
+            # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(drinking_experiment__dex_date__gt=cev['cev_date'])
+        return return_queryset
+
+
 class Institution(models.Model):
     ins_institution_id = models.AutoField('ins_id', primary_key=True)
     ins_institution_name = models.CharField('Institution', max_length=500, unique=True, null=False,
@@ -629,7 +663,7 @@ class DrinkingExperiment(models.Model):
 
 class MTDManager(models.Manager):
     def get_query_set(self):
-        return MEXQuerySet(self.model, using=self._db)
+        return MTDQuerySet(self.model, using=self._db)
 
     def Ind(self):
         return self.get_query_set().filter(drinking_experiment__dex_type='Induction')
@@ -1075,11 +1109,6 @@ class CohortBout(models.Model):
 
     class Meta:
         db_table = 'cbt_cohort_bouts'
-
-
-class MEXQuerySet(models.query.QuerySet):
-    def exclude_exceptions(self):
-        return self.exclude(mex_excluded=True)
 
 
 class MonkeyException(models.Model):
