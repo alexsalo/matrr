@@ -240,10 +240,13 @@ class MEXQuerySet(models.query.QuerySet):
         return self.exclude(mex_excluded=True)
 
 
-class MTDQuerySet(MEXQuerySet):
+class OASplitQueryset(models.query.QuerySet):
+    dex_type_lookup = ''
+    dex_date_lookup = ''
+
     def __split_oa(self):
         # First, make sure all the MTDs we're working with are OA MTDs
-        oa_mtds = self.filter(drinking_experiment__dex_type="Open Access") # Even though I wrote it, I'm not sure how much I trust DexType
+        oa_mtds = self.filter(**{self.dex_type_lookup: "Open Access"}) # Even though I wrote it, I'm not sure how much I trust DexType
         # Collect the cohorts we need to sort thru
         cohorts = self.values_list('monkey__cohort', flat=True).distinct()
         # Collect the cohort events for our cohorts that mark the end of the first 6 months
@@ -258,15 +261,37 @@ class MTDQuerySet(MEXQuerySet):
         cohort_events, oa_mtds, return_queryset = self.__split_oa()
         for cev in cohort_events:
             # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
-            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(drinking_experiment__dex_date__lte=cev['cev_date'])
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__lte" :cev['cev_date']})
         return return_queryset
 
     def second_six_months_oa(self):
         cohort_events, oa_mtds, return_queryset = self.__split_oa()
         for cev in cohort_events:
             # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
-            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(drinking_experiment__dex_date__gt=cev['cev_date'])
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__gt" :cev['cev_date']})
         return return_queryset
+
+
+class MTDQuerySet(MEXQuerySet, OASplitQueryset):
+    def __init__(self, *args, **kwargs):
+        super(MEXQuerySet, self).__init__(*args, **kwargs)
+        super(OASplitQueryset, self).__init__(*args, **kwargs)
+        self.dex_type_lookup = 'drinking_experiment__dex_type'
+        self.dex_date_lookup = 'drinking_experiment__dex_date'
+
+
+class BECQuerySet(MEXQuerySet, OASplitQueryset):
+    def __init__(self, *args, **kwargs):
+        super(MEXQuerySet, self).__init__(*args, **kwargs)
+        super(OASplitQueryset, self).__init__(*args, **kwargs)
+        self.dex_type_lookup = 'mtd__drinking_experiment__dex_type'
+        self.dex_date_lookup = 'mtd__drinking_experiment__dex_date'
+
+
+class MHMQuerySet(BECQuerySet):
+    # at the moment I don't have anything to change between BECQuerySet and this, but I might in the future and seems like a bad idea to make
+    # the MHMManager use the BECQueryset
+    pass
 
 
 class Institution(models.Model):
@@ -3106,7 +3131,7 @@ class FamilyRelationship(models.Model):
 
 class MHMManager(models.Manager):
     def get_query_set(self):
-        return MEXQuerySet(self.model, using=self._db)
+        return MHMQuerySet(self.model, using=self._db)
 
     def Ind(self):
         return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
@@ -3185,7 +3210,7 @@ class MonkeyHormone(models.Model):
 
 class BECManager(models.Manager):
     def get_query_set(self):
-        return MEXQuerySet(self.model, using=self._db)
+        return BECQuerySet(self.model, using=self._db)
 
     def Ind(self):
         return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
@@ -3198,8 +3223,7 @@ class MonkeyBEC(models.Model):
     objects = BECManager()
     bec_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='bec_records', db_column='mky_id', editable=False)
-    mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='bec_record', editable=False,
-                               on_delete=models.SET_NULL)
+    mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='bec_record', editable=False, on_delete=models.SET_NULL)
     bec_collect_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
     bec_run_date = models.DateTimeField("Date Run", editable=False, null=True, blank=False)
     bec_exper = models.CharField('Experiment Type', max_length=20, null=True, blank=True)
