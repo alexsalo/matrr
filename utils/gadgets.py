@@ -189,7 +189,7 @@ def gather_monkey_percentiles(monkeys, oa_stage=0):
     """
     # high drinkers == high percentiles
     high_high = ['mtd_etoh_g_kg', 'mhm_ald', 'bec_mg_pct', 'mtd_veh_intake', 'mtd_max_bout_vol']
-    hh_label = ["Avg Daily Etoh (g/kg)", "Avg Aldosterone", "Avg BEC (% mg)", "Avg Daily Max Bout (ml)"]
+    hh_label = ["Avg Daily Etoh (g/kg)", "Avg Aldosterone", "Avg BEC (% mg)", "Average Daily h20 (ml)", "Avg Daily Max Bout (ml)"]
     # high drinkers == low percentiles
     high_low = ['mhm_acth', 'mtd_pct_max_bout_vol_total_etoh', 'mhm_doc', 'mtd_total_pellets', 'mtd_latency_1st_drink',
                 'bec_pct_intake', 'mhm_cort_stdev', 'mhm_t_stdev', 'mhm_dheas_stdev']

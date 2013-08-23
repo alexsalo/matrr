@@ -2678,8 +2678,8 @@ def category_parallel_plot(categories):
     main_subplot.set_ylabel("Average Percentile of Category")
     return fig
 
-def category_parallel_plot_fillbetween(categories):
-    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+def category_parallel_plot_fillbetween(categories, fig_size=HISTOGRAM_FIG_SIZE):
+    fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(1, 1)
     gs.update(left=0.05, right=0.93, top=.96, bottom=.19)
     main_subplot = fig.add_subplot(gs[0])
@@ -2729,8 +2729,8 @@ def category_parallel_plot_fillbetween(categories):
     main_subplot.set_ylabel("Average Percentile of Category")
     return fig
 
-def category_parallel_plot_split_oa(categories):
-    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+def category_parallel_plot_split_oa(categories, fig_size=HISTOGRAM_FIG_SIZE):
+    fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(2, 1)
     gs.update(left=0.05, right=0.93, top=.96, bottom=.19, hspace=.05)
     first_subplot = fig.add_subplot(gs[0])
@@ -3340,9 +3340,20 @@ def create_kathy_graphs():
         fig.savefig(filename, dpi=DPI)
 
 
-def create_manuscript_graphs(save=False, fig_size=(25, 15)):
+def create_manuscript_graphs(output_path='', fig_size=(25, 15), save_first=4):
     figures = list()
     names = list()
+    all_categories = DRINKING_CATEGORIES
+    red_vs_blue = ["VHD", "LD"]
+
+    figures.append(category_parallel_plot_fillbetween(all_categories, fig_size=fig_size))
+    names.append('category_parallel_plot_fillbetween-all')
+    figures.append(category_parallel_plot_fillbetween(red_vs_blue, fig_size=fig_size))
+    names.append('category_parallel_plot_fillbetween-red_vs_blue')
+    figures.append(category_parallel_plot_split_oa(all_categories, fig_size=fig_size))
+    names.append('category_parallel_plot_split_oa-all')
+    figures.append(category_parallel_plot_split_oa(red_vs_blue, fig_size=fig_size))
+    names.append('category_parallel_plot_split_oa-red_vs_blue')
     figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=fig_size))
     names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram')
     figures.append(rhesus_etoh_gkg_stackedbargraph(fig_size=fig_size))
@@ -3355,11 +3366,11 @@ def create_manuscript_graphs(save=False, fig_size=(25, 15)):
     names.append('monkey_etoh_bouts_vol-10052')
     figures.append(monkey_plots.monkey_etoh_bouts_vol(10049)[0])
     names.append('monkey_etoh_bouts_vol-10049')
-    if save:
-        output_path = '/home/developer/Desktop/_graphs/manuscript/'
-        for index, FigName in enumerate(zip(figures, names)):
+    if output_path:
+        for index, FigName in enumerate(zip(figures, names)[:save_first]):
             fig, name = FigName
             filename = output_path + '%s-%d.svg' % (name, index)
             fig.savefig(filename, format='svg',dpi=800)
             filename = output_path + '%s-%d.eps' % (name, index)
             fig.savefig(filename, format='eps',dpi=800)
+
