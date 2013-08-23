@@ -1,6 +1,8 @@
 import numpy, pylab
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator
+from scipy import stats
+from matrr.models import MonkeyToDrinkingExperiment, Avg, MonkeyBEC, MonkeyHormone
 
 
 def convex_hull(points, graphic=False, smidgen=0.0075):
@@ -137,4 +139,84 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
         assign_x_labels(ax, x_labels)
     else:
         ax.set_xticks([])
+
+
+def get_percentile_callable(monkey, monkeys, specific_callable, field):
+    this_value = None
+    all_values = list()
+    for mky in monkeys:
+        value = specific_callable(mky, field)
+        all_values.append(value)
+        if mky == monkey:
+            this_value = value
+    if this_value is None:
+        raise Exception("monkey was not found in the monkeys collection.")
+    return stats.percentileofscore(all_values, this_value)
+
+def get_mean_oa_gkg(monkey):
+    mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
+    return mtds.aggregate(Avg('mtd_etoh_g_kg'))['mtd_etoh_g_kg__avg']
+
+def get_mean_MTD_oa_field(monkey, field):
+    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
+    return mtds.aggregate(Avg(field))[field+'__avg']
+
+def get_mean_BEC_oa_field(monkey, field):
+    becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey)
+    return becs.aggregate(Avg(field))[field+'__avg']
+
+def get_mean_MHM_oa_field(monkey, field):
+    mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey)
+    return mhms.aggregate(Avg(field))[field+'__avg']
+
+def gather_monkey_percentiles(monkeys, oa_stage=0):
+    """
+    oa_stage == (0,1,2)
+        0 == all OA
+        1 == first 6 months of OA
+        2 == second 6 months of OA
+    """
+    from matrr.plotting import COHORT_END_FIRST_OPEN_ACCESS
+    # high drinkers == high percentiles
+    high_high = ['mtd_etoh_g_kg', 'mhm_ald', 'bec_mg_pct', 'mtd_veh_intake', 'mtd_max_bout_vol']
+    hh_label = ["Avg Daily Etoh (g/kg)", "Avg Aldosterone", "Avg BEC (% mg)", "Avg Daily Max Bout (ml)"]
+    # high drinkers == low percentiles
+    high_low = ['mhm_acth', 'mtd_pct_max_bout_vol_total_etoh', 'mhm_doc', 'mtd_total_pellets', 'mtd_latency_1st_drink',
+                'bec_pct_intake', 'mhm_cort_stdev', 'mhm_t_stdev', 'mhm_dheas_stdev']
+    hl_label = ["Avg ACTH", "Avg Daily Max Bout / Total", "Avg Deoxycorticosterone", "Avg Daily Pellets",
+                "Avg Time to First Drink (s)", "Avg % Etoh Before BEC Sample",
+                "Cortisol's Cohort STDEV", "Testosterone's Cohort STDEV", "DHEAS's Cohort STDEV"]
+    # scattered
+    scattered = ['mhm_cort', 'mhm_t', 'mhm_dheas', 'mhm_ald_stdev', 'mhm_doc_stdev', 'mhm_acth_stdev']
+
+    explore = []
+
+    fields = []
+    labels = []
+    fields.extend(high_high)
+    fields.extend(high_low)
+    labels.extend(hh_label)
+    labels.extend(hl_label)
+#    fields = ['mtd_etoh_g_kg', 'mhm_ald', 'bec_mg_pct', 'mtd_veh_intake', 'mtd_total_pellets', 'mtd_latency_1st_drink']
+
+    def get_callable(field):
+        if 'mtd' in field:
+            return get_mean_MTD_oa_field
+        if 'bec' in field:
+            return get_mean_BEC_oa_field
+        if 'mhm' in field:
+            return get_mean_MHM_oa_field
+
+    data = dict()
+    for monkey in monkeys:
+        x_values = list()
+        y_values = list()
+        x = 0
+        for field in fields:
+            field_callable = get_callable(field)
+            x_values.append(x)
+            y_values.append(get_percentile_callable(monkey, monkeys, field_callable, field))
+            x += 1
+        data[monkey] = numpy.array(zip(x_values, y_values))
+    return data, labels
 

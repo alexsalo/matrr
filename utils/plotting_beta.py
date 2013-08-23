@@ -24,6 +24,7 @@ from matrr.models import ExperimentEvent, ExperimentBout, ExperimentEventType, C
 from utils import apriori
 from matrr.plotting import monkey_plots, plot_tools
 from matrr.plotting import *
+from utils.gadgets import gather_monkey_percentiles
 
 
 doc_snippet = \
@@ -2618,6 +2619,119 @@ def rhesus_etoh_bec_scatter(HD_monkey=10065, LD_monkey=10052, fig_size=HISTOGRAM
     right_subplot.set_ylabel("BEC (mg pct)", size=label_size)
     right_subplot.set_xlabel("Date", size=label_size)
     return fig
+
+
+def rhesus_parallel_plot():
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(1, 1)
+    gs.update(left=0.06, right=0.98, wspace=.12, hspace=0, top=.92)
+    main_subplot = fig.add_subplot(gs[0])
+
+    monkeys = ALL_RHESUS_DRINKERS
+    data, labels  = gather_monkey_percentiles(monkeys)
+    for monkey in data.iterkeys():
+        main_subplot.plot(data[monkey][:,0], data[monkey][:,1], c=RHESUS_MONKEY_COLORS[monkey], linewidth=5, alpha=.5)
+
+    return fig
+
+def category_parallel_plot(categories):
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(1, 1)
+    gs.update(left=0.05, right=0.93, top=.96, bottom=.19)
+    main_subplot = fig.add_subplot(gs[0])
+    main_subplot.set_title("Percentile Distribution of Metrics, by Drinking Category")
+
+    data, labels = gather_monkey_percentiles(ALL_RHESUS_DRINKERS)
+    category_values = defaultdict(lambda: defaultdict(lambda: list()))
+    for monkey in data.iterkeys():
+        key = RHESUS_MONKEY_CATEGORY[monkey]
+        x_values = data[monkey][:,0]
+        y_values = data[monkey][:,1]
+        for x, y in zip(x_values, y_values):
+            category_values[key][x].append(y)
+
+    plot_x = [] # this will be overwritten immediately
+    for key in categories:
+        category_dict = category_values[key]
+        plot_x = sorted(category_dict.keys())
+        plot_y = list()
+        std_error = list()
+        for x in plot_x:
+            _yvalues = category_dict[x]
+            _avg = numpy.average(_yvalues)
+            _err = stats.sem(_yvalues)
+            plot_y.append(_avg)
+            std_error.append(_err)
+        main_subplot.plot(plot_x, plot_y, c=RHESUS_COLORS[key], linewidth=5)
+        main_subplot.scatter(plot_x, plot_y, c=RHESUS_COLORS[key], edgecolor=RHESUS_COLORS[key], s=150)
+        plotline, caplines, barlinecols = main_subplot.errorbar(plot_x, plot_y, yerr=std_error, fmt=None, ecolor=RHESUS_COLORS[key], elinewidth=16, zorder=-50, capsize=0)
+        for blc in barlinecols:
+            blc.set_alpha(.25)
+    main_subplot.vlines(plot_x, 0, 100, zorder=-100, alpha=.3)
+    main_subplot.hlines(range(20,100,20), 0, len(plot_x), zorder=-100, alpha=.3)
+
+    main_subplot.set_xlim(xmin=0, xmax=len(plot_x))
+    main_subplot.set_ylim(ymin=0, ymax=100)
+
+    main_subplot.set_xticks(plot_x)
+    main_subplot.set_xticklabels(labels, rotation=-45, ha='left')
+    main_subplot.set_ylabel("Average Percentile of Category")
+    return fig
+
+def category_parallel_plot_fillbetween(categories):
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(1, 1)
+    gs.update(left=0.05, right=0.93, top=.96, bottom=.19)
+    main_subplot = fig.add_subplot(gs[0])
+    main_subplot.set_title("Percentile Distribution of Metrics, by Drinking Category")
+
+    data, labels = gather_monkey_percentiles(ALL_RHESUS_DRINKERS)
+    category_values = defaultdict(lambda: defaultdict(lambda: list()))
+    for monkey in data.iterkeys():
+        key = RHESUS_MONKEY_CATEGORY[monkey]
+        x_values = data[monkey][:,0]
+        y_values = data[monkey][:,1]
+        for x, y in zip(x_values, y_values):
+            category_values[key][x].append(y)
+
+    base_alpha = .25
+    plot_x = [] # this will be overwritten immediately
+    for key in categories:
+        category_dict = category_values[key]
+        plot_x = sorted(category_dict.keys())
+        plot_y = list()
+        std_error = list()
+        for x in plot_x:
+            _yvalues = category_dict[x]
+            _avg = numpy.average(_yvalues)
+            _err = stats.sem(_yvalues)
+            plot_y.append(_avg)
+            std_error.append(_err)
+        plot_y = numpy.array(plot_y)
+        std_error = numpy.array(std_error)
+
+        if key in ['HD', 'MD']:
+            alpha = .5 * base_alpha
+        else:
+            alpha = base_alpha
+        main_subplot.plot(plot_x, plot_y, c=RHESUS_COLORS[key], linewidth=5)
+        main_subplot.scatter(plot_x, plot_y, c=RHESUS_COLORS[key], edgecolor=RHESUS_COLORS[key], s=150)
+        main_subplot.fill_between(plot_x, plot_y-std_error, plot_y+std_error, alpha=alpha, edgecolor=RHESUS_COLORS[key], facecolor=RHESUS_COLORS[key])
+
+    main_subplot.vlines(plot_x, 0, 100, zorder=-100, alpha=.3)
+    main_subplot.hlines(range(20,100,20), 0, len(plot_x), zorder=-100, alpha=.3)
+
+    main_subplot.set_xlim(xmin=0, xmax=len(plot_x))
+    main_subplot.set_ylim(ymin=0, ymax=100)
+
+    main_subplot.set_xticks(plot_x)
+    main_subplot.set_xticklabels(labels, rotation=-45, ha='left')
+    main_subplot.set_ylabel("Average Percentile of Category")
+    return fig
+
+
+
+
 
 #---
 #plot
