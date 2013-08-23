@@ -1685,8 +1685,7 @@ def rhesus_oa_pellettime_vs_gkg():
     return fig
 
 
-def _rhesus_eev_by_hour_boxplot(subplot, x_values, monkey_category, data_collection_method, color, width=1,
-                                extra_kwargs=None):
+def _rhesus_eev_by_hour_boxplot(subplot, x_values, monkey_category, data_collection_method, color, width=1, extra_kwargs=None):
     extra_kwargs = extra_kwargs if extra_kwargs else {}
     data = list()
     for start_time in range(SESSION_START, SESSION_END, ONE_HOUR):
@@ -1695,9 +1694,7 @@ def _rhesus_eev_by_hour_boxplot(subplot, x_values, monkey_category, data_collect
             eev_pellet_time__lt=start_time + ONE_HOUR)
         # pass these events into the data collection method.
         # The data collection method is expected to produce a subset of boxplot-able data, filtered and normalized as the parent method intends
-        #data.append(data_collection_method(eevs, monkey_category, **extra_kwargs))
-        data = data_collection_method('',
-                                      monkey_category) # when using _load_from_file_Hourly_eev_gkg_summations(), uncomment this line, comment the forloop above
+        data = data_collection_method(eevs, monkey_category)
     bp = subplot.boxplot(data, positions=x_values, widths=width)
     for key in bp.keys():
         if key != 'medians':
@@ -1715,9 +1712,11 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
         ex.
         [3.2, 1.4, 5.7, 3.5, 2.9]
         """
-        filename = "utils/DATA/json/rhesus_hourly_gkg_boxplot_by_category-%s.json" % monkey_category
+        folder_name = "utils/DATA/json/"
+        file_name = "rhesus_hourly_gkg_boxplot_by_category-%s.json" % monkey_category
+        file_path = os.path.join(folder_name, file_name)
         try:
-            f = open(filename, 'r')
+            f = open(file_path, 'r')
             json_string = f.readline()
             events_gkg = json.loads(json_string)
         except Exception as e:
@@ -1731,7 +1730,11 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
                 # to get g/kg, aggregate the volume consumed, multiply by .04 and divide by weight
                 gkg = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] * .04 / avg_weight
                 events_gkg.append(gkg)
-            f = open(filename, 'w')
+            try:
+                os.makedirs(folder_name)
+            except IOError:
+                pass
+            f = open(file_path, 'w')
             json_data = json.dumps(events_gkg)
             f.write(json_data)
             f.close()
@@ -3340,7 +3343,7 @@ def create_kathy_graphs():
         fig.savefig(filename, dpi=DPI)
 
 
-def create_manuscript_graphs(output_path='', fig_size=(25, 15), save_first=4):
+def create_manuscript_graphs(output_path='', fig_size=(25, 15)):
     figures = list()
     names = list()
     all_categories = DRINKING_CATEGORIES
@@ -3354,6 +3357,7 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15), save_first=4):
     names.append('category_parallel_plot_split_oa-all')
     figures.append(category_parallel_plot_split_oa(red_vs_blue, fig_size=fig_size))
     names.append('category_parallel_plot_split_oa-red_vs_blue')
+    """
     figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=fig_size))
     names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram')
     figures.append(rhesus_etoh_gkg_stackedbargraph(fig_size=fig_size))
@@ -3366,8 +3370,9 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15), save_first=4):
     names.append('monkey_etoh_bouts_vol-10052')
     figures.append(monkey_plots.monkey_etoh_bouts_vol(10049)[0])
     names.append('monkey_etoh_bouts_vol-10049')
+    """
     if output_path:
-        for index, FigName in enumerate(zip(figures, names)[:save_first]):
+        for index, FigName in enumerate(zip(figures, names)):
             fig, name = FigName
             filename = output_path + '%s-%d.svg' % (name, index)
             fig.savefig(filename, format='svg',dpi=800)
