@@ -141,11 +141,11 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
         ax.set_xticks([])
 
 
-def get_percentile_callable(monkey, monkeys, specific_callable, field):
+def get_percentile_callable(monkey, monkeys, specific_callable, field, oa_stage=0):
     this_value = None
     all_values = list()
     for mky in monkeys:
-        value = specific_callable(mky, field)
+        value = specific_callable(mky, field, oa_stage=oa_stage)
         all_values.append(value)
         if mky == monkey:
             this_value = value
@@ -153,20 +153,31 @@ def get_percentile_callable(monkey, monkeys, specific_callable, field):
         raise Exception("monkey was not found in the monkeys collection.")
     return stats.percentileofscore(all_values, this_value)
 
-def get_mean_oa_gkg(monkey):
-    mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey)
-    return mtds.aggregate(Avg('mtd_etoh_g_kg'))['mtd_etoh_g_kg__avg']
-
-def get_mean_MTD_oa_field(monkey, field):
-    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
+def get_mean_MTD_oa_field(monkey, field, oa_stage=0):
+    if oa_stage == 1:
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).first_six_months_oa()
+    elif oa_stage == 2:
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).second_six_months_oa()
+    else:
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
     return mtds.aggregate(Avg(field))[field+'__avg']
 
-def get_mean_BEC_oa_field(monkey, field):
-    becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey)
+def get_mean_BEC_oa_field(monkey, field, oa_stage=0):
+    if oa_stage == 1:
+        becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).first_six_months_oa()
+    elif oa_stage == 2:
+        becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).second_six_months_oa()
+    else:
+        becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey)
     return becs.aggregate(Avg(field))[field+'__avg']
 
-def get_mean_MHM_oa_field(monkey, field):
-    mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey)
+def get_mean_MHM_oa_field(monkey, field, oa_stage=0):
+    if oa_stage == 1:
+        mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey).first_six_months_oa()
+    elif oa_stage == 2:
+        mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey).second_six_months_oa()
+    else:
+        mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey)
     return mhms.aggregate(Avg(field))[field+'__avg']
 
 def gather_monkey_percentiles(monkeys, oa_stage=0):
@@ -176,7 +187,6 @@ def gather_monkey_percentiles(monkeys, oa_stage=0):
         1 == first 6 months of OA
         2 == second 6 months of OA
     """
-    from matrr.plotting import COHORT_END_FIRST_OPEN_ACCESS
     # high drinkers == high percentiles
     high_high = ['mtd_etoh_g_kg', 'mhm_ald', 'bec_mg_pct', 'mtd_veh_intake', 'mtd_max_bout_vol']
     hh_label = ["Avg Daily Etoh (g/kg)", "Avg Aldosterone", "Avg BEC (% mg)", "Avg Daily Max Bout (ml)"]
@@ -215,7 +225,7 @@ def gather_monkey_percentiles(monkeys, oa_stage=0):
         for field in fields:
             field_callable = get_callable(field)
             x_values.append(x)
-            y_values.append(get_percentile_callable(monkey, monkeys, field_callable, field))
+            y_values.append(get_percentile_callable(monkey, monkeys, field_callable, field, oa_stage=oa_stage))
             x += 1
         data[monkey] = numpy.array(zip(x_values, y_values))
     return data, labels

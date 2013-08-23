@@ -2729,7 +2729,61 @@ def category_parallel_plot_fillbetween(categories):
     main_subplot.set_ylabel("Average Percentile of Category")
     return fig
 
+def category_parallel_plot_split_oa(categories):
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(2, 1)
+    gs.update(left=0.05, right=0.93, top=.96, bottom=.19, hspace=.05)
+    first_subplot = fig.add_subplot(gs[0])
+    second_subplot = fig.add_subplot(gs[1])
+    fig.suptitle("Percentile Distribution of Metrics, by Drinking Category")
 
+    plot_x = [] # this will be overwritten immediately
+    labels = [] # this will be overwritten immediately
+    for oa_stage, subplot in enumerate([first_subplot, second_subplot], start=1):
+        data, labels = gather_monkey_percentiles(ALL_RHESUS_DRINKERS, oa_stage=oa_stage)
+        category_values = defaultdict(lambda: defaultdict(lambda: list()))
+        for monkey in data.iterkeys():
+            key = RHESUS_MONKEY_CATEGORY[monkey]
+            x_values = data[monkey][:,0]
+            y_values = data[monkey][:,1]
+            for x, y in zip(x_values, y_values):
+                category_values[key][x].append(y)
+
+        base_alpha = .25
+        for key in categories:
+            category_dict = category_values[key]
+            plot_x = sorted(category_dict.keys())
+            plot_y = list()
+            std_error = list()
+            for x in plot_x:
+                _yvalues = category_dict[x]
+                _avg = numpy.average(_yvalues)
+                _err = stats.sem(_yvalues)
+                plot_y.append(_avg)
+                std_error.append(_err)
+            plot_y = numpy.array(plot_y)
+            std_error = numpy.array(std_error)
+
+            if key in ['HD', 'MD']:
+                alpha = .5 * base_alpha
+            else:
+                alpha = base_alpha
+            subplot.plot(plot_x, plot_y, c=RHESUS_COLORS[key], linewidth=5)
+            subplot.scatter(plot_x, plot_y, c=RHESUS_COLORS[key], edgecolor=RHESUS_COLORS[key], s=150)
+            subplot.fill_between(plot_x, plot_y-std_error, plot_y+std_error, alpha=alpha, edgecolor=RHESUS_COLORS[key], facecolor=RHESUS_COLORS[key])
+
+        subplot.set_xlim(xmin=0, xmax=len(plot_x))
+        subplot.set_ylim(ymin=0, ymax=100)
+        subplot.vlines(plot_x, 0, 100, zorder=-100, alpha=.3)
+        subplot.hlines(range(20,100,20), 0, len(plot_x), zorder=-100, alpha=.3)
+        subplot.set_ylabel("Average Percentile of Category")
+        label_prefix = "First" if oa_stage == 1 else "Second"
+        subplot_label = "%s six months of Open Access" % label_prefix
+        subplot.legend((), title=subplot_label, loc=1, frameon=False, prop={'size': 12})
+    first_subplot.set_xticks([])
+    second_subplot.set_xticks(plot_x)
+    second_subplot.set_xticklabels(labels, rotation=-45, ha='left')
+    return fig
 
 
 
