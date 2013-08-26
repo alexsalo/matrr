@@ -2713,7 +2713,7 @@ def category_parallel_plot_fillbetween(categories, fig_size=HISTOGRAM_FIG_SIZE):
         plot_y = numpy.array(plot_y)
         std_error = numpy.array(std_error)
 
-        if key in ['HD', 'MD']:
+        if key in ['HD', 'BD']:
             alpha = .5 * base_alpha
         else:
             alpha = base_alpha
@@ -2767,7 +2767,7 @@ def category_parallel_plot_split_oa(categories, fig_size=HISTOGRAM_FIG_SIZE):
             plot_y = numpy.array(plot_y)
             std_error = numpy.array(std_error)
 
-            if key in ['HD', 'MD']:
+            if key in ['HD', 'BD']:
                 alpha = .5 * base_alpha
             else:
                 alpha = base_alpha
@@ -3059,7 +3059,7 @@ class RhesusAdjacencyNetwork():
             group = 4
         if key == 'HD':
             group = 3
-        if key == 'MD':
+        if key == 'BD':
             group = 2
         if key == 'LD':
             group = 1
@@ -3343,7 +3343,7 @@ def create_kathy_graphs():
         fig.savefig(filename, dpi=DPI)
 
 
-def create_manuscript_graphs(output_path='', fig_size=(25, 15)):
+def create_manuscript_graphs(output_path='', fig_size=(25, 15), dpi=800):
     figures = list()
     names = list()
     all_categories = DRINKING_CATEGORIES
@@ -3357,7 +3357,6 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15)):
     names.append('category_parallel_plot_split_oa-all')
     figures.append(category_parallel_plot_split_oa(red_vs_blue, fig_size=fig_size))
     names.append('category_parallel_plot_split_oa-red_vs_blue')
-    """
     figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=fig_size))
     names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram')
     figures.append(rhesus_etoh_gkg_stackedbargraph(fig_size=fig_size))
@@ -3370,12 +3369,11 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15)):
     names.append('monkey_etoh_bouts_vol-10052')
     figures.append(monkey_plots.monkey_etoh_bouts_vol(10049)[0])
     names.append('monkey_etoh_bouts_vol-10049')
-    """
     if output_path:
-        for index, FigName in enumerate(zip(figures, names)):
+        for FigName in zip(figures, names):
             fig, name = FigName
-            filename = output_path + '%s-%d.svg' % (name, index)
-            fig.savefig(filename, format='svg',dpi=800)
-            filename = output_path + '%s-%d.eps' % (name, index)
-            fig.savefig(filename, format='eps',dpi=800)
+            filename = output_path + '%s.svg' % name
+            fig.savefig(filename, format='svg',dpi=dpi)
+            filename = output_path + '%s.png' % name
+            fig.savefig(filename, format='eps',dpi=dpi)
 
