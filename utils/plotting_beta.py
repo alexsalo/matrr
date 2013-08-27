@@ -1690,11 +1690,10 @@ def _rhesus_eev_by_hour_boxplot(subplot, x_values, monkey_category, data_collect
     data = list()
     for start_time in range(SESSION_START, SESSION_END, ONE_HOUR):
         # Get all events that ever happened within this session hour
-        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(eev_session_time__gte=start_time).filter(
-            eev_pellet_time__lt=start_time + ONE_HOUR)
+        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(eev_session_time__gte=start_time).filter(eev_pellet_time__lt=start_time + ONE_HOUR)
         # pass these events into the data collection method.
         # The data collection method is expected to produce a subset of boxplot-able data, filtered and normalized as the parent method intends
-        data = data_collection_method(eevs, monkey_category)
+        data.append(data_collection_method(eevs, monkey_category, **extra_kwargs))
     bp = subplot.boxplot(data, positions=x_values, widths=width)
     for key in bp.keys():
         if key != 'medians':
@@ -1725,13 +1724,14 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
                 # first, get the subset of events associated with this monkey
                 _eevs = eevs.filter(monkey=monkey)
                 # Next, get this monkey's average OPEN ACCESS weight
-                mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=eevs[0].monkey)
+                mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
                 avg_weight = mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
                 # to get g/kg, aggregate the volume consumed, multiply by .04 and divide by weight
                 gkg = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] * .04 / avg_weight
                 events_gkg.append(gkg)
             try:
-                os.makedirs(folder_name)
+                if not os.path.exists(folder_name):
+                    os.makedirs(folder_name)
             except IOError:
                 pass
             f = open(file_path, 'w')
@@ -2681,12 +2681,12 @@ def category_parallel_plot(categories):
     main_subplot.set_ylabel("Average Percentile of Category")
     return fig
 
-def category_parallel_plot_fillbetween(categories, fig_size=HISTOGRAM_FIG_SIZE):
+def category_parallel_plot_fillbetween(categories, fig_size=(25, 15), tick_size=22, title_size=30,  label_size=26):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(1, 1)
-    gs.update(left=0.05, right=0.93, top=.96, bottom=.19)
+    gs.update(left=0.05, right=0.94, top=.96, bottom=.29)
     main_subplot = fig.add_subplot(gs[0])
-    main_subplot.set_title("Percentile Distribution of Metrics, by Drinking Category")
+    main_subplot.set_title("Percentile Distribution of Metrics, by Drinking Category", size=title_size)
 
     data, labels = gather_monkey_percentiles(ALL_RHESUS_DRINKERS)
     category_values = defaultdict(lambda: defaultdict(lambda: list()))
@@ -2697,7 +2697,7 @@ def category_parallel_plot_fillbetween(categories, fig_size=HISTOGRAM_FIG_SIZE):
         for x, y in zip(x_values, y_values):
             category_values[key][x].append(y)
 
-    base_alpha = .25
+    base_alpha = .35
     plot_x = [] # this will be overwritten immediately
     for key in categories:
         category_dict = category_values[key]
@@ -2714,7 +2714,7 @@ def category_parallel_plot_fillbetween(categories, fig_size=HISTOGRAM_FIG_SIZE):
         std_error = numpy.array(std_error)
 
         if key in ['HD', 'BD']:
-            alpha = .5 * base_alpha
+            alpha = .65 * base_alpha
         else:
             alpha = base_alpha
         main_subplot.plot(plot_x, plot_y, c=RHESUS_COLORS[key], linewidth=5)
@@ -2728,21 +2728,31 @@ def category_parallel_plot_fillbetween(categories, fig_size=HISTOGRAM_FIG_SIZE):
     main_subplot.set_ylim(ymin=0, ymax=100)
 
     main_subplot.set_xticks(plot_x)
-    main_subplot.set_xticklabels(labels, rotation=-45, ha='left')
-    main_subplot.set_ylabel("Average Percentile of Category")
+    main_subplot.set_xticklabels(labels, rotation=-45, ha='left', size=tick_size)
+    main_subplot.set_ylabel("Average Percentile of Category", size=label_size)
+    main_subplot.tick_params(axis='both', which='major', labelsize=tick_size)
+    main_subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
     return fig
 
-def category_parallel_plot_split_oa(categories, fig_size=HISTOGRAM_FIG_SIZE):
+def category_parallel_plot_split_oa(categories, fig_size=(25, 15), tick_size=22, title_size=30,  label_size=26):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(2, 1)
-    gs.update(left=0.05, right=0.93, top=.96, bottom=.19, hspace=.05)
+    gs.update(left=0.05, right=0.94, top=.94, bottom=.29, hspace=.06)
     first_subplot = fig.add_subplot(gs[0])
     second_subplot = fig.add_subplot(gs[1])
-    fig.suptitle("Percentile Distribution of Metrics, by Drinking Category")
+
+    fig.suptitle("Percentile Distribution of Metrics, by Drinking Category",  size=title_size)
+    fig.text(0.01,0.82,"Average Percentile of Category", fontdict={'fontsize':label_size}, rotation=90)
 
     plot_x = [] # this will be overwritten immediately
     labels = [] # this will be overwritten immediately
     for oa_stage, subplot in enumerate([first_subplot, second_subplot], start=1):
+        subplot.tick_params(axis='both', which='major', labelsize=tick_size)
+        subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
+        label_prefix = "First" if oa_stage == 1 else "Second"
+        subplot_label = "%s six months of Open Access" % label_prefix
+        legend = subplot.legend((), title=subplot_label, loc=1, frameon=False)
+        pyplot.setp(legend.get_title(),fontsize=tick_size)
         data, labels = gather_monkey_percentiles(ALL_RHESUS_DRINKERS, oa_stage=oa_stage)
         category_values = defaultdict(lambda: defaultdict(lambda: list()))
         for monkey in data.iterkeys():
@@ -2779,13 +2789,9 @@ def category_parallel_plot_split_oa(categories, fig_size=HISTOGRAM_FIG_SIZE):
         subplot.set_ylim(ymin=0, ymax=100)
         subplot.vlines(plot_x, 0, 100, zorder=-100, alpha=.3)
         subplot.hlines(range(20,100,20), 0, len(plot_x), zorder=-100, alpha=.3)
-        subplot.set_ylabel("Average Percentile of Category")
-        label_prefix = "First" if oa_stage == 1 else "Second"
-        subplot_label = "%s six months of Open Access" % label_prefix
-        subplot.legend((), title=subplot_label, loc=1, frameon=False, prop={'size': 12})
     first_subplot.set_xticks([])
     second_subplot.set_xticks(plot_x)
-    second_subplot.set_xticklabels(labels, rotation=-45, ha='left')
+    second_subplot.set_xticklabels(labels, rotation=-45, ha='left', size=tick_size)
     return fig
 
 
@@ -2943,8 +2949,12 @@ def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_
                     y_data.append(y_value)
             subplot.set_ylabel("Summed volume of adjacent bouts")
             subplot.set_xlabel("Bout start time difference")
-            fx = open('utils/DATA/_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
-            fy = open('utils/DATA/_bout_startdiff_volsum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
+
+            folder_name = 'utils/DATA/'
+            if not os.path.exists(folder_name):
+                os.makedirs(folder_name)
+            fx = open(folder_name+'_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
+            fy = open(folder_name+'_bout_startdiff_volsum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
             fx.write(json.dumps(x_data))
             fy.write(json.dumps(y_data))
             fx.close()
@@ -3375,5 +3385,5 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15), dpi=800):
             filename = output_path + '%s.svg' % name
             fig.savefig(filename, format='svg',dpi=dpi)
             filename = output_path + '%s.png' % name
-            fig.savefig(filename, format='eps',dpi=dpi)
+            fig.savefig(filename, format='png',dpi=dpi)
 
