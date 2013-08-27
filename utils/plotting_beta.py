@@ -3388,6 +3388,4 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15), dpi=800):
             fig, name = FigName
             filename = output_path + '%s.svg' % name
             fig.savefig(filename, format='svg',dpi=dpi)
-            filename = output_path + '%s.png' % name
-            fig.savefig(filename, format='png',dpi=dpi)
 
