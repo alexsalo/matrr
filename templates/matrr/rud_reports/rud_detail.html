@@ -1,7 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<div id="large-headline">Research Update {{ rud.pk }}<span class="right"><a href="{% url rud-list %}">View research updates</a></span></div>
+	<div id="large-headline">
+        Research Update {{ rud.pk }}
+        {% if perms.matrr.view_rud_detail %}
+            <span class="right"><a href="{% url rud-list %}">View research updates</a></span>
+    {% endif %}
+    </div>
 	<table class='common rud_detail'>
 		<tr>
 			<th>RUD Date</th>
