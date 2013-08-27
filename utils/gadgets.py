@@ -192,10 +192,9 @@ def gather_monkey_percentiles(monkeys, oa_stage=0):
     hh_label = ["Avg Daily Etoh (g/kg)", "Avg Aldosterone", "Avg BEC (% mg)", "Average Daily h20 (ml)", "Avg Daily Max Bout (ml)"]
     # high drinkers == low percentiles
     high_low = ['mhm_acth', 'mtd_pct_max_bout_vol_total_etoh', 'mhm_doc', 'mtd_total_pellets', 'mtd_latency_1st_drink',
-                'bec_pct_intake', 'mhm_cort_stdev', 'mhm_t_stdev', 'mhm_dheas_stdev']
+                'bec_pct_intake']
     hl_label = ["Avg ACTH", "Avg Daily Max Bout / Total", "Avg Deoxycorticosterone", "Avg Daily Pellets",
-                "Avg Time to First Drink (s)", "Avg % Etoh Before BEC Sample",
-                "Cortisol's Cohort STDEV", "Testosterone's Cohort STDEV", "DHEAS's Cohort STDEV"]
+                "Avg Time to First Drink (s)", "Avg % Etoh Before BEC Sample"]
     # scattered
     scattered = ['mhm_cort', 'mhm_t', 'mhm_dheas', 'mhm_ald_stdev', 'mhm_doc_stdev', 'mhm_acth_stdev']
 
