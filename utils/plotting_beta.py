@@ -1690,10 +1690,10 @@ def _rhesus_eev_by_hour_boxplot(subplot, x_values, monkey_category, data_collect
     data = list()
     for start_time in range(SESSION_START, SESSION_END, ONE_HOUR):
         # Get all events that ever happened within this session hour
-        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(eev_session_time__gte=start_time).filter(eev_pellet_time__lt=start_time + ONE_HOUR)
+        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(eev_session_time__gte=start_time).filter(eev_session_time__lt=start_time + ONE_HOUR)
         # pass these events into the data collection method.
         # The data collection method is expected to produce a subset of boxplot-able data, filtered and normalized as the parent method intends
-        data.append(data_collection_method(eevs, monkey_category, **extra_kwargs))
+        data.append(data_collection_method(eevs, monkey_category, start_time, **extra_kwargs))
     bp = subplot.boxplot(data, positions=x_values, widths=width)
     for key in bp.keys():
         if key != 'medians':
@@ -1705,14 +1705,14 @@ def _rhesus_eev_by_hour_boxplot(subplot, x_values, monkey_category, data_collect
 
 
 def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
-    def _hourly_eev_gkg_summation(eevs, monkey_category):
+    def _hourly_eev_gkg_summation(eevs, monkey_category, start_time):
         """
         This method will return a list of each monkey's gkg consumed within the events passed in (eevs), for each monkey in monkey_category
         ex.
         [3.2, 1.4, 5.7, 3.5, 2.9]
         """
         folder_name = "utils/DATA/json/"
-        file_name = "rhesus_hourly_gkg_boxplot_by_category-%s.json" % monkey_category
+        file_name = "rhesus_hourly_gkg_boxplot_by_category-%s-%s.json" % (monkey_category, str(start_time))
         file_path = os.path.join(folder_name, file_name)
         try:
             f = open(file_path, 'r')
@@ -1727,7 +1727,11 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
                 mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
                 avg_weight = mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
                 # to get g/kg, aggregate the volume consumed, multiply by .04 and divide by weight
-                gkg = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum'] * .04 / avg_weight
+                etoh_volume = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+                if etoh_volume and avg_weight:
+                    gkg = etoh_volume * .04 / avg_weight
+                else:
+                    gkg = 0
                 events_gkg.append(gkg)
             try:
                 if not os.path.exists(folder_name):
@@ -1762,8 +1766,6 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
     # centers xticks, so labels are place in the middle of the hour, rotated
     new_xticks = numpy.arange(0, TWENTYTWO_HOUR * gap_factor, ONE_HOUR * gap_factor)
     subplot.set_xticks(new_xticks)
-    xtickNames = pyplot.setp(subplot, xticklabels=x_labels)
-    pyplot.setp(xtickNames, )#rotation=45)
     subplot.set_yticklabels([])
 
     # Create legend
