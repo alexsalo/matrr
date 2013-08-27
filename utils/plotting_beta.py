@@ -1766,6 +1766,8 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
     # centers xticks, so labels are place in the middle of the hour, rotated
     new_xticks = numpy.arange(0, TWENTYTWO_HOUR * gap_factor, ONE_HOUR * gap_factor)
     subplot.set_xticks(new_xticks)
+    xtick_labels = numpy.arange(ONE_HOUR, TWENTYTWO_HOUR+ONE_HOUR, ONE_HOUR) / 60 / 60
+    subplot.set_xticklabels(xtick_labels)
     subplot.set_yticklabels([])
 
     # Create legend
