@@ -5,6 +5,7 @@ from django.template import RequestContext
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
+from matrr.decorators import user_owner_test
 from matrr.forms import RudUpdateForm, RudProgressForm
 from matrr.models import ResearchUpdate, ResearchProgress, Request
 
@@ -79,11 +80,11 @@ def rud_progress(request):
     return render_to_response(template, {'form': form, }, context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
+@user_owner_test(
+    lambda u, rud_id: u.has_perm('matrr.view_rud_detail') or get_object_or_404(ResearchUpdate, pk=rud_id).req_request.user == u, 'rud_id')
 def rud_detail(request, rud_id):
     rud = get_object_or_404(ResearchUpdate, pk=rud_id)
-    return render_to_response('matrr/rud_reports/rud_detail.html', {'rud': rud},
-                              context_instance=RequestContext(request))
+    return render_to_response('matrr/rud_reports/rud_detail.html', {'rud': rud}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
@@ -103,8 +104,7 @@ def rud_list(request):
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
         rud_list = paginator.page(paginator.num_pages)
-    return render_to_response('matrr/rud_reports/rud_list.html', {'rud_list': rud_list},
-                              context_instance=RequestContext(request))
+    return render_to_response('matrr/rud_reports/rud_list.html', {'rud_list': rud_list}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
