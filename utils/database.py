@@ -656,7 +656,7 @@ def load_nicotine_monkey_data(input_file):
     print 'Success'
 
 
-def load_cyno_9_data(input_file):
+def load_cyno_9_monkeys(input_file):
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
     columns = input_data.next()
     ins = Institution.objects.get(ins_institution_name='Oregon Health Sciences University')
@@ -673,6 +673,26 @@ def load_cyno_9_data(input_file):
             mky['mky_drinking'] = row[10] != 'control'
             mky['mky_housing_control'] = False
             mky['mky_necropsy_start_date'] = get_datetime_from_steve(row[6])
+            monkey, is_new = Monkey.objects.get_or_create(**mky)
+            monkey.save()
+    print 'Success'
+
+def load_cyno_10_monkeys(input_file):
+    input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
+    columns = input_data.next()
+    ins = Institution.objects.get(ins_institution_name='Oregon Health Sciences University')
+    cohort, is_new = Cohort.objects.get_or_create(coh_cohort_name='INIA Cyno 10', institution=ins, coh_species='Cyno')
+    for row in input_data:
+        if row[0]:
+            mky = dict()
+            mky['cohort'] = cohort
+            mky['mky_species'] = 'Cyno'
+            mky['mky_real_id'] = row[1]
+            mky['mky_name'] = row[0]
+            mky['mky_gender'] = row[2]
+            mky['mky_birthdate'] = get_datetime_from_steve(row[3])
+            mky['mky_drinking'] = False
+            mky['mky_housing_control'] = False
             monkey, is_new = Monkey.objects.get_or_create(**mky)
             monkey.save()
     print 'Success'
