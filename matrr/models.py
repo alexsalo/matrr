@@ -662,6 +662,7 @@ class Account(models.Model):
                            ('view_confederates', 'Can view confederate data'),
                            ('bcc_request_email', 'Receive BCC of processed request emails'),
                            ('po_manifest_email', 'Receive PO shipping manifest email'),
+                           ('provide_po_number', 'Can provide PO number'),
                            ('verify_mta', 'Can verify MTA uploads'),
                            ('ship_genetics', 'Can ship RNA/DNA'),
                        ])
