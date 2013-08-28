@@ -2604,20 +2604,22 @@ def rhesus_etoh_bec_scatter(HD_monkey=10065, LD_monkey=10052, fig_size=HISTOGRAM
         right_subplot.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey],
                               marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size)
 
+    suptitle_size = 30
+    title_size = 26
+    label_size = 24
+    tick_size = 20
+    legend_size = 20
     left_subplot.set_ylim(ymin=0)
     left_subplot.set_xlim(xmin=0, xmax=xmax_mtd)
     right_subplot.set_ylim(ymin=0)
     right_subplot.set_xlim(xmin=0, xmax=xmax_bec)
-    tick_size = 20
-    legend_size = 20
+    right_subplot.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
+    right_subplot.text(0, 82, "80 mg pct", size=tick_size)
     for subplot in [left_subplot, right_subplot]:
         subplot.legend(["Monkey %d" % m for m in monkey_ids], prop={'size': legend_size})
         subplot.tick_params(axis='both', which='major', labelsize=tick_size)
         subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
 
-    suptitle_size = 30
-    title_size = 26
-    label_size = 24
     fig.suptitle("High Drinker vs Low Drinker", size=suptitle_size)
     left_subplot.set_title("Daily Ethanol Intake", size=title_size)
     left_subplot.set_ylabel("Ethanol (g/kg)", size=label_size)
