@@ -78,19 +78,29 @@
 			{% block nav-list %}
 				<ul>
 					<li class='top'><a href="/">Home</a></li>
-
 				</ul>
 
 				<ul>
 					<li class='top'><a href='{% url search %}'>Search</a></li>
 					<li class='drop-down'><a href='{% url advanced-search %}'>Advanced Search</a></li>
-
 				</ul>
 
 				{% if user.is_authenticated and user_is_verified %}
 					<ul>
 						<li class='top'><a href="{% url account-view %}">My Account</a></li>
 						<li class='drop-down'><a href="{% url order-list %}">My Orders</a></li>
+					</ul>
+				{% endif %}
+
+				{% if perms.matrr.can_download_data or perms.auth.upload_raw_data %}
+					<ul>
+						<li class='top'><a>Data</a></li>
+                        {% if perms.matrr.can_download_data %}
+				    		<li class='drop-down'><a href="{% url data-landing %}">Download</a></li>
+		        		{% endif %}
+						{% if perms.auth.upload_raw_data %}
+							<li class='drop-down'><a href='{% url raw-upload %}'>Upload</a></li>
+						{% endif %}
 					</ul>
 				{% endif %}
 
@@ -110,8 +120,8 @@
 						{% if user.is_superuser %}
 							<li class='drop-down'><a href="{% url tools-supersandbox %}">SuperSandbox</a></li>
 						{% endif %}
-					</ul>
-				{% endif %}
+                    </ul>
+                {% endif %}
 
 				{% if perms.matrr.change_review %}
 					<ul>
@@ -134,44 +144,32 @@
 					</ul>
 				{% endif %}
 
-				{% if perms.auth.issue_tracker %}
+				{% if perms.matrr.can_verify_tissues or  perms.matrr.browse_inventory or perms.matrr.rna_display or perms.matrr.rna_submit %}
 					<ul>
-						<li class='top'>
-							<a href='https://gleek.ecs.baylor.edu/wiki/index.php?title=Issue_Tracker'>Issue Tracker</a>
-						</li>
-					</ul>
-				{% endif %}
-
-				{% if user.is_staff %}
-					<ul>
-						<li class='top'><a href="/admin/">Admin</a></li>
-						<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
+						<li class='top'><a>Inventory</a></li>
+						{% if perms.matrr.can_verify_tissues %}
+    						<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
+						{% endif %}
 						{% if perms.matrr.browse_inventory %}
 							<li class='drop-down'><a href="{% url inventory %}">Browse Inventory</a></li>
 						{% endif %}
 						{% if perms.matrr.rna_display or perms.matrr.rna_submit %}
 							<li class='drop-down'><a href='{% url rna-landing %}'>RNA Yields</a></li>
 						{% endif %}
+					</ul>
+				{% endif %}
+
+				{% if user.is_staff or perms.matrr.verify_mta or perms.auth.upload_raw_data %}
+					<ul>
+						<li class='top'>{% if user.is_staff %}<a href="/admin/">Admin</a>{% else %}Admin{% endif %}</li>
 						{% if perms.matrr.view_rud_file %}
 							<li class='drop-down'><a href='{% url rud-overdue %}'>Research Updates</a></li>
 						{% endif %}
 						{% if perms.matrr.verify_mta %}
 							<li class='drop-down'><a href='{% url mta-list %}'>Verify MTAs</a></li>
 						{% endif %}
-						{% if perms.auth.upload_raw_data %}
-							<li class='drop-down'><a href='{% url raw-upload %}'>Upload</a></li>
-						{% endif %}
-
 					</ul>
 				{% endif %}
-
-				{#      {% if user.is_staff %}#}
-				{#      <ul>#}
-				{#          <li class='top'><a href="/qc/">Quality Control</a></li>#}
-				{#          <li class='drop-down'><a href="/upload_rna/">Upload RNA</a></li>#}
-				{#          <li class='drop-down'><a href="/view_rna/">View RNA</a></li>#}
-				{#      </ul>#}
-				{#      {% endif %}#}
 			{% endblock %}
 		</div>
 
@@ -208,13 +206,16 @@
 				<div class='headline'>
 					Quick Links
 				</div>
-				<a href="{% url upcoming %}">View Upcoming Cohorts</a><br/>
-				<a href="{% url available %}">View Archival Cohorts</a><br/>
-				<a href="{% url cohorts %}">View All Cohorts</a><br/>
-				<a href="{% url assay %}">Request tissues for Assay Development</a><br/>
+				<a href="{% url upcoming %}">Upcoming Cohorts</a><br/>
+				<a href="{% url available %}">Archival Cohorts</a><br/>
+				<a href="{% url cohorts %}">All Cohorts</a><br/>
+				<a href="{% url assay %}">Assay Development</a><br/>
 				<a href="{% url account-mta %}">Update your MTA</a><br/>
 				<a href="{% url rud-upload %}">Submit Research Updates</a><br/>
 				<a href="{% url publications %}">View Publications</a>
+				{% if perms.auth.issue_tracker %}
+                    <a href='https://gleek.ecs.baylor.edu/wiki/index.php?title=Issue_Tracker'>Issue Tracker</a>
+				{% endif %}
 			</div>
 
 			<div class='sidebar-block'>

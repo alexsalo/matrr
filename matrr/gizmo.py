@@ -1,3 +1,4 @@
+import csv
 import settings, os, math, urllib, StringIO
 from datetime import datetime
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
@@ -168,4 +169,46 @@ def export_template_to_pdf(template, context={}, outfile=None, return_pisaDocume
     else:
         raise Exception(pdf.err)
 
+def dump_queryset_to_csv(qs, outfile_path, dex_type=None, from_date=None, to_date=None):
+    model = qs.model
+    f = open(outfile_path, 'w')
+    writer = csv.writer(f)
+
+    filter_keys = {'dex_type': '', 'dex_date': ''}
+    headers = []
+    field_names = []
+    for field in model._meta.fields:
+        dex_append = False
+        if field.name == 'drinking_experiment': # means model == MonkeyToDrinkingExperiment
+            _type = "drinking_experiment__dex_type"
+            _date = "drinking_experiment__dex_date"
+            dex_append = True
+        if field.name == 'mtd': # means model has a mtd FK (MonkeyBEC, MonkeyHormone, ExperimentBout, etc)
+            _type = "mtd__drinking_experiment__dex_type"
+            _date = "mtd__drinking_experiment__dex_date"
+            dex_append = True
+        if field.name == 'ebt': # means model == ExperimentDrink
+            _type = "ebt__mtd__drinking_experiment__dex_type"
+            _date = "ebt__mtd__drinking_experiment__dex_date"
+            dex_append = True
+        if dex_append:
+            headers.append("dex_type")
+            headers.append("dex_date")
+            field_names.append(_type)
+            field_names.append(_date)
+            filter_keys['dex_type'] = _type
+            filter_keys['dex_date'] = _date
+            continue
+        headers.append(field.verbose_name)
+        field_names.append(field.name)
+    if dex_type:
+        qs = qs.filter(**{filter_keys['dex_type']: dex_type})
+    if from_date:
+        qs = qs.filter(**{filter_keys['dex_date'] + "__gte": from_date})
+    if to_date:
+        qs = qs.filter(**{filter_keys['dex_date'] + "__lt": to_date})
+    writer.writerow(headers)
+    values_list = qs.values_list(*field_names)
+    writer.writerows(values_list)
+    f.close()
 

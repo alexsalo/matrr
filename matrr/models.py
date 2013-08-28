@@ -1789,12 +1789,11 @@ class DataFile(models.Model):
     dat_id = models.AutoField(primary_key=True)
     account = models.ForeignKey(Account, null=True)
     dat_modified = models.DateTimeField('Last Modified', auto_now_add=True, editable=False, auto_now=True)
-    dat_title = models.CharField('Title', blank=True, null=False, max_length=50,
-                                 help_text='Brief description of this data file.')
+    dat_title = models.CharField('Title', blank=True, null=False, max_length=150, help_text='Brief description of this data file.')
     dat_data_file = models.FileField('Data File', upload_to='data_files/', null=True, blank=False)
 
     def verify_user_access_to_file(self, user):
-        return user.is_authenticated() and user.account.verified and user.account == self.account
+        return user.is_authenticated() and user.account.verified and user.account == self.account and user.has_perm('matrr.can_download_data')
 
     def __unicode__(self):
         # You should override this method too
@@ -1802,6 +1801,7 @@ class DataFile(models.Model):
 
 
     class Meta:
+        permissions = ( ('can_download_data', 'Allow data export'), )
         db_table = 'dat_data_file'
 
 

@@ -554,8 +554,7 @@ def tools_monkey_etoh_graphs(request, monkey_method, coh_id):
         context['monkey_select_form'] = GraphToolsMonkeySelectForm(drinking_monkeys)
         context['experiment_range_form'] = ExperimentRangeForm()
 
-    return render_to_response('matrr/tools/ethanol/ethanol_monkey.html', context,
-                              context_instance=RequestContext(request))
+    return render_to_response('matrr/tools/ethanol/ethanol_monkey.html', context, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
@@ -620,13 +619,10 @@ def tools_monkey_bec(request, monkey_method): # pick a cohort
             cohort = cohort_form.cleaned_data['subject']
             return redirect('tools-monkey-bec-graphs', monkey_method, cohort.pk)
     else:
-        cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort',
-                                                                    flat=True).distinct() # this only returns the pk int
-        cohorts_with_bec_data = Cohort.objects.nicotine_filter(request.user).filter(
-            pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
+        cohorts_with_bec_data = MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct() # this only returns the pk int
+        cohorts_with_bec_data = Cohort.objects.nicotine_filter(request.user).filter( pk__in=cohorts_with_bec_data) # so get the queryset of cohorts
         cohort_form = CohortSelectForm(subject_queryset=cohorts_with_bec_data)
-    return render_to_response('matrr/tools/bec/bec.html', {'subject_select_form': cohort_form},
-                              context_instance=RequestContext(request))
+    return render_to_response('matrr/tools/bec/bec.html', {'subject_select_form': cohort_form}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_bec_data'), login_url='/denied/')
