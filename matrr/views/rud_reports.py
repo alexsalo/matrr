@@ -80,8 +80,7 @@ def rud_progress(request):
     return render_to_response(template, {'form': form, }, context_instance=RequestContext(request))
 
 
-@user_owner_test(
-    lambda u, rud_id: u.has_perm('matrr.view_rud_detail') or get_object_or_404(ResearchUpdate, pk=rud_id).req_request.user == u, 'rud_id')
+@user_owner_test(lambda u, rud_id: u.has_perm('matrr.view_rud_detail') or get_object_or_404(ResearchUpdate, pk=rud_id).req_request.user == u, 'rud_id')
 def rud_detail(request, rud_id):
     rud = get_object_or_404(ResearchUpdate, pk=rud_id)
     return render_to_response('matrr/rud_reports/rud_detail.html', {'rud': rud}, context_instance=RequestContext(request))
