@@ -4,11 +4,9 @@ from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.http import Http404
 from django.contrib.auth.decorators import user_passes_test
-from datetime import datetime
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
-from django.template.defaultfilters import dictsort
-from matrr.forms import ExperimentRangeForm, DataSelectForm, CohortSelectForm, GraphSubjectSelectForm, GraphToolsMonkeySelectForm
+from matrr.forms import ExperimentRangeForm, DataSelectForm, CohortSelectForm, GraphToolsMonkeySelectForm
 from matrr.models import MonkeyToDrinkingExperiment, MonkeyBEC, MonkeyHormone, MonkeyProtein, Cohort, Monkey, DataFile
 
 
@@ -50,10 +48,8 @@ def data_cohort(request, data_type=""): # pick a cohort
 # GraphToolsMonkeySelectForm
 @user_passes_test(lambda u: u.has_perm('matrr.can_download_data'), login_url='/denied/')
 def data_cohort_dates(request, data_type='', coh_id=0):
-    field_prefixes = {'MonkeyToDrinkingExperiment': "", 'MonkeyBEC': 'mtd__', 'MonkeyHormone': "mtd__"}
-
-    if not data_type in [field[0] for field in DataSelectForm.DATA_CHOICES]: # basically, if someone hand-wrote the url incorrectly
-        raise Http404("That is not a valid data type option.")
+    if not data_type in [field[0] for field in DataSelectForm.DATA_CHOICES]:
+        raise Http404("That is not a valid data type option.") # basically, if someone manually wrote the url incorrectly
     DataModel = eval(data_type)
     cohort = get_object_or_404(Cohort, pk=coh_id)
     monkey_queryset = Monkey.objects.Drinkers().filter(cohort=cohort)
