@@ -677,22 +677,32 @@ def load_cyno_9_monkeys(input_file):
             monkey.save()
     print 'Success'
 
-def load_cyno_10_monkeys(input_file):
+def load_rhesus_10_monkeys(input_file):
+    """
+    I think m-d panel would be mky_drinking = false, and mky_housing_control = false.
+
+    The ones that live with no panel would be mky_drinking = false, and mky_housing_control = true.
+
+    (And the normal ones would be mky_drinking = true and mky_housing_control = false).
+
+    Steve
+    """
+    species = 'Rhesus'
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
     columns = input_data.next()
     ins = Institution.objects.get(ins_institution_name='Oregon Health Sciences University')
-    cohort, is_new = Cohort.objects.get_or_create(coh_cohort_name='INIA Cyno 10', institution=ins, coh_species='Cyno')
+    cohort, is_new = Cohort.objects.get_or_create(coh_cohort_name='INIA %s 10' % species, institution=ins, coh_species=species)
     for row in input_data:
         if row[0]:
             mky = dict()
             mky['cohort'] = cohort
-            mky['mky_species'] = 'Cyno'
-            mky['mky_real_id'] = row[1]
-            mky['mky_name'] = row[0]
-            mky['mky_gender'] = row[2]
-            mky['mky_birthdate'] = get_datetime_from_steve(row[3])
-            mky['mky_drinking'] = False
-            mky['mky_housing_control'] = False
+            mky['mky_species'] = species
+            mky['mky_real_id'] = row[3]
+            mky['mky_name'] = row[4]
+            mky['mky_gender'] = row[5]
+            mky['mky_birthdate'] = get_datetime_from_steve(row[6])
+            mky['mky_drinking'] = not row[7]
+            mky['mky_housing_control'] = row[7] and not row[8]
             monkey, is_new = Monkey.objects.get_or_create(**mky)
             monkey.save()
     print 'Success'
