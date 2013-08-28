@@ -2588,21 +2588,18 @@ def rhesus_etoh_bec_scatter(HD_monkey=10065, LD_monkey=10052, fig_size=HISTOGRAM
     xmax_bec = 0
     xmax_mtd = 0
     for monkey in monkey_ids:
-        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).order_by(
-            'drinking_experiment__dex_date')
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).order_by('drinking_experiment__dex_date')
         xaxis_length = mtds.count()
         xmax_mtd = max(xaxis_length, xmax_mtd)
         x_axis = range(xaxis_length)
         y_axis = mtds.values_list('mtd_etoh_g_kg', flat=True)
-        left_subplot.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey],
-                             marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size)
+        left_subplot.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size, label=str(monkey))
         becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).order_by('bec_collect_date')
         xaxis_length = becs.count()
         xmax_bec = max(xaxis_length, xmax_bec)
         x_axis = range(xaxis_length)
         y_axis = becs.values_list('bec_mg_pct', flat=True)
-        right_subplot.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey],
-                              marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size)
+        right_subplot.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size, label=str(monkey))
 
     suptitle_size = 30
     title_size = 26
@@ -2616,7 +2613,7 @@ def rhesus_etoh_bec_scatter(HD_monkey=10065, LD_monkey=10052, fig_size=HISTOGRAM
     right_subplot.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
     right_subplot.text(0, 82, "80 mg pct", size=tick_size)
     for subplot in [left_subplot, right_subplot]:
-        subplot.legend(["Monkey %d" % m for m in monkey_ids], prop={'size': legend_size})
+        subplot.legend(prop={'size': legend_size})
         subplot.tick_params(axis='both', which='major', labelsize=tick_size)
         subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
 
