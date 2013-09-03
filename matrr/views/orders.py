@@ -19,7 +19,7 @@ def orders_list(request):
                               context_instance=RequestContext(request))
 
 
-@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user or u.has_perm('matrr.change_shipment'), arg_name='req_request_id', redirect_url='/denied/')
+@user_owner_test(lambda u, req_id: u == Request.objects.get(req_request_id=req_id).user or u.has_perm('matrr.change_shipment') or  u.has_perm('matrr.ship_genetics'), arg_name='req_request_id', redirect_url='/denied/')
 def order_detail(request, req_request_id, edit=False):
     # get the request
     req_request = Request.objects.get(req_request_id=req_request_id)
