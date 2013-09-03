@@ -12,7 +12,7 @@ from matrr.forms import TissueShipmentForm, TrackingNumberForm
 from matrr.models import Request, User, Shipment, ShipmentStatus, RequestStatus
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment' or u.has_perm('matrr.ship_genetics')), login_url='/denied/')
 def shipping_history(request):
 #	Shipped Requests
     shipped_requests = Request.objects.shipped().order_by('-shipments__shp_shipment_date').distinct()
@@ -25,7 +25,7 @@ def shipping_history(request):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
 def shipping_history_user(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     shipped_requests = Request.objects.shipped().filter(user=user).order_by('-shipments__shp_shipment_date').distinct()
@@ -34,8 +34,7 @@ def shipping_history_user(request, user_id):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'),
-                  login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'),login_url='/denied/')
 def shipping_overview(request):
     #Requests Pending Shipment
     accepted_requests = Request.objects.none()
@@ -61,7 +60,7 @@ def shipping_overview(request):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
 def shipment_creator(request, req_request_id):
     req_request = get_object_or_404(Request, pk=req_request_id)
     acc_rtt_wo_shipment = req_request.tissue_request_set.filter(shipment=None).exclude(accepted_monkeys=None)
@@ -112,7 +111,7 @@ def shipment_creator(request, req_request_id):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
 def shipment_detail(request, shipment_id):
     confirm_ship = False
     confirm_delete_shipment = False
@@ -179,7 +178,7 @@ def shipment_detail(request, shipment_id):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
 def shipment_manifest_export(request, shipment_id):
     shipment = get_object_or_404(Shipment, pk=shipment_id)
     req_request = shipment.req_request
