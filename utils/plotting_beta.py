@@ -24,7 +24,7 @@ from matrr.models import ExperimentEvent, ExperimentBout, ExperimentEventType, C
 from utils import apriori
 from matrr.plotting import monkey_plots, plot_tools
 from matrr.plotting import *
-from utils.gadgets import gather_monkey_percentiles
+from utils.gadgets import gather_monkey_percentiles_by_six_months
 
 
 doc_snippet = \
@@ -2634,7 +2634,7 @@ def rhesus_parallel_plot():
     main_subplot = fig.add_subplot(gs[0])
 
     monkeys = ALL_RHESUS_DRINKERS
-    data, labels  = gather_monkey_percentiles(monkeys)
+    data, labels  = gather_monkey_percentiles_by_six_months(monkeys)
     for monkey in data.iterkeys():
         main_subplot.plot(data[monkey][:,0], data[monkey][:,1], c=RHESUS_MONKEY_COLORS[monkey], linewidth=5, alpha=.5)
 
@@ -2647,7 +2647,7 @@ def category_parallel_plot(categories):
     main_subplot = fig.add_subplot(gs[0])
     main_subplot.set_title("Percentile Distribution of Metrics, by Drinking Category")
 
-    data, labels = gather_monkey_percentiles(ALL_RHESUS_DRINKERS)
+    data, labels = gather_monkey_percentiles_by_six_months(ALL_RHESUS_DRINKERS)
     category_values = defaultdict(lambda: defaultdict(lambda: list()))
     for monkey in data.iterkeys():
         key = RHESUS_MONKEY_CATEGORY[monkey]
@@ -2691,7 +2691,7 @@ def category_parallel_plot_fillbetween(categories, fig_size=(25, 15), tick_size=
     main_subplot = fig.add_subplot(gs[0])
     main_subplot.set_title("Percentile Distribution of Metrics, by Drinking Category", size=title_size)
 
-    data, labels = gather_monkey_percentiles(ALL_RHESUS_DRINKERS)
+    data, labels = gather_monkey_percentiles_by_six_months(ALL_RHESUS_DRINKERS)
     category_values = defaultdict(lambda: defaultdict(lambda: list()))
     for monkey in data.iterkeys():
         key = RHESUS_MONKEY_CATEGORY[monkey]
@@ -2749,14 +2749,14 @@ def category_parallel_plot_split_oa(categories, fig_size=(25, 15), tick_size=22,
 
     plot_x = [] # this will be overwritten immediately
     labels = [] # this will be overwritten immediately
-    for oa_stage, subplot in enumerate([first_subplot, second_subplot], start=1):
+    for six_months, subplot in enumerate([first_subplot, second_subplot], start=1):
         subplot.tick_params(axis='both', which='major', labelsize=tick_size)
         subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
-        label_prefix = "First" if oa_stage == 1 else "Second"
+        label_prefix = "First" if six_months == 1 else "Second"
         subplot_label = "%s six months of Open Access" % label_prefix
         legend = subplot.legend((), title=subplot_label, loc=1, frameon=False)
         pyplot.setp(legend.get_title(),fontsize=tick_size)
-        data, labels = gather_monkey_percentiles(ALL_RHESUS_DRINKERS, oa_stage=oa_stage)
+        data, labels = gather_monkey_percentiles_by_six_months(ALL_RHESUS_DRINKERS, six_months=six_months)
         category_values = defaultdict(lambda: defaultdict(lambda: list()))
         for monkey in data.iterkeys():
             key = RHESUS_MONKEY_CATEGORY[monkey]
@@ -2796,6 +2796,96 @@ def category_parallel_plot_split_oa(categories, fig_size=(25, 15), tick_size=22,
     second_subplot.set_xticks(plot_x)
     second_subplot.set_xticklabels(labels, rotation=-45, ha='left', size=tick_size)
     return fig
+
+def rhesus_category_parallel_classification_stability(categories, y_value_callable, y_label, fig_size=(25, 15), tick_size=22, title_size=30,  label_size=26):
+    fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(2, 1)
+    gs.update(left=0.05, right=0.94, top=.94, bottom=.06, hspace=.06)
+    etoh_subplot = fig.add_subplot(gs[0])
+    bec_subplot = fig.add_subplot(gs[1])
+
+    fig.suptitle("Stability of categorical drinking classifications over time. (Ethanol Consumption and BEC)",  size=title_size)
+    fig.text(0.01,0.74, y_label, fontdict={'fontsize':label_size}, rotation=90)
+
+    field_names = ['mtd_etoh_g_kg', 'bec_mg_pct',]
+    field_labels = ["Avg Daily Etoh (g/kg)", "Avg BEC (% mg)", ]
+
+    plot_x = range(1,5,1)
+    etoh_category_values = defaultdict(lambda: defaultdict(lambda: list()))
+    for three_months in plot_x:
+        etoh_data = y_value_callable(ALL_RHESUS_DRINKERS, field=field_names[0],  three_months=three_months)
+        for monkey in etoh_data.iterkeys():
+            key = RHESUS_MONKEY_CATEGORY[monkey]
+            etoh_category_values[key][three_months].append(etoh_data[monkey])
+
+    base_alpha = .35
+    for key in categories:
+        category_dict = etoh_category_values[key]
+        plot_y = list()
+        std_error = list()
+        for x in plot_x:
+            _yvalues = category_dict[x]
+            _avg = numpy.average(_yvalues)
+            _err = stats.sem(_yvalues)
+            plot_y.append(_avg)
+            std_error.append(_err)
+        plot_y = numpy.array(plot_y)
+        std_error = numpy.array(std_error)
+
+        if key in ['HD', 'BD']:
+            alpha = .5 * base_alpha
+        else:
+            alpha = base_alpha
+        etoh_subplot.plot(plot_x, plot_y, c=RHESUS_COLORS[key], linewidth=5)
+        etoh_subplot.scatter(plot_x, plot_y, c=RHESUS_COLORS[key], edgecolor=RHESUS_COLORS[key], s=150)
+        etoh_subplot.fill_between(plot_x, plot_y-std_error, plot_y+std_error, alpha=alpha, edgecolor=RHESUS_COLORS[key], facecolor=RHESUS_COLORS[key])
+
+    plot_x = range(1,5,1)
+    bec_category_values = defaultdict(lambda: defaultdict(lambda: list()))
+    for three_months in plot_x:
+        bec_data = y_value_callable(ALL_RHESUS_DRINKERS, field=field_names[1],  three_months=three_months)
+        for monkey in bec_data.iterkeys():
+            key = RHESUS_MONKEY_CATEGORY[monkey]
+            bec_category_values[key][three_months].append(bec_data[monkey])
+
+    base_alpha = .35
+    for key in categories:
+        category_dict = bec_category_values[key]
+        plot_y = list()
+        std_error = list()
+        for x in plot_x:
+            _yvalues = category_dict[x]
+            _avg = numpy.average(_yvalues)
+            _err = stats.sem(_yvalues)
+            plot_y.append(_avg)
+            std_error.append(_err)
+        plot_y = numpy.array(plot_y)
+        std_error = numpy.array(std_error)
+
+        if key in ['HD', 'BD']:
+            alpha = .5 * base_alpha
+        else:
+            alpha = base_alpha
+        bec_subplot.plot(plot_x, plot_y, c=RHESUS_COLORS[key], linewidth=5)
+        bec_subplot.scatter(plot_x, plot_y, c=RHESUS_COLORS[key], edgecolor=RHESUS_COLORS[key], s=150)
+        bec_subplot.fill_between(plot_x, plot_y-std_error, plot_y+std_error, alpha=alpha, edgecolor=RHESUS_COLORS[key], facecolor=RHESUS_COLORS[key])
+
+    for index, subplot in enumerate([etoh_subplot, bec_subplot]):
+        subplot.tick_params(axis='both', which='major', labelsize=tick_size)
+        subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
+        subplot.set_xlim(xmin=1, xmax=len(plot_x))
+        subplot.set_ylim(ymin=0)
+        subplot.yaxis.set_major_locator(MaxNLocator(prune='lower'))
+        subplot.grid(True, which='major', axis='both')
+        legend = subplot.legend((), title=field_labels[index], loc=1, frameon=False)
+        pyplot.setp(legend.get_title(),fontsize=tick_size)
+    etoh_subplot.set_xticks([])
+    bec_subplot.set_xticks(plot_x)
+    x_labels = ["First", "Second", "Third", "Fourth"]
+    x_labels = ["%s 3 months" % x for x in x_labels]
+    bec_subplot.set_xticklabels(x_labels, size=tick_size)
+    return fig
+
 
 
 
@@ -3362,6 +3452,10 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15), dpi=800):
     all_categories = DRINKING_CATEGORIES
     red_vs_blue = ["VHD", "LD"]
 
+    figures.append(rhesus_category_parallel_classification_stability(all_categories, gadgets.gather_monkey_percentiles_by_three_months, "Average Percentile of Category"))
+    names.append("rhesus_category_parallel_classification_stability-percentile")
+    figures.append(rhesus_category_parallel_classification_stability(all_categories, gadgets.gather_monkey_three_month_average_by_field, "Average Value of Category"))
+    names.append("rhesus_category_parallel_classification_stability-raw")
     figures.append(category_parallel_plot_fillbetween(all_categories, fig_size=fig_size))
     names.append('category_parallel_plot_fillbetween-all')
     figures.append(category_parallel_plot_fillbetween(red_vs_blue, fig_size=fig_size))
@@ -3382,6 +3476,8 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15), dpi=800):
     names.append('monkey_etoh_bouts_vol-10052')
     figures.append(monkey_plots.monkey_etoh_bouts_vol(10049)[0])
     names.append('monkey_etoh_bouts_vol-10049')
+    figures.append(rhesus_oa_pelletvolume_perday_perkg())
+    names.append('rhesus_oa_pelletvolume_perday_perkg')
     if output_path:
         for FigName in zip(figures, names):
             fig, name = FigName

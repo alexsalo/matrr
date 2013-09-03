@@ -141,11 +141,11 @@ def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None)
         ax.set_xticks([])
 
 
-def get_percentile_callable(monkey, monkeys, specific_callable, field, oa_stage=0):
+def get_percentile_callable(monkey, monkeys, specific_callable, field, six_months=0, three_months=0):
     this_value = None
     all_values = list()
     for mky in monkeys:
-        value = specific_callable(mky, field, oa_stage=oa_stage)
+        value = specific_callable(mky, field, six_months=six_months, three_months=three_months)
         all_values.append(value)
         if mky == monkey:
             this_value = value
@@ -153,36 +153,63 @@ def get_percentile_callable(monkey, monkeys, specific_callable, field, oa_stage=
         raise Exception("monkey was not found in the monkeys collection.")
     return stats.percentileofscore(all_values, this_value)
 
-def get_mean_MTD_oa_field(monkey, field, oa_stage=0):
-    if oa_stage == 1:
+def get_mean_MTD_oa_field(monkey, field, six_months=0, three_months=0):
+    assert not (six_months and three_months), "You cannot gather six month and three month intervals at the same time."
+    if six_months == 1:
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).first_six_months_oa()
-    elif oa_stage == 2:
+    elif six_months == 2:
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).second_six_months_oa()
+    elif three_months == 1:
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).first_three_months_oa()
+    elif three_months == 2:
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).second_three_months_oa()
+    elif three_months == 3:
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).third_three_months_oa()
+    elif three_months == 4:
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).fourth_three_months_oa()
     else:
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
     return mtds.aggregate(Avg(field))[field+'__avg']
 
-def get_mean_BEC_oa_field(monkey, field, oa_stage=0):
-    if oa_stage == 1:
+def get_mean_BEC_oa_field(monkey, field, six_months=0, three_months=0):
+    assert not (six_months and three_months), "You cannot gather six month and three month intervals at the same time."
+    if six_months == 1:
         becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).first_six_months_oa()
-    elif oa_stage == 2:
+    elif six_months == 2:
         becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).second_six_months_oa()
+    elif three_months == 1:
+        becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).first_three_months_oa()
+    elif three_months == 2:
+        becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).second_three_months_oa()
+    elif three_months == 3:
+        becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).third_three_months_oa()
+    elif three_months == 4:
+        becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).fourth_three_months_oa()
     else:
         becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey)
     return becs.aggregate(Avg(field))[field+'__avg']
 
-def get_mean_MHM_oa_field(monkey, field, oa_stage=0):
-    if oa_stage == 1:
+def get_mean_MHM_oa_field(monkey, field, six_months=0, three_months=0):
+    assert not (six_months and three_months), "You cannot gather six month and three month intervals at the same time."
+    if six_months == 1:
         mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey).first_six_months_oa()
-    elif oa_stage == 2:
+    elif six_months == 2:
         mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey).second_six_months_oa()
+    elif three_months == 1:
+        mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey).first_three_months_oa()
+    elif three_months == 2:
+        mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey).second_three_months_oa()
+    elif three_months == 3:
+        mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey).third_three_months_oa()
+    elif three_months == 4:
+        mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey).fourth_three_months_oa()
     else:
         mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey)
     return mhms.aggregate(Avg(field))[field+'__avg']
 
-def gather_monkey_percentiles(monkeys, oa_stage=0):
+def gather_monkey_percentiles_by_six_months(monkeys, six_months=0):
     """
-    oa_stage == (0,1,2)
+    six_months == (0,1,2)
         0 == all OA
         1 == first 6 months of OA
         2 == second 6 months of OA
@@ -224,8 +251,57 @@ def gather_monkey_percentiles(monkeys, oa_stage=0):
         for field in fields:
             field_callable = get_callable(field)
             x_values.append(x)
-            y_values.append(get_percentile_callable(monkey, monkeys, field_callable, field, oa_stage=oa_stage))
+            y_values.append(get_percentile_callable(monkey, monkeys, field_callable, field, six_months=six_months))
             x += 1
         data[monkey] = numpy.array(zip(x_values, y_values))
     return data, labels
+
+def gather_monkey_percentiles_by_three_months(monkeys, field, three_months=0):
+    """
+    three_monhs == (0,1,2,3,4)
+        0 == all OA
+        1 == first 3 months of OA
+        2 == second 3 months of OA
+        3 == third 3 months of OA
+        4 == fourth 3 months of OA
+    """
+    def get_callable(field):
+        if 'mtd' in field:
+            return get_mean_MTD_oa_field
+        if 'bec' in field:
+            return get_mean_BEC_oa_field
+        if 'mhm' in field:
+            return get_mean_MHM_oa_field
+
+    data = dict()
+    for monkey in monkeys:
+        field_callable = get_callable(field)
+        percentile_of_monkey_within_monkeys = get_percentile_callable(monkey, monkeys, field_callable, field, three_months=three_months)
+        data[monkey] = percentile_of_monkey_within_monkeys
+    return data
+
+
+def gather_monkey_three_month_average_by_field(monkeys, field, three_months=0):
+    """
+    three_monhs == (0,1,2,3,4)
+        0 == all OA
+        1 == first 3 months of OA
+        2 == second 3 months of OA
+        3 == third 3 months of OA
+        4 == fourth 3 months of OA
+    """
+    def get_callable(field):
+        if 'mtd' in field:
+            return get_mean_MTD_oa_field
+        if 'bec' in field:
+            return get_mean_BEC_oa_field
+        if 'mhm' in field:
+            return get_mean_MHM_oa_field
+
+    data = dict()
+    for monkey in monkeys:
+        field_callable = get_callable(field)
+        value = field_callable(monkey, field, three_months=three_months)
+        data[monkey] = value
+    return data
 
