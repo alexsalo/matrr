@@ -21,10 +21,9 @@ from matplotlib.ticker import MaxNLocator, NullLocator
 import networkx as nx
 
 from matrr.models import ExperimentEvent, ExperimentBout, ExperimentEventType, CohortBout, Cohort, Monkey, MonkeyBEC, MonkeyToDrinkingExperiment
-from utils import apriori
+from utils import apriori, gadgets
 from matrr.plotting import monkey_plots, plot_tools
 from matrr.plotting import *
-from utils.gadgets import gather_monkey_percentiles_by_six_months
 
 
 doc_snippet = \
@@ -2575,14 +2574,16 @@ def rhesus_pellet_sessiontime_percent_distribution():
     return fig
 
 
-def rhesus_etoh_bec_scatter(HD_monkey=10065, LD_monkey=10052, fig_size=HISTOGRAM_FIG_SIZE):
+def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(1, 2)
     gs.update(left=0.06, right=0.98, wspace=.12, hspace=0, top=.92)
     left_subplot = fig.add_subplot(gs[0])
     right_subplot = fig.add_subplot(gs[1])
 
-    monkey_ids = [LD_monkey, HD_monkey]
+    monkey_ids = [monkey_two, monkey_one]
+    if monkey_three:
+        monkey_ids.append(monkey_three)
 
     marker_size = 90
     xmax_bec = 0
@@ -2608,6 +2609,7 @@ def rhesus_etoh_bec_scatter(HD_monkey=10065, LD_monkey=10052, fig_size=HISTOGRAM
     legend_size = 20
     left_subplot.set_ylim(ymin=0)
     left_subplot.set_xlim(xmin=0, xmax=xmax_mtd)
+    left_subplot.axhspan(3.95, 4.05, color='black', alpha=.4, zorder=-100)
     right_subplot.set_ylim(ymin=0)
     right_subplot.set_xlim(xmin=0, xmax=xmax_bec)
     right_subplot.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
@@ -2634,7 +2636,7 @@ def rhesus_parallel_plot():
     main_subplot = fig.add_subplot(gs[0])
 
     monkeys = ALL_RHESUS_DRINKERS
-    data, labels  = gather_monkey_percentiles_by_six_months(monkeys)
+    data, labels  = gadgets.gather_monkey_percentiles_by_six_months(monkeys)
     for monkey in data.iterkeys():
         main_subplot.plot(data[monkey][:,0], data[monkey][:,1], c=RHESUS_MONKEY_COLORS[monkey], linewidth=5, alpha=.5)
 
@@ -2647,7 +2649,7 @@ def category_parallel_plot(categories):
     main_subplot = fig.add_subplot(gs[0])
     main_subplot.set_title("Percentile Distribution of Metrics, by Drinking Category")
 
-    data, labels = gather_monkey_percentiles_by_six_months(ALL_RHESUS_DRINKERS)
+    data, labels = gadgets.gather_monkey_percentiles_by_six_months(ALL_RHESUS_DRINKERS)
     category_values = defaultdict(lambda: defaultdict(lambda: list()))
     for monkey in data.iterkeys():
         key = RHESUS_MONKEY_CATEGORY[monkey]
@@ -2691,7 +2693,7 @@ def category_parallel_plot_fillbetween(categories, fig_size=(25, 15), tick_size=
     main_subplot = fig.add_subplot(gs[0])
     main_subplot.set_title("Percentile Distribution of Metrics, by Drinking Category", size=title_size)
 
-    data, labels = gather_monkey_percentiles_by_six_months(ALL_RHESUS_DRINKERS)
+    data, labels = gadgets.gather_monkey_percentiles_by_six_months(ALL_RHESUS_DRINKERS)
     category_values = defaultdict(lambda: defaultdict(lambda: list()))
     for monkey in data.iterkeys():
         key = RHESUS_MONKEY_CATEGORY[monkey]
@@ -2756,7 +2758,7 @@ def category_parallel_plot_split_oa(categories, fig_size=(25, 15), tick_size=22,
         subplot_label = "%s six months of Open Access" % label_prefix
         legend = subplot.legend((), title=subplot_label, loc=1, frameon=False)
         pyplot.setp(legend.get_title(),fontsize=tick_size)
-        data, labels = gather_monkey_percentiles_by_six_months(ALL_RHESUS_DRINKERS, six_months=six_months)
+        data, labels = gadgets.gather_monkey_percentiles_by_six_months(ALL_RHESUS_DRINKERS, six_months=six_months)
         category_values = defaultdict(lambda: defaultdict(lambda: list()))
         for monkey in data.iterkeys():
             key = RHESUS_MONKEY_CATEGORY[monkey]
@@ -3470,7 +3472,7 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15), dpi=800):
     names.append('rhesus_etoh_gkg_stackedbargraph')
     figures.append(rhesus_hourly_gkg_boxplot_by_category(fig_size=fig_size))
     names.append('rhesus_hourly_gkg_boxplot_by_category')
-    figures.append(rhesus_etoh_bec_scatter(LD_monkey=10052, HD_monkey=10049, fig_size=fig_size))
+    figures.append(rhesus_etoh_bec_scatter(monkey_two=10052, monkey_one=10049, fig_size=fig_size))
     names.append('rhesus_etoh_bec_scatter-10052-10049')
     figures.append(monkey_plots.monkey_etoh_bouts_vol(10052)[0])
     names.append('monkey_etoh_bouts_vol-10052')
