@@ -7,7 +7,7 @@ import Image
 import traceback
 import numpy
 import sys
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from string import lower, replace
 
 from django.core.files.base import File
@@ -244,7 +244,7 @@ class OASplitQueryset(models.query.QuerySet):
     dex_type_lookup = ''
     dex_date_lookup = ''
 
-    def __split_oa(self):
+    def __split_oa_in_half(self):
         # First, make sure all the MTDs we're working with are OA MTDs
         oa_mtds = self.filter(**{self.dex_type_lookup: "Open Access"}) # Even though I wrote it, I'm not sure how much I trust DexType
         # Collect the cohorts we need to sort thru
@@ -258,17 +258,54 @@ class OASplitQueryset(models.query.QuerySet):
         return cohort_events, oa_mtds, return_queryset
 
     def first_six_months_oa(self):
-        cohort_events, oa_mtds, return_queryset = self.__split_oa()
+        cohort_events, oa_mtds, return_queryset = self.__split_oa_in_half()
         for cev in cohort_events:
             # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
-            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__lte" :cev['cev_date']})
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__lte": cev['cev_date']})
         return return_queryset
 
     def second_six_months_oa(self):
-        cohort_events, oa_mtds, return_queryset = self.__split_oa()
+        cohort_events, oa_mtds, return_queryset = self.__split_oa_in_half()
         for cev in cohort_events:
             # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
-            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__gt" :cev['cev_date']})
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__gt": cev['cev_date']})
+        return return_queryset
+
+    def first_three_months_oa(self):
+        cohort_events, oa_mtds, return_queryset = self.__split_oa_in_half()
+        for cev in cohort_events:
+            # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
+            six_mo_end = cev['cev_date']
+            three_mo_end = six_mo_end - timedelta(days=90)
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__lte": three_mo_end})
+        return return_queryset
+
+    def second_three_months_oa(self):
+        cohort_events, oa_mtds, return_queryset = self.__split_oa_in_half()
+        for cev in cohort_events:
+            # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
+            six_mo_end = cev['cev_date']
+            three_mo_end = six_mo_end - timedelta(days=90)
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__lte": six_mo_end}).filter(**{self.dex_date_lookup+"__gt": three_mo_end})
+        return return_queryset
+
+    def third_three_months_oa(self):
+        cohort_events, oa_mtds, return_queryset = self.__split_oa_in_half()
+        for cev in cohort_events:
+            # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
+            six_mo_end = cev['cev_date']
+            nine_mo_end = six_mo_end + timedelta(days=90)
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__lte": nine_mo_end}).filter(**{self.dex_date_lookup+"__gt": six_mo_end})
+        return return_queryset
+
+    def fourth_three_months_oa(self):
+        cohort_events, oa_mtds, return_queryset = self.__split_oa_in_half()
+        for cev in cohort_events:
+            # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
+            six_mo_end = cev['cev_date']
+            nine_mo_end = six_mo_end + timedelta(days=90)
+            twelve_mo_end = nine_mo_end + timedelta(days=90)
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__lte": twelve_mo_end}).filter(**{self.dex_date_lookup+"__gt": nine_mo_end})
         return return_queryset
 
 
