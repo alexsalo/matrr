@@ -1524,8 +1524,8 @@ def rhesus_oa_pelletvolume_perday_perkg():
     inset_plot = fig.add_axes([0.6, 0.7, 0.37, 0.23])
     inset_plot, handles, labels = _rhesus_category_scatterplot(inset_plot, _oa_pelletwater_perday_perkg)
     inset_plot.set_title("H20 Intake vs pellets")
-    inset_plot.set_ylabel("Pellet (count)/Weight (kg)/Monkey")
-    inset_plot.set_xlabel("Water (mL.)/Weight (kg)/Monkey")
+    inset_plot.set_ylabel("Pellet(count)/Weight(kg)/Monkey")
+    inset_plot.set_xlabel("Water (mL.) / Weight(kg) / Monkey")
     ## Because the legend is almost the same as the main subplot's legend, we dont need to show most of the keys
     ## but we do want to show the regression fit, and large enough to read without hiding the scatterplot
     for index, label in enumerate(labels):
