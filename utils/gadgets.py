@@ -322,9 +322,8 @@ def identify_drinking_category(mtd_queryset):
     pct_over_three = days_over_three / total_days
     pct_over_four = days_over_four / total_days
 
-#    cutoffs = {2:.5, 3:.3, 4:.1}
-    is_BD = pct_over_two >= .50
-    is_HD = pct_over_three >= .30
+    is_BD = pct_over_two >= .55
+    is_HD = pct_over_three >= .25
     is_VHD = pct_over_four >= .1
 
     if is_VHD:
