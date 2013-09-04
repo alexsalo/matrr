@@ -1236,7 +1236,7 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=HISTOGRAM_FIG_SIZE):
     gs = gridspec.GridSpec(1, 3)
     gs.update(left=0.515, right=0.95, top=.94, wspace=.05, hspace=0)
     subplot = None
-    cutoffs = {2:.5, 3:.3, 4:.1}
+    cutoffs = {2:.55, 3:.25, 4:.1}
     for limit in range(2, 5, 1):
         gs_index = limit - 2
         subplot = fig.add_subplot(gs[:,gs_index:gs_index+1], sharex=subplot, sharey=subplot)
