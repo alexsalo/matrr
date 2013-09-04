@@ -828,7 +828,7 @@ def _cohort_etoh_cumsum_nofood(cohort, subplot, minutes_excluded=5):
 
     subplot.set_title("Induction Cumulative EtOH Intake for %s, excluding drinks less than %d minutes after food" % (
     str(cohort), minutes_excluded))
-    subplot.set_ylabel("Volume EtOH / Monkey Weight, ml/kg")
+    subplot.set_ylabel("Volume EtOH / Monkey Weight, mL./kg")
 
     cmap = get_cmap('jet')
     mky_colors = dict()
@@ -855,7 +855,7 @@ def _cohort_etoh_max_bout_cumsum(cohort, subplot):
     mkys = Monkey.objects.Drinkers().filter(cohort=cohort).values_list('pk', flat=True)
 
     subplot.set_title("Induction St. 3 Cumulative Max Bout EtOH Intake for %s" % str(cohort))
-    subplot.set_ylabel("Volume EtOH / Monkey Weight, ml/kg")
+    subplot.set_ylabel("Volume EtOH / Monkey Weight, mL./kg")
 
     mky_colors = dict()
     mky_ymax = dict()
@@ -1400,7 +1400,7 @@ def rhesus_oa_discrete_minute_volumes(minutes, monkey_category, distinct_monkeys
                                      vs_kwargs={'distinct_monkeys': distinct_monkeys})
     subplot.set_xlabel("Minutes since last pellet")
     subplot.set_title("Average intake by minute after pellet")
-    subplot.set_ylabel("Average volume, ml per monkey")
+    subplot.set_ylabel("Average volume, mL. per monkey")
     return fig
 
 
@@ -1443,7 +1443,7 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category, distinct_
         subplot.set_xlabel("Minutes since last pellet")
         subplot.set_title("Average intake by minute after pellet")
         if y_label:
-            subplot.set_ylabel("Average volume, ml per monkey")
+            subplot.set_ylabel("Average volume, mL. per monkey")
             y_label = False
     return fig
 
@@ -1517,15 +1517,15 @@ def rhesus_oa_pelletvolume_perday_perkg():
     subplot, handles, labels = _rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
     subplot.legend(handles, labels, scatterpoints=1, loc='lower left')
     subplot.set_title("EtOH Intake vs pellets")
-    subplot.set_ylabel("Average pellet / Average weight, per monkey")
-    subplot.set_xlabel("Average volume / Average weight, per monkey")
+    subplot.set_ylabel("Average pellet (count) / Average weight (kg), per monkey")
+    subplot.set_xlabel("Average volume (mL.) / Average weight (kg), per monkey")
 
     # inset scatterplot, pellet vs water
     inset_plot = fig.add_axes([0.6, 0.7, 0.37, 0.23])
     inset_plot, handles, labels = _rhesus_category_scatterplot(inset_plot, _oa_pelletwater_perday_perkg)
     inset_plot.set_title("H20 Intake vs pellets")
-    inset_plot.set_ylabel("Pellets/Weight/Monkey")
-    inset_plot.set_xlabel("Water/Weight/Monkey")
+    inset_plot.set_ylabel("Pellets (count)/Weight (kg)/Monkey")
+    inset_plot.set_xlabel("Water (mL.)/Weight (kg)/Monkey")
     ## Because the legend is almost the same as the main subplot's legend, we dont need to show most of the keys
     ## but we do want to show the regression fit, and large enough to read without hiding the scatterplot
     for index, label in enumerate(labels):
@@ -1656,7 +1656,7 @@ def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one
                                                         _oa_eev_volume_summation)
     subplot.set_xlabel("Minutes since last pellet")
     subplot.set_title("Average intake by minute after pellet")
-    subplot.set_ylabel("Average volume, ml per monkey")
+    subplot.set_ylabel("Average volume, mL. per monkey")
     return fig
 
 
@@ -2128,7 +2128,7 @@ def _rhesus_etoh_max_bout_cumsum(subplot):
     mkys = Monkey.objects.filter(pk__in=ALL_RHESUS_DRINKERS)
 
     subplot.set_title("Induction St. 3 Cumulative Max Bout EtOH Intake for cohorts 4/5/7a/7b")
-    subplot.set_ylabel("Volume EtOH / Monkey Weight, ml/kg")
+    subplot.set_ylabel("Volume EtOH / Monkey Weight, mL./kg")
 
     mky_ymax = dict()
     for idx, m in enumerate(mkys):
@@ -3285,7 +3285,7 @@ def dump_RAN_json(cohort_pk=0, cohorts_pks=None):
 
 def _kathy_correlation_bec_max_bout_general(subplot, becs, color='black', subject_title=''):
     title = "Correlation between Max Bout Volume and BEC%s" % subject_title
-    x_label = "Max Bout Volume (ml), before BEC sample"
+    x_label = "Max Bout Volume (mL.), before BEC sample"
     y_label = "BEC (mg pct)"
     subplot.set_title(title)
     subplot.set_xlabel(x_label)
