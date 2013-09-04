@@ -16,7 +16,7 @@ import sys
 
 from django.db.models import Sum, Avg, Min, Max
 from matplotlib.cm import get_cmap
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, Circle
 from matplotlib.ticker import MaxNLocator, NullLocator
 import networkx as nx
 
@@ -2883,11 +2883,92 @@ def rhesus_category_parallel_classification_stability(categories, y_value_callab
         pyplot.setp(legend.get_title(),fontsize=tick_size)
     etoh_subplot.set_xticks([])
     bec_subplot.set_xticks(plot_x)
-    x_labels = ["First", "Second", "Third", "Fourth"]
-    x_labels = ["%s 3 months" % x for x in x_labels]
+    ordinals = ["First", "Second", "Third", "Fourth"]
+    x_labels = ["%s 3 months" % x for x in ordinals]
     bec_subplot.set_xticklabels(x_labels, size=tick_size)
     return fig
 
+def rhesus_category_parallel_classification_stability_popcount(categories, y_value_callable, y_label, fig_size=(25, 15), tick_size=22, title_size=30,  label_size=26):
+    fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(6, 1)
+    gs.update(left=0.05, right=0.94, top=.94, bottom=.06, hspace=.4)
+    etoh_subplot = fig.add_subplot(gs[0:4,:])
+    pop_subplot = fig.add_subplot(gs[4:,:], sharex=etoh_subplot)
+
+    fig.suptitle("Stability of categorical drinking classifications over time. (Ethanol Consumption and Population Count)",  size=title_size)
+    fig.text(0.01,0.74, y_label, fontdict={'fontsize':label_size}, rotation=90)
+
+    field_labels = ["Avg Daily Etoh (g/kg)", "Population Change", ]
+
+    plot_x = range(1,5,1)
+    etoh_category_values = defaultdict(lambda: defaultdict(lambda: list()))
+    for three_months in plot_x:
+        etoh_data = y_value_callable(ALL_RHESUS_DRINKERS, field='mtd_etoh_g_kg',  three_months=three_months)
+        for monkey in etoh_data.iterkeys():
+            key = RHESUS_MONKEY_CATEGORY[monkey]
+            etoh_category_values[key][three_months].append(etoh_data[monkey])
+
+    base_alpha = .35
+    for key in categories:
+        category_dict = etoh_category_values[key]
+        plot_y = list()
+        std_error = list()
+        for x in plot_x:
+            _yvalues = category_dict[x]
+            _avg = numpy.average(_yvalues)
+            _err = stats.sem(_yvalues)
+            plot_y.append(_avg)
+            std_error.append(_err)
+        plot_y = numpy.array(plot_y)
+        std_error = numpy.array(std_error)
+
+        if key in ['HD', 'BD']:
+            alpha = .5 * base_alpha
+        else:
+            alpha = base_alpha
+        etoh_subplot.plot(plot_x, plot_y, c=RHESUS_COLORS[key], linewidth=5)
+        etoh_subplot.scatter(plot_x, plot_y, c=RHESUS_COLORS[key], edgecolor=RHESUS_COLORS[key], s=150)
+        etoh_subplot.fill_between(plot_x, plot_y-std_error, plot_y+std_error, alpha=alpha, edgecolor=RHESUS_COLORS[key], facecolor=RHESUS_COLORS[key])
+    legend = etoh_subplot.legend((), title=field_labels[0], loc=1, frameon=False)
+    pyplot.setp(legend.get_title(),fontsize=tick_size)
+
+    ###############
+    ordinals = ["First", "Second", "Third", "Fourth"]
+    x_base = numpy.array(range(1,5,1))
+    category_populations = dict()
+    for key in DRINKING_CATEGORIES:
+        category_populations[key] = len(RHESUS_DRINKERS_DISTINCT[key])
+    for ordinal, x_start in zip(ordinals, x_base - .2):
+        x_val = x_start
+        quarter_population = list(gadgets.get_category_population_by_quarter(ordinal, monkeys=ALL_RHESUS_DRINKERS))
+        x_values = list()
+        y_values = list()
+        colors = list()
+        for key in DRINKING_CATEGORIES:
+            x_values.append(x_val)
+            y_value = quarter_population.count(key) - category_populations[key]
+            y_values.append(y_value)
+            colors.append(RHESUS_COLORS[key])
+            while y_value > 0:
+                x_values.append(x_val)
+                y_value -= 1
+                y_values.append(y_value)
+                colors.append(RHESUS_COLORS[key])
+            x_val += .1
+        pop_subplot.scatter(x_values, y_values, c=colors, edgecolor=colors, s=175)
+    pop_subplot.set_title("Population Difference from 12month Study", size=title_size)
+
+    for index, subplot in enumerate([etoh_subplot, pop_subplot]):
+        subplot.tick_params(axis='both', which='both', labelsize=tick_size)
+        subplot.set_xlim(xmin=.75, xmax=len(plot_x)+.2)
+        subplot.yaxis.set_major_locator(MaxNLocator(prune='lower'))
+#    etoh_subplot.set_ylim(ymin=0)
+    etoh_subplot.grid(True, which='major', axis='both')
+    etoh_subplot.get_xaxis().set_visible(False)
+    pop_subplot.set_xticks(plot_x)
+    x_labels = ["%s 3 months" % x for x in ordinals]
+    pop_subplot.set_xticklabels(x_labels, size=tick_size)
+    return fig
 
 
 
