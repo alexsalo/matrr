@@ -3529,7 +3529,7 @@ def create_kathy_graphs():
         fig.savefig(filename, dpi=DPI)
 
 
-def create_manuscript_graphs(output_path='', fig_size=(25, 15), dpi=800):
+def create_manuscript_graphs(output_path='', svg=True, png=True, fig_size=(25, 15), dpi=800):
     figures = list()
     names = list()
     all_categories = DRINKING_CATEGORIES
@@ -3561,9 +3561,13 @@ def create_manuscript_graphs(output_path='', fig_size=(25, 15), dpi=800):
     names.append('monkey_etoh_bouts_vol-10049')
     figures.append(rhesus_oa_pelletvolume_perday_perkg())
     names.append('rhesus_oa_pelletvolume_perday_perkg')
-    if output_path:
+    if svg or png:
         for FigName in zip(figures, names):
             fig, name = FigName
-            filename = output_path + '%s.svg' % name
-            fig.savefig(filename, format='svg',dpi=dpi)
+            if svg:
+                filename = output_path + '%s.svg' % name
+                fig.savefig(filename, format='svg',dpi=dpi)
+            if png:
+                filename = output_path + '%s.png' % name
+                fig.savefig(filename, format='png',dpi=dpi)
 
