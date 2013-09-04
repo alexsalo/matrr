@@ -1,4 +1,5 @@
 import numpy, pylab
+from django.db.models import Max, Min
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator
 from scipy import stats
@@ -308,7 +309,11 @@ def gather_monkey_three_month_average_by_field(monkeys, field, three_months=0):
 
 
 def identify_drinking_category(mtd_queryset):
-    total_days = float(mtd_queryset.count())
+    max_date = mtd_queryset.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
+    min_date = mtd_queryset.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
+    total_days = float((max_date-min_date).days)
+#    _count = mtds.filter(mtd_etoh_g_kg__gt=limit).count()
+#    total_days = float(mtd_queryset.count())
     days_over_two = mtd_queryset.filter(mtd_etoh_g_kg__gt=2).count()
     days_over_three = mtd_queryset.filter(mtd_etoh_g_kg__gt=3).count()
     days_over_four = mtd_queryset.filter(mtd_etoh_g_kg__gt=4).count()
@@ -317,8 +322,9 @@ def identify_drinking_category(mtd_queryset):
     pct_over_three = days_over_three / total_days
     pct_over_four = days_over_four / total_days
 
-    is_BD = pct_over_two >= .60
-    is_HD = pct_over_three >= .20
+#    cutoffs = {2:.5, 3:.3, 4:.1}
+    is_BD = pct_over_two >= .50
+    is_HD = pct_over_three >= .30
     is_VHD = pct_over_four >= .1
 
     if is_VHD:
