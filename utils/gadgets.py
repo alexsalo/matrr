@@ -3,6 +3,7 @@ from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator
 from scipy import stats
 from matrr.models import MonkeyToDrinkingExperiment, Avg, MonkeyBEC, MonkeyHormone
+from matrr import plotting
 
 
 def convex_hull(points, graphic=False, smidgen=0.0075):
@@ -305,3 +306,40 @@ def gather_monkey_three_month_average_by_field(monkeys, field, three_months=0):
         data[monkey] = value
     return data
 
+
+def identify_drinking_category(mtd_queryset):
+    total_days = float(mtd_queryset.count())
+    days_over_two = mtd_queryset.filter(mtd_etoh_g_kg__gt=2).count()
+    days_over_three = mtd_queryset.filter(mtd_etoh_g_kg__gt=3).count()
+    days_over_four = mtd_queryset.filter(mtd_etoh_g_kg__gt=4).count()
+
+    pct_over_two = days_over_two / total_days
+    pct_over_three = days_over_three / total_days
+    pct_over_four = days_over_four / total_days
+
+    is_BD = pct_over_two >= .60
+    is_HD = pct_over_three >= .20
+    is_VHD = pct_over_four >= .1
+
+    if is_VHD:
+        return 'VHD'
+    elif is_HD:
+        return 'HD'
+    elif is_BD:
+        return 'BD'
+    return 'LD'
+    
+def get_category_population_by_quarter(quarter, monkeys=plotting.ALL_RHESUS_DRINKERS):
+    quarter = str(quarter).lower()
+    if quarter == 'first' or quarter == '1':
+        mtd_queryset = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys).first_three_months_oa()
+    elif quarter == 'second' or quarter == '2':
+        mtd_queryset = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys).second_three_months_oa()
+    elif quarter == 'third' or quarter == '3':
+        mtd_queryset = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys).third_three_months_oa()
+    elif quarter == 'fourth' or quarter == '4':
+        mtd_queryset = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys).fourth_three_months_oa()
+    else:
+        raise Exception("Quarter can only be ('first', 'second', 'third', 'fourth') or (1,2,3,4)")
+    category_results = [identify_drinking_category(mtd_queryset.filter(monkey=monkey)) for monkey in monkeys]
+    return category_results
