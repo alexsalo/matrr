@@ -2815,7 +2815,7 @@ def rhesus_category_parallel_classification_stability(categories, y_value_callab
     plot_x = range(1,5,1)
     etoh_category_values = defaultdict(lambda: defaultdict(lambda: list()))
     for three_months in plot_x:
-        etoh_data = y_value_callable(ALL_RHESUS_DRINKERS, field=field_names[0],  three_months=three_months)
+        etoh_data = y_value_callable(ALL_RHESUS_DRINKERS, fieldname=field_names[0],  three_months=three_months)
         for monkey in etoh_data.iterkeys():
             key = RHESUS_MONKEY_CATEGORY[monkey]
             etoh_category_values[key][three_months].append(etoh_data[monkey])
@@ -2845,7 +2845,7 @@ def rhesus_category_parallel_classification_stability(categories, y_value_callab
     plot_x = range(1,5,1)
     bec_category_values = defaultdict(lambda: defaultdict(lambda: list()))
     for three_months in plot_x:
-        bec_data = y_value_callable(ALL_RHESUS_DRINKERS, field=field_names[1],  three_months=three_months)
+        bec_data = y_value_callable(ALL_RHESUS_DRINKERS, fieldname=field_names[1],  three_months=three_months)
         for monkey in bec_data.iterkeys():
             key = RHESUS_MONKEY_CATEGORY[monkey]
             bec_category_values[key][three_months].append(bec_data[monkey])
