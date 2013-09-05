@@ -1236,7 +1236,7 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=HISTOGRAM_FIG_SIZE):
     gs = gridspec.GridSpec(1, 3)
     gs.update(left=0.515, right=0.95, top=.94, wspace=.05, hspace=0)
     subplot = None
-    cutoffs = {2:.55, 3:.25, 4:.1}
+    cutoffs = {2:.55, 3:.2, 4:.1}
     for limit in range(2, 5, 1):
         gs_index = limit - 2
         subplot = fig.add_subplot(gs[:,gs_index:gs_index+1], sharex=subplot, sharey=subplot)
@@ -3535,9 +3535,9 @@ def create_manuscript_graphs(output_path='', svg=True, png=True, fig_size=(25, 1
     all_categories = DRINKING_CATEGORIES
     red_vs_blue = ["VHD", "LD"]
 
-    figures.append(rhesus_category_parallel_classification_stability(all_categories, gadgets.gather_monkey_percentiles_by_three_months, "Average Percentile of Category"))
+    figures.append(rhesus_category_parallel_classification_stability(all_categories, gadgets.gather_three_month_monkey_percentiles_by_fieldname, "Average Percentile of Category"))
     names.append("rhesus_category_parallel_classification_stability-percentile")
-    figures.append(rhesus_category_parallel_classification_stability(all_categories, gadgets.gather_monkey_three_month_average_by_field, "Average Value of Category"))
+    figures.append(rhesus_category_parallel_classification_stability(all_categories, gadgets.gather_three_month_monkey_average_by_fieldname, "Average Value of Category"))
     names.append("rhesus_category_parallel_classification_stability-raw")
     figures.append(category_parallel_plot_fillbetween(all_categories, fig_size=fig_size))
     names.append('category_parallel_plot_fillbetween-all')
