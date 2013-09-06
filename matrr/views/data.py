@@ -1,5 +1,6 @@
 import os
 from django.contrib import messages
+from django.core.exceptions import FieldError
 from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.http import Http404
@@ -7,7 +8,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from matrr.forms import ExperimentRangeForm, DataSelectForm, CohortSelectForm, GraphToolsMonkeySelectForm
-from matrr.models import MonkeyToDrinkingExperiment, MonkeyBEC, MonkeyHormone, MonkeyProtein, Cohort, Monkey, DataFile
+from matrr.models import MonkeyToDrinkingExperiment, MonkeyBEC, MonkeyHormone, MonkeyProtein, MonkeyException, Cohort, Monkey, DataFile
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.can_download_data'), login_url='/denied/')
@@ -77,12 +78,19 @@ def data_cohort_dates(request, data_type='', coh_id=0):
                 from matrr.gizmo import dump_queryset_to_csv
                 temp_path = '/tmp/%s.csv' % str(datafile)
                 # dump method will filter dates and dex_types appropriately by model.
-                dump_queryset_to_csv(unfiltered_data, temp_path, dex_type=dex_type, from_date=from_date, to_date=to_date)
+                success = True
+                try:
+                    dump_queryset_to_csv(unfiltered_data, temp_path, dex_type=dex_type, from_date=from_date, to_date=to_date)
+                except FieldError:
+                    success = False
                 f = open(temp_path, 'r')
                 datafile.dat_data_file = File(f)
                 datafile.save()
                 os.remove(temp_path)
-                messages.info(request, "Your data file has been saved and is available for download on your account page.")
+                if success:
+                    messages.info(request, "Your data file has been saved and is available for download on your account page.")
+                else:
+                    messages.warning(request, "Your data file was NOT saved.  This is usually avoided by choosing 'Custom Dates' and leaving the date fields blank.")
             else:
                 messages.warning(request, "You must have a valid MTA on record to download data.  MTA information can be updated on your account page.")
     monkey_select_form = GraphToolsMonkeySelectForm(monkey_queryset)

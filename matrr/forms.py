@@ -937,7 +937,7 @@ class GraphToolsMonkeySelectForm(forms.Form):
 
 
 class DataSelectForm(forms.Form):
-    DATA_CHOICES = (("MonkeyToDrinkingExperiment", "Daily Drinking Summary"), ("MonkeyBEC", "BEC Data"), ("MonkeyHormone", "Hormone Data"), ("MonkeyProtein", "Protein Data"))
+    DATA_CHOICES = (("MonkeyToDrinkingExperiment", "Daily Drinking Summary"), ("MonkeyBEC", "BEC Data"), ("MonkeyHormone", "Hormone Data"), ("MonkeyProtein", "Protein Data"), ("MonkeyException", "Excluded Dates"))
     data_type = forms.ChoiceField(choices=DATA_CHOICES, label="Data Type", help_text="Choose the kind of data you'd like to download.")
 
 
