@@ -45,7 +45,7 @@ def log_except_hook(*exc_info):
 if GLEEK:
 	sys.excepthook = log_except_hook
 
-
+CSRF_FAILURE_VIEW = 'matrr.views.basic.matrr_handler403'
 
 
 
