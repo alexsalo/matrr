@@ -18,6 +18,9 @@ def matrr_handler500(request):
     from django.core.context_processors import static
     return render_to_response('500.html', static(request), context_instance=RequestContext(request))
 
+def matrr_handler403(request, reason=''):
+    from django.core.context_processors import static
+    return render_to_response('403.html', static(request), context_instance=RequestContext(request))
 
 def index_view(request):
     index_context = {'event_list': Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name')[:5],
