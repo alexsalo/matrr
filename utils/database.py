@@ -2232,8 +2232,11 @@ def populate_mky_species():
 def load_mbb_images(image_dir):
     def create_mbb(image_path):
         filename = os.path.basename(image_path)
-        regex_match = re.match('(?P<datestring>[\d-]+).(?P<monkey_identifier>\d+)(?P<extra_filename>.+)(?P<file_extension>\..+)' , filename)
-        match_dict = regex_match.groupdict()
+        try:
+            match_dict = re.match('(?P<datestring>[\d-]+)\.(?P<monkey_identifier>\d{4,5})(?P<extra_filename>.{0,})(?P<file_extension>\..+)' , filename).groupdict()
+        except AttributeError: # Means the regex didn't match, trying to call None.groupdict()
+            print "This filename does not match the expected format:  %s" % filename
+            return
         monkey = match_dict['monkey_identifier']
         ##  Verify monkey_identifier is actually a monkey pk/real_id
         if not isinstance(monkey, Monkey):
