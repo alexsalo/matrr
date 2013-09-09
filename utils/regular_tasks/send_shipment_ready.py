@@ -24,7 +24,5 @@ def shipments_ready():
 
 send_email, assay_ready = shipments_ready()
 if settings.PRODUCTION and send_email:
-	send_shipment_ready_notification()
-	if assay_ready:
-		send_shipment_ready_notification(assay_ready=assay_ready)
+    send_shipment_ready_notification(assay_ready=assay_ready)
 

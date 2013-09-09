@@ -37,8 +37,7 @@ def order_detail(request, req_request_id, edit=False):
                 messages.success(request, "Purchase Order number has been saved.")
                 if not _prev_shippable and req_request.can_be_shipped():  # couldn't be shipped, but now can
                     from matrr.emails import send_shipment_ready_notification
-
-                    send_shipment_ready_notification(req_request)
+                    send_shipment_ready_notification()
             else:
                 messages.error(request,
                                "Purchase Order form invalid, please try again.  Please notify a MATRR admin if this message is erroneous.")
