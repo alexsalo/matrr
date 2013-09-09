@@ -17,7 +17,7 @@
                 {% for mig in cohort.brains %}
                     {% if forloop.counter0|divisibleby:6 %}</tr><tr>{% endif %}
                     <td width="100">
-                        <a href="{% url inventory-brain-monkey mig.monkey.pk %}">
+                        <a href="{% url inventory-brain-monkey mig.pk %}">
                             {{ mig.monkey.pk }}
                             <img src="{{ mig.image.url }}" width='100'>
                         </a>

@@ -1,85 +1,281 @@
 <head>
-	<meta http-equiv="X-UA-Compatible" content="chrome=1">
-	<link rel="stylesheet" type="text/css" href="/static/css/layout.css"/>
-	<link rel="stylesheet" type="text/css" href="/static/css/style.css"/>
-	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
-	<script type="text/javascript" src="/static/js/jquery.colorbox.js"></script>
-	<script type="text/javascript" src="/static/js/plot_gallery.js"></script>
-	<script type="text/javascript" src="/static/js/toggle-visibility.js"></script>
-	<link rel="stylesheet" type="text/css" href="/static/css/colorbox.css"/>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="/static/css/layout.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css"/>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.colorbox.js"></script>
+    <script type="text/javascript" src="/static/js/plot_gallery.js"></script>
+    <script type="text/javascript" src="/static/js/toggle-visibility.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/colorbox.css"/>
 </head>
 
 <div style='width: 1120px'>
-	<div class='left image_container_nomargin' style="margin-right: 10px"><img src="{{ image.image.url }}"></div>
-	<div class='left'>
-		<a onclick="javascript:toggle_visibility('block2');">Tissue Labels a</a>
-		<table id=block2 class=hidden>
-			<tr><th>Label</th><th>Tissue</th>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">6</td><td>area 6 (premotor cortex)
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">8</td><td>area 8 (frontal eye fields)
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">9</td><td>area 9</td>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">12</td><td>area 12</td>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">24</td><td>area 24 (anterior cingulate cortex)</td>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">AAA</td><td>anterior amygdaloid area
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">AAB</td><td>Accessory basal amygdala
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">AB</td><td>Basal amygdala
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">CC</td><td>corpus callosum</td>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">CD</td><td>caudate nucleus</td>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">cgs</td><td>Cingulate sulcus</td>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">cl</td><td>claustrum
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">FW</td><td>Frontal white</td>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">prs</td><td>Principal sulcus</td>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">TL </td><td>temporal lobe</td>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">IC</td><td>Internal capsule
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">Ins</td><td>Insula
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">LV</td><td>Lateral ventricle
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">NAc</td><td>Nucleus accumbens
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">OC</td><td>Optic chiasm
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">Put</td><td>Putamen
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">SeN</td><td>Septal nucleus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">AC</td><td>anterior commissure
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">AMG</td><td>amygdala
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">bnst</td><td>bed nucleus of stria terminalis
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">ec</td><td>entorhinal cortex
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">HPC</td><td>hippocampus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">VP</td><td>ventral pallidum
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">4</td><td>area 4 (motor cortex)
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">Dic</td><td>dysgranular insular cortex
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">GPe</td><td>globus pallidus external segment
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">GPi</td><td>globus pallidus internal segment
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">HPC</td><td>hippocampus
-		</table>
-		<hr>
-		<div class=clearfix></div>
-		<a onclick="javascript:toggle_visibility('block5');">Tissue Labels b</a>
-		<table id=block5 class=hidden>
-			<tr><th>Label</th><th>Tissue</th>
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">4</td><td>area 4 (motor cortex)
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">23</td><td>area 23 (posterior cingulate cortex)
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">AN</td><td>anterior nucleus of the thalamus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">Gic</td><td>granular insular cortex
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">GP</td><td>globus pallidus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">LGN</td><td>lateral genuiculate nucleus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">MD</td><td>mediodorsal nucleus of the thalamus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">R</td><td>reuniens nucleus of the thalamus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">SN</td><td>substantia nigra
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">VA</td><td>ventral anterior nucleus of the thalamus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">VL</td><td>ventral lateral nucleus of the thalamus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">VTA</td><td>ventral tegmental area
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">LD</td><td>lateral dorsal nucleus of the thalamus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">MD</td><td>mediodorsal nucleus of the thalamus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">VPL</td><td>ventral posterolateral nucleus of the thalamus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">AQ</td><td>cerebral aqueduct
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">CB</td><td>cerebellum
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">MED</td><td>medulla
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">MGN</td><td>medial geniculate nucleus
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">CB</td><td>cerebellum
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">DR</td><td>dorsal raphe
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">PAG</td><td>periaqueductal gray
-		</tr><tr><td bgcolor="#cccccc" align="center" width="35px">SC</td><td>superior colliculus
-		</table>
-		<hr>
-	</div>
+    {% if image_filename %}
+        <div class='left image_container_nomargin' style="margin-right: 10px">{{ image_filename }}</div>
+    {% endif %}
+    <div class='left image_container_nomargin' style="margin-right: 10px"><img src="{{ image.image.url }}"></div>
+    <div class='left'>
+        <a onclick="javascript:toggle_visibility('block2');">Tissue Labels a</a>
+        <table id=block2 class=hidden>
+            <tr>
+                <th>Label</th>
+                <th>Tissue</th>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">6</td>
+                <td>area 6 (premotor cortex)
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">8</td>
+                <td>area 8 (frontal eye fields)
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">9</td>
+                <td>area 9</td>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">12</td>
+                <td>area 12</td>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">24</td>
+                <td>area 24 (anterior cingulate cortex)</td>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">AAA</td>
+                <td>anterior amygdaloid area
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">AAB</td>
+                <td>Accessory basal amygdala
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">AB</td>
+                <td>Basal amygdala
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">CC</td>
+                <td>corpus callosum</td>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">CD</td>
+                <td>caudate nucleus</td>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">cgs</td>
+                <td>Cingulate sulcus</td>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">cl</td>
+                <td>claustrum
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">FW</td>
+                <td>Frontal white</td>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">prs</td>
+                <td>Principal sulcus</td>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">TL</td>
+                <td>temporal lobe</td>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">IC</td>
+                <td>Internal capsule
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">Ins</td>
+                <td>Insula
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">LV</td>
+                <td>Lateral ventricle
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">NAc</td>
+                <td>Nucleus accumbens
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">OC</td>
+                <td>Optic chiasm
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">Put</td>
+                <td>Putamen
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">SeN</td>
+                <td>Septal nucleus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">AC</td>
+                <td>anterior commissure
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">AMG</td>
+                <td>amygdala
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">bnst</td>
+                <td>bed nucleus of stria terminalis
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">ec</td>
+                <td>entorhinal cortex
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">HPC</td>
+                <td>hippocampus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">VP</td>
+                <td>ventral pallidum
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">4</td>
+                <td>area 4 (motor cortex)
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">Dic</td>
+                <td>dysgranular insular cortex
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">GPe</td>
+                <td>globus pallidus external segment
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">GPi</td>
+                <td>globus pallidus internal segment
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">HPC</td>
+                <td>hippocampus
+        </table>
+        <hr>
+        <div class=clearfix></div>
+        <a onclick="javascript:toggle_visibility('block5');">Tissue Labels b</a>
+        <table id=block5 class=hidden>
+            <tr>
+                <th>Label</th>
+                <th>Tissue</th>
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">4</td>
+                <td>area 4 (motor cortex)
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">23</td>
+                <td>area 23 (posterior cingulate cortex)
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">AN</td>
+                <td>anterior nucleus of the thalamus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">Gic</td>
+                <td>granular insular cortex
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">GP</td>
+                <td>globus pallidus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">LGN</td>
+                <td>lateral genuiculate nucleus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">MD</td>
+                <td>mediodorsal nucleus of the thalamus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">R</td>
+                <td>reuniens nucleus of the thalamus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">SN</td>
+                <td>substantia nigra
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">VA</td>
+                <td>ventral anterior nucleus of the thalamus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">VL</td>
+                <td>ventral lateral nucleus of the thalamus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">VTA</td>
+                <td>ventral tegmental area
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">LD</td>
+                <td>lateral dorsal nucleus of the thalamus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">MD</td>
+                <td>mediodorsal nucleus of the thalamus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">VPL</td>
+                <td>ventral posterolateral nucleus of the thalamus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">AQ</td>
+                <td>cerebral aqueduct
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">CB</td>
+                <td>cerebellum
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">MED</td>
+                <td>medulla
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">MGN</td>
+                <td>medial geniculate nucleus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">CB</td>
+                <td>cerebellum
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">DR</td>
+                <td>dorsal raphe
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">PAG</td>
+                <td>periaqueductal gray
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">SC</td>
+                <td>superior colliculus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">IC</td>
+                <td>inferior colliculus
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">mcp</td>
+                <td>middle cerebellar peduncle
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">scp</td>
+                <td>superior cerebellar peduncle
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">CBv</td>
+                <td>cerebellum vermis
+            </tr>
+            <tr>
+                <td bgcolor="#cccccc" align="center" width="35px">lv</td>
+                <td>lateral ventricle
+            </tr>
+        </table>
+        <hr>
+    </div>
 </div>
 
 
