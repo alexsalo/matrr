@@ -41,23 +41,22 @@ def inventory_cohort(request, coh_id):
                     tst_row['row'].append(Availability.Unavailable)
             availability_matrix.append(tst_row)
     return render_to_response('matrr/inventory/inventory_cohort.html',
-                              {"cohort": cohort, "monkeys": monkeys, "matrix": availability_matrix},
-                              context_instance=RequestContext(request))
+                              {"cohort": cohort, "monkeys": monkeys, "matrix": availability_matrix}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_tissuesample'), login_url='/denied/')
 def inventory_brain_cohort(request, coh_id):
     cohort = get_object_or_404(Cohort, pk=coh_id)
-    brains = MonkeyImage.objects.filter(method='__brain_image', monkey__cohort=cohort).distinct()
+    brains = MonkeyImage.objects.filter(method='__brain_image', monkey__cohort=cohort)
 
     cohort.brains = brains.order_by('monkey')
-    return render_to_response('matrr/inventory/inventory_brain_cohort.html', {"cohort": cohort},
-                              context_instance=RequestContext(request))
+    return render_to_response('matrr/inventory/inventory_brain_cohort.html', {"cohort": cohort}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.change_tissuesample'), login_url='/denied/')
-def inventory_brain_monkey(request, mky_id):
-    monkey = get_object_or_404(Monkey, pk=mky_id)
+def inventory_brain_monkey(request, mig_id):
+    mig = get_object_or_404(MonkeyImage, pk=mig_id)
+    monkey = mig.monkey
 
     if request.method == 'POST':
         brain_form = InventoryBrainForm(data=request.POST)
@@ -84,19 +83,14 @@ def inventory_brain_monkey(request, mky_id):
             tst_row['title'] = tst.tst_tissue_name
             for block in blocks:
                 brain = list()
-                left_hemi = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_hemisphere='L',
-                                                         mbb_block_name__contains=block)
-                right_hemi = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_hemisphere='R',
-                                                          mbb_block_name__contains=block)
+                left_hemi = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_hemisphere='L', mbb_block_name__contains=block)
+                right_hemi = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_hemisphere='R', mbb_block_name__contains=block)
                 brain.append(1 if tst in left_hemi.tissue_types.all() else 0)
                 brain.append(1 if tst in right_hemi.tissue_types.all() else 0)
                 tst_row['row'].append(brain)
             matrix.append(tst_row)
 
-    image = MonkeyImage.objects.get(monkey=monkey, method='__brain_image') # There can be only 1
-    context = {"plot_gallery": True, "monkey": monkey, 'brain_form': brain_form, 'image': image, 'matrix': matrix,
-               'blocks': blocks, 'show_grid': show_grid}
-    return render_to_response('matrr/inventory/inventory_brain_monkey.html', context,
-                              context_instance=RequestContext(request))
+    context = {"plot_gallery": True, "monkey": monkey, 'brain_form': brain_form, 'image': mig, 'matrix': matrix,'blocks': blocks, 'show_grid': show_grid}
+    return render_to_response('matrr/inventory/inventory_brain_monkey.html', context, context_instance=RequestContext(request))
 
 

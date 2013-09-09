@@ -2230,8 +2230,12 @@ def populate_mky_species():
 
 
 def load_mbb_images(image_dir):
-    def create_mbb(monkey, image_path):
-        ##  Verify argument is actually a monkey
+    def create_mbb(image_path):
+        filename = os.path.basename(image_path)
+        regex_match = re.match('(?P<datestring>[\d-]+).(?P<monkey_identifier>\d+)(?P<extra_filename>.+)(?P<file_extension>\..+)' , filename)
+        match_dict = regex_match.groupdict()
+        monkey = match_dict['monkey_identifier']
+        ##  Verify monkey_identifier is actually a monkey pk/real_id
         if not isinstance(monkey, Monkey):
             try:
                 monkey = Monkey.objects.get(pk=monkey)
@@ -2241,48 +2245,37 @@ def load_mbb_images(image_dir):
                 except Monkey.DoesNotExist:
                     print("That's not a valid monkey:  %s." % monkey)
                     return
+        # Create the django File() thingy that gets saved to the model's image field.
         _file = File(open(image_path, 'r'))
-        mig, is_new = MonkeyImage.objects.get_or_create(monkey=monkey, method='__brain_image')
-        if not is_new:
-            return
-        mig.image = _file
-        mig.save()
-        mig._build_html_fragment(None, add_footer=False, save_fragment=True)
+        # test to see if a MonkeyImage exists with the same file name.
+        filename_exists = list()
+        # Search thru any existing brain images, looking for images with the same filename (meaning the image has been imported before)
+        for mig in MonkeyImage.objects.filter(monkey=monkey, method='__brain_image'):
+            _exists = filename in mig.image.path
+            filename_exists.append(_exists)
+            if _exists:
+                break # we want mig == the MIG with the same filename
+
+        if not any(filename_exists): # evaluates True only if there are 0 MIGs with the same filename.
+            # Create a MonkeyImage for this new brain image.
+            mig = MonkeyImage.objects.create(monkey=monkey, method='__brain_image')
+            mig.image = _file
+            mig.save()
+        # New or old, build the html fragment, just in case the template has changed.
+        mig._build_html_fragment(None, add_footer=False, save_fragment=True, image_filename=filename)
 
         for i in range(1, 16, 1):
-            mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig,
-                                                                 mbb_block_name='Block %02d' % i)
-            mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig,
-                                                                 mbb_block_name='Block %02d' % i)
+            MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig, mbb_block_name='Block %02d' % i)
+            mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block %02d' % i)
+        if is_new:
+            # The last brain block receives all brain tissues, but only if it is new.
+            # if it isn't new, it could have been updated and we don't want to overwrite that.
+            brain_tissues = TissueType.objects.filter(category__cat_name__icontains='brain')
+            mbb.assign_tissues(brain_tissues)
 
-        brain_tissues = TissueType.objects.filter(category__cat_name__icontains='brain')
-        mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig,
-                                                             mbb_block_name='Block 15')
-        mbb.assign_tissues(brain_tissues)
-        mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig,
-                                                             mbb_block_name='Block 15')
-        mbb.assign_tissues(brain_tissues)
-
-    mbbs_to_load = dict()
     files = os.listdir(image_dir)
-    for file in files:
-        upload_date, mky_number, extension = file.split('.')
-        dupe_mbb = mbbs_to_load.get(mky_number, None)
-        if dupe_mbb:
-            dupe_upload_date, mky_number, extension = file.split('.')
-            try:
-                dupe_date = dt.strptime(dupe_upload_date, "%Y-%m-%d-%H-%M-%S")
-                this_date = dt.strptime(upload_date, "%Y-%m-%d-%H-%M-%S")
-            except ValueError as ve:
-                dupe_date = dt.strptime(dupe_upload_date, "%m-%d-%Y-%H-%M-%S")
-                this_date = dt.strptime(upload_date, "%m-%d-%Y-%H-%M-%S")
-            if dupe_date > this_date:
-                continue # skip this brain image, is not the most recent uploaded brain image for this monkey
-        mbbs_to_load[mky_number] = file
-
-    for real_id, file in mbbs_to_load.iteritems():
-        if file.endswith('.png'):
-            create_mbb(real_id, os.path.join(image_dir, file))
+    for filename in files:
+        create_mbb(os.path.join(image_dir, filename))
 
 
 def load_monkey_exceptions(file_name, overwrite=False, header=True):
