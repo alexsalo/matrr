@@ -226,12 +226,12 @@ def send_pending_reviews_info():
 # used in matrr and utils.regular_tasks
 def send_shipment_ready_notification(assay_ready=False):
     """
-    Send an email to all staff members that there is a request ready to be shipped
+    Send an email to all users with matrr.change_shipment that there is a request ready to be shipped
     """
     if assay_ready:
         users = [User.objects.get(username='jdaunais'), User.objects.get(username='adaven')]
     else:
-        users = User.objects.filter(is_staff=True).exclude(username='garyjmurray')
+        users = Account.objects.users_with_perm('change_shipment').exclude(username='garyjmurray')
     from_email = User.objects.get(username='matrr_admin').email
     for user in users:
         email = user.email

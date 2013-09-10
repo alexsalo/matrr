@@ -8,19 +8,18 @@ setup_environ(settings)
 from matrr.emails import send_shipment_ready_notification
 
 def shipments_ready():
-	from django.db.models.query_utils import Q
-	from matrr.models import RequestStatus, Request
-	assay_ready = False
-	send_email = False
-	accepted = Q(req_status__in=[RequestStatus.Partially, RequestStatus.Accepted]) # Requests that have been accepted
-	accepted = Request.objects.filter(accepted)
-	for req in accepted:
-		if req.can_be_shipped():
-			if 'assay' in req.cohort.coh_cohort_name.lower():
-				assay_ready = True
-			else:
-				send_email = True
-	return send_email, assay_ready
+    from django.db.models.query_utils import Q
+    from matrr.models import RequestStatus, Request
+    assay_ready = False
+    send_email = False
+    accepted = Q(req_status__in=[RequestStatus.Partially, RequestStatus.Accepted]) # Requests that have been accepted
+    accepted = Request.objects.filter(accepted)
+    for req in accepted:
+        if req.can_be_shipped():
+            send_email = True
+            if 'assay' in req.cohort.coh_cohort_name.lower():
+                assay_ready = True
+    return send_email, assay_ready
 
 send_email, assay_ready = shipments_ready()
 if settings.PRODUCTION and send_email:
