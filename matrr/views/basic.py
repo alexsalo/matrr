@@ -218,7 +218,7 @@ def publications(request):
             request.session['old_post'] = post
             cohorts = subject.cleaned_data['subject']
             if cohorts:
-                pubs = Publication.objects.filter(cohorts__in=cohorts).order_by('-published_year', '-published_month')
+                pubs = Publication.objects.filter(cohorts__in=cohorts).distinct().order_by('-published_year', '-published_month')
         else:
             # The invalid form, of only checkboxes, is assumed invalid because it is blank.
             # Blank forms, when submitted, should display cohort-less publications.
