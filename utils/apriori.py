@@ -4,7 +4,7 @@ import json
 import os
 
 def createC1(dataset):
-	"Create a list of candidate item sets of size one."
+	"""Create a list of candidate item sets of size one."""
 	c1 = []
 	for transaction in dataset:
 		for item in transaction:
@@ -15,7 +15,7 @@ def createC1(dataset):
 	return map(frozenset, c1)
 
 def scanD(dataset, candidates, min_support):
-	"Returns all candidates that meets a minimum support level"
+	"""Returns all candidates that meets a minimum support level"""
 	sscnt = {}
 	for tid in dataset:
 		for can in candidates:
@@ -34,7 +34,7 @@ def scanD(dataset, candidates, min_support):
 	return retlist, support_data
 
 def aprioriGen(freq_sets, k):
-	"Generate the joint transactions from candidate sets"
+	"""Generate the joint transactions from candidate sets"""
 	retList = []
 	lenLk = len(freq_sets)
 	for i in range(lenLk):
@@ -49,7 +49,7 @@ def aprioriGen(freq_sets, k):
 
 
 def apriori(dataset, minsupport=0.5):
-	"Generate a list of candidate item sets"
+	"""Generate a list of candidate item sets"""
 	C1 = createC1(dataset)
 	D = map(set, dataset)
 	L1, support_data = scanD(D, C1, minsupport)
@@ -83,7 +83,7 @@ def generateRules(L, support_data, min_confidence=0.7):
 		return pruned_H
 
 	def rules_from_conseq(freqSet, H, support_data, rules, min_confidence=0.7):
-		"Generate a set of candidate rules"
+		"""Generate a set of candidate rules"""
 		m = len(H[0])
 		if (len(freqSet) > (m + 1)):
 			Hmp1 = aprioriGen(H, m + 1)

@@ -21,6 +21,7 @@ from matplotlib.ticker import MaxNLocator, NullLocator
 import networkx as nx
 
 from matrr.models import ExperimentEvent, ExperimentBout, ExperimentEventType, CohortBout, Cohort, Monkey, MonkeyBEC, MonkeyToDrinkingExperiment
+from matrr.models import ONE_HOUR, TWO_HOUR, TWENTYTWO_HOUR, TWENTYFOUR_HOUR, SESSION_START, SESSION_END, LIGHTS_ON, LIGHTS_OUT
 from utils import apriori, gadgets
 from matrr.plotting import monkey_plots, plot_tools
 from matrr.plotting import *
@@ -3101,25 +3102,25 @@ def rhesus_confederate_boxplots(minutes, nighttime_only=False):
 #--
 
 #---# Confederate histograms and scatterplots
-def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_data=None):
+def _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_subplot, axHistx=None, axHisty=None, collect_xy_data=None):
     def _bout_startdiff_volsum(subplot, monkey_one, monkey_two):
         try:
-            fx = open('utils/DATA/_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
-            fy = open('utils/DATA/_bout_startdiff_volsum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+            fx = open('utils/DATA/json/_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+            fy = open('utils/DATA/json/_bout_startdiff_volsum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
         except:
             one_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_one).order_by('drinking_experiment__dex_date')
             one_dates = one_mtds.values_list('drinking_experiment__dex_date', flat=True).distinct()
-            x_data = list()
-            y_data = list()
+            x_data = [TWENTYFOUR_HOUR,]
+            y_data = [1000,]
             for date in one_dates:
-                one_values = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
-                two_bouts = ExperimentBout.objects.filter(mtd__monkey=monkey_two, mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
-                if not one_values or not two_bouts:
+                one_values = ExperimentBout.objects.filter(mtd__monkey=monkey_one, mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
+                two_values = ExperimentBout.objects.filter(mtd__monkey=monkey_two, mtd__drinking_experiment__dex_date=date).values_list('ebt_start_time', 'ebt_volume')
+                if not one_values or not two_values:
                     continue
-                two_starts = numpy.array(two_bouts)[:,0]
+                two_starts = numpy.array(two_values)[:,0]
                 for one_start_time, one_volume in one_values:
                     two_closest_start = min(two_starts, key=lambda x:abs(x-one_start_time))
-                    two_closest_bout = two_bouts.get(ebt_start_time=two_closest_start)
+                    two_closest_bout = two_values.get(ebt_start_time=two_closest_start)
                     x_value = float(numpy.abs(one_start_time - two_closest_bout[0]))
                     y_value = float(one_volume + two_closest_bout[1])
                     x_data.append(x_value)
@@ -3127,7 +3128,7 @@ def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_
             subplot.set_ylabel("Summed volume of adjacent bouts")
             subplot.set_xlabel("Bout start time difference")
 
-            folder_name = 'utils/DATA/'
+            folder_name = 'utils/DATA/json/'
             if not os.path.exists(folder_name):
                 os.makedirs(folder_name)
             fx = open(folder_name+'_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
@@ -3146,6 +3147,28 @@ def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_
             subplot.set_xlabel("Bout start time difference")
             return subplot, x, y
 
+    collect_xy_data = collect_xy_data if collect_xy_data else _bout_startdiff_volsum
+
+    scatter_subplot, _x, _y = collect_xy_data(scatter_subplot, monkey_one, monkey_two)
+    _x = numpy.array(_x)
+    _y = numpy.array(_y)
+
+#    scatter_subplot.scatter(_x, _y, color='navy', edgecolor='none', alpha=.2)
+    scatter_subplot.axis([0, 3*ONE_HOUR, 0, 500])
+    scatter_subplot.hexbin(_x, _y, bins='log', mincnt=0, gridsize=250)
+
+    scatter_subplot.set_xlim(xmin=0)
+    scatter_subplot.set_ylim(ymin=0)
+
+    if axHistx:
+        axHistx.hist(_x, bins=150, alpha=1, log=True)
+        pyplot.setp(axHistx.get_xticklabels() + axHistx.get_yticklabels(), visible=False)
+    if axHisty:
+        axHisty.hist(_y, bins=150, alpha=1, log=True, orientation='horizontal')
+        pyplot.setp(axHisty.get_xticklabels() + axHisty.get_yticklabels(), visible=False)
+    return scatter_subplot, axHistx, axHisty
+
+def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_data=None):
     if not isinstance(monkey_one, Monkey):
         try:
             monkey_one = Monkey.objects.get(pk=monkey_one)
@@ -3169,29 +3192,56 @@ def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_
     fig.suptitle("Monkey %s - Monkey %s" % (str(monkey_one), str(monkey_two)))
     main_gs = gridspec.GridSpec(10, 10)
     main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0.08)
-    subplot = fig.add_subplot(main_gs[1:,:9])
-    axHistx = fig.add_subplot(main_gs[:1,:9], sharex=subplot)
-    axHisty = fig.add_subplot(main_gs[1:10,9:], sharey=subplot)
+    scatter_subplot = fig.add_subplot(main_gs[1:,:9])
+    axHistx = fig.add_subplot(main_gs[:1,:9], sharex=scatter_subplot)
+    axHisty = fig.add_subplot(main_gs[1:10,9:], sharey=scatter_subplot)
+    scatter_subplot, axHistx, axHisty = _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_subplot, axHistx, axHisty, collect_xy_data)
+    return fig
 
-    collect_xy_data = collect_xy_data if collect_xy_data else _bout_startdiff_volsum
+def monkey_confederate_bout_start_difference_grid(cohort, collect_xy_data=None):
+    if not isinstance(cohort, Cohort):
+        try:
+            cohort = Cohort.objects.get(pk=cohort)
+        except Monkey.DoesNotExist:
+            print("That's not a valid cohort.")
+            return
 
-    colors = ['navy', 'gold', 'green', 'blue', 'orange']
-    subplot, _x, _y = collect_xy_data(subplot, monkey_one, monkey_two)
-    _x = numpy.array(_x)
-    _y = numpy.array(_y)
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+    fig.suptitle("Cohort %s" % str(cohort))
+    monkeys = Monkey.objects.Drinkers().filter(cohort=cohort).order_by('pk')
+    mky_count = monkeys.count()
+    main_gs = gridspec.GridSpec(mky_count, mky_count)
 
-    subplot.scatter(_x, _y, color=colors.pop(0), edgecolor='none', alpha=.2)
-    subplot.set_xlim(xmin=0)
-    xticks = range(2*60*60, int(_x.max()), 2*60*60)
-    xtick_labels = ["%d hours" % (x/60/60) for x in xticks]
-    subplot.set_xticks(xticks)
-    subplot.set_xticklabels(xtick_labels)
+    # The grid will hide duplicate monkey pairs (and the diagonal)
+    # The left column and bottom row are duplicates, and won't be rendered
+    # So I offset the gridspec to shift the left/bottom to hide this empty space.
+    bottom_base = -.1
+    left_base = -.1
+    bottom = bottom_base - mky_count/100
+    left = left_base - mky_count/100
+    main_gs.update(top=.93, left=left, right=0.92, bottom=bottom, wspace=.02, hspace=0.02)
 
-    # make the histogram's labels invisible
-    pyplot.setp(axHistx.get_xticklabels() + axHistx.get_yticklabels(), visible=False)
-    pyplot.setp(axHisty.get_xticklabels() + axHisty.get_yticklabels(), visible=False)
-    axHistx.hist(_x, bins=150, alpha=1, log=True)
-    axHisty.hist(_y, bins=150, alpha=1, log=True, orientation='horizontal')
+    finished = list()
+    scatter_subplot = None
+    for x_index, x_monkey in enumerate(monkeys):
+        for y_index, y_monkey in enumerate(monkeys):
+            if x_monkey == y_monkey: continue
+            if sorted([x_monkey.pk, y_monkey.pk]) in finished: continue
+            scatter_subplot = fig.add_subplot(main_gs[x_index,y_index], sharex=scatter_subplot, sharey=scatter_subplot)
+            if x_index == 0:
+                scatter_subplot.set_title("%s" % str(y_monkey), size=20, color=RHESUS_MONKEY_COLORS[y_monkey.pk])
+            if y_index+1 == mky_count:
+                x0, y0, x1, y1 = scatter_subplot.get_position().extents
+                fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_MONKEY_COLORS[x_monkey.pk], rotation=-90, verticalalignment='center')
+#            subplots = []
+            subplots = _confederate_bout_start_difference_subplots(x_monkey, y_monkey, scatter_subplot, collect_xy_data=collect_xy_data)
+            for subplot in subplots:
+                if subplot:
+                    subplot.set_ylabel("")
+                    subplot.set_xlabel("")
+                    pyplot.setp(subplot.get_xticklabels() + subplot.get_yticklabels(), visible=False)
+
+            finished.append(sorted([x_monkey.pk, y_monkey.pk]))
     return fig
 
 

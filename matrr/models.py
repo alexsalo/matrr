@@ -73,6 +73,18 @@ class Enumeration(object):
         return self.enum_list.__iter__()
 
 
+ONE_HOUR = 60 * 60
+TWO_HOUR = 2 * ONE_HOUR
+SIX_HOUR = 6 * ONE_HOUR # time before lights out
+TWELVE_HOUR = 12 * ONE_HOUR # duration of lights out
+TWENTYTWO_HOUR = 22 * ONE_HOUR # duration of drinking day
+TWENTYFOUR_HOUR = 24 * ONE_HOUR # full day
+
+SESSION_START = 0
+SESSION_END = SESSION_START + TWENTYTWO_HOUR
+LIGHTS_OUT = SESSION_START + SIX_HOUR
+LIGHTS_ON = LIGHTS_OUT + TWELVE_HOUR
+
 InventoryStatus = (('Unverified', 'Unverified'), ('Sufficient', 'Sufficient'), ('Insufficient', 'Insufficient'))
 
 #Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
@@ -238,6 +250,16 @@ Permission._meta.permissions = ([
 class MEXQuerySet(models.query.QuerySet):
     def exclude_exceptions(self):
         return self.exclude(mex_excluded=True)
+
+
+class EBTQuerySet(models.query.QuerySet):
+    def Night(self):
+        return self.filter(ebt_start_time__gte=LIGHTS_OUT).filter(ebt_end_time__lt=LIGHTS_ON)
+
+    def Day(self):
+        return self.filter(ebt_end_time__gte=LIGHTS_ON).filter(ebt_start_time__lt=LIGHTS_OUT)
+
+
 
 
 class OASplitQueryset(models.query.QuerySet):
@@ -953,6 +975,9 @@ class EBTManager(models.Manager):
     def OA(self):
         return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Open Access')
 
+    def get_query_set(self):
+        return EBTQuerySet(self.model, using=self._db)
+
 
 class ExperimentBout(models.Model):
     objects = EBTManager()
@@ -964,16 +989,12 @@ class ExperimentBout(models.Model):
     ebt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
     ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
     ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False, db_index=True)
-
     cbt_set = models.ManyToManyField('CohortBout', blank=True, null=True, default=None, related_name='ebt_set')
-
     ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True,
                                                help_text="Bout's volume as a percentage of total ethanol consumed that day")
-    ebt_contains_pellet = models.NullBooleanField('Pellet distributed during bout', blank=True, null=True, default=None,
-                                                  help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.',
-                                                  db_index=True)
-    ebt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True,
-                                                                     null=True, default=None, db_index=True)
+    ebt_contains_pellet = models.NullBooleanField('Pellet distributed during bout', blank=True, null=True, default=None,db_index=True,
+                                                  help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.')
+    ebt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True,null=True, default=None, db_index=True)
 
     def _populate_pct_vol_total_etoh(self, recalculate=False, save=True):
         if recalculate or not self.ebt_pct_vol_total_etoh:
