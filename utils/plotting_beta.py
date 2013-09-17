@@ -2577,56 +2577,80 @@ def rhesus_pellet_sessiontime_percent_distribution():
 
 def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
-    gs = gridspec.GridSpec(1, 2)
-    gs.update(left=0.06, right=0.98, wspace=.12, hspace=0, top=.92)
-    left_subplot = fig.add_subplot(gs[0])
-    right_subplot = fig.add_subplot(gs[1])
+    gs = gridspec.GridSpec(2, 1)
+    gs.update(left=0.06, right=0.94, wspace=.0, hspace=.04, top=.98)
+    top_subplot = fig.add_subplot(gs[0])
+    bottom_subplot_left = fig.add_subplot(gs[1], sharex=top_subplot)
+    bottom_subplot_right = bottom_subplot_left.twinx()
 
     monkey_ids = [monkey_two, monkey_one]
     if monkey_three:
         monkey_ids.append(monkey_three)
 
     marker_size = 90
-    xmax_bec = 0
-    xmax_mtd = 0
+
+    # this is dumb, i know.
+    # matplotlib won't plot dates on the axis of a sharedaxis.  I think this is a known bug, suggested workarounds have failed
+    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_ids).order_by('drinking_experiment__dex_date')
+    all_dates = mtds.dates('drinking_experiment__dex_date', 'day')
+    x_dates = dict()
+    date_index = 0
+    for x in all_dates:
+        x_dates[x] = date_index
+        date_index += 1
+
     for monkey in monkey_ids:
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).order_by('drinking_experiment__dex_date')
-        xaxis_length = mtds.count()
-        xmax_mtd = max(xaxis_length, xmax_mtd)
-        x_axis = range(xaxis_length)
+        x_axis_dates = mtds.dates('drinking_experiment__dex_date', 'day')
+        x_axis = list()
+        for x in x_axis_dates:
+            x_axis.append(x_dates[x])
         y_axis = mtds.values_list('mtd_etoh_g_kg', flat=True)
-        left_subplot.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size, label=str(monkey))
+        top_subplot.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size, label=str(monkey))
         becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey).order_by('bec_collect_date')
-        xaxis_length = becs.count()
-        xmax_bec = max(xaxis_length, xmax_bec)
-        x_axis = range(xaxis_length)
+        x_axis_dates = becs.dates('bec_collect_date', 'day')
+        x_axis = list()
+        for x in x_axis_dates:
+            x_axis.append(x_dates[x])
         y_axis = becs.values_list('bec_mg_pct', flat=True)
-        right_subplot.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size, label=str(monkey))
+        bottom_subplot_left.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size, label=str(monkey))
+        if monkey in RHESUS_DRINKERS_DISTINCT['VHD']:
+            y_axis = becs.values_list('bec_gkg_etoh', 'bec_daily_gkg_etoh')
+            y_axis = [y[0]/y[1] for y in y_axis]
+            bottom_subplot_right.plot(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], lw=3, alpha=.5)
 
     suptitle_size = 30
     title_size = 26
     label_size = 24
     tick_size = 20
     legend_size = 20
-    left_subplot.set_ylim(ymin=0)
-    left_subplot.set_xlim(xmin=0, xmax=xmax_mtd)
-    left_subplot.axhspan(3.95, 4.05, color='black', alpha=.4, zorder=-100)
-    right_subplot.set_ylim(ymin=0)
-    right_subplot.set_xlim(xmin=0, xmax=xmax_bec)
-    right_subplot.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
-    right_subplot.text(0, 82, "80 mg pct", size=tick_size)
-    for subplot in [left_subplot, right_subplot]:
+    top_subplot.set_ylim(ymin=0)
+    top_subplot.set_xlim(xmin=0, xmax=date_index)
+    bottom_subplot_left.set_ylim(ymin=0)
+    bottom_subplot_left.set_xlim(xmin=0, xmax=date_index)
+    top_subplot.axhspan(3.98, 4.02, color='black', alpha=.4, zorder=-100)
+    bottom_subplot_left.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
+    bottom_subplot_left.text(0, 82, "80 mg pct", size=tick_size)
+    line_ticks = numpy.arange(0,1.01,.2)
+    bottom_subplot_right.set_yticks(line_ticks)
+    bottom_subplot_right.set_yticklabels(["%d%%" % int(tick*100) for tick in line_ticks])
+    for subplot in [top_subplot, bottom_subplot_left, bottom_subplot_right]:
         subplot.legend(prop={'size': legend_size})
         subplot.tick_params(axis='both', which='major', labelsize=tick_size)
         subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
 
-    fig.suptitle("High Drinker vs Low Drinker", size=suptitle_size)
-    left_subplot.set_title("Daily Ethanol Intake", size=title_size)
-    left_subplot.set_ylabel("Ethanol (g/kg)", size=label_size)
-    left_subplot.set_xlabel("Date", size=label_size)
-    right_subplot.set_title("Daily BEC", size=title_size)
-    right_subplot.set_ylabel("BEC (mg pct)", size=label_size)
-    right_subplot.set_xlabel("Date", size=label_size)
+#    fig.suptitle("High Drinker vs Low Drinker", size=suptitle_size)
+#    top_subplot.set_title("Daily Ethanol Intake", size=title_size)
+    top_subplot.text(.42, .92, "Daily Ethanol Intake", size=title_size, transform=top_subplot.transAxes)
+    top_subplot.set_ylabel("Ethanol (g/kg)", size=label_size)
+    top_subplot.set_xlabel("Open Access Days", size=label_size)
+    top_subplot.get_xaxis().set_visible(False)
+
+#    bottom_subplot_left.set_title("Daily BEC", size=title_size)
+    bottom_subplot_left.text(.45, .92, "Daily BEC", size=title_size, transform=bottom_subplot_left.transAxes)
+    bottom_subplot_left.set_ylabel("BEC (mg/dl)", size=label_size)
+    bottom_subplot_left.set_xlabel("Days", size=label_size)
+    bottom_subplot_right.set_ylabel("% Daily EtOH taken before Blood Sample", size=label_size)
     return fig
 
 
@@ -3155,7 +3179,7 @@ def _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_
 
 #    scatter_subplot.scatter(_x, _y, color='navy', edgecolor='none', alpha=.2)
     scatter_subplot.axis([0, 3*ONE_HOUR, 0, 500])
-    scatter_subplot.hexbin(_x, _y, bins='log', mincnt=0, gridsize=250)
+    scatter_subplot.hexbin(_x, _y, mincnt=0, gridsize=250, vmin=0, vmax=10000)
 
     scatter_subplot.set_xlim(xmin=0)
     scatter_subplot.set_ylim(ymin=0)
@@ -3226,22 +3250,23 @@ def monkey_confederate_bout_start_difference_grid(cohort, collect_xy_data=None):
     for x_index, x_monkey in enumerate(monkeys):
         for y_index, y_monkey in enumerate(monkeys):
             if x_monkey == y_monkey: continue
-            if sorted([x_monkey.pk, y_monkey.pk]) in finished: continue
-            scatter_subplot = fig.add_subplot(main_gs[x_index,y_index], sharex=scatter_subplot, sharey=scatter_subplot)
-            if x_index == 0:
+            if x_index == 0 and y_index:
                 scatter_subplot.set_title("%s" % str(y_monkey), size=20, color=RHESUS_MONKEY_COLORS[y_monkey.pk])
             if y_index+1 == mky_count:
                 x0, y0, x1, y1 = scatter_subplot.get_position().extents
                 fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_MONKEY_COLORS[x_monkey.pk], rotation=-90, verticalalignment='center')
-#            subplots = []
-            subplots = _confederate_bout_start_difference_subplots(x_monkey, y_monkey, scatter_subplot, collect_xy_data=collect_xy_data)
-            for subplot in subplots:
-                if subplot:
-                    subplot.set_ylabel("")
-                    subplot.set_xlabel("")
-                    pyplot.setp(subplot.get_xticklabels() + subplot.get_yticklabels(), visible=False)
-
-            finished.append(sorted([x_monkey.pk, y_monkey.pk]))
+            if sorted([x_monkey.pk, y_monkey.pk]) in finished:
+                continue
+            else:
+                scatter_subplot = fig.add_subplot(main_gs[x_index,y_index], sharex=scatter_subplot, sharey=scatter_subplot)
+    #            subplots = []
+                subplots = _confederate_bout_start_difference_subplots(x_monkey, y_monkey, scatter_subplot, collect_xy_data=collect_xy_data)
+                for subplot in subplots:
+                    if subplot:
+                        subplot.set_ylabel("")
+                        subplot.set_xlabel("")
+                        pyplot.setp(subplot.get_xticklabels() + subplot.get_yticklabels(), visible=False)
+                finished.append(sorted([x_monkey.pk, y_monkey.pk]))
     return fig
 
 
