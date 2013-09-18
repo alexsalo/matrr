@@ -33,17 +33,18 @@
 						<td><a href='{% url verification-list-export req.req_request_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
 					</tr>
 				{% endfor %}
-				{% if requestless_count %}
-					<tr>
-						<td></td>
-						<td></td>
-						<td></td>
-						<td></td>
-						<td>Current Inventory</td>
-						<td><a href='{% url verification-list 0 %}' class='blockLinkCheckoutButton' style='width:60px;float: right'>Update</a></td>
-						<td><a href='{% url verification-list-export 0 %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
-					</tr>
-
+				{% if current_inventory %}
+                    {% for coh_pk, cohort_name in current_inventory %}
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>{{ cohort_name }}</td>
+                            <td>-</td>
+                            <td>Current Inventory</td>
+                            <td><a href='{% url verification-inventory coh_pk %}' class='blockLinkCheckoutButton' style='width:60px;float: right'>Update</a></td>
+                            <td><a href='{% url verification-inventory-export coh_pk %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
+                        </tr>
+                       {% endfor %}
 				{% endif %}
 			</table>
 		{% else %}
