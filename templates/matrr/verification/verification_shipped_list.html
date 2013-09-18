@@ -25,13 +25,18 @@
 						<td align="center">
 							<button type='submit' name='submit' class='blockLinkCheckoutButton' style='width:100px;float: left'>Update</button>
 						</td>
-						<td align="center" class='verification_legend unverified'>Unverified</td>
-						<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
-						<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
+						<td align="center" colspan=3>There are THREE inventory values that matter to MATRR.  Additional accuracy is primarily for YOUR records.</td>
 						<td align="center">
 							<a href='{% url verification-list-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
 						</td>
 					</tr>
+					<tr>
+                        <td> </td>
+						<td align="center">Quantity < 0:<br>Inventory will not be updated</td>
+						<td align="center">Quantity == 0:<br>No more tissue exists for this monkey:tissue_type</td>
+						<td align="center">Quantity > 0:<br>Some tissue exists.</td>
+                        <td> </td>
+                    </tr>
 					<tr></tr>
 					{# hack to add a tiny space between this table and the formset #}
 				</table>

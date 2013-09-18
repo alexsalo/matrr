@@ -107,6 +107,8 @@ urlpatterns += patterns('',
     url(r'^verification/$', verification.tissue_verification, name='verification'),
     url(r'^verification/(?P<req_request_id>\d+)/$', verification.tissue_verification_list, name='verification-list'),
     url(r'^verification/(?P<req_request_id>\d+)/export$', verification.tissue_verification_export, name='verification-list-export'),
+    url(r'^verification/inventory/(?P<cohort_pk>\d+)$', verification.tissue_verification_post_shipment, name='verification-inventory'),
+    url(r'^verification/inventory/(?P<cohort_pk>\d+)/export$', verification.tissue_verification_export, name='verification-inventory-export'),
     url(r'^verification/(?P<req_request_id>\d+)/(?P<tiv_id>\d+)/$', verification.tissue_verification_detail, name='verification-detail'),
 )
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.forms.models import formset_factory
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib import messages
@@ -12,23 +12,20 @@ from matrr.models import TissueInventoryVerification, Request
 def tissue_verification(request):
     request_ids = TissueInventoryVerification.objects.values_list('tissue_request__req_request')
     requests = Request.objects.filter(req_request_id__in=request_ids).order_by('req_request_date')
-    requestless_count = TissueInventoryVerification.objects.filter(tissue_request=None).count()
+    current_inventory = TissueInventoryVerification.objects.filter(tissue_request=None).values_list('monkey__cohort', 'monkey__cohort__coh_cohort_name').distinct()
     return render_to_response('matrr/verification/verification_request_list.html',
-                              {
-                              'requests': requests,
-                              'requestless_count': requestless_count,
-                              },
+                              {'requests': requests,
+                              'current_inventory': current_inventory,},
                               context_instance=RequestContext(request))
 
 
-def tissue_verification_export(request, req_request_id):
+def tissue_verification_export(request, req_request_id=0, cohort_pk=0):
     if req_request_id:
-        tiv_list = TissueInventoryVerification.objects.filter(
-            tissue_request__req_request__req_request_id=req_request_id).order_by('inventory').order_by("monkey")
+        tiv_list = TissueInventoryVerification.objects.filter(tissue_request__req_request__req_request_id=req_request_id).order_by('inventory').order_by("monkey")
+    elif cohort_pk:
+        tiv_list = TissueInventoryVerification.objects.filter(tissue_request=None, monkey__cohort=cohort_pk).order_by('inventory').order_by("monkey")
     else:
-        tiv_list = TissueInventoryVerification.objects.filter(tissue_request=None).order_by('inventory').order_by(
-            "monkey")
-
+        raise Http404("Neither req_request_id nor cohort_pk provided.")
     # Create the HttpResponse object with the appropriate PDF headers.
     response = HttpResponse(mimetype='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
@@ -36,9 +33,9 @@ def tissue_verification_export(request, req_request_id):
     return gizmo.export_template_to_pdf('pdf_templates/tissue_verification.html', context, outfile=response)
 
 
-def tissue_verification_list(request, req_request_id):
+def tissue_verification_list(request, req_request_id, cohort_pk=0):
     if int(req_request_id) is 0:
-        return tissue_verification_post_shipment(request)
+        return tissue_verification_post_shipment(request, cohort_pk)
 
     TissueVerificationFormSet = formset_factory(TissueInventoryVerificationForm, extra=0)
     if request.method == "POST":
@@ -89,7 +86,7 @@ def tissue_verification_list(request, req_request_id):
                               context_instance=RequestContext(request))
 
 
-def tissue_verification_post_shipment(request):
+def tissue_verification_post_shipment(request, cohort_pk):
     TissueVerificationShippedFormSet = formset_factory(TissueInventoryVerificationShippedForm, extra=0)
     if request.method == "POST":
         formset = TissueVerificationShippedFormSet(request.POST)
@@ -115,9 +112,8 @@ def tissue_verification_post_shipment(request):
 
     # if request method != post and/or formset isNOT valid
     # build a new formset
-    tiv_list = TissueInventoryVerification.objects.filter(tissue_request=None).order_by('monkey',
-                                                                                        'tissue_type__tst_tissue_name')
-    p_tiv_list = gizmo.create_paginator_instance(request, tiv_list, 30)
+    tiv_list = TissueInventoryVerification.objects.filter(tissue_request=None, monkey__cohort=cohort_pk).order_by('tissue_type__tst_tissue_name', 'monkey')
+    p_tiv_list = gizmo.create_paginator_instance(request, tiv_list, 50)
     initial = []
     for tiv in p_tiv_list.object_list:
         tss = tiv.tissue_sample

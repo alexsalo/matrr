@@ -2933,8 +2933,7 @@ class TissueInventoryVerification(models.Model):
             tiv.tiv_inventory = "Unverified"
             tiv.save()
 
-    def verify_all_TIVs(self, are_you_sure=False, are_you_double_sure=False, are_you_damn_positive=False,
-                        req_request=False):
+    def verify_all_TIVs(self, are_you_sure=False, are_you_double_sure=False, are_you_damn_positive=False,req_request=False):
         if settings.PRODUCTION is False or (are_you_sure and are_you_double_sure and are_you_damn_positive):
             if req_request is True:
                 tivs = TissueInventoryVerification.objects.all()
@@ -2947,7 +2946,14 @@ class TissueInventoryVerification(models.Model):
 
 
     def save(self, *args, **kwargs):
-        notes = self.tiv_notes
+        if self.tissue_request is None:
+            if self.tissue_type.tst_tissue_name == 'Custom' or 'be specific' in self.tissue_type.tst_tissue_name.lower():
+                self.delete()
+                return
+            if 'assay' in self.monkey.cohort.coh_cohort_name.lower():
+                self.delete()
+                return
+
         # This will set the tissue_sample field with several database consistency checks
         if self.tissue_sample is None:
             try:
@@ -2973,11 +2979,10 @@ class TissueInventoryVerification(models.Model):
             notes = "%s:Database Error:  This TIV has inconsistent monkey:tissue_type:tissue_sample. Please notify a MATRR admin.  Do not edit, changes will not be saved." % str(
                 datetime.now().date())
 
-        if 'Do not edit' in notes:
+        if 'Do not edit' in self.tiv_notes:
             # this doesnt save any other changes
-            TissueInventoryVerification.objects.filter(pk=self.pk).update(tiv_notes=notes)
+            TissueInventoryVerification.objects.filter(pk=self.pk).update(tiv_notes=self.tiv_notes)
         else:
-            self.tiv_notes = notes
             super(TissueInventoryVerification, self).save(*args, **kwargs)
             ## If the tissue has been verified, but has NO tissue_request associated with it
             if self.tiv_inventory != "Unverified" and self.tissue_request is None:
@@ -3661,8 +3666,7 @@ def request_post_save(**kwargs):
     # get the Request instance
     req_request = kwargs['instance']
     # check if there was a change in the status
-    if req_request._previous_status is None or \
-                    req_request.req_status == req_request._previous_status:
+    if req_request._previous_status is None or req_request.req_status == req_request._previous_status:
         # if there was no change, don't do anything
         return
 
@@ -3731,13 +3735,9 @@ def request_post_save(**kwargs):
         and current_status == RequestStatus.Shipped:
         # Create new TIVs to update MATRR inventory after a tissue has shipped.
         for tissue_request in tissue_requests:
-            for monkey in tissue_request.accepted_monkeys.all().exclude(
-                    mky_real_id=0): # dont create tivs for assay monkeys after shipment
-                tv = TissueInventoryVerification.objects.create(tissue_type=tissue_request.tissue_type,
-                                                                monkey=monkey,
-                                                                tissue_request=None)
+            for monkey in tissue_request.accepted_monkeys.all().exclude(mky_real_id=0): # dont create tivs for assay monkeys after shipment
+                tv = TissueInventoryVerification.objects.create(tissue_type=tissue_request.tissue_type, monkey=monkey, tissue_request=None)
                 tv.save()
-
     req_request._previous_status = None
 
 # This is a method to check to see if a user_id exists that does not have

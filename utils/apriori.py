@@ -170,7 +170,7 @@ def get_nighttime_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_p
 	try:
 		f = open(os.path.join(dir_path, file_name), 'r')
 	except IOError:
-		# pretty sure this will throw another IOException if dir_path doesn't exist
+		# This will throw another IOException if dir_path doesn't exist
 		f = open(os.path.join(dir_path, file_name), 'w')
 	else:
 		s = f.read()
