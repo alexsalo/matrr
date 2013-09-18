@@ -2946,6 +2946,14 @@ class TissueInventoryVerification(models.Model):
 
 
     def save(self, *args, **kwargs):
+        """
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        DO NOT FORLOOP THROUGH ALL TIVs ON PRODUCTION, CALLING tiv.save()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        I did this just now but some requests had already been fully verified.  As a result tiv_post_save
+        triggered an email to matrr_admin for every single TIV in the request.  Damnit.
+        """
         if self.tissue_request is None:
             if self.tissue_type.tst_tissue_name == 'Custom' or 'be specific' in self.tissue_type.tst_tissue_name.lower():
                 self.delete()
@@ -3806,6 +3814,15 @@ def datafile_pre_delete(**kwargs):
 
 @receiver(post_save, sender=TissueInventoryVerification)
 def tiv_post_save(**kwargs):
+    # todo: prevent this.
+    """
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    DO NOT FORLOOP THROUGH ALL TIVs ON PRODUCTION, CALLING tiv.save()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    I did this just now but some requests had already been fully verified.  As a result tiv_post_save
+    triggered an email to matrr_admin for every single TIV in the request.  Damnit.
+    """
     # see if all the TIVs for the request have been verified
     tiv = kwargs['instance']
     if tiv.tiv_inventory != "Unverified":
