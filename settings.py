@@ -12,14 +12,16 @@ TEMPLATE_DEBUG = DEBUG = False
 ADMINS = (
 ('matrr_admin', 'matrr_gleek@gmail.com'),
 )
-GLEEK = DEVELOPMENT = PRODUCTION = False
+GLEEK = DEVELOPMENT = PRODUCTION = ENABLE_EMAILS = False
 
 if path == '/web/www/matrr-prod':
-	PRODUCTION = GLEEK = True
+	PRODUCTION = GLEEK = ENABLE_EMAILS =True
 elif path == '/web/www/matrr-dev':
 	DEVELOPMENT = GLEEK = True
 else:
 	DEVELOPMENT = True
+
+ENABLE_EMAILS = False
 
 import getpass
 if getpass.getuser().lower() == 'root':

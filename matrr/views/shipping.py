@@ -6,7 +6,7 @@ from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
-from settings import PRODUCTION
+from settings import PRODUCTION, ENABLE_EMAILS
 from matrr import gizmo, emails
 from matrr.forms import TissueShipmentForm, TrackingNumberForm
 from matrr.models import Request, User, Shipment, ShipmentStatus, RequestStatus
@@ -149,8 +149,7 @@ def shipment_detail(request, shipment_id):
                         emails.send_po_manifest_upon_shipment(shipment)
                         emails.notify_user_upon_shipment(shipment)
                 if shipment_status == ShipmentStatus.Genetics:
-                    messages.success(request,
-                                     "Shipment #%d has been sent to the DNA processing facility." % shipment.pk)
+                    messages.success(request, "Shipment #%d has been sent to the DNA processing facility." % shipment.pk)
                 req_request.ship_request()
                 return redirect(reverse('shipping-overview'))
 
