@@ -60,10 +60,11 @@ def send_colliding_requests_info():
             recipients = list()
             recipients.append(email)
 
-            ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-            if ret > 0:
-                print "%s Colliding requests info sent for user: %s" % (
-                datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+            if settings.PRODUCTION and settings.ENABLE_EMAILS:
+                ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+                if ret > 0:
+                    print "%s Colliding requests info sent for user: %s" % (
+                    datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 
 # regular_tasks
 def send_verify_tissues_info():
@@ -88,10 +89,11 @@ def send_verify_tissues_info():
             body = 'Information from matrr.com\n During the last 24 hours new request(s) has (have) been submitted. Your account %s can verify tissues. Please, find some time to do so.\n' % user.username + \
                    'Please, do not respond. This is an automated message.\n'
 
-            ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-            if ret > 0:
-                print "%s Verify tissues info sent for user: %s" % (
-                datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+            if settings.PRODUCTION and settings.ENABLE_EMAILS:
+                ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+                if ret > 0:
+                    print "%s Verify tissues info sent for user: %s" % (
+                    datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 
     # Send emails only to jim and april for assay requests.  Because assay requests are special....
     assay_requests = Request.objects.submitted().filter(req_modified_date__gte=time_yesterday,
@@ -110,10 +112,11 @@ def send_verify_tissues_info():
             body += 'During the last 24 hours new request(s) has (have) been submitted. Your account %s can verify tissues. Please, find some time to do so.\n' % user.username
             body += 'Please, do not respond. This is an automated message.\n'
 
-            ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-            if ret > 0:
-                print "%s Verify tissues info sent for user: %s" % (
-                datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+            if settings.PRODUCTION and settings.ENABLE_EMAILS:
+                ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+                if ret > 0:
+                    print "%s Verify tissues info sent for user: %s" % (
+                    datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 
 # regular_tasks
 def urge_po_mta():
@@ -146,9 +149,10 @@ def urge_po_mta():
         body = re.sub('(\r?\n){2,}', '\n\n', body)
         subject = "MATRR needs more information before request %s can be shipped." % str(req.pk)
 
-        ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-        if ret > 0:
-            print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
+        if settings.PRODUCTION and settings.ENABLE_EMAILS:
+            ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+            if ret > 0:
+                print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
 
 # regular_tasks
 def urge_progress_reports():
@@ -182,9 +186,10 @@ def urge_progress_reports():
         body += "\n\n"
         body += "This is an automated message."
 
-        ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-        if ret > 0:
-            print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
+        if settings.PRODUCTION and settings.ENABLE_EMAILS:
+            ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+            if ret > 0:
+                print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
 
     if way_overdue and date.today().isocalendar()[
         1] % 2 == 0: # there exist overdue updates, and today is an even week of the year
@@ -194,9 +199,10 @@ def urge_progress_reports():
         body = "We have some users who haven't given us a research update.  Click the link below to see who's slacking off.\n\n"
         body += 'http://gleek.ecs.baylor.edu' + reverse('rud-overdue')
 
-        ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-        if ret > 0:
-            print "%s Overdue research update notification sent" % datetime.now().strftime("%Y-%m-%d,%H:%M:%S")
+        if settings.PRODUCTION and settings.ENABLE_EMAILS:
+            ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+            if ret > 0:
+                print "%s Overdue research update notification sent" % datetime.now().strftime("%Y-%m-%d,%H:%M:%S")
 
 # regular_tasks
 def send_pending_reviews_info():
@@ -218,10 +224,11 @@ def send_pending_reviews_info():
             body = 'Information from matrr.com\n You have pending request(s) to be reviewed on your account: %s \n' % user.username + \
                    'Please, do not respond. This is an automated message.\n'
 
-            ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-            if ret > 0:
-                print "%s Pending info sent for user: %s" % (
-                datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+            if settings.PRODUCTION and settings.ENABLE_EMAILS:
+                ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+                if ret > 0:
+                    print "%s Pending info sent for user: %s" % (
+                    datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 
 # used in matrr and utils.regular_tasks
 def send_shipment_ready_notification(assay_ready=False):
@@ -242,7 +249,7 @@ def send_shipment_ready_notification(assay_ready=False):
         body += 'http://gleek.ecs.baylor.edu%s\n' % reverse('shipping-overview')
         body += 'Please, do not respond. This is an automated message.\n'
 
-        if settings.PRODUCTION:
+        if settings.PRODUCTION and settings.ENABLE_EMAILS:
             ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
             if ret > 0:
                 print "%s Shipment info sent to user: %s" % (
@@ -272,7 +279,8 @@ def send_po_manifest_upon_shipment(shp_shipment):
 
     outfile.close()
     email.attach_file(outfile.name)
-    email.send()
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        email.send()
 
 # matrr
 def notify_user_upon_shipment(shp_shipment):
@@ -297,7 +305,8 @@ def notify_user_upon_shipment(shp_shipment):
 
     outfile.close()
     email.attach_file(outfile.name)
-    email.send()
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        email.send()
 
 # matrr
 def send_jim_hippocampus_notification(req_request):
@@ -317,7 +326,7 @@ def send_jim_hippocampus_notification(req_request):
     body += 'Sincerely,\n'
     body += 'MATRR'
 
-    if settings.PRODUCTION:
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
         ret = send_mail(subject, body, matrr.email, recipient_list=[jim.email, ], fail_silently=False)
         if ret > 0:
             print "%s Hippocampus notification sent to %s." % (
@@ -361,7 +370,7 @@ def send_verify_new_account_email(account):
     subject = "New account on www.matrr.com"
     from_e = User.objects.get(username='matrr_admin').email
     to_e = [from_e, ]
-    if settings.PRODUCTION:
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
         send_mail(subject, body, from_e, to_e, fail_silently=True)
 
 # matrr
@@ -385,9 +394,10 @@ def send_new_request_info(req_request):
         body = 'More information about this request is available at matrr.com\n' \
                'Please, do not respond. This is an automated message.\n'
 
-        ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-        if ret > 0:
-            print "%s New request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+        if settings.PRODUCTION and settings.ENABLE_EMAILS:
+            ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+            if ret > 0:
+                print "%s New request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 
 # matrr
 def send_verification_complete_notification(req_request):
@@ -403,7 +413,7 @@ def send_verification_complete_notification(req_request):
                'review-overview', args=[req_request.pk, ]) + \
            "Please, do not respond. This is an automated message.\n"
 
-    if settings.PRODUCTION:
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
         send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
 
 # matrr
@@ -442,7 +452,8 @@ def send_contact_us_email(form_data, user):
         # Anonymous user does not have email field.
         pass
     email_to = User.objects.get(username='matrr_admin').email
-    send_mail(subject, form_data['email_body'], form_data['email_from'], [email_to])
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        send_mail(subject, form_data['email_body'], form_data['email_from'], [email_to])
 
 # matrr
 def notify_mta_uploaded(mta):
@@ -462,10 +473,11 @@ def notify_mta_uploaded(mta):
         mta.user.first_name, mta.user.last_name, mta.user.email, mta.user.account.phone_number)
         body += "If this is a valid MTA click here to update MATRR: http://gleek.ecs.baylor.edu%s" % reverse('mta-list')
 
-        ret = send_mail(subject, body, from_email, recipient_list=recipients)
-        if ret > 0:
-            print "%s MTA verification request sent to user: %s" % (
-            datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
+        if settings.PRODUCTION and settings.ENABLE_EMAILS:
+            ret = send_mail(subject, body, from_email, recipient_list=recipients)
+            if ret > 0:
+                print "%s MTA verification request sent to user: %s" % (
+                datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
     return
 
 # matrr
@@ -482,7 +494,8 @@ def send_account_verified_email(account):
     from_e = account.user.email
     to_e = list()
     to_e.append(from_e)
-    send_mail(subject, body, from_e, to_e, fail_silently=True)
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        send_mail(subject, body, from_e, to_e, fail_silently=True)
 
 # matrr
 def send_mta_uploaded_email(account):
@@ -504,9 +517,10 @@ def send_mta_uploaded_email(account):
         body += "\n\nIn addition to any other steps, please have %s upload the signed MTA form to MATRR using this link: http://gleek.ecs.baylor.edu%s" % (
         account.user.username, reverse('mta-upload'))
 
-        ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-        if ret > 0:
-            print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
+        if settings.PRODUCTION and settings.ENABLE_EMAILS:
+            ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+            if ret > 0:
+                print "%s MTA request info sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), user.username)
 
 # matrr
 def send_dna_request_details(req_request):
@@ -533,7 +547,8 @@ def send_dna_request_details(req_request):
     gizmo.export_template_to_pdf('pdf_templates/invoice.html', context, outfile=outfile)
     outfile.close()
     email.attach_file(outfile.name)
-    email.send()
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        email.send()
 
 # matrr
 def send_rud_data_available_email(rud):
@@ -552,8 +567,9 @@ def send_rud_data_available_email(rud):
     body += "\n"
     body += "You should probably buy Jon a celebratory beer.  :)\n"
 
-    ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
-    if ret > 0:
-        print "%s rud data available email sent to user: %s" % (
-        datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+        if ret > 0:
+            print "%s rud data available email sent to user: %s" % (
+            datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
 
