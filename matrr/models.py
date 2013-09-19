@@ -2954,14 +2954,6 @@ class TissueInventoryVerification(models.Model):
         I did this just now but some requests had already been fully verified.  As a result tiv_post_save
         triggered an email to matrr_admin for every single TIV in the request.  Damnit.
         """
-        if self.tissue_request is None:
-            if self.tissue_type.tst_tissue_name == 'Custom' or 'be specific' in self.tissue_type.tst_tissue_name.lower():
-                self.delete()
-                return
-            if 'assay' in self.monkey.cohort.coh_cohort_name.lower():
-                self.delete()
-                return
-
         # This will set the tissue_sample field with several database consistency checks
         if self.tissue_sample is None:
             try:
@@ -3831,8 +3823,15 @@ def tiv_post_save(**kwargs):
             verification_status = req_request.get_inventory_verification_status()
             if verification_status == VerificationStatus.Complete:
                 from matrr.emails import send_verification_complete_notification
-
                 send_verification_complete_notification(req_request)
+    if tiv.tissue_request is None:
+        if tiv.tissue_type.tst_tissue_name == 'Custom' or 'be specific' in tiv.tissue_type.tst_tissue_name.lower():
+            tiv.delete()
+            return
+        if 'assay' in tiv.monkey.cohort.coh_cohort_name.lower():
+            tiv.delete()
+            return
+
 
 # This is a method to check to see if the rud_data_available boolean has changed to True
 # If True, it will email matrr_admin that there is some data ready to be uploaded.
