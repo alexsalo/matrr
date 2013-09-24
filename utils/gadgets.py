@@ -339,9 +339,10 @@ def identify_drinking_category(mtd_queryset):
     max_date = mtd_queryset.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
     min_date = mtd_queryset.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
     total_days = float((max_date-min_date).days)
-    days_over_two = mtd_queryset.filter(mtd_etoh_g_kg__gt=2).count()
-    days_over_three = mtd_queryset.filter(mtd_etoh_g_kg__gt=3).count()
-    days_over_four = mtd_queryset.filter(mtd_etoh_g_kg__gt=4).count()
+    mtd_values = mtd_queryset.values('mtd_etoh_g_kg')
+    days_over_two = mtd_values.filter(mtd_etoh_g_kg__gt=2).count()
+    days_over_three = mtd_values.filter(mtd_etoh_g_kg__gt=3).count()
+    days_over_four = mtd_values.filter(mtd_etoh_g_kg__gt=4).count()
 
     pct_over_two = days_over_two / total_days
     pct_over_three = days_over_three / total_days
@@ -373,3 +374,14 @@ def get_category_population_by_quarter(quarter, monkeys=plotting.ALL_RHESUS_DRIN
         raise Exception("Quarter can only be ('first', 'second', 'third', 'fourth') or (1,2,3,4)")
     category_results = [identify_drinking_category(mtd_queryset.filter(monkey=monkey)) for monkey in monkeys]
     return category_results
+
+def find_nearest_bouts(bout):
+    from matrr.models import ExperimentBout
+    day_bouts = ExperimentBout.objects.filter(mtd__monkey__cohort=bout.mtd.monkey.cohort, mtd__drinking_experiment__dex_date=bout.mtd.drinking_experiment.dex_date)
+    day_bouts = day_bouts.exclude(mtd__monkey=bout.mtd.monkey)
+    day_bout_starts = day_bouts.values_list('ebt_start_time', flat=True)
+    closest_start = min(day_bout_starts, key=lambda x:abs(x-bout.ebt_start_time))
+    nearest_bouts = day_bouts.filter(ebt_start_time=closest_start)
+    return nearest_bouts
+
+
