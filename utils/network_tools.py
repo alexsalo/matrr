@@ -1,7 +1,10 @@
-__author__ = 'farro'
-
+from collections import defaultdict
+import math
+from utils import gadgets
+from matrr.plotting import RHESUS_COLORS
 import random
 import networkx as nx
+import pygraphviz as pgv
 
 class CytoVisualStyle():
 #	family_graph = None
@@ -247,4 +250,127 @@ def family_tree():
     else:
         print "this shit creates a publicly visible bogus cohort.  dont use this."
 
+
+class ConfederateNetwork(object):
+    network = None
+    cohort = None
+    monkeys = None
+    depth = None
+    normalization_function = None
+
+    nearest_bout_times = defaultdict(lambda: defaultdict(lambda: list())) # nearest_bout_time[source monkey.pk][target monkey.pk] = [array of seconds to nearest bout]
+    mean_nearest_bout_times = defaultdict(lambda: dict()) # nearest_bout_time[source monkey.pk][target monkey.pk] = average seconds between monkey's nearest bout
+    normalized_relationships = defaultdict(lambda: dict())
+
+    def __init__(self, cohort, network=None, depth=1):
+        from matrr.models import Cohort, Monkey
+        assert isinstance(cohort, Cohort)
+        self.cohort = cohort
+        self. monkeys = Monkey.objects.Drinkers().filter(cohort=self.cohort)
+        self.network = network if network else pgv.AGraph()
+        self.depth = depth
+        self.define_nodes()
+        self.collect_nearest_bout_times()
+        self.average_nearest_bout_times()
+        self.normalize_averages()
+        self.define_edges()
+
+
+    def dump_graphml(self):
+        return "".join(nx.generate_graphml(self.network))
+
+    def define_edges(self):
+        finished = list()
+        for source_pk in self.normalized_relationships.iterkeys():
+            for target_pk in self.normalized_relationships[source_pk]:
+                sorted_pks = sorted([source_pk, target_pk])
+                if not sorted_pks in finished and self.normalized_relationships[source_pk][target_pk]:
+                    self._add_monkey_edge(source_pk, target_pk)
+                    finished.append(sorted_pks)
+
+    def define_nodes(self):
+        for monkey in self.monkeys:
+            self._add_monkey_node(monkey.pk)
+
+    def collect_nearest_bout_times(self):
+        from matrr.models import ExperimentBout
+        import json
+        print "Collecting nearest bout times..."
+        try:
+            f = open('utils/DATA/json/ConfederateNetwork-%d-nearest_bout_times.json' % self.cohort.pk, 'r')
+        except:
+            for monkey in self.monkeys:
+                print "Starting Monkey %d" % monkey.pk
+                for bout in ExperimentBout.objects.OA().filter(mtd__monkey=monkey):
+                    nearest_bouts = gadgets.find_nearest_bouts(bout)
+                    for close_bout in nearest_bouts:
+                        self.nearest_bout_times[monkey.pk][close_bout.mtd.monkey.pk].append(math.fabs(bout.ebt_start_time-close_bout.ebt_start_time))
+        else:
+            self.nearest_bout_times = json.loads(f.read())
+        finally:
+            f = open('utils/DATA/json/ConfederateNetwork-%d-nearest_bout_times.json' % self.cohort.pk, 'w')
+            f.write(json.dumps(self.nearest_bout_times))
+            f.close()
+
+    def average_nearest_bout_times(self):
+        assert bool(self.nearest_bout_times) is True
+        import numpy
+        print "Averaging nearest bout times..."
+        for monkey_pk in self.nearest_bout_times.iterkeys():
+            for nearest_mky_pk in self.nearest_bout_times[monkey_pk].iterkeys():
+                self.mean_nearest_bout_times[monkey_pk][nearest_mky_pk] = numpy.mean(self.nearest_bout_times[monkey_pk][nearest_mky_pk])
+
+    def normalize_averages(self):
+        def norm_sum(source, target):
+            return self.mean_nearest_bout_times[source][target] + self.mean_nearest_bout_times[target][source]
+        print "Normalizing relationships..."
+        norm_function = self.normalization_function if self.normalization_function else norm_sum
+        edge_values = list()
+        for monkey_pk in self.nearest_bout_times.iterkeys():
+            for nearest_mky_pk in self.nearest_bout_times[monkey_pk].iterkeys():
+                norm_value = norm_function(monkey_pk, nearest_mky_pk)
+                self.normalized_relationships[monkey_pk][nearest_mky_pk] = norm_value
+                edge_values.append(norm_value)
+        edge_values = sorted(edge_values)
+        max_edge = edge_values[len(edge_values)-1]
+        pct_cutoff = .25
+        value_cutoff = edge_values[int(len(edge_values)*pct_cutoff)]
+        for monkey_pk in self.nearest_bout_times.iterkeys():
+            for nearest_mky_pk in self.nearest_bout_times[monkey_pk].iterkeys():
+                if self.normalized_relationships[monkey_pk][nearest_mky_pk] >= value_cutoff:
+                    self.normalized_relationships[monkey_pk][nearest_mky_pk] /= max_edge
+                else:
+                    self.normalized_relationships[monkey_pk][nearest_mky_pk] = 0
+
+    def _construct_node_data(self, monkey_pk, data=None):
+        from matrr.models import MonkeyToDrinkingExperiment
+        #  IMPORTANT NOTE
+        # Data put in here _will_ be visible in the GraphML, and in turn the web page's source code
+        data = data if data else dict()
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
+        data['category'] = gadgets.identify_drinking_category(mtds)
+        data['color'] = RHESUS_COLORS[data['category']]
+        data['style'] = 'filled'
+        data['fillcolor'] = RHESUS_COLORS[data['category']]
+        data['fontcolor'] = 'white'
+        data['label'] = monkey_pk
+        return data
+
+    def _construct_edge_data(self, source_pk, target_pk, data=None):
+        #  IMPORTANT NOTE
+        # Data put in here _will_ be visible in the GraphML, and in turn the web page's source code
+        data = data if data else dict()
+#        data['label'] = "%d->%d" % (int(source_pk), int(target_pk))
+        data['label'] = "%.2f" % (self.normalized_relationships[source_pk][target_pk] + self.normalized_relationships[target_pk][source_pk])
+        data['penwidth'] = (self.normalized_relationships[source_pk][target_pk] + self.normalized_relationships[target_pk][source_pk]+1)**2
+        data['style'] = 'solid'
+        data['dir'] = 'none'
+#        data['penwidth'] = .2
+        return data
+
+    def _add_monkey_node(self, monkey_pk):
+        self.network.add_node(monkey_pk, **self._construct_node_data(monkey_pk))
+
+    def _add_monkey_edge(self, source_pk, target_pk):
+        self.network.add_edge(source_pk, target_pk, **self._construct_edge_data(source_pk, target_pk))
 
