@@ -268,6 +268,7 @@ class ConfederateNetwork(object):
         self.cohort = cohort
         self. monkeys = Monkey.objects.Drinkers().filter(cohort=self.cohort)
         self.network = network if network else pgv.AGraph()
+        self.network.clear()
         self.depth = depth
         self.define_nodes()
         self.collect_nearest_bout_times()
