@@ -268,6 +268,7 @@ class ConfederateNetwork(object):
         self.cohort = cohort
         self.monkeys = Monkey.objects.Drinkers().filter(cohort=self.cohort)
         self.network = pgv.agraph.AGraph(name=self.cohort.coh_cohort_name, directed=True)
+        self.network.clear()
         self.normalization_function = normalization_function
         self.depth = depth # this doesn't do anything at the moment
         self.define_nodes()
