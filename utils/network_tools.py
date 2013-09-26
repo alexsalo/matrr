@@ -300,7 +300,7 @@ class ConfederateNetwork(object):
         print "Collecting nearest bout times..."
         try:
             f = open('utils/DATA/json/ConfederateNetwork-%d-nearest_bout_times.json' % self.cohort.pk, 'r')
-        except:
+        except IOError:
             for monkey in self.monkeys:
                 print "Starting Monkey %d" % monkey.pk
                 for bout in ExperimentBout.objects.OA().filter(mtd__monkey=monkey):
@@ -308,6 +308,7 @@ class ConfederateNetwork(object):
                     for close_bout in nearest_bouts:
                         self.nearest_bout_times[monkey.pk][close_bout.mtd.monkey.pk].append(math.fabs(bout.ebt_start_time-close_bout.ebt_start_time))
         else:
+            self.nearest_bout_times.clear()
             self.nearest_bout_times = json.loads(f.read())
         finally:
             f = open('utils/DATA/json/ConfederateNetwork-%d-nearest_bout_times.json' % self.cohort.pk, 'w')
