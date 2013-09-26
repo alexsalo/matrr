@@ -12,3 +12,4 @@ cohort_pk = int(sys.argv[1]) # 0 index is this file's filename
 cfn = ConfederateNetwork(Cohort.objects.get(pk=cohort_pk))
 cfn.network.layout(prog='dot')
 cfn.network.draw('ConfederateNetwork.%d.png' % cohort_pk)
+cfn.network.close()
