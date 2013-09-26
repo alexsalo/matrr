@@ -266,9 +266,9 @@ class ConfederateNetwork(object):
         from matrr.models import Cohort, Monkey
         assert isinstance(cohort, Cohort)
         self.cohort = cohort
-        self. monkeys = Monkey.objects.Drinkers().filter(cohort=self.cohort)
-        self.network = network if network else pgv.AGraph()
-        self.network.clear()
+        self.monkeys = Monkey.objects.Drinkers().filter(cohort=self.cohort)
+        self.network = pgv.agraph.AGraph(name=self.cohort.coh_cohort_name, directed=True)
+        pgv.AGraph().clear()
         self.depth = depth
         self.define_nodes()
         self.collect_nearest_bout_times()
