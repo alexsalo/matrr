@@ -255,21 +255,21 @@ class ConfederateNetwork(object):
     network = None
     cohort = None
     monkeys = None
-    depth = None
+    depth = None # this doesn't do anything at the moment
     normalization_function = None
 
     nearest_bout_times = defaultdict(lambda: defaultdict(lambda: list())) # nearest_bout_time[source monkey.pk][target monkey.pk] = [array of seconds to nearest bout]
     mean_nearest_bout_times = defaultdict(lambda: dict()) # nearest_bout_time[source monkey.pk][target monkey.pk] = average seconds between monkey's nearest bout
     normalized_relationships = defaultdict(lambda: dict())
 
-    def __init__(self, cohort, network=None, depth=1):
+    def __init__(self, cohort, normalization_function=None, depth=1):
         from matrr.models import Cohort, Monkey
         assert isinstance(cohort, Cohort)
         self.cohort = cohort
         self.monkeys = Monkey.objects.Drinkers().filter(cohort=self.cohort)
         self.network = pgv.agraph.AGraph(name=self.cohort.coh_cohort_name, directed=True)
-        pgv.AGraph().clear()
-        self.depth = depth
+        self.normalization_function = normalization_function
+        self.depth = depth # this doesn't do anything at the moment
         self.define_nodes()
         self.collect_nearest_bout_times()
         self.average_nearest_bout_times()
