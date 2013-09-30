@@ -1248,7 +1248,8 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dpi=DEFAULT_DPI):
     (osm, osr), (m, b, r) = stats.probplot(gkg_daycounts, dist='norm')
     osmf = osm.take([0, -1])
     osrf = m * osmf + b
-    regression_label = "r=%f" % r
+    regression_label = "m=%.4f, b=%.4f, r=%.4f" % (m, b, r)
+    subplot.plot(limits, limits, '-', color='orange')
     subplot.plot(osm, osr, '.')
     subplot.plot(osmf, osrf, '-', label=regression_label)
     subplot.legend(loc=0)
