@@ -1221,6 +1221,43 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
     return fig
 
 
+def rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dpi=DEFAULT_DPI):
+    fig = pyplot.figure(figsize=(8,6), dpi=dpi)
+    gs = gridspec.GridSpec(1, 1)
+    gs.update(left=0.1, right=0.97, top=.94, wspace=.25, hspace=0)
+    subplot = fig.add_subplot(gs[:,:])
+
+    monkeys = Monkey.objects.Drinkers().filter(cohort__in=[5,6,9,10]).values_list('pk', flat=True).distinct()
+    increment = .25
+    limits = numpy.arange(0, 7, increment)
+    gkg_daycounts = numpy.zeros(len(limits))
+    for monkey in monkeys:
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
+        if not mtds.count():
+            continue
+        max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
+        min_date = mtds.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
+        days = float((max_date-min_date).days)
+        for index, limit in enumerate(limits):
+            if not limit:
+                continue
+            _count = mtds.filter(mtd_etoh_g_kg__gt=limits[index-1]).filter(mtd_etoh_g_kg__lte=limits[index]).count()
+            gkg_daycounts[index] += _count / days
+
+    gkg_daycounts = numpy.array(gkg_daycounts)
+    (osm, osr), (m, b, r) = stats.probplot(gkg_daycounts, dist='norm')
+    osmf = osm.take([0, -1])
+    osrf = m * osmf + b
+    regression_label = "r=%f" % r
+    subplot.plot(osm, osr, '.')
+    subplot.plot(osmf, osrf, '-', label=regression_label)
+    subplot.legend(loc=0)
+    subplot.set_title("Q-Q plot of Intakes Exceeding g/kg Minimums versus normal distribution")
+    subplot.set_ylabel("Observed")
+    subplot.set_xlabel("Expected")
+    return fig
+
+
 def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(1, 1)
@@ -1258,8 +1295,8 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=HISTOGRAM_FIG_SIZE):
 def _etoh_gkg_forced_histogram(subplot, tick_size=16, title_size=22, label_size=20):
     monkeys = Monkey.objects.Drinkers().filter(cohort__in=[5,6,9,10]).values_list('pk', flat=True).distinct()
 
-    increment = .1
-    limits = numpy.arange(0, 8, increment)
+    increment = .25
+    limits = numpy.arange(0, 7, increment)
     gkg_daycounts = numpy.zeros(len(limits))
     for monkey in monkeys:
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
