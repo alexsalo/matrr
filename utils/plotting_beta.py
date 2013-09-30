@@ -1252,7 +1252,7 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dpi=DEFAULT_DPI):
     subplot.plot(osm, osr, '.')
     subplot.plot(osmf, osrf, '-', label=regression_label)
     subplot.legend(loc=0)
-    subplot.set_title("Q-Q plot of Intakes Exceeding g/kg Minimums versus normal distribution")
+    subplot.set_title("Q-Q plot:  EtOH Intake Distribution VS Normal Distribution")
     subplot.set_ylabel("Observed")
     subplot.set_xlabel("Expected")
     return fig
