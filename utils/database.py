@@ -13,6 +13,7 @@ import csv
 import re
 import gc
 import logging
+from utils import gadgets
 
 
 def queryset_iterator(queryset, chunksize=5000):
@@ -2593,4 +2594,44 @@ def load_rna_records(filename):
                 print e
                 print row
                 print ''
+
+
+def dump_rhesus_summed_gkg_by_quarter():
+    f = open('summed_gkg_by_category.csv', 'w')
+    writer = csv.writer(f)
+    writer.writerow([
+        'cohort', 'monkey',
+        '12mo summed gkg', '12mo category',
+        'first 3mo summed gkg', 'first 3mo category',
+        'second 3mo summed gkg', 'second 3mo category',
+        'third 3mo summed gkg', 'third 3mo category',
+        'fourth 3mo summed gkg', 'fourth 3mo category'
+    ])
+
+    data_rows = list()
+    for cohort_name, cohort_pk  in Cohort.objects.filter(pk__in=[5,6,9,10]).order_by('coh_cohort_name').values_list('coh_cohort_name', 'pk'):
+        for monkey_pk in Monkey.objects.Drinkers().filter(cohort=cohort_pk).order_by('pk').values_list('pk', flat=True):
+            row = list()
+            row.extend([cohort_name, monkey_pk])
+
+            oa_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
+            first_mtds = oa_mtds.first_three_months_oa()
+            second_mtds = oa_mtds.second_three_months_oa()
+            third_mtds = oa_mtds.third_three_months_oa()
+            fourth_mtds = oa_mtds.fourth_three_months_oa()
+            mtd_sets = [oa_mtds, first_mtds, second_mtds, third_mtds, fourth_mtds]
+
+            for _mtds in mtd_sets:
+                gkg_sum = _mtds.aggregate(Sum('mtd_etoh_g_kg'))['mtd_etoh_g_kg__sum']
+                period_category = gadgets.identify_drinking_category(_mtds)
+                row.append(gkg_sum)
+                row.append(period_category)
+            data_rows.append(row)
+    writer.writerows(data_rows)
+    f.close()
+    return
+
+
+
+
 
