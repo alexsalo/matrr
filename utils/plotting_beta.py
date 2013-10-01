@@ -1221,7 +1221,7 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
     return fig
 
 
-def rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dpi=DEFAULT_DPI):
+def rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dpi=DEFAULT_DPI, dist='norm', verbose_dist='Normal'):
     fig = pyplot.figure(figsize=(8,6), dpi=dpi)
     gs = gridspec.GridSpec(1, 1)
     gs.update(left=0.1, right=0.97, top=.94, wspace=.25, hspace=0)
@@ -1245,14 +1245,16 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dpi=DEFAULT_DPI):
             gkg_daycounts[index] += _count / days
 
     gkg_daycounts = numpy.array(gkg_daycounts)
-    (osm, osr), (m, b, r) = stats.probplot(gkg_daycounts, dist='norm')
+    gkg_mean = gkg_daycounts.mean()
+    gkg_std = gkg_daycounts.std()
+    (osm, osr), (m, b, r) = stats.probplot(gkg_daycounts, sparams=(gkg_mean, gkg_std), dist=dist)
     osmf = osm.take([0, -1])
     osrf = m * osmf + b
     regression_label = "m=%.4f, b=%.4f, r=%.4f" % (m, b, r)
     subplot.plot(osm, osr, '.')
     subplot.plot(osmf, osrf, '-', label=regression_label)
     subplot.legend(loc=0)
-    subplot.set_title("Q-Q plot:  EtOH Intake Distribution VS Normal Distribution")
+    subplot.set_title("Q-Q plot:  EtOH Intake Distribution VS %s Distribution" % verbose_dist)
     subplot.set_ylabel("Observed")
     subplot.set_xlabel("Expected")
     return fig
