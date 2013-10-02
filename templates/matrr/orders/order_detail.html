@@ -2,7 +2,7 @@
 
 {% block content %}
 	<div class='large-headline' xmlns="http://www.w3.org/1999/html">
-		{% block title %}{% if edit %}Edit Order{% else %}Order Detail{% endif %}{% endblock %}
+		{% block title %}{% if edit %}Edit Order{% else %}Order Detail{% endif %}:  {{ order.pk }}{% endblock %}
 	</div>
 
 	<br/>

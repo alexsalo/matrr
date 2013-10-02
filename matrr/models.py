@@ -2486,6 +2486,7 @@ class TissueRequest(models.Model):
 
     def get_data(self):
         return [['Tissue Type', self.tissue_type],
+                ['RTT ID', self.pk],
                 ['Fix', self.rtt_fix_type],
                 ['Prep', self.rtt_prep_type],
                 ['Amount', self.get_amount()],
@@ -2494,6 +2495,7 @@ class TissueRequest(models.Model):
 
     def get_latex_data(self):
         return [['Tissue Type', self.tissue_type],
+                ['RTT ID', self.pk],
                 ['Fix', self.rtt_fix_type],
                 ['Amount', self.get_latex_amount()],
                 ['Estimated Cost', "$%.2f" % self.get_estimated_cost()]]
