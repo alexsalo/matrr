@@ -2250,7 +2250,7 @@ class Request(models.Model, DiffingMixin):
 
     def ship_request(self):
         fully_shipped = True
-        for tr in self.tissue_request_set.all():
+        for tr in self.tissue_request_set.exclude(accepted_monkey=None):
             if tr.shipment is None or tr.shipment.shp_shipment_status != ShipmentStatus.Shipped:
                 fully_shipped = False
                 break
@@ -3709,7 +3709,6 @@ def request_post_save(**kwargs):
         tissues = req_request.tissue_request_set.all().values_list('tissue_type', flat=True)
         if hippocampus in tissues:
             from matrr.emails import send_jim_hippocampus_notification
-
             send_jim_hippocampus_notification(req_request)
     # For Accepted and Partially accepted Requests
     if previous_status == RequestStatus.Submitted \

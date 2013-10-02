@@ -6,7 +6,7 @@ from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
-from settings import PRODUCTION, ENABLE_EMAILS
+from settings import PRODUCTION
 from matrr import gizmo, emails
 from matrr.forms import TissueShipmentForm, TrackingNumberForm
 from matrr.models import Request, User, Shipment, ShipmentStatus, RequestStatus
@@ -50,8 +50,7 @@ def shipping_overview(request):
     if request.user.has_perm('matrr.ship_genetics'):
         pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Genetics)
     # Shipped Shipments
-    shipped_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Shipped).exclude(
-        req_request__req_status=RequestStatus.Shipped)
+    shipped_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Shipped).exclude(req_request__req_status=RequestStatus.Shipped)
 
     return render_to_response('matrr/shipping/shipping_overview.html',
                               {'accepted_requests': accepted_requests,
@@ -145,9 +144,8 @@ def shipment_detail(request, shipment_id):
             else:
                 if shipment_status == ShipmentStatus.Shipped:
                     messages.success(request, "Shipment #%d has been shipped." % shipment.pk)
-                    if PRODUCTION:
-                        emails.send_po_manifest_upon_shipment(shipment)
-                        emails.notify_user_upon_shipment(shipment)
+                    emails.send_po_manifest_upon_shipment(shipment)
+                    emails.notify_user_upon_shipment(shipment)
                 if shipment_status == ShipmentStatus.Genetics:
                     messages.success(request, "Shipment #%d has been sent to the DNA processing facility." % shipment.pk)
                 req_request.ship_request()
