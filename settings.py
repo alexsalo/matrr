@@ -1,4 +1,3 @@
-# bogus change
 import logging
 import os
 import traceback
@@ -21,7 +20,7 @@ elif path == '/web/www/matrr-dev':
 else:
 	DEVELOPMENT = True
 
-ENABLE_EMAILS = False
+ENABLE_EMAILS = True
 
 import getpass
 if getpass.getuser().lower() == 'root':
