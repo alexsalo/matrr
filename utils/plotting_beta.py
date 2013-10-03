@@ -1488,7 +1488,7 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category, distinct_
     return fig
 
 
-def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
+def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None, include_regression=False):
     xy_kwargs = xy_kwargs if xy_kwargs is not None else dict()
     all_x = list()
     all_y = list()
@@ -1501,23 +1501,19 @@ def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None):
         plot_tools.create_convex_hull_polygon(subplot, _x, _y, color)
 
     # regression line
-    all_x = numpy.array(all_x)
-    all_y = numpy.array(all_y)
-    slope, intercept, r_value, p_value, std_err = stats.linregress(all_x, all_y)
+    if include_regression:
+        all_x = numpy.array(all_x)
+        all_y = numpy.array(all_y)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(all_x, all_y)
 
-    reg_label = "Fit: r=%f, p=%f" % (r_value, p_value)
-    subplot.plot(all_x, all_x * slope + intercept, color='black', label=reg_label)
+        reg_label = "Fit: p=%f" % p_value
+        subplot.plot(all_x, all_x * slope + intercept, color='black', label=reg_label)
 
     handles, labels = subplot.get_legend_handles_labels()
-    _handles = list()
-    _labels = copy.copy(DRINKING_CATEGORIES)
-    _labels.append(reg_label)
-    for _l in _labels:
-        _handles.append(handles[labels.index(_l)])
-    return subplot, _handles, _labels
+    return subplot, handles, labels
 
 
-def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE):
+def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE, include_regression=False):
     def _oa_pelletvolume_perday_perkg(monkey_category):
         monkey_set = RHESUS_DRINKERS_DISTINCT[monkey_category]
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
@@ -1554,7 +1550,7 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE):
 
     # main scatterplot, pellet vs etoh
     subplot = fig.add_subplot(main_gs[:])
-    subplot, handles, labels = _rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg)
+    subplot, handles, labels = _rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg, include_regression=include_regression)
     subplot.legend(handles, labels, scatterpoints=1, loc='lower left')
     subplot.set_title("EtOH Intake vs pellets")
     subplot.set_ylabel("Average pellet (count) / Average weight (kg), per monkey")
@@ -1562,17 +1558,18 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE):
 
     # inset scatterplot, pellet vs water
     inset_plot = fig.add_axes([0.6, 0.7, 0.37, 0.23])
-    inset_plot, handles, labels = _rhesus_category_scatterplot(inset_plot, _oa_pelletwater_perday_perkg)
+    inset_plot, handles, labels = _rhesus_category_scatterplot(inset_plot, _oa_pelletwater_perday_perkg, include_regression=include_regression)
     inset_plot.set_title("H20 Intake vs pellets")
     inset_plot.set_ylabel("Pellet(count)/Weight(kg)/Monkey")
     inset_plot.set_xlabel("Water (mL.) / Weight(kg) / Monkey")
     ## Because the legend is almost the same as the main subplot's legend, we dont need to show most of the keys
     ## but we do want to show the regression fit, and large enough to read without hiding the scatterplot
-    for index, label in enumerate(labels):
-        if 'Fit' in label:
-            break
-    inset_legend = inset_plot.legend([handles[index]], [labels[index]], scatterpoints=1, loc='upper right')
-    inset_legend.get_frame().set_alpha(0) # hide the legend's background, so it doesn't hide the scatterplot
+    if include_regression:
+        for index, label in enumerate(labels):
+            if 'Fit' in label:
+                break
+        inset_legend = inset_plot.legend([handles[index]], [labels[index]], scatterpoints=1, loc='upper right')
+        inset_legend.get_frame().set_alpha(0) # hide the legend's background, so it doesn't hide the scatterplot
     return fig
 
 
@@ -3674,8 +3671,14 @@ def create_manuscript_graphs(output_path='', svg=True, png=True, fig_size=(25, 1
     names.append('monkey_etoh_bouts_vol-10052')
     figures.append(monkey_plots.monkey_etoh_bouts_vol(10049)[0])
     names.append('monkey_etoh_bouts_vol-10049')
-    figures.append(rhesus_oa_pelletvolume_perday_perkg())
+    figures.append(rhesus_oa_pelletvolume_perday_perkg(include_regression=False))
     names.append('rhesus_oa_pelletvolume_perday_perkg')
+    figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dist='truncnorm', verbose_dist='Truncated Normal', dpi=1200))
+    names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot-truncnorm.png')
+    figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dist='truncexpon', verbose_dist='Truncated Exponential', dpi=1200))
+    names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot-truncexpon.png')
+    figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dist='uniform', verbose_dist='Uniform'))
+    names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot-uniform.png')
     if svg or png:
         for FigName in zip(figures, names):
             fig, name = FigName
