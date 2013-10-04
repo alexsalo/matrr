@@ -893,6 +893,10 @@ td.mbb_1 {
     border: 1px solid #999;
 }
 
+.table-drink-cats .dont-wrap-header {
+    white-space: nowrap;
+}
+
 .table-drink-cats .drink-cat-rows .LD {
     background: #739FE6;
 }

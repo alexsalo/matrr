@@ -89,9 +89,9 @@
                     <tr>
                         {% if perms.matrr.monkey_view_confidential %}
                             <th>Real Name</th>{% endif %}
-                        <th nowrap><a href="?order_by=pk">Monkey ID <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                        <th class='dont-wrap-header'><a href="?order_by=pk">Monkey ID <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
                         <th>Sex</th>
-                        <th nowrap><a href="?order_by=mky_birthdate">Birthdate <img src='{{ STATIC_URL }}images/DecSort.png'></a></th>
+                        <th class='dont-wrap-header'><a href="?order_by=mky_birthdate">Birthdate <img src='{{ STATIC_URL }}images/DecSort.png'></a></th>
                         <th>Weight</th>
                         {% if user.is_authenticated %}
                             <th><a href="?order_by=mky_necropsy_start_date">Necropsy Start Date <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
@@ -126,9 +126,9 @@
                     <tr>
                         {% if perms.matrr.monkey_view_confidential %}
                             <th>Real Name</th>{% endif %}
-                        <th nowrap><a href="?order_by=pk">Monkey ID <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                        <th class='dont-wrap-header'><a href="?order_by=pk">Monkey ID <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
                         <th>Sex</th>
-                        <th nowrap><a href="?order_by=mky_birthdate">Birthdate <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                        <th class='dont-wrap-header'><a href="?order_by=mky_birthdate">Birthdate <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
                         <th>Weight</th>
                         {% if user.is_authenticated %}
                             <th>Test Group</th>
