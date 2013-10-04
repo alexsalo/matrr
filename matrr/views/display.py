@@ -77,7 +77,7 @@ def __cohorts_view(request, cohorts, template_name):
             cohort_list = paginator.page(paginator.num_pages)
     else:
         cohort_list = cohorts
-
+    has_categories = bool(cohort.monkey_set.all().values_list('mky_drinking_category', flat=True))
     return render_to_response(template_name, {'cohort_list': cohort_list}, context_instance=RequestContext(request))
 
 
@@ -89,8 +89,12 @@ def cohort_details(request, **kwargs):
         images = CohortImage.objects.filter(cohort=cohort, canonical=True).vip_filter(request.user)
     else:
         return redirect(reverse('cohorts'))
+    order_by = request.GET.get('order_by', 'pk')
+    monkeys = cohort.monkey_set.all().order_by(order_by)
+    has_categories = any(cohort.monkey_set.all().values_list('mky_drinking_category', flat=True))
     return render_to_response('matrr/cohort.html',
-                              {'cohort': cohort, 'images': images, 'coh_data': coh_data, 'plot_gallery': True},
+                              {'cohort': cohort, 'images': images, 'coh_data': coh_data,
+                               'plot_gallery': True, 'has_categories': has_categories, 'monkeys': monkeys},
                               context_instance=RequestContext(request))
 
 

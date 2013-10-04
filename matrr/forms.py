@@ -874,9 +874,9 @@ class BECRangeForm(ExperimentRangeForm):
 
 
 class AdvancedSearchSelectForm(forms.Form):
-    sex = forms.MultipleChoiceField(choices=models.Monkey.SEX_CHOICES, required=False,
+    sex = forms.MultipleChoiceField(choices=models.SexChoices, required=False,
                                     widget=widgets.CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
-    species = forms.MultipleChoiceField(choices=models.Monkey.SPECIES, required=False,
+    species = forms.MultipleChoiceField(choices=models.Species, required=False,
                                         widget=widgets.CheckboxSelectMultiple(attrs={'onchange': 'post_adv_form()'}))
 
 

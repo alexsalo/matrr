@@ -19,6 +19,7 @@ from django.dispatch import receiver
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError, PermissionDenied
 #from matrr.plotting import cohort_plots
+from matrr import plotting
 
 import settings
 
@@ -126,6 +127,25 @@ ExperimentEventType = Enumeration([
     ('T', 'Time', 'Time event'),
     ('P', 'Pellet', 'Pellet event'),
 ])
+
+DrinkingCategory = Enumeration([
+    ('LD', 'Low', 'Low Drinker'),
+    ('BB', 'Binge', 'Binge Drinker'),
+    ('HD', 'High', 'High Drinker'),
+    ('VHD', 'VeryHigh', 'Very High Drinker'),
+])
+
+SexChoices = Enumeration([
+    ('M', 'Male', 'Male'),
+    ('F', 'Female', 'Female'),
+])
+
+Species = Enumeration([
+    ('Rhesus', 'Rhesus', 'Rhesus'),
+    ('Cyno', 'Cynomolgus', 'Cyno'),
+    ('Vervet', 'Vervet', 'Vervet'),
+])
+
 
 LeftRight = Enumeration([
     ('L', 'Left', 'Left side'),
@@ -498,9 +518,6 @@ class MonkeyManager(models.Manager):
 
 class Monkey(models.Model):
     objects = MonkeyManager()
-    SEX_CHOICES = ( ('M', 'Male'), ('F', 'Female'))
-    SPECIES = ( ('Rhesus', 'Rhesus'), ('Cyno', 'Cynomolgus'), ('Vervet', 'Vervet'))
-
     mky_id = models.AutoField('Monkey ID', primary_key=True)
     cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', verbose_name='Cohort',
                                help_text='The cohort this monkey belongs to.')
@@ -509,37 +526,30 @@ class Monkey(models.Model):
     # Legacy note about the mky_gender field
     # It was decided sometime 2011 that 'gender' is an inaccurate representation of a monkey's sex.
     # It should (justly) be 'sex'.
-    # This was decided after significant codebase and database population -.-
+    # This was decided after significant codebase and database development -.-
     # So, instead of a massively trivial refactoring of a single database field
     # We changed any public-facing use of this field to read 'sex', primarily in templates.
     # I have no intention of ever renaming this field.  -JF
-    mky_gender = models.CharField('Sex', max_length=1, choices=SEX_CHOICES, blank=True, null=True,
-                                  help_text='The sex of the monkey.')
-    mky_birthdate = models.DateField('Date of Birth', blank=True, null=True, max_length=20,
-                                     help_text='Please enter the date the monkey was born on.')
+    mky_gender = models.CharField('Sex', max_length=1, choices=SexChoices, blank=True, null=True, help_text='The sex of the monkey.')
+    mky_birthdate = models.DateField('Date of Birth', blank=True, null=True, max_length=20, help_text='Please enter the date the monkey was born on.')
     mky_weight = models.FloatField('Weight', blank=True, null=True,
                                    help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
     mky_drinking = models.BooleanField('Is Drinking', null=False, help_text='Was this monkey given alcohol?')
-    mky_housing_control = models.BooleanField('Housing Control', null=False, default=False,
-                                              help_text='Was this monkey part of a housing control group?')
-    mky_necropsy_start_date = models.DateField('Necropsy Start Date', null=True, blank=True,
-                                               help_text='Please enter the date the necropsy was performed on (or was started on).')
+    mky_housing_control = models.BooleanField('Housing Control', null=False, default=False, help_text='Was this monkey part of a housing control group?')
+    mky_necropsy_start_date = models.DateField('Necropsy Start Date', null=True, blank=True, help_text='Please enter the date the necropsy was performed on (or was started on).')
     mky_necropsy_start_date_comments = models.TextField('Necropsy Start Date Comments', null=True, blank=True)
-    mky_necropsy_end_date = models.DateField('Necropsy End Date', null=True, blank=True,
-                                             help_text='Please enter the end date of the necropsy.')
+    mky_necropsy_end_date = models.DateField('Necropsy End Date', null=True, blank=True, help_text='Please enter the end date of the necropsy.')
     mky_necropsy_end_date_comments = models.TextField('Necropsy End Date Comments', null=True, blank=True)
-    mky_study_complete = models.BooleanField('Complete Study Performed', null=False, default=False,
-                                             help_text='Did this monkey complete all stages of the experiment?')
+    mky_study_complete = models.BooleanField('Complete Study Performed', null=False, default=False, help_text='Did this monkey complete all stages of the experiment?')
     mky_stress_model = models.CharField('Stress Model', null=True, blank=True, max_length=30,
                                         help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
     mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
     mky_notes = models.CharField('Monkey Notes', null=True, blank=True, max_length=1000, )
-    mky_species = models.CharField('Species', max_length=30, choices=SPECIES,
-                                   help_text='Please select the species of the monkey.')
+    mky_species = models.CharField('Species', max_length=30, choices=Species, help_text='Please select the species of the monkey.')
     mky_high_drinker = models.BooleanField("High-drinking monkey", null=False, blank=False, default=False)
     mky_low_drinker = models.BooleanField("Low-drinking monkey", null=False, blank=False, default=False)
-    mky_age_at_intox = models.PositiveIntegerField("Age at first Intoxication (days)", null=True, blank=False,
-                                                   default=None)
+    mky_age_at_intox = models.PositiveIntegerField("Age at first Intoxication (days)", null=True, blank=False, default=None)
+    mky_drinking_category = models.CharField('Drinking Category', max_length=3, choices=DrinkingCategory, blank=False, null=True, help_text='The Drinking Category of the Monkey')
 
     def __unicode__(self):
         return str(self.mky_id)
@@ -560,7 +570,7 @@ class Monkey(models.Model):
             return True
         return False
 
-    def migrate_species(self, choices=SPECIES):
+    def migrate_species(self, choices=Species):
         for choice in choices:
             if choice[0] in self.cohort.coh_cohort_name:
                 self.mky_species = choice[0]
@@ -579,6 +589,12 @@ class Monkey(models.Model):
             self.mky_age_at_intox = age
             self.save()
 
+    def populate_drinking_category(self):
+        from utils.gadgets import identify_drinking_category
+        oa_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
+        if oa_mtds:
+            self.mky_drinking_category = identify_drinking_category(oa_mtds)
+            self.save()
 
     class Meta:
         db_table = 'mky_monkeys'

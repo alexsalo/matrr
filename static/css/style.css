@@ -580,7 +580,6 @@ table.common th {
 
 table.common_center td {
     text-align: center;
-    color: #4E4E4E;
     font-size: small;
 }
 
@@ -867,3 +866,46 @@ td.mbb_1 {
 .fragmentfoot{
     width: 800.0px; margin:auto; text-align:center;
 }
+
+.menu-links .LD a {
+    color: #405980
+}
+
+.menu-links .BD a {
+    color: #408040
+}
+
+.menu-links .HD a {
+    color: #805940
+}
+
+.menu-links .VHD a {
+    color: #804040
+}
+
+.table-drink-cats-legend {
+    color: #4E4E4E;
+    background-color: #D8D8CB;
+    border: 3px solid #7B7E82;
+    float: right
+}
+.table-drink-cats-legend td {
+    border: 1px solid #999;
+}
+
+.table-drink-cats .drink-cat-rows .LD {
+    background: #739FE6;
+}
+
+.table-drink-cats .drink-cat-rows .BD {
+    background: #73E673;
+}
+
+.table-drink-cats .drink-cat-rows .HD {
+    background: #E6A173;
+}
+
+.table-drink-cats .drink-cat-rows .VHD {
+    background: #E67373;
+}
+
