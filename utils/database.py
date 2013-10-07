@@ -1652,22 +1652,26 @@ def load_necropsy_summary(filename, six_month_cohort=False):
         (row[21] = '22hr_2nd_6mos_avg_g/kg' if present, column_offset += 1 starting from this row) # not included if six_month_cohort=True
         row[21]	= 22hr_12mos_avg_g/kg # not included if six_month_cohort=True
     """
-    csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
-    columns = csv_infile.next()
     pre_columns_offset = 0
     unsure = False
+    csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+    columns = csv_infile.next()
     try:
-        if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
-            pre_columns_offset = 2
-        elif six_month_cohort:
-            pass
-        else:
-            unsure = True
-    except:
+        _ = columns[1] == 'matrr_number'
+    except IndexError:
         csv_infile = csv.reader(open(filename, 'rU'), delimiter="\t")
         columns = csv_infile.next()
-        if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
-            pre_columns_offset = 2
+    if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
+        pre_columns_offset = 2
+    if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
+        pre_columns_offset = 2
+    elif columns[0] == 'matrr_number' and columns[1] == 'cohort_broad_title':
+        pass
+    elif six_month_cohort:
+        pass
+    else:
+        unsure = True
+
     if unsure:
         raise Exception("Unsure of format, investigate further and update this function.")
 
@@ -1685,7 +1689,7 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             except Monkey.DoesNotExist:
                 try:
                     monkey = Monkey.objects.get(mky_real_id=row[0])
-                    column_offset = 2 #
+#                    column_offset = 2 #
                 except Monkey.DoesNotExist:
                     raise Exception("No such monkey:  %s" % str(row[0]))
             try:
@@ -1698,22 +1702,21 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             monkey.mky_age_at_necropsy = row[7]
             monkey.save()
 
-            nec_sum.ncm_etoh_onset = datetime.datetime.strptime(row[8 + columns_offset], '%m/%d/%y')
+            nec_sum.ncm_etoh_onset = None if row[10 + columns_offset] == "control" else datetime.datetime.strptime(row[8 + columns_offset], '%m/%d/%y')
             nec_sum.ncm_age_onset_etoh = row[9 + columns_offset]
             nec_sum.ncm_etoh_4pct_induction = row[10 + columns_offset] if row[10 + columns_offset] != "control" else 0
             nec_sum.ncm_etoh_4pct_22hr = row[11 + columns_offset] if row[11 + columns_offset] != "control" else 0
             nec_sum.ncm_etoh_4pct_lifetime = row[12 + columns_offset] if row[12 + columns_offset] != "control" else 0
             nec_sum.ncm_etoh_g_lifetime = row[13 + columns_offset] if row[13 + columns_offset] != "control" else 0
-            nec_sum.ncm_sum_g_per_kg_induction = row[14 + columns_offset] if row[
-                                                                                 14 + columns_offset] != "control" else 0
+            nec_sum.ncm_sum_g_per_kg_induction = row[14 + columns_offset] if row[14 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_22hr = row[15 + columns_offset] if row[15 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_lifetime = row[16 + columns_offset] if row[16 + columns_offset] != "control" else 0
-            nec_sum.ncm_6_mo_start = datetime.datetime.strptime(row[17 + columns_offset], '%m/%d/%y')
-            nec_sum.ncm_6_mo_end = datetime.datetime.strptime(row[18 + columns_offset], '%m/%d/%y')
+            nec_sum.ncm_6_mo_start = None if row[17 + columns_offset] == "control" else datetime.datetime.strptime(row[17 + columns_offset], '%m/%d/%y')
+            nec_sum.ncm_6_mo_end = None if row[18 + columns_offset] == "control" else datetime.datetime.strptime(row[18 + columns_offset], '%m/%d/%y')
             nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[19 + columns_offset] if row[19 + columns_offset] != "control" else 0
             if not six_month_cohort:
                 nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
-                nec_sum.ncm_12_mo_end = datetime.datetime.strptime(row[19 + columns_offset], '%m/%d/%y')
+                nec_sum.ncm_12_mo_end = None if row[19 + columns_offset] == "control" else datetime.datetime.strptime(row[19 + columns_offset], '%m/%d/%y')
                 if extra_22hr_column:
                     nec_sum.ncm_22hr_2nd_6mos_avg_g_per_kg = row[21 + columns_offset] if row[21 + columns_offset] != "control" else 0
                     columns_offset += 1
