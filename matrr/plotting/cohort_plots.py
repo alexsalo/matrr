@@ -8,7 +8,7 @@ from scipy.linalg import LinAlgError
 from scipy.cluster import vq
 from matrr.models import *
 from utils.gadgets import Treemap
-from matrr.plotting import specific_callables, plot_tools
+from matrr.plotting import specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE
 
 def _cohort_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
     """
@@ -34,7 +34,7 @@ def _cohort_necropsy_summary_general(specific_callable, x_label, graph_title, le
             print("That's not a valid cohort.  Using monkey's cohort")
             return False, False
 
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     ax1 = fig.add_subplot(111)
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
     ax1.set_axisbelow(True)
@@ -120,7 +120,7 @@ def cohort_necropsy_sum_g_per_kg(cohort):
 
 
 def _cohort_tools_boxplot(data, title, x_label, y_label, scale_x=(), scale_y=()):
-    tool_figure = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     ax1 = tool_figure.add_subplot(111)
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
     ax1.set_axisbelow(True)
@@ -316,7 +316,7 @@ def cohort_etoh_bihourly_treemap(cohort, from_date=None, to_date=None, dex_type=
     tree = tuple(tree)
     color_tree = tuple(color_tree)
 
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     left, width = 0.02, 0.73
     bottom, height = 0.05, .85
     left_h = left+width+0.07
@@ -365,7 +365,7 @@ def cohort_etoh_induction_cumsum(cohort, stage=1):
     stages[2] = Q(eev_dose=1)
     stages[3] = Q(eev_dose=1.5)
 
-    fig = pyplot.figure(figsize=plot_tools.HISTOGRAM_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
 #   main graph
     main_gs = gridspec.GridSpec(monkeys.count(), 40)
     main_gs.update(left=0.02, right=0.95, wspace=0, hspace=.01*monkeys.count()) # sharing xaxis
@@ -402,7 +402,7 @@ def cohort_etoh_gkg_quadbar(cohort):
         except Cohort.DoesNotExist:
             print("That's not a valid cohort.")
             return False, False
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     fig.suptitle(str(cohort), size=18)
     main_gs = gridspec.GridSpec(2, 2)
     main_gs.update(left=0.08, right=.98, top=.92, bottom=.06, wspace=.02, hspace=.23)
@@ -474,7 +474,7 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
     else:
         return False, False
 
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     ax1 = fig.add_subplot(111)
 
 
@@ -651,7 +651,7 @@ def cohort_bec_monthly_centroid_distance_general(cohort, mtd_x_axis, mtd_y_axis,
         mky_datas[mky] = (bar_y, colors)
 
 
-    fig = pyplot.figure(figsize=plot_tools.DEFAULT_FIG_SIZE, dpi=plot_tools.DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(monkeys.count(), 40)
     main_gs.update(left=0.03, right=0.98, wspace=0, hspace=.1) # sharing xaxis
 
