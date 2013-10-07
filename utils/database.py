@@ -1623,7 +1623,12 @@ def load_necropsy_summary(filename, six_month_cohort=False):
     """
         This function will load a csv file in the format:
         row[0]	= matrr_number or mky_real_id
-        (( if row[0] is a mky_real_id and row[1] is "primary_cohort" the function will add 2 to all row indexes
+            if row[0] is a monkey_number and row[1] is "primary_cohort" the function will add 2 to all row indexes because columns are:
+            [0]mky_real_id,
+            [1]mky_id,
+            [2]primary_cohort (unused),
+            [3]cohort_broad_title (unused)
+            ...etc.
         row[1]	= cohort_broad_title 	# unused
         row[2]	= species 				# unused
         row[3]	= cohort_number 		# unused
