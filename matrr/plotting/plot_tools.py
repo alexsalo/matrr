@@ -382,30 +382,33 @@ def fetch_plot_choices(subject, user, cohort, tool):
 
 def create_necropsy_plots(cohorts=True, monkeys=True):
     if monkeys:
-        monkey_plots = [
-                        'monkey_necropsy_etoh_4pct',
-                        'monkey_necropsy_sum_g_per_kg',
-                        'monkey_necropsy_avg_22hr_g_per_kg']
+        plots = [
+            'monkey_necropsy_etoh_4pct',
+            'monkey_necropsy_sum_g_per_kg',
+            'monkey_necropsy_avg_22hr_g_per_kg',
+            ]
 
         from matrr.models import MonkeyImage, Monkey
+        from matrr.plotting import monkey_plots
         for monkey in NecropsySummary.objects.all().values_list('monkey', flat=True).distinct():
             monkey = Monkey.objects.get(pk=monkey)
-            for graph in monkey_plots:
+            for graph in plots:
                 MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=monkey_plots.MONKEY_PLOTS[graph][1], canonical=True)
                 gc.collect()
 
     if cohorts:
-        cohort_plots = [
-                        'cohort_necropsy_etoh_4pct',
-                        'cohort_necropsy_sum_g_per_kg',
-                        'cohort_necropsy_avg_22hr_g_per_kg',
-                        ]
+        plots = [
+            'cohort_necropsy_etoh_4pct',
+            'cohort_necropsy_sum_g_per_kg',
+            'cohort_necropsy_avg_22hr_g_per_kg',
+            ]
 
         from matrr.models import CohortImage, Cohort
+        from matrr.plotting import cohort_plots
         for cohort in NecropsySummary.objects.all().values_list('monkey__cohort', flat=True).distinct():
             cohort = Cohort.objects.get(pk=cohort)
             print cohort
-            for graph in cohort_plots:
+            for graph in plots:
                 gc.collect()
                 CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
 
@@ -513,27 +516,26 @@ def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
             print "That's not a valid cohort."
             return
 
-    cohort_plots = ['cohort_etoh_bihourly_treemap',
-                    ]
+    plots = ['cohort_etoh_bihourly_treemap',]
     dex_types = ["", "Induction", "Open Access"]
 
     print "Creating cohort mtd plots for %s." % str(cohort)
     for dex_type in dex_types:
         params = str({'dex_type': dex_type})
-        for method in cohort_plots:
+        for method in plots:
             CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=COHORT_PLOTS[method][1], canonical=True)
 
     if create_monkey_plots:
-        monkey_plots = ['monkey_etoh_bouts_vol',
-                        'monkey_etoh_first_max_bout',
-                        'monkey_etoh_bouts_drinks',
-                        ]
+        plots = ['monkey_etoh_bouts_vol',
+                 'monkey_etoh_first_max_bout',
+                 'monkey_etoh_bouts_drinks',
+                 ]
         dex_types = ["", "Induction", "Open Access"]
 
         print "Creating mtd monkey plots."
         for monkey in cohort.monkey_set.all():
             for dex_type in dex_types:
                 params = str({'dex_type': dex_type})
-                for method in monkey_plots:
+                for method in plots:
                     MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=MONKEY_PLOTS[method][1], canonical=True)
                     gc.collect()
