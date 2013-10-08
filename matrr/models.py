@@ -286,6 +286,24 @@ class OASplitQueryset(models.query.QuerySet):
     dex_type_lookup = ''
     dex_date_lookup = ''
 
+    def nth_n_months_oa(self, split_by_months, split_index):
+        # First, make sure all the MTDs we're working with are OA MTDs
+        oa_mtds = self.filter(**{self.dex_type_lookup: "Open Access"}) # Even though I wrote it, I'm not sure how much I trust DexType
+        # Collect the cohorts we need to sort thru
+        cohorts = self.values_list('monkey__cohort', flat=True).distinct()
+        # Collect the cohort events for our cohorts that mark the end of the first 6 months
+        event = EventType.objects.get(evt_name='22 hr Open Access Start')
+        cohort_events = CohortEvent.objects.filter(cohort__in=cohorts, event=event).values('cohort', 'cev_date').distinct()
+
+        # Instantiate an empty MTDQueryset, into which we store all our first six month oa MTDs
+        return_queryset = MTDQuerySet(self.model, using=self._db).none()
+        for cev in cohort_events:
+            # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
+            start_date = cev['cev_date'] + timedelta(days=(30*split_by_months)*split_index)
+            end_date = start_date + timedelta(days=30*split_by_months)
+            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort']).filter(**{self.dex_date_lookup+"__gte": start_date}).filter(**{self.dex_date_lookup+"__lt": end_date})
+        return return_queryset
+
     def __split_oa_in_half(self):
         # First, make sure all the MTDs we're working with are OA MTDs
         oa_mtds = self.filter(**{self.dex_type_lookup: "Open Access"}) # Even though I wrote it, I'm not sure how much I trust DexType
