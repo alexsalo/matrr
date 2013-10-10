@@ -1,65 +1,71 @@
+# Django settings for matrr project.
 import logging
 import os
+import getpass
 import traceback
 import sys
 
 path = os.path.dirname(os.path.realpath(__file__))
 
-TEMPLATE_DEBUG = DEBUG = False
-#TEMPLATE_DEBUG = DEBUG = True
+DEBUG = False
+TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
 ('matrr_admin', 'matrr_gleek@gmail.com'),
 )
-GLEEK = DEVELOPMENT = PRODUCTION = ENABLE_EMAILS = False
+MANAGERS = ADMINS
+
+GLEEK = False
+DEVELOPMENT = False
+PRODUCTION = False
 
 if path == '/web/www/matrr-prod':
-	PRODUCTION = GLEEK = ENABLE_EMAILS =True
+    PRODUCTION = True
+    GLEEK = True
 elif path == '/web/www/matrr-dev':
-	DEVELOPMENT = GLEEK = True
+    DEVELOPMENT = True
+    GLEEK = True
 else:
-	DEVELOPMENT = True
+    DEVELOPMENT = True
 
-ENABLE_EMAILS = True
+ENABLE_EMAILS = PRODUCTION
 
-import getpass
 if getpass.getuser().lower() == 'root':
-	if PRODUCTION:
-		os.environ['HOME'] = "/web/www/matrr-prod"
-	if DEVELOPMENT:
-		os.environ['HOME'] = "/web/www/matrr-dev"	
+    if PRODUCTION:
+        os.environ['HOME'] = "/web/www/matrr-prod"
+    if DEVELOPMENT:
+        os.environ['HOME'] = "/web/www/matrr-dev"
 if GLEEK:
-	import matplotlib
-	matplotlib.use('agg')
+    import matplotlib
+    matplotlib.use('agg')
 
-# logging
-_log_path = os.environ['HOME']
-_log_file = 'MATRR.log'
-LOG_FILE_PATH = os.path.join(_log_path, _log_file)
-# this logger will only get hit by django if debug == False.  I think django wraps everything in a try:catch
-logging.basicConfig(format='%(asctime)s|%(levelname)s|%(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=LOG_FILE_PATH, level=logging.WARNING)
 
-def log_except_hook(*exc_info):
-	text = "".join(traceback.format_exception(*exc_info))
-	logging.error("Unhandled exception: %s", text)
-
-if GLEEK:
-	sys.excepthook = log_except_hook
-
-CSRF_FAILURE_VIEW = 'matrr.views.basic.matrr_handler403'
 
 DATABASES = {
-		'default': {
-			'ENGINE': 'django.db.backends.postgresql_psycopg2',
-			# Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-			'NAME': 'matrr_production', # Or path to database file if using sqlite3.
-			'USER': 'matrr_prod', # Not used with sqlite3.
-			'PASSWORD': 'm0nk3y_1s_drUnK', # Not used with sqlite3.
-			'HOST': '10.4.100.2', # Set to empty string for localhost. Not used with sqlite3.
-			#'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-		}
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'matrr_production',
+        'USER': 'matrr_prod',
+        'PASSWORD': 'm0nk3y_1s_drUnK',
+        'HOST': '10.4.100.2',
+    }
 }
 
+# This view is what handled a failed CSRF test, pointing users to the FAQ page
+# for instructions on how to enable cookies.  This worked in 1.3 (woohoo!), it
+# should still work in 1.5 (I didn't see any release notes related to it).  I
+# believe there are more versitle error handling mechanics in 1.4+, if this doesn't
+# work in 1.5+
+CSRF_FAILURE_VIEW = 'matrr.views.basic.matrr_handler403'
+
+# Hosts/domain names that are valid for this site; required if DEBUG is False
+# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
+ALLOWED_HOSTS = ['.gleek.ecs.baylor.edu', '.matrr.com']
+
+# Local time zone for this installation. Choices can be found here:
+# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
+# although not all choices may be available on all operating systems.
+# In a Windows environment this must be set to your system time zone.
 TIME_ZONE = 'America/Chicago'
 
 # Language code for this installation. All choices can be found here:
@@ -73,18 +79,44 @@ SITE_ID = 1
 USE_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
-# calendars according to the current locale
+# calendars according to the current locale.
 USE_L10N = True
+
+# If you set this to False, Django will not use timezone-aware datetimes.
+USE_TZ = False
+
 UPLOAD_DIR = '/web/www/MATRR/prod/upload'
+
+# Absolute filesystem path to the directory that will hold user-uploaded files.
+# Example: "/var/www/example.com/media/"
 MEDIA_ROOT = '/web/www/MATRR/prod/media'
+
+# URL that handles the media served from MEDIA_ROOT. Make sure to use a
+# trailing slash.
+# Examples: "http://example.com/media/", "http://media.example.com/"
 MEDIA_URL = '/media/'
+
+# Absolute path to the directory static files should be collected to.
+# Don't put anything in this directory yourself; store your static files
+# in apps' "static/" subdirectories and in STATICFILES_DIRS.
+# Example: "/var/www/example.com/static/"
 STATIC_ROOT = '/web/www/MATRR/prod/static'
+
+# URL prefix for static files.
+# Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = '/static/'
+
 MATRR_STATIC_STRING = 'static'
 ADMIN_MEDIA_PREFIX = '/' + MATRR_STATIC_STRING + '/admin/'
+
+# Additional locations of static files
 STATICFILES_DIRS = (
+    # Put strings here, like "/home/html/static" or "C:/www/django/static".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
 	  os.path.join(path, MATRR_STATIC_STRING),
 	)
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -94,7 +126,7 @@ STATICFILES_FINDERS = (
 	)
 
 # List of regex URLs which do NOT require user to be logged in.
-# Your Login URL MUST be included. 
+# Your Login URL MUST be included.
 PUBLIC_URLS = (
 	r'^$',
 	r'^login/?$',
@@ -127,7 +159,7 @@ MIDDLEWARE_CLASSES = (
 	'matrr.middleware.EnforceLoginMiddleware',
 	)
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'matrr.urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
 	"django.contrib.auth.context_processors.auth",
@@ -153,6 +185,11 @@ TEMPLATE_DIRS = (
 	"/web/www/MATRR/prod/media/matrr_images/fragments",
 	)
 
+# Python dotted path to the WSGI application used by Django's runserver.
+WSGI_APPLICATION = 'matrr.wsgi.application'
+
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
+
 SPHINX_API_VERSION = 0x116
 SPHINX_SERVER = '10.4.100.2'
 SPHINX_PORT = 9312
@@ -164,13 +201,10 @@ INSTALLED_APPS = (
 		'django.contrib.sites',
 		'django.contrib.messages',
 		'django.contrib.staticfiles',
-		# Uncomment the next line to enable the admin:
 		'django.contrib.admin',
-		# Uncomment the next line to enable admin documentation:
 		'django.contrib.admindocs',
 
 		'matrr',
-		# django-registration installed by EJB - 3.16.11
 		'registration',
 		'utils',
 		'south',
@@ -193,6 +227,48 @@ PRIVATE_SEARCH_INDEXES = {'monkey_auth':("monkey_auth", 'Monkey')}
 ResearchUpdateInitialGrace = 90
 ResearchUpdateNoProgressGrace = 45
 ResearchUpdateInProgressGrace = 180
+# A sample logging configuration. The only tangible logging
+# performed by this configuration is to send an email to
+# the site admins on every HTTP 500 error when DEBUG=False.
+# See http://docs.djangoproject.com/en/dev/topics/logging for
+# more details on how to customize your logging configuration.
+#LOGGING = {
+#    'version': 1,
+#    'disable_existing_loggers': False,
+#    'filters': {
+#        'require_debug_false': {
+#            '()': 'django.utils.log.RequireDebugFalse'
+#        }
+#    },
+#    'handlers': {
+#        'mail_admins': {
+#            'level': 'ERROR',
+#            'filters': ['require_debug_false'],
+#            'class': 'django.utils.log.AdminEmailHandler'
+#        }
+#    },
+#    'loggers': {
+#        'django.request': {
+#            'handlers': ['mail_admins'],
+#            'level': 'ERROR',
+#            'propagate': True,
+#        },
+#    }
+#}
+
+## My logging
+_log_path = os.environ['HOME']
+_log_file = 'MATRR.log'
+LOG_FILE_PATH = os.path.join(_log_path, _log_file)
+# this logger will only get hit by django if debug == False.  I think django wraps everything in a try:catch
+logging.basicConfig(format='%(asctime)s|%(levelname)s|%(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=LOG_FILE_PATH, level=logging.WARNING)
+
+def log_except_hook(*exc_info):
+    text = "".join(traceback.format_exception(*exc_info))
+    logging.error("Unhandled exception: %s", text)
+
+if GLEEK:
+    sys.excepthook = log_except_hook
 
 if DEVELOPMENT:
-	from develop_settings import *
+    from develop_settings import *

@@ -9,7 +9,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from djangosphinx.models import SphinxQuerySet
-from settings import MEDIA_ROOT, STATIC_URL
+from matrr.settings import MEDIA_ROOT, STATIC_URL
 from matrr import emails, gizmo
 from matrr.forms import MatrrRegistrationForm, ContactUsForm, FulltextSearchForm, MTAValidationForm, AdvancedSearchSelectForm, AdvancedSearchFilterForm, PublicationCohortSelectForm
 from matrr.models import * # sendfile() uses a lot of models

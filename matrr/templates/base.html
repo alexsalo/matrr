@@ -62,11 +62,10 @@
 	<div class='right'>
 		{% if not user.is_authenticated %}
 			{% load basic_filters %}
-			<a style='color: #FAF9ED' href="{% url auth_login %}?next={{ request.path|strip_account }}">Login</a> |
-			<a style='color: #FAF9ED;' href="{% url registration_register %}?next={{ request.path|strip_account }}">
-				Create an Account</a>
+            <a style='color: #FAF9ED' href="{% url 'auth_login' %}?next={{ request.path|strip_account }}">Login</a> |
+            <a style='color: #FAF9ED;' href="{% url 'registration_register' %}?next={{ request.path|strip_account }}">Create an Account</a>
 		{% else %}
-			Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{% url matrr-logout %}">Logout</a>
+			Welcome {{ user.username }} | <a style='color: #FAF9ED' href="{% url 'matrr-logout' %}">Logout</a>
 		{% endif %}
 	</div>
 </div>
@@ -81,14 +80,14 @@
 				</ul>
 
 				<ul>
-					<li class='top'><a href='{% url search %}'>Search</a></li>
-					<li class='drop-down'><a href='{% url advanced-search %}'>Advanced Search</a></li>
+					<li class='top'><a href={% url 'search' %}">Search</a></li>
+					<li class='drop-down'><a href='{% url 'advanced-search' %}'>Advanced Search</a></li>
 				</ul>
 
 				{% if user.is_authenticated and user_is_verified %}
 					<ul>
-						<li class='top'><a href="{% url account-view %}">My Account</a></li>
-						<li class='drop-down'><a href="{% url order-list %}">My Orders</a></li>
+						<li class='top'><a href="{% url 'account-view' %}">My Account</a></li>
+						<li class='drop-down'><a href="{% url 'order-list' %}">My Orders</a></li>
 					</ul>
 				{% endif %}
 
@@ -96,29 +95,29 @@
 					<ul>
 						<li class='top'><a>Data</a></li>
                         {% if perms.matrr.can_download_data %}
-				    		<li class='drop-down'><a href="{% url data-landing %}">Download</a></li>
+				    		<li class='drop-down'><a href="{% url 'data-landing' %}">Download</a></li>
 		        		{% endif %}
 						{% if perms.auth.upload_raw_data %}
-							<li class='drop-down'><a href='{% url raw-upload %}'>Upload</a></li>
+							<li class='drop-down'><a href='{% url 'raw-upload' %}'>Upload</a></li>
 						{% endif %}
 					</ul>
 				{% endif %}
 
 				{% if user.is_authenticated and user_is_verified %}
 					<ul>
-						<li class='top'><a href="{% url tools-landing %}">Tools</a></li>
-						<li class='drop-down'><a href="{% url tools-protein %}">Protein</a></li>
+						<li class='top'><a href="{% url 'tools-landing' %}">Tools</a></li>
+						<li class='drop-down'><a href="{% url 'tools-protein' %}">Protein</a></li>
 						{% if perms.matrr.view_hormone_tools %}
-    						<li class='drop-down'><a href="{% url tools-hormone %}">Hormone</a></li>
+    						<li class='drop-down'><a href="{% url 'tools-hormone' %}">Hormone</a></li>
 						{% endif %}
 						{% if perms.matrr.view_confederates %}
-							<li class='drop-down'><a href="{% url tools-confederates %}">Confederates</a></li>
+							<li class='drop-down'><a href="{% url 'tools-confederates' %}">Confederates</a></li>
 						{% endif %}
 						{% if perms.matrr.view_sandbox %}
-							<li class='drop-down'><a href="{% url tools-sandbox %}">Sandbox</a></li>
+							<li class='drop-down'><a href="{% url 'tools-sandbox' %}">Sandbox</a></li>
 						{% endif %}
 						{% if user.is_superuser %}
-							<li class='drop-down'><a href="{% url tools-supersandbox %}">SuperSandbox</a></li>
+							<li class='drop-down'><a href="{% url 'tools-supersandbox' %}">SuperSandbox</a></li>
 						{% endif %}
                     </ul>
                 {% endif %}
@@ -126,11 +125,11 @@
 				{% if perms.matrr.change_review %}
 					<ul>
 						<li class='top'>
-							<a href="{% url review-list %}">My Reviews</a>
+							<a href="{% url 'review-list' %}">My Reviews</a>
 						</li>
 						{% if perms.matrr.view_review_overview %}
-							<li class='drop-down'><a href="{% url review-overview-list %}">Overview</a></li>
-							<li class='drop-down'><a href="{% url review-history-list %}">History</a></li>
+							<li class='drop-down'><a href="{% url 'review-overview-list' %}">Overview</a></li>
+							<li class='drop-down'><a href="{% url 'review-history-list' %}">History</a></li>
 						{% endif %}
 					</ul>
 				{% endif %}
@@ -138,9 +137,9 @@
 				{% if perms.matrr.change_shipment or perms.matrr.ship_genetics %}
 					<ul>
 						<li class='top'>
-							<a href='{% url shipping-overview %}'>Shipping</a>
+							<a href='{% url 'shipping-overview' %}'>Shipping</a>
 						</li>
-						<li class='drop-down'><a href="{% url shipping-history %}">History</a></li>
+						<li class='drop-down'><a href="{% url 'shipping-history' %}">History</a></li>
 					</ul>
 				{% endif %}
 
@@ -148,13 +147,13 @@
 					<ul>
 						<li class='top'><a>Inventory</a></li>
 						{% if perms.matrr.can_verify_tissues %}
-    						<li class='drop-down'><a href="{% url verification %}">Inventory Verification</a></li>
+    						<li class='drop-down'><a href="{% url 'verification' %}">Inventory Verification</a></li>
 						{% endif %}
 						{% if perms.matrr.browse_inventory %}
 							<li class='drop-down'><a href="{% url inventory %}">Browse Inventory</a></li>
 						{% endif %}
 						{% if perms.matrr.rna_display or perms.matrr.rna_submit %}
-							<li class='drop-down'><a href='{% url rna-landing %}'>RNA Yields</a></li>
+							<li class='drop-down'><a href='{% url 'rna-landing' %}'>RNA Yields</a></li>
 						{% endif %}
 					</ul>
 				{% endif %}
@@ -163,10 +162,10 @@
 					<ul>
 						<li class='top'>{% if user.is_staff %}<a href="/admin/">Admin</a>{% else %}Admin{% endif %}</li>
 						{% if perms.matrr.view_rud_file %}
-							<li class='drop-down'><a href='{% url rud-overdue %}'>Research Updates</a></li>
+							<li class='drop-down'><a href='{% url 'rud-overdue' %}'>Research Updates</a></li>
 						{% endif %}
 						{% if perms.matrr.verify_mta %}
-							<li class='drop-down'><a href='{% url mta-list %}'>Verify MTAs</a></li>
+							<li class='drop-down'><a href='{% url 'mta-list' %}'>Verify MTAs</a></li>
 						{% endif %}
 					</ul>
 				{% endif %}
@@ -188,8 +187,8 @@
 						<div class='headline'>
 							Login
 						</div>
-						{% include 'login.form' %}
-						<a href="{% url registration_register %}">Create an Account</a>
+						{% include 'registration/login.form' %}
+						<a href="{% url 'registration_register' %}">Create an Account</a>
 					</div>
 				{% endif %}
 			{% endblock %}
@@ -210,8 +209,8 @@
 				<a href="{% url available %}">Archival Cohorts</a><br/>
 				<a href="{% url cohorts %}">All Cohorts</a><br/>
 				<a href="{% url assay %}">Assay Development</a><br/>
-				<a href="{% url account-mta %}">Update your MTA</a><br/>
-				<a href="{% url rud-upload %}">Submit Research Updates</a><br/>
+				<a href="{% url 'account-mta' %}">Update your MTA</a><br/>
+				<a href="{% url 'rud-upload' %}">Submit Research Updates</a><br/>
 				<a href="{% url publications %}">View Publications</a><br>
 				{% if perms.auth.issue_tracker %}
                     <a href='https://gleek.ecs.baylor.edu/wiki/index.php?title=Issue_Tracker'>Issue Tracker</a>

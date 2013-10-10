@@ -6,7 +6,6 @@ from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
-from settings import PRODUCTION
 from matrr import gizmo, emails
 from matrr.forms import TissueShipmentForm, TrackingNumberForm
 from matrr.models import Request, User, Shipment, ShipmentStatus, RequestStatus

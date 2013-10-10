@@ -1,4 +1,4 @@
-import json, numpy, settings, os
+import json, numpy, os
 import cStringIO as StringIO
 import ho.pisa as pisa
 from django.core.files import File
@@ -9,7 +9,7 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.utils.safestring import mark_safe
-from matrr import gizmo
+from matrr import gizmo, settings
 from matrr.views.basic import sendfile
 from matrr.forms import CohortSelectForm, GraphSubjectSelectForm, ProteinSelectForm, MonkeyProteinGraphAppearanceForm, HormoneSelectForm, MonkeyHormoneGraphAppearanceForm
 from matrr.forms import ExperimentRangeForm, BECRangeForm, GenealogyParentsForm, GraphToolsMonkeySelectForm

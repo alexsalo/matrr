@@ -3,7 +3,7 @@ from django import forms
 from django.forms.models import inlineformset_factory
 from django.db import transaction
 import re
-from matrr import models, widgets
+import models, widgets
 from registration.forms import RegistrationForm
 
 UPCOMING_FIX_CHOICES = (('', '---------'),
@@ -83,7 +83,7 @@ class MatrrRegistrationForm(RegistrationForm):
         account.act_shipping_name = user.first_name + " " + user.last_name
 
         account.save()
-        from matrr.emails import send_verify_new_account_email
+        from emails import send_verify_new_account_email
 
         send_verify_new_account_email(account)
         return user
@@ -753,7 +753,7 @@ class RNASubmitForm(forms.ModelForm):
 
     class Meta:
         model = models.RNARecord
-        fields = ('tissue_type', 'monkey', 'rna_min', 'rna_max')
+        fields = ('tissue_type', 'monkey')#, 'rna_min', 'rna_max')
 
 
 class HormoneSelectForm(forms.Form):

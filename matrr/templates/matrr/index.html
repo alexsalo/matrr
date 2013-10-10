@@ -84,7 +84,7 @@
             <ul>
                 {% for pub in pub_list %}
                     <li>
-                        <a href='{% url publications %}'>
+                        <a href='{% url 'publications' %}'>
                             {{ pub.title|truncatewords:5 }},
                             {% if pub.journal == 'Proceedings of the National Academy of Sciences of the United States of America' %}
                                 PNAS,
@@ -109,7 +109,7 @@
                 {% endfor %}
                 <div>
                     <div style='float:left;'><a href='{% url events %}'>more</a></div>
-                    <div style='float:right;'><a href='{% url archived-events %}'>archived</a></div>
+                    <div style='float:right;'><a href='{% url 'archived-events' %}'>archived</a></div>
                 </div>
             </div>
         {% endif %}
