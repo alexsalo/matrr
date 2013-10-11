@@ -150,7 +150,7 @@
     						<li class='drop-down'><a href="{% url 'verification' %}">Inventory Verification</a></li>
 						{% endif %}
 						{% if perms.matrr.browse_inventory %}
-							<li class='drop-down'><a href="{% url inventory %}">Browse Inventory</a></li>
+							<li class='drop-down'><a href="{% url 'inventory' %}">Browse Inventory</a></li>
 						{% endif %}
 						{% if perms.matrr.rna_display or perms.matrr.rna_submit %}
 							<li class='drop-down'><a href='{% url 'rna-landing' %}'>RNA Yields</a></li>
@@ -205,13 +205,13 @@
 				<div class='headline'>
 					Quick Links
 				</div>
-				<a href="{% url upcoming %}">Upcoming Cohorts</a><br/>
-				<a href="{% url available %}">Archival Cohorts</a><br/>
-				<a href="{% url cohorts %}">All Cohorts</a><br/>
-				<a href="{% url assay %}">Assay Development</a><br/>
+				<a href="{% url 'upcoming' %}">Upcoming Cohorts</a><br/>
+				<a href="{% url 'available' %}">Archival Cohorts</a><br/>
+				<a href="{% url 'cohorts' %}">All Cohorts</a><br/>
+				<a href="{% url 'assay' %}">Assay Development</a><br/>
 				<a href="{% url 'account-mta' %}">Update your MTA</a><br/>
 				<a href="{% url 'rud-upload' %}">Submit Research Updates</a><br/>
-				<a href="{% url publications %}">View Publications</a><br>
+				<a href="{% url 'publications' %}">View Publications</a><br>
 				{% if perms.auth.issue_tracker %}
                     <a href='https://gleek.ecs.baylor.edu/wiki/index.php?title=Issue_Tracker'>Issue Tracker</a>
 				{% endif %}

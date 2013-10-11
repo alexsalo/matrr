@@ -26,9 +26,9 @@
         <div class='content-block-lower'>
             <div class='headline'>Request Tissues</div>
             <div class='buttons'>
-                <a class="cohortButton cohortUpcoming" href='{% url upcoming %}'>Request tissues from Upcoming Cohorts</a><br>
-                <a class="cohortButton cohortAvailable" href='{% url available %}'>Request tissues from Available Cohorts</a><br>
-				<a class="cohortButton cohortAssay" href='{% url assay %}'>Request tissues for Assay Development</a>
+                <a class="cohortButton cohortUpcoming" href='{% url 'upcoming' %}'>Request tissues from Upcoming Cohorts</a><br>
+                <a class="cohortButton cohortAvailable" href='{% url 'available' %}'>Request tissues from Available Cohorts</a><br>
+				<a class="cohortButton cohortAssay" href='{% url 'assay' %}'>Request tissues for Assay Development</a>
             </div>
         </div>
 		{% else %}
@@ -108,7 +108,7 @@
                     </div>
                 {% endfor %}
                 <div>
-                    <div style='float:left;'><a href='{% url events %}'>more</a></div>
+                    <div style='float:left;'><a href='{% url 'events' %}'>more</a></div>
                     <div style='float:right;'><a href='{% url 'archived-events' %}'>archived</a></div>
                 </div>
             </div>
