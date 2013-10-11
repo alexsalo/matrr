@@ -1,4 +1,6 @@
-import sys, os
+import sys
+import os
+
 project =  os.path.dirname(os.path.realpath(__file__))
 sys.path.append(project)
 from django.core.management import setup_environ

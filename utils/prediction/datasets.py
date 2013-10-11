@@ -1,4 +1,3 @@
-__author__ = 'developer'
 import numpy
 
 mtd_columns = [

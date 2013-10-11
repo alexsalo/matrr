@@ -1,8 +1,11 @@
-import numpy, pylab
+import numpy
+from scipy import stats
+
+import pylab
 from django.db.models import Max, Min
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator
-from scipy import stats
+
 from matrr.models import MonkeyToDrinkingExperiment, Avg, MonkeyBEC, MonkeyHormone
 from matrr import plotting
 

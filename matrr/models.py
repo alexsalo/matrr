@@ -19,10 +19,8 @@ from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError, PermissionDenied
-#from matrr.plotting import cohort_plots
-from matrr import plotting
 
-import settings
+from matrr import settings
 
 
 def get_sentinel_user():

@@ -1,6 +1,7 @@
-from matrr.models import *
 from django.contrib.auth.views import AuthenticationForm
-from settings import PRODUCTION, GLEEK, DEVELOPMENT, DEBUG
+
+from matrr.models import *
+from matrr.settings import PRODUCTION, GLEEK, DEVELOPMENT, DEBUG
 
 
 def cart(request):

@@ -1,10 +1,13 @@
 from collections import defaultdict
 import math
-from utils import gadgets
-from matrr.plotting import RHESUS_COLORS
 import random
+
 import networkx as nx
 import pygraphviz as pgv
+
+from utils import gadgets
+from matrr.plotting import RHESUS_COLORS
+
 
 class CytoVisualStyle():
 #	family_graph = None

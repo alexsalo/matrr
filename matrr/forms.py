@@ -1,10 +1,14 @@
 #encoding=utf-8
+import re
+
 from django import forms
 from django.forms.models import inlineformset_factory
 from django.db import transaction
-import re
-import models, widgets
 from registration.forms import RegistrationForm
+
+import models
+import widgets
+
 
 UPCOMING_FIX_CHOICES = (('', '---------'),
                         ('Flash Frozen', 'Flash Frozen'),

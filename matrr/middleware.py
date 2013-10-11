@@ -1,7 +1,7 @@
-__author__ = 'farro'
+import re
+
 from django.http import HttpResponseRedirect
 from django.conf import settings
-import re
 
 
 class EnforceLoginMiddleware(object):

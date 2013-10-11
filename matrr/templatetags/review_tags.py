@@ -1,8 +1,8 @@
 from django import template
-from matrr.models import Request
+from matrr.settings import STATIC_URL
+
 
 register = template.Library()
-from settings import STATIC_URL
 
 
 @register.inclusion_tag('collision_requests.html')
