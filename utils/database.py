@@ -2173,9 +2173,11 @@ def load_bec_data(file_name, overwrite=False, header=True):
     'bec_gkg_etoh', # 10
     'bec_daily_gkg_etoh', # 11
     '__(bec_gkg_etoh - bec_daily_gkg_etoh)', # 12, this column is ignored
-    'bec_mg_pct',            # 13
+    'bec_mg_pct', # 13
+    'bec_daily_vol_etoh', # 14
     )
-    FIELDS_INDEX = (4, 14) #(4,14) => 4,5,6,7,8,9,10,11,12,13
+    print_warning = True
+    FIELDS_INDEX = (4, 15) #(4,15) => 4,5,6,7,8,9,10,11,12,13,14
     with open(file_name, 'r') as f:
         read_data = f.read()
         if '\r' in read_data:
@@ -2213,17 +2215,23 @@ def load_bec_data(file_name, overwrite=False, header=True):
             else:
                 bec = MonkeyBEC(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
 
+
             data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
             model_fields = fields[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
             for i, field in enumerate(model_fields):
                 if model_fields[i].startswith('__'):
                     continue
-                if data_fields[i] != '':
+                try:
+                    value = data_fields[i]
+                except IndexError:
+                    if print_warning:
+                        print "There was an index error, probably means this file doesn't have a bec_daily_vol_etoh column."
+                        print_warning = False
+                if value != '':
                     if i in (2, 3): # time fields, fields[6] and fields[7]
-                        setattr(bec, field, format_time(data_fields[i]))
+                        setattr(bec, field, format_time(value))
                     else:
-                        setattr(bec, field, data_fields[i])
-
+                        setattr(bec, field, value)
             try:
                 bec.full_clean()
             except Exception as e:

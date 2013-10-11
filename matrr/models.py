@@ -3328,6 +3328,7 @@ class MonkeyBEC(models.Model):
     bec_gkg_etoh = models.FloatField("Etoh at sample time, g/kg", null=True, blank=True)
     bec_daily_gkg_etoh = models.FloatField("Total Etoh, g/kg", null=True, blank=True)
     bec_mg_pct = models.FloatField("Blood Ethanol Conc., mg %", null=False, blank=False)
+    bec_daily_vol_etoh = models.FloatField("Total Etoh, ml", null=True, blank=False, default=None)
 
     bec_pct_intake = models.FloatField("Sample Volume / Total Intake", null=True, blank=True)
     mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
