@@ -12,8 +12,8 @@
 /.komodotools/
 *.pyc
 /*.komodoproject
-/local_settings.py
-/develop_settings.py
+local_settings.py
+develop_settings.py
 /sroot
 /utils/*hokus*.py
 /media
