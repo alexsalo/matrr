@@ -1,3 +1,4 @@
+import settings
 from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
@@ -14,32 +15,30 @@ def rud_update(request):
         form = RudUpdateForm(user=request.user, data=request.POST)
         if form.is_valid():
             cd = form.cleaned_data
-            if cd['progress'] == 'CP':
+            if cd['progress'] == ResearchProgress.Complete:
                 request.session['rud_form'] = form
                 return redirect(reverse('rud-complete'))
-            elif cd['progress'] == 'IP':
+            elif cd['progress'] == ResearchProgress.InProgress:
                 request.session['rud_form'] = form
                 return redirect(reverse('rud-in-progress'))
-            else:
+            else: # ResearchUpdate.NoProgress
                 for req in cd['req_request']:
                     rud = ResearchUpdate()
                     rud.req_request = req
                     rud.rud_progress = cd['progress']
                     rud.save()
-                messages.info(request, "You will be emailed again in 45 days to provide another research update.")
+                messages.info(request, "You will be emailed again in %d days to provide another research update." % settings.ResearchUpdateNoProgressGrace)
                 return redirect(reverse('account-view'))
     else:
         form = RudUpdateForm(user=request.user)
-    return render_to_response('matrr/rud_reports/rud_update.html', {'form': form, },
-                              context_instance=RequestContext(request))
+    return render_to_response('matrr/rud_reports/rud_update.html', {'form': form, }, context_instance=RequestContext(request))
 
 
 def rud_progress(request):
     progress_form = ''
     update_form = request.session.get('rud_form', '')
     if not update_form:
-        messages.error(request,
-                       "There was an issue loading the first part of your research update, please start over.  If this continues to happen, please contact a MATRR administrator.")
+        messages.error(request, "There was an issue loading the first part of your research update, please start over.  If this continues to happen, please contact a MATRR administrator.")
         return redirect(reverse('rud-upload'))
 
     update_cd = update_form.cleaned_data
@@ -64,8 +63,14 @@ def rud_progress(request):
                     rud.rud_grant = progress_cd['grants']
                     rud.save()
                 messages.success(request, "Your research update was successfully submitted.  Thank you.")
-                if update_cd['progress'] != ResearchProgress.Complete:
-                    messages.info(request, "You will be emailed again in 90 days to provide another research update.")
+                if update_cd['progress'] == ResearchProgress.NoProgress:
+                    grace_period = settings.ResearchUpdateNoProgressGrace
+                elif update_cd['progress'] == ResearchProgress.InProgress:
+                    grace_period = settings.ResearchUpdateInProgressGrace
+                else: # ResearchProgress.Complete
+                    grace_period = 0
+                if grace_period:
+                    messages.info(request, "You will be emailed again in %d days to provide another research update." % grace_period)
                 return redirect(reverse('account-view'))
 
     form = progress_form if progress_form else RudProgressForm(initial={'progress': update_cd['progress']})
@@ -126,7 +131,6 @@ def rud_overdue(request):
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
         req_list = paginator.page(paginator.num_pages)
-    return render_to_response('matrr/rud_reports/req_list.html', {'req_list': req_list},
-                              context_instance=RequestContext(request))
+    return render_to_response('matrr/rud_reports/req_list.html', {'req_list': req_list}, context_instance=RequestContext(request))
 
 

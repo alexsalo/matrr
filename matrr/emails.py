@@ -176,8 +176,7 @@ def urge_progress_reports():
         subject = 'Progress Report'
         body = 'Hello, \n'
         body += 'the tissue(s) you requested were shipped on %s. ' % str(shipment_date)
-        body += 'Please, submit a 90 day progress report concerning this request using this link: http://gleek.ecs.baylor.edu%s\n' % reverse(
-            'rud-upload')
+        body += 'Please, submit a progress report concerning this request using this link: http://gleek.ecs.baylor.edu%s\n' % reverse('rud-upload')
         body += "\n"
         body += "Request overview:\n\n%s\n" % req.print_self_in_detail()
         body += "\n"

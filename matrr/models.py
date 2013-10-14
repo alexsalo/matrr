@@ -7,6 +7,7 @@ import Image
 import traceback
 import numpy
 import sys
+import settings
 from datetime import datetime, date, timedelta
 from string import lower, replace
 
@@ -2066,7 +2067,7 @@ class Request(models.Model, DiffingMixin):
     req_funding = models.TextField('Source of Funding', null=True, blank=False,
                                    help_text='Please describe the source of funding which will be used for this request.')
     req_progress_agreement = models.BooleanField(
-        'I acknowledge that I will be required to submit a 90 day progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.',
+        'I acknowledge that I will be required to submit a progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.',
         blank=False, null=False)
     req_safety_agreement = models.BooleanField(
         'I acknowledge that I have read and understand the potential biohazards associated with tissue shipment.',
@@ -2309,23 +2310,25 @@ class Request(models.Model, DiffingMixin):
         return self.get_rud_weeks_overdue() > 0
 
     def get_rud_weeks_overdue(self):
+        if self.rud_set.filter(rud_progress=ResearchProgress.Complete).count():
+            return 0
         today = date.today()
-        grace_period = 0
+        grace_period = 0 # this default value shouldn't ever be used.  Conditions for all ResearchProgress states exist.
         try:
-            if self.rud_set.filter(rud_progress=ResearchProgress.Complete).count():
-                return 0
             latest_rud = self.rud_set.order_by('-rud_date')[0]
-            age = (today - latest_rud.rud_date).days
-            if latest_rud.rud_progress == ResearchProgress.NoProgress:
-                grace_period = 45
-            if latest_rud.rud_progress == ResearchProgress.InProgress:
-                grace_period = 90
         except IndexError:
             max_shipment = self.get_max_shipment()
             if not max_shipment or not max_shipment.shp_shipment_date:
                 return 0 # nothing shipped yet
             age = (today - max_shipment.shp_shipment_date).days
-            grace_period = 90
+            grace_period = settings.ResearchUpdateInitialGrace
+        else:
+            age = (today - latest_rud.rud_date).days
+            if latest_rud.rud_progress == ResearchProgress.NoProgress:
+                grace_period = settings.ResearchUpdateNoProgressGrace
+            if latest_rud.rud_progress == ResearchProgress.InProgress:
+                grace_period = settings.ResearchUpdateInProgressGrace
+
 
         age_overdue = age - grace_period
         weeks_overdue = int(age_overdue / 7)

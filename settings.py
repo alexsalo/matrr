@@ -48,10 +48,6 @@ if GLEEK:
 
 CSRF_FAILURE_VIEW = 'matrr.views.basic.matrr_handler403'
 
-
-
-
-
 DATABASES = {
 		'default': {
 			'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -192,6 +188,11 @@ PUBLIC_SEARCH_INDEXES = {'monkey':("monkey", 'Monkey'),
 						 'monkeyprotein': ('monkeyprotein', 'MonkeyProtein')}
 PRIVATE_SEARCH_INDEXES = {'monkey_auth':("monkey_auth", 'Monkey')}
 
+# These define the grace periods following a tissue shipment and a RUD submission
+# before we start emailing the user to submit a ResearchUpdate
+ResearchUpdateInitialGrace = 90
+ResearchUpdateNoProgressGrace = 45
+ResearchUpdateInProgressGrace = 180
 
 if DEVELOPMENT:
 	from develop_settings import *
