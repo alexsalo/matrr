@@ -1,7 +1,6 @@
 import os
 import mimetypes
 from datetime import datetime
-from django.core.urlresolvers import reverse
 from django.forms.models import formset_factory
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, redirect
@@ -9,7 +8,9 @@ from django.template import RequestContext
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
+from registration.backends.default import views
 from djangosphinx.models import SphinxQuerySet
+from registration.models import RegistrationProfile
 from matrr.settings import MEDIA_ROOT, STATIC_URL
 from matrr import emails, gizmo
 from matrr.forms import MatrrRegistrationForm, ContactUsForm, FulltextSearchForm, MTAValidationForm, AdvancedSearchSelectForm, AdvancedSearchFilterForm, PublicationCohortSelectForm
@@ -33,112 +34,50 @@ def index_view(request):
     return render_to_response('matrr/index.html', index_context, context_instance=RequestContext(request))
 
 
-def register(request, success_url=None,
-             form_class=MatrrRegistrationForm, profile_callback=None,
-             template_name='registration/registration_form.html',
-             extra_context=None):
-    """
-    ## Notes from jf ##
-    This method, in its entirety, is copied from django-registration (version
-    0.7 I think).  As of 1.0, the library uses only class views, though
-    I think you're expected to subclass the provided classes and overwrite
-    methods to provide business logic for the registration.
 
-    I don't want to do all that, I just want to upgrade to django 1.5 and
-    stop getting deprecation warnings from django-registration.  I copied
-    the old view here, which we called via a thinly wrapped view.  Total
-    hack, but I just want the site to work in 1.5 for now.
-    ## -jf ##
+#def registration(request):
+#    from registration.views import register
+#    return register(request, form_class=MatrrRegistrationForm)
 
-    Allow a new user to register an account.
+class RegistrationView(views.RegistrationView):
+    disallowed_url = 'matrr-home'
+    form_class = MatrrRegistrationForm
+    success_url = 'registration_complete'
+    template_name = 'registration/registration_form.html'
 
-    Following successful registration, issue a redirect; by default,
-    this will be whatever URL corresponds to the named URL pattern
-    ``registration_complete``, which will be
-    ``/accounts/register/complete/`` if using the included URLConf. To
-    change this, point that named pattern at another URL, or pass your
-    preferred URL as the keyword argument ``success_url``.
+    def registration_allowed(self, request):
+        return True
 
-    By default, ``registration.forms.RegistrationForm`` will be used
-    as the registration form; to change this, pass a different form
-    class as the ``form_class`` keyword argument. The form class you
-    specify must have a method ``save`` which will create and return
-    the new ``User``, and that method must accept the keyword argument
-    ``profile_callback`` (see below).
+    def register(request, username, password1, email, last_name, first_name, institution, phone_number, act_real_address1, act_real_address2, act_real_city,
+        act_real_country, act_real_state, act_zip, act_shipping_name, **cleaned_data):
+        user = RegistrationProfile.objects.create_inactive_user(username=cleaned_data['username'],
+                                                                    password=cleaned_data['password1'],
+                                                                    email=cleaned_data['email'])
+        user.last_name = cleaned_data['last_name']
+        user.first_name = cleaned_data['first_name']
+        user.save()
+        account = models.Account(user=user)
+        account.institution = cleaned_data['institution']
+        account.phone_number = cleaned_data['phone_number']
+        account.act_real_address1 = cleaned_data['act_real_address1']
+        account.act_real_address2 = cleaned_data['act_real_address2']
+        account.act_real_city = cleaned_data['act_real_city']
+        account.act_real_state = cleaned_data['act_real_state']
+        account.act_real_zip = cleaned_data['act_real_zip']
+        account.act_real_country = cleaned_data['act_real_country']
+        account.act_address1 = account.act_real_address1
+        account.act_address2 = account.act_real_address2
+        account.act_city = account.act_real_city
+        account.act_country = account.act_real_country
+        account.act_state = account.act_real_state
+        account.act_zip = account.act_real_zip
+        account.act_shipping_name = user.first_name + " " + user.last_name
+        account.save()
 
-    To enable creation of a site-specific user profile object for the
-    new user, pass a function which will create the profile object as
-    the keyword argument ``profile_callback``. See
-    ``RegistrationManager.create_inactive_user`` in the file
-    ``models.py`` for details on how to write this function.
+        from emails import send_verify_new_account_email
+        send_verify_new_account_email(account)
+        return user
 
-    By default, use the template
-    ``registration/registration_form.html``; to change this, pass the
-    name of a template as the keyword argument ``template_name``.
-
-    **Required arguments**
-
-    None.
-
-    **Optional arguments**
-
-    ``form_class``
-        The form class to use for registration.
-
-    ``extra_context``
-        A dictionary of variables to add to the template context. Any
-        callable object in this dictionary will be called to produce
-        the end result which appears in the context.
-
-    ``profile_callback``
-        A function which will be used to create a site-specific
-        profile instance for the new ``User``.
-
-    ``success_url``
-        The URL to redirect to on successful registration.
-
-    ``template_name``
-        A custom template to use.
-
-    **Context:**
-
-    ``form``
-        The registration form.
-
-    Any extra variables supplied in the ``extra_context`` argument
-    (see above).
-
-    **Template:**
-
-    registration/registration_form.html or ``template_name`` keyword
-    argument.
-
-    """
-    if request.method == 'POST':
-        form = form_class(data=request.POST, files=request.FILES)
-        if form.is_valid():
-            new_user = form.save(profile_callback=profile_callback)
-            # success_url needs to be dynamically generated here; setting a
-            # a default value using reverse() will cause circular-import
-            # problems with the default URLConf for this application, which
-            # imports this file.
-            return HttpResponseRedirect(success_url or reverse('registration_complete'))
-    else:
-        form = form_class()
-
-    if extra_context is None:
-        extra_context = {}
-    context = RequestContext(request)
-    for key, value in extra_context.items():
-        context[key] = callable(value) and value() or value
-    return render_to_response(template_name,
-                              { 'form': form },
-                              context_instance=context)
-
-
-def registration(request):
-    from registration.views import register
-    return register(request, form_class=MatrrRegistrationForm)
 
 
 def logout(request, next_page=None):

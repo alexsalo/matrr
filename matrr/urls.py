@@ -2,13 +2,15 @@ from django.conf.urls import patterns, include, url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from django.contrib import admin
+from views import cart, account, orders, review, rna, rud_reports, shipping, uploads, verification, inventory, ajax, basic, tools, display, data
+from settings import MEDIA_URL, MEDIA_ROOT, PRODUCTION
 import registration.backends.default.urls as registration_urls
 admin.autodiscover()
 
 urlpatterns = patterns('',
 					   url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 					   url(r'^admin/', include(admin.site.urls)),
-					   url(r'^accounts/register/$', 'matrr.views.basic.registration'),
+                       url(r'accounts/register/$', basic.RegistrationView.as_view(), name='matrr-register'),
                        url(r'^accounts/', include('registration.backends.default.urls')),
 					   url(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
 					   url(r'^robots\.txt$', RedirectView.as_view(url='/static/robots.txt')),
@@ -16,13 +18,10 @@ urlpatterns = patterns('',
 
 urlpatterns += staticfiles_urlpatterns()
 
-from views import cart, account, orders, review, rna, rud_reports, shipping, uploads, verification, inventory, ajax, basic, tools, display, data
-from settings import MEDIA_URL, MEDIA_ROOT, PRODUCTION
 
 urlpatterns += patterns('',
     ## Miscellaneous views.  Many of these are public facing
     url(r'^$', basic.index_view, name='matrr-home'),
-    url(r'accounts/register/$', basic.registration, name='matrr-register'),
     url(r'^logout/?$', basic.logout, name='matrr-logout'),
     url(r'^(?P<static_page>privacy|data|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', basic.pages_view), #  These are non-dynamic pages. Mostly text/html.
     url(r'^contact_us/$', basic.contact_us, name='contact-us'),
