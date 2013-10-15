@@ -42,6 +42,23 @@ class RequestAdmin(admin.ModelAdmin):
     list_filter = ('cohort', 'req_status', 'req_request_date', 'user')
 
 
+class TissueRequestAdmin(admin.ModelAdmin):
+    list_display = ['get_req_request_pk', 'get_cohort', 'get_user', 'tissue_type', 'rtt_fix_type', 'rtt_prep_type', 'rtt_amount', 'rtt_units']
+    list_filter = ('req_request__cohort', 'rtt_fix_type', 'rtt_prep_type', 'req_request__req_status', 'tissue_type', 'req_request__user')
+
+    def get_req_request_pk(self, obj):
+        return obj.req_request.pk
+    get_req_request_pk.short_description = 'Request ID'
+
+    def get_cohort(self, obj):
+        return obj.req_request.cohort.coh_cohort_name
+    get_cohort.short_description = 'Cohort'
+
+    def get_user(self, obj):
+        return obj.req_request.user.username
+    get_user.short_description = 'Username'
+
+
 class UserAdmin(admin.ModelAdmin):
     model = User
     list_display = ['username', 'email', 'first_name', 'last_name', 'date_joined']
@@ -88,7 +105,7 @@ admin.site.register(Mta)
 admin.site.register(Account, VerificationAccountAdmin)
 admin.site.register(Request, RequestAdmin)
 admin.site.register(TissueInventoryVerification)
-admin.site.register(TissueRequest)
+admin.site.register(TissueRequest, TissueRequestAdmin)
 admin.site.register(TissueRequestReview)
 admin.site.register(Permission)
 
