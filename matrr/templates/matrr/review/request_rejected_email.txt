@@ -2,7 +2,7 @@ After review, your request for MATRR tissue was not approved.  The most common r
 
 If you have questions about why your request has been denied please contact MATRR staff.  Our contact information is provided <a href="https://gleek.ecs.baylor.edu/contact/">here</a>.
 
-You can make changes to partially accepted and rejected requests and submit for further review.  Click "Revise" on this order's <a href="https://gleek.ecs.baylor.edu{% url order-detail req_request.pk %}">detail page</a> or on your <a href="https://gleek.ecs.baylor.edu{% url order-list %}">order history page</a> for more details.
+You can make changes to partially accepted and rejected requests and submit for further review.  Click "Revise" on this order's <a href="https://gleek.ecs.baylor.edu{% url 'order-detail' req_request.pk %}">detail page</a> or on your <a href="https://gleek.ecs.baylor.edu{% url 'order-list' %}">order history page</a> for more details.
 
 You requested the following tissues from {{ req_request.cohort }}:
 {% for tissue_request in req_request.get_requested_tissues %}{% for datum in tissue_request.get_data %}

@@ -18,7 +18,7 @@
 	<form action='' method='post'>
 		{% csrf_token %}
 		{{ graph_form.monkeys }}
-		<div class=headline>Cohort: {{ cohort }}<div class=right><a href="{% url tools-hormone  %}"><img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>&nbsp;Choose another cohort</a></div></div>
+		<div class=headline>Cohort: {{ cohort }}<div class=right><a href="{% url 'tools-hormone' %}"><img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>&nbsp;Choose another cohort</a></div></div>
 		<div class=headline>{{ graph_form.yaxis_units.label }}</div>
 		<div class=small>{{ graph_form.yaxis_units.help_text }}</div>
 		{{ graph_form.yaxis_units }}

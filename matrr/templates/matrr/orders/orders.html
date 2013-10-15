@@ -26,7 +26,7 @@
 					<td>{{ order.req_request_date|date:"m/d/Y, g:i a" }}</td>
 					<td>{{ order.get_req_status_display }}</td>
 					<td>Revise Order has not shipped.</td>
-					<td><a href='{% url order-edit order.req_request_id %}'>Edit</a></td>
+					<td><a href='{% url 'order-edit' order.req_request_id %}'>Edit</a></td>
 				</tr>
 			{% endfor %}
 		</table>
@@ -58,14 +58,14 @@
 						{{ order.get_req_status_display }}</td>
 
 					<td>{% if order.shipment.shp_shipment_date %}{{ order.shipment.shp_shipment_date|date:"m/d/Y" }}{% else %}Order has not shipped.{% endif %}</td>
-					<td><a href='{% url order-detail order.req_request_id %}'>Details</a></td>
+					<td><a href='{% url 'order-detail' order.req_request_id %}'>Details</a></td>
 					{% if order.can_be_duplicated %}
-						<td><a href='{% url order-duplicate order.req_request_id %}'>Duplicate</a></td>
+						<td><a href='{% url 'order-duplicate' order.req_request_id %}'>Duplicate</a></td>
 					{% else %}
 						<td></td>
 					{% endif %}
 					{% if order.can_be_revised %}
-						<td><a href='{% url order-revise order.req_request_id %}'>Revise</a></td>
+						<td><a href='{% url 'order-revise' order.req_request_id %}'>Revise</a></td>
 					{% else %}
 						<td></td>
 					{% endif %}

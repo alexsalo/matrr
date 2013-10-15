@@ -30,7 +30,7 @@
 		<br/>
 		{% endfor %}
 		<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Accept prices'/>
-		<a href="{% url review-overview req.req_request_id %}" class="blockLinkButton">Back to overview</a>
+		<a href="{% url 'review-overview' req.req_request_id %}" class="blockLinkButton">Back to overview</a>
 
 	</form>
 	

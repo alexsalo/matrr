@@ -1,6 +1,6 @@
 {% if not collisions %}None{% endif %}
 {% for collision in collisions %}
-	<a href="{% url review-overview collision.req_request_id %}"
+	<a href="{% url 'review-overview' collision.req_request_id %}"
 	   target="_blank">
 		{{ collision.user }}<img src="{{ STATIC_URL }}images/arrow_popup.png" width="8" height="8" style='vertical-align: text-top' alt='external link'/>
 

@@ -8,13 +8,13 @@ import registration.backends.default.urls as registration_urls
 admin.autodiscover()
 
 urlpatterns = patterns('',
-					   url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-					   url(r'^admin/', include(admin.site.urls)),
-                       url(r'accounts/register/$', basic.RegistrationView.as_view(), name='matrr-register'),
-                       url(r'^accounts/', include('registration.backends.default.urls')),
-					   url(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
-					   url(r'^robots\.txt$', RedirectView.as_view(url='/static/robots.txt')),
-					   )
+    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/', include(admin.site.urls)),
+    url(r'^accounts/register/$', basic.RegistrationView.as_view(), name='registration_register'), # this overrides the registration.backend.default.urls url endpoint.
+    url(r'^accounts/', include('registration.backends.default.urls')),
+    url(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
+    url(r'^robots\.txt$', RedirectView.as_view(url='/static/robots.txt')),
+    )
 
 urlpatterns += staticfiles_urlpatterns()
 
@@ -22,11 +22,11 @@ urlpatterns += staticfiles_urlpatterns()
 urlpatterns += patterns('',
     ## Miscellaneous views.  Many of these are public facing
     url(r'^$', basic.index_view, name='matrr-home'),
-    url(r'^logout/?$', basic.logout, name='matrr-logout'),
+    url(r'^logout/$', basic.logout, name='matrr-logout'),
     url(r'^(?P<static_page>privacy|data|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', basic.pages_view), #  These are non-dynamic pages. Mostly text/html.
     url(r'^contact_us/$', basic.contact_us, name='contact-us'),
-    url(r'^search/?$', basic.search, name='search'),
-    url(r'^advanced_search/?$', basic.advanced_search, name='advanced-search'),
+    url(r'^search/$', basic.search, name='search'),
+    url(r'^advanced_search/$', basic.advanced_search, name='advanced-search'),
     url(r'^publications/$', basic.publications, name='publications'),
     url(r'^mta/list/$', basic.mta_list, name='mta-list'), # not public facing, but it doesn't really belong anywhere else
 

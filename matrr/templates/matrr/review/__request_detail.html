@@ -1,9 +1,9 @@
 <table class='request_detail'>
 	<tr>
 		<th>Cohort:</th>
-		<td><a href='{% url cohort-details req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></td>
+		<td><a href='{% url 'cohort-details' req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></td>
 		<th>User:</th>
-		<td><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></td>
+		<td><a href='{% url 'account-reviewer-view' req_request.user.id %}'>{{ req_request.user }}</a></td>
 	</tr>
 	<tr>
 		<th>Requested On:</th>
@@ -26,7 +26,7 @@
 	{% if req_request.parent_request %}
 		<tr>
 			<th>Revision of Request:</th>
-			<td><a href='{% url review-overview req_request.parent_request.pk %}'>{{ req_request.parent_request.pk }}</a></td>
+			<td><a href='{% url 'review-overview' req_request.parent_request.pk %}'>{{ req_request.parent_request.pk }}</a></td>
 		</tr>
 	{% endif %}
 	<tr>

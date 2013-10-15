@@ -23,9 +23,9 @@
 				</tr>
 				{% for user, request_count in user_list %}
 					<tr>
-						<td><a href="{% url account-reviewer-view user.id %}">{{ user.username }}</a></td>
+						<td><a href="{% url 'account-reviewer-view' user.id %}">{{ user.username }}</a></td>
 						<td>{{ request_count }}</td>
-						<td><a href="{% url shipping-history-user user.pk %}">Show history</a></td>
+						<td><a href="{% url 'shipping-history-user' user.pk %}">Show history</a></td>
 					</tr>
 				{% endfor %}
 			</table>

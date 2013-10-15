@@ -14,7 +14,7 @@
 {% if map %}
 	<map name='{{ image.cohort.pk }}'>
 	{% for point in map %}
-		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 8' href="{%  url monkey-detail image.cohort.pk point.0  %}" target='_blank'>
+		<area shape='circle' coords='{{ point.1 }}, {{ point.2 }}, 8' href="{%  url 'monkey-detail' image.cohort.pk point.0  %}" target='_blank'>
 	{% endfor %}
 	</map>
 {% endif %}

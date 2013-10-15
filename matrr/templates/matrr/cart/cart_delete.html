@@ -14,7 +14,7 @@
 			</div>
 		</div>
 
-		<form action='{% url cart-delete %}' method='post'>
+		<form action='{% url 'cart-delete' %}' method='post'>
 			{% csrf_token %}
 			<button type='submit' name='submit' value='no' class="blockLinkCheckoutButton">Cancel</button>
 			<button type='submit' name='submit' value='yes' class="blockLinkDeleteButton">Delete</button>

@@ -6,7 +6,7 @@
 	{% endblock %}
 {% endblock %}
 
-{% block destination %}{% url cart-item cart_item.get_id %}{% endblock %}
+{% block destination %}{% url 'cart-item' cart_item.get_id %}{% endblock %}
 
 {% block buttons %}
 	<button class='blockLinkButton' type='submit' name='submit' value='cancel'>Cancel</button>

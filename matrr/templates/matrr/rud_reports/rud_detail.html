@@ -4,7 +4,7 @@
 	<div id="large-headline">
         Research Update {{ rud.pk }}
         {% if perms.matrr.view_rud_detail %}
-            <span class="right"><a href="{% url rud-list %}">View research updates</a></span>
+            <span class="right"><a href="{% url 'rud-list' %}">View research updates</a></span>
     {% endif %}
     </div>
 	<table class='common rud_detail'>
@@ -14,11 +14,11 @@
 		</tr>
 		<tr>
 			<th>Request</th>
-			<td><a href='{% url order-detail rud.req_request.pk %}'>{{ rud.req_request.pk }}</a></td>
+			<td><a href='{% url 'order-detail' rud.req_request.pk %}'>{{ rud.req_request.pk }}</a></td>
 		</tr>
 		<tr>
 			<th>User</th>
-			<td><a href='{% url account-reviewer-view rud.req_request.user.id %}'>{{ rud.req_request.user.username }}</a></td>
+			<td><a href='{% url 'account-reviewer-view' rud.req_request.user.id %}'>{{ rud.req_request.user.username }}</a></td>
 		</tr>
 		<tr>
 			<th>Progress</th>

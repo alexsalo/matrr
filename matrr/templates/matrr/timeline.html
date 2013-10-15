@@ -16,15 +16,15 @@ Cohort: {{ cohort.coh_cohort_name }}
 <div class="clearfix">
   <div style='float: left;'>
 
-      <a href="{% url cohort-details cohort.coh_cohort_id %}">
+      <a href="{% url 'cohort-details' cohort.coh_cohort_id %}">
 
     <img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
       &nbsp;View Cohort Details</a>
     <br>
     {% if cohort.coh_upcoming %}
-      <a href="{% url upcoming %}">
+      <a href="{% url 'upcoming' %}">
     {% else %}
-      <a href="{% url available %}">
+      <a href="{% url 'available' %}">
     {% endif %}
     <img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
       &nbsp;View {% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohorts</a>
@@ -32,7 +32,7 @@ Cohort: {{ cohort.coh_cohort_name }}
 
 
 <div style='float: right;'>
-<a class='blockLinkButton' href='{% url tissue-shop-landing cohort.coh_cohort_id %}'>Request Tissues from this Cohort</a>
+<a class='blockLinkButton' href='{% url 'tissue-shop-landing' cohort.coh_cohort_id %}'>Request Tissues from this Cohort</a>
 </div>
 
 </div>

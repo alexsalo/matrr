@@ -7,7 +7,7 @@
 
 	<div class='large-headline'>Tissue Inventory Verification</div>
 	<div class='clearfix'>
-		<a href="{% if request.META.HTTP_REFERER %}{{ request.META.HTTP_REFERER }}{% else %}{% url verification-list req_id %}{% endif %}">
+		<a href="{% if request.META.HTTP_REFERER %}{{ request.META.HTTP_REFERER }}{% else %}{% url 'verification-list' req_id %}{% endif %}">
 
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 			&nbsp;Verification list for request {{ req_id }}</a>

@@ -16,27 +16,27 @@
 	<div class='clearfix'>
 		<div style='float: left;'>
 			<!--link back to cohort detail-->
-			<a href="{% url cohort-details monkey.cohort.pk %}">
+			<a href="{% url 'cohort-details' monkey.cohort.pk %}">
 				<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 				&nbsp;Cohort Details</a>
 			<!--endlink back to cohort list-->
 			{% if monkey.has_protein_data %}
 				<br>
-				<a href="{% url tools-monkey-protein monkey.cohort.pk monkey.pk %}">
+				<a href="{% url 'tools-monkey-protein' monkey.cohort.pk monkey.pk %}">
 					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 					&nbsp;View Protein Tools
 				</a>
 			{% endif %}
 			{% if monkey.has_hormone_data and perms.matrr.view_hormone_tools %}
 				<br>
-				<a href="{% url tools-monkey-hormone monkey.cohort.pk monkey.pk %}">
+				<a href="{% url 'tools-monkey-hormone' monkey.cohort.pk monkey.pk %}">
 					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 					&nbsp;View Hormone Tools
 				</a>
 			{% endif %}
 			{% if perms.matrr.browse_inventory %}
 				<br/>
-				<a href="{% url inventory-cohort monkey.cohort.pk %}">
+				<a href="{% url 'inventory-cohort' monkey.cohort.pk %}">
 					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 					&nbsp;Browse Cohort Inventory
 				</a>
@@ -44,7 +44,7 @@
 		</div>
 
 		<div style='float: right;'>
-			<a class='blockLinkButton' href='{% url tissue-shop-landing monkey.cohort.pk %}'>Request Tissues from this Cohort</a>
+			<a class='blockLinkButton' href='{% url 'tissue-shop-landing' monkey.cohort.pk %}'>Request Tissues from this Cohort</a>
 		</div>
 
 	</div>

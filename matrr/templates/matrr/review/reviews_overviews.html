@@ -25,7 +25,7 @@
 			{% for req_request in req_requests %}
 				<tr>
 					<td nowrap>{{ req_request.cohort.coh_cohort_name }}</td>
-					<td><a href='{% url account-reviewer-view req_request.user.id %}'>{{ req_request.user }}</a></td>
+					<td><a href='{% url 'account-reviewer-view' req_request.user.id %}'>{{ req_request.user }}</a></td>
 					<td nowrap>{{ req_request.req_request_date|date:"m/d/Y" }}</td>
 
 					{% for item in req_request.complete %}
@@ -37,7 +37,7 @@
 					{% endfor %}
 					<td style="color:orange;">{% if req_request.has_collisions %}Yes{% endif %}</td>
 
-					<td><a href='{% url review-overview req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>
+					<td><a href='{% url 'review-overview' req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>
 				</tr>
 			{% endfor %}
 		</table>

@@ -45,7 +45,7 @@
 
                     <ul>
                         <li class='top'>
-                            <a href='{% url search %}'>Search</a>
+                            <a href='{% url 'search' %}'>Search</a>
                         </li>
                     </ul>
                 {% endblock %}
@@ -64,13 +64,13 @@
                     <div class='headline'>
                         Quick Links
                     </div>
-                    <a href="{% url upcoming %}">View Upcoming Cohorts</a><br/>
-                    <a href="{% url available %}">View Archival Cohorts</a><br/>
-                    <a href="{% url cohorts %}">View All Cohorts</a><br/>
-                    <a href="{% url assay %}">Request tissues for Assay Development</a><br/>
-                    <a href="{% url mta-upload %}">Upload an MTA</a><br/>
-                    <a href="{% url account-view %}">Submit Research Updates</a><br/>
-                    <a href="{% url publications %}">View Publications</a>
+                    <a href="{% url 'upcoming' %}">View Upcoming Cohorts</a><br/>
+                    <a href="{% url 'available' %}">View Archival Cohorts</a><br/>
+                    <a href="{% url 'cohorts' %}">View All Cohorts</a><br/>
+                    <a href="{% url 'assay' %}">Request tissues for Assay Development</a><br/>
+                    <a href="{% url 'mta-upload' %}">Upload an MTA</a><br/>
+                    <a href="{% url 'account-view' %}">Submit Research Updates</a><br/>
+                    <a href="{% url 'publications' %}">View Publications</a>
                 </div>
 
                 <div class='sidebar-block'>

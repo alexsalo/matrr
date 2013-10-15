@@ -5,15 +5,15 @@
 
 
 {% block content %}
-<div class='headline'>Inventory Status for Cohort <a href="{% url cohort-details cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a></div>
+<div class='headline'>Inventory Status for Cohort <a href="{% url 'cohort-details' cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a></div>
 
 <div class=left>
-<a href="{% url inventory %}">
+<a href="{% url 'inventory' %}">
 
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 			&nbsp;View Inventory Cohort List</a>
 <br/>
-<a href="{% url cohort-details cohort.coh_cohort_id %}">
+<a href="{% url 'cohort-details' cohort.coh_cohort_id %}">
 
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 			&nbsp;View Cohort Details</a>
@@ -32,7 +32,7 @@
 	<tr>
 		<th>Tissue Type \ Monkey</th>
 		{% for mky in monkeys %}
-			<th><a href="{% url monkey-detail mky.cohort.coh_cohort_id mky.mky_id %}" target="_blank">
+			<th><a href="{% url 'monkey-detail' mky.cohort.coh_cohort_id mky.mky_id %}" target="_blank">
 						{{ mky.mky_id }}
 						<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
 				</a>

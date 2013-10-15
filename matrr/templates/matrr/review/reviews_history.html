@@ -24,9 +24,9 @@
 			</tr>
 			{% for req_request in req_requests.object_list %}
 				<tr>
-					<td><a href='{% url order-detail req_request.pk %}'>{{ req_request.pk }}</a></td>
+					<td><a href='{% url 'order-detail' req_request.pk %}'>{{ req_request.pk }}</a></td>
 					<td nowrap>{{ req_request.cohort.coh_cohort_name }}</td>
-					<td><a href='{% url account-reviewer-view req_request.user.id %}'>
+					<td><a href='{% url 'account-reviewer-view' req_request.user.id %}'>
 						{% if req_request.user|lower == 'dummy_user_for_past_requests' %}Generic User
 							{% else %}{{ req_request.user }}
 						{% endif %}</a></td>
@@ -35,7 +35,7 @@
 							<td align="center" id="{{ req_request.req_status|lower }}">{{ req_request.get_req_status_display }}</td>
 			
 
-					<td><a href='{% url review-overview req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>
+					<td><a href='{% url 'review-overview' req_request.req_request_id %}' class='blockLinkButton'>Overview</a></td>
 				</tr>
 			{% endfor %}
 		</table>

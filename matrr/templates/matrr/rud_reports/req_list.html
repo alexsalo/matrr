@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<div id="large-headline">Overdue Research Updates<span class="right"><a href="{% url rud-list %}">View research updates</a></span> </div>
+	<div id="large-headline">Overdue Research Updates<span class="right"><a href="{% url 'rud-list' %}">View research updates</a></span> </div>
 	<div id="small-headline">Shipped Requests</div>
 	<table class='common center'>
 		<tr>
@@ -14,11 +14,11 @@
 		</tr>
 	{% for req in req_list.object_list %}
 		<tr>
-			<td style='text-align:center'><a href='{% url order-detail req.pk %}'>{{ req.pk }}</a></td>
-			<td style='text-align:center'><a href='{% url account-reviewer-view req.user.id %}'>{{ req.user.username }}</a></td>
-			<td style='text-align:center'><a href="{% url cohort-details req.cohort.pk %}">{{ req.cohort }}</a></td>
+			<td style='text-align:center'><a href='{% url 'order-detail' req.pk %}'>{{ req.pk }}</a></td>
+			<td style='text-align:center'><a href='{% url 'account-reviewer-view' req.user.id %}'>{{ req.user.username }}</a></td>
+			<td style='text-align:center'><a href="{% url 'cohort-details' req.cohort.pk %}">{{ req.cohort }}</a></td>
 			<td style='text-align:center'>{{ req.get_max_shipment.shp_shipment_date|date:"SHORT_DATE_FORMAT" }}</td>
-			<td style='text-align:center'>{% for shipment in req.shipments.all %}<a href="{% url shipment-detail shipment.pk %}">{{ shipment.pk }}</a>,{% endfor %}</td>
+			<td style='text-align:center'>{% for shipment in req.shipments.all %}<a href="{% url 'shipment-detail' shipment.pk %}">{{ shipment.pk }}</a>,{% endfor %}</td>
 			<td style="text-align:center;background-color:{{ req.get_overdue_rud_color }}">{{ req.get_rud_weeks_overdue }}</td>
 		</tr>
 	{% endfor %}

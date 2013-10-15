@@ -1,6 +1,6 @@
 {% if edit %}
-<a href='{% url orders-edit-tissue item.rtt_tissue_request_id %}' class='blockLinkCheckoutButton' style='float: right'>Edit</a>
-	<form action="{% url orders-delete-tissue item.rtt_tissue_request_id %}" method="post">
+<a href='{% url 'orders-edit-tissue' item.rtt_tissue_request_id %}' class='blockLinkCheckoutButton' style='float: right'>Edit</a>
+	<form action="{% url 'orders-delete-tissue' item.rtt_tissue_request_id %}" method="post">
 	{% csrf_token %}
 	<button type='submit' name='submit' value="delete" class='blockLinkDeleteButton' style='float: right'>Delete</button>
 	</form>
@@ -29,7 +29,7 @@
       {% if forloop.counter0|divisibleby:"6" %}
         </tr><tr>
       {% endif %}
-      <td align='center'><a href='{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
+      <td align='center'><a href='{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a></td>
     {% endfor %}
     </tr>
   {% else %}
@@ -51,7 +51,7 @@
         {% if forloop.counter0|divisibleby:"4" %}
           </tr><tr>
         {% endif %}
-        <td align='center'><a href='{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}</a></td>
+        <td align='center'><a href='{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}</a></td>
       {% endfor %}
       </tr>
     {% else %}
@@ -63,7 +63,7 @@
         {% if forloop.counter0|divisibleby:"4" %}
           </tr><tr>
         {% endif %}
-        <td align='center'><a href='{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}</a></td>
+        <td align='center'><a href='{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}</a></td>
       {% endfor %}
       </tr>
       <tr>
@@ -74,7 +74,7 @@
         {% if forloop.counter0|divisibleby:"4" %}
           </tr><tr>
         {% endif %}
-        <td align='center'><a href='{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}</a></td>
+        <td align='center'><a href='{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}'>{{ monkey.mky_id }}</a></td>
       {% endfor %}
       </tr>
     {% endif %}

@@ -48,11 +48,11 @@ class RegistrationView(views.RegistrationView):
     def registration_allowed(self, request):
         return True
 
-    def register(request, username, password1, email, last_name, first_name, institution, phone_number, act_real_address1, act_real_address2, act_real_city,
-        act_real_country, act_real_state, act_zip, act_shipping_name, **cleaned_data):
+    def register(self, request, **cleaned_data):
         user = RegistrationProfile.objects.create_inactive_user(username=cleaned_data['username'],
-                                                                    password=cleaned_data['password1'],
-                                                                    email=cleaned_data['email'])
+                                                                password=cleaned_data['password1'],
+                                                                email=cleaned_data['email'],
+                                                                site=settings.SITE_ID)
         user.last_name = cleaned_data['last_name']
         user.first_name = cleaned_data['first_name']
         user.save()
@@ -74,7 +74,7 @@ class RegistrationView(views.RegistrationView):
         account.act_shipping_name = user.first_name + " " + user.last_name
         account.save()
 
-        from emails import send_verify_new_account_email
+        from matrr.emails import send_verify_new_account_email
         send_verify_new_account_email(account)
         return user
 

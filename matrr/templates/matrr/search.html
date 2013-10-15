@@ -57,7 +57,7 @@
 								<td>{{ monkey.mky_name }}</td>
 							{% endif %}
 							<td>
-								<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id%}"
+								<a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id%}"
 								   target="_blank">
 									{{ monkey.mky_id }}
 									<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8'
@@ -100,7 +100,7 @@
 								<td>{{ mpn.monkey.mky_name }}</td>
 							{% endif %}
 							<td>
-								<a href="{% url monkey-detail mpn.monkey.cohort.coh_cohort_id mpn.monkey.mky_id%}"target="_blank">
+								<a href="{% url 'monkey-detail' mpn.monkey.cohort.coh_cohort_id mpn.monkey.mky_id%}"target="_blank">
 									{{ mpn.monkey.mky_id }}
 									<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
 								</a>
@@ -124,7 +124,7 @@
 						</tr>
 						{% for cohort in results.cohort %}
 							<tr>
-								<td><a href="{% url cohort-details cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a></td>
+								<td><a href="{% url 'cohort-details' cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a></td>
 							</tr>
 						{% endfor %}
 					</table>
@@ -162,7 +162,7 @@
 							{% endif %}
 							<br>
 							{% for cohort in pub.cohorts.all %}
-								<a href="{% url cohort-details cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a>{% if not forloop.last %}, {% else %}<br>{% endif %}
+								<a href="{% url 'cohort-details' cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a>{% if not forloop.last %}, {% else %}<br>{% endif %}
 							{% endfor %}
 						</tr>
 						{% if not forloop.last %}<br> {% endif %}

@@ -11,7 +11,7 @@
 	{	var response = $.ajax
     ({
         type: "POST",
-        url: '{% url ajax-advanced-search %}',
+        url: '{% url 'ajax-advanced-search' %}',
         dataType: 'json',
         async: false,
         data: $("#adv_form").serialize()
@@ -73,13 +73,13 @@
 									<td>{{ monkey.mky_name }}</td>
 								{% endif %}
 								<td>
-									<a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+									<a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
 										{{ monkey.mky_id }}
 										<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
 									</a>
 								</td>
 								<td>
-									<a href="{% url cohort-details monkey.cohort.pk %}" target='_blank'>
+									<a href="{% url 'cohort-details' monkey.cohort.pk %}" target='_blank'>
 										{{ monkey.cohort.coh_cohort_name }}
 										<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
 									</a>

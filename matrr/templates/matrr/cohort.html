@@ -20,20 +20,20 @@
 
 		<div style='float: left;'>
 
-			<a href="{% url cohort-timeline cohort.coh_cohort_id %}">
+			<a href="{% url 'cohort-timeline' cohort.coh_cohort_id %}">
 				<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 				&nbsp;View Cohort Timeline
 			</a>
 			{% if cohort.has_protein_data %}
 				<br>
-				<a href="{% url tools-cohort-protein cohort.pk %}">
+				<a href="{% url 'tools-cohort-protein' cohort.pk %}">
 					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 					&nbsp;View Protein Tools
 				</a>
 			{% endif %}
 			{% if cohort.has_hormone_data and perms.matrr.view_hormone_tools%}
 				<br>
-				<a href="{% url tools-cohort-hormone cohort.pk %}">
+				<a href="{% url 'tools-cohort-hormone' cohort.pk %}">
 					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 					&nbsp;View Hormone Tools
 				</a>
@@ -42,17 +42,17 @@
 			<!--link back to cohort list-->
 			{% if cohort.coh_upcoming %}
 				<br>
-				<a href="{% url upcoming %}">
+				<a href="{% url 'upcoming' %}">
 			{% else %}
 				<br>
-				<a href="{% url available %}">
+				<a href="{% url 'available' %}">
 			{% endif %}
 				<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 				&nbsp;View {% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohorts</a>
 			<!--endlink back to cohort list-->
 			{% if perms.matrr.browse_inventory %}
 				<br/>
-				<a href="{% url inventory-cohort cohort.coh_cohort_id %}">
+				<a href="{% url 'inventory-cohort' cohort.coh_cohort_id %}">
 					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 					&nbsp;Browse Cohort Inventory
 				</a>
@@ -60,9 +60,9 @@
 		</div>
 
 		<div style='float: right;'>
-			<a class='blockLinkButton' href='{% url tissue-shop-landing cohort.coh_cohort_id %}'>Request Tissues from this Cohort</a>
+			<a class='blockLinkButton' href='{% url 'tissue-shop-landing' cohort.coh_cohort_id %}'>Request Tissues from this Cohort</a>
 			{% if perms.matrr.add_cohortdata %}
-				<div class="text-right"><a href="{% url cod-upload cohort.coh_cohort_id %}" class='blockLinkButton'>Add Cohort Data</a></div>
+				<div class="text-right"><a href="{% url 'cod-upload' cohort.coh_cohort_id %}" class='blockLinkButton'>Add Cohort Data</a></div>
 			{% endif %}
             {% if has_categories %}
                 <table class='table-drink-cats table-drink-cats-legend blocklinkbutton'>
@@ -106,7 +106,7 @@
                                 <td>{{ monkey.mky_name }}</td>
                             {% endif %}
                             <td>
-                                <a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+                                <a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
                                     {{ monkey.mky_id }}
                                     <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
                                 </a>
@@ -147,7 +147,7 @@
                             {% if perms.matrr.monkey_view_confidential %}
                                 <td>{{ monkey.mky_name }}</td>
                             {% endif %}
-                            <td><a href="{% url monkey-detail monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+                            <td><a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
                                 {{ monkey.mky_id }}
                                 <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
                             </a>

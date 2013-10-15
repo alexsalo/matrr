@@ -31,11 +31,11 @@
 	</div>
 	<br/>
 
-	<form action="{% url order-revise-confirm req_id %}" method="post">
+	<form action="{% url 'order-revise-confirm' req_id %}" method="post">
 	{% csrf_token %}
 	<button type='submit' name='submit' value="duplicate" class='blockLinkCheckoutButton' style='float: left'>Create Editable Copy</button>
 	</form>
-	<a href='{% url order-list %}' class='blockLinkDeleteButton' style='float: left'>Cancel</a>
+	<a href='{% url 'order-list' %}' class='blockLinkDeleteButton' style='float: left'>Cancel</a>
 
 
 {% endblock %}

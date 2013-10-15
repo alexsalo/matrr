@@ -127,7 +127,7 @@
 				<button type='submit' name='submit' value='checkout' class="blockLinkCheckoutButton">Submit Request</button>
 			</div>
 			<div style='padding:3px; float: right;'>
-				<a href='{% if edit %}{% url order-edit form.instance.req_request_id %}{% else %}{% url cart %}{% endif %}'>
+				<a href='{% if edit %}{% url 'order-edit' form.instance.req_request_id %}{% else %}{% url 'cart' %}{% endif %}'>
 					<div class="blockLinkDeleteButton">Cancel {%if edit %}Checkout{% else %}Request{% endif %}</div>
 				</a>
 			</div>

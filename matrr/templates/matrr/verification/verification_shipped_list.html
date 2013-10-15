@@ -7,7 +7,7 @@
 
 	<div class='large-headline'>Tissue Inventory Verification</div>
 	<div class='clearfix'>
-		<a href="{% url verification %}">
+		<a href="{% url 'verification' %}">
 
 			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
 			&nbsp;Verification - list of requests</a>
@@ -27,7 +27,7 @@
 						</td>
 						<td align="center" colspan=3>There are THREE inventory values that matter to MATRR.  Additional accuracy is primarily for YOUR records.</td>
 						<td align="center">
-							<a href='{% url verification-list-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
+							<a href='{% url 'verification-list-export' req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
 						</td>
 					</tr>
 					<tr>
@@ -73,7 +73,7 @@
 									</td>
 									</tr><tr style='padding: 4px'>
 								{% endif %}
-									<td ><a href="{% url verification-detail req_id tiv.initial.primarykey %}">Edit</a></td>
+									<td ><a href="{% url 'verification-detail' req_id tiv.initial.primarykey %}">Edit</a></td>
 									<td  align="center">{{ tiv.initial.monkey }}</td>
 									<td width="250px" align="left">{{ tiv.initial.tissue }}</td>
 
@@ -99,7 +99,7 @@
 					<td align="center" class='verification_legend unverified'>Unverified</td>
 					<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
 					<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
-					<td align="center">	<a href='{% url verification-list-export req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
+					<td align="center">	<a href='{% url 'verification-list-export' req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
 				</tr>
 			</table>
 		{% endif %}

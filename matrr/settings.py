@@ -129,7 +129,6 @@ STATICFILES_FINDERS = (
 # Your Login URL MUST be included.
 PUBLIC_URLS = (
 	r'^$',
-	r'^login/?$',
 	r'^logout/?$',
 	r'^accounts/', # django.auth url, NOT matrr's "account" url.  -.-
 	r'^(privacy|data|usage|browser|public-faq|about|benefits|denied|not-verified)/', # all non-dynamic pages.  Should find a way to pull this from matrr.urls
@@ -214,7 +213,7 @@ ACCOUNT_ACTIVATION_DAYS = 2
 EMAIL_HOST = 'localhost'
 DEFAULT_FROM_EMAIL = 'matrr_admin@localhost'
 
-LOGIN_REDIRECT_URL = '/login'
+LOGIN_REDIRECT_URL = '/'
 
 PUBLIC_SEARCH_INDEXES = {'monkey':("monkey", 'Monkey'),
 						 'cohort':("cohort", 'Cohort'),
@@ -227,6 +226,7 @@ PRIVATE_SEARCH_INDEXES = {'monkey_auth':("monkey_auth", 'Monkey')}
 ResearchUpdateInitialGrace = 90
 ResearchUpdateNoProgressGrace = 45
 ResearchUpdateInProgressGrace = 180
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error when DEBUG=False.
