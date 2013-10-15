@@ -2285,7 +2285,7 @@ class Request(models.Model, DiffingMixin):
 
     def ship_request(self):
         fully_shipped = True
-        for tr in self.tissue_request_set.exclude(accepted_monkey=None):
+        for tr in self.tissue_request_set.exclude(accepted_monkeys=None):
             if tr.shipment is None or tr.shipment.shp_shipment_status != ShipmentStatus.Shipped:
                 fully_shipped = False
                 break
