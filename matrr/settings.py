@@ -19,10 +19,10 @@ GLEEK = False
 DEVELOPMENT = False
 PRODUCTION = False
 
-if path == '/web/www/matrr-prod':
+if path == '/web/www/matrr-prod/matrr':
     PRODUCTION = True
     GLEEK = True
-elif path == '/web/www/matrr-dev':
+elif path == '/web/www/matrr-dev/matrr':
     DEVELOPMENT = True
     GLEEK = True
 else:
@@ -30,6 +30,9 @@ else:
 
 ENABLE_EMAILS = PRODUCTION
 
+# I can't remember why I added this
+# I think it has to do with dot-files in the project dir
+# to my knowledge the project is never used as root.
 if getpass.getuser().lower() == 'root':
     if PRODUCTION:
         os.environ['HOME'] = "/web/www/matrr-prod"

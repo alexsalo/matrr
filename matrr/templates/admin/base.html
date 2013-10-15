@@ -16,12 +16,12 @@
 
 <!-- Container -->
 {% if PRODUCTION %}
-<div id="container">
+    <div id="container-prod">
 {% else %}
-	{% if GLEEK %}
-	<div id="container-gleek">
-	{% else %}
-	<div id="container-dev">
+    {% if GLEEK %}
+        <div id="container-dev">
+    {% else %}
+        <div id="container-local">
 	{% endif %}
 {% endif %}
 

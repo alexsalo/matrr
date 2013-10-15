@@ -646,13 +646,13 @@ table#change-history tbody th {
 
 /* PAGE STRUCTURE */
 
-#container {
+#container-prod {
     position: relative;
     width: 100%;
     min-width: 760px;
     padding: 0;
 }
-#container-dev {
+#container-local {
     position: relative;
     width: 100%;
     min-width: 760px;
@@ -660,7 +660,7 @@ table#change-history tbody th {
 	background-color: #11cc11
 }
 
-#container-gleek {
+#container-dev {
     position: relative;
     width: 100%;
     min-width: 760px;
