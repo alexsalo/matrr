@@ -1,4 +1,4 @@
-import settings
+from matrr import settings
 from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
