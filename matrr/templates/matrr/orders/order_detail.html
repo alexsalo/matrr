@@ -1,14 +1,18 @@
 {% extends "base.html" %}
 
+{% block title %}
+	MATRR Request {{ order.pk }}
+{% endblock %}
+
 {% block content %}
 	<div class='large-headline' xmlns="http://www.w3.org/1999/html">
-		{% block title %}{% if edit %}Edit Order{% else %}Order Detail{% endif %}:  {{ order.pk }}{% endblock %}
+		{% if edit %}Edit Request{% else %}Request Detail{% endif %}:  {{ order.pk }}
 	</div>
 
 	<br/>
 	{% if edit %}
 		<center>
-			<div class='blockLinkButton' style=''>This part of order can be edited only during checkout.</div>
+			<div class='blockLinkButton' style=''>This part of request can only be edited during checkout.</div>
 		</center>
 	{% endif %}
 	<table class="common_right" style="margin: auto; width:95%">
@@ -82,7 +86,7 @@
 	{% endif %}
 	{% if edit %}
 		<div class="messages">
-			<div class="warning">A Revised order is just your draft, <strong>it has to be checked out (submitted).</strong> Only then can the MATRR team process it.</div>
+			<div class="warning">A Revised request is just your draft, <strong>it has to be checked out (submitted).</strong> Only then can the MATRR team process it.</div>
 		</div>
 		<div class="messages">
 			<div class="info">

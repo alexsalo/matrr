@@ -1,5 +1,4 @@
-{% extends 'base.html' %}
-
+{% extends 'review/review_base.html' %}
 
 {% block extra_js %}
 	{{ block.super }}
@@ -7,9 +6,7 @@
 {% endblock %}
 
 {% block content %}
-	<div class='large-headline'>
-		{% block title %}Review{% endblock %}
-	</div>
+	<div class='large-headline'>Review</div>
 
 	<form action='' method='post'>
 		{% csrf_token %}

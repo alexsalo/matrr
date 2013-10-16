@@ -1,55 +1,50 @@
 {% extends "base.html" %}
 
-
 {% block title %}Inventory Status for Cohort {{ cohort.coh_cohort_name }}{% endblock %}
 
-
 {% block content %}
-<div class='headline'>Inventory Status for Cohort <a href="{% url 'cohort-details' cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a></div>
+    <div class='headline'>Inventory Status for Cohort <a href="{% url 'cohort-details' cohort.coh_cohort_id %}">{{ cohort.coh_cohort_name }}</a></div>
 
-<div class=left>
-<a href="{% url 'inventory' %}">
+    <div class=left>
+        <a href="{% url 'inventory' %}">
 
-			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
-			&nbsp;View Inventory Cohort List</a>
-<br/>
-<a href="{% url 'cohort-details' cohort.coh_cohort_id %}">
+            <img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+            &nbsp;View Inventory Cohort List</a>
+        <br/>
+        <a href="{% url 'cohort-details' cohort.coh_cohort_id %}">
 
-			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
-			&nbsp;View Cohort Details</a>
-</div>
-<div class=right>
-	<table class='common_center' style='padding: 0'>
-		<tr>
-			<td id="avail0">Available</td>
-		</tr>
-		<tr>
-			<td id="avail2">Unavailable</td>
-		</tr>
-	</table>
-</div>
-<table class='common_center' style='padding: 0'>
-	<tr>
-		<th>Tissue Type \ Monkey</th>
-		{% for mky in monkeys %}
-			<th><a href="{% url 'monkey-detail' mky.cohort.coh_cohort_id mky.mky_id %}" target="_blank">
-						{{ mky.mky_id }}
-						<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
-				</a>
-			</th>
-		{% endfor %}	
-	</tr>
-	{% for tst in matrix %}
-		<tr>
-			<th>{{ tst.title }}</th>
-			{% for avail in tst.row %}
-				<td id="avail{{ avail }}"></td>
-			{% endfor %}
-		</tr>
-	{% endfor %}
-	
-</table>
+            <img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+            &nbsp;View Cohort Details</a>
+    </div>
+    <div class=right>
+        <table class='common_center' style='padding: 0'>
+            <tr>
+                <td id="avail0">Available</td>
+            </tr>
+            <tr>
+                <td id="avail2">Unavailable</td>
+            </tr>
+        </table>
+    </div>
+    <table class='common_center' style='padding: 0'>
+        <tr>
+            <th>Tissue Type \ Monkey</th>
+            {% for mky in monkeys %}
+                <th><a href="{% url 'monkey-detail' mky.cohort.coh_cohort_id mky.mky_id %}" target="_blank">
+                    {{ mky.mky_id }}
+                    <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
+                </a>
+                </th>
+            {% endfor %}
+        </tr>
+        {% for tst in matrix %}
+            <tr>
+                <th>{{ tst.title }}</th>
+                {% for avail in tst.row %}
+                    <td id="avail{{ avail }}"></td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
 
-
-
+    </table>
 {% endblock %}

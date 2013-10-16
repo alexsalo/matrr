@@ -1,5 +1,9 @@
 {% load tissue_filters %}
 
+{% block title %}
+	MATRR Tissue Inventory
+{% endblock %}
+
 {% if tissue_request.get_tissue %}
 	<div>
 		<a onclick="javascript:toggle_visibility('inventory_{{ tissue_request.get_html_label }}');">
