@@ -7,6 +7,6 @@
 {% block content %}
 	<div>
 		<div class='large-headline'>Shipped Requests for user {{ user.username }}</div>
-		{% include 'matrr/shipping/shipping_history_table.html' %}
+		{% include 'matrr/shipping/shipping_history_table.html' with requests=shipped_requests %}
 	</div>
 {% endblock %}

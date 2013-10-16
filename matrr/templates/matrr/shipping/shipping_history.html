@@ -10,7 +10,7 @@
 	<div>
 		{% if recently_shipped %}
 			<div class='large-headline'>Recently Shipped</div>
-			{% include 'matrr/shipping/shipping_history_table.html' with shipped_requests=recently_shipped %}
+			{% include 'matrr/shipping/shipping_history_table.html' with requests=recently_shipped %}
 		{% endif %}
 	</div>
 	{% if user_list %}

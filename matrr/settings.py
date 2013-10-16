@@ -174,7 +174,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 	'matrr.context_processors.login_form',
 	'matrr.context_processors.global_context',
 	'matrr.context_processors.unsupported_browser',
-
+    'django.contrib.messages.context_processors.messages',
 #	"django.core.context_processors.auth",
 	)
 
