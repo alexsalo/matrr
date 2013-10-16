@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "tools/tools_base.html" %}
 
 {% block content %}
 	<div class=large-headline>{% if monkeys %}Monkey Protein Tools: Monkeys {% for monkey in monkeys %}{{ monkey.pk }} {% endfor %}{% else %}Monkey Protein Tools:{% endif %}</div>
