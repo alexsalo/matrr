@@ -158,7 +158,7 @@
 	{% endif %}
 
 	<!--This section displays the status of requests-->
-	<div class='headline'>Submitted Requests Status (<a href="{% url 'order-list' %}">All orders are here</a>)</div>
+	<div class='headline'>Status of Submitted Requests (<a href="{% url 'order-list' account_info.user.pk %}">View All Requests</a>)</div>
 	{% if order_list %}
 		<table class="common">
 			<tr>

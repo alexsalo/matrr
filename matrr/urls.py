@@ -64,6 +64,7 @@ urlpatterns += patterns('',
     ##  Order processing views
     # order revision/submission/deletion
     url(r'^orders/$', orders.orders_list, name='order-list'),
+    url(r'^orders/user/(?P<user_id>\d+)/$', orders.orders_list, name='order-list'),
     url(r'^orders/(?P<req_request_id>\d+)/$', orders.order_detail, name='order-detail'),
     url(r'^orders/(?P<req_request_id>\d+)/delete/$', orders.order_delete, name='order-delete'),
     url(r'^orders/(?P<req_request_id>\d+)/revise/$', orders.order_revise, name='order-revise'),

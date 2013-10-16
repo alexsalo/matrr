@@ -137,7 +137,7 @@ def account_detail_view(request, user_id):
     else:
         rud_on = False
 
-    order_list = Request.objects.processed().filter(user__id=user_id).order_by("-req_request_date")[:20]
+    order_list = Request.objects.processed().filter(user__id=user_id).order_by("-req_request_date")[:10]
 
     return render_to_response('matrr/account/account.html',
                               {'account_info': account_info,
