@@ -1,4 +1,3 @@
-import copy
 import itertools
 import logging
 import numpy
@@ -16,7 +15,7 @@ import sys
 
 from django.db.models import Sum, Avg, Min, Max
 from matplotlib.cm import get_cmap
-from matplotlib.patches import Rectangle, Circle
+from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator, NullLocator
 import networkx as nx
 
@@ -1180,7 +1179,7 @@ def rhesus_etoh_gkg_bargraph(limit_step=1):
 def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(3, 3)
-    gs.update(left=0.035, right=0.98, top=.95, wspace=.00, hspace=0)
+    gs.update(left=0.035, right=0.98, top=.98, wspace=.00, hspace=0)
     subplot = fig.add_subplot(gs[:, :])
 
     limits = numpy.arange(1, 9, limit_step)
@@ -1215,9 +1214,8 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
     subplot.set_yticklabels([])
     subplot.tick_params(axis='both', which='major', labelsize=tick_size)
     subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
-    subplot.set_title("Rhesus 4/5/7a/7b, Distribution of Intakes Exceeding g/kg Minimums", size=title_size)
-    subplot.set_ylabel("Aggregation of EtOH Intake Days", size=label_size)
-    subplot.set_xlabel("Etoh intake, g/kg", size=label_size)
+    subplot.set_ylabel("Aggregation of EtOH Intake Days by Category", size=label_size)
+    subplot.set_xlabel("Percentage of Days Exceeding EtOH Intake(g/kg)", size=label_size)
     return fig
 
 
@@ -1263,7 +1261,7 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dpi=DEFAULT_DPI, dist
 def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(1, 1)
-    gs.update(left=0.03, right=0.485, top=.94, wspace=.25, hspace=0)
+    gs.update(left=0.03, right=0.492, top=.98)
 
     tick_size = 28
     title_size = 28
@@ -1274,7 +1272,7 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=HISTOGRAM_FIG_SIZE):
 
 #	Histograms, right
     gs = gridspec.GridSpec(1, 3)
-    gs.update(left=0.515, right=0.95, top=.94, wspace=.05, hspace=0)
+    gs.update(left=0.507, right=0.95, top=.98, wspace=.1, hspace=0)
     subplot = None
     cutoffs = {2:.55, 3:.2, 4:.1}
     for limit in range(2, 5, 1):
@@ -1285,8 +1283,6 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=HISTOGRAM_FIG_SIZE):
         subplot.yaxis.set_visible(False)
         subplot.tick_params(axis='both', which='major', labelsize=tick_size)
         subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
-        if limit == 3: # middle subplot
-            subplot.set_xlabel('Monkey', size=label_size)
 
     subplot.yaxis.set_visible(True)
     subplot.yaxis.set_label_position('right')
@@ -1327,9 +1323,8 @@ def _etoh_gkg_forced_histogram(subplot, tick_size=16, title_size=22, label_size=
     ymax = max(gkg_daycounts)*1.005
     subplot.set_ylim(ymin=0, ymax=ymax)
     subplot.set_xlim(xmin=0, xmax=xmax)
-    subplot.set_title("Rhesus 4/5/7a/7b, distribution of intakes",  size=title_size)
-    subplot.set_ylabel("Aggregate percent days of EtOH consumption", size=label_size)
-    subplot.set_xlabel("Etoh intake, g/kg",  size=label_size)
+    subplot.set_ylabel("Summation of percentage of days of EtOH intake", size=label_size)
+    subplot.set_xlabel("Etoh intake (g/kg)",  size=label_size)
     subplot.tick_params(axis='both', which='major', labelsize=tick_size)
     subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
 #    ytick_labels = ["%d" % (2*x*10) for x in range(6)]
@@ -1370,7 +1365,7 @@ def _etoh_gkg_monkeybargraph(subplot, limit, cutoff=None, tick_size=12, title_si
 
     subplot.set_xlim(xmax=len(monkeys))
     subplot.set_xticks([])
-    subplot.set_title("Days > %d g/kg" % limit, size=title_size)
+    subplot.set_xlabel("%% Days > %d g/kg" % limit, size=tick_size)
     ytick_labels = ["%d" % (2*10*x) for x in range(6)]
     subplot.set_yticklabels(ytick_labels, size=tick_size)
     return subplot
@@ -1544,25 +1539,31 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE, include_reg
             y_data.append(pel_avg / wgt_avg)
         return x_data, y_data
 
+    tick_size=22
+    title_size=30
+    label_size=26
+
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(3, 3)
-    main_gs.update(left=0.06, right=0.98, wspace=.08, hspace=0)
+    main_gs.update(left=0.05, right=0.98, wspace=.08, hspace=0)
 
     # main scatterplot, pellet vs etoh
-    subplot = fig.add_subplot(main_gs[:])
-    subplot, handles, labels = _rhesus_category_scatterplot(subplot, _oa_pelletvolume_perday_perkg, include_regression=include_regression)
-    subplot.legend(handles, labels, scatterpoints=1, loc='lower left')
-    subplot.set_title("EtOH Intake vs pellets")
-    subplot.set_ylabel("Average pellet (count) / Average weight (kg), per monkey")
-    subplot.set_xlabel("Average volume (mL.) / Average weight (kg), per monkey")
+    main_subplot = fig.add_subplot(main_gs[:])
+    main_subplot, handles, labels = _rhesus_category_scatterplot(main_subplot, _oa_pelletvolume_perday_perkg, include_regression=include_regression)
+    main_subplot.legend(handles, labels, scatterpoints=1, loc='lower left')
+    main_subplot.set_ylabel("Average pellet (count) / Average weight (kg), per monkey", size=label_size)
+    main_subplot.set_xlabel("Average volume (mL.) / Average weight (kg), per monkey", size=label_size)
+    main_subplot.tick_params(axis='both', which='major', labelsize=tick_size)
+    main_subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
+    main_subplot.legend(loc=3, frameon=True, prop={'size': tick_size})
 
     # inset scatterplot, pellet vs water
     inset_plot = fig.add_axes([0.6, 0.7, 0.37, 0.23])
     inset_plot, handles, labels = _rhesus_category_scatterplot(inset_plot, _oa_pelletwater_perday_perkg, include_regression=include_regression)
-    inset_plot.set_title("H20 Intake vs pellets")
-    inset_plot.set_ylabel("Pellet(count)/Weight(kg)/Monkey")
-    inset_plot.set_xlabel("Water (mL.) / Weight(kg) / Monkey")
-    ## Because the legend is almost the same as the main subplot's legend, we dont need to show most of the keys
+    inset_plot.set_title("H20 Intake vs pellets", size=tick_size)
+    inset_plot.set_ylabel("Pellet/Weight/Monkey", size=tick_size)
+    inset_plot.set_xlabel("Water (mL.) / Weight(kg) / Monkey", size=tick_size)
+    ## Because the legend is almost the same as the main_subplot's legend, we dont need to show most of the keys
     ## but we do want to show the regression fit, and large enough to read without hiding the scatterplot
     if include_regression:
         for index, label in enumerate(labels):
@@ -2653,7 +2654,7 @@ def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, 
         if monkey in RHESUS_DRINKERS_DISTINCT['VHD']:
             y_axis = becs.values_list('bec_gkg_etoh', 'bec_daily_gkg_etoh')
             y_axis = [y[0]/y[1] for y in y_axis]
-            bottom_subplot_right.plot(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], lw=3, alpha=.5)
+            bottom_subplot_right.plot(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], lw=3, alpha=.5, label="Percent Daily Intake at Sample, %d" % monkey)
 
     suptitle_size = 30
     title_size = 26
@@ -2671,14 +2672,17 @@ def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, 
     bottom_subplot_right.set_yticks(line_ticks)
     bottom_subplot_right.set_yticklabels(["%d%%" % int(tick*100) for tick in line_ticks])
     for subplot in [top_subplot, bottom_subplot_left, bottom_subplot_right]:
-        subplot.legend(prop={'size': legend_size})
         subplot.tick_params(axis='both', which='major', labelsize=tick_size)
         subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
 
+    top_subplot.legend(loc=2, prop={'size': legend_size})
+    bottom_subplot_left.legend(loc=2, prop={'size': legend_size})
+    bottom_subplot_right.legend(loc=1, prop={'size': legend_size})
+
 #    fig.suptitle("High Drinker vs Low Drinker", size=suptitle_size)
 #    top_subplot.set_title("Daily Ethanol Intake", size=title_size)
-    top_subplot.text(.42, .92, "Daily Ethanol Intake", size=title_size, transform=top_subplot.transAxes)
-    top_subplot.set_ylabel("Ethanol (g/kg)", size=label_size)
+    top_subplot.text(.42, .92, "Daily EtOH Intake", size=title_size, transform=top_subplot.transAxes)
+    top_subplot.set_ylabel("EtOH (g/kg)", size=label_size)
     top_subplot.set_xlabel("Open Access Days", size=label_size)
     top_subplot.get_xaxis().set_visible(False)
 
@@ -2952,14 +2956,11 @@ def rhesus_category_parallel_classification_stability(categories, y_value_callab
 def rhesus_category_parallel_classification_stability_popcount(categories, y_value_callable, y_label, fig_size=(25, 15), tick_size=22, title_size=30,  label_size=26):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(6, 1)
-    gs.update(left=0.05, right=0.94, top=.94, bottom=.06, hspace=.02)
+    gs.update(left=0.05, right=0.94, top=.94, bottom=.06, hspace=.25)
     etoh_subplot = fig.add_subplot(gs[0:4,:])
     pop_subplot = fig.add_subplot(gs[4:,:], sharex=etoh_subplot)
 
-    fig.suptitle("Stability of categorical drinking classifications over time. (Ethanol Consumption and Population Count)",  size=title_size)
-    fig.text(0.01,0.74, y_label, fontdict={'fontsize':label_size}, rotation=90)
-
-    field_labels = ["Avg Daily Etoh (g/kg)", "Population Change", ]
+    etoh_subplot.set_ylabel(y_label, fontdict={'fontsize': label_size})
 
     plot_x = range(1,5,1)
     etoh_category_values = defaultdict(lambda: defaultdict(lambda: list()))
@@ -2988,10 +2989,9 @@ def rhesus_category_parallel_classification_stability_popcount(categories, y_val
         else:
             alpha = base_alpha
         etoh_subplot.plot(plot_x, plot_y, c=RHESUS_COLORS[key], linewidth=5)
-        etoh_subplot.scatter(plot_x, plot_y, c=RHESUS_COLORS[key], edgecolor=RHESUS_COLORS[key], s=150, marker=DRINKING_CATEGORY_MARKER[key])
+        etoh_subplot.scatter(plot_x, plot_y, c=RHESUS_COLORS[key], edgecolor=RHESUS_COLORS[key], s=150, marker=DRINKING_CATEGORY_MARKER[key], label=key)
         etoh_subplot.fill_between(plot_x, plot_y-std_error, plot_y+std_error, alpha=alpha, edgecolor=RHESUS_COLORS[key], facecolor=RHESUS_COLORS[key])
-    legend = etoh_subplot.legend((), title=field_labels[0], loc=1, frameon=False)
-    pyplot.setp(legend.get_title(),fontsize=tick_size)
+    etoh_subplot.legend(loc=1, frameon=True, prop={'size': tick_size})
 
     ###############
     ordinals = ["First", "Second", "Third", "Fourth"]
@@ -3016,13 +3016,12 @@ def rhesus_category_parallel_classification_stability_popcount(categories, y_val
                 y_values.append(y_value)
             x_val += .1
             pop_subplot.scatter(x_values, y_values, c=color, edgecolor=color, s=175, marker=marker)
-#    pop_subplot.set_title("Population Difference from 12month Study", size=title_size)
-
     for index, subplot in enumerate([etoh_subplot, pop_subplot]):
         subplot.tick_params(axis='both', which='both', labelsize=tick_size)
         subplot.set_xlim(xmin=.75, xmax=len(plot_x)+.2)
         subplot.yaxis.set_major_locator(MaxNLocator(prune='lower'))
     etoh_subplot.grid(True, which='major', axis='both')
+    pop_subplot.set_ylabel(r'$\Delta$ Population', fontdict={'fontsize': label_size})
     pop_subplot.grid(True, which='major', axis='y')
     pop_subplot.axhspan(-.1, .1, color='black', alpha=.7, zorder=-100)
     pop_subplot.set_yticks(range(-6,7,2))
@@ -3030,6 +3029,9 @@ def rhesus_category_parallel_classification_stability_popcount(categories, y_val
     pop_subplot.set_xticks(plot_x)
     x_labels = ["%s 3 months" % x for x in ordinals]
     pop_subplot.set_xticklabels(x_labels, size=tick_size)
+    legend = pop_subplot.legend((), title="Population change from 12 Month Study", loc=9, frameon=False)
+    pyplot.setp(legend.get_title(), fontsize=title_size)
+    #    pop_subplot.legend(loc=3, title='Population Difference from 12month Study')
     return fig
 
 
@@ -3641,50 +3643,29 @@ def create_kathy_graphs():
         fig.savefig(filename, dpi=DPI)
 
 
-def create_manuscript_graphs(output_path='', svg=True, png=True, fig_size=(25, 15), dpi=800):
+def create_manuscript_graphs(output_path='', graphs='12345', png=True, fig_size=(25, 15), dpi=800):
     figures = list()
     names = list()
     all_categories = DRINKING_CATEGORIES
-    red_vs_blue = ["VHD", "LD"]
 
-    figures.append(rhesus_category_parallel_classification_stability(all_categories, gadgets.gather_three_month_monkey_percentiles_by_fieldname, "Average Percentile of Category"))
-    names.append("rhesus_category_parallel_classification_stability-percentile")
-    figures.append(rhesus_category_parallel_classification_stability(all_categories, gadgets.gather_three_month_monkey_average_by_fieldname, "Average Value of Category"))
-    names.append("rhesus_category_parallel_classification_stability-raw")
-    figures.append(category_parallel_plot_fillbetween(all_categories, fig_size=fig_size))
-    names.append('category_parallel_plot_fillbetween-all')
-    figures.append(category_parallel_plot_fillbetween(red_vs_blue, fig_size=fig_size))
-    names.append('category_parallel_plot_fillbetween-red_vs_blue')
-    figures.append(category_parallel_plot_split_oa(all_categories, fig_size=fig_size))
-    names.append('category_parallel_plot_split_oa-all')
-    figures.append(category_parallel_plot_split_oa(red_vs_blue, fig_size=fig_size))
-    names.append('category_parallel_plot_split_oa-red_vs_blue')
-    figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=fig_size))
-    names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram')
-    figures.append(rhesus_etoh_gkg_stackedbargraph(fig_size=fig_size))
-    names.append('rhesus_etoh_gkg_stackedbargraph')
-    figures.append(rhesus_hourly_gkg_boxplot_by_category(fig_size=fig_size))
-    names.append('rhesus_hourly_gkg_boxplot_by_category')
-    figures.append(rhesus_etoh_bec_scatter(monkey_two=10052, monkey_one=10049, fig_size=fig_size))
-    names.append('rhesus_etoh_bec_scatter-10052-10049')
-    figures.append(monkey_plots.monkey_etoh_bouts_vol(10052)[0])
-    names.append('monkey_etoh_bouts_vol-10052')
-    figures.append(monkey_plots.monkey_etoh_bouts_vol(10049)[0])
-    names.append('monkey_etoh_bouts_vol-10049')
-    figures.append(rhesus_oa_pelletvolume_perday_perkg(include_regression=False))
-    names.append('rhesus_oa_pelletvolume_perday_perkg')
-    figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dist='truncnorm', verbose_dist='Truncated Normal', dpi=1200))
-    names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot-truncnorm.png')
-    figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dist='truncexpon', verbose_dist='Truncated Exponential', dpi=1200))
-    names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot-truncexpon.png')
-    figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dist='uniform', verbose_dist='Uniform'))
-    names.append('rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot-uniform.png')
-    if svg or png:
+    if '1' in graphs:
+        figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=fig_size))
+        names.append('Figure1')
+    if '2' in graphs:
+        figures.append(rhesus_etoh_gkg_stackedbargraph(fig_size=fig_size))
+        names.append('Figure2')
+    if '3' in graphs:
+        figures.append(rhesus_etoh_bec_scatter(monkey_two=10098, monkey_one=10092, fig_size=fig_size))
+        names.append('Figure3')
+    if '4' in graphs:
+        figures.append(rhesus_category_parallel_classification_stability_popcount(all_categories, gadgets.gather_three_month_monkey_average_by_fieldname, "Average Daily EtOH Intake by Category (g/kg)"))
+        names.append('Figure4')
+    if '5' in graphs:
+        figures.append(rhesus_oa_pelletvolume_perday_perkg(fig_size=fig_size))
+        names.append('Figure5')
+    if png:
         for FigName in zip(figures, names):
             fig, name = FigName
-            if svg:
-                filename = output_path + '%s.svg' % name
-                fig.savefig(filename, format='svg',dpi=dpi)
             if png:
                 filename = output_path + '%s.png' % name
                 fig.savefig(filename, format='png',dpi=dpi)
