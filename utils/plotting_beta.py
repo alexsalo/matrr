@@ -1210,9 +1210,8 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
     tick_size=22
     title_size=30
     label_size=26
-
 #    tick_size = 32
-    title_size = 32
+#    title_size = 32
 #    label_size = 32
 #    legend_size = 32
     subplot.legend(prop={'size': tick_size})
