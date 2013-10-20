@@ -1206,11 +1206,16 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
         bottom += gkg_daycounts
 
     subplot.set_xlim(xmin=1, xmax=7)
-    tick_size = 32
+
+    tick_size=22
+    title_size=30
+    label_size=26
+
+#    tick_size = 32
     title_size = 32
-    label_size = 32
-    legend_size = 32
-    subplot.legend(prop={'size': legend_size})
+#    label_size = 32
+#    legend_size = 32
+    subplot.legend(prop={'size': tick_size})
     subplot.set_yticklabels([])
     subplot.tick_params(axis='both', which='major', labelsize=tick_size)
     subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
@@ -1323,8 +1328,8 @@ def _etoh_gkg_forced_histogram(subplot, tick_size=16, title_size=22, label_size=
     ymax = max(gkg_daycounts)*1.005
     subplot.set_ylim(ymin=0, ymax=ymax)
     subplot.set_xlim(xmin=0, xmax=xmax)
-    subplot.set_ylabel("Summation of percentage of days of EtOH intake", size=label_size)
-    subplot.set_xlabel("Etoh intake (g/kg)",  size=label_size)
+    subplot.set_ylabel("Summation of Percentage of Days of EtOH Intake", size=label_size)
+    subplot.set_xlabel("EtOH Intake (g/kg)",  size=label_size)
     subplot.tick_params(axis='both', which='major', labelsize=tick_size)
     subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
 #    ytick_labels = ["%d" % (2*x*10) for x in range(6)]
@@ -1552,7 +1557,7 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE, include_reg
     main_subplot, handles, labels = _rhesus_category_scatterplot(main_subplot, _oa_pelletvolume_perday_perkg, include_regression=include_regression)
     main_subplot.legend(handles, labels, scatterpoints=1, loc='lower left')
     main_subplot.set_ylabel("Average pellet (count) / Average weight (kg), per monkey", size=label_size)
-    main_subplot.set_xlabel("Average volume (mL.) / Average weight (kg), per monkey", size=label_size)
+    main_subplot.set_xlabel("Average EtOH (mL.) / Average weight (kg), per monkey", size=label_size)
     main_subplot.tick_params(axis='both', which='major', labelsize=tick_size)
     main_subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
     main_subplot.legend(loc=3, frameon=True, prop={'size': tick_size})
@@ -2656,11 +2661,11 @@ def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, 
             y_axis = [y[0]/y[1] for y in y_axis]
             bottom_subplot_right.plot(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], lw=3, alpha=.5, label="Percent Daily Intake at Sample, %d" % monkey)
 
-    suptitle_size = 30
-    title_size = 26
-    label_size = 24
-    tick_size = 20
-    legend_size = 20
+    tick_size=22
+    title_size=30
+    label_size=26
+    legend_size = tick_size
+
     top_subplot.set_ylim(ymin=0)
     top_subplot.set_xlim(xmin=0, xmax=date_index)
     bottom_subplot_left.set_ylim(ymin=0)
@@ -2679,14 +2684,11 @@ def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, 
     bottom_subplot_left.legend(loc=2, prop={'size': legend_size})
     bottom_subplot_right.legend(loc=1, prop={'size': legend_size})
 
-#    fig.suptitle("High Drinker vs Low Drinker", size=suptitle_size)
-#    top_subplot.set_title("Daily Ethanol Intake", size=title_size)
     top_subplot.text(.42, .92, "Daily EtOH Intake", size=title_size, transform=top_subplot.transAxes)
     top_subplot.set_ylabel("EtOH (g/kg)", size=label_size)
     top_subplot.set_xlabel("Open Access Days", size=label_size)
     top_subplot.get_xaxis().set_visible(False)
 
-#    bottom_subplot_left.set_title("Daily BEC", size=title_size)
     bottom_subplot_left.text(.45, .92, "Daily BEC", size=title_size, transform=bottom_subplot_left.transAxes)
     bottom_subplot_left.set_ylabel("BEC (mg/dl)", size=label_size)
     bottom_subplot_left.set_xlabel("Days", size=label_size)
