@@ -4,7 +4,6 @@ from django.views.generic import RedirectView
 from django.contrib import admin
 from views import cart, account, orders, review, rna, rud_reports, shipping, uploads, verification, inventory, ajax, basic, tools, display, data
 from settings import MEDIA_URL, MEDIA_ROOT, PRODUCTION
-import registration.backends.default.urls as registration_urls
 admin.autodiscover()
 
 urlpatterns = patterns('',

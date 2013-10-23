@@ -41,5 +41,10 @@ def unsupported_browser(request):
     hua = request.META.get('HTTP_USER_AGENT', '')
     if 'MSIE' in hua and 'chromeframe' not in hua:
         return {'unsupported_browser': request.META['HTTP_USER_AGENT']}
-    else:
-        return {}
+    return {}
+
+def include_sitewide_warning(request):
+    from matrr import settings
+    if settings.INCLUDE_SITEWIDE_WARNING:
+        return {'INCLUDE_SITEWIDE_WARNING': True}
+    return {}

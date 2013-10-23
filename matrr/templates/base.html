@@ -255,11 +255,15 @@
 			{% if unsupported_browser %}
 				<div class="warning">Your browser is not supported by MATRR. <a href="/browser/">Click here for details.</a></div>
 			{% endif %}
+			{% if INCLUDE_SITEWIDE_WARNING %}
+				{% include 'SITEWIDE_WARNING.html' %}
+			{% endif %}
 			{% if messages %}
 				{% for message in messages %}
 					<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
 				{% endfor %}
 			{% endif %}
+            {% block additional_messages %}{% endblock %}
 		</div>
 		{% block content %}{% endblock %}
 

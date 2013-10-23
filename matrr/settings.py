@@ -29,6 +29,7 @@ else:
     DEVELOPMENT = True
 
 ENABLE_EMAILS = PRODUCTION
+INCLUDE_SITEWIDE_WARNING = False
 
 # I can't remember why I added this
 # I think it has to do with dot-files in the project dir
@@ -163,7 +164,7 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'matrr.urls'
 
-TEMPLATE_CONTEXT_PROCESSORS = (
+TEMPLATE_CONTEXT_PROCESSORS = [
 	"django.contrib.auth.context_processors.auth",
 	"django.core.context_processors.debug",
 	"django.core.context_processors.i18n",
@@ -175,8 +176,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 	'matrr.context_processors.global_context',
 	'matrr.context_processors.unsupported_browser',
     'django.contrib.messages.context_processors.messages',
-#	"django.core.context_processors.auth",
-	)
+]
+if INCLUDE_SITEWIDE_WARNING:
+    TEMPLATE_CONTEXT_PROCESSORS.append('matrr.context_processors.include_sitewide_warning')
 
 TEMPLATE_DIRS = (
 	# Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
