@@ -1,15 +1,14 @@
-import sys
-this = sys.modules[__name__]
-for n in dir():
-    if n[0]!='_': delattr(this, n)
-import os
+#import sys
+#this = sys.modules[__name__]
+#for n in dir():
+#    if n[0]!='_': delattr(this, n)
+import os, sys
 project =  os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(project)
-from django.core.management import setup_environ
-import settings
-setup_environ(settings)
 
-from utils.network_tools import ConfederateNetwork
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "matrr.settings")
+
+from network_tools import ConfederateNetwork
 from matplotlib import pyplot
 from matrr.models import Cohort
 

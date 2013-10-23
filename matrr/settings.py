@@ -210,7 +210,6 @@ INSTALLED_APPS = (
 
 		'matrr',
 		'registration',
-		'utils',
 		'south',
 		)
 

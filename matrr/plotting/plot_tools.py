@@ -77,7 +77,7 @@ def create_convex_hull_polygon(subplot, xvalues, yvalues, color):
     """
     This method will draw several lines around the provided x-y values, onto 'subplot', colored by 'color'.
     """
-    from utils.gadgets import convex_hull
+    from matrr.utils.gadgets import convex_hull
     from matplotlib.path import Path
 
     try:

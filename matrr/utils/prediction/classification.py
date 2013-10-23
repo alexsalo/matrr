@@ -30,7 +30,7 @@ def modified_slavka_code():
 	print cross_val_score(svr, d.data, numpy.asarray(d.target))
 
 def GaussianNB_rhesus():
-	from utils.prediction.datasets import RhesusPCADataset
+	from matrr.utils.prediction.datasets import RhesusPCADataset
 	pca_data = RhesusPCADataset()
 	from sklearn.naive_bayes import GaussianNB
 	gnb = GaussianNB()
@@ -39,7 +39,7 @@ def GaussianNB_rhesus():
 	print "Number of mislabeled points : %d" % (pca_data.target != y_pred).sum() # 1938
 
 def BernoulliNB_rhesus():
-	from utils.prediction.datasets import RhesusPCADataset
+	from matrr.utils.prediction.datasets import RhesusPCADataset
 	pca_data = RhesusPCADataset()
 	from sklearn.naive_bayes import BernoulliNB
 	gnb = BernoulliNB()
@@ -48,7 +48,7 @@ def BernoulliNB_rhesus():
 	print "Number of mislabeled points : %d" % (pca_data.target != y_pred).sum() # 1870
 
 def MultinomialNB_rhesus():
-	from utils.prediction.datasets import RhesusPCADataset
+	from matrr.utils.prediction.datasets import RhesusPCADataset
 	pca_data = RhesusPCADataset(MultinomialNB=True)
 	from sklearn.naive_bayes import MultinomialNB
 	gnb = MultinomialNB()
@@ -57,7 +57,7 @@ def MultinomialNB_rhesus():
 	print "Number of mislabeled points : %d" % (pca_data.target != y_pred).sum() # 2083
 
 def GaussianNB_rhesus_trainHormone_predictAll():
-	from utils.prediction.datasets import RhesusPCADataset
+	from matrr.utils.prediction.datasets import RhesusPCADataset
 	only_hormone = RhesusPCADataset(include_only_hormone=True)
 	with_hormone = RhesusPCADataset(include_hormone=True)
 	from sklearn.naive_bayes import GaussianNB
@@ -69,7 +69,7 @@ def GaussianNB_rhesus_trainHormone_predictAll():
 
 def BernoulliNB_rhesus_trainHormone_predictAll():
 	from sklearn.naive_bayes import BernoulliNB
-	from utils.prediction.datasets import RhesusPCADataset
+	from matrr.utils.prediction.datasets import RhesusPCADataset
 	only_hormone = RhesusPCADataset(include_only_hormone=True)
 	with_hormone = RhesusPCADataset(include_hormone=True)
 	gnb = BernoulliNB()
@@ -80,7 +80,7 @@ def BernoulliNB_rhesus_trainHormone_predictAll():
 
 def MultinomialNB_rhesus_trainHormone_predictAll():
 	from sklearn.naive_bayes import MultinomialNB
-	from utils.prediction.datasets import RhesusPCADataset
+	from matrr.utils.prediction.datasets import RhesusPCADataset
 	only_hormone = RhesusPCADataset(MultinomialNB=True, include_only_hormone=True)
 	with_hormone = RhesusPCADataset(MultinomialNB=True, include_hormone=True)
 	gnb = MultinomialNB()
@@ -91,7 +91,7 @@ def MultinomialNB_rhesus_trainHormone_predictAll():
 
 def _bernoulli_beyes_RBD_sample(rhesus_beyes_dataset):
 	from sklearn.naive_bayes import BernoulliNB
-	from utils import plotting_beta
+	from matrr.utils import plotting_beta
 	gnb = BernoulliNB()
 	rhesus_beyes_dataset.sample_dataset()
 	trained = gnb.fit(rhesus_beyes_dataset.training_dataset, rhesus_beyes_dataset.training_targetset)
@@ -109,8 +109,8 @@ def _bernoulli_beyes_RBD_sample(rhesus_beyes_dataset):
 
 def bootstrap_bernouli_beyes_RBD(first_key, second_key, loop_count=10, all_monkeys=False):
 	import gc
-	from utils import plotting_beta
-	from utils.prediction.datasets import RhesusBeyesDataset
+	from matrr.utils import plotting_beta
+	from matrr.utils.prediction.datasets import RhesusBeyesDataset
 	monkey_ids = plotting_beta.RHESUS_DRINKERS_DISTINCT[first_key]
 	monkey_ids.extend(plotting_beta.RHESUS_DRINKERS_DISTINCT[second_key])
 	if all_monkeys:
@@ -136,8 +136,8 @@ def bootstrap_bernouli_beyes_RBD(first_key, second_key, loop_count=10, all_monke
 
 def bootstrap_bernouli_beyes_RBD_Stage3(first_key, second_key, loop_count=10, all_monkeys=False):
 	import gc
-	from utils import plotting_beta
-	from utils.prediction.datasets import RhesusBeyesDataset_Stage3
+	from matrr.utils import plotting_beta
+	from matrr.utils.prediction.datasets import RhesusBeyesDataset_Stage3
 	monkey_ids = plotting_beta.RHESUS_DRINKERS_DISTINCT[first_key]
 	monkey_ids.extend(plotting_beta.RHESUS_DRINKERS_DISTINCT[second_key])
 	if all_monkeys:

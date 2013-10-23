@@ -260,7 +260,7 @@ def dump_postprandial_matrices(monkeys_only=False):
 			dump.writerow(row)
 
 def dump_rhesus_category_comparison_ttests(minutes=120):
-	from utils import plotting_beta
+	from matrr.utils import plotting_beta
 
 	def _thirds_oa_volume_summation_by_minute(monkey_category, offset=0):
 		"""

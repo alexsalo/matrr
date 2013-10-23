@@ -15,7 +15,7 @@
 local_settings.py
 develop_settings.py
 /sroot
-/utils/*hokus*.py
+*hokus*.py
 /media
 /matrr/migrations
 /MATRR.log

@@ -13,7 +13,7 @@ from string import lower, replace
 
 from django.core.files.base import File
 from django.db import models
-from django.db.models import Q, Min, Max, Avg, Sum, Count
+from django.db.models import Q, Min, Max, Avg, Sum, Count, StdDev
 from django.contrib.auth.models import User, Permission
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
@@ -607,7 +607,7 @@ class Monkey(models.Model):
             self.save()
 
     def populate_drinking_category(self):
-        from utils.gadgets import identify_drinking_category
+        from matrr.utils.gadgets import identify_drinking_category
         oa_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
         if oa_mtds:
             self.mky_drinking_category = identify_drinking_category(oa_mtds)

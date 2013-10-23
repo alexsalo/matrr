@@ -5,7 +5,7 @@ import random
 import networkx as nx
 import pygraphviz as pgv
 
-from utils import gadgets
+from matrr.utils import gadgets
 from matrr.plotting import RHESUS_COLORS
 
 
@@ -304,7 +304,7 @@ class ConfederateNetwork(object):
         import json
         print "Collecting nearest bout times..."
         try:
-            f = open('utils/DATA/json/ConfederateNetwork-%d-nearest_bout_times.json' % self.cohort.pk, 'r')
+            f = open('matrr/utils/DATA/json/ConfederateNetwork-%d-nearest_bout_times.json' % self.cohort.pk, 'r')
         except IOError:
             for monkey in self.monkeys:
                 print "Starting Monkey %d" % monkey.pk
@@ -316,7 +316,7 @@ class ConfederateNetwork(object):
             self.nearest_bout_times.clear()
             self.nearest_bout_times = json.loads(f.read())
         finally:
-            f = open('utils/DATA/json/ConfederateNetwork-%d-nearest_bout_times.json' % self.cohort.pk, 'w')
+            f = open('matrr/utils/DATA/json/ConfederateNetwork-%d-nearest_bout_times.json' % self.cohort.pk, 'w')
             f.write(json.dumps(self.nearest_bout_times))
             f.close()
 
@@ -390,7 +390,7 @@ class ConfederateNetwork_all_closest_bouts(ConfederateNetwork):
         import json
         print "Collecting nearest bout times..."
         try:
-            f = open('utils/DATA/json/ConfederateNetwork_all_closest_bouts-%d-nearest_bout_times.json' % self.cohort.pk, 'r')
+            f = open('matrr/utils/DATA/json/ConfederateNetwork_all_closest_bouts-%d-nearest_bout_times.json' % self.cohort.pk, 'r')
         except IOError:
             for monkey in self.monkeys:
                 print "Starting Monkey %d" % monkey.pk
@@ -404,7 +404,7 @@ class ConfederateNetwork_all_closest_bouts(ConfederateNetwork):
             self.nearest_bout_times.clear()
             self.nearest_bout_times = json.loads(f.read())
         finally:
-            f = open('utils/DATA/json/ConfederateNetwork_all_closest_bouts-%d-nearest_bout_times.json' % self.cohort.pk, 'w')
+            f = open('matrr/utils/DATA/json/ConfederateNetwork_all_closest_bouts-%d-nearest_bout_times.json' % self.cohort.pk, 'w')
             f.write(json.dumps(self.nearest_bout_times))
             f.close()
 

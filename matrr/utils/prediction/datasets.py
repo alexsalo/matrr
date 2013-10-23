@@ -55,7 +55,7 @@ class RhesusPCADataset():
 
 	def __init__(self, MultinomialNB=False, include_hormone=False, include_only_hormone=False, monkey_pk=None):
 		from matrr.models import MonkeyToDrinkingExperiment, MonkeyHormone, Avg, StdDev
-		from utils import plotting_beta
+		from matrr.utils import plotting_beta
 		data_columns = \
 			['induction stage',
 			 'mtd_etoh_intake',
@@ -176,7 +176,7 @@ class RhesusPCADataset():
 
 def create_dataset_from_mtds(mtds):
 	from matrr.models import MonkeyHormone, Avg
-	from utils import plotting_beta
+	from matrr.utils import plotting_beta
 	loop_mtd_columns = mtd_columns
 
 	means = dict()
@@ -215,7 +215,7 @@ def create_dataset_from_mtds(mtds):
 	return data, target
 
 def create_dataset_from_mtd_values(monkey_pk, mtd_values):
-	from utils import plotting_beta
+	from matrr.utils import plotting_beta
 	means = dict()
 	for col in mtd_columns:
 		_sum = 0

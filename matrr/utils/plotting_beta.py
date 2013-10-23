@@ -21,7 +21,7 @@ import networkx as nx
 
 from matrr.models import ExperimentEvent, ExperimentBout, ExperimentEventType, CohortBout, Cohort, Monkey, MonkeyBEC, MonkeyToDrinkingExperiment
 from matrr.models import ONE_HOUR, TWO_HOUR, TWENTYTWO_HOUR, TWENTYFOUR_HOUR, SESSION_START, SESSION_END, LIGHTS_ON, LIGHTS_OUT
-from utils import apriori, gadgets
+from matrr.utils import apriori, gadgets
 from matrr.plotting import monkey_plots, plot_tools
 from matrr.plotting import *
 
@@ -1752,7 +1752,7 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
         ex.
         [3.2, 1.4, 5.7, 3.5, 2.9]
         """
-        folder_name = "utils/DATA/json/"
+        folder_name = "matrr/utils/DATA/json/"
         file_name = "rhesus_hourly_gkg_boxplot_by_category-%s-%s.json" % (monkey_category, str(start_time))
         file_path = os.path.join(folder_name, file_name)
         try:
@@ -3167,8 +3167,8 @@ def rhesus_confederate_boxplots(minutes, nighttime_only=False):
 def _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_subplot, axHistx=None, axHisty=None, collect_xy_data=None):
     def _bout_startdiff_volsum(subplot, monkey_one, monkey_two):
         try:
-            fx = open('utils/DATA/json/_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
-            fy = open('utils/DATA/json/_bout_startdiff_volsum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+            fx = open('matrr/utils/DATA/json/_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+            fy = open('matrr/utils/DATA/json/_bout_startdiff_volsum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
         except:
             one_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_one).order_by('drinking_experiment__dex_date')
             one_dates = one_mtds.values_list('drinking_experiment__dex_date', flat=True).distinct()
@@ -3190,7 +3190,7 @@ def _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_
             subplot.set_ylabel("Summed volume of adjacent bouts")
             subplot.set_xlabel("Bout start time difference")
 
-            folder_name = 'utils/DATA/json/'
+            folder_name = 'matrr/utils/DATA/json/'
             if not os.path.exists(folder_name):
                 os.makedirs(folder_name)
             fx = open(folder_name+'_bout_startdiff_volsum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')

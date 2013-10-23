@@ -16,7 +16,7 @@ from matrr.forms import ExperimentRangeForm, BECRangeForm, GenealogyParentsForm,
 from matrr.models import Cohort, Monkey, CohortImage, MonkeyImage, MonkeyProtein, MonkeyBEC, DataFile, MonkeyProteinImage, MonkeyHormone, MonkeyHormoneImage, FamilyNode, MATRRImage
 from matrr.models import MonkeyToDrinkingExperiment, MTDImage, CohortProteinImage, CohortHormoneImage
 from matrr.plotting import cohort_plots, monkey_plots, RHESUS_MONKEY_COLORS
-from utils import apriori
+from matrr.utils import apriori
 
 
 def tools_landing(request):
@@ -100,7 +100,7 @@ def tools_cohort_protein(request, coh_id):
                     datafile, isnew = DataFile.objects.get_or_create(account=account,
                                                                      dat_title="%s Protein data" % str(cohort))
                     if isnew:
-                        from utils.database import dump_monkey_protein_data
+                        from matrr.utils.database import dump_monkey_protein_data
                         dump_monkey_protein_data(monkey_proteins, '/tmp/%s.csv' % str(datafile))
                         datafile.dat_data_file = File(open('/tmp/%s.csv' % str(datafile), 'r'))
                         datafile.save()
@@ -850,7 +850,7 @@ def tools_supersandbox(request):
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):
-    from utils.network_tools import ExampleFamilyTree
+    from matrr.utils.network_tools import ExampleFamilyTree
 
     def male_female_shape(node):
         shape = 'circle' if node[1]['shape_input'] == 'F' else 'square'

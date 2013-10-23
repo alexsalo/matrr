@@ -125,7 +125,7 @@ def recreate_serializable_apriori_output(orig):
 		new_dict[float(support)] = new_occ
 	return new_dict
 
-def get_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='utils/DATA/apriori/', nighttime_only=False):
+def get_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='matrr/utils/DATA/apriori/', nighttime_only=False):
 	def load_all_data(cohort_pk, minutes=0):
 		from matrr.models import CohortBout
 		cbts = CohortBout.objects.filter(cohort=cohort_pk, cbt_pellet_elapsed_time_since_last=minutes*60)
@@ -154,7 +154,7 @@ def get_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='utils
 	f.close()
 	return supports
 
-def get_nighttime_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='utils/DATA/apriori/'):
+def get_nighttime_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='matrr/utils/DATA/apriori/'):
 	def load_nighttime_data(cohort_pk, minutes=0):
 		from matrr.models import CohortBout
 		lights_out = 7*60*60

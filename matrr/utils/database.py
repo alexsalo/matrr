@@ -12,7 +12,7 @@ from django.db.transaction import commit_on_success
 from django.db import transaction
 
 from matrr.models import *
-from utils import gadgets
+from matrr.utils import gadgets
 
 
 def queryset_iterator(queryset, chunksize=5000):
@@ -112,7 +112,7 @@ def load_initial_inventory(file, output_file, load_tissue_types=False, delete_na
         10 - Freezer
       """
     if load_tissue_types:
-        load_TissueTypes('utils/DATA/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
+        load_TissueTypes('matrr/utils/DATA/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
     input = csv.reader(open(file, 'rU'), delimiter=',')
     output = csv.writer(open(output_file, 'w'), delimiter=',')
     unknown_monkeys = csv.writer(open('unknown_monkeys.csv', 'w'), delimiter=',')
@@ -274,7 +274,7 @@ def load_cohort_6a_inventory(input_file):
 def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_duplicates=False,
                             create_tissue_samples=False):
     if load_tissue_types:
-        load_TissueTypes('utils/DATA/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
+        load_TissueTypes('matrr/utils/DATA/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
     unmatched_output_file = input_file + "-unmatched-output.csv"
 
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')

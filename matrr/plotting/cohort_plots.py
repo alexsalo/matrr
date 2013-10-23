@@ -7,7 +7,7 @@ import numpy, operator
 from scipy.linalg import LinAlgError
 from scipy.cluster import vq
 from matrr.models import *
-from utils.gadgets import Treemap
+from matrr.utils.gadgets import Treemap
 from matrr.plotting import specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE
 
 def _cohort_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
@@ -516,7 +516,7 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
         mky_datas.append((mky, zip(xaxis, yaxis), color))
 
     def create_convex_hull_polygon(cluster, color, label):
-        from utils.gadgets import convex_hull
+        from matrr.utils.gadgets import convex_hull
         from matplotlib.path import Path
         try:
             hull = convex_hull(numpy.array(cluster).transpose())
