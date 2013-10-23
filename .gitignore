@@ -19,6 +19,6 @@ develop_settings.py
 /media
 /matrr/migrations
 /MATRR.log
-/utils/DATA/
+/matrr/utils/DATA/
 /log_archive
 
