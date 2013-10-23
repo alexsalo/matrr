@@ -1,0 +1,34 @@
+{% extends 'shipping/shipping_base.html' %}
+
+{% block title %}
+	Shipping History
+{% endblock %}
+
+{% block content %}
+	<i>This page will only display fully-shipped requests.  Until all tissues for a request have been shipped, the request (and/or its shipments) will be shown on the shipping overview page</i>
+	<br>
+	<div>
+		{% if recently_shipped %}
+			<div class='large-headline'>Recently Shipped</div>
+			{% include 'matrr/shipping/shipping_history_table.html' with requests=recently_shipped %}
+		{% endif %}
+	</div>
+	{% if user_list %}
+		<div>
+			<div class='large-headline'>Shipped Requests</div>
+			<table class="common_center" cellpadding='4' cellspacing='2'>
+				<tr>
+					<th>User</th>
+					<th>Count</th>
+				</tr>
+				{% for user, request_count in user_list %}
+					<tr>
+						<td><a href="{% url 'account-reviewer-view' user.id %}">{{ user.username }}</a></td>
+						<td>{{ request_count }}</td>
+						<td><a href="{% url 'shipping-history-user' user.pk %}">Show history</a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
+	{% endif %}
+{% endblock %}

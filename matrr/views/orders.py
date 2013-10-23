@@ -10,10 +10,11 @@ from matrr.decorators import user_owner_test
 from matrr.forms import PurchaseOrderForm, CohortSelectForm, CartCheckoutForm, TissueRequestForm
 from matrr.models import Request, RequestStatus, Acceptance, Cohort, TissueRequest
 
-def orders_list(request):
+def orders_list(request, user_id=0):
     # get a list of all requests for the user
-    orders = Request.objects.processed().filter(user=request.user).order_by('-req_request_date')
-    revised = Request.objects.revised_or_duplicated().filter(user=request.user)
+    user = user_id if user_id else request.user
+    orders = Request.objects.processed().filter(user=user).order_by('-req_request_date')
+    revised = Request.objects.revised_or_duplicated().filter(user=user)
     order_list = gizmo.create_paginator_instance(request, orders, 20)
     return render_to_response('matrr/orders/orders.html', {'order_list': order_list, 'revised': revised,},
                               context_instance=RequestContext(request))

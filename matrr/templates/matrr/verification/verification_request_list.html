@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Tissue Inventory Verification{% endblock %}
+
+{% block content %}
+
+	<div class='large-headline'>Tissue Inventory Verification</div>
+	<div class='clearfix'>
+		{% if requests.count > 0 or requestless_count > 0 %}
+			<table class="common_center" cellpadding='4' cellspacing='2'>
+				<tr>
+					<th>Request</th>
+					<th>User</th>
+					<th>Cohort</th>
+					<th>Date Placed</th>
+					<th>Status</th>
+
+				</tr>
+
+				{% for req in requests %}
+					<tr>
+						<td><a href={% url 'order-detail' req.pk %}>{{ req.pk }}</a></td>
+						<td>{{ req.user }}</td>
+						<td>{{ req.cohort }}</td>
+						<td>{{ req.req_request_date|date:"m/d/Y" }}</td>
+						<td>{% if req.get_inventory_verification_status == 'CP' %}Verified{% else %}Incomplete{% endif %}</td>
+						<td><a {% if req.get_inventory_verification_status == 'IC' %}class='blockLinkCheckoutButton'{% else %}class='blockLinkButton'{% endif %}
+							   href='{% url 'verification-list' req.req_request_id %}'
+							   style='width:60px;float: right'>
+							{% if req.get_inventory_verification_status == 'IC' %}Verify{% else %}Update{% endif %}</a>
+						</td>
+						<td><a href='{% url 'verification-list-export' req.req_request_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
+					</tr>
+				{% endfor %}
+				{% if current_inventory %}
+                    {% for coh_pk, cohort_name in current_inventory %}
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>{{ cohort_name }}</td>
+                            <td>-</td>
+                            <td>Current Inventory</td>
+                            <td><a href='{% url 'verification-inventory' coh_pk %}' class='blockLinkCheckoutButton' style='width:60px;float: right'>Update</a></td>
+                            <td><a href='{% url 'verification-inventory-export' coh_pk %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
+                        </tr>
+                       {% endfor %}
+				{% endif %}
+			</table>
+		{% else %}
+			<div class='messages'>
+				<div class='info'>
+					No tissues to verify
+				</div>
+			</div>
+		{% endif %}
+	</div>
+
+	<br>
+
+
+{% endblock %}

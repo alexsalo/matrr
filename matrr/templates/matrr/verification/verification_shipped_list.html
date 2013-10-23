@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Tissue Inventory Verification{% endblock %}
+
+{% block content %}
+
+	<div class='large-headline'>Tissue Inventory Verification</div>
+	<div class='clearfix'>
+		<a href="{% url 'verification' %}">
+
+			<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+			&nbsp;Verification - list of requests</a>
+		
+		{% if formset %}
+		
+	
+			<form method="post" action="">
+				{{ formset.management_form }}
+				{% csrf_token %}
+				<table style="width:100%;">
+					<tr></tr>
+					{# hack to remove the color and add a tiny space between this table and the titleblock #}
+					<tr>
+						<td align="center">
+							<button type='submit' name='submit' class='blockLinkCheckoutButton' style='width:100px;float: left'>Update</button>
+						</td>
+						<td align="center" colspan=3>There are THREE inventory values that matter to MATRR.  Additional accuracy is primarily for YOUR records.</td>
+						<td align="center">
+							<a href='{% url 'verification-list-export' req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a>
+						</td>
+					</tr>
+					<tr>
+                        <td> </td>
+						<td align="center">Quantity < 0:<br>Inventory will not be updated</td>
+						<td align="center">Quantity == 0:<br>No more tissue exists for this monkey:tissue_type</td>
+						<td align="center">Quantity > 0:<br>Some tissue exists.</td>
+                        <td> </td>
+                    </tr>
+					<tr></tr>
+					{# hack to add a tiny space between this table and the formset #}
+				</table>
+				{% if formset.total_form_count >= 10 %}
+				<center>
+					{% load inclusion_tags %}
+					{% pagination paginator %}
+				</center>
+				{% endif %}	
+				<center>
+					<table class="common_center" cellpadding='2' cellspacing='2'>
+						<th>Details</th>
+						<th>Monkey</th>
+						<th>Tissue</th>
+						<th>Requested</th>
+						{% for tiv in formset %}
+							<tr style='padding: 4px'>
+								{{ tiv.primarykey }} {# Important! #}
+								{{ tiv.non_field_errors }}
+								{% if tiv.initial.notes %}
+									</tr><tr style='padding: 4px'>
+									<td colspan=5 style="background-color: orange;">
+										{{ tiv.initial.notes }}
+									</td>
+									</tr><tr style='padding: 4px'>
+								{% endif %}
+								{% if tiv.initial.req_request %}
+									</tr><tr style='padding: 4px'>
+									<td colspan=5 class="warning" style="text-align: center">
+											<span style="white-space: pre">      </span><b>Warning:</b> The tissue below has been accepted, but not shipped, for another request.  Please take into account the accepted request before verifying this tissue.<br>
+											{% load review_tags %}
+											{% colliding_accepted_requests tiv.initial.req_request tiv.initial.tissue tiv.initial.monkey %}
+											
+									</td>
+									</tr><tr style='padding: 4px'>
+								{% endif %}
+									<td ><a href="{% url 'verification-detail' req_id tiv.initial.primarykey %}">Edit</a></td>
+									<td  align="center">{{ tiv.initial.monkey }}</td>
+									<td width="250px" align="left">{{ tiv.initial.tissue }}</td>
+
+									<td align="right">Current Inventory</td>
+									<td style='width:50px;' align=right>{{ tiv.quantity }}</td>
+									<td>{{ tiv.units }}</td>
+								</tr>
+						{% endfor %}
+					</table>
+				</center>
+		
+		<center>
+					{% load inclusion_tags %}
+				{% pagination paginator %}
+			</center>
+		
+		{% if formset.total_form_count >= 10 %}
+			<table style="width:100%;">
+				<tr>
+					<td align="center">
+						<button type='submit' name='submit' class='blockLinkCheckoutButton' style='width:100px;float: left'>Update</button>
+					</td>
+					<td align="center" class='verification_legend unverified'>Unverified</td>
+					<td align="center" class='verification_legend sufficient'>Verified: sufficient</td>
+					<td align="center" class='verification_legend insufficient'>Verified: insufficent</td>
+					<td align="center">	<a href='{% url 'verification-list-export' req_id %}' class='blockLinkDeleteButton' style='width:100px;float: right'>Export PDF</a></td>
+				</tr>
+			</table>
+		{% endif %}
+			</form>
+		{% endif %}
+	</div>
+
+	<br>
+
+
+{% endblock %}

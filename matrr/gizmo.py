@@ -1,12 +1,17 @@
 import csv
-import settings, os, math, urllib, StringIO
+import os
+import urllib
+import StringIO
 from datetime import datetime
+
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
-from matrr.models import Request, RequestStatus
 from django.template import loader, Context
 from ho import pisa
+
+from matrr import settings
+from matrr.models import Request, RequestStatus
 
 
 def redirect_with_get(url_name, *args, **kwargs):

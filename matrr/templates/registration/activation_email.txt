@@ -1,0 +1,9 @@
+{% load i18n %}
+{% trans "Activate account at" %} matrr.com:
+
+Use the link below to activate your MATRR account.  Once the account is activated a MATRR admin will be notified and begin the account verification process.  This will take about 48 hours.
+
+http://gleek.ecs.baylor.edu{% url 'registration_activate' activation_key %}
+
+After being verified you will be granted access to the MATRR site.
+{% blocktrans %}This link is valid for {{ expiration_days }} days.{% endblocktrans %}

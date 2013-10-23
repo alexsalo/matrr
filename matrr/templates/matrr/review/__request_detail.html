@@ -1,0 +1,45 @@
+<table class='request_detail'>
+	<tr>
+		<th>Cohort:</th>
+		<td><a href='{% url 'cohort-details' req_request.cohort.coh_cohort_id %}'>{{ req_request.cohort }}</a></td>
+		<th>User:</th>
+		<td><a href='{% url 'account-reviewer-view' req_request.user.id %}'>{{ req_request.user }}</a></td>
+	</tr>
+	<tr>
+		<th>Requested On:</th>
+		<td>{{ req_request.req_request_date|date:"m/d/Y" }}</td>
+		<th>Referred By:</th>
+		<td>{{ req_request.req_referred_by }}</td>
+	</tr>
+	<tr>
+		<th>Estimated Cost:</th>
+		<td>${{ req_request.get_total_estimated_cost|floatformat:2 }}</td>
+		<th>Experimental Plan:</th>
+		<td>
+			{% if req_request.req_experimental_plan %}
+				<a href='{{ MEDIA_URL }}{{ req_request.req_experimental_plan }}'>{{ req_request.req_experimental_plan }}</a>
+			{% else %}
+				None
+			{% endif %}
+		</td>
+	</tr>
+	{% if req_request.parent_request %}
+		<tr>
+			<th>Revision of Request:</th>
+			<td><a href='{% url 'review-overview' req_request.parent_request.pk %}'>{{ req_request.parent_request.pk }}</a></td>
+		</tr>
+	{% endif %}
+	<tr>
+		<th>Project Title:</th>
+		<td colspan="3">{{ req_request.req_project_title }}</td>
+	</tr>
+	<tr>
+		<th>Purpose:</th>
+		<td colspan="3">{{ req_request.req_reason }}</td>
+	</tr>
+	<tr>
+		<th>Additional Notes:</th>
+		<td colspan="3">{% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}
+		</td>
+	</tr>
+</table>

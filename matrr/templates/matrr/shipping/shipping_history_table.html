@@ -1,0 +1,22 @@
+<table class="common_center" cellpadding='4' cellspacing='2'>
+	<tr>
+		<th>Request</th>
+		<th>User</th>
+		<th>Cohort</th>
+		<th>Request Date</th>
+		<th>Shipments</th>
+	</tr>
+	{% for request in requests %}
+		<tr>
+			<td><a href='{% url 'order-detail' request.req_request_id %}'>{{ request.pk }}</a></td>
+			<td><a href="{% url 'account-reviewer-view' request.user.id %}">{{ request.user }}</a></td>
+			<td>{{ request.cohort.coh_cohort_name }}</td>
+			<td>{{ request.req_request_date|date:"m/d/y" }}</td>
+			<td>
+				{% for shipment in request.shipments.all %}
+					<a href='{% url 'shipment-detail' shipment.pk %}'>{{ shipment.shp_shipment_date|date:"m/d/y" }}</a>
+				{% endfor %}
+			</td>
+		</tr>
+	{% endfor %}
+</table>

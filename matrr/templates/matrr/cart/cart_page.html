@@ -1,0 +1,50 @@
+{% extends 'matrr/tissue_shopping.html' %}
+
+{% block cart %}{% endblock %}
+
+{% block content %}
+	<div id='large-headline'>
+		Tissue Request Cart 
+	</div>
+
+	{% if cart_exists %}
+		<div>
+
+			<a href='
+			{% url 'tissue-shop-landing' cart.cohort.coh_cohort_id %}
+
+'>
+				<img src='{{ STATIC_URL }}/images/cart_add.png' width='16' height='16' alt='add more items to cart'/>
+				&nbsp;Add more tissues
+			</a>
+		</div>
+		<br/>
+		{% if cart_num_items != 0 %}
+			<a href='
+			
+			{% url 'cohort-details' cart.cohort.coh_cohort_id %}
+			
+		'>{{ cart.cohort }}</a>
+			{% include 'matrr/cart/cart_items_table.html' %}
+			<br/>
+			<div style='float: left;'>
+				<a href='{% url 'cart-checkout' %}' class='blockLinkCheckoutButton'>Checkout</a>
+			</div>
+		{% else %}
+			<div class="messages">
+				<div class="info">
+					There are no items in your cart.
+				</div>
+			</div>
+		{% endif %}
+		<div style='float: right;'>
+			<a href='{% url 'cart-delete' %}' class='blockLinkDeleteButton'>Delete Cart</a>
+		</div>
+	{% else %}
+		<div class='messages'>
+			<div class='info'>
+				You have not started a cart yet.
+			</div>
+		</div>
+	{% endif %}
+{% endblock %}

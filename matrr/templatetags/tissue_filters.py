@@ -1,4 +1,3 @@
-__author__ = 'soltau'
 from matrr.models import TissueInventoryVerification
 from django import template
 
@@ -35,4 +34,3 @@ def get_stock(tissue, monkey):
 def get_verification(tissue_request, monkey):
     return TissueInventoryVerification.objects.get(tissue_request=tissue_request, monkey=monkey,
                                                    tissue_type=tissue_request.tissue_type).tiv_inventory
-	

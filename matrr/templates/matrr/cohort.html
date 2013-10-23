@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load basic_filters %}
+
+{% block title %}
+	{% if cohort.coh_upcoming %}
+		Upcoming
+	{% else %}
+		Available
+	{% endif %}
+	Cohort: {{ cohort.coh_cohort_name }}
+{% endblock %}
+
+
+{% block content %}
+	<div id='large-headline'>
+		{% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohort: {{ cohort.coh_cohort_name }}
+	</div>
+
+	<div class='clearfix'>
+
+		<div style='float: left;'>
+
+			<a href="{% url 'cohort-timeline' cohort.coh_cohort_id %}">
+				<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+				&nbsp;View Cohort Timeline
+			</a>
+			{% if cohort.has_protein_data %}
+				<br>
+				<a href="{% url 'tools-cohort-protein' cohort.pk %}">
+					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+					&nbsp;View Protein Tools
+				</a>
+			{% endif %}
+			{% if cohort.has_hormone_data and perms.matrr.view_hormone_tools%}
+				<br>
+				<a href="{% url 'tools-cohort-hormone' cohort.pk %}">
+					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+					&nbsp;View Hormone Tools
+				</a>
+			{% endif %}
+
+			<!--link back to cohort list-->
+			{% if cohort.coh_upcoming %}
+				<br>
+				<a href="{% url 'upcoming' %}">
+			{% else %}
+				<br>
+				<a href="{% url 'available' %}">
+			{% endif %}
+				<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+				&nbsp;View {% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohorts</a>
+			<!--endlink back to cohort list-->
+			{% if perms.matrr.browse_inventory %}
+				<br/>
+				<a href="{% url 'inventory-cohort' cohort.coh_cohort_id %}">
+					<img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>
+					&nbsp;Browse Cohort Inventory
+				</a>
+			{% endif %}
+		</div>
+
+		<div style='float: right;'>
+			<a class='blockLinkButton' href='{% url 'tissue-shop-landing' cohort.coh_cohort_id %}'>Request Tissues from this Cohort</a>
+			{% if perms.matrr.add_cohortdata %}
+				<div class="text-right"><a href="{% url 'cod-upload' cohort.coh_cohort_id %}" class='blockLinkButton'>Add Cohort Data</a></div>
+			{% endif %}
+            {% if has_categories %}
+                <table class='table-drink-cats table-drink-cats-legend blocklinkbutton'>
+                    <tbody class='drink-cat-rows'>
+                        <tr>
+                            <td class='VHD'>Very High Drinker</td>
+                            <td class='HD'>High Drinker</td>
+                        </tr>
+                        <tr>
+                            <td class='BD'>Binge Drinker</td>
+                            <td class='LD'>Low Drinker</td>
+                        </tr>
+                    </tbody>
+                </table>
+            {% endif %}
+		</div>
+
+	</div>
+
+	<div>
+		<table class='table-drink-cats menu-links common_center'>
+			{% if 'assay development' in cohort.coh_cohort_name|lower %}
+                <thead>
+                    <tr>
+                        {% if perms.matrr.monkey_view_confidential %}
+                            <th>Real Name</th>{% endif %}
+                        <th class='dont-wrap-header'><a href="?order_by=pk">Monkey ID <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                        <th>Sex</th>
+                        <th class='dont-wrap-header'><a href="?order_by=mky_birthdate">Birthdate <img src='{{ STATIC_URL }}images/DecSort.png'></a></th>
+                        <th>Weight</th>
+                        {% if user.is_authenticated %}
+                            <th><a href="?order_by=mky_necropsy_start_date">Necropsy Start Date <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                            <th>Monkey Notes</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody class='drink-cat-rows'>
+                    {% for monkey in monkeys %}
+                        <tr class={{ monkey.mky_drinking_category }}>
+                            {% if perms.matrr.monkey_view_confidential %}
+                                <td>{{ monkey.mky_name }}</td>
+                            {% endif %}
+                            <td>
+                                <a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+                                    {{ monkey.mky_id }}
+                                    <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
+                                </a>
+                            </td>
+                            <td>{{ monkey.mky_gender }}</td>
+                            <td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
+                            <td>{{ monkey.mky_weight }}</td>
+                            {% if user.is_authenticated %}
+                                <td>{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}</td>
+                                <td>{{ monkey.mky_notes }}</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+			{% else %}
+                <thead>
+                    <tr>
+                        {% if perms.matrr.monkey_view_confidential %}
+                            <th>Real Name</th>{% endif %}
+                        <th class='dont-wrap-header'><a href="?order_by=pk">Monkey ID <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                        <th>Sex</th>
+                        <th class='dont-wrap-header'><a href="?order_by=mky_birthdate">Birthdate <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                        <th>Weight</th>
+                        {% if user.is_authenticated %}
+                            <th>Test Group</th>
+                            <th><a href="?order_by=mky_necropsy_start_date">Necropsy Start Date <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                        {% endif %}
+                        <th>Stress Model</th>
+                        <th>Study Complete</th>
+                        {% if has_categories %}
+                            <th><a href="?order_by=mky_drinking_category">Drinking Category <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody class='drink-cat-rows'>
+                    {% for monkey in monkeys %}
+                        <tr>
+                            {% if perms.matrr.monkey_view_confidential %}
+                                <td>{{ monkey.mky_name }}</td>
+                            {% endif %}
+                            <td><a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+                                {{ monkey.mky_id }}
+                                <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
+                            </a>
+                            </td>
+                            <td>{{ monkey.mky_gender }}</td>
+                            <td>{{ monkey.mky_birthdate|date:"m/d/Y" }}</td>
+                            <td>{{ monkey.mky_weight }}</td>
+                            {% if user.is_authenticated %}
+                            <td>
+                                {% if monkey.mky_drinking %}
+                                    Ethanol
+                                    {% else %}{% if monkey.mky_housing_control %}
+                                        Housing Control
+                                    {% else %}
+                                        Control
+                                    {% endif %}{% endif %}
+                            </td>
+                            <td>{{ monkey.mky_necropsy_start_date|date:"m/d/Y" }}</td>
+                            {% endif %}
+                            <td>{{ monkey.mky_stress_model }}</td>
+                            <td>{% if monkey.mky_study_complete %}Complete{% else %}Incomplete{% endif %}</td>
+                            {% if has_categories %}
+                                <td class={{ monkey.mky_drinking_category }}>{{ monkey.mky_drinking_category|default:'' }}</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+			{% endif %}
+		</table>
+	</div>
+	{% if user.is_authenticated %}
+	<div class='clearfix'>
+		{% if coh_data %}
+			<div class='mini-headline'>Cohort Data</div>
+			<table class="common">
+				<tr>
+					<th>Title</th>
+					<th>&nbsp;</th>
+				</tr>
+				{% for cod in cohort.cod_set.all %}
+					<tr>
+						<td class='text-center-common-td'><a href="{{ MEDIA_URL }}{{ cod.cod_file }}">{{ cod.cod_title }}</a></td>
+						<td class='text-center-common-td'><a href="{{ MEDIA_URL }}{{ cod.cod_file }}"><img src="{{ STATIC_URL }}/images/download.png" height="25" width="25"></a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% endif %}
+	</div>
+
+
+	<div class="clearfix">
+
+		{% if images %}
+			<div class='mini-headline'>Cohort Plots</div>
+			{% for cig in images %}
+				<div class="image_container">
+					<div class="image_thumbnail left">
+						<center>{{ cig.title }}</center>
+						<a rel="plot_gallery" title="{{ cig.title }}" href="{% if cig.html_fragment %}{{ cig.html_fragment.url }}{% else %}{{ cig.image.url }}{% endif %}" target="_blank">
+							<img src="{{ cig.thumbnail.url }}">
+						</a>
+					</div>
+				</div>
+			{% endfor %}
+		{% endif %}
+
+	</div>
+	{% endif %}
+
+	<div>
+		<div class='mini-headline'>
+			Publications
+		</div>
+		{% with publications=cohort.publication_set.all %}
+			{% if publications %}
+				{% include 'matrr/publication_table.html' %}
+			{% else %}
+				No Publications for this cohort.
+			{% endif %}
+		{% endwith %}
+	</div>
+
+
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+	MATRR Update Address
+{% endblock %}
+
+{% block content %}
+
+<div>
+<div class="headline">Account Address</div>
+<br>
+
+
+
+<form method="post" action="">{% csrf_token %}
+
+<div>
+<table class='table-wrap clear'>
+	{% for field in form %}
+  <tr>
+	<td class="text-right">{{ field.label }}</td>
+	<td>{{ field }}</td>
+
+  </tr>
+  <tr>
+  			{% if field.errors %}
+				<td class="text-right"></td>
+				<td><div class="field-error">{{ field.label }}:{{ field.errors }}</div><td>
+			{% endif %}
+  </tr>
+	{% endfor %}
+<tr><td></td>
+<td>
+
+  <input type="submit" value="{% trans 'Submit' %}" />
+</td>
+</tr>
+</table>
+</div>
+</form>
+
+</div>
+
+
+{% endblock %}

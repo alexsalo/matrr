@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+
+{% block title %}Brain Inventory{% endblock %}
+
+
+{% block content %}
+    <div class='headline'>Brain Inventory</div>
+    <a href="{% url 'inventory' %}"><img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>&nbsp;View Inventory Cohort List</a>
+    <br/>
+    {% if cohort.brains %}
+        <table class='common_center'>
+            <tr>
+                <th colspan="6">{{ cohort }}</th>
+            </tr>
+            <tr>
+                {% for mig in cohort.brains %}
+                    {% if forloop.counter0|divisibleby:6 %}</tr>
+                        <tr>{% endif %}
+                    <td width="100">
+                        <a href="{% url 'inventory-brain-monkey' mig.pk %}">
+                            {{ mig.monkey.pk }}
+                            <img src="{{ mig.image.url }}" width='100'>
+                        </a>
+                    </td>
+                {% endfor %}
+                </tr>
+        </table>
+    {% else %}
+        <div class="messages">
+            <div class="info">
+                No brain images for this cohort
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

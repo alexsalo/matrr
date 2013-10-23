@@ -8,8 +8,10 @@ from django.template import RequestContext
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
+from registration.backends.default import views
 from djangosphinx.models import SphinxQuerySet
-from settings import MEDIA_ROOT, STATIC_URL
+from registration.models import RegistrationProfile
+from matrr.settings import MEDIA_ROOT, STATIC_URL
 from matrr import emails, gizmo
 from matrr.forms import MatrrRegistrationForm, ContactUsForm, FulltextSearchForm, MTAValidationForm, AdvancedSearchSelectForm, AdvancedSearchFilterForm, PublicationCohortSelectForm
 from matrr.models import * # sendfile() uses a lot of models
@@ -24,8 +26,7 @@ def matrr_handler403(request, reason=''):
 
 def index_view(request):
     index_context = {'event_list': Event.objects.filter(date__gte=datetime.now()).order_by('date', 'name')[:5],
-                     'pub_list': Publication.objects.all().exclude(published_year=None).order_by('-published_year',
-                                                                                                 '-published_month')[:2],
+                     'pub_list': Publication.objects.all().exclude(published_year=None).order_by('-published_year', '-published_month')[:2],
                      'search_form': FulltextSearchForm(),
                      'plot_gallery': True,
     }
@@ -33,9 +34,50 @@ def index_view(request):
     return render_to_response('matrr/index.html', index_context, context_instance=RequestContext(request))
 
 
-def registration(request):
-    from registration.views import register
-    return register(request, form_class=MatrrRegistrationForm)
+
+#def registration(request):
+#    from registration.views import register
+#    return register(request, form_class=MatrrRegistrationForm)
+
+class RegistrationView(views.RegistrationView):
+    disallowed_url = 'matrr-home'
+    form_class = MatrrRegistrationForm
+    success_url = 'registration_complete'
+    template_name = 'registration/registration_form.html'
+
+    def registration_allowed(self, request):
+        return True
+
+    def register(self, request, **cleaned_data):
+        user = RegistrationProfile.objects.create_inactive_user(username=cleaned_data['username'],
+                                                                password=cleaned_data['password1'],
+                                                                email=cleaned_data['email'],
+                                                                site=settings.SITE_ID)
+        user.last_name = cleaned_data['last_name']
+        user.first_name = cleaned_data['first_name']
+        user.save()
+        account = models.Account(user=user)
+        account.institution = cleaned_data['institution']
+        account.phone_number = cleaned_data['phone_number']
+        account.act_real_address1 = cleaned_data['act_real_address1']
+        account.act_real_address2 = cleaned_data['act_real_address2']
+        account.act_real_city = cleaned_data['act_real_city']
+        account.act_real_state = cleaned_data['act_real_state']
+        account.act_real_zip = cleaned_data['act_real_zip']
+        account.act_real_country = cleaned_data['act_real_country']
+        account.act_address1 = account.act_real_address1
+        account.act_address2 = account.act_real_address2
+        account.act_city = account.act_real_city
+        account.act_country = account.act_real_country
+        account.act_state = account.act_real_state
+        account.act_zip = account.act_real_zip
+        account.act_shipping_name = user.first_name + " " + user.last_name
+        account.save()
+
+        from matrr.emails import send_verify_new_account_email
+        send_verify_new_account_email(account)
+        return user
+
 
 
 def logout(request, next_page=None):

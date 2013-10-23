@@ -1,0 +1,13 @@
+{% extends "tools/tools_base.html" %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+{% endblock %}
+
+{% block content %}
+	<div class=large-headline>Hormone Tools</div>
+    The hormone data uploaded to date are concentrations in plasma obtained by awake venipuncture in the morning (8 am).
+
+	{% include 'matrr/tools/__subject_select_form.html' %}
+{% endblock %}

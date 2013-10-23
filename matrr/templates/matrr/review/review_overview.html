@@ -1,0 +1,143 @@
+{% extends 'review/review_base.html' %}
+
+{% block extra_js %}
+	{{ block.super }}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+{% endblock %}
+
+{% block content %}
+	<div class='large-headline'>
+		{% block title %}Request {{ req_request.pk }}: {{ req_request.user.username }}'s request for {{ req_request.cohort.coh_cohort_name }}{% endblock %}
+	</div>
+	<form action='' method='post'>
+		{% csrf_token %}
+		<div style='margin-top: 10px;'>
+		    {% include 'matrr/review/__request_detail.html' %}
+			<hr>
+			<table>
+				<tr>
+					<th>Reviewer</th>
+					<th colspan='10'>Reviewer's Notes</th>
+				</tr>
+				{% for review in reviews %}
+					<tr>
+						<th>{{ review.user }}</th>
+						{% if review.rvs_notes != None and review.rvs_notes != '' %}
+							<td colspan='9'>{{ review.rvs_notes }}</td>
+						{% else %}
+							<td colspan='9'>
+								<div class='small'>No notes</div>
+							</td>
+							</tr>
+						{% endif %}
+				{% endfor %}
+			</table>
+			<br/>
+			{{ tissue_requests.management_form }}
+			{% for form in tissue_requests %}
+				{% include 'matrr/review/review_overview_item.html' %}
+				<br>
+				{% if not no_monkeys %}
+					{{ form }}
+				{% else %}
+					{% with tissue_request=form.instance %}
+						<div class="mini-headline">Monkeys accepted for this tissue request:</div>
+						{% if tissue_request.accepted_monkeys.all %}
+							<table class="common" style="width:30%">
+								<thead>
+								<th>Monkey</th>
+								<th>Assignment</th>
+								</thead>
+								{% for monkey in tissue_request.accepted_monkeys.all %}
+									<tr>
+										<td>
+											<a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+												{{ monkey.mky_id }}
+												<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
+										</td>
+										<td>
+											{% if monkey.mky_drinking %}
+												Ethanol
+											{% else %}
+												{% if monkey.mky_housing_control %}
+													Housing Control
+												{% else %}
+													Control
+												{% endif %}
+											{% endif %}
+										</td>
+									</tr>
+								{% endfor %}
+							</table>
+						{% else %}
+							<div class="messages-small">
+								<div class="info">
+									No monkeys were accepted for this tissue request.
+								</div>
+								<br>
+							</div>
+						{% endif %}
+						<div class="mini-headline">Monkeys rejected for this tissue request:</div>
+						{% if tissue_request.not_accepted_monkeys %}
+							<table class="common" style="width:30%">
+								<thead>
+								<th>Monkey</th>
+								<th>Assignment</th>
+								</thead>
+								{% for monkey in tissue_request.not_accepted_monkeys %}
+									<tr>
+										<td>
+											<a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+												{{ monkey.mky_id }}
+												<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
+										</td>
+										<td>
+											{% if monkey.mky_drinking %}
+												Ethanol
+											{% else %}
+												{% if monkey.mky_housing_control %}
+													Housing Control
+												{% else %}
+													Control
+												{% endif %}
+											{% endif %}
+
+										</td>
+									</tr>
+								{% endfor %}
+							</table>
+						{% else %}
+							<div class="messages-small">
+								<div class="info">
+									No monkeys were rejected for this tissue request.
+								</div>
+								<br>
+							</div>
+						{% endif %}
+					{% endwith %}
+				{% endif %}
+			{% endfor %}
+			<br>
+
+			<div>
+				{% if not req_request.user.account.has_mta %}
+					<div class='messages clearfix'>
+						<div class="error">User has not uploaded any MTAs</div>
+					</div>
+				{% endif %}
+
+				{% if req_request.user.account.has_overdue_rud %}
+					<div class='messages clearfix'>
+						<div class="error">User has not submitted research updates for past requests.</div>
+					</div>
+				{% endif %}
+
+				{% if req_request.can_be_evaluated %}
+					<input type='submit' class='blockLinkCheckoutButton' value='Process Request'/>
+				{% endif %}
+				<a href='{% if back_url %}{{ back_url }}{% else %}{% url 'review-overview-list' %}{% endif %}' class='blockLinkButton'>Back</a>
+			</div>
+		</div>
+	</form>
+{% endblock %}

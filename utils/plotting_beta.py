@@ -3032,7 +3032,6 @@ def rhesus_category_parallel_classification_stability_popcount(categories, y_val
     pop_subplot.set_xticklabels(x_labels, size=tick_size)
     legend = pop_subplot.legend((), title="Population change from 12 Month Study", loc=9, frameon=False)
     pyplot.setp(legend.get_title(), fontsize=title_size)
-    #    pop_subplot.legend(loc=3, title='Population Difference from 12month Study')
     return fig
 
 

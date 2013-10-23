@@ -1,17 +1,18 @@
 import re
 import datetime
-import time
 from itertools import chain
+
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_unicode
-from matrr.models import Availability, Monkey
 from django.forms.util import flatatt
 from django.core.urlresolvers import reverse
 from django.forms import * # i'd like to refactor this to not import *, instead use forms.Blah
 from django.forms.widgets import Input, RadioFieldRenderer, RadioInput
 from django.conf import settings
 from django import forms
+
+from matrr.models import Availability, Monkey
 
 
 def date_to_padded_int(date):

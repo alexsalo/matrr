@@ -6,7 +6,6 @@ from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
-from settings import PRODUCTION
 from matrr import gizmo, emails
 from matrr.forms import TissueShipmentForm, TrackingNumberForm
 from matrr.models import Request, User, Shipment, ShipmentStatus, RequestStatus
@@ -28,7 +27,7 @@ def shipping_history(request):
 @user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
 def shipping_history_user(request, user_id):
     user = get_object_or_404(User, pk=user_id)
-    shipped_requests = Request.objects.shipped().filter(user=user).order_by('-shipments__shp_shipment_date').distinct()
+    shipped_requests = Request.objects.shipped().order_by('pk').filter(user=user)
     return render_to_response('matrr/shipping/shipping_history_user.html',
                               {'user': user, 'shipped_requests': shipped_requests},
                               context_instance=RequestContext(request))

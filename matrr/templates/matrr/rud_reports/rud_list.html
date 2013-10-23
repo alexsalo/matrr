@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+	MATRR Research Update
+{% endblock %}
+
+{% block content %}
+	<div id="large-headline">Research Updates <span class="right"><a href="{% url 'rud-overdue' %}">View overdue requests</a></span></div>
+	<table class='common center'>
+		<tr>
+			<th>RUD Date</th>
+			<th>Request</th>
+			<th>User</th>
+			<th>Progress</th>
+			<th>Data</th>
+			<th> </th>
+		</tr>
+	{% for rud in rud_list.object_list %}
+        <tr>
+            <td class='text-center-common-td'>{{ rud.rud_date|date:"m/d/Y" }}</td>
+            <td class='text-center-common-td'><a href='{% url 'order-detail' rud.req_request.pk %}'>{{ rud.req_request.pk }}</a></td>
+            <td class='text-center-common-td'><a href='{% url 'account-reviewer-view' rud.req_request.user.id %}'>{{ rud.req_request.user.username }}</a></td>
+            <td class='text-center-common-td'>{{ rud.get_rud_progress_display }}</td>
+            <td class='text-center-common-td'>{% if rud.rud_data_available %}Yes{% endif %}</td>
+            <td class='text-center-common-td'><a href='{% url 'rud-detail' rud.pk %}'>View Research Update</a></td>
+        </tr>
+    {% endfor %}
+	</table>
+
+	<center>
+		{% load inclusion_tags %}
+		{% pagination rud_list %}
+	</center>
+
+{% endblock %}

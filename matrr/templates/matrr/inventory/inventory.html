@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Status{% endblock %}
+
+{% block content %}
+    <div class='headline'>Inventory Status</div>
+
+
+    <table class='common_center' width="80%">
+        <tr>
+            <th>Cohort</th>
+        </tr>
+        {% for cohort in object_list %}
+            <tr>
+                <td>
+                    <a href="{% url 'cohort-details' cohort.coh_cohort_id %}" target="_blank">
+                        {{ cohort.coh_cohort_name }}
+                        <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
+                    </a>
+                </td>
+                <td><a href="{% url 'inventory-cohort' cohort.coh_cohort_id %}">Browse Inventory</a></td>
+                <td>{% if 'cohort.has_brain_images' %}<a href="{% url 'inventory-brain-cohort' cohort.coh_cohort_id %}">Update Brain Inventory</a></td>{% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+
+
+
+{% endblock %}

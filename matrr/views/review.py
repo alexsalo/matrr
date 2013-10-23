@@ -8,7 +8,6 @@ from django.template.loader import render_to_string
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
-from settings import PRODUCTION
 from matrr import emails, gizmo
 from matrr.forms import ReviewForm, TissueRequestProcessForm, ReviewResponseForm
 from matrr.models import Review, RequestStatus, Account, Request, TissueRequest, Acceptance, Monkey
@@ -277,10 +276,8 @@ def request_review_process(request, req_request_id):
                 req_request.req_status = status
                 req_request.save()
                 messages.success(request, "The tissue request has been processed.")
-                if PRODUCTION:
-                    emails.send_processed_request_email(form.cleaned_data, req_request)
-                    messages.info(request, str(
-                        req_request.user.username) + " was sent an email informing him/her that the request was processed.")
+                emails.send_processed_request_email(form.cleaned_data, req_request)
+                messages.info(request, str(req_request.user.username) + " was sent an email informing him/her that the request was processed.")
                 return redirect(reverse('review-overview-list'))
             else:
                 return render_to_response('matrr/review/process.html',

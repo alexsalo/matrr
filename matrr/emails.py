@@ -10,7 +10,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.models import Group
 
 from matrr import gizmo
-import settings
+from matrr import settings
 from matrr.models import Request, User, Shipment, Account, RequestStatus, Acceptance, Review
 
 
@@ -433,9 +433,10 @@ def send_processed_request_email(form_data, req_request):
         gizmo.export_template_to_pdf('pdf_templates/invoice.html', context, outfile=outfile)
         outfile.close()
         email.attach_file(outfile.name)
-    email.send()
-    if req_request.contains_genetics() and req_request.req_status != RequestStatus.Rejected:
-        send_dna_request_details(req_request)
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        email.send()
+        if req_request.contains_genetics() and req_request.req_status != RequestStatus.Rejected:
+            send_dna_request_details(req_request)
 
 # matrr
 def send_contact_us_email(form_data, user):
@@ -475,8 +476,7 @@ def notify_mta_uploaded(mta):
         if settings.PRODUCTION and settings.ENABLE_EMAILS:
             ret = send_mail(subject, body, from_email, recipient_list=recipients)
             if ret > 0:
-                print "%s MTA verification request sent to user: %s" % (
-                datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
+                print "%s MTA verification request sent to user: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
     return
 
 # matrr

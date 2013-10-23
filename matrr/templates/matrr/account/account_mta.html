@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+	MATRR MTA
+{% endblock %}
+
+{% block content %}
+	<div class="content-item">
+		<div id="headline">Material Transfer Agreement (MTA)</div>
+		<br>
+		<div class='center-content'>
+			<p>
+				The UBMTA materials transfer agreement is used by MATRR when releasing tissues.  Many institutions are already signatories to the UBMTA agreement.
+				<br><br>
+				Please choose your institution from the alphabetically-sorted list below.  This will satisfy the MATRR MTA requirement and you will be eligible to
+				receive tissue shipments.
+				<br><br>
+				If you are ordering tissues from a Wake Forest cohort or your institution has not signed a UBMTA agreement, please choose "Non-UBMTA Institution"
+				from the list and follow the additional instructions.
+				<br><br>
+				The UBMTA text can be found <a href="{{ STATIC_URL }}pdf/ubmta.pdf">here.</a>
+			</p>
+		</div>
+		{% if form.errors %}
+			<div class="messages">
+				<div class="error">
+					{% for field in form %}
+						{% if field.errors %}
+							{{ field.label_tag }}:
+							{% for error in field.errors %}
+								{{ error }}
+							{% endfor %}
+						{% endif %}
+					{% endfor %}
+
+				</div></div>
+		{% endif %}
+
+		<form method="post" action="">
+			{% csrf_token %}
+			<br>
+			{{ form }}
+			<div class="table-right">
+				<button type='submit' class="blockLinkCheckoutButton">Submit</button>
+			</div>
+		</form>
+	</div>
+{% endblock %}

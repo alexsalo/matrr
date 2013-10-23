@@ -1,15 +1,31 @@
-from django.conf.urls.defaults import patterns, url
-from matrr.views import cart, account, orders, review, rna, rud_reports, shipping, uploads, verification, inventory, ajax, basic, tools, display, data
+from django.conf.urls import patterns, include, url
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.generic import RedirectView
+from django.contrib import admin
+from views import cart, account, orders, review, rna, rud_reports, shipping, uploads, verification, inventory, ajax, basic, tools, display, data
 from settings import MEDIA_URL, MEDIA_ROOT, PRODUCTION
+admin.autodiscover()
 
 urlpatterns = patterns('',
-    ## Miscelanious views.  Many of these are public facing
-    url(r'^$', basic.index_view),
-    url(r'^logout/?$', basic.logout, name='matrr-logout'),
+    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/', include(admin.site.urls)),
+    url(r'^accounts/register/$', basic.RegistrationView.as_view(), name='registration_register'), # this overrides the registration.backend.default.urls url endpoint.
+    url(r'^accounts/', include('registration.backends.default.urls')),
+    url(r'^favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
+    url(r'^robots\.txt$', RedirectView.as_view(url='/static/robots.txt')),
+    )
+
+urlpatterns += staticfiles_urlpatterns()
+
+
+urlpatterns += patterns('',
+    ## Miscellaneous views.  Many of these are public facing
+    url(r'^$', basic.index_view, name='matrr-home'),
+    url(r'^logout/$', basic.logout, name='matrr-logout'),
     url(r'^(?P<static_page>privacy|data|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', basic.pages_view), #  These are non-dynamic pages. Mostly text/html.
-    url(r'^contact_us/$', basic.contact_us),
-    url(r'^search/?$', basic.search, name='search'),
-    url(r'^advanced_search/?$', basic.advanced_search, name='advanced-search'),
+    url(r'^contact_us/$', basic.contact_us, name='contact-us'),
+    url(r'^search/$', basic.search, name='search'),
+    url(r'^advanced_search/$', basic.advanced_search, name='advanced-search'),
     url(r'^publications/$', basic.publications, name='publications'),
     url(r'^mta/list/$', basic.mta_list, name='mta-list'), # not public facing, but it doesn't really belong anywhere else
 
@@ -47,6 +63,7 @@ urlpatterns += patterns('',
     ##  Order processing views
     # order revision/submission/deletion
     url(r'^orders/$', orders.orders_list, name='order-list'),
+    url(r'^orders/user/(?P<user_id>\d+)/$', orders.orders_list, name='order-list'),
     url(r'^orders/(?P<req_request_id>\d+)/$', orders.order_detail, name='order-detail'),
     url(r'^orders/(?P<req_request_id>\d+)/delete/$', orders.order_delete, name='order-delete'),
     url(r'^orders/(?P<req_request_id>\d+)/revise/$', orders.order_revise, name='order-revise'),

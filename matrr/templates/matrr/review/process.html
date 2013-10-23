@@ -1,0 +1,66 @@
+{% extends 'review/review_base.html' %}
+
+{% block extra_js %}
+	{{ block.super }}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-visibility.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+{% endblock %}
+
+{% block content %}
+	<div class='large-headline'>
+		{% block title %}Processing {{ req_request.user.username }}'s request{% endblock %}
+	</div>
+	<div>
+		<form action='' method='post'>
+			{% csrf_token %}
+			{% if form.non_field_errors %}
+				<div class="error">{{ form.non_field_errors }}</div>
+			{% endif %}
+			{% for hidden_field in form.hidden_fields %}
+				{{ hidden_field }}
+			{% endfor %}
+			<table>
+				{% for field in form.visible_fields %}
+					{% if field.name == 'body' or field.name == "subject" %}
+						<tr>
+							<th>{{ field.label }}</th>
+							<td>{{ field }}</td>
+						</tr>
+					{% endif %}
+				{% endfor %}
+			</table>
+			<div class='headline'> Tissue Requests</div>
+			<div class='clearfix'>
+				{% for field in form.visible_fields %}
+					{% if field.name != 'body' and field.name != "subject" %}
+						{% for tissue_request in req_request.get_requested_tissues %}
+							<div class="clearfix">
+							{% ifequal tissue_request|stringformat:"s" field.name %}
+								{% for datum in tissue_request.get_data %}
+									{% if forloop.first %}
+										<div class="mini-headline">
+											{% if tissue_request.get_accepted %}
+												<font color=green><b>This tissue request will be accepted:</b></font>
+											{% else %}
+												<font color=red><b>This tissue request will be rejected:</b></font>
+											{% endif %}{{ datum.0 }}: {{ datum.1 }}
+										</div>
+										<div style="float:left; color: #4E4E4E">{% include 'matrr/review/item_inventory.html' %}</div>
+									{% else %}
+										<div style="float: right; color: #4E4E4E;">{{ datum.0 }}: {{ datum.1 }}</div>
+										<br>
+									{% endif %}
+								{% endfor %}
+							{% endifequal %}
+							</div>
+							<br>
+						{% endfor %}
+					{% endif %}
+				{% endfor %}
+			</div>
+			<br>
+			<input type='submit' name='submit' class='blockLinkCheckoutButton' value='Finalize and Send Email'/>
+			<input type='submit' name='submit' class='blockLinkDeleteButton' value='cancel'/>
+		</form>
+	</div>
+{% endblock %}

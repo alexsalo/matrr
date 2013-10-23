@@ -1,0 +1,16 @@
+{% extends "matrr/tissue_shopping.html" %}
+
+{% block headline %}
+	{% block title %}
+		{{ cart_item.get_tissue.get_name }}
+	{% endblock %}
+{% endblock %}
+
+{% block destination %}{% url 'cart-item' cart_item.get_id %}{% endblock %}
+
+{% block buttons %}
+	<button class='blockLinkButton' type='submit' name='submit' value='cancel'>Cancel</button>
+	<button class='blockLinkDeleteButton' type='submit' name='submit' value='delete'>Delete</button>
+	<button class='blockLinkCheckoutButton' type='submit' name='submit' value='update'>Update</button>
+{% endblock %}
+

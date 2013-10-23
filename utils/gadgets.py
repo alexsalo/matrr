@@ -1,8 +1,11 @@
-import numpy, pylab
+import numpy
+from scipy import stats
+
+import pylab
 from django.db.models import Max, Min
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator
-from scipy import stats
+
 from matrr.models import MonkeyToDrinkingExperiment, Avg, MonkeyBEC, MonkeyHormone
 from matrr import plotting
 
@@ -384,4 +387,25 @@ def find_nearest_bouts(bout):
     nearest_bouts = day_bouts.filter(ebt_start_time=closest_start)
     return nearest_bouts
 
+def find_nearest_bout_per_monkey(bout):
+    """
+    For a given bout, find the closest ExperimentBout to bout from each monkey in the cohort.
+
+    Returns a list of the closest bout from each monkey
+    """
+    from matrr.models import ExperimentBout, Monkey
+    nearest_bouts = list()
+    for monkey in Monkey.objects.Drinkers().filter(cohort=bout.mtd.monkey.cohort).exclude(pk=bout.mtd.monkey.pk):
+        day_bouts = ExperimentBout.objects.filter(mtd__monkey=monkey, mtd__drinking_experiment__dex_date=bout.mtd.drinking_experiment.dex_date)
+        day_bout_starts = day_bouts.values_list('ebt_start_time', flat=True)
+        try:
+            closest_start = min(day_bout_starts, key=lambda x:abs(x-bout.ebt_start_time))
+            close_bout = day_bouts.filter(ebt_start_time=closest_start)[0]
+        except ValueError:
+            continue # sometimes the min() raised a value error.  I forget why exactly, but it happened in this function.
+        except IndexError:
+            # will catch if day_bouts.filter(blah) is empty.  This should never happen in this function, but just in case.
+            continue
+        nearest_bouts.append(close_bout)
+    return nearest_bouts
 

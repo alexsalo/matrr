@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block login %} {% endblock %}
+
+{% block content %}
+
+
+<div id='headline'>Login to MATRR</div>
+
+{% if form.errors %}
+<div class="messages"><div class="error">
+{% for key, value in form.errors.items %}
+  {% for error in value %}
+    {{ error }}<br>
+  {% endfor %}
+{% endfor %}
+</div></div>
+{% endif %}
+
+<form method="post" action="">{% csrf_token %}
+    <div id="table-wrap">
+
+    <div id='table-left'><a href="{% url 'auth_password_reset' %}">{% trans "Forgot Password" %}</a></div>
+    <div id='table-right'><div id="text-right"><a href="{% url 'registration_register' %}">{% trans "Create an Account" %}</a></div></div>
+
+    <div id="table-left"><div id="text-right">Username:</div></div>
+    <div id="table-right">{{ form.username }}</div>
+    <div id="table-left"><div id="text-right">Password:</div></div>
+    <div id="table-right">{{ form.password }}</div>
+
+    <div id="table-left"></div>
+    <div id="table-right">
+        <input type="submit" value="{% trans 'Log in' %}" />
+        <input type="hidden" name="next" value="{{ next }}" />
+    </div>
+
+</form>
+
+
+
+
+
+
+
+
+{% endblock %}

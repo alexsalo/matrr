@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+	MATRR Update Shipping
+{% endblock %}
+
+{% block content %}
+
+<div>
+<div class="headline">Shipping Information</div>
+<br>
+
+{% if form.errors %}
+<div class="messages error">
+{% for key, value in form.errors.items %}
+  {% for error in value %}
+    {{ error }}<br>
+  {% endfor %}
+{% endfor %}
+</div>
+{% endif %}
+
+
+<form method="post" action="">{% csrf_token %}
+
+<div>
+<table class='table-wrap clear'>
+	<tr><td class="text-right">
+	<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ form.act_shipping_name.help_text }}</span></a>	
+	Shipping Name:</td>
+	<td>{{ form.act_shipping_name }}</td>
+  </tr>
+  <tr>
+	<td class="text-right">Address 1:</td>
+	<td>{{ form.act_address1 }}</td>
+  </tr>
+  <tr>
+	<td class="text-right">Address 2:</td>
+	<td>{{ form.act_address2 }}</td>
+  </tr>
+  <tr>
+  <td class="text-right">City:</td>
+	<td>{{ form.act_city }}</td>
+  </tr>
+  <tr>
+	<td class=" text-right">State:</td>
+	<td>{{ form.act_state }}</td>
+  </tr>
+  <tr>
+	<td class="text-right">Zip Code:</td>
+	<td>{{ form.act_zip }}</td>
+  </tr>
+  <tr>
+	<td class="text-right">Country:</td>
+	<td>{{ form.act_country }}</td>
+  </tr>
+  <tr>
+	<td class="text-right">
+	<a class='tool-tip'><img src='{{ STATIC_URL }}images/help-12.png'/><span>{{ form.act_fedex.help_text }}</span></a>	
+	FedEx Account #:</td>
+	<td>{{ form.act_fedex }}</td>
+  </tr>
+<tr><td></td>
+<td>
+
+  <input type="submit" value="{% trans 'Submit' %}" />
+</td>
+</tr>
+</table>
+</div>
+</form>
+
+</div>
+
+
+{% endblock %}

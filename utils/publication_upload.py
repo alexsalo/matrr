@@ -1,10 +1,12 @@
-from matrr.models import *
-from django.db import transaction
+import csv
+import re
+import logging
 
+from django.db import transaction
 from suds.client import Client
 from suds.sax.text import Text
 
-import csv, re, logging
+from matrr.models import *
 
 
 logging.basicConfig(level=logging.CRITICAL)

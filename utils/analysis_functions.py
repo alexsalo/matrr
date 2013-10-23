@@ -1,5 +1,4 @@
 from __future__ import division
-import collections
 import numpy
 from datetime import timedelta
 from scipy import stats

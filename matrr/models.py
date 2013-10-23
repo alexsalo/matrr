@@ -19,10 +19,8 @@ from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError, PermissionDenied
-#from matrr.plotting import cohort_plots
-from matrr import plotting
 
-import settings
+from matrr import settings
 
 
 def get_sentinel_user():
@@ -3616,12 +3614,9 @@ class CohortMetaData(models.Model):
 
 class RNARecord(models.Model):
     rna_id = models.AutoField(primary_key=True)
-    tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id', related_name='rna_set', blank=False,
-                                    null=False)
-    cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', related_name='rna_set', editable=False, blank=False,
-                               null=False)
-    user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='rna_set',
-                             editable=False, null=True)
+    tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id', related_name='rna_set', blank=False, null=False)
+    cohort = models.ForeignKey(Cohort, db_column='coh_cohort_id', related_name='rna_set', editable=False, blank=False, null=False)
+    user = models.ForeignKey(User, verbose_name="Last Updated by", on_delete=models.SET_NULL, related_name='rna_set', editable=False, null=True)
     monkey = models.ForeignKey(Monkey, db_column='mky_id', related_name='rna_set', blank=True, null=True)
     rna_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
     rna_extracted = models.DateField('Date Extracted', blank=False, null=True)

@@ -5,7 +5,7 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
-from settings import UPLOAD_DIR, PRODUCTION
+from matrr.settings import UPLOAD_DIR
 from matrr import emails
 from matrr.forms import MtaForm, CodForm, RawDataUploadForm
 from matrr.models import Mta, Cohort
@@ -17,14 +17,9 @@ def mta_upload(request):
     # make a MTA upload form if one does not exist
     if request.method == 'POST':
         if 'request_form' in request.POST:
-            if PRODUCTION:
-                account = request.user.account
-                emails.send_mta_uploaded_email(account)
-            else:
-                print "%s - New request email not sent, PRODUCTION = %s" % (
-                datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), PRODUCTION)
-            messages.success(request,
-                             'A MATRR administrator has been notified of your MTA request and will contact you with more information.')
+            account = request.user.account
+            emails.send_mta_uploaded_email(account)
+            messages.success(request, 'A MATRR administrator has been notified of your MTA request and will contact you with more information.')
             return redirect(reverse('account-view'))
         form = MtaForm(request.POST, request.FILES, instance=mta_object)
         if form.is_valid():

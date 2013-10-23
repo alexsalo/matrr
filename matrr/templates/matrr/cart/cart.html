@@ -1,0 +1,20 @@
+{% if cart_exists %}
+	<div id='sidebar-block'>
+		<div class='headline'>
+			<a href='{% url 'cart' %}'> Cart ({{ cart_num_items }})</a>
+		</div>
+
+		{% if cart_num_items > 0 %}
+			<ul style='list-style:none; list-style-position: outside; padding-left: 22px; text-indent: -22px'>
+				{% for item in cart_items %}
+					<li style='margin: 1px 0px'>{{ item.cart_display }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+
+		<a href='{% url 'cart-checkout' %}'><img src="{{ STATIC_URL }}/images/cart_go.png" width='24' height='24' alt='checkout'/>
+			Checkout
+		</a>
+
+	</div>
+{% endif %}
