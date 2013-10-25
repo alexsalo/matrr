@@ -385,23 +385,20 @@ class ConfederateNetwork(object):
 
 class ConfederateNetwork_all_closest_bouts(ConfederateNetwork):
     def collect_nearest_bout_times(self):
-        import psutil, gc
         from matrr.models import ExperimentBout
         import json
         print "Collecting nearest bout times..."
+        self.nearest_bout_times.clear()
         try:
             f = open('matrr/utils/DATA/json/ConfederateNetwork_all_closest_bouts-%d-nearest_bout_times.json' % self.cohort.pk, 'r')
         except IOError:
             for monkey in self.monkeys:
                 print "Starting Monkey %d" % monkey.pk
-                print psutil.phymem_usage()
                 for bout in ExperimentBout.objects.OA().filter(mtd__monkey=monkey):
                     nearest_bouts = gadgets.find_nearest_bout_per_monkey(bout)
                     for close_bout in nearest_bouts:
                         self.nearest_bout_times[monkey.pk][close_bout.mtd.monkey.pk].append(math.fabs(bout.ebt_start_time-close_bout.ebt_start_time))
-                    gc.collect()
         else:
-            self.nearest_bout_times.clear()
             self.nearest_bout_times = json.loads(f.read())
         finally:
             f = open('matrr/utils/DATA/json/ConfederateNetwork_all_closest_bouts-%d-nearest_bout_times.json' % self.cohort.pk, 'w')
