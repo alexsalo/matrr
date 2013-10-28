@@ -1,6 +1,5 @@
-import sys, os
-project =  os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-sys.path.append(project)
+import sys
+sys.path.append('/web/www/matrr-prod')
 from django.core.management import setup_environ
 from matrr import settings
 
