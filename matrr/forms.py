@@ -286,8 +286,7 @@ class RudUpdateForm(forms.Form):
 
     def __init__(self, user, *args, **kwargs):
         super(RudUpdateForm, self).__init__(*args, **kwargs)
-        self.fields['req_request'].queryset = models.Request.objects.filter(user=user,
-                                                                            req_status=models.RequestStatus.Shipped)
+        self.fields['req_request'].queryset = models.Request.objects.filter(user=user, req_status=models.RequestStatus.Shipped)
 
 
 class RudProgressForm(forms.Form):

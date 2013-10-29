@@ -9,18 +9,30 @@ from django.contrib import messages
 from matrr.decorators import user_owner_test
 from matrr.forms import RudUpdateForm, RudProgressForm
 from matrr.models import ResearchUpdate, ResearchProgress, Request
+import json
 
 def rud_update(request):
     if request.method == 'POST':
-        form = RudUpdateForm(user=request.user, data=request.POST)
+
+        form = RudUpdateForm(user=request.user.pk, data=request.POST)
         if form.is_valid():
+            print '1'
             cd = form.cleaned_data
             if cd['progress'] == ResearchProgress.Complete:
-                request.session['rud_form'] = form
+                cd['req_request'] = [req.pk for req in cd['req_request']]
+                request.session['rud_form'] = cd
                 return redirect(reverse('rud-complete'))
             elif cd['progress'] == ResearchProgress.InProgress:
-                request.session['rud_form'] = form
-                return redirect(reverse('rud-in-progress'))
+                cd['req_request'] = [req.pk for req in cd['req_request']]
+                request.session['rud_form'] = cd
+                try:
+                    return redirect('rud-in-progress')
+                except:
+                    pass
+                try:
+                    return redirect(reverse('rud-in-progress'))
+                except:
+                    raise Exception()
             else: # ResearchUpdate.NoProgress
                 for req in cd['req_request']:
                     rud = ResearchUpdate()
@@ -29,14 +41,21 @@ def rud_update(request):
                     rud.save()
                 messages.info(request, "You will be emailed again in %d days to provide another research update." % settings.ResearchUpdateNoProgressGrace)
                 return redirect(reverse('account-view'))
+            print 'wtf'
+        else:
+            pass
     else:
-        form = RudUpdateForm(user=request.user)
+        request.session['rud_form'] = None
+        form = RudUpdateForm(user=request.user.pk)
     return render_to_response('matrr/rud_reports/rud_update.html', {'form': form, }, context_instance=RequestContext(request))
 
 
 def rud_progress(request):
     progress_form = ''
-    update_form = request.session.get('rud_form', '')
+    rud_update_data = request.session.get('rud_form', '')
+    update_form = RudUpdateForm(user=request.user.pk, data=rud_update_data)
+    update_form.clean()
+    assert update_form.is_valid(), "This form must be valid when passed POST data via session cache."
     if not update_form:
         messages.error(request, "There was an issue loading the first part of your research update, please start over.  If this continues to happen, please contact a MATRR administrator.")
         return redirect(reverse('rud-upload'))
