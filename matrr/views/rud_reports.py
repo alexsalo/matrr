@@ -9,17 +9,17 @@ from django.contrib import messages
 from matrr.decorators import user_owner_test
 from matrr.forms import RudUpdateForm, RudProgressForm
 from matrr.models import ResearchUpdate, ResearchProgress, Request
-import json
 
 def rud_update(request):
     if request.method == 'POST':
-
         form = RudUpdateForm(user=request.user.pk, data=request.POST)
         if form.is_valid():
-            print '1'
             cd = form.cleaned_data
             if cd['progress'] == ResearchProgress.Complete:
-                cd['req_request'] = [req.pk for req in cd['req_request']]
+                cd['req_request'] = [req.pk for req in cd['req_request']] # This is crucial.  Read below
+                # Okok so I without this line, in django 1.5 the queryset that the RudUpdateForm.req_request creates wasn't getting
+                # JSON serialized inside the session/forward/etc.  It was kind of a pain in the ass to track down, haven't had that
+                # trouble in a while.
                 request.session['rud_form'] = cd
                 return redirect(reverse('rud-complete'))
             elif cd['progress'] == ResearchProgress.InProgress:
@@ -41,9 +41,6 @@ def rud_update(request):
                     rud.save()
                 messages.info(request, "You will be emailed again in %d days to provide another research update." % settings.ResearchUpdateNoProgressGrace)
                 return redirect(reverse('account-view'))
-            print 'wtf'
-        else:
-            pass
     else:
         form = RudUpdateForm(user=request.user.pk)
     request.session['rud_form'] = None
