@@ -3503,9 +3503,73 @@ def kathy_correlation_bec_maxbout_cohort(cohort=5):
     return figures, subject_labels
 
 
+def rhesus_N_gkg_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
+    from matplotlib import pyplot
+    from matrr import plotting
+    import numpy
+    monkeys = plotting.ALL_RHESUS_DRINKERS
+    fig = pyplot.figure(figsize=fig_size, dpi=dpi)
+    ax1 = fig.add_subplot(111)
+    ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+    ax1.set_axisbelow(True)
+    ax1.set_title("Days below %.02fgkg" % float(upper_limit))
+    ax1.set_ylabel("Count")
+    ax1.set_xlabel("Monkey")
+
+    sorted_data = gkg_count_upperlimit(upper_limit=upper_limit, monkeys=monkeys)
+    idx = numpy.arange(len(sorted_data))
+    width = .9
+    for _x, _y, _mky in zip(idx, sorted_data[:,1], sorted_data[:,0]):
+        ax1.bar(_x, _y, width, color=plotting.RHESUS_MONKEY_COLORS[int(_mky)])
+    ax1.set_xticklabels(sorted_data[:,0])
+    return fig
+
+def gkg_count_upperlimit(upper_limit, monkeys):
+    from matrr import models
+    import operator
+    data = dict()
+    for _mky in monkeys:
+        _mtds = models.MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=_mky)
+        data[_mky] = _mtds.filter(mtd_etoh_g_kg__lte=upper_limit).count()
+
+    sorted_data = sorted(data.iteritems(), key=operator.itemgetter(1))
+    return numpy.array(sorted_data)
+
+def bec_count_upperlimit(upper_limit, monkeys):
+    from matrr import models
+    import operator
+    data = dict()
+    for _mky in monkeys:
+        _becs = models.MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=_mky)
+        data[_mky] = _becs.filter(bec_mg_pct__lte=upper_limit).count()
+
+    sorted_data = sorted(data.iteritems(), key=operator.itemgetter(1))
+    return numpy.array(sorted_data)
+
+def rhesus_N_bec_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
+    from matplotlib import pyplot
+    from matrr import plotting
+    import numpy
+    monkeys = plotting.ALL_RHESUS_DRINKERS
+    fig = pyplot.figure(figsize=fig_size, dpi=dpi)
+    ax1 = fig.add_subplot(111)
+    ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+    ax1.set_axisbelow(True)
+    ax1.set_title("Days below %d mg pct" % int(upper_limit))
+    ax1.set_ylabel("Count")
+    ax1.set_xlabel("Monkey")
+
+    sorted_data = bec_count_upperlimit(upper_limit=upper_limit, monkeys=monkeys)
+    idx = numpy.arange(len(sorted_data))
+    width = .9
+    for _x, _y, _mky in zip(idx, sorted_data[:,1], sorted_data[:,0]):
+        ax1.bar(_x, _y, width, color=plotting.RHESUS_MONKEY_COLORS[int(_mky)])
+    ax1.set_xticklabels(sorted_data[:,0])
+    return fig
+
 #----------------------
 def create_age_graphs():
-    import settings
+    from matrr import settings
 
     output_path = settings.STATIC_ROOT
     output_path = os.path.join(output_path, "images/christa/")
@@ -3538,7 +3602,7 @@ def create_age_graphs():
 
 
 def create_christa_graphs():
-    import settings
+    from matrr import settings
 
     output_path = settings.STATIC_ROOT
     output_path = os.path.join(output_path, "images/christa/")
@@ -3562,7 +3626,7 @@ def create_christa_graphs():
 
 
 def create_erich_graphs():
-    import settings
+    from matrr import settings
 
     output_path = settings.STATIC_ROOT
     output_path = os.path.join(output_path, "images/erich/")
@@ -3625,7 +3689,7 @@ def create_erich_graphs():
 
 
 def create_kathy_graphs():
-    import settings
+    from matrr import settings
 
     output_path = settings.STATIC_ROOT
     output_path = os.path.join(output_path, "images/kathy/")
