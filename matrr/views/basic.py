@@ -56,7 +56,7 @@ class RegistrationView(views.RegistrationView):
         user.last_name = cleaned_data['last_name']
         user.first_name = cleaned_data['first_name']
         user.save()
-        account = models.Account(user=user)
+        account = Account(user=user)
         account.institution = cleaned_data['institution']
         account.phone_number = cleaned_data['phone_number']
         account.act_real_address1 = cleaned_data['act_real_address1']
