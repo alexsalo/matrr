@@ -3215,18 +3215,29 @@ def _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_
     _x = numpy.array(_x)
     _y = numpy.array(_y)
 
+    x_mean = _x.mean()
+    x_std = _x.std()
+    y_mean = _y.mean()
+    y_std = _y.std()
+    x_data = list()
+    y_data = list()
+    for xval, yval in zip(_x, _y):
+        if xval < (x_mean + 2*x_std) and yval < (y_mean + 2*y_std): # chop off outliers > 2stdev from the mean
+            x_data.append(xval)
+            y_data.append(yval)
+
 #    scatter_subplot.scatter(_x, _y, color='navy', edgecolor='none', alpha=.2)
-    scatter_subplot.axis([0, 3*ONE_HOUR, 0, 500])
-    scatter_subplot.hexbin(_x, _y, mincnt=0, gridsize=250, vmin=0, vmax=10000)
+#    scatter_subplot.axis([0, 3*ONE_HOUR, 0, 500])
+    scatter_subplot.hexbin(x_data, y_data, gridsize=30)
 
     scatter_subplot.set_xlim(xmin=0)
     scatter_subplot.set_ylim(ymin=0)
 
     if axHistx:
-        axHistx.hist(_x, bins=150, alpha=1, log=True)
+        axHistx.hist(x_data, bins=150, alpha=1, log=True)
         pyplot.setp(axHistx.get_xticklabels() + axHistx.get_yticklabels(), visible=False)
     if axHisty:
-        axHisty.hist(_y, bins=150, alpha=1, log=True, orientation='horizontal')
+        axHisty.hist(y_data, bins=150, alpha=1, log=True, orientation='horizontal')
         pyplot.setp(axHisty.get_xticklabels() + axHisty.get_yticklabels(), visible=False)
     return scatter_subplot, axHistx, axHisty
 
@@ -3277,8 +3288,8 @@ def monkey_confederate_bout_start_difference_grid(cohort, collect_xy_data=None):
     # The grid will hide duplicate monkey pairs (and the diagonal)
     # The left column and bottom row are duplicates, and won't be rendered
     # So I offset the gridspec to shift the left/bottom to hide this empty space.
-    bottom_base = -.1
-    left_base = -.1
+    bottom_base = .02
+    left_base = .02
     bottom = bottom_base - mky_count/100
     left = left_base - mky_count/100
     main_gs.update(top=.93, left=left, right=0.92, bottom=bottom, wspace=.02, hspace=0.02)
@@ -3288,23 +3299,30 @@ def monkey_confederate_bout_start_difference_grid(cohort, collect_xy_data=None):
     for x_index, x_monkey in enumerate(monkeys):
         for y_index, y_monkey in enumerate(monkeys):
             if x_monkey == y_monkey: continue
+            if sorted([x_monkey.pk, y_monkey.pk]) in finished:
+                continue
+            else:
+                finished.append(sorted([x_monkey.pk, y_monkey.pk]))
+            scatter_subplot = fig.add_subplot(main_gs[x_index, y_index], sharex=scatter_subplot, sharey=scatter_subplot)
+
             if x_index == 0 and y_index:
                 scatter_subplot.set_title("%s" % str(y_monkey), size=20, color=RHESUS_MONKEY_COLORS[y_monkey.pk])
             if y_index+1 == mky_count:
                 x0, y0, x1, y1 = scatter_subplot.get_position().extents
                 fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_MONKEY_COLORS[x_monkey.pk], rotation=-90, verticalalignment='center')
-            if sorted([x_monkey.pk, y_monkey.pk]) in finished:
-                continue
-            else:
-                scatter_subplot = fig.add_subplot(main_gs[x_index,y_index], sharex=scatter_subplot, sharey=scatter_subplot)
-    #            subplots = []
-                subplots = _confederate_bout_start_difference_subplots(x_monkey, y_monkey, scatter_subplot, collect_xy_data=collect_xy_data)
-                for subplot in subplots:
-                    if subplot:
-                        subplot.set_ylabel("")
-                        subplot.set_xlabel("")
-                        pyplot.setp(subplot.get_xticklabels() + subplot.get_yticklabels(), visible=False)
-                finished.append(sorted([x_monkey.pk, y_monkey.pk]))
+            scatter_subplot = fig.add_subplot(main_gs[x_index,y_index], sharex=scatter_subplot, sharey=scatter_subplot)
+            subplots = _confederate_bout_start_difference_subplots(x_monkey, y_monkey, scatter_subplot, collect_xy_data=collect_xy_data)
+            for subplot in subplots:
+                if subplot:
+                    subplot.set_ylabel("")
+                    subplot.set_xlabel("")
+#                    pyplot.setp(subplot.get_xticklabels() + subplot.get_yticklabels(), visible=False)
+                    scatter_subplot.set_xticklabels([])
+                    scatter_subplot.set_yticklabels([])
+                    scatter_subplot.set_xticks([])
+                    scatter_subplot.set_yticks([])
+                    gray_color = .6
+                    scatter_subplot.set_axis_bgcolor((gray_color, gray_color, gray_color))
     return fig
 
 
