@@ -7,5 +7,4 @@ from matrr import settings
 from matrr.emails import urge_progress_reports
 
 if settings.PRODUCTION:
-	raise Exception()
 	urge_progress_reports()
