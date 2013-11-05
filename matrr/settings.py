@@ -29,7 +29,7 @@ elif path == '/web/www/matrr-dev/matrr':
 else:
     DEVELOPMENT = True
 
-ENABLE_EMAILS = PRODUCTION
+ENABLE_EMAILS = not DEBUG
 INCLUDE_SITEWIDE_WARNING = False
 
 # I can't remember why I added this
