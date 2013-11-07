@@ -768,9 +768,7 @@ class HormoneSelectForm(forms.Form):
         super(HormoneSelectForm, self).__init__(*args, **kwargs)
         hormone_choices = [('mhm_cort', "Cortisol"), ('mhm_acth', "ACTH"), ('mhm_t', "Testosterone"),
                            ('mhm_doc', "Deoxycorticosterone"), ('mhm_ald', "Aldosterone"), ('mhm_dheas', "DHEAS")]
-        self.fields['hormones'] = forms.MultipleChoiceField(choices=hormone_choices,
-                                                            widget=widgets.CheckboxSelectMultiple_columns(
-                                                                columns=columns))
+        self.fields['hormones'] = forms.MultipleChoiceField(choices=hormone_choices, widget=widgets.CheckboxSelectMultiple_columns(columns=columns))
         self.fields['hormones'].label = "Hormones"
         self.fields['hormones'].help_text = "Select hormones to display"
 
@@ -779,9 +777,7 @@ class ProteinSelectForm(forms.Form):
     def __init__(self, protein_queryset=None, columns=3, *args, **kwargs):
         super(ProteinSelectForm, self).__init__(*args, **kwargs)
         self.queryset = protein_queryset if protein_queryset else models.Protein.objects.all()
-        self.fields['proteins'] = forms.ModelMultipleChoiceField(queryset=self.queryset,
-                                                                 widget=widgets.CheckboxSelectMultiple_columns(
-                                                                     columns=columns))
+        self.fields['proteins'] = forms.ModelMultipleChoiceField(queryset=self.queryset, widget=widgets.CheckboxSelectMultiple_columns(columns=columns))
         self.fields['proteins'].label = "Protein"
         self.fields['proteins'].help_text = "Select proteins to display"
 

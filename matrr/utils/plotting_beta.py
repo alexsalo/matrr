@@ -3215,6 +3215,7 @@ def _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_
     _x = numpy.array(_x)
     _y = numpy.array(_y)
 
+    #### chop off outliers > 2stdev from the mean
     x_mean = _x.mean()
     x_std = _x.std()
     y_mean = _y.mean()
@@ -3222,14 +3223,17 @@ def _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_
     x_data = list()
     y_data = list()
     for xval, yval in zip(_x, _y):
-        if xval < (x_mean + 2*x_std) and yval < (y_mean + 2*y_std): # chop off outliers > 2stdev from the mean
-            x_data.append(xval)
-            y_data.append(yval)
+        if (x_mean - 2*x_std) < xval < (x_mean + 2*x_std):
+            if (y_mean - 2*y_std) < yval < (y_mean + 2*y_std):
+                x_data.append(xval)
+                y_data.append(yval)
+    ###--
 
-#    scatter_subplot.scatter(_x, _y, color='navy', edgecolor='none', alpha=.2)
-#    scatter_subplot.axis([0, 3*ONE_HOUR, 0, 500])
+    print '%s, %s' % (str(monkey_one), str(monkey_two))
+    print x_data
+    print y_data
+    print '---'
     scatter_subplot.hexbin(x_data, y_data, gridsize=30)
-
     scatter_subplot.set_xlim(xmin=0)
     scatter_subplot.set_ylim(ymin=0)
 
