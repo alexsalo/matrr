@@ -3230,8 +3230,8 @@ def _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_
     ###--
 
     print '%s, %s' % (str(monkey_one), str(monkey_two))
-    print x_data
-    print y_data
+    print len(x_data)
+    print len(y_data)
     print '---'
     scatter_subplot.hexbin(x_data, y_data, gridsize=30)
     scatter_subplot.set_xlim(xmin=0)
