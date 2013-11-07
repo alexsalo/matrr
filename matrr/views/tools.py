@@ -314,26 +314,27 @@ def tools_cohort_hormone(request, coh_id):
                 # WARNING
                 # If hormone data is for-download, replace the raise Http404() with code from tools_cohort_protein, modified for hormones
                 raise Http404("Hormone data is not available for download at the moment.")
-    return render_to_response('matrr/tools/hormone/hormone.html', {'subject_select_form': subject_select_form},
-                              context_instance=RequestContext(request))
+    return render_to_response('matrr/tools/hormone/hormone.html', {'subject_select_form': subject_select_form}, context_instance=RequestContext(request))
 
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_hormone_tools'), login_url='/denied/')
 def tools_cohort_hormone_graphs(request, coh_id):
     old_post = request.session.get('_old_post')
+    if old_post:
+        request.session['_old_post'] = {}
     cohort = Cohort.objects.get(pk=coh_id)
     cohorts_with_hormone_data = MonkeyHormone.objects.all().values_list('monkey__cohort__pk', flat=True).distinct()
-    cohorts_with_hormone_data = Cohort.objects.nicotine_filter(request.user).filter(
-        pk__in=cohorts_with_hormone_data) # get the queryset of cohorts
+    cohorts_with_hormone_data = Cohort.objects.nicotine_filter(request.user).filter(pk__in=cohorts_with_hormone_data) # get the queryset of cohorts
     context = {'cohort': cohort}
     if request.method == "POST" or old_post:
         post = request.POST if request.POST else old_post
         hormone_form = HormoneSelectForm(data=post)
-        subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_hormone_data, horizontal=True,
-                                               initial={'subject': coh_id}, data=post)
+        subject_select_form = CohortSelectForm(subject_queryset=cohorts_with_hormone_data, horizontal=True, initial={'subject': coh_id}, data=post)
         if hormone_form.is_valid() and subject_select_form.is_valid():
             if int(coh_id) != subject_select_form.cleaned_data['subject'].pk:
-                request.session['_old_post'] = request.POST
+                new_post = dict(request.POST)
+                new_post['subject'] = subject_select_form.cleaned_data['subject'].pk
+                request.session['_old_post'] = new_post
                 return redirect(tools_cohort_hormone_graphs, subject_select_form.cleaned_data['subject'].pk)
             hormones = hormone_form.cleaned_data['hormones']
             scaled = hormone_form.cleaned_data['scaled']
