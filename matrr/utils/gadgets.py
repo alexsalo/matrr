@@ -1,4 +1,6 @@
+import json
 import numpy
+import os
 from scipy import stats
 
 import pylab
@@ -6,7 +8,7 @@ from django.db.models import Max, Min
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator
 
-from matrr.models import MonkeyToDrinkingExperiment, Avg, MonkeyBEC, MonkeyHormone
+from matrr.models import MonkeyToDrinkingExperiment, Avg, MonkeyBEC, MonkeyHormone, TWENTYFOUR_HOUR, ExperimentBout
 from matrr import plotting
 
 
@@ -214,6 +216,57 @@ def get_mean_MHM_oa_field(monkey, field, six_months=0, three_months=0):
     else:
         mhms = MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey=monkey)
     return mhms.aggregate(Avg(field))[field+'__avg']
+
+def ebt_startdiff_volsum_exclude_fivehours(subplot, monkey_one, monkey_two):
+    """
+    For use with plotting_beta.rhesus_category_parallel_classification_stability_popcount
+    """
+    try:
+        fx = open('matrr/utils/DATA/json/ebt_startdiff_volsum_exclude_fivehours-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+        fy = open('matrr/utils/DATA/json/ebt_startdiff_volsum_exclude_fivehours-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+    except:
+        one_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_one).order_by('drinking_experiment__dex_date')
+        one_dates = one_mtds.values_list('drinking_experiment__dex_date', flat=True).distinct()
+        x_data = [TWENTYFOUR_HOUR,]
+        y_data = [1000,]
+        for date in one_dates:
+            ebts = ExperimentBout.objects.filter(mtd__drinking_experiment__dex_date=date).exclude(ebt_start_time__lte=5*60*60)
+            one_values = ebts.filter(mtd__monkey=monkey_one).values_list('ebt_start_time', 'ebt_volume')
+            two_values = ebts.filter(mtd__monkey=monkey_two).values_list('ebt_start_time', 'ebt_volume')
+            if not one_values or not two_values:
+                continue
+            two_starts = numpy.array(two_values)[:,0]
+            for one_start_time, one_volume in one_values:
+                two_closest_start = min(two_starts, key=lambda x:abs(x-one_start_time))
+                two_closest_bout = two_values.get(ebt_start_time=two_closest_start)
+                x_value = float(numpy.abs(one_start_time - two_closest_bout[0]))
+                y_value = float(one_volume + two_closest_bout[1])
+                x_data.append(x_value)
+                y_data.append(y_value)
+        subplot.set_ylabel("Summed volume of adjacent bouts")
+        subplot.set_xlabel("Bout start time difference")
+
+        folder_name = 'matrr/utils/DATA/json/'
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+        fx = open(folder_name+'ebt_startdiff_volsum_exclude_fivehours-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
+        fy = open(folder_name+'ebt_startdiff_volsum_exclude_fivehours-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
+        fx.write(json.dumps(x_data))
+        fy.write(json.dumps(y_data))
+        fx.close()
+        fy.close()
+        return subplot, x_data, y_data
+    else:
+        x = json.loads(fx.readline())
+        y = json.loads(fy.readline())
+        fx.close()
+        fy.close()
+        subplot.set_ylabel("Summed volume of adjacent bouts")
+        subplot.set_xlabel("Bout start time difference")
+        return subplot, x, y
+
+
+
 ####
 
 def get_callable(field):

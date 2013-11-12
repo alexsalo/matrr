@@ -2957,7 +2957,7 @@ def rhesus_category_parallel_classification_stability(categories, y_value_callab
 def rhesus_category_parallel_classification_stability_popcount(categories, y_value_callable, y_label, fig_size=(25, 15), tick_size=22, title_size=30,  label_size=26):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(6, 1)
-    gs.update(left=0.05, right=0.94, top=.94, bottom=.06, hspace=.25)
+    gs.update(left=0.05, right=0.94, top=.97, bottom=.06, hspace=.25)
     etoh_subplot = fig.add_subplot(gs[0:4,:])
     pop_subplot = fig.add_subplot(gs[4:,:], sharex=etoh_subplot)
 
@@ -3270,7 +3270,7 @@ def monkey_confederate_bout_start_difference(monkey_one, monkey_two, collect_xy_
     scatter_subplot, axHistx, axHisty = _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_subplot, axHistx, axHisty, collect_xy_data)
     return fig
 
-def monkey_confederate_bout_start_difference_grid(cohort, collect_xy_data=None):
+def monkey_confederate_bout_start_difference_grid(cohort, collect_xy_data=None, exclude_lt=0):
     if not isinstance(cohort, Cohort):
         try:
             cohort = Cohort.objects.get(pk=cohort)
