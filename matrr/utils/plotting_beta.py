@@ -3279,7 +3279,8 @@ def monkey_confederate_bout_start_difference_grid(cohort, collect_xy_data=None, 
             return
 
     fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
-    fig.suptitle("Cohort %s" % str(cohort))
+#    fig.suptitle("Cohort %s" % str(cohort))
+    fig.suptitle("Cohort %s - first five hours excluded" % str(cohort))
     monkeys = Monkey.objects.Drinkers().filter(cohort=cohort).order_by('pk')
     mky_count = monkeys.count()
     main_gs = gridspec.GridSpec(mky_count, mky_count)
