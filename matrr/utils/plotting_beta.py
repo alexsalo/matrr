@@ -3010,13 +3010,8 @@ def rhesus_category_parallel_classification_stability_popcount(categories, y_val
             y_value = quarter_population.count(key) - category_populations[key]
             y_values.append(y_value)
             color = RHESUS_COLORS[key]
-            marker = DRINKING_CATEGORY_MARKER[key]
-            while y_value != 0:
-                x_values.append(x_val)
-                y_value = y_value + 1 if y_value < 0 else y_value - 1
-                y_values.append(y_value)
             x_val += .1
-            pop_subplot.scatter(x_values, y_values, c=color, edgecolor=color, s=175, marker=marker)
+            pop_subplot.bar(x_values, y_values, width=.05, color=color, edgecolor=color)
     for index, subplot in enumerate([etoh_subplot, pop_subplot]):
         subplot.tick_params(axis='both', which='both', labelsize=tick_size)
         subplot.set_xlim(xmin=.75, xmax=len(plot_x)+.2)
