@@ -11,7 +11,7 @@ from matrr.forms import TissueShipmentForm, TrackingNumberForm
 from matrr.models import Request, User, Shipment, ShipmentStatus, RequestStatus
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment' or u.has_perm('matrr.ship_genetics')), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
 def shipping_history(request):
 #	Shipped Requests
     shipped_requests = Request.objects.shipped().order_by('-shipments__shp_shipment_date').distinct()
