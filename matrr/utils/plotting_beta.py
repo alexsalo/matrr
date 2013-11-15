@@ -22,6 +22,7 @@ import networkx as nx
 from matrr.models import ExperimentEvent, ExperimentBout, ExperimentEventType, CohortBout, Cohort, Monkey, MonkeyBEC, MonkeyToDrinkingExperiment
 from matrr.models import ONE_HOUR, TWO_HOUR, TWENTYTWO_HOUR, TWENTYFOUR_HOUR, SESSION_START, SESSION_END, LIGHTS_ON, LIGHTS_OUT
 from matrr.utils import apriori, gadgets
+#from matrr import plotting
 from matrr.plotting import monkey_plots, plot_tools
 from matrr.plotting import *
 
@@ -1188,7 +1189,7 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
     for key in DRINKING_CATEGORIES:
         width = 1 / (1. / limit_step)
         gkg_daycounts = numpy.zeros(len(limits))
-        for monkey in RHESUS_DRINKERS_DISTINCT[key]:
+        for monkey in RDD_56890[key]:
             mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
             if not mtds.count():
                 continue
@@ -1420,7 +1421,7 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
 def rhesus_oa_discrete_minute_volumes(minutes, monkey_category, distinct_monkeys=False):
     def _oa_eev_volume_summation(monkey_category, minutes=20, exclude=False, distinct_monkeys=False):
         data = defaultdict(lambda: 0)
-        _drinkers = RHESUS_DRINKERS_DISTINCT if distinct_monkeys else RHESUS_DRINKERS
+        _drinkers = RDD_56890 if distinct_monkeys else RHESUS_DRINKERS
         if exclude:
             monkey_set = [x for x in ALL_RHESUS_DRINKERS if x not in _drinkers[monkey_category]]
         else:
@@ -1448,7 +1449,7 @@ def rhesus_thirds_oa_discrete_minute_volumes(minutes, monkey_category, distinct_
         cohort_starts = {5: datetime(2008, 10, 20), 6: datetime(2009, 4, 13), 9: datetime(2011, 7, 12),
                          10: datetime(2011, 01, 03)}
         data = defaultdict(lambda: 0)
-        _drinkers = RHESUS_DRINKERS_DISTINCT if distinct_monkeys else RHESUS_DRINKERS
+        _drinkers = RDD_56890 if distinct_monkeys else RHESUS_DRINKERS
         if exclude:
             monkey_set = [x for x in ALL_RHESUS_DRINKERS if x not in _drinkers[monkey_category]]
         else:
@@ -1514,7 +1515,7 @@ def _rhesus_category_scatterplot(subplot, collect_xy_data, xy_kwargs=None, inclu
 
 def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE, include_regression=False):
     def _oa_pelletvolume_perday_perkg(monkey_category):
-        monkey_set = RHESUS_DRINKERS_DISTINCT[monkey_category]
+        monkey_set = RDD_56890[monkey_category]
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         x_data = list()
         y_data = list()
@@ -1529,7 +1530,7 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE, include_reg
         return x_data, y_data
 
     def _oa_pelletwater_perday_perkg(monkey_category):
-        monkey_set = RHESUS_DRINKERS_DISTINCT[monkey_category]
+        monkey_set = RDD_56890[monkey_category]
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         x_data = list()
         y_data = list()
@@ -1592,7 +1593,7 @@ def rhesus_thirds_oa_pelletvolume_perday_perkg():
             if offset <= 120:
                 end = start + timedelta(days=120)
                 _mtds = _mtds.filter(drinking_experiment__dex_date__lt=end)
-            for monkey in RHESUS_DRINKERS_DISTINCT[monkey_category]:
+            for monkey in RDD_56890[monkey_category]:
                 _data = _mtds.filter(monkey=monkey)
                 if not _data:
                     continue
@@ -1630,14 +1631,14 @@ def rhesus_bout_last_pellet_histogram(exclude_intrapellets=True, exclude_zero=Fa
     gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
 
     subplot = None
-    for index, key in enumerate(RHESUS_DRINKERS_DISTINCT.iterkeys()):
+    for index, key in enumerate(RDD_56890.iterkeys()):
         subplot = fig.add_subplot(gs[index, :], sharex=subplot, sharey=subplot)
         ebts = ExperimentBout.objects.OA().filter(mtd__monkey__cohort__in=[5, 6, 9, 10])
         if exclude_intrapellets:
             ebts = ebts.exclude(ebt_contains_pellet=True)
         if exclude_zero:
             ebts = ebts.exclude(ebt_pellet_elapsed_time_since_last__lte=3 * 60)
-        pellet_times = ebts.filter(mtd__monkey__in=RHESUS_DRINKERS_DISTINCT[key]).values_list(
+        pellet_times = ebts.filter(mtd__monkey__in=RDD_56890[key]).values_list(
             'ebt_pellet_elapsed_time_since_last', flat=True)
         bin_count = 250
         linspace = numpy.linspace(0, max(pellet_times), bin_count) # defines number of bins in histogram
@@ -1683,7 +1684,7 @@ def _rhesus_minute_volumes_compare_categories(subplot, minutes, monkey_cat_one, 
 def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one, monkey_cat_two):
     def _oa_eev_volume_summation(monkey_category, minutes=20):
         data = defaultdict(lambda: 0)
-        monkey_set = RHESUS_DRINKERS_DISTINCT[monkey_category]
+        monkey_set = RDD_56890[monkey_category]
         eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         for i in range(0, minutes):
             _eevs = eevs.filter(eev_pellet_time__gte=i * 60).filter(eev_pellet_time__lt=(i + 1) * 60)
@@ -1704,7 +1705,7 @@ def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one
 
 def rhesus_oa_pellettime_vs_gkg():
     def _oa_pelletvolume_perday_perkg(monkey_category):
-        monkey_set = RHESUS_DRINKERS_DISTINCT[monkey_category]
+        monkey_set = RDD_56890[monkey_category]
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         x_data = list()
         y_data = list()
@@ -1761,7 +1762,7 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
             events_gkg = json.loads(json_string)
         except Exception as e:
             events_gkg = list()
-            for monkey in RHESUS_DRINKERS_DISTINCT[monkey_category]:
+            for monkey in RDD_56890[monkey_category]:
                 # first, get the subset of events associated with this monkey
                 _eevs = eevs.filter(monkey=monkey)
                 # Next, get this monkey's average OPEN ACCESS weight
@@ -1840,7 +1841,7 @@ def _rhesus_gkg_age_mtd_general(subplot, phase, gkg_onset, mtd_callable_xvalue_g
     for key in DRINKING_CATEGORIES:
         x = list()
         y = list()
-        for monkey_pk in RHESUS_DRINKERS_DISTINCT[key]:
+        for monkey_pk in RDD_56890[key]:
             monkey = Monkey.objects.get(pk=monkey_pk)
             monkey_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
             min_gkg_onset_date = monkey_mtds.filter(mtd_etoh_g_kg__gte=gkg_onset).aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
@@ -1881,7 +1882,7 @@ def _rhesus_bec_age_mtd_general(subplot, phase, bec_onset, mtd_callable_xvalue_g
     for key in DRINKING_CATEGORIES:
         x = list()
         y = list()
-        for monkey_pk in RHESUS_DRINKERS_DISTINCT[key]:
+        for monkey_pk in RDD_56890[key]:
             monkey = Monkey.objects.get(pk=monkey_pk)
             monkey_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
             monkey_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
@@ -1928,7 +1929,7 @@ def _rhesus_bec_age_mtd_regression(phase, bec_onset, mtd_callable_xvalue_generat
     y = list()
     label = ''
     for key in DRINKING_CATEGORIES:
-        for monkey_pk in RHESUS_DRINKERS_DISTINCT[key]:
+        for monkey_pk in RDD_56890[key]:
             monkey = Monkey.objects.get(pk=monkey_pk)
             monkey_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
             monkey_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
@@ -1962,7 +1963,7 @@ def _rhesus_bec_age_mtd_regression_centroids(phase, bec_onset, mtd_callable_xval
     for key in DRINKING_CATEGORIES:
         data_x = list()
         data_y = list()
-        for monkey_pk in RHESUS_DRINKERS_DISTINCT[key]:
+        for monkey_pk in RDD_56890[key]:
             monkey = Monkey.objects.get(pk=monkey_pk)
             monkey_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
             monkey_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
@@ -2070,7 +2071,7 @@ def rhesus_OA_bec_pellettime_scatter(phase): # phase = 0-2
     for key in DRINKING_CATEGORIES:
         x_axis = list()
         y_axis = list()
-        for monkey_pk in RHESUS_DRINKERS_DISTINCT[key]:
+        for monkey_pk in RDD_56890[key]:
             monkey = Monkey.objects.get(pk=monkey_pk)
             becs = MonkeyBEC.objects.OA().filter(monkey=monkey_pk).order_by('pk')
             if phase:
@@ -2124,7 +2125,7 @@ def rhesus_OA_bec_pelletcount_scatter(phase): # phase = 0-2
     for key in DRINKING_CATEGORIES:
         x_axis = list()
         y_axis = list()
-        for monkey_pk in RHESUS_DRINKERS_DISTINCT[key]:
+        for monkey_pk in RDD_56890[key]:
             monkey = Monkey.objects.get(pk=monkey_pk)
             becs = MonkeyBEC.objects.OA().filter(monkey=monkey_pk).order_by('pk')
             if phase:
@@ -2349,7 +2350,7 @@ def rhesus_pellet_time_histogram_grid():
     subplot = None
     for grid_index, rhesus_key in enumerate(DRINKING_CATEGORIES):
         subplot = fig.add_subplot(gs[grid_index], sharex=subplot)
-        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=RHESUS_DRINKERS_DISTINCT[rhesus_key])
+        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=RDD_56890[rhesus_key])
         eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
         #		eevs = eevs.exclude(eev_pellet_time__lte=1.95*60*60)
         data = eevs.values_list('eev_pellet_time', flat=True)
@@ -2386,7 +2387,7 @@ def rhesus_etoh_pellettime_bec():
     all_size = list()
     max_size = 0
     for key in DRINKING_CATEGORIES:
-        monkeys = Monkey.objects.filter(pk__in=RHESUS_DRINKERS_DISTINCT[key])
+        monkeys = Monkey.objects.filter(pk__in=RDD_56890[key])
         x_values = list()
         y_values = list()
         size_values = list()
@@ -2458,7 +2459,7 @@ def rhesus_etoh_pellettime_pctetohmeal():
     all_size = list()
     max_size = 0
     for key in DRINKING_CATEGORIES:
-        monkeys = Monkey.objects.filter(pk__in=RHESUS_DRINKERS_DISTINCT[key])
+        monkeys = Monkey.objects.filter(pk__in=RDD_56890[key])
         x_values = list()
         y_values = list()
         size_values = list()
@@ -2527,7 +2528,7 @@ def rhesus_pellet_sessiontime_distribution():
     subplot = None
     for grid_index, rhesus_key in enumerate(DRINKING_CATEGORIES):
         subplot = fig.add_subplot(gs[grid_index], sharex=subplot, sharey=subplot)
-        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=RHESUS_DRINKERS_DISTINCT[rhesus_key])
+        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=RDD_56890[rhesus_key])
         eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
         eevs = eevs.filter(eev_session_time__lte=8 * 60 * 60)
         data = eevs.values_list('eev_session_time', flat=True)
@@ -2580,7 +2581,7 @@ def rhesus_pellet_sessiontime_percent_distribution():
     subplot = None
     for grid_index, rhesus_key in enumerate(DRINKING_CATEGORIES):
         subplot = fig.add_subplot(gs[grid_index], sharex=subplot, sharey=subplot)
-        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=RHESUS_DRINKERS_DISTINCT[rhesus_key])
+        eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=RDD_56890[rhesus_key])
         eevs = eevs.filter(eev_event_type=ExperimentEventType.Pellet)
         eevs = eevs.filter(eev_session_time__lte=8 * 60 * 60)
 
@@ -2655,7 +2656,7 @@ def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, 
             x_axis.append(x_dates[x])
         y_axis = becs.values_list('bec_mg_pct', flat=True)
         bottom_subplot_left.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size, label=str(monkey))
-        if monkey in RHESUS_DRINKERS_DISTINCT['VHD']:
+        if monkey in RDD_56890['VHD']:
             y_axis = becs.values_list('bec_gkg_etoh', 'bec_daily_gkg_etoh')
             y_axis = [y[0]/y[1] for y in y_axis]
             bottom_subplot_right.plot(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], lw=3, alpha=.5, label="Percent Daily Intake at Sample, %d" % monkey)
@@ -2997,9 +2998,10 @@ def rhesus_category_parallel_classification_stability_popcount(categories, y_val
     ###############
     ordinals = ["First", "Second", "Third", "Fourth"]
     x_base = numpy.array(range(1,5,1))
-    category_populations = dict()
+    twelve_mo_category_pop_count = dict()
     for key in DRINKING_CATEGORIES:
-        category_populations[key] = len(RHESUS_DRINKERS_DISTINCT[key])
+        twelve_mo_category_pop_count[key] = len(RHESUS_DRINKERS_DISTINCT[key])
+
     for ordinal, x_start in zip(ordinals, x_base - .2):
         x_val = x_start
         quarter_population = list(gadgets.get_category_population_by_quarter(ordinal, monkeys=ALL_RHESUS_DRINKERS))
@@ -3007,7 +3009,7 @@ def rhesus_category_parallel_classification_stability_popcount(categories, y_val
             x_values = list()
             y_values = list()
             x_values.append(x_val)
-            y_value = quarter_population.count(key) - category_populations[key]
+            y_value = quarter_population.count(key) - twelve_mo_category_pop_count[key]
             y_values.append(y_value)
             color = RHESUS_COLORS[key]
             x_val += .1
@@ -3370,8 +3372,8 @@ class RhesusAdjacencyNetwork():
         data = data if data else dict()
         data['monkey'] = mky.pk
         group = None
-        for key in RHESUS_DRINKERS_DISTINCT.iterkeys():
-            if mky.pk in RHESUS_DRINKERS_DISTINCT[key]:
+        for key in RDD_56890.iterkeys():
+            if mky.pk in RDD_56890[key]:
                 break
         if key == 'VHD':
             group = 4
@@ -3482,9 +3484,9 @@ def kathy_correlation_bec_maxbout_pairwise_drinkinggroup():
         gs.update(left=0.08, right=0.98, wspace=.00, hspace=0)
         subplot = fig.add_subplot(gs[:, :])
         subject_title = " for %s vs %s" % (key1, key2)
-        vhd_becs = MonkeyBEC.objects.filter(monkey__in=RHESUS_DRINKERS_DISTINCT[key1]).exclude(mtd=None)
+        vhd_becs = MonkeyBEC.objects.filter(monkey__in=RDD_56890[key1]).exclude(mtd=None)
         subplot = _kathy_correlation_bec_max_bout_general(subplot, vhd_becs, RHESUS_COLORS[key1], subject_title)
-        ld_becs = MonkeyBEC.objects.filter(monkey__in=RHESUS_DRINKERS_DISTINCT[key2]).exclude(mtd=None)
+        ld_becs = MonkeyBEC.objects.filter(monkey__in=RDD_56890[key2]).exclude(mtd=None)
         subplot = _kathy_correlation_bec_max_bout_general(subplot, ld_becs, RHESUS_COLORS[key2], subject_title)
         figures.append(fig)
         labels.append("%s-%s" % (key1, key2))
