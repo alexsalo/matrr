@@ -3540,8 +3540,8 @@ def rhesus_N_gkg_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
     idx = numpy.arange(len(sorted_data))
     width = .9
     for _x, _y, _mky in zip(idx, sorted_data[:,1], sorted_data[:,0]):
-        ax1.bar(_x, _y, width, color=plotting.RHESUS_MONKEY_COLORS[int(_mky)])
-    ax1.set_xticklabels(sorted_data[:,0])
+        ax1.bar(_x, _y, width, color=plotting.RHESUS_MONKEY_COLORS[int(_mky)], log=True)
+    ax1.set_xticklabels([])
     return fig
 
 def gkg_count_upperlimit(upper_limit, monkeys):
@@ -3727,7 +3727,7 @@ def create_kathy_graphs():
         fig.savefig(filename, dpi=DPI)
 
 
-def create_manuscript_graphs(output_path='', graphs='12345', png=True, fig_size=(25, 15), dpi=800):
+def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,', png=True, fig_size=(25, 15), dpi=800):
     figures = list()
     names = list()
     all_categories = DRINKING_CATEGORIES
@@ -3747,6 +3747,15 @@ def create_manuscript_graphs(output_path='', graphs='12345', png=True, fig_size=
     if '5' in graphs:
         figures.append(rhesus_oa_pelletvolume_perday_perkg(fig_size=fig_size))
         names.append('Figure5')
+    if 's2a' in graphs:
+        fig = rhesus_N_gkg_days(.5)
+        figures.append(fig)
+        names.append('S2a')
+    if 's2b' in graphs:
+        fig = rhesus_N_gkg_days(2.5)
+        figures.append(fig)
+        names.append('S2b')
+
     if png:
         for FigName in zip(figures, names):
             fig, name = FigName
