@@ -12,7 +12,7 @@ DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-('matrr_admin', 'matrr_gleek@gmail.com'),
+('matrr_admin', 'matrrgleek@gmail.com'),
 )
 MANAGERS = ADMINS
 
@@ -237,43 +237,52 @@ ResearchUpdateInProgressGrace = 180
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-#LOGGING = {
-#    'version': 1,
-#    'disable_existing_loggers': False,
-#    'filters': {
-#        'require_debug_false': {
-#            '()': 'django.utils.log.RequireDebugFalse'
-#        }
-#    },
-#    'handlers': {
-#        'mail_admins': {
-#            'level': 'ERROR',
-#            'filters': ['require_debug_false'],
-#            'class': 'django.utils.log.AdminEmailHandler'
-#        }
-#    },
-#    'loggers': {
-#        'django.request': {
-#            'handlers': ['mail_admins'],
-#            'level': 'ERROR',
-#            'propagate': True,
-#        },
-#    }
-#}
+#
+# Modified per suggestions from http://stackoverflow.com/questions/238081/how-do-you-log-server-errors-on-django-sites
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'logfile': {
+            'class': 'logging.handlers.WatchedFileHandler',
+            'filename': '/web/www/matrr-prod/MATRR.log'
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        # Might as well log any errors anywhere else in Django
+        'django': {
+            'handlers': ['logfile'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    }
+}
 
 ## My logging
-_log_path = os.environ['HOME']
-_log_file = 'MATRR.log'
-LOG_FILE_PATH = os.path.join(_log_path, _log_file)
-# this logger will only get hit by django if debug == False.  I think django wraps everything in a try:catch
-logging.basicConfig(format='%(asctime)s|%(levelname)s|%(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=LOG_FILE_PATH, level=logging.WARNING)
+#_log_path = os.environ['HOME']
+#_log_file = 'MATRR.log'
+#LOG_FILE_PATH = os.path.join(_log_path, _log_file)
+## this logger will only get hit by django if debug == False.  I think django wraps everything in a try:catch
+#logging.basicConfig(format='%(asctime)s|%(levelname)s|%(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=LOG_FILE_PATH, level=logging.WARNING)
+#
+#def log_except_hook(*exc_info):
+#    text = "".join(traceback.format_exception(*exc_info))
+#    logging.error("Unhandled exception: %s", text)
+#
+#if GLEEK:
+#    sys.excepthook = log_except_hook
 
-def log_except_hook(*exc_info):
-    text = "".join(traceback.format_exception(*exc_info))
-    logging.error("Unhandled exception: %s", text)
 
-if GLEEK:
-    sys.excepthook = log_except_hook
 
 if DEVELOPMENT:
     from develop_settings import *
