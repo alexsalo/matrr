@@ -3540,7 +3540,7 @@ def rhesus_N_gkg_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
     idx = numpy.arange(len(sorted_data))
     width = .9
     for _x, _y, _mky in zip(idx, sorted_data[:,1], sorted_data[:,0]):
-        if _y:
+        if _y and _y != 0:
             ax1.bar(_x, _y, width, color=plotting.RHESUS_MONKEY_COLORS[int(_mky)], log=True)
     ax1.set_xticklabels([])
     return fig
