@@ -197,7 +197,7 @@ def search(request):
             terms = form.cleaned_data['terms']
 
             from django.db.models.loading import get_model
-            from settings import PRIVATE_SEARCH_INDEXES, PUBLIC_SEARCH_INDEXES
+            from matrr.settings import PRIVATE_SEARCH_INDEXES, PUBLIC_SEARCH_INDEXES
 
             SEARCH_INDEXES = PUBLIC_SEARCH_INDEXES
 
