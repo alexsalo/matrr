@@ -19,7 +19,7 @@ from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator, NullLocator
 import networkx as nx
 
-from matrr.models import ExperimentEvent, ExperimentBout, ExperimentEventType, CohortBout, Cohort, Monkey, MonkeyBEC, MonkeyToDrinkingExperiment
+from matrr.models import ExperimentEvent, ExperimentBout, ExperimentEventType, CohortBout, Cohort, Monkey, MonkeyBEC, MonkeyToDrinkingExperiment, DrinkingExperiment
 from matrr.models import ONE_HOUR, TWO_HOUR, TWENTYTWO_HOUR, TWENTYFOUR_HOUR, SESSION_START, SESSION_END, LIGHTS_ON, LIGHTS_OUT
 from matrr.utils import apriori, gadgets
 #from matrr import plotting
@@ -3160,7 +3160,7 @@ def rhesus_confederate_boxplots(minutes, nighttime_only=False):
 
 #--
 
-#---# Confederate histograms and scatterplots
+#---# Confederate graphs
 def _confederate_bout_start_difference_subplots(monkey_one, monkey_two, scatter_subplot, axHistx=None, axHisty=None, collect_xy_data=None):
     def _bout_startdiff_volsum(subplot, monkey_one, monkey_two):
         try:
@@ -3327,6 +3327,76 @@ def monkey_confederate_bout_start_difference_grid(cohort, collect_xy_data=None, 
                     scatter_subplot.set_axis_bgcolor((gray_color, gray_color, gray_color))
     return fig
 
+def cohort_confederates_data_collection(cohort):
+    monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
+    drinker_count = monkeys.count()
+    dexs = DrinkingExperiment.objects.filter(cohort=cohort, dex_type='Open Access')
+
+    data = defaultdict(lambda: defaultdict(list))
+    for dex in dexs:
+        # get the MTDs for each today's drinking experiment
+        mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment=dex, monkey__in=monkeys)
+        if not mtds:
+            continue
+
+        # find out how many records are missing/excluded, so that I can pad numbers with the average
+        empty_count = 0
+        for mtd in mtds:
+            # We need to find out how many MTDs are excluded
+            if mtd.mex_excluded:
+                empty_count += 1
+        # We also need to find out how many MTD records are missing (usually due to exceptions)
+        empty_count += drinker_count - mtds.count()
+
+        included_mtds = mtds.exclude(mex_excluded=True)
+        for monkey in monkeys:
+            try:
+                data['etoh_data'][monkey].append(included_mtds.filter(monkey=monkey)[0].mtd_etoh_g_kg)
+            except IndexError:
+                data['etoh_data'][monkey].append(0)
+            data['missing_counts'][monkey].append(empty_count)
+    data['monkeys'] = monkeys
+    return data
+
+def cohort_confederate_daily_intakes(cohort_pk, figsize=HISTOGRAM_FIG_SIZE):
+    cohort = Cohort.objects.get(pk=cohort_pk)
+    monkeys = Monkey.objects.Drinkers().filter(cohort=cohort)
+    fig = pyplot.figure(figsize=figsize, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(3, 3)
+    gs.update(left=0.04, bottom=.05, right=0.98, top=.95, wspace=.00, hspace=0)
+    subplot = fig.add_subplot(gs[:, :])
+
+    data = cohort_confederates_data_collection(cohort)
+
+    grey_indexes = list()
+    day_count = max([len(data['etoh_data'][mky]) for mky in monkeys])
+    reformatted_ydata = defaultdict(lambda: numpy.zeros(day_count))
+    for monkey in monkeys:
+        for index, mc in enumerate(data['missing_counts'][monkey]):
+            if mc:
+                grey_indexes.append(index)
+        y_data = numpy.array(data['etoh_data'][monkey])
+        reformatted_ydata[monkey.mky_drinking_category] += y_data
+
+    grey_indexes = set(grey_indexes)
+    x_axis = range(day_count)
+    bottom = numpy.zeros(day_count)
+    max_yvalue = 0
+    for key in ['LD', 'BD', 'HD', 'VHD']:
+        y_axis = reformatted_ydata[key]
+        max_yvalue = max(max_yvalue, max(y_axis))
+        colors = list()
+        for index, _x in enumerate(x_axis):
+            color = 'purple' if index in grey_indexes else RHESUS_COLORS[key]
+            colors.append(color)
+        subplot.bar(x_axis, y_axis, bottom=bottom, width=1, alpha=1, color=colors, edgecolor=colors)
+        bottom += y_axis
+    subplot.legend()
+    subplot.set_title(str(cohort))
+    subplot.set_ylabel("Total EtOH Intake of Cohort (g/kg)")
+    subplot.set_xlabel("Day of Open Access")
+    subplot.set_xlim(xmax=day_count)
+    return fig
 
 #---#
 
@@ -3653,6 +3723,38 @@ def create_erich_graphs():
     output_path = os.path.join(output_path, "images/erich/")
     minutes = 120
 
+    cohort = 5
+    fig = cohort_confederate_daily_intakes(cohort , figsize=(10, 6))
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("cohort_confederate_daily_intakes", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 6
+    fig = cohort_confederate_daily_intakes(cohort , figsize=(10, 6))
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("cohort_confederate_daily_intakes", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 8
+    fig = cohort_confederate_daily_intakes(cohort , figsize=(10, 6))
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("cohort_confederate_daily_intakes", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 9
+    fig = cohort_confederate_daily_intakes(cohort , figsize=(10, 6))
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("cohort_confederate_daily_intakes", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 10
+    fig = cohort_confederate_daily_intakes(cohort , figsize=(10, 6))
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("cohort_confederate_daily_intakes", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    already_created = \
+        """
     fig = rhesus_oa_pellettime_vs_gkg()
     DPI = fig.get_dpi()
     filename = output_path + '%s.png' % "rhesus_oa_pellettime_vs_gkg"
@@ -3668,8 +3770,6 @@ def create_erich_graphs():
     filename = output_path + '%s.png' % "rhesus_thirds_oa_pelletvolume_perday_perkg"
     fig.savefig(filename, dpi=DPI)
 
-    already_created = \
-        """
     fig = rhesus_etoh_gkg_stackedbargraph()
     DPI = fig.get_dpi()
     filename = output_path + '%s.png' % "rhesus_etoh_gkg_stackedbargraph"
