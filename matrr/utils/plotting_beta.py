@@ -3532,7 +3532,7 @@ def rhesus_N_gkg_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
     ax1 = fig.add_subplot(111)
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
     ax1.set_axisbelow(True)
-    ax1.set_title("Days below %.02fgkg" % float(upper_limit))
+    ax1.set_title("Days below %.02f g/kg" % float(upper_limit))
     ax1.set_ylabel("Count")
     ax1.set_xlabel("Monkey")
 
@@ -3541,7 +3541,7 @@ def rhesus_N_gkg_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
     width = .9
     for _x, _y, _mky in zip(idx, sorted_data[:,1], sorted_data[:,0]):
         if _y and _y != 0:
-            ax1.bar(_x, _y, width, color=plotting.RHESUS_MONKEY_COLORS[int(_mky)], log=True)
+            ax1.bar(_x, _y, width, color=plotting.RHESUS_MONKEY_COLORS[int(_mky)])
     ax1.set_xticklabels([])
     return fig
 
@@ -3733,6 +3733,7 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,', png=Tr
     names = list()
     all_categories = DRINKING_CATEGORIES
 
+    graphs = graphs.split(',')
     if '1' in graphs:
         figures.append(rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=fig_size))
         names.append('Figure1')
