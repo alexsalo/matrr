@@ -3392,7 +3392,6 @@ def confederate_bout_difference_grid(cohort, collect_xy_data=None):
     subplots = []
     for x_index, x_monkey in enumerate(monkeys):
         for y_index, y_monkey in enumerate(monkeys):
-            if x_monkey == y_monkey: continue
             if sorted([x_monkey.pk, y_monkey.pk]) in finished:
                 continue
             else:
