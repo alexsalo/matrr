@@ -1062,15 +1062,21 @@ class ExperimentBout(models.Model):
         if self.ebt_intake_rate is None or recalculate:
             weight = self.mtd.mtd_weight
             if not weight:
+                # try to deduce the monkey's weight with its g/kg and mL intakes
+                ml_kg = self.mtd.mtd_etoh_g_kg / .04
+                weight = (ml_kg / self.mtd.mtd_etoh_intake)**-1
+            if not weight:
+                # if I can't, try to get the average of the last 30 days
                 max_date = self.mtd.drinking_experiment.dex_date
                 min_date = max_date - timedelta(days=30)
                 weight_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.mtd.monkey)
                 weight_mtds = weight_mtds.filter(drinking_experiment__dex_date__gte=min_date)
                 weight_mtds = weight_mtds.filter(drinking_experiment__dex_date__lt=max_date)
                 weight = weight_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
+
             grams = self.ebt_volume * .04
             grams_kg = grams / weight
-            grams_kg_min = grams_kg / (self.ebt_length / 60)
+            grams_kg_min = grams_kg / (self.ebt_length / 60.)
             self.ebt_intake_rate = grams_kg_min
             if save:
                 self.save()
