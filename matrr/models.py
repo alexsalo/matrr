@@ -1028,6 +1028,7 @@ class ExperimentBout(models.Model):
     ebt_contains_pellet = models.NullBooleanField('Pellet distributed during bout', blank=True, null=True, default=None,db_index=True,
                                                   help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.')
     ebt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True,null=True, default=None, db_index=True)
+    ebt_intake_rate = models.FloatField('Rate of Ethanol Intake', blank=False, null=True, default=None)
 
     def _populate_pct_vol_total_etoh(self, recalculate=False, save=True):
         if recalculate or not self.ebt_pct_vol_total_etoh:
@@ -1057,10 +1058,28 @@ class ExperimentBout(models.Model):
             if save:
                 self.save()
 
+    def _populate_intake_rate(self, recalculate=False, save=True):
+        if self.ebt_intake_rate is None or recalculate:
+            weight = self.mtd.mtd_weight
+            if not weight:
+                max_date = self.mtd.drinking_experiment.dex_date
+                min_date = max_date - timedelta(days=30)
+                weight_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.mtd.monkey)
+                weight_mtds = weight_mtds.filter(drinking_experiment__dex_date__gte=min_date)
+                weight_mtds = weight_mtds.filter(drinking_experiment__dex_date__lt=max_date)
+                weight = weight_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
+            grams = self.ebt_volume * .04
+            grams_kg = grams / weight
+            grams_kg_min = grams_kg / (self.ebt_length / 60)
+            self.ebt_intake_rate = grams_kg_min
+            if save:
+                self.save()
+
     def populate_fields(self, recalculate=False):
         self._populate_pct_vol_total_etoh(recalculate=recalculate, save=False)
         self._populate_pellet_elapsed_time_since_last(recalculate=recalculate, save=False)
         self._populate_contains_pellet(recalculate=recalculate, save=False)
+        self._populate_intake_rate(recalculate=recalculate, save=False)
         self.save()
 
     def clean(self):
