@@ -3357,7 +3357,8 @@ def confederate_bout_difference_grid(cohort, collect_xy_data=None):
         ###--
 
         bins = numpy.arange(0, 1, .025)
-        scatter_subplot.hist(y_data, bins=bins, )#gridsize=30)
+        if y_data:
+            scatter_subplot.hist(y_data, bins=bins)
         scatter_subplot.set_xlim(xmin=0)
         scatter_subplot.set_ylim(ymin=0)
 
@@ -3399,10 +3400,10 @@ def confederate_bout_difference_grid(cohort, collect_xy_data=None):
             scatter_subplot = fig.add_subplot(main_gs[x_index, y_index], sharex=scatter_subplot, sharey=scatter_subplot)
 
             if x_index == 0 and y_index:
-                scatter_subplot.set_title("%s" % str(y_monkey), size=20, color=RHESUS_MONKEY_COLORS[y_monkey.pk])
+                scatter_subplot.set_title("%s" % str(y_monkey), size=20, color=RHESUS_COLORS[y_monkey.mky_drinking_category])
             if y_index+1 == mky_count:
                 x0, y0, x1, y1 = scatter_subplot.get_position().extents
-                fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_MONKEY_COLORS[x_monkey.pk], rotation=-90, verticalalignment='center')
+                fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_COLORS[y_monkey.mky_drinking_category], rotation=-90, verticalalignment='center')
             scatter_subplot = fig.add_subplot(main_gs[x_index,y_index], sharex=scatter_subplot, sharey=scatter_subplot)
             subplots.append(scatter_subplot)
             __confederate_bout_difference_subplots(x_monkey, y_monkey, scatter_subplot, collect_xy_data=collect_xy_data)
@@ -3416,7 +3417,7 @@ def confederate_bout_difference_grid(cohort, collect_xy_data=None):
             subplot.set_yticks([])
             gray_color = .6
             subplot.set_axis_bgcolor((gray_color, gray_color, gray_color))
-    notes_subplot = fig.add_subplot(main_gs[5:mky_count-1, 1:5])
+    notes_subplot = fig.add_subplot(main_gs[int(mky_count/2):mky_count-1, 1:int(mky_count/2)])
     notes_subplot.set_axis_bgcolor([1,1,1])
     notes_subplot.set_title("EXAMPLE SUBPLOT")
     notes_subplot.set_ylabel("Count (bouts)")
