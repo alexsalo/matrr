@@ -462,3 +462,49 @@ def find_nearest_bout_per_monkey(bout):
         nearest_bouts.append(close_bout)
     return nearest_bouts
 
+def collect_bout_startdiff_ratesum_data(subplot, monkey_one, monkey_two):
+    try:
+        fx = open('matrr/utils/DATA/json/bout_startdiff_ratesum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+        fy = open('matrr/utils/DATA/json/bout_startdiff_ratesum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'r')
+    except:
+        one_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_one).order_by('drinking_experiment__dex_date')
+        one_dates = one_mtds.values_list('drinking_experiment__dex_date', flat=True).distinct()
+        x_data = [TWENTYFOUR_HOUR,]
+        y_data = [1000,]
+        for date in one_dates:
+            one_bouts = ExperimentBout.objects.filter(mtd__monkey=monkey_one, mtd__drinking_experiment__dex_date=date).exclude(ebt_intake_rate=None)
+            one_values = one_bouts.values_list('ebt_start_time', 'ebt_intake_rate')
+            two_bouts = ExperimentBout.objects.filter(mtd__monkey=monkey_two, mtd__drinking_experiment__dex_date=date).exclude(ebt_intake_rate=None)
+            two_values = two_bouts.values_list('ebt_start_time', 'ebt_intake_rate')
+            if not one_values or not two_values:
+                continue
+            two_starts = numpy.array(two_values)[:,0]
+            for one_start_time, one_rate in one_values:
+                two_closest_start = min(two_starts, key=lambda x:abs(x-one_start_time))
+                two_closest_bout = two_values.get(ebt_start_time=two_closest_start)
+                x_value = float(numpy.abs(one_start_time - two_closest_bout[0]))
+                y_value = float(one_rate + two_closest_bout[1])
+                x_data.append(x_value)
+                y_data.append(y_value)
+        subplot.set_ylabel("Summed intake rate of adjacent bouts (in g/kg/minute)")
+        subplot.set_xlabel("Bout start time difference")
+
+        folder_name = 'matrr/utils/DATA/json/'
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+        fx = open(folder_name+'bout_startdiff_ratesum-%d-%d-xvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
+        fy = open(folder_name+'bout_startdiff_ratesum-%d-%d-yvalues.json' % (monkey_one.pk, monkey_two.pk), 'w')
+        fx.write(json.dumps(x_data))
+        fy.write(json.dumps(y_data))
+        fx.close()
+        fy.close()
+        return subplot, x_data, y_data
+    else:
+        x = json.loads(fx.readline())
+        y = json.loads(fy.readline())
+        fx.close()
+        fy.close()
+        subplot.set_ylabel("Summed intake rate of adjacent bouts (in g/kg/minute)")
+        subplot.set_xlabel("Bout start time difference")
+        return subplot, x, y
+

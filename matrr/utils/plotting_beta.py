@@ -3319,12 +3319,111 @@ def monkey_confederate_bout_start_difference_grid(cohort, collect_xy_data=None, 
                     subplot.set_ylabel("")
                     subplot.set_xlabel("")
 #                    pyplot.setp(subplot.get_xticklabels() + subplot.get_yticklabels(), visible=False)
-                    scatter_subplot.set_xticklabels([])
-                    scatter_subplot.set_yticklabels([])
-                    scatter_subplot.set_xticks([])
-                    scatter_subplot.set_yticks([])
+                    subplot.set_xticklabels([])
+                    subplot.set_yticklabels([])
+                    subplot.set_xticks([])
+                    subplot.set_yticks([])
                     gray_color = .6
-                    scatter_subplot.set_axis_bgcolor((gray_color, gray_color, gray_color))
+                    subplot.set_axis_bgcolor((gray_color, gray_color, gray_color))
+    return fig
+
+def confederate_bout_difference_grid(cohort, collect_xy_data=None):
+    if not isinstance(cohort, Cohort):
+        try:
+            cohort = Cohort.objects.get(pk=cohort)
+        except Monkey.DoesNotExist:
+            print("That's not a valid cohort.")
+            return
+
+    def __confederate_bout_difference_subplots(monkey_one, monkey_two, scatter_subplot, axHistx=None, axHisty=None, collect_xy_data=None):
+        collect_xy_data = collect_xy_data if collect_xy_data else gadgets.collect_bout_startdiff_ratesum_data
+
+        scatter_subplot, _x, _y = collect_xy_data(scatter_subplot, monkey_one, monkey_two)
+        _x = numpy.array(_x)
+        _y = numpy.array(_y)
+
+        #### chop off outliers > 2stdev from the mean
+        x_mean = _x.mean()
+        x_std = _x.std()
+        y_mean = _y.mean()
+        y_std = _y.std()
+        x_data = list()
+        y_data = list()
+        for xval, yval in zip(_x, _y):
+            if (x_mean - 2*x_std) < xval < (x_mean + 2*x_std):
+                if (y_mean - 2*y_std) < yval < (y_mean + 2*y_std):
+                    x_data.append(xval)
+                    y_data.append(yval)
+        ###--
+
+        bins = numpy.arange(0, 1, .025)
+        scatter_subplot.hist(y_data, bins=bins, )#gridsize=30)
+        scatter_subplot.set_xlim(xmin=0)
+        scatter_subplot.set_ylim(ymin=0)
+
+        if axHistx:
+            axHistx.hist(x_data, bins=150, alpha=1, log=True)
+            pyplot.setp(axHistx.get_xticklabels() + axHistx.get_yticklabels(), visible=False)
+        if axHisty:
+            axHisty.hist(y_data, bins=150, alpha=1, log=True, orientation='horizontal')
+            pyplot.setp(axHisty.get_xticklabels() + axHisty.get_yticklabels(), visible=False)
+        return scatter_subplot, axHistx, axHisty
+
+
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+
+    fig.suptitle("Cohort %s" % str(cohort))
+    monkeys = Monkey.objects.Drinkers().filter(cohort=cohort).order_by('pk')
+    mky_count = monkeys.count()
+    main_gs = gridspec.GridSpec(mky_count, mky_count)
+
+    # The grid will hide duplicate monkey pairs (and the diagonal)
+    # The left column and bottom row are duplicates, and won't be rendered
+    # So I offset the gridspec to shift the left/bottom to hide this empty space.
+    bottom_base = .02
+    left_base = .02
+    bottom = bottom_base - mky_count/100
+    left = left_base - mky_count/100
+    main_gs.update(top=.93, left=left, right=0.92, bottom=bottom, wspace=.02, hspace=0.02)
+
+    finished = list()
+    scatter_subplot = None
+    subplots = []
+    for x_index, x_monkey in enumerate(monkeys):
+        for y_index, y_monkey in enumerate(monkeys):
+            if x_monkey == y_monkey: continue
+            if sorted([x_monkey.pk, y_monkey.pk]) in finished:
+                continue
+            else:
+                finished.append(sorted([x_monkey.pk, y_monkey.pk]))
+            scatter_subplot = fig.add_subplot(main_gs[x_index, y_index], sharex=scatter_subplot, sharey=scatter_subplot)
+
+            if x_index == 0 and y_index:
+                scatter_subplot.set_title("%s" % str(y_monkey), size=20, color=RHESUS_MONKEY_COLORS[y_monkey.pk])
+            if y_index+1 == mky_count:
+                x0, y0, x1, y1 = scatter_subplot.get_position().extents
+                fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_MONKEY_COLORS[x_monkey.pk], rotation=-90, verticalalignment='center')
+            scatter_subplot = fig.add_subplot(main_gs[x_index,y_index], sharex=scatter_subplot, sharey=scatter_subplot)
+            subplots.append(scatter_subplot)
+            __confederate_bout_difference_subplots(x_monkey, y_monkey, scatter_subplot, collect_xy_data=collect_xy_data)
+    for subplot in subplots:
+        if subplot:
+            subplot.set_ylabel("")
+            subplot.set_xlabel("")
+            subplot.set_xticklabels([])
+            subplot.set_yticklabels([])
+            subplot.set_xticks([])
+            subplot.set_yticks([])
+            gray_color = .6
+            subplot.set_axis_bgcolor((gray_color, gray_color, gray_color))
+    notes_subplot = fig.add_subplot(main_gs[5:mky_count-1, 1:5])
+    notes_subplot.set_axis_bgcolor([1,1,1])
+    notes_subplot.set_title("EXAMPLE SUBPLOT")
+    notes_subplot.set_ylabel("Count (bouts)")
+    notes_subplot.set_xlabel("grams / kilogram / minute")
+    notes_subplot.set_xlim(0, 1)
+    notes_subplot.set_xticks(numpy.arange(0,1.1 ,.1))
+    pyplot.setp(notes_subplot.get_xticklabels(), rotation=-45)
     return fig
 
 def cohort_confederates_data_collection(cohort):
@@ -3724,6 +3823,38 @@ def create_erich_graphs():
     minutes = 120
 
     cohort = 5
+    fig = confederate_bout_difference_grid(cohort)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 6
+    fig = confederate_bout_difference_grid(cohort)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 8
+    fig = confederate_bout_difference_grid(cohort)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 9
+    fig = confederate_bout_difference_grid(cohort)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 10
+    fig = confederate_bout_difference_grid(cohort)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    already_created = \
+        """
+    cohort = 5
     fig = cohort_confederate_daily_intakes(cohort , figsize=(10, 6))
     DPI = fig.get_dpi()
     filename = output_path + '%s-%d.png' % ("cohort_confederate_daily_intakes", cohort)
@@ -3753,8 +3884,6 @@ def create_erich_graphs():
     filename = output_path + '%s-%d.png' % ("cohort_confederate_daily_intakes", cohort)
     fig.savefig(filename, dpi=DPI)
 
-    already_created = \
-        """
     fig = rhesus_oa_pellettime_vs_gkg()
     DPI = fig.get_dpi()
     filename = output_path + '%s.png' % "rhesus_oa_pellettime_vs_gkg"
