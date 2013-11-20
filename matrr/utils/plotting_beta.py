@@ -3403,7 +3403,7 @@ def confederate_bout_difference_grid(cohort, collect_xy_data=None):
                 scatter_subplot.set_title("%s" % str(y_monkey), size=20, color=RHESUS_COLORS[y_monkey.mky_drinking_category])
             if y_index+1 == mky_count:
                 x0, y0, x1, y1 = scatter_subplot.get_position().extents
-                fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_COLORS[y_monkey.mky_drinking_category], rotation=-90, verticalalignment='center')
+                fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_COLORS[x_monkey.mky_drinking_category], rotation=-90, verticalalignment='center')
             scatter_subplot = fig.add_subplot(main_gs[x_index,y_index], sharex=scatter_subplot, sharey=scatter_subplot)
             subplots.append(scatter_subplot)
             __confederate_bout_difference_subplots(x_monkey, y_monkey, scatter_subplot, collect_xy_data=collect_xy_data)
