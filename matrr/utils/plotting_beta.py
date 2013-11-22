@@ -3823,6 +3823,39 @@ def create_erich_graphs():
     minutes = 120
 
     cohort = 5
+    fig = confederate_bout_difference_grid(cohort, collect_xy_data=gadgets.collect_bout_startdiff_normratesum_data)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid-normratesum", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 6
+    fig = confederate_bout_difference_grid(cohort, collect_xy_data=gadgets.collect_bout_startdiff_normratesum_data)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid-normratesum", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 8
+    fig = confederate_bout_difference_grid(cohort, collect_xy_data=gadgets.collect_bout_startdiff_normratesum_data)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid-normratesum", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 9
+    fig = confederate_bout_difference_grid(cohort, collect_xy_data=gadgets.collect_bout_startdiff_normratesum_data)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid-normratesum", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+    cohort = 10
+    fig = confederate_bout_difference_grid(cohort, collect_xy_data=gadgets.collect_bout_startdiff_normratesum_data)
+    DPI = fig.get_dpi()
+    filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid-normratesum", cohort)
+    fig.savefig(filename, dpi=DPI)
+
+
+    already_created = \
+        """
+    cohort = 5
     fig = confederate_bout_difference_grid(cohort)
     DPI = fig.get_dpi()
     filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid", cohort)
@@ -3852,8 +3885,6 @@ def create_erich_graphs():
     filename = output_path + '%s-%d.png' % ("confederate_bout_difference_grid", cohort)
     fig.savefig(filename, dpi=DPI)
 
-    already_created = \
-        """
     cohort = 5
     fig = cohort_confederate_daily_intakes(cohort , figsize=(10, 6))
     DPI = fig.get_dpi()
