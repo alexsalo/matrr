@@ -3381,11 +3381,11 @@ def confederate_bout_difference_grid(cohort, collect_xy_data=None):
     # The grid will hide duplicate monkey pairs (and the diagonal)
     # The left column and bottom row are duplicates, and won't be rendered
     # So I offset the gridspec to shift the left/bottom to hide this empty space.
-    bottom_base = .02
-    left_base = .02
+    bottom_base = .07
+    left_base = .05
     bottom = bottom_base - mky_count/100
     left = left_base - mky_count/100
-    main_gs.update(top=.93, left=left, right=0.92, bottom=bottom, wspace=.02, hspace=0.02)
+    main_gs.update(top=.93, left=left, right=0.94, bottom=bottom, wspace=.01, hspace=0.01)
 
     finished = list()
     scatter_subplot = None
@@ -3416,7 +3416,7 @@ def confederate_bout_difference_grid(cohort, collect_xy_data=None):
             subplot.set_yticks([])
             gray_color = .6
             subplot.set_axis_bgcolor((gray_color, gray_color, gray_color))
-    notes_subplot = fig.add_subplot(main_gs[int(mky_count/2):mky_count-1, 1:int(mky_count/2)])
+    notes_subplot = fig.add_subplot(main_gs[int(mky_count/2)+1:mky_count, 0:int(mky_count/2)])
     notes_subplot.set_axis_bgcolor([1,1,1])
     notes_subplot.set_title("EXAMPLE SUBPLOT")
     notes_subplot.set_ylabel("Count (bouts)")
