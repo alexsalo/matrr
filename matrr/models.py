@@ -1251,8 +1251,8 @@ class CohortBout(models.Model):
         self.ebt_set.add(*ebts)
 
     def populate_edr_set(self):
-        edrs = ExperimentDrink.objects.filter(mtd__monkey__cohort=self.cohort, mtd__drinking_experiment__dex_date=self.dex_date)
-        edrs = edrs.filter(ebt_start_time__gte=self.cbt_start_time).filter(ebt_end_time__lte=self.cbt_end_time)
+        edrs = ExperimentDrink.objects.filter(ebt__mtd__monkey__cohort=self.cohort, ebt__mtd__drinking_experiment__dex_date=self.dex_date)
+        edrs = edrs.filter(edr_start_time__gte=self.cbt_start_time).filter(edr_end_time__lte=self.cbt_end_time)
         self.edr_set.add(*edrs)
 
 
