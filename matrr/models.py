@@ -1022,11 +1022,11 @@ class ExperimentBout(models.Model):
     ebt_length = models.PositiveIntegerField('Bout length [s]', blank=False, null=False)
     ebt_ibi = models.PositiveIntegerField('Inter-Bout Interval [s]', blank=True, null=True)
     ebt_volume = models.FloatField('Bout volume [ml]', blank=False, null=False, db_index=True)
+
     cbt_set = models.ManyToManyField('CohortBout', blank=True, null=True, default=None, related_name='ebt_set')
-    ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True,
-                                               help_text="Bout's volume as a percentage of total ethanol consumed that day")
-    ebt_contains_pellet = models.NullBooleanField('Pellet distributed during bout', blank=True, null=True, default=None,db_index=True,
-                                                  help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.')
+
+    ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True, help_text="Bout's volume as a percentage of total ethanol consumed that day")
+    ebt_contains_pellet = models.NullBooleanField('Pellet distributed during bout', blank=True, null=True, default=None,db_index=True, help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.')
     ebt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True,null=True, default=None, db_index=True)
     ebt_intake_rate = models.FloatField('Rate of Ethanol Intake', blank=False, null=True, default=None)
 
@@ -1122,6 +1122,8 @@ class ExperimentDrink(models.Model):
     edr_length = models.PositiveIntegerField('Drink length [s]', blank=False, null=False)
     edr_idi = models.PositiveIntegerField('Inter-Drink Interval [s]', blank=True, null=True)
     edr_volume = models.FloatField('Bout volume [ml]', blank=False, null=False)
+
+    cbt_set = models.ManyToManyField('CohortBout', blank=True, null=True, default=None, related_name='edr_set')
 
     def clean(self):
         if self.edr_end_time < self.edr_start_time:
@@ -1232,21 +1234,26 @@ class CohortBout(models.Model):
     """
     cbt_id = models.AutoField(primary_key=True)
     cohort = models.ForeignKey(Cohort, related_name='cbt_set', db_column='coh_cohort_id', null=False, blank=False,
-                               default=2, help_text='Choose the cohort associated with these bouts.')
+                               help_text='Choose the cohort associated with these bouts.')
     dex_date = models.DateField('Date', help_text='The date this bout occurred')
     cbt_number = models.IntegerField('CBout number', blank=False, null=False, default=-1)
     cbt_start_time = models.IntegerField('Start time [s]', blank=False, null=False, default=-1)
     cbt_end_time = models.IntegerField('End time [s]', blank=False, null=False, default=-1)
 
-    cbt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True,
-                                                                     null=True, default=None,
-                                                                     help_text="This is the threshold to allow a bout's inclusion in this CohortBout.  All EBT.ebt_pellet_elapsed_time_since_last >= this field.")
+    cbt_gap_definition = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, default=None,
+                                                                     help_text="This is the threshold to allow a drink's inclusion in this CohortBout.  If a drink starts after self.cbt_end_time+self.cbt_gap_definition, the drink is part of a different CBT.")
 
     def populate_ebt_set(self):
+        raise Exception("This method is obsolete.  This model is no longer uses bouts.")
         ebts = ExperimentBout.objects.filter(mtd__monkey__cohort=self.cohort,
                                              mtd__drinking_experiment__dex_date=self.dex_date)
         ebts = ebts.filter(ebt_start_time__gte=self.cbt_start_time).filter(ebt_end_time__lte=self.cbt_end_time)
         self.ebt_set.add(*ebts)
+
+    def populate_edr_set(self):
+        edrs = ExperimentDrink.objects.filter(mtd__monkey__cohort=self.cohort, mtd__drinking_experiment__dex_date=self.dex_date)
+        edrs = edrs.filter(ebt_start_time__gte=self.cbt_start_time).filter(ebt_end_time__lte=self.cbt_end_time)
+        self.edr_set.add(*edrs)
 
 
     class Meta:
