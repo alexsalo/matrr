@@ -2565,7 +2565,7 @@ def _create_cohort_bouts(cohort, overwrite, gap_definition_seconds=0):
     all_dates = all_mtds.dates('drinking_experiment__dex_date', 'day', 'ASC').order_by('drinking_experiment__dex_date')
     for date in all_dates:
         # Get all the drink start times from each date
-        drinks = ExperimentDrink.objects.filter(mtd__monkey__cohort=cohort, mtd__drinking_experiment__dex_date=date).order_by('edr_start_time')
+        drinks = ExperimentDrink.objects.filter(ebt__mtd__monkey__cohort=cohort, ebt__mtd__drinking_experiment__dex_date=date).order_by('edr_start_time')
         drink_values = drinks.values('edr_start_time', 'edr_end_time')
 
         # And send the times into a recursion loop
