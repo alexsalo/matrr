@@ -2621,7 +2621,7 @@ def rhesus_pellet_sessiontime_percent_distribution():
 def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(2, 1)
-    gs.update(left=0.06, right=0.94, top=.95, bottom=.08, wspace=.0, hspace=.04)
+    gs.update(left=0.05, right=0.94, top=.95, bottom=.08, wspace=.0, hspace=.04)
     top_subplot = fig.add_subplot(gs[0])
     bottom_subplot_left = fig.add_subplot(gs[1], sharex=top_subplot)
     bottom_subplot_right = bottom_subplot_left.twinx()
@@ -2666,7 +2666,7 @@ def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, 
     title_size=30
     label_size=26
     legend_size = tick_size
-    fig.text(.01, .96, "Figure 3", fontsize=title_size)
+    fig.text(.92, .96, "Figure 3", fontsize=title_size)
 
     top_subplot.set_ylim(ymin=0)
     top_subplot.set_xlim(xmin=0, xmax=date_index)
