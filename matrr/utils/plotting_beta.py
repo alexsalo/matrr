@@ -1180,7 +1180,7 @@ def rhesus_etoh_gkg_bargraph(limit_step=1):
 def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(3, 3)
-    gs.update(left=0.035, right=0.98, top=.98, wspace=.00, hspace=0)
+    gs.update(left=0.035, right=0.98, top=.95, bottom=.08, wspace=.00, hspace=0)
     subplot = fig.add_subplot(gs[:, :])
 
     limits = numpy.arange(1, 9, limit_step)
@@ -1211,10 +1211,8 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
     tick_size=22
     title_size=30
     label_size=26
-#    tick_size = 32
-#    title_size = 32
-#    label_size = 32
-#    legend_size = 32
+    fig.text(.01, .96, "Figure 2", fontsize=title_size)
+
     subplot.legend(prop={'size': tick_size})
     subplot.set_yticklabels([])
     subplot.tick_params(axis='both', which='major', labelsize=tick_size)
@@ -1266,18 +1264,20 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram_qq_plot(dpi=DEFAULT_DPI, dist
 def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(1, 1)
-    gs.update(left=0.03, right=0.492, top=.98)
+    gs.update(left=0.03, right=0.492, top=.95, bottom=.08)
 
     tick_size = 28
-    title_size = 28
+    title_size = 30
     label_size = 32
+    fig.text(.01, .96, "Figure 1", fontsize=title_size)
+
 #	Histogram, left
     subplot = fig.add_subplot(gs[:,:])
     subplot = _etoh_gkg_forced_histogram(subplot, tick_size=tick_size, title_size=title_size, label_size=label_size)
 
 #	Histograms, right
     gs = gridspec.GridSpec(1, 3)
-    gs.update(left=0.507, right=0.95, top=.98, wspace=.1, hspace=0)
+    gs.update(left=0.507, right=0.95, top=.95, bottom=.08, wspace=.1, hspace=0)
     subplot = None
     cutoffs = {2:.55, 3:.2, 4:.1}
     for limit in range(2, 5, 1):
@@ -1544,13 +1544,14 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE, include_reg
             y_data.append(pel_avg / wgt_avg)
         return x_data, y_data
 
+    fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
+    main_gs = gridspec.GridSpec(3, 3)
+    main_gs.update(left=0.05, right=0.98, top=.95, bottom=.08, wspace=.08, hspace=0)
+
     tick_size=22
     title_size=30
     label_size=26
-
-    fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
-    main_gs = gridspec.GridSpec(3, 3)
-    main_gs.update(left=0.05, right=0.98, wspace=.08, hspace=0)
+    fig.text(.92, .96, "Figure 5", fontsize=title_size)
 
     # main scatterplot, pellet vs etoh
     main_subplot = fig.add_subplot(main_gs[:])
@@ -1563,7 +1564,7 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=HISTOGRAM_FIG_SIZE, include_reg
     main_subplot.legend(loc=3, frameon=True, prop={'size': tick_size})
 
     # inset scatterplot, pellet vs water
-    inset_plot = fig.add_axes([0.6, 0.7, 0.37, 0.23])
+    inset_plot = fig.add_axes([0.6, 0.69, 0.37, 0.23])
     inset_plot, handles, labels = _rhesus_category_scatterplot(inset_plot, _oa_pelletwater_perday_perkg, include_regression=include_regression)
     inset_plot.set_title("H20 Intake vs pellets", size=tick_size)
     inset_plot.set_ylabel("Pellet/Weight/Monkey", size=tick_size)
@@ -2620,7 +2621,7 @@ def rhesus_pellet_sessiontime_percent_distribution():
 def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, fig_size=HISTOGRAM_FIG_SIZE):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(2, 1)
-    gs.update(left=0.06, right=0.94, wspace=.0, hspace=.04, top=.98)
+    gs.update(left=0.06, right=0.94, top=.95, bottom=.08, wspace=.0, hspace=.04)
     top_subplot = fig.add_subplot(gs[0])
     bottom_subplot_left = fig.add_subplot(gs[1], sharex=top_subplot)
     bottom_subplot_right = bottom_subplot_left.twinx()
@@ -2665,6 +2666,7 @@ def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, 
     title_size=30
     label_size=26
     legend_size = tick_size
+    fig.text(.01, .96, "Figure 3", fontsize=title_size)
 
     top_subplot.set_ylim(ymin=0)
     top_subplot.set_xlim(xmin=0, xmax=date_index)
@@ -2957,8 +2959,9 @@ def rhesus_category_parallel_classification_stability(categories, y_value_callab
 
 def rhesus_category_parallel_classification_stability_popcount(categories, y_value_callable, y_label, fig_size=(25, 15), tick_size=22, title_size=30,  label_size=26):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
+    fig.text(.92, .96, "Figure 4", fontsize=title_size)
     gs = gridspec.GridSpec(6, 1)
-    gs.update(left=0.05, right=0.94, top=.97, bottom=.06, hspace=.25)
+    gs.update(left=0.05, right=0.98, top=.95, bottom=.04, hspace=.25)
     etoh_subplot = fig.add_subplot(gs[0:4,:])
     pop_subplot = fig.add_subplot(gs[4:,:], sharex=etoh_subplot)
 
@@ -3403,7 +3406,7 @@ def confederate_bout_difference_grid(cohort, collect_xy_data=None):
             if y_index+1 == mky_count:
                 x0, y0, x1, y1 = scatter_subplot.get_position().extents
                 fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_COLORS[x_monkey.mky_drinking_category], rotation=-90, verticalalignment='center')
-            scatter_subplot = fig.add_subplot(main_gs[x_index,y_index], sharex=scatter_subplot, sharey=scatter_subplot)
+
             subplots.append(scatter_subplot)
             __confederate_bout_difference_subplots(x_monkey, y_monkey, scatter_subplot, collect_xy_data=collect_xy_data)
     for subplot in subplots:
