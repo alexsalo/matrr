@@ -2633,7 +2633,7 @@ def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, 
     marker_size = 90
 
     # this is dumb, i know.
-    # matplotlib won't plot dates on the axis of a sharedaxis.  I think this is a known bug, suggested workarounds have failed
+    # matplotlib won't plot dates on the axis of a shared axis.  I think this is a known bug, suggested workarounds have failed
     mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_ids).order_by('drinking_experiment__dex_date')
     all_dates = mtds.dates('drinking_experiment__dex_date', 'day')
     x_dates = dict()

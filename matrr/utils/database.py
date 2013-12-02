@@ -2578,7 +2578,7 @@ def _create_cohort_bouts(cohort, overwrite, gap_definition_seconds=0):
 
 
 def create_cohort_bouts(cohort, overwrite=False):
-    for seconds in range(0, 5*60+1, 60):
+    for seconds in range(60, 5*60+1, 60):
         _create_cohort_bouts(cohort, overwrite, seconds)
 
 

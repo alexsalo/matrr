@@ -104,6 +104,8 @@ def generateRules(L, support_data, min_confidence=0.7):
                 calc_confidence(freqSet, H1, support_data, rules, min_confidence)
     return rules
 
+# ---- end of library/algorithm functions.
+
 def confederate_groups(cohort_pk, minutes, load_dataset, min_confidence=0, serializable=False):
     supports = dict()
     for _support in numpy.arange(.05, .96, .05):
@@ -126,7 +128,6 @@ def recreate_serializable_apriori_output(orig):
         new_dict[float(support)] = new_occ
     return new_dict
 
-# ---- end of library/algorithm functions.
 
 
 def get_all_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='matrr/utils/DATA/apriori/'):
