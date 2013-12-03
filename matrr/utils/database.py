@@ -2577,8 +2577,8 @@ def _create_cohort_bouts(cohort, overwrite, gap_definition_seconds=0):
             cbt.populate_edr_set()
 
 
-def create_cohort_bouts(cohort, overwrite=False):
-    for seconds in range(60, 5*60+1, 60):
+def create_cohort_bouts(cohort, gap_seconds, overwrite=False):
+    for seconds in gap_seconds:
         _create_cohort_bouts(cohort, overwrite, seconds)
 
 
