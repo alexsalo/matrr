@@ -158,7 +158,7 @@
 					</ul>
 				{% endif %}
 
-				{% if user.is_staff or perms.matrr.verify_mta or perms.auth.upload_raw_data %}
+				{% if user.is_staff or perms.matrr.verify_mta %}
 					<ul>
 						<li class='top'>{% if user.is_staff %}<a href="/admin/">Admin</a>{% else %}Admin{% endif %}</li>
 						{% if perms.matrr.view_rud_file %}
