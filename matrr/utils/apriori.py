@@ -157,7 +157,7 @@ def get_all_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='m
     f.close()
     return supports
 
-def get_nighttime_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='matrr/utils/DATA/apriori/'):
+def get_nighttime_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_path='matrr/utils/DATA/apriori/', force_regen=False):
     def _fetch_nighttime_CBT_monkey_groups(cohort_pk, minutes=0):
         cbts = CohortBout.objects.filter(cohort=cohort_pk, cbt_gap_definition=minutes*60)
         cbts = cbts.filter(cbt_start_time__gte=LIGHTS_OUT).filter(cbt_start_time__lt=LIGHTS_ON)
@@ -168,16 +168,19 @@ def get_nighttime_confederate_groups(cohort_pk, minutes, min_confidence=0, dir_p
         return bout_groups
 
     file_name = "%d-%d-%.3f-nighttime.json" % (cohort_pk, minutes, min_confidence)
-    try:
-        f = open(os.path.join(dir_path, file_name), 'r')
-    except IOError:
-        # This will throw another IOException if dir_path doesn't exist
-        f = open(os.path.join(dir_path, file_name), 'w')
+    if not force_regen:
+        try:
+            f = open(os.path.join(dir_path, file_name), 'r')
+        except IOError:
+            # This will throw another exception if dir_path doesn't exist
+            f = open(os.path.join(dir_path, file_name), 'w')
+        else:
+            s = f.read()
+            f.close()
+            d = json.loads(s)
+            return d
     else:
-        s = f.read()
-        f.close()
-        d = json.loads(s)
-        return d
+        f = open(os.path.join(dir_path, file_name), 'w')
     supports = confederate_groups(cohort_pk, minutes, _fetch_nighttime_CBT_monkey_groups, min_confidence=min_confidence, serializable=True)
     s = json.dumps(supports)
     f.write(s)
