@@ -2519,39 +2519,30 @@ def _create_cbts(drinks, date, cohort, gap_definition_seconds=0, overwrite=False
     This recursive function will iterate thru the drinks' start and end times to create a CohortBout.
     When it finds a drink start time that is over gap_definition_seconds from this function's CohortBout it will call itself again to create a new CohortBout with the remaining drink times.
     """
-    def _create_cbt(date, cohort, cbt_number, overwrite, gap_definition_seconds):
+    def _get_or_create_cbt(date, cohort, cbt_number, overwrite, gap_definition_seconds):
         cbt, is_new = CohortBout.objects.get_or_create(cohort=cohort, dex_date=date, cbt_number=cbt_number, cbt_gap_definition=gap_definition_seconds)
         needs_times = is_new or overwrite
-        if not is_new and not overwrite:
-            msg = "CBT already exists, overwrite=False.  Returning..."
-            print msg
         return cbt, needs_times
 
     cbt_index = 0
     if len(drinks):
+        cbt, needs_times = _get_or_create_cbt(date, cohort, cbt_number=cbt_index, overwrite=overwrite, gap_definition_seconds=gap_definition_seconds)
         for index, drink in enumerate(drinks):
-            cbt, needs_times = _create_cbt(date, cohort, cbt_number=cbt_index, overwrite=overwrite, gap_definition_seconds=gap_definition_seconds)
             if needs_times:
                 cbt.cbt_start_time = drink['edr_start_time']
                 cbt.cbt_end_time = drink['edr_end_time']
-
-            # First, a new or overwritten CBT needs an initial start time and end time
-            # Next, test if we need to trigger a new CBT
-            # New CBT will need to be triggered if the drink's start time is >= gap_definition_seconds after the cbt_end_time
-            # this means there was a large enough gap between the end of a cohort bout and the start of another monkey drink to define a new CBT
+                needs_times = False
             drink_gap = drink['edr_start_time'] - cbt.cbt_end_time
             if drink_gap >= gap_definition_seconds:
                 cbt.save() # first, save this CBT
-                # next, begin(or continue) the recursion.
-                # drinks[index:]: We don't need to pass in drinks we've already evaluated, but we do need to include the current drink, which triggered a new CBT
-                # cbt_number+1: We need to increment the cbt_number, to maintain distinct CBTs within a single day
                 cbt_index += 1
-                cbt = _create_cbt(date=date, cohort=cohort, cbt_number=cbt_index, overwrite=overwrite, gap_definition_seconds=gap_definition_seconds)
-                break # this break is crucial. the recursion will continue the rest of the bout loop.
+                cbt, needs_times = _get_or_create_cbt(date=date, cohort=cohort, cbt_number=cbt_index, overwrite=overwrite, gap_definition_seconds=gap_definition_seconds)
+                if needs_times:
+                    cbt.cbt_start_time = drink['edr_start_time']
+                    cbt.cbt_end_time = drink['edr_end_time']
+                    cbt.save()
+                    needs_times = False
             else:
-                # This drink's start time within the current CBT's time span
-                # update the CBTs time span
-                # Because the drinks passed in are ordered by edr_start_time, the cbt_start_time should always be less than the edr_start_time
                 cbt.cbt_end_time = max(cbt.cbt_end_time, drink['edr_end_time'])
 
 

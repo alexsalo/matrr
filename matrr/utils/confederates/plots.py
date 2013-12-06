@@ -550,6 +550,7 @@ def competitive_bout_rate_grid(cohort):
     def __draw_subplot(monkey_one, monkey_two, subplot):
         if monkey_one == monkey_two:
             return subplot
+        subplot.text(.05, .35, "A=%d, B=%d" % (monkey_one.pk, monkey_two.pk), size=10, transform=subplot.transAxes)
         AB, AB_NON, BA, BA_NON = collect_overlapping_bout_intake_rate_data(monkey_one, monkey_two)
 
         #### chop off outliers > 2stdev from the mean
@@ -566,7 +567,6 @@ def competitive_bout_rate_grid(cohort):
         AB_NON = chop_outliers(AB_NON)
         BA = chop_outliers(BA)
         BA_NON = chop_outliers(BA_NON)
-        all_data = numpy.array([AB, AB_NON, BA, BA_NON])
         ###--
 
         t_stat, p_value = stats.ttest_ind(AB, AB_NON)
@@ -579,7 +579,6 @@ def competitive_bout_rate_grid(cohort):
             subplot.axvspan(2.5, 5, color='lightgreen', alpha=.5)
         subplot.boxplot([AB, AB_NON, BA, BA_NON], positions=range(1,5,1))
         subplot.set_xlim(xmin=0, xmax=5)
-#        subplot.set_ylim(ymin=0, ymax=all_data.max())
         return subplot
 
     fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
