@@ -659,3 +659,12 @@ def competitive_bout_rate_grid(cohort, support=.2):
     pyplot.setp(notes_subplot.get_xticklabels(), rotation=-45)
     """
     return fig
+
+
+def dump_competitive_bout_rate_grid(cohorts=(5,6,8,9,10), supports=(.05, .1, .15, .2), output_path=''):
+    for cohort in cohorts:
+        for support in supports:
+            fig = competitive_bout_rate_grid(cohort, support)
+            filename = output_path + 'competitive_bout_rate_grid-%d-%.2f.png' % (cohort, support)
+            fig.savefig(filename, format='png')
+
