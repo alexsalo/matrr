@@ -601,6 +601,7 @@ def competitive_bout_rate_grid(cohort, support=.2):
     # This shit is dumb, part of why I don't like json, and possibly my fault.
     # the keys in the supports are string-represented floats, eg. u'0.20000000001'.  Super stupid.
     # so I loop thru the keys like a lazy clown and get the support level I want.
+    apriori_list = []
     for cool_string_float_key in supports.iterkeys():
         real_key = round(float(cool_string_float_key), 1)
         if real_key == support:
@@ -638,7 +639,7 @@ def competitive_bout_rate_grid(cohort, support=.2):
             pairs = fetch_apriori_supconf(x_monkey.pk, y_monkey.pk)
             if len(pairs):
                 subplot.text(.05, .55, "Confidence=%s" % str(['%.2f' % conf for conf in pairs]), size=10, transform=subplot.transAxes)
-                subplot.axvspan(0, 5, color='orange', alpha=.3)
+                subplot.axvspan(0, 5, color='orange', alpha=.15)
 
     for subplot in subplots:
         if subplot:
