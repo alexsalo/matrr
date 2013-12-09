@@ -539,7 +539,7 @@ def collect_overlapping_bout_intake_rate_data(monkey_A, monkey_B):
         BA_non_overlapping_rates = json.loads(BA_non_overlapping_file.readline())
         return AB_overlapping_rates, AB_non_overlapping_rates, BA_overlapping_rates, BA_non_overlapping_rates
 
-def competitive_bout_rate_grid(cohort):
+def competitive_bout_rate_grid(cohort, support=.2):
     if not isinstance(cohort, Cohort):
         try:
             cohort = Cohort.objects.get(pk=cohort)
@@ -597,7 +597,15 @@ def competitive_bout_rate_grid(cohort):
     main_gs.update(top=.93, left=left, right=0.94, bottom=bottom, wspace=.03, hspace=0.03)
 
     supports = confederates.load_apriori_output(cohort.pk, 20)
-    apriori_list = supports['0.2']
+
+    # This shit is dumb, part of why I don't like json, and possibly my fault.
+    # the keys in the supports are string-represented floats, eg. u'0.20000000001'.  Super stupid.
+    # so I loop thru the keys like a lazy clown and get the support level I want.
+    for cool_string_float_key in supports.iterkeys():
+        real_key = round(float(cool_string_float_key), 1)
+        if real_key == support:
+            apriori_list = supports[cool_string_float_key]
+            break
 
     def fetch_apriori_supconf(monkey_a, monkey_b):
         pairs = list()
