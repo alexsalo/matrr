@@ -17,6 +17,7 @@ from matrr.models import Cohort, Monkey, CohortImage, MonkeyImage, MonkeyProtein
 from matrr.models import MonkeyToDrinkingExperiment, MTDImage, CohortProteinImage, CohortHormoneImage
 from matrr.plotting import cohort_plots, monkey_plots, RHESUS_MONKEY_COLORS
 from matrr.utils import apriori
+from matrr.utils.confederates import confederates
 
 
 def tools_landing(request):
@@ -707,7 +708,7 @@ def tools_confederates_chord_diagram(request):
             indices[monkey_pk] = index
 
         for cohort_pk in cohorts:
-            orig = apriori.get_confederate_groups(cohort_pk, minutes=15, min_confidence=min_conf)
+            orig = confederates.get_all_confederate_groups(cohort_pk, minutes=15, min_confidence=min_conf)
             for support, occurrences in orig.iteritems():
                 for cause, effect, confidence in occurrences:
                     if len(cause) > 1 or len(effect) > 1:
@@ -731,7 +732,7 @@ def tools_confederates_chord_diagram(request):
             indices[monkey_pk] = index
 
         for cohort_pk in cohorts:
-            orig = apriori.get_confederate_groups(cohort_pk, minutes=15, min_confidence=min_conf)
+            orig = confederates.get_all_confederate_groups(cohort_pk, minutes=15, min_confidence=min_conf)
             for support, occurrences in orig.iteritems():
                 for cause_monkeys, effect_monkeys, confidence in occurrences:
                     cause_value = float(support) * float(confidence) / len(cause_monkeys) / len(effect_monkeys)
