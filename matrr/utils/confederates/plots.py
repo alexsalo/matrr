@@ -477,9 +477,9 @@ def find_overlapping_bouts(primary_bouts, secondary_bouts):
         secondary_overlapped.extend(overlapped_bouts)
     return secondary_overlapped
 
-def collect_overlapping_bout_intake_rate_data(monkey_A, monkey_B):
+def generic_collect_overlapping_bout_data(monkey_A, monkey_B, bout_field):
     import inspect
-    outfile_name = inspect.stack()[0][3]
+    outfile_name = inspect.stack()[0][3] + ".bout_field"
     try:
         AB_overlapping_file = open('matrr/utils/DATA/json/%s-%d-%d-overlapping.json' % (outfile_name, monkey_A.pk, monkey_B.pk), 'r')
         AB_non_overlapping_file = open('matrr/utils/DATA/json/%s-%d-%d-non_overlapping.json' % (outfile_name, monkey_A.pk, monkey_B.pk), 'r')
@@ -493,8 +493,8 @@ def collect_overlapping_bout_intake_rate_data(monkey_A, monkey_B):
         BA_overlapping_rates = []
         BA_non_overlapping_rates = []
         for date in A_dates:
-            A_bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey_A, mtd__drinking_experiment__dex_date=date).exclude(ebt_intake_rate=None)
-            B_bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey_B, mtd__drinking_experiment__dex_date=date).exclude(ebt_intake_rate=None)
+            A_bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey_A, mtd__drinking_experiment__dex_date=date).exclude(**{bout_field: None})
+            B_bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey_B, mtd__drinking_experiment__dex_date=date).exclude(**{bout_field: None})
             AB_bouts = A_bouts | B_bouts
             if not AB_bouts:
                 continue
@@ -511,10 +511,10 @@ def collect_overlapping_bout_intake_rate_data(monkey_A, monkey_B):
             AB_non_overlapping_rates.extend(A_without_B)
             BA_non_overlapping_rates.extend(B_without_A)
 
-        AB_overlapping_rates = list(ExperimentBout.objects.filter(pk__in=AB_overlapping_rates).values_list('ebt_intake_rate', flat=True))
-        AB_non_overlapping_rates = list(ExperimentBout.objects.filter(pk__in=AB_non_overlapping_rates).values_list('ebt_intake_rate', flat=True))
-        BA_overlapping_rates = list(ExperimentBout.objects.filter(pk__in=BA_overlapping_rates).values_list('ebt_intake_rate', flat=True))
-        BA_non_overlapping_rates = list(ExperimentBout.objects.filter(pk__in=BA_non_overlapping_rates).values_list('ebt_intake_rate', flat=True))
+        AB_overlapping_rates = list(ExperimentBout.objects.filter(pk__in=AB_overlapping_rates).values_list(bout_field, flat=True))
+        AB_non_overlapping_rates = list(ExperimentBout.objects.filter(pk__in=AB_non_overlapping_rates).values_list(bout_field, flat=True))
+        BA_overlapping_rates = list(ExperimentBout.objects.filter(pk__in=BA_overlapping_rates).values_list(bout_field, flat=True))
+        BA_non_overlapping_rates = list(ExperimentBout.objects.filter(pk__in=BA_non_overlapping_rates).values_list(bout_field, flat=True))
 
         folder_name = 'matrr/utils/DATA/json/'
         if not os.path.exists(folder_name):
@@ -539,7 +539,16 @@ def collect_overlapping_bout_intake_rate_data(monkey_A, monkey_B):
         BA_non_overlapping_rates = json.loads(BA_non_overlapping_file.readline())
         return AB_overlapping_rates, AB_non_overlapping_rates, BA_overlapping_rates, BA_non_overlapping_rates
 
-def competitive_bout_rate_grid(cohort, support=.2):
+def collect_overlapping_bout_intake_rate_data(monkey_A, monkey_B):
+    return generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_intake_rate')
+
+def collect_overlapping_bout_volume_data(monkey_A, monkey_B):
+    return generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_volume')
+
+def collect_overlapping_bout_volume_data(monkey_A, monkey_B):
+    return generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_length')
+
+def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overlapping_bout_intake_rate_data):
     if not isinstance(cohort, Cohort):
         try:
             cohort = Cohort.objects.get(pk=cohort)
@@ -551,7 +560,7 @@ def competitive_bout_rate_grid(cohort, support=.2):
         if monkey_one == monkey_two:
             return subplot
         subplot.text(.05, .35, "A=%d, B=%d" % (monkey_one.pk, monkey_two.pk), size=10, transform=subplot.transAxes)
-        AB, AB_NON, BA, BA_NON = collect_overlapping_bout_intake_rate_data(monkey_one, monkey_two)
+        AB, AB_NON, BA, BA_NON = collect_data_method(monkey_one, monkey_two)
 
         #### chop off outliers > 2stdev from the mean
         def chop_outliers(data, std_outlier_limit=5):
@@ -665,7 +674,21 @@ def competitive_bout_rate_grid(cohort, support=.2):
 def dump_competitive_bout_rate_grid(cohorts=(5,6,8,9,10), supports=(.05, .1, .15, .2), output_path=''):
     for cohort in cohorts:
         for support in supports:
-            fig = competitive_bout_rate_grid(cohort, support)
+            fig = competitive_bout_grid(cohort, support)
             filename = output_path + 'competitive_bout_rate_grid-%d-%.2f.png' % (cohort, support)
+            fig.savefig(filename, format='png')
+
+def dump_competitive_bout_volume_grid(cohorts=(5,6,8,9,10), supports=(.05, .1, .15, .2), output_path=''):
+    for cohort in cohorts:
+        for support in supports:
+            fig = competitive_bout_grid(cohort, support, collect_data_method=collect_overlapping_bout_volume_data)
+            filename = output_path + 'competitive_bout_volume_grid-%d-%.2f.png' % (cohort, support)
+            fig.savefig(filename, format='png')
+
+def dump_competitive_bout_length_grid(cohorts=(5,6,8,9,10), supports=(.05, .1, .15, .2), output_path=''):
+    for cohort in cohorts:
+        for support in supports:
+            fig = competitive_bout_grid(cohort, support, collect_data_method=collect_overlapping_bout_volume_data)
+            filename = output_path + 'competitive_bout_length_grid-%d-%.2f.png' % (cohort, support)
             fig.savefig(filename, format='png')
 
