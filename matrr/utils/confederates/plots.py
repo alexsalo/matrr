@@ -559,7 +559,6 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
     def __draw_subplot(monkey_one, monkey_two, subplot):
         if monkey_one == monkey_two:
             return subplot
-        subplot.text(.05, .35, "A=%d, B=%d" % (monkey_one.pk, monkey_two.pk), size=10, transform=subplot.transAxes)
         AB, AB_NON, BA, BA_NON = collect_data_method(monkey_one, monkey_two)
 
         #### chop off outliers > 2stdev from the mean
@@ -579,15 +578,58 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
         ###--
 
         t_stat, p_value = stats.ttest_ind(AB, AB_NON)
-        subplot.text(.05, .85, "AB vs AB_non: p=%.03f" % p_value, size=10, transform=subplot.transAxes)
         if p_value <= .05:
-            subplot.axvspan(0, 2.5, color='lightgreen', alpha=.5)
+            subplot.axvspan(0, 2.5, color='lightgreen', alpha=.3)
         t_stat, p_value = stats.ttest_ind(BA, BA_NON)
-        subplot.text(.25, .75, "BA vs BA_non: p=%.03f" % p_value, size=10, transform=subplot.transAxes)
         if p_value <= .05:
-            subplot.axvspan(2.5, 5, color='lightgreen', alpha=.5)
+            subplot.axvspan(2.5, 5, color='lightgreen', alpha=.3)
         subplot.boxplot([AB, AB_NON, BA, BA_NON], positions=range(1,5,1))
         subplot.set_xlim(xmin=0, xmax=5)
+
+        pairs = fetch_apriori_supconf(x_monkey.pk, y_monkey.pk)
+        if len(pairs):
+            subplot.axvspan(0, 5, color='orange', alpha=.15)
+        return subplot
+
+    def __label_subplot(monkey_one, monkey_two, subplot):
+        if monkey_one == monkey_two:
+            return subplot
+        subplot.text(.05, .9, "A=%d, B=%d" % (monkey_one.pk, monkey_two.pk), size=10, transform=subplot.transAxes)
+        AB, AB_NON, BA, BA_NON = collect_data_method(monkey_one, monkey_two)
+
+        #### chop off outliers > 2stdev from the mean
+        def chop_outliers(data, std_outlier_limit=5):
+            data = numpy.array(data)
+            chopped_data = list()
+            data_mean = data.mean()
+            data_std = data.std()
+            for datapoint in data:
+                if (data_mean - std_outlier_limit*data_std) < datapoint < (data_mean + std_outlier_limit*data_std):
+                    chopped_data.append(datapoint)
+            return chopped_data
+        AB = chop_outliers(AB)
+        AB_NON = chop_outliers(AB_NON)
+        BA = chop_outliers(BA)
+        BA_NON = chop_outliers(BA_NON)
+        ###--
+
+        t_stat, p_value = stats.ttest_ind(AB, AB_NON)
+        subplot.text(.05, .7, "AB vs AB_non:\np=%.03f" % p_value, size=10, transform=subplot.transAxes)
+        if p_value <= .05:
+            subplot.axvspan(0, 2.5, color='lightgreen', alpha=.3)
+        t_stat, p_value = stats.ttest_ind(BA, BA_NON)
+        subplot.text(.95, .7, "BA vs BA_non:\np=%.03f" % p_value, size=10, transform=subplot.transAxes, horizontalalignment='right')
+        if p_value <= .05:
+            subplot.axvspan(2.5, 5, color='lightgreen', alpha=.3)
+        subplot.set_xlim(xmin=0, xmax=5)
+
+        pairs = fetch_apriori_supconf(x_monkey.pk, y_monkey.pk)
+        if len(pairs):
+            txt = "Confidences:\n%s" % str(['%.2f' % conf for conf in sorted(pairs, reverse=True)])
+            if len(txt) > 50:
+                txt = txt[:50] + '...'
+            subplot.text(.05, .4, txt, size=10, transform=subplot.transAxes)
+            subplot.axvspan(0, 5, color='orange', alpha=.15)
         return subplot
 
     fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
@@ -627,15 +669,12 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
 
     subplots = []
     finished = []
-    for y_index, y_monkey in enumerate(monkeys):
-        for x_index, x_monkey in enumerate(monkeys):
+    for x_index, x_monkey in enumerate(monkeys):
+        for y_index, y_monkey in enumerate(monkeys):
             if x_monkey == y_monkey:
                 continue
-            if sorted([x_monkey, y_monkey]) in finished:
-                continue
-            else:
-                finished.append(sorted([x_monkey, y_monkey]))
             subplot = fig.add_subplot(main_gs[x_index, y_index])
+            subplots.append(subplot)
 
             if x_index == 0 and y_index:
                 subplot.set_title("%s" % str(y_monkey), size=20, color=RHESUS_COLORS[y_monkey.mky_drinking_category])
@@ -643,12 +682,11 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
                 x0, y0, x1, y1 = subplot.get_position().extents
                 fig.text(x1 + .02, (y0+y1)/2, "%s" % str(x_monkey), size=20, color=RHESUS_COLORS[x_monkey.mky_drinking_category], rotation=-90, verticalalignment='center')
 
-            subplots.append(subplot)
-            __draw_subplot(x_monkey, y_monkey, subplot)
-            pairs = fetch_apriori_supconf(x_monkey.pk, y_monkey.pk)
-            if len(pairs):
-                subplot.text(.05, .55, "Confidence=%s" % str(['%.2f' % conf for conf in pairs]), size=10, transform=subplot.transAxes)
-                subplot.axvspan(0, 5, color='orange', alpha=.15)
+            if sorted([x_monkey, y_monkey]) in finished:
+                __label_subplot(x_monkey, y_monkey, subplot)
+            else:
+                finished.append(sorted([x_monkey, y_monkey]))
+                __draw_subplot(x_monkey, y_monkey, subplot)
 
     for subplot in subplots:
         if subplot:
