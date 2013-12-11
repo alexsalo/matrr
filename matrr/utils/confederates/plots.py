@@ -477,9 +477,9 @@ def find_overlapping_bouts(primary_bouts, secondary_bouts):
         secondary_overlapped.extend(overlapped_bouts)
     return secondary_overlapped
 
-def generic_collect_overlapping_bout_data(monkey_A, monkey_B, bout_field):
+def _generic_collect_overlapping_bout_data(monkey_A, monkey_B, bout_field):
     import inspect
-    outfile_name = inspect.stack()[0][3] + ".bout_field"
+    outfile_name = inspect.stack()[1][3] + ".%s" % bout_field
     try:
         AB_overlapping_file = open('matrr/utils/DATA/json/%s-%d-%d-overlapping.json' % (outfile_name, monkey_A.pk, monkey_B.pk), 'r')
         AB_non_overlapping_file = open('matrr/utils/DATA/json/%s-%d-%d-non_overlapping.json' % (outfile_name, monkey_A.pk, monkey_B.pk), 'r')
@@ -540,13 +540,13 @@ def generic_collect_overlapping_bout_data(monkey_A, monkey_B, bout_field):
         return AB_overlapping_rates, AB_non_overlapping_rates, BA_overlapping_rates, BA_non_overlapping_rates
 
 def collect_overlapping_bout_intake_rate_data(monkey_A, monkey_B):
-    return generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_intake_rate')
+    return _generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_intake_rate')
 
 def collect_overlapping_bout_volume_data(monkey_A, monkey_B):
-    return generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_volume')
+    return _generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_volume')
 
 def collect_overlapping_bout_volume_data(monkey_A, monkey_B):
-    return generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_length')
+    return _generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_length')
 
 def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overlapping_bout_intake_rate_data):
     if not isinstance(cohort, Cohort):
@@ -627,8 +627,8 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
 
     subplots = []
     finished = []
-    for x_index, x_monkey in enumerate(monkeys):
-        for y_index, y_monkey in enumerate(monkeys):
+    for y_index, y_monkey in enumerate(monkeys):
+        for x_index, x_monkey in enumerate(monkeys):
             if x_monkey == y_monkey:
                 continue
             if sorted([x_monkey, y_monkey]) in finished:
