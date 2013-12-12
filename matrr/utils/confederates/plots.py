@@ -681,7 +681,7 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
             else:
 
                 finished.append(sorted([x_monkey, y_monkey]))
-                #__draw_subplot(x_monkey, y_monkey, subplot)
+                __draw_subplot(x_monkey, y_monkey, subplot)
 
     for subplot in subplots:
         if subplot:
