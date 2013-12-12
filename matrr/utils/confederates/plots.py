@@ -694,24 +694,28 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
     return fig
 
 
-def dump_competitive_bout_rate_grid(cohorts=(5,6,8,9,10), supports=(.05, .1, .15, .2), output_path=''):
+def dump_competitive_bout_rate_grid(cohorts=(), supports=(), output_path=''):
     for cohort in cohorts:
         for support in supports:
             fig = competitive_bout_grid(cohort, support)
             filename = output_path + 'competitive_bout_rate_grid-%d-%.2f.png' % (cohort, support)
             fig.savefig(filename, format='png')
 
-def dump_competitive_bout_volume_grid(cohorts=(5,6,8,9,10), supports=(.05, .1, .15, .2), output_path=''):
+def dump_competitive_bout_volume_grid(cohorts=(), supports=(), output_path=''):
     for cohort in cohorts:
         for support in supports:
             fig = competitive_bout_grid(cohort, support, collect_data_method=collect_overlapping_bout_volume_data)
             filename = output_path + 'competitive_bout_volume_grid-%d-%.2f.png' % (cohort, support)
             fig.savefig(filename, format='png')
 
-def dump_competitive_bout_length_grid(cohorts=(5,6,8,9,10), supports=(.05, .1, .15, .2), output_path=''):
+def dump_competitive_bout_length_grid(cohorts=(), supports=(), output_path=''):
     for cohort in cohorts:
         for support in supports:
             fig = competitive_bout_grid(cohort, support, collect_data_method=collect_overlapping_bout_volume_data)
             filename = output_path + 'competitive_bout_length_grid-%d-%.2f.png' % (cohort, support)
             fig.savefig(filename, format='png')
 
+def dump_competitive_bouts(cohorts=(5,6,8,9,10), supports=(.05, .1, .15, .2)):
+    dump_competitive_bout_rate_grid(cohorts=cohorts, supports=supports)
+    dump_competitive_bout_volume_grid(cohorts=cohorts, supports=supports)
+    dump_competitive_bout_length_grid(cohorts=cohorts, supports=supports)
