@@ -577,18 +577,21 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
         BA_NON = __chop_outliers(BA_NON)
         ###--
 
+        alpha = .4
+
         t_stat, p_value = stats.ttest_ind(AB, AB_NON)
         if p_value <= .05:
-            subplot.axvspan(0, 2.5, color='lightgreen', alpha=.3)
+            subplot.axvspan(0, 2.5, color='lightgreen', alpha=alpha)
         t_stat, p_value = stats.ttest_ind(BA, BA_NON)
+
         if p_value <= .05:
-            subplot.axvspan(2.5, 5, color='lightgreen', alpha=.3)
+            subplot.axvspan(2.5, 5, color='lightgreen', alpha=alpha)
         subplot.boxplot([AB, AB_NON, BA, BA_NON], positions=range(1,5,1))
         subplot.set_xlim(xmin=0, xmax=5)
 
         pairs = __fetch_apriori_supconf(x_monkey.pk, y_monkey.pk)
         if len(pairs):
-            subplot.axvspan(0, 5, color='orange', alpha=.15)
+            subplot.axvspan(0, 5, color='orange', alpha=alpha)
         return subplot
 
     def __label_subplot(monkey_one, monkey_two, subplot):
@@ -603,6 +606,7 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
         ###--
 
         fontsize = 8
+        alpha = .4
 
         subplot.set_xlim(xmin=0, xmax=5)
         subplot.text(.05, .85, "A=%d, B=%d" % (monkey_one.pk, monkey_two.pk), size=fontsize, transform=subplot.transAxes)
@@ -610,12 +614,12 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
         t_stat, p_value = stats.ttest_ind(AB, AB_NON)
         subplot.text(.05, .55, "AB vs AB_non:\np=%.03f" % p_value, size=fontsize, transform=subplot.transAxes)
         if p_value <= .05:
-            subplot.axvspan(0, 2.5, color='lightgreen', alpha=.3)
+            subplot.axvspan(0, 2.5, color='lightgreen', alpha=alpha)
 
         t_stat, p_value = stats.ttest_ind(BA, BA_NON)
         subplot.text(.95, .3, "BA vs BA_non:\np=%.03f" % p_value, size=fontsize, transform=subplot.transAxes, horizontalalignment='right')
         if p_value <= .05:
-            subplot.axvspan(2.5, 5, color='lightgreen', alpha=.3)
+            subplot.axvspan(2.5, 5, color='lightgreen', alpha=alpha)
 
         pairs = __fetch_apriori_supconf(x_monkey.pk, y_monkey.pk)
         if len(pairs):
@@ -623,7 +627,7 @@ def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overla
             if len(txt) > 50:
                 txt = txt[:50] + '...'
             subplot.text(.05, .15, txt, size=fontsize, transform=subplot.transAxes)
-            subplot.axvspan(0, 5, color='orange', alpha=.15)
+            subplot.axvspan(0, 5, color='orange', alpha=alpha)
         return subplot
 
     def __fetch_apriori_supconf(monkey_a, monkey_b):
