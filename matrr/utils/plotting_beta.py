@@ -1919,6 +1919,8 @@ def rhesus_bec_onset_age_category(phase, bec_onset):
     main_plot, label = _rhesus_bec_age_mtd_general(main_plot, phase, bec_onset, _mtd_call_gkg_etoh)
     main_plot.set_xlabel(label)
     main_plot.legend(loc=0, scatterpoints=1)
+    main_plot.set_xlim(xmin=1, xmax=5)
+    main_plot.set_ylim(ymin=4, ymax=12)
     return fig
 
 
