@@ -2484,15 +2484,23 @@ def load_tissue_inventory_csv(filename):
     csv_infile = csv.reader(open(filename, 'rU'), delimiter=',')
     columns = csv_infile.next()
     label = columns.pop(0) # "should read "Tissue Type \ Monkey"
-    assert label == "Tissue Type \ Monkey"
 
     # This will convert the header row of "matrr_pk/mky_real_id" cells into a list of monkey objects
     monkeys = list()
     for h in columns:
         if h:
-            _pk, _id = h.split('/')
-            m = Monkey.objects.get(pk=_pk,
-                                   mky_real_id=_id) # this will raise an Exception if the pk/id doesn't match or doesn't exist
+            monkey_ids = h.split('/')
+            if len(monkey_ids) == 2:
+                _pk, _id = monkey_ids
+                m = Monkey.objects.get(pk=_pk, mky_real_id=_id) # this will raise an Exception if the pk/id doesn't match or doesn't exist
+            else:
+                try:
+                    m = Monkey.objects.get(pk=monkey_ids[0])
+                except Monkey.DoesNotExist:
+                    try:
+                        m = Monkey.objects.get(mky_real_id=monkey_ids[0])
+                    except Monkey.DoesNotExist:
+                        raise Exception("No such monkey:  %s" % str(monkey_ids[0]))
             monkeys.append(m)
 
     for row in csv_infile:
