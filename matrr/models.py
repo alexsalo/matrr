@@ -129,7 +129,7 @@ ExperimentEventType = Enumeration([
 
 DrinkingCategory = Enumeration([
     ('LD', 'Low', 'Low Drinker'),
-    ('BB', 'Binge', 'Binge Drinker'),
+    ('BD', 'Binge', 'Binge Drinker'),
     ('HD', 'High', 'High Drinker'),
     ('VHD', 'VeryHigh', 'Very High Drinker'),
 ])
