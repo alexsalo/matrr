@@ -3,29 +3,26 @@ from matplotlib import pyplot
 from matrr import models, plotting
 
 
-def swoon(field_list, colors=False):
-#    excludes = Q()
-#    for i, f in enumerate(field_list):
-#        excludes |= Q(**{field_list[i]:None})
-    data = models.MonkeyToDrinkingExperiment.objects.OA().filter(monkey__cohort=8)
- #   data = data.exclude(excludes)
-    categories = data.values_list('monkey__mky_drinking_category', flat=True)
-    color_values = [plotting.RHESUS_COLORS[cat] for cat in categories]
+def swoon(field_list, cohort_pk=8, colors=False):
+    color_values = list()
+
+    data = models.MonkeyToDrinkingExperiment.objects.OA().filter(monkey__cohort=cohort_pk)
+    if colors:
+        categories = data.values_list('monkey__mky_drinking_category', flat=True) # only needed for colors, but need to pull the categories before casting data to a list
+        color_values = [plotting.RHESUS_COLORS[cat] for cat in categories]
     data = list(data.values_list(*field_list))
     for index, row in enumerate(data):
         if None in row:
             data.pop(index)
     data = numpy.array(data)
-    if colors:
-        return data, color_values
-    return data
+    return data, color_values
 
 
 def matplotlib_pca_test():
     from matplotlib import mlab
 
     fields = ['mtd_etoh_intake', 'mtd_veh_intake', 'mtd_total_pellets', 'mtd_etoh_media_ibi', 'mtd_pct_etoh_in_1st_bout']
-    pca = mlab.PCA(swoon(fields))
+    pca = mlab.PCA(swoon(fields)[0])
     print pca.Wt
     print '------'
     print pca.fracs
@@ -35,7 +32,7 @@ def matplotlib_pca_test():
     print '!!!!!!!!!!!!'
 
     fields = list(reversed(fields))
-    pca = mlab.PCA(swoon(fields))
+    pca = mlab.PCA(swoon(fields)[0])
     print pca.Wt
     print '------'
     print pca.fracs
@@ -47,7 +44,7 @@ def mdp_pca_test():
     fields = ['mtd_etoh_intake', 'mtd_veh_intake', 'mtd_total_pellets', 'mtd_etoh_media_ibi', 'mtd_pct_etoh_in_1st_bout']
     print fields
     node = mdp.nodes.PCANode(output_dim=.95)
-    test = node.execute(swoon(fields))
+    test = node.execute(swoon(fields)[0])
     print test
 
     print '-------'
@@ -55,7 +52,7 @@ def mdp_pca_test():
     fields = list(reversed(fields))
     print fields
     NODE = mdp.nodes.PCANode(output_dim=.95)
-    TEST = NODE.execute(swoon(fields))
+    TEST = NODE.execute(swoon(fields)[0])
     print TEST
 
 def mpl_3d_pca():
@@ -86,5 +83,5 @@ def mpl_3d_pca():
 
 #matplotlib_pca_test()
 #mdp_pca_test()
-mpl_3d_pca()
+#mpl_3d_pca()
 
