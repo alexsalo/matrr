@@ -3565,7 +3565,7 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,', png=Tr
                 filename = output_path + '%s.png' % name
                 fig.savefig(filename, format='png',dpi=dpi)
 
-def create_jims_graphs(output_path='', graphs='1,2,3,', png=True, dpi=800):
+def create_jims_graphs(output_path='', graphs='1,2,3,', format='png', dpi=800):
     from matrr.plotting import cohort_plots
     figures = list()
     names = list()
@@ -3583,8 +3583,8 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', png=True, dpi=800):
         figures.append(cohort_plots.cohort_necropsy_sum_g_per_kg(cohort_pk)[0])
         names.append('cohort_necropsy_sum_g_per_kg')
 
-    if png:
+    if format:
         for fig, name in zip(figures, names):
-            filename = output_path + '%s.png' % name
-            fig.savefig(filename, format='png',dpi=dpi)
+            filename = output_path + '%s.%s' % (name, format)
+            fig.savefig(filename, format=format,dpi=dpi)
 
