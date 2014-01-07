@@ -14,6 +14,15 @@ from django.db import transaction
 from matrr.models import *
 from matrr.utils import gadgets
 
+def get_monkey_by_number(mystery_number):
+    try:
+        monkey = Monkey.objects.get(pk=mystery_number)
+    except Monkey.DoesNotExist:
+        try:
+            monkey = Monkey.objects.get(mky_real_id=mystery_number)
+        except Monkey.DoesNotExist:
+            raise Exception("No such monkey:  %s" % str(mystery_number))
+    return monkey
 
 def queryset_iterator(queryset, chunksize=5000):
     '''
@@ -2642,7 +2651,30 @@ def dump_rhesus_summed_gkg_by_quarter():
     f.close()
     return
 
+def load_cohort2_electrophys(file_path):
+    input_data = csv.reader(open(file_path, 'rU'), delimiter=',')
+    columns = input_data.next()
 
-
-
-
+    for row in input_data:
+        if row[0]:
+            monkey = get_monkey_by_number(row[0])
+            ephy = dict()
+            ephy['monkey'] = monkey
+            ephy['mep_bal'] = row[1]
+            ephy['mep_lifetime_gkg'] = row[2]
+            ephy['mep_lifetime_vol'] = row[3]
+            ephy['mep_freq'] = row[4]
+            ephy['mep_iei'] = row[5]
+            ephy['mep_amp'] = row[6]
+            ephy['mep_rise'] = row[7]
+            ephy['mep_decay'] = row[8]
+            ephy['mep_area'] = row[9]
+            ephy['mep_baseline'] = row[10]
+            ephy['mep_noise'] = row[11]
+            ephy['mep_10_90_rise'] = row[12]
+            ephy['mep_half_width'] = row[13]
+            ephy['mep_50_rise'] = row[14]
+            ephy['mep_10_90_slope'] = row[15]
+            ephy['mep_rel_time'] = row[16]
+            mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
+    print 'Success'

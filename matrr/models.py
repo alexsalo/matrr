@@ -481,9 +481,9 @@ class Cohort(models.Model):
 
     class Meta:
         db_table = 'coh_cohorts'
-        permissions = ([
-                           ('view_nicotine_cohorts', 'Can view nicotine cohorts'),
-                       ])
+        permissions = (
+            ('view_nicotine_cohorts', 'Can view nicotine cohorts'),
+        )
 
 
 class CohortData(models.Model):
@@ -616,9 +616,9 @@ class Monkey(models.Model):
     class Meta:
         db_table = 'mky_monkeys'
         ordering = ['mky_id']
-        permissions = ([
-                           ('monkey_view_confidential', 'Can view confidential data'),
-                       ])
+        permissions = (
+            ('monkey_view_confidential', 'Can view confidential data'),
+        )
 
 
 class Mta(models.Model):
@@ -656,9 +656,9 @@ class Mta(models.Model):
     class Meta:
         db_table = 'mta_material_transfer'
         permissions = (
-        ('view_mta_file', 'Can view MTA files of other users'),
-        ('receive_mta_request', 'Will receive MTA form requests'),
-        ('mta_upload_notification', 'Receive emails when MTAs uploaded'),
+            ('view_mta_file', 'Can view MTA files of other users'),
+            ('receive_mta_request', 'Will receive MTA form requests'),
+            ('mta_upload_notification', 'Receive emails when MTAs uploaded'),
         )
 
 
@@ -747,17 +747,17 @@ class Account(models.Model):
 
     class Meta:
         db_table = 'act_account'
-        permissions = ([
-                           ('view_other_accounts', 'Can view accounts of other users'),
-                           ('view_sandbox', 'Can view sandbox tools'),
-                           ('view_etoh_data', 'Can view ethanol data'),
-                           ('view_confederates', 'Can view confederate data'),
-                           ('bcc_request_email', 'Receive BCC of processed request emails'),
-                           ('po_manifest_email', 'Receive PO shipping manifest email'),
-                           ('provide_po_number', 'Can provide PO number'),
-                           ('verify_mta', 'Can verify MTA uploads'),
-                           ('ship_genetics', 'Can ship RNA/DNA'),
-                       ])
+        permissions = (
+            ('view_other_accounts', 'Can view accounts of other users'),
+            ('view_sandbox', 'Can view sandbox tools'),
+            ('view_etoh_data', 'Can view ethanol data'),
+            ('view_confederates', 'Can view confederate data'),
+            ('bcc_request_email', 'Receive BCC of processed request emails'),
+            ('po_manifest_email', 'Receive PO shipping manifest email'),
+            ('provide_po_number', 'Can provide PO number'),
+            ('verify_mta', 'Can verify MTA uploads'),
+            ('ship_genetics', 'Can ship RNA/DNA'),
+        )
 
 
 class DrinkingExperiment(models.Model):
@@ -1243,13 +1243,6 @@ class CohortBout(models.Model):
     cbt_gap_definition = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, default=None,
                                                                      help_text="This is the threshold to allow a drink's inclusion in this CohortBout.  If a drink starts after self.cbt_end_time+self.cbt_gap_definition, the drink is part of a different CBT.")
 
-    def populate_ebt_set(self):
-        raise Exception("This method is obsolete.  This model is no longer uses bouts.")
-        ebts = ExperimentBout.objects.filter(mtd__monkey__cohort=self.cohort,
-                                             mtd__drinking_experiment__dex_date=self.dex_date)
-        ebts = ebts.filter(ebt_start_time__gte=self.cbt_start_time).filter(ebt_end_time__lte=self.cbt_end_time)
-        self.ebt_set.add(*ebts)
-
     def populate_edr_set(self):
         edrs = ExperimentDrink.objects.filter(ebt__mtd__monkey__cohort=self.cohort, ebt__mtd__drinking_experiment__dex_date=self.dex_date)
         edrs = edrs.filter(edr_start_time__gte=self.cbt_start_time).filter(edr_end_time__lte=self.cbt_end_time)
@@ -1600,7 +1593,7 @@ class MonkeyImage(MATRRImage):
 
     class Meta:
         permissions = (
-        ('view_vip_images', 'Can view VIP images'),
+            ('view_vip_images', 'Can view VIP images'),
         )
         db_table = 'mig_monkey_image'
 
@@ -2029,7 +2022,7 @@ class TissueType(models.Model):
         unique_together = (('tst_tissue_name', 'category'),)
         ordering = ['tst_tissue_name']
         permissions = (
-        ('browse_inventory', 'Can browse inventory'),
+            ('browse_inventory', 'Can browse inventory'),
         )
 
 
@@ -2382,8 +2375,8 @@ class Request(models.Model, DiffingMixin):
     class Meta:
         db_table = 'req_requests'
         permissions = (
-        ('view_experimental_plan', 'Can view experimental plans of other users'),
-        ('can_receive_colliding_requests_info', 'Can receive colliding requests info'),
+            ('view_experimental_plan', 'Can view experimental plans of other users'),
+            ('can_receive_colliding_requests_info', 'Can receive colliding requests info'),
         )
 
 
@@ -2481,7 +2474,7 @@ class ResearchUpdate(models.Model):
     class Meta:
         db_table = 'rud_research_update'
         permissions = (
-        ('view_rud_detail', 'Can view research updates of other users.'),
+            ('view_rud_detail', 'Can view research updates of other users.'),
         )
 
 
@@ -2743,8 +2736,8 @@ class Review(models.Model):
 
     class Meta:
         permissions = (
-        ('can_receive_pending_reviews_info', 'Can receive pending reviews info by e-mail'),
-        ('view_review_overview', 'Can view review overview and history overview')
+            ('can_receive_pending_reviews_info', 'Can receive pending reviews info by e-mail'),
+            ('view_review_overview', 'Can view review overview and history overview')
         )
         db_table = 'rvs_reviews'
         unique_together = ('user', 'req_request')
@@ -3061,7 +3054,7 @@ class TissueInventoryVerification(models.Model):
     class Meta:
         db_table = 'tiv_tissue_verification'
         permissions = (
-        ('can_verify_tissues', 'Can verify tissues'),
+            ('can_verify_tissues', 'Can verify tissues'),
         )
 
 
@@ -3226,10 +3219,10 @@ class FamilyNode(models.Model):
 
 
     class Meta:
-        permissions = ([
-                           ('genealogy_tools', 'Can modify monkey genealogy'),
-                           ('genealogy', 'Can view monkey genealogy'),
-                       ])
+        permissions = (
+            ('genealogy_tools', 'Can modify monkey genealogy'),
+            ('genealogy', 'Can view monkey genealogy'),
+        )
         db_table = 'fmn_family_node'
 
 
@@ -3714,10 +3707,46 @@ class MonkeyBrainBlock(models.Model):
 
 
     class Meta:
-        permissions = ([
-                           ('brainblock_update', 'Can update brain inventory'),
-                       ])
+        permissions = (
+            ('brainblock_update', 'Can update brain inventory'),
+        )
         db_table = 'mbb_monkey_brain_block'
+
+
+class MonkeyEphys(models.Model):
+    """
+    Monkey ElectroPhys data, from Gin
+
+    https://gleek.ecs.baylor.edu/wiki/index.php/MonkeyEphys
+    """
+    mep_id = models.AutoField(primary_key=True)
+    monkey = models.ForeignKey(Monkey, null=False, related_name='bec_records', db_column='mky_id', editable=False)
+    mep_bal = models.FloatField("Blood Alcohol Level", editable=False, null=False, blank=False, help_text="Average blood alcohol level of the last 6 months.")
+    mep_lifetime_gkg = models.FloatField("Lifetime Intake (g/kg)", editable=False, null=False, blank=False)
+    mep_lifetime_vol = models.FloatField("Lifetime Intake (mL)", editable=False, null=False, blank=False)
+    mep_freq = models.FloatField("Frequency (hz)", editable=False, null=False, blank=False)
+    mep_iei = models.FloatField("Inter-Event Interval (ms)", editable=False, null=False, blank=False)
+    mep_amp = models.FloatField("Amplitude (pico-amps)", editable=False, null=False, blank=False)
+    mep_rise = models.FloatField("Rise (ms)", editable=False, null=False, blank=False)
+    mep_decay = models.FloatField("Decay (ms)", editable=False, null=False, blank=False)
+    mep_area = models.FloatField("Area (??)", editable=False, null=False, blank=False)
+    mep_baseline = models.FloatField("Baseline (??)", editable=False, null=False, blank=False)
+    mep_noise = models.FloatField("Noise (??)", editable=False, null=False, blank=False)
+    mep_10_90_rise = models.FloatField("10-90 Rise (ms)", editable=False, null=False, blank=False, help_text="Time it takes to get from 10% to 90% of the rise.")
+    mep_10_90_slope = models.FloatField("10-90 Slope (??)", editable=False, null=False, blank=False, help_text="Slope fo the 10-90 rise")
+    mep_half_width = models.FloatField("Half Width (??)", editable=False, null=False, blank=False)
+    mep_50_rise = models.FloatField("50 Rise (ms)", editable=False, null=False, blank=False, help_text="Time it takes to get to 50% of the rise (definition unconfirmed).")
+    mep_rel_time = models.FloatField("Rel Time (??)", editable=False, null=False, blank=False, help_text="Definition unknown.")
+
+    def __unicode__(self):
+        return "%s - Electrophys" % str(self.monkey)
+
+    class Meta:
+        db_table = 'mep_monkey_ephys'
+        permissions = (
+            ('view_mep_data', 'Can view ephys data'),
+        )
+
 
 
 # put any signal callbacks down here after the model declarations
