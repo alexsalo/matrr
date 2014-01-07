@@ -3574,18 +3574,17 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', png=True, dpi=800):
     cohort_pk = 6
     graphs = graphs.split(',')
     if '1' in graphs:
-        figures.append(cohort_plots.cohort_necropsy_avg_22hr_g_per_kg(cohort_pk))
+        figures.append(cohort_plots.cohort_necropsy_avg_22hr_g_per_kg(cohort_pk)[0])
         names.append('cohort_necropsy_avg_22hr_g_per_kg')
     if '2' in graphs:
-        figures.append(cohort_plots.cohort_necropsy_etoh_4pct(cohort_pk))
+        figures.append(cohort_plots.cohort_necropsy_etoh_4pct(cohort_pk)[0])
         names.append('cohort_necropsy_etoh_4pct')
     if '3' in graphs:
-        figures.append(cohort_plots.cohort_necropsy_sum_g_per_kg(cohort_pk))
+        figures.append(cohort_plots.cohort_necropsy_sum_g_per_kg(cohort_pk)[0])
         names.append('cohort_necropsy_sum_g_per_kg')
 
     if png:
         for fig, name in zip(figures, names):
-            if png:
-                filename = output_path + '%s.png' % name
-                fig.savefig(filename, format='png',dpi=dpi)
+            filename = output_path + '%s.png' % name
+            fig.savefig(filename, format='png',dpi=dpi)
 
