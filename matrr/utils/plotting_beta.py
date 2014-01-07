@@ -3565,3 +3565,27 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,', png=Tr
                 filename = output_path + '%s.png' % name
                 fig.savefig(filename, format='png',dpi=dpi)
 
+def create_jims_graphs(output_path='', graphs='1,2,3,', png=True, dpi=800):
+    from matrr.plotting import cohort_plots
+    figures = list()
+    names = list()
+    all_categories = DRINKING_CATEGORIES
+
+    cohort_pk = 6
+    graphs = graphs.split(',')
+    if '1' in graphs:
+        figures.append(cohort_plots.cohort_necropsy_avg_22hr_g_per_kg(cohort_pk))
+        names.append('cohort_necropsy_avg_22hr_g_per_kg')
+    if '2' in graphs:
+        figures.append(cohort_plots.cohort_necropsy_etoh_4pct(cohort_pk))
+        names.append('cohort_necropsy_etoh_4pct')
+    if '3' in graphs:
+        figures.append(cohort_plots.cohort_necropsy_sum_g_per_kg(cohort_pk))
+        names.append('cohort_necropsy_sum_g_per_kg')
+
+    if png:
+        for fig, name in zip(figures, names):
+            if png:
+                filename = output_path + '%s.png' % name
+                fig.savefig(filename, format='png',dpi=dpi)
+

@@ -39,7 +39,7 @@ def _cohort_necropsy_summary_general(specific_callable, x_label, graph_title, le
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
     ax1.set_axisbelow(True)
     ax1.set_title(graph_title)
-    ax1.set_ylabel("Monkey")
+    ax1.set_ylabel("Monkey ID")
     ax1.set_xlabel(x_label)
 
     cohort_colors =  ['navy', 'slateblue']
@@ -85,7 +85,7 @@ def cohort_necropsy_avg_22hr_g_per_kg(cohort):
     in g/kg.
     """
     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
-        graph_title = 'Average Daily Ethanol Intake for cohort %s during 22 Hour Free Access Phase' % str(cohort)
+        graph_title = 'Average Daily EtOH Intake (22hr open access)'
         x_label = "Average Daily Ethanol Intake (in g/kg)"
         legend_labels = ('12 Month Average', '6 Month Average')
         return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
@@ -98,7 +98,7 @@ def cohort_necropsy_etoh_4pct(cohort):
      intake, in ml.
     """
     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
-        graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
+        graph_title = "Total EtOH Intake (in mL)"
         x_label = "Ethanol Intake (in 4% ml)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
         return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
@@ -111,7 +111,7 @@ def cohort_necropsy_sum_g_per_kg(cohort):
     and open access, in g/kg.
     """
     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
-        graph_title = 'Total Ethanol Intake for Cohort %s' % str(cohort)
+        graph_title = 'Total EtOH Intake (in g/kg)'
         x_label = "Ethanol Intake (in g/kg)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
         return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
