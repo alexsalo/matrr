@@ -17,11 +17,10 @@ def swoon(field_list, cohort_pk=8, colors=False):
     data = numpy.array(data)
     return data, color_values
 
-
 def matplotlib_pca_test():
     from matplotlib import mlab
 
-    fields = ['mtd_etoh_intake', 'mtd_veh_intake', 'mtd_total_pellets', 'mtd_etoh_media_ibi', 'mtd_pct_etoh_in_1st_bout']
+    fields = ['mtd_etoh_intake', 'mtd_veh_intake', 'mtd_total_pellets', 'mtd_etoh_media_ibi', 'mtd_pct_etoh_in_1st_bout', 'mtd_etoh_g_kg']
     pca = mlab.PCA(swoon(fields)[0])
     print pca.Wt
     print '------'
@@ -81,7 +80,30 @@ def mpl_3d_pca():
     ax.set_title("The title of the plot")
     pyplot.show() # show the plot
 
-#matplotlib_pca_test()
-#mdp_pca_test()
-#mpl_3d_pca()
+def find_empty_columns(cohort=8, empty_threshold=.5, MATRR_MODEL=models.MonkeyToDrinkingExperiment):
+    mtds = MATRR_MODEL.objects.filter(monkey__cohort=cohort)
+    mtd_count = float(mtds.count())
+    if mtd_count == 0:
+        raise ZeroDivisionError("No records for this cohort.")
+    fields = [f.name for f in MATRR_MODEL._meta.fields]
 
+    empty_columns = list()
+    full_columns = list()
+    for field in fields:
+        _mtds = mtds.exclude(**{field:None})
+        pct = _mtds.count() / mtd_count
+        if pct <= empty_threshold:
+            print "%s :: %.2f" % (field, pct)
+            empty_columns.append(field)
+        else:
+            full_columns.append(field)
+
+    return full_columns, empty_columns
+
+def matrr_pca(cohort=8, empty_column_threshold=.5, MATRR_MODEL=models.MonkeyBEC):
+    from matplotlib import mlab
+    full_columns, empty_columns = find_empty_columns(cohort, empty_column_threshold, MATRR_MODEL)
+
+    swoon(full_columns)[0]
+    pca = mlab.PCA()
+    print pca.Wt
