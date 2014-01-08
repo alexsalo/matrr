@@ -3,18 +3,18 @@ from matplotlib import pyplot
 from matrr import models, plotting
 
 
-def swoon(field_list, cohort_pk=8, colors=False):
+def swoon(field_list, cohort_pk=8, colors=False, MATRR_MODEL=models.MonkeyToDrinkingExperiment):
     color_values = list()
 
-    data = models.MonkeyToDrinkingExperiment.objects.OA().filter(monkey__cohort=cohort_pk)
+    data = MATRR_MODEL.objects.OA().filter(monkey__cohort=cohort_pk)
     if colors:
         categories = data.values_list('monkey__mky_drinking_category', flat=True) # only needed for colors, but need to pull the categories before casting data to a list
         color_values = [plotting.RHESUS_COLORS[cat] for cat in categories]
     data = list(data.values_list(*field_list))
-    for index, row in enumerate(data):
-        if None in row:
-            data.pop(index)
-    data = numpy.array(data)
+#    for index, row in enumerate(data):
+#        if None in row:
+#            data.pop(index)
+    data = numpy.array(data, dtype=object)
     return data, color_values
 
 def matplotlib_pca_test():
@@ -85,7 +85,9 @@ def find_empty_columns(cohort=8, empty_threshold=.5, MATRR_MODEL=models.MonkeyTo
     mtd_count = float(mtds.count())
     if mtd_count == 0:
         raise ZeroDivisionError("No records for this cohort.")
-    fields = [f.name for f in MATRR_MODEL._meta.fields]
+    from django.db.models import DateField, DateTimeField, TimeField, TextField, CharField, AutoField, ForeignKey, OneToOneField, ManyToManyField, BooleanField
+    exclude_field_types = (DateField, DateTimeField, TimeField, TextField, CharField, AutoField, ForeignKey, OneToOneField, ManyToManyField, BooleanField)
+    fields = [f.name for f in MATRR_MODEL._meta.fields if type(f) not in exclude_field_types]
 
     empty_columns = list()
     full_columns = list()
@@ -104,6 +106,6 @@ def matrr_pca(cohort=8, empty_column_threshold=.5, MATRR_MODEL=models.MonkeyBEC)
     from matplotlib import mlab
     full_columns, empty_columns = find_empty_columns(cohort, empty_column_threshold, MATRR_MODEL)
 
-    swoon(full_columns)[0]
-    pca = mlab.PCA()
+    data = swoon(full_columns, cohort_pk=cohort, MATRR_MODEL=MATRR_MODEL)[0]
+    pca = mlab.PCA(data)
     print pca.Wt
