@@ -38,9 +38,10 @@ def _cohort_necropsy_summary_general(specific_callable, x_label, graph_title, le
     ax1 = fig.add_subplot(111)
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
     ax1.set_axisbelow(True)
-    ax1.set_title(graph_title)
-    ax1.set_ylabel("Monkey ID")
-    ax1.set_xlabel(x_label)
+    font_dict = {'size': 16}
+    ax1.set_title(graph_title, fontdict=font_dict)
+    ax1.set_ylabel("Monkey ID", fontdict=font_dict)
+    ax1.set_xlabel(x_label, fontdict=font_dict)
 
     cohort_colors =  ['navy', 'slateblue']
 
@@ -99,7 +100,7 @@ def cohort_necropsy_etoh_4pct(cohort):
     """
     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
         graph_title = "Total EtOH Intake (in mL)"
-        x_label = "Ethanol Intake (in 4% ml)"
+        x_label = "Ethanol intake (4% w/v)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
         return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
     else:
