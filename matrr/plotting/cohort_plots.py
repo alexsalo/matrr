@@ -87,7 +87,7 @@ def cohort_necropsy_avg_22hr_g_per_kg(cohort):
     """
     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
         graph_title = 'Average Daily EtOH Intake (22hr open access)'
-        x_label = "Average Daily Ethanol Intake (in g/kg)"
+        x_label = "Average Daily Ethanol Intake (g/kg)"
         legend_labels = ('12 Month Average', '6 Month Average')
         return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
     else:
@@ -99,7 +99,7 @@ def cohort_necropsy_etoh_4pct(cohort):
      intake, in ml.
     """
     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
-        graph_title = "Total EtOH Intake (in mL)"
+        graph_title = "Total EtOH Intake (mL)"
         x_label = "Ethanol intake (4% w/v)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
         return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
@@ -112,8 +112,8 @@ def cohort_necropsy_sum_g_per_kg(cohort):
     and open access, in g/kg.
     """
     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
-        graph_title = 'Total EtOH Intake (in g/kg)'
-        x_label = "Ethanol Intake (in g/kg)"
+        graph_title = 'Total EtOH Intake (g/kg)'
+        x_label = "Ethanol Intake (g/kg)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
         return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
     else:
