@@ -271,14 +271,24 @@ class MEXQuerySet(models.query.QuerySet):
         return self.exclude(mex_excluded=True)
 
 
+class EEVQuerySet(models.query.QuerySet):
+    def exclude_exceptions(self):
+        return self.exclude(mex_excluded=True)
+
+    def Night(self):
+        return self.filter(eev_session_time__gte=LIGHTS_OUT).filter(eev_session_time__lt=LIGHTS_ON)
+
+    def Day(self):
+        return self.filter(eev_session_time__gte=LIGHTS_ON) | self.filter(eev_session_time__lt=LIGHTS_OUT)
+
+
 class EBTQuerySet(models.query.QuerySet):
     def Night(self):
         return self.filter(ebt_start_time__gte=LIGHTS_OUT).filter(ebt_end_time__lt=LIGHTS_ON)
 
     def Day(self):
+        # todo: verify this works as expected.  it might need to look more like EEVQuerySet.Day(), but maybe not I haven't looked into it yet.
         return self.filter(ebt_end_time__gte=LIGHTS_ON).filter(ebt_start_time__lt=LIGHTS_OUT)
-
-
 
 
 class OASplitQueryset(models.query.QuerySet):
@@ -1144,7 +1154,7 @@ class ExperimentDrink(models.Model):
 
 class EEVManager(models.Manager):
     def get_query_set(self):
-        return MEXQuerySet(self.model, using=self._db)
+        return EEVQuerySet(self.model, using=self._db)
 
     def Ind(self):
         return self.get_query_set().filter(dex_type='Induction')
