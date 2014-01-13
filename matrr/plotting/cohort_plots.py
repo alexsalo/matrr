@@ -74,7 +74,7 @@ def _cohort_necropsy_summary_general(specific_callable, x_label, graph_title, le
     autolabel(cohort_bar1, 'white')
     autolabel(cohort_bar2, 'white')
 
-    ax1.legend( (cohort_bar2[0], cohort_bar1[0]), legend_labels, loc=4)
+    ax1.legend( (cohort_bar2[0], cohort_bar1[0]), legend_labels, loc=2)
 
     ax1.set_yticks(idx+width)
     ax1.set_yticklabels(cohort_labels)
