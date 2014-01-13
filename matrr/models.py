@@ -288,7 +288,8 @@ class EBTQuerySet(models.query.QuerySet):
 
     def Day(self):
         # todo: verify this works as expected.  it might need to look more like EEVQuerySet.Day(), but maybe not I haven't looked into it yet.
-        return self.filter(ebt_end_time__gte=LIGHTS_ON).filter(ebt_start_time__lt=LIGHTS_OUT)
+        return  self.filter(ebt_end_time__gte=LIGHTS_ON) | self.filter(ebt_start_time__lt=LIGHTS_OUT)
+
 
 
 class OASplitQueryset(models.query.QuerySet):
