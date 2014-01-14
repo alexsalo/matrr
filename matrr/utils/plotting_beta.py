@@ -1399,8 +1399,8 @@ def rhesus_etoh_gkg_monkeybargraph():
 def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, vs_kwargs=None):
     assert monkey_category in RHESUS_DRINKERS.keys()
     vs_kwargs = vs_kwargs if vs_kwargs is not None else dict()
-    light_data, light_count = volume_summation(monkey_category, minutes, exclude=True, **vs_kwargs)
-    heavy_data, heavy_count = volume_summation(monkey_category, minutes, exclude=False, **vs_kwargs)
+    light_data, light_count, xlabel, ylabel, title  = volume_summation(monkey_category, minutes, exclude=True, **vs_kwargs)
+    heavy_data, heavy_count, xlabel, ylabel, title  = volume_summation(monkey_category, minutes, exclude=False, **vs_kwargs)
     assert light_data.keys() == heavy_data.keys()
     for x in light_data.keys():
         # lower, light drinkers
@@ -1416,7 +1416,7 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
     subplot.set_xticks(xticks)
     xtick_labels = ["%d" % x for x in light_data.keys()  if x % 15 == 0]
     subplot.set_xticklabels(xtick_labels)
-    return subplot
+    return subplot, xlabel, ylabel, title
 
 def _oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20, DAYTIME=True, NIGHTTIME=True):
     """
@@ -1460,10 +1460,13 @@ def _oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20,
         json_data = json.dumps(volume_by_minute_from_pellet)
         f.write(json_data)
         f.close()
-    return volume_by_minute_from_pellet, len(monkey_set)
+    xlabel = "Minutes since last pellet"
+    ylabel = "Average volume per monkey (mL)"
+    title = "Average intake by minute after pellet"
+    return volume_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
-def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20):
+def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=True, NIGHTTIME=True):
     assert category_half in ('high', 'low')
     if category_half == 'high':
         monkey_set = RDD_56890['VHD']
@@ -1481,8 +1484,11 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20):
         volume_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
         volume_by_minute_from_pellet = defaultdict(lambda: 0)
-
         eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
+        if DAYTIME and not NIGHTTIME:
+            eevs = eevs.Day()
+        if NIGHTTIME and not DAYTIME:
+            eevs = eevs.Night()
         for i in range(0, minutes):
             _eevs = eevs.filter(eev_pellet_time__gte=i * 60).filter(eev_pellet_time__lt=(i + 1) * 60)
             volume_by_minute_from_pellet[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
@@ -1503,11 +1509,10 @@ def rhesus_oa_discrete_minute_volumes(minutes, monkey_category, distinct_monkeys
     main_gs = gridspec.GridSpec(3, 40)
     main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
     subplot = fig.add_subplot(main_gs[:, :])
-    subplot = _rhesus_minute_volumes(subplot, minutes, monkey_category, _oa_eev_volume_summation_by_minutesFromPellet,
-                                     vs_kwargs={'distinct_monkeys': distinct_monkeys})
-    subplot.set_xlabel("Minutes since last pellet")
-    subplot.set_title("Average intake by minute after pellet")
-    subplot.set_ylabel("Average volume, mL. per monkey")
+    subplot, xlabel, ylabel, title = _rhesus_minute_volumes(subplot, minutes, monkey_category, _oa_eev_volume_summation_by_minutesFromPellet, vs_kwargs={'distinct_monkeys': distinct_monkeys})
+    subplot.set_xlabel(xlabel)
+    subplot.set_ylabel(ylabel)
+    subplot.set_title(title)
     return fig
 
 
@@ -1754,22 +1759,23 @@ def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one
     main_gs = gridspec.GridSpec(3, 40)
     main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
     subplot = fig.add_subplot(main_gs[:, :])
-    subplot = _rhesus_minute_volumes_compare_categories(subplot, 120, monkey_cat_one, monkey_cat_two,
-                                                        _oa_eev_volume_summation_by_minutesFromPellet)
-    subplot.set_xlabel("Minutes since last pellet")
-    subplot.set_title("Average intake by minute after pellet")
-    subplot.set_ylabel("Average volume, mL. per monkey")
+    subplot, xlabel, ylabel, title  = _rhesus_minute_volumes_compare_categories(subplot, 120, monkey_cat_one, monkey_cat_two, _oa_eev_volume_summation_by_minutesFromPellet)
+    subplot.set_xlabel(xlabel)
+    subplot.set_ylabel(ylabel)
+    subplot.set_title(title)
     return fig
 
 
-def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120):
+def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, DAYTIME=True, NIGHTTIME=True, collect_data=_oa_eev_volume_summation_high_vs_low):
     fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(3, 40)
     main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
     subplot = fig.add_subplot(main_gs[:, :])
 
-    a_data, a_count = _oa_eev_volume_summation_high_vs_low('high', minutes)
-    b_data, b_count = _oa_eev_volume_summation_high_vs_low('low', minutes)
+#    a_data, a_count = _oa_eev_volume_summation_high_vs_low('high', minutes)
+#    b_data, b_count = _oa_eev_volume_summation_high_vs_low('low', minutes)
+    a_data, a_count, xlabel, ylabel, title = collect_data(category_half='high', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+    b_data, b_count, xlabel, ylabel, title = collect_data(category_half='low', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
     assert a_data.keys() == b_data.keys()
     for x in a_data.keys():
         # lower, light drinkers
@@ -1788,14 +1794,14 @@ def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120):
     subplot.set_xticks(xticks)
     subplot.set_xticklabels(xtick_labels)
 
-    subplot.set_xlabel("Minutes since last pellet")
-    subplot.set_title("Average intake by minute after pellet")
-    subplot.set_ylabel("Average volume, mL per monkey")
+    subplot.set_xlabel(xlabel)
+    subplot.set_ylabel(ylabel)
+    subplot.set_title(title)
     return fig
 
 
-def _rhesus_oa_volumes_by_timefrompellet_by_category(subplot, drinking_category, minutes=120, DAYTIME=True, NIGHTTIME=True):
-    a_data, a_count = _oa_eev_volume_summation_by_minutesFromPellet(drinking_category=drinking_category, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+def _rhesus_oa_volumes_by_timefrompellet_by_category(subplot, drinking_category, minutes=120, DAYTIME=True, NIGHTTIME=True, collect_data=_oa_eev_volume_summation_by_minutesFromPellet):
+    a_data, a_count, xlabel, ylabel, title  = collect_data(drinking_category=drinking_category, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
     a_count = float(a_count)
     colors = (RHESUS_COLORS[drinking_category], RHESUS_COLORS_ACCENT[drinking_category])
     minutes = [int(x) for x in a_data.keys()] # the a_data.keys are dumped to json as strings, which matplotlib doesn't appreciate.
@@ -1811,13 +1817,13 @@ def _rhesus_oa_volumes_by_timefrompellet_by_category(subplot, drinking_category,
     xtick_labels = ["%d" % x for x in minutes if x % 15 == 0]
     subplot.set_xticks(xticks)
     subplot.set_xticklabels(xtick_labels)
-    subplot.set_xlabel("Minutes since last pellet")
-    subplot.set_ylabel("Average volume, mL per monkey")
+    subplot.set_xlabel(xlabel)
+    subplot.set_ylabel(ylabel)
     subplot.legend((), title=drinking_category, loc=1, frameon=False)
-    return subplot
+    return subplot, xlabel, ylabel, title
 
 
-def rhesus_oa_intake_from_pellet_by_category(minutes=120, DAYTIME=True, NIGHTTIME=True):
+def rhesus_oa_intake_from_pellet_by_category(minutes=120, DAYTIME=True, NIGHTTIME=True, collect_data=_oa_eev_volume_summation_by_minutesFromPellet):
     fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(4,1)
     main_gs.update(left=0.05, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.02)
@@ -1826,13 +1832,14 @@ def rhesus_oa_intake_from_pellet_by_category(minutes=120, DAYTIME=True, NIGHTTIM
     for yindex in indexes:
         subplot = fig.add_subplot(main_gs[yindex, :])
         category = drinking_categories.pop()
-        subplot = _rhesus_oa_volumes_by_timefrompellet_by_category(subplot=subplot, drinking_category=category, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+        subplot, xlabel, ylabel, title  = _rhesus_oa_volumes_by_timefrompellet_by_category(subplot=subplot, drinking_category=category, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME, collect_data=collect_data)
         subplot.yaxis.set_visible(False)
         subplot.xaxis.set_visible(False)
     subplot.xaxis.set_visible(True)
-    fig.suptitle("Average intake by minute after pellet")
+    fig.suptitle(title)
     fontsize = 18
-    fig.text(.01, .5, "Average EtOH per monkey, mL", rotation='vertical', verticalalignment='center', fontsize=fontsize)
+    fig.text(.01, .5, ylabel, rotation='vertical', verticalalignment='center', fontsize=fontsize)
+    return fig
 
 def rhesus_oa_pellettime_vs_gkg():
     def _oa_pelletvolume_perday_perkg(monkey_category):
@@ -3719,3 +3726,28 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', output_format='png', dpi
             fig.savefig(filename, format=output_format,dpi=dpi)
     return figures, names
 
+
+def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format='png', dpi=800):
+    figures = list()
+    names = list()
+
+    minutes = 12*60
+    graphs = graphs.split(',')
+    if '1' in graphs:
+        figures.append(rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False))
+        names.append('rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME' % minutes)
+    if '2' in graphs:
+        figures.append(rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False))
+        names.append('rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME' % minutes)
+    if '3' in graphs:
+        figures.append(rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False))
+        names.append('rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes)
+    if '3' in graphs:
+        figures.append(rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False))
+        names.append('rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes)
+
+    if output_format:
+        for fig, name in zip(figures, names):
+            filename = output_path + '%s.%s' % (name, output_format)
+            fig.savefig(filename, format=output_format,dpi=dpi)
+    return figures, names
