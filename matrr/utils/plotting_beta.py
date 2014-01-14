@@ -1476,14 +1476,16 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
         monkey_set.extend(RDD_56890['LD'])
 
     folder_name = "matrr/utils/DATA/json/"
-    file_name = "_oa_eev_volume_summation_high_vs_low-%s-%s.json" % (category_half, str(minutes))
+    filename_concatination = "-DAYTIME" if DAYTIME else ""
+    filename_concatination += "-NIGHTTIME" if NIGHTTIME else ""
+    file_name = "_oa_eev_volume_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
     try:
         f = open(file_path, 'r')
         json_string = f.readline()
-        volume_by_minute_from_pellet = json.loads(json_string)
+        highlow_volume_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
-        volume_by_minute_from_pellet = defaultdict(lambda: 0)
+        highlow_volume_by_minute_from_pellet = defaultdict(lambda: 0)
         eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         if DAYTIME and not NIGHTTIME:
             eevs = eevs.Day()
@@ -1491,17 +1493,21 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
             eevs = eevs.Night()
         for i in range(0, minutes):
             _eevs = eevs.filter(eev_pellet_time__gte=i * 60).filter(eev_pellet_time__lt=(i + 1) * 60)
-            volume_by_minute_from_pellet[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+            highlow_volume_by_minute_from_pellet[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
             try:
                 if not os.path.exists(folder_name):
                     os.makedirs(folder_name)
             except IOError:
                 pass
             f = open(file_path, 'w')
-            json_data = json.dumps(volume_by_minute_from_pellet)
+            json_data = json.dumps(highlow_volume_by_minute_from_pellet)
             f.write(json_data)
             f.close()
-    return volume_by_minute_from_pellet, len(monkey_set)
+    xlabel = "Minutes since last pellet"
+    ylabel = "Average volume per monkey (mL)"
+    title = "Average intake by minute after pellet"
+    return highlow_volume_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
+    return highlow_volume_by_minute_from_pellet, len(monkey_set)
 
 
 def rhesus_oa_discrete_minute_volumes(minutes, monkey_category, distinct_monkeys=False):
