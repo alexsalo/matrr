@@ -3742,7 +3742,7 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format=
     if '3' in graphs:
         figures.append(rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False))
         names.append('rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes)
-    if '3' in graphs:
+    if '4' in graphs:
         figures.append(rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False))
         names.append('rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes)
 
