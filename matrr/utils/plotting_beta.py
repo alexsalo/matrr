@@ -1778,18 +1778,18 @@ def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, DAYTIME=True, NIG
     main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
     subplot = fig.add_subplot(main_gs[:, :])
 
-#    a_data, a_count = _oa_eev_volume_summation_high_vs_low('high', minutes)
-#    b_data, b_count = _oa_eev_volume_summation_high_vs_low('low', minutes)
     a_data, a_count, xlabel, ylabel, title = collect_data(category_half='high', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
     b_data, b_count, xlabel, ylabel, title = collect_data(category_half='low', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
     assert a_data.keys() == b_data.keys()
     for x in a_data.keys():
         # lower, light drinkers
-        _ld = a_data[x] / float(a_count)
+        _a = 0 if a_data[x] is None else a_data[x]
+        _ld = _a / float(a_count)
         subplot.bar(x, _ld, width=.5, color='slateblue', edgecolor='none')
         # higher, heavy drinkers
-        subplot.bar(x + .5, b_data[x] / float(b_count), width=.5, color='navy', edgecolor='none')
-    #	patches.append(Rectangle((0,0),1,1, color=value))
+        _y = 0 if b_data[x] is None else b_data[x]
+        _hd = _y / float(b_count)
+        subplot.bar(x + .5, _hd, width=.5, color='navy', edgecolor='none')
     subplot.legend(
         [Rectangle((0, 0), 1, 1, color='slateblue'), Rectangle((0, 0), 1, 1, color='navy')],
         ['VHD+HD', 'BD+LD'], title="Monkey Category", loc='upper left')
@@ -3734,26 +3734,27 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', output_format='png', dpi
 
 
 def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format='png', dpi=800):
-    figures = list()
-    names = list()
+    def dump_fig(fig, name, output_path, output_format, dpi):
+        if output_format:
+            filename = output_path + '%s.%s' % (name, output_format)
+            fig.savefig(filename, format=output_format,dpi=dpi)
 
     minutes = 12*60
     graphs = graphs.split(',')
     if '1' in graphs:
-        figures.append(rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False))
-        names.append('rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME' % minutes)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False)
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME' % minutes
+        dump_fig(fig, name, output_path, output_format, dpi)
     if '2' in graphs:
-        figures.append(rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False))
-        names.append('rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME' % minutes)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False)
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME' % minutes
+        dump_fig(fig, name, output_path, output_format, dpi)
     if '3' in graphs:
-        figures.append(rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False))
-        names.append('rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False)
+        name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
+        dump_fig(fig, name, output_path, output_format, dpi)
     if '4' in graphs:
-        figures.append(rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False))
-        names.append('rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes)
-
-    if output_format:
-        for fig, name in zip(figures, names):
-            filename = output_path + '%s.%s' % (name, output_format)
-            fig.savefig(filename, format=output_format,dpi=dpi)
-    return figures, names
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False)
+        name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
+        dump_fig(fig, name, output_path, output_format, dpi)
+    return
