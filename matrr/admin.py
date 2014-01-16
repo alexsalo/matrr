@@ -38,6 +38,25 @@ class MonkeyAdmin(admin.ModelAdmin):
     list_filter = ('cohort', 'mky_gender', 'mky_species', 'mky_drinking', )
 
 
+class ShipmentAdmin(admin.ModelAdmin):
+    readonly_fields = ('user', 'shp_shipment_date', 'req_request')
+    list_display = ['shp_shipment_id', 'user', 'shp_shipment_date', 'shp_shipment_status', 'req_request_pk', 'req_request_cohort', 'req_request_user']
+    list_filter = ('req_request__cohort', 'shp_shipment_status', 'req_request__user', )
+
+    def req_request_cohort(self, obj):
+        return obj.req_request.cohort.coh_cohort_name
+    req_request_cohort.short_description = 'Cohort'
+
+    def req_request_user(self, obj):
+        return obj.req_request.user.username
+    req_request_user.short_description = 'Requesting User'
+
+    def req_request_pk(self, obj):
+        return obj.req_request.pk
+    req_request_pk.short_description = 'Request'
+
+
+
 class RequestAdmin(admin.ModelAdmin):
     list_display = ['req_request_id', 'cohort', 'user', 'req_request_date', 'req_status']
     list_filter = ('cohort', 'req_status', 'req_request_date', 'user')
@@ -95,7 +114,7 @@ admin.site.register(CohortEvent)
 admin.site.register(CohortData)
 admin.site.register(EventType)
 admin.site.register(Monkey, MonkeyAdmin)
-admin.site.register(Shipment)
+admin.site.register(Shipment, ShipmentAdmin)
 admin.site.register(DrinkingExperiment)
 admin.site.register(MonkeyToDrinkingExperiment)
 admin.site.register(Institution)
