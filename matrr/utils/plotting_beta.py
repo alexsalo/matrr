@@ -3742,18 +3742,18 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format=
     graphs = graphs.split(',')
     if '1' in graphs:
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False)
-        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%dNIGHTTIME' % minutes
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '2' in graphs:
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False)
-        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%dDAYTIME' % minutes
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '3' in graphs:
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False)
-        name = 'rhesus_oa_intake_from_pellet_by_category-%dDAYTIME' % minutes
+        name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '4' in graphs:
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False)
-        name = 'rhesus_oa_intake_from_pellet_by_category-%dDAYTIME' % minutes
+        name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     return
