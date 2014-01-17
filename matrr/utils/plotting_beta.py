@@ -1461,6 +1461,7 @@ def _oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20,
         json_data = json.dumps(volume_by_minute_from_pellet)
         f.write(json_data)
         f.close()
+        print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
     ylabel = "Average volume per monkey (mL)"
     title = "Average intake by minute after pellet"
@@ -1496,15 +1497,16 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
         for i in range(0, minutes):
             _eevs = eevs.filter(eev_pellet_time__gte=i * 60).filter(eev_pellet_time__lt=(i + 1) * 60)
             highlow_volume_by_minute_from_pellet[i] = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-            try:
-                if not os.path.exists(folder_name):
-                    os.makedirs(folder_name)
-            except IOError:
-                pass
-            f = open(file_path, 'w')
-            json_data = json.dumps(highlow_volume_by_minute_from_pellet)
-            f.write(json_data)
-            f.close()
+        try:
+            if not os.path.exists(folder_name):
+                os.makedirs(folder_name)
+        except IOError:
+            pass
+        f = open(file_path, 'w')
+        json_data = json.dumps(highlow_volume_by_minute_from_pellet)
+        f.write(json_data)
+        f.close()
+        print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
     ylabel = "Average volume per monkey (mL)"
     title = "Average intake by minute after pellet"
@@ -1927,6 +1929,7 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
             json_data = json.dumps(events_gkg)
             f.write(json_data)
             f.close()
+            print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
         return events_gkg
 
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
