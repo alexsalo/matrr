@@ -1440,7 +1440,7 @@ def _oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20,
         json_string = f.readline()
         volume_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
-        print "Generating and dumping '%s' to file..." % file_path
+        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
         volume_by_minute_from_pellet = defaultdict(lambda: 0)
         eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         if DAYTIME and not NIGHTTIME:
@@ -1486,7 +1486,7 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
         json_string = f.readline()
         highlow_volume_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
-        print "Generating and dumping '%s' to file..." % file_path
+        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
         highlow_volume_by_minute_from_pellet = defaultdict(lambda: 0)
         eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         if DAYTIME and not NIGHTTIME:
@@ -1903,7 +1903,7 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
             json_string = f.readline()
             events_gkg = json.loads(json_string)
         except Exception as e:
-            print "Generating and dumping '%s' to file..." % file_path
+            print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
             events_gkg = list()
             for monkey in RDD_56890[monkey_category]:
                 # first, get the subset of events associated with this monkey
@@ -3732,7 +3732,7 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', output_format='png', dpi
     return figures, names
 
 
-def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format='png', dpi=800):
+def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format='png', dpi=80):
     def dump_fig(fig, name, output_path, output_format, dpi):
         if output_format:
             filename = output_path + '%s.%s' % (name, output_format)
@@ -3756,4 +3756,22 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format=
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
+
+    if '5' in graphs:
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False)
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME' % minutes
+        dump_fig(fig, name, output_path, output_format, dpi)
+    if '6' in graphs:
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False)
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME' % minutes
+        dump_fig(fig, name, output_path, output_format, dpi)
+    if '6' in graphs:
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False)
+        name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME' % minutes
+        dump_fig(fig, name, output_path, output_format, dpi)
+    if '8' in graphs:
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False)
+        name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
+        dump_fig(fig, name, output_path, output_format, dpi)
+
     return
