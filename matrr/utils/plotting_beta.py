@@ -1429,8 +1429,8 @@ def _oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20,
     """
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     folder_name = "matrr/utils/DATA/json/"
-    filename_concatination = "-DAYTIME" if DAYTIME else ""
-    filename_concatination += "-NIGHTTIME" if NIGHTTIME else ""
+    filename_concatination = "DAYTIME" if DAYTIME else ""
+    filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
     file_name = "_oa_eev_volume_summation_by_minutesFromPellet-%s-%s-%s.json" % (drinking_category, str(minutes), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
 
@@ -1476,8 +1476,8 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
         monkey_set.extend(RDD_56890['LD'])
 
     folder_name = "matrr/utils/DATA/json/"
-    filename_concatination = "-DAYTIME" if DAYTIME else ""
-    filename_concatination += "-NIGHTTIME" if NIGHTTIME else ""
+    filename_concatination = "DAYTIME" if DAYTIME else ""
+    filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
     file_name = "_oa_eev_volume_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
     try:
@@ -1507,7 +1507,6 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
     ylabel = "Average volume per monkey (mL)"
     title = "Average intake by minute after pellet"
     return highlow_volume_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
-    return highlow_volume_by_minute_from_pellet, len(monkey_set)
 
 
 def rhesus_oa_discrete_minute_volumes(minutes, monkey_category, distinct_monkeys=False):
@@ -1774,35 +1773,33 @@ def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one
 
 def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, DAYTIME=True, NIGHTTIME=True, collect_data=_oa_eev_volume_summation_high_vs_low):
     fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-    main_gs = gridspec.GridSpec(3, 40)
-    main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
-    subplot = fig.add_subplot(main_gs[:, :])
+    main_gs = gridspec.GridSpec(2,1)
+    main_gs.update(left=0.08, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.05)
+    hi_subplot = fig.add_subplot(main_gs[0, :])
+    lo_subplot = fig.add_subplot(main_gs[1, :], sharey=hi_subplot)
 
-    a_data, a_count, xlabel, ylabel, title = collect_data(category_half='high', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
-    b_data, b_count, xlabel, ylabel, title = collect_data(category_half='low', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
-    assert a_data.keys() == b_data.keys()
-    for x in a_data.keys():
+    hi_data, hi_count, xlabel, ylabel, title = collect_data(category_half='high', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+    lo_data, lo_count, xlabel, ylabel, title = collect_data(category_half='low', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+    assert hi_data.keys() == lo_data.keys()
+
+    sorted_minutes = sorted([int(x) for x in hi_data.keys()])
+    for x in sorted_minutes:
+        unicode_x = unicode(x)
         # lower, light drinkers
-        _a = 0 if a_data[x] is None else a_data[x]
-        _ld = _a / float(a_count)
-        subplot.bar(x, _ld, width=.5, color='slateblue', edgecolor='none')
+        _a = 0 if lo_data[unicode_x] is None else lo_data[unicode_x]
+        _ld = _a / float(hi_count)
+        lo_subplot.bar(x, _ld, color='purple', edgecolor='none')
         # higher, heavy drinkers
-        _y = 0 if b_data[x] is None else b_data[x]
-        _hd = _y / float(b_count)
-        subplot.bar(x + .5, _hd, width=.5, color='navy', edgecolor='none')
-    subplot.legend(
-        [Rectangle((0, 0), 1, 1, color='slateblue'), Rectangle((0, 0), 1, 1, color='navy')],
-        ['VHD+HD', 'BD+LD'], title="Monkey Category", loc='upper left')
-    subplot.set_xlim(xmax=max(b_data.keys()))
-    # rotate the xaxis labels
-    xticks = [x + .5 for x in a_data.keys() if x % 15 == 0]
-    xtick_labels = ["%d" % x for x in b_data.keys() if x % 15 == 0]
-    subplot.set_xticks(xticks)
-    subplot.set_xticklabels(xtick_labels)
+        _y = 0 if hi_data[unicode_x] is None else hi_data[unicode_x]
+        _hd = _y / float(lo_count)
+        hi_subplot.bar(x, _hd, color='gold', edgecolor='none')
+    hi_subplot.legend([], title="VHD+HD", loc='upper right')
+    lo_subplot.legend([], title="BD+LD", loc='upper right')
 
-    subplot.set_xlabel(xlabel)
-    subplot.set_ylabel(ylabel)
-    subplot.set_title(title)
+    hi_subplot.xaxis.set_visible(False)
+    lo_subplot.set_xlabel(xlabel)
+    fig.text(.01, .5, ylabel, rotation='vertical', verticalalignment='center')
+    hi_subplot.set_title(title)
     return fig
 
 
@@ -1819,10 +1816,6 @@ def _rhesus_oa_volumes_by_timefrompellet_by_category(subplot, drinking_category,
         _y /= a_count
         subplot.bar(x, _y, width=1, color=colors[index%2], edgecolor='none')
     # rotate the xaxis labels
-    xticks = [x + .5 for x in minutes if x % 15 == 0]
-    xtick_labels = ["%d" % x for x in minutes if x % 15 == 0]
-    subplot.set_xticks(xticks)
-    subplot.set_xticklabels(xtick_labels)
     subplot.set_xlabel(xlabel)
     subplot.set_ylabel(ylabel)
     subplot.legend((), title=drinking_category, loc=1, frameon=False)
@@ -1835,8 +1828,9 @@ def rhesus_oa_intake_from_pellet_by_category(minutes=120, DAYTIME=True, NIGHTTIM
     main_gs.update(left=0.05, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.02)
     indexes = range(4)
     drinking_categories = list(reversed(DRINKING_CATEGORIES)) # reversed so that LD is on the bottom, cast to list so .pop() works
+    subplot = None
     for yindex in indexes:
-        subplot = fig.add_subplot(main_gs[yindex, :])
+        subplot = fig.add_subplot(main_gs[yindex, :], sharex=subplot)
         category = drinking_categories.pop()
         subplot, xlabel, ylabel, title  = _rhesus_oa_volumes_by_timefrompellet_by_category(subplot=subplot, drinking_category=category, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME, collect_data=collect_data)
         subplot.yaxis.set_visible(False)
@@ -3743,18 +3737,18 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format=
     graphs = graphs.split(',')
     if '1' in graphs:
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False)
-        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME' % minutes
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%dNIGHTTIME' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '2' in graphs:
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False)
-        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME' % minutes
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%dDAYTIME' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '3' in graphs:
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False)
-        name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
+        name = 'rhesus_oa_intake_from_pellet_by_category-%dDAYTIME' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '4' in graphs:
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False)
-        name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
+        name = 'rhesus_oa_intake_from_pellet_by_category-%dDAYTIME' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     return
