@@ -1441,7 +1441,7 @@ def _oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20,
         json_string = f.readline()
         volume_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
-        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
+        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.now()), file_path)
         volume_by_minute_from_pellet = defaultdict(lambda: 0)
         eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         if DAYTIME and not NIGHTTIME:
@@ -1462,7 +1462,7 @@ def _oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20,
         json_data = json.dumps(volume_by_minute_from_pellet)
         f.write(json_data)
         f.close()
-        print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
+        print "%s:  '%s' successfully dumped." % (str(datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
     ylabel = "Average volume per monkey (mL)"
     title = "Average intake by minute after pellet"
@@ -1488,7 +1488,7 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
         json_string = f.readline()
         highlow_volume_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
-        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
+        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.now()), file_path)
         highlow_volume_by_minute_from_pellet = defaultdict(lambda: 0)
         eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         if DAYTIME and not NIGHTTIME:
@@ -1507,7 +1507,7 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
         json_data = json.dumps(highlow_volume_by_minute_from_pellet)
         f.write(json_data)
         f.close()
-        print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
+        print "%s:  '%s' successfully dumped." % (str(datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
     ylabel = "Average volume per monkey (mL)"
     title = "Average intake by minute after pellet"
@@ -1557,7 +1557,7 @@ def _oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, DA
         json_string = f.readline()
         gkg_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
-        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
+        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.now()), file_path)
         gkg_by_minute_from_pellet = _eev_gkg_summation_by_minute_general(monkey_set, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
         try:
             if not os.path.exists(folder_name):
@@ -1568,7 +1568,7 @@ def _oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, DA
         json_data = json.dumps(gkg_by_minute_from_pellet)
         f.write(json_data)
         f.close()
-        print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
+        print "%s:  '%s' successfully dumped." % (str(datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
     ylabel = "Average EtOH intake per monkey, g/kg"
     title = "Average intake by minute after pellet"
@@ -1576,7 +1576,6 @@ def _oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, DA
 
 
 def _oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=True, NIGHTTIME=True):
-    "editing"
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     assert category_half in ('high', 'low'), "Use 'low' or 'high' for the category_half argument."
     if category_half == 'high':
@@ -1596,7 +1595,7 @@ def _oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=
         json_string = f.readline()
         highlow_gkg_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
-        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
+        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.now()), file_path)
         highlow_gkg_by_minute_from_pellet  = _eev_gkg_summation_by_minute_general(monkey_set, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
         try:
             if not os.path.exists(folder_name):
@@ -1607,7 +1606,7 @@ def _oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=
         json_data = json.dumps(highlow_gkg_by_minute_from_pellet)
         f.write(json_data)
         f.close()
-        print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
+        print "%s:  '%s' successfully dumped." % (str(datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
     ylabel = "Average volume per monkey (mL)"
     title = "Average intake by minute after pellet"
@@ -2006,7 +2005,7 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
             json_string = f.readline()
             events_gkg = json.loads(json_string)
         except Exception as e:
-            print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
+            print "%s:  Generating and dumping '%s' to file..." % (str(datetime.now()), file_path)
             events_gkg = list()
             for monkey in RDD_56890[monkey_category]:
                 # first, get the subset of events associated with this monkey
@@ -2030,7 +2029,7 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
             json_data = json.dumps(events_gkg)
             f.write(json_data)
             f.close()
-            print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
+            print "%s:  '%s' successfully dumped." % (str(datetime.now()), file_path)
         return events_gkg
 
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)

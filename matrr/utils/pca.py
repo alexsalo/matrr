@@ -6,7 +6,7 @@ from matrr import models, plotting
 def swoon(field_list, cohort_pk=8, colors=False, MATRR_MODEL=models.MonkeyToDrinkingExperiment):
     color_values = list()
 
-    data = MATRR_MODEL.objects.OA().filter(monkey__cohort=cohort_pk)
+    data = MATRR_MODEL.objects.OA().exclude_exceptions().filter(monkey__cohort=cohort_pk)
     if colors:
         categories = data.values_list('monkey__mky_drinking_category', flat=True) # only needed for colors, but need to pull the categories before casting data to a list
         color_values = [plotting.RHESUS_COLORS[cat] for cat in categories]
@@ -99,13 +99,31 @@ def find_empty_columns(cohort=8, empty_threshold=.5, MATRR_MODEL=models.MonkeyTo
             empty_columns.append(field)
         else:
             full_columns.append(field)
-
     return full_columns, empty_columns
 
 def matrr_pca(cohort=8, empty_column_threshold=.5, MATRR_MODEL=models.MonkeyBEC):
     from matplotlib import mlab
     full_columns, empty_columns = find_empty_columns(cohort, empty_column_threshold, MATRR_MODEL)
+    print full_columns
 
-    data = swoon(full_columns, cohort_pk=cohort, MATRR_MODEL=MATRR_MODEL)[0]
+    data, colors = swoon(full_columns, cohort_pk=cohort, MATRR_MODEL=MATRR_MODEL, colors=True)
+    data = numpy.array(data, dtype=float)
     pca = mlab.PCA(data)
-    print pca.Wt
+    first_principle_component = pca.Wt[0] * data
+    second_principle_component = pca.Wt[1] * data
+    X_axis = second_principle_component.sum(axis=1)
+    Y_axis = first_principle_component.sum(axis=1)
+
+    from matrr.utils import plotting_beta
+    fig = pyplot.figure(figsize=plotting_beta.DEFAULT_FIG_SIZE, dpi=plotting_beta.DEFAULT_DPI)
+    main_gs = plotting_beta.gridspec.GridSpec(3, 40)
+    main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
+    main_plot = fig.add_subplot(main_gs[:, :])
+    main_plot.set_title("Horray for PCA!")
+    main_plot.set_xlabel("PC2")
+    main_plot.set_ylabel("PC1")
+
+    main_plot.scatter(X_axis, Y_axis, color=colors, s=30)
+    return fig
+
+
