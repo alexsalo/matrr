@@ -1418,6 +1418,7 @@ def _rhesus_minute_volumes(subplot, minutes, monkey_category, volume_summation, 
     subplot.set_xticklabels(xtick_labels)
     return subplot, xlabel, ylabel, title
 
+
 def _oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20, DAYTIME=True, NIGHTTIME=True):
     """
     This method will return a tuple.
@@ -1511,6 +1512,62 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
     ylabel = "Average volume per monkey (mL)"
     title = "Average intake by minute after pellet"
     return highlow_volume_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
+
+
+def _oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, DAYTIME=True, NIGHTTIME=True):
+    """
+    """
+    assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
+    folder_name = "matrr/utils/DATA/json/"
+    filename_concatination = "DAYTIME" if DAYTIME else ""
+    filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
+    file_name = "_oa_eev_gkg_summation_by_minutesFromPellet-%s-%s-%s.json" % (drinking_category, str(minutes), filename_concatination)
+    file_path = os.path.join(folder_name, file_name)
+
+    monkey_set = RDD_56890[drinking_category]
+    try:
+        f = open(file_path, 'r')
+        json_string = f.readline()
+        volume_by_minute_from_pellet = json.loads(json_string)
+    except Exception as e:
+        print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
+        volume_by_minute_from_pellet = defaultdict(lambda: 0)
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
+        monkey_set_eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
+        if DAYTIME and not NIGHTTIME:
+            monkey_set_eevs = monkey_set_eevs.Day()
+        if NIGHTTIME and not DAYTIME:
+            monkey_set_eevs = monkey_set_eevs.Night()
+
+        mean_weight = mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
+        assert mean_weight, "If mean_weight is 0 or None, this method will throw an exception."
+        weight_and_date = mtds.values_list('drinking_experiment__dex_date', 'mtd_weight', 'monkey')
+        for date, weight, monkey in weight_and_date:
+            todays_weight = weight if weight else mean_weight
+            monkey_date_eevs = monkey_set_eevs.filter(eev_occurred__year=date.year)
+            monkey_date_eevs = monkey_date_eevs.filter(eev_occurred__month=date.month)
+            monkey_date_eevs = monkey_date_eevs.filter(eev_occurred__day=date.day)
+            monkey_date_eevs = monkey_date_eevs.filter(monkey=monkey)
+            for i in range(0, minutes):
+                monkey_date_minute_eevs = monkey_date_eevs.filter(eev_pellet_time__gte=i * 60).filter(eev_pellet_time__lt=(i + 1) * 60)
+                summed_volume = monkey_date_minute_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+                summed_volume = summed_volume if summed_volume else 0
+                gkg_conversion = summed_volume * .04 / todays_weight
+                volume_by_minute_from_pellet[i] +=  gkg_conversion
+        try:
+            if not os.path.exists(folder_name):
+                os.makedirs(folder_name)
+        except IOError:
+            pass
+        f = open(file_path, 'w')
+        json_data = json.dumps(volume_by_minute_from_pellet)
+        f.write(json_data)
+        f.close()
+        print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
+    xlabel = "Minutes since last pellet"
+    ylabel = "Average EtOH intake per monkey, g/kg"
+    title = "Average intake by minute after pellet"
+    return volume_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
 def rhesus_oa_discrete_minute_volumes(minutes, monkey_category, distinct_monkeys=False):
@@ -3761,20 +3818,20 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format=
         dump_fig(fig, name, output_path, output_format, dpi)
 
     if '5' in graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False)
-        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME' % minutes
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False, collect_data=_oa_eev_gkg_summation_by_minutesFromPellet)
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME-gkg' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '6' in graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False)
-        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME' % minutes
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False, collect_data=_oa_eev_gkg_summation_by_minutesFromPellet)
+        name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME-gkg' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
-    if '6' in graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False)
-        name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME' % minutes
+    if '7' in graphs:
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False, collect_data=_oa_eev_gkg_summation_by_minutesFromPellet)
+        name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME-gkg' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '8' in graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False)
-        name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False, collect_data=_oa_eev_gkg_summation_by_minutesFromPellet)
+        name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME-gkg' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
 
     return
