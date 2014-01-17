@@ -1440,6 +1440,7 @@ def _oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20,
         json_string = f.readline()
         volume_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
+        print "Generating and dumping '%s' to file..." % file_path
         volume_by_minute_from_pellet = defaultdict(lambda: 0)
         eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         if DAYTIME and not NIGHTTIME:
@@ -1485,6 +1486,7 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
         json_string = f.readline()
         highlow_volume_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
+        print "Generating and dumping '%s' to file..." % file_path
         highlow_volume_by_minute_from_pellet = defaultdict(lambda: 0)
         eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         if DAYTIME and not NIGHTTIME:
@@ -1780,14 +1782,16 @@ def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, DAYTIME=True, NIG
 
     hi_data, hi_count, xlabel, ylabel, title = collect_data(category_half='high', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
     lo_data, lo_count, xlabel, ylabel, title = collect_data(category_half='low', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
-    assert hi_data.keys() == lo_data.keys()
 
     sorted_minutes = sorted([int(x) for x in hi_data.keys()])
     for x in sorted_minutes:
         unicode_x = unicode(x)
         # lower, light drinkers
-        _a = 0 if lo_data[unicode_x] is None else lo_data[unicode_x]
-        _ld = _a / float(hi_count)
+        if unicode_x in lo_data.keys():
+            _a = 0 if lo_data[unicode_x] is None else lo_data[unicode_x]
+            _ld = _a / float(hi_count)
+        else:
+            _ld = 0
         lo_subplot.bar(x, _ld, color='purple', edgecolor='none')
         # higher, heavy drinkers
         _y = 0 if hi_data[unicode_x] is None else hi_data[unicode_x]
@@ -1899,6 +1903,7 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=HISTOGRAM_FIG_SIZE):
             json_string = f.readline()
             events_gkg = json.loads(json_string)
         except Exception as e:
+            print "Generating and dumping '%s' to file..." % file_path
             events_gkg = list()
             for monkey in RDD_56890[monkey_category]:
                 # first, get the subset of events associated with this monkey
