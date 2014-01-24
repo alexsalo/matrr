@@ -42,9 +42,9 @@
 					{{ form }}
 				{% else %}
 					{% with tissue_request=form.instance %}
-						{% if tissue_request.accepted_monkeys.all %}
-                            <div class="left content-padding">
-                                <div class="mini-headline">Monkeys accepted:</div>
+                        <div class="left content-padding">
+                            <div class="mini-headline">Monkeys accepted:</div>
+                            {% if tissue_request.accepted_monkeys.all %}
                                 <table class="common" style="width:30%">
                                     <thead>
                                     <th>Monkey</th>
@@ -71,11 +71,16 @@
                                         </tr>
                                     {% endfor %}
                                 </table>
-                            </div>
-                        {% endif %}
-						{% if tissue_request.not_accepted_monkeys %}
-                            <div class="right content-padding">
-                                <div class="mini-headline">Monkeys rejected:</div>
+                            {% else %}
+                                <div class="messages-small"><div class="info">
+                                    No monkeys were accepted for this tissue request.
+                                </div></div>
+                            {% endif %}
+                        </div>
+
+                        <div class="right content-padding">
+                            <div class="mini-headline">Monkeys rejected:</div>
+                            {% if tissue_request.not_accepted_monkeys %}
                                 <table class="common" style="width:30%">
                                     <thead>
                                     <th>Monkey</th>
@@ -103,13 +108,16 @@
                                         </tr>
                                     {% endfor %}
                                 </table>
-                            </div>
-						{% endif %}
+                            {% else %}
+                                <div class="messages-small"><div class="info">
+                                    No monkeys were rejected for this tissue request.
+                                </div></div>
+                            {% endif %}
+                        </div>
+                        <div class="clearfix"></div>
 					{% endwith %}
 				{% endif %}
 			{% endfor %}
-			<br>
-            <div class="clearfix"></div>
 			<div>
 				{% if not req_request.user.account.has_mta %}
 					<div class='messages clearfix'>
