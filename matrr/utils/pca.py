@@ -3,21 +3,6 @@ from matplotlib import pyplot
 from matrr import models, plotting
 
 
-def swoon(field_list, cohort_pk=8, colors=False, MATRR_MODEL=models.MonkeyToDrinkingExperiment):
-    categories = list()
-    color_values = list()
-
-    data = MATRR_MODEL.objects.OA().exclude_exceptions().filter(monkey__cohort=cohort_pk)
-    if colors:
-        categories = data.values_list('monkey__mky_drinking_category', flat=True) # only needed for colors, but need to pull the categories before casting data to a list
-        color_values = [plotting.RHESUS_COLORS[cat] for cat in categories]
-    data = list(data.values_list(*field_list))
-#    for index, row in enumerate(data):
-#        if None in row:
-#            data.pop(index)
-    data = numpy.array(data, dtype=object)
-    return data, categories, color_values
-
 def matplotlib_pca_test():
     from matplotlib import mlab
 
@@ -96,35 +81,71 @@ def find_empty_columns(cohort=8, empty_threshold=.5, MATRR_MODEL=models.MonkeyTo
         _mtds = mtds.exclude(**{field:None})
         pct = _mtds.count() / mtd_count
         if pct <= empty_threshold:
-            print "%s :: %.2f" % (field, pct)
             empty_columns.append(field)
         else:
             full_columns.append(field)
-    return full_columns, empty_columns
+    return sorted(full_columns), sorted(empty_columns)
 
 class ConfigObjectNeedsBetterName(object):
     cohort = 8
-    matrr_model = models.MonkeyBEC
+    matrr_models = [models.MonkeyBEC, models.MonkeyToDrinkingExperiment]
     empty_column_threshold = .5
 
-    def __init__(self, cohort=8, matrr_model=models.MonkeyBEC, empty_column_threshold=.5):
+    def __init__(self, cohort=8, empty_column_threshold=.5):
         self.cohort = cohort
-        self.matrr_model = matrr_model
         self.empty_column_threshold = empty_column_threshold
 
+    def get_matrr_models_columns(self):
+        columns = list()
+        columns.extend(['mtd_etoh_intake', 'mtd_veh_intake', 'mtd_total_pellets', 'mtd_weight', 'mtd_pct_etoh', ])
+        columns.extend(['mtd_etoh_g_kg', 'mtd_etoh_bout', 'mtd_etoh_drink_bout'])
+        columns.extend(['bec_record__bec_daily_gkg_etoh', 'bec_record__bec_exper_day', 'bec_record__bec_gkg_etoh', 'bec_record__bec_mg_pct', 'bec_record__bec_pct_intake', 'bec_record__bec_vol_etoh', 'bec_record__bec_weight'])
+        return columns
+
+    def get_data_row_count(self, data_model):
+        data = data_model.objects.OA().exclude_exceptions().filter(monkey__cohort=self.cohort)
+        return data.count()
+
+    def __swoon(self):
+        data = models.MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__cohort=self.cohort)
+
+        categories = data.values_list('monkey__mky_drinking_category', flat=True) # only needed for colors, but need to pull the categories before casting data to a list
+        color_values = [plotting.RHESUS_COLORS[cat] for cat in categories]
+
+        field_list = self.get_matrr_models_columns()
+        data = list(data.values_list(*field_list))
+        return data, categories, color_values
+
+    def gather_pca_data(self):
+        data, categories, color_values = self.__swoon()
+        return data, categories, color_values
+
+
 def PCA_data_collection_all_nonempty_model_fields(cfg=ConfigObjectNeedsBetterName()):
+    """
+    """
     from matplotlib import mlab
+
+    this_code_is_deprecated = """ I started cherry picking columns instead.
     full_columns, empty_columns = find_empty_columns(cfg.cohort, cfg.empty_column_threshold, cfg.matrr_model)
 
-    data, categories, colors = swoon(full_columns, cohort_pk=cfg.cohort, MATRR_MODEL=cfg.matrr_model, colors=True)
-    data = numpy.ma.masked_invalid(numpy.array(data, dtype=float))
-    pca = mlab.PCA(data)
+    all_columns = [f for f in full_columns] # lazy way to recopy the variable
+    all_columns.extend(empty_columns)
 
-    print 'First Principle Component:  '
-    for i in range(2):
-        print "Principle Component %d" % i
-        for index,column in enumerate(full_columns):
-            print "%s:  %f" % (column, pca.Wt[5][index])
+#    start_index = 0
+#    end_index = 3
+#    not_all_columns = all_columns[start_index:end_index]
+    print full_columns
+    """
+    data, categories, colors = cfg.gather_pca_data()
+    data = numpy.ma.masked_invalid(numpy.array(data, dtype=float))
+    print data[0]
+    for index, column in enumerate(data.T):
+        avg = column.mean()
+        centered = column / avg
+        data[:,index] = centered
+    print data[0]
+    pca = mlab.PCA(data)
 
     first_principle_component = pca.Wt[0] * data
     second_principle_component = pca.Wt[1] * data
@@ -144,7 +165,7 @@ def matrr_pca_scatter(cfg=ConfigObjectNeedsBetterName()):
     main_plot.set_xlabel("PC2")
     main_plot.set_ylabel("PC1")
 
-    main_plot.scatter(X_axis, Y_axis, color=colors, s=30)
+    main_plot.scatter(X_axis, Y_axis, color=colors, alpha=1)
     return fig
 
 def matrr_pca_scatter_centroids(cfg=ConfigObjectNeedsBetterName()):
