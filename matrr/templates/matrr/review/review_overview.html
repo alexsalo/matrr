@@ -42,84 +42,74 @@
 					{{ form }}
 				{% else %}
 					{% with tissue_request=form.instance %}
-						<div class="mini-headline">Monkeys accepted for this tissue request:</div>
 						{% if tissue_request.accepted_monkeys.all %}
-							<table class="common" style="width:30%">
-								<thead>
-								<th>Monkey</th>
-								<th>Assignment</th>
-								</thead>
-								{% for monkey in tissue_request.accepted_monkeys.all %}
-									<tr>
-										<td>
-											<a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
-												{{ monkey.mky_id }}
-												<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
-										</td>
-										<td>
-											{% if monkey.mky_drinking %}
-												Ethanol
-											{% else %}
-												{% if monkey.mky_housing_control %}
-													Housing Control
-												{% else %}
-													Control
-												{% endif %}
-											{% endif %}
-										</td>
-									</tr>
-								{% endfor %}
-							</table>
-						{% else %}
-							<div class="messages-small">
-								<div class="info">
-									No monkeys were accepted for this tissue request.
-								</div>
-								<br>
-							</div>
-						{% endif %}
-						<div class="mini-headline">Monkeys rejected for this tissue request:</div>
+                            <div class="left content-padding">
+                                <div class="mini-headline">Monkeys accepted:</div>
+                                <table class="common" style="width:30%">
+                                    <thead>
+                                    <th>Monkey</th>
+                                    <th>Assignment</th>
+                                    </thead>
+                                    {% for monkey in tissue_request.accepted_monkeys.all %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+                                                    {{ monkey.mky_id }}
+                                                    <img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
+                                            </td>
+                                            <td>
+                                                {% if monkey.mky_drinking %}
+                                                    Ethanol
+                                                {% else %}
+                                                    {% if monkey.mky_housing_control %}
+                                                        Housing Control
+                                                    {% else %}
+                                                        Control
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
+                        {% endif %}
 						{% if tissue_request.not_accepted_monkeys %}
-							<table class="common" style="width:30%">
-								<thead>
-								<th>Monkey</th>
-								<th>Assignment</th>
-								</thead>
-								{% for monkey in tissue_request.not_accepted_monkeys %}
-									<tr>
-										<td>
-											<a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
-												{{ monkey.mky_id }}
-												<img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
-										</td>
-										<td>
-											{% if monkey.mky_drinking %}
-												Ethanol
-											{% else %}
-												{% if monkey.mky_housing_control %}
-													Housing Control
-												{% else %}
-													Control
-												{% endif %}
-											{% endif %}
+                            <div class="right content-padding">
+                                <div class="mini-headline">Monkeys rejected:</div>
+                                <table class="common" style="width:30%">
+                                    <thead>
+                                    <th>Monkey</th>
+                                    <th>Assignment</th>
+                                    </thead>
+                                    {% for monkey in tissue_request.not_accepted_monkeys %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+                                                    {{ monkey.mky_id }}
+                                                    <img src="/static//images/arrow_popup.png" width="8" height="8" style="vertical-align: text-top"></a>
+                                            </td>
+                                            <td>
+                                                {% if monkey.mky_drinking %}
+                                                    Ethanol
+                                                {% else %}
+                                                    {% if monkey.mky_housing_control %}
+                                                        Housing Control
+                                                    {% else %}
+                                                        Control
+                                                    {% endif %}
+                                                {% endif %}
 
-										</td>
-									</tr>
-								{% endfor %}
-							</table>
-						{% else %}
-							<div class="messages-small">
-								<div class="info">
-									No monkeys were rejected for this tissue request.
-								</div>
-								<br>
-							</div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
 						{% endif %}
 					{% endwith %}
 				{% endif %}
 			{% endfor %}
 			<br>
-
+            <div class="clearfix"></div>
 			<div>
 				{% if not req_request.user.account.has_mta %}
 					<div class='messages clearfix'>
