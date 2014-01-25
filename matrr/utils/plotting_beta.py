@@ -1516,22 +1516,23 @@ def _oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTI
 
 def _eev_gkg_summation_by_minute_general(monkey_set, minutes=20, DAYTIME=True, NIGHTTIME=True):
     gkg_by_minute_from_pellet = defaultdict(lambda: 0)
-    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
     monkey_set_eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
     if DAYTIME and not NIGHTTIME:
         monkey_set_eevs = monkey_set_eevs.Day()
     if NIGHTTIME and not DAYTIME:
         monkey_set_eevs = monkey_set_eevs.Night()
 
+    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
     mean_weight = mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
     assert mean_weight, "If mean_weight is 0 or None, this method will throw an exception."
-    weight_and_date = mtds.values_list('drinking_experiment__dex_date', 'mtd_weight', 'monkey')
-    for date, weight, monkey in weight_and_date:
+    date_and_weight = mtds.values_list('drinking_experiment__dex_date', 'mtd_weight', 'monkey')
+    for date, weight, monkey in date_and_weight:
         todays_weight = weight if weight else mean_weight
         monkey_date_eevs = monkey_set_eevs.filter(eev_occurred__year=date.year)
         monkey_date_eevs = monkey_date_eevs.filter(eev_occurred__month=date.month)
         monkey_date_eevs = monkey_date_eevs.filter(eev_occurred__day=date.day)
         monkey_date_eevs = monkey_date_eevs.filter(monkey=monkey)
+        monkey_date_eevs = monkey_date_eevs.values_list('eev_etoh_volume', 'eev_pellet_time')
         for i in range(0, minutes):
             monkey_date_minute_eevs = monkey_date_eevs.filter(eev_pellet_time__gte=i * 60).filter(eev_pellet_time__lt=(i + 1) * 60)
             summed_volume = monkey_date_minute_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
@@ -1575,7 +1576,7 @@ def _oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, DA
     return gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
-def _oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=True, NIGHTTIME=True):
+def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=True, NIGHTTIME=True):
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     assert category_half in ('high', 'low'), "Use 'low' or 'high' for the category_half argument."
     if category_half == 'high':
