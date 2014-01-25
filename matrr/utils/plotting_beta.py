@@ -1576,7 +1576,7 @@ def _oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, DA
     return gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
-def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=True, NIGHTTIME=True):
+def _oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=True, NIGHTTIME=True):
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     assert category_half in ('high', 'low'), "Use 'low' or 'high' for the category_half argument."
     if category_half == 'high':
