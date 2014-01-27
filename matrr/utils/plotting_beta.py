@@ -1514,37 +1514,49 @@ def oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTIM
     return highlow_volume_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
-def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, DAYTIME=True, NIGHTTIME=True):
+def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
     gkg_by_minute_from_pellet = defaultdict(lambda: 0)
-    monkey_set_eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
+    monkey_set_eevs = ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set).order_by()
     if DAYTIME and not NIGHTTIME:
         monkey_set_eevs = monkey_set_eevs.Day()
     if NIGHTTIME and not DAYTIME:
         monkey_set_eevs = monkey_set_eevs.Night()
 
-    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
-    mean_weight = mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
+    monkey_set_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set).order_by()
+    mean_weight = monkey_set_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
     assert mean_weight, "If mean_weight is 0 or None, this method will throw an exception."
-    date_and_weight = mtds.values_list('drinking_experiment__dex_date', 'mtd_weight', 'monkey')
-    for date, weight, monkey in date_and_weight:
-        todays_weight = weight if weight else mean_weight
-        monkey_date_eevs = monkey_set_eevs.filter(eev_occurred__year=date.year)
-        monkey_date_eevs = monkey_date_eevs.filter(eev_occurred__month=date.month)
-        monkey_date_eevs = monkey_date_eevs.filter(eev_occurred__day=date.day)
-        monkey_date_eevs = monkey_date_eevs.filter(monkey=monkey)
-        monkey_date_eevs = monkey_date_eevs.values_list('eev_etoh_volume', 'eev_pellet_time')
-        for i in range(0, minutes):
-            monkey_date_minute_eevs = monkey_date_eevs.filter(eev_pellet_time__gte=i * 60).filter(eev_pellet_time__lt=(i + 1) * 60)
-            summed_volume = monkey_date_minute_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-            summed_volume = summed_volume if summed_volume else 0
+    date_and_weight = monkey_set_mtds.values_list('drinking_experiment__dex_date', 'mtd_weight', 'monkey')
+    for _date, _weight, _monkey in date_and_weight:
+        print "%s:  Starting Monkey %d" % (str(datetime.now()), _monkey)
+        todays_weight = _weight if _weight else mean_weight
+        monkey_date_eevs = monkey_set_eevs.filter(eev_occurred__year=_date.year)
+        monkey_date_eevs = monkey_date_eevs.filter(eev_occurred__month=_date.month)
+        monkey_date_eevs = monkey_date_eevs.filter(eev_occurred__day=_date.day)
+        monkey_date_eevs = monkey_date_eevs.filter(monkey=_monkey)
+        total_eevs = monkey_date_eevs.count() * 1.
+        current_eevs = 0
+        print 'eevs to process:  %s' % str(total_eevs)
+        md_start = datetime.now()
+        for _minutes in range(0, minutes+1, minutes_gap):
+            monkey_date_minute_eevs = monkey_date_eevs.filter(eev_pellet_time__gte=_minutes*60)
+            if _minutes != minutes:
+                monkey_date_minute_eevs = monkey_date_minute_eevs.filter(eev_pellet_time__lte=(_minutes+minutes_gap)*60)
+            summed_volume = monkey_date_minute_eevs.aggregate(sv=Sum('eev_etoh_volume'))['sv']
+            if summed_volume is None:
+                continue
             gkg_conversion = summed_volume * .04 / todays_weight
-            gkg_by_minute_from_pellet[i] +=  gkg_conversion
+            gkg_by_minute_from_pellet[_minutes] +=  gkg_conversion
+            current_eevs += monkey_date_minute_eevs.count()
+            if current_eevs == total_eevs:
+                break
+        diff = (datetime.now() - md_start).seconds
+        _duration_minutes = diff / 60
+        _duration_seconds = diff % 60
+        print "%s:  Finished processing events for %d on %s. Duration=%dm%ds" % (str(datetime.now()), _monkey, str(_date), _duration_minutes, _duration_seconds)
     return gkg_by_minute_from_pellet
 
 
-def oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, DAYTIME=True, NIGHTTIME=True):
-    """
-    """
+def oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
@@ -1559,7 +1571,7 @@ def oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, DAY
         gkg_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
         print "%s:  Generating and dumping '%s' to file..." % (str(datetime.now()), file_path)
-        gkg_by_minute_from_pellet = eev_gkg_summation_by_minute_general(monkey_set, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+        gkg_by_minute_from_pellet = eev_gkg_summation_by_minute_general(monkey_set, minutes=minutes, minutes_gap=minutes_gap, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
         try:
             if not os.path.exists(folder_name):
                 os.makedirs(folder_name)
@@ -1576,7 +1588,7 @@ def oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, DAY
     return gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
-def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=True, NIGHTTIME=True):
+def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     assert category_half in ('high', 'low'), "Use 'low' or 'high' for the category_half argument."
     if category_half == 'high':
@@ -1597,7 +1609,7 @@ def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=T
         highlow_gkg_by_minute_from_pellet = json.loads(json_string)
     except Exception as e:
         print "%s:  Generating and dumping '%s' to file..." % (str(datetime.now()), file_path)
-        highlow_gkg_by_minute_from_pellet  = eev_gkg_summation_by_minute_general(monkey_set, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+        highlow_gkg_by_minute_from_pellet  = eev_gkg_summation_by_minute_general(monkey_set, minutes=minutes, minutes_gap=minutes_gap, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
         try:
             if not os.path.exists(folder_name):
                 os.makedirs(folder_name)
@@ -1876,15 +1888,15 @@ def rhesus_oa_discrete_minute_volumes_discrete_monkey_comparisons(monkey_cat_one
     return fig
 
 
-def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, DAYTIME=True, NIGHTTIME=True, collect_data=oa_eev_volume_summation_high_vs_low):
+def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, minutes_gap=10, DAYTIME=True, NIGHTTIME=True, collect_data=oa_eev_volume_summation_high_vs_low):
     fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(2,1)
     main_gs.update(left=0.08, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.05)
     hi_subplot = fig.add_subplot(main_gs[0, :])
     lo_subplot = fig.add_subplot(main_gs[1, :], sharey=hi_subplot)
 
-    hi_data, hi_count, xlabel, ylabel, title = collect_data(category_half='high', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
-    lo_data, lo_count, xlabel, ylabel, title = collect_data(category_half='low', minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+    hi_data, hi_count, xlabel, ylabel, title = collect_data(category_half='high', minutes=minutes, minutes_gap=minutes_gap, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+    lo_data, lo_count, xlabel, ylabel, title = collect_data(category_half='low', minutes=minutes, minutes_gap=minutes_gap, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
 
     sorted_minutes = sorted([int(x) for x in hi_data.keys()])
     for x in sorted_minutes:
@@ -1910,8 +1922,8 @@ def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, DAYTIME=True, NIG
     return fig
 
 
-def rhesus_oa_volumes_by_timefrompellet_by_category(subplot, drinking_category, minutes=120, DAYTIME=True, NIGHTTIME=True, collect_data=oa_eev_volume_summation_by_minutesFromPellet):
-    a_data, a_count, xlabel, ylabel, title  = collect_data(drinking_category=drinking_category, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
+def rhesus_oa_volumes_by_timefrompellet_by_category(subplot, drinking_category, minutes=120, minutes_gap=10, DAYTIME=True, NIGHTTIME=True, collect_data=oa_eev_volume_summation_by_minutesFromPellet):
+    a_data, a_count, xlabel, ylabel, title  = collect_data(drinking_category=drinking_category, minutes=minutes, minutes_gap=minutes_gap, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
     a_count = float(a_count)
     colors = (RHESUS_COLORS[drinking_category], RHESUS_COLORS_ACCENT[drinking_category])
     minutes = [int(x) for x in a_data.keys()] # the a_data.keys are dumped to json as strings, which matplotlib doesn't appreciate.
@@ -1929,7 +1941,7 @@ def rhesus_oa_volumes_by_timefrompellet_by_category(subplot, drinking_category, 
     return subplot, xlabel, ylabel, title
 
 
-def rhesus_oa_intake_from_pellet_by_category(minutes=120, DAYTIME=True, NIGHTTIME=True, collect_data=oa_eev_volume_summation_by_minutesFromPellet):
+def rhesus_oa_intake_from_pellet_by_category(minutes=120, minutes_gap=10, DAYTIME=True, NIGHTTIME=True, collect_data=oa_eev_volume_summation_by_minutesFromPellet):
     fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(4,1)
     main_gs.update(left=0.05, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.02)
@@ -1939,7 +1951,7 @@ def rhesus_oa_intake_from_pellet_by_category(minutes=120, DAYTIME=True, NIGHTTIM
     for yindex in indexes:
         subplot = fig.add_subplot(main_gs[yindex, :], sharex=subplot)
         category = drinking_categories.pop()
-        subplot, xlabel, ylabel, title  = rhesus_oa_volumes_by_timefrompellet_by_category(subplot=subplot, drinking_category=category, minutes=minutes, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME, collect_data=collect_data)
+        subplot, xlabel, ylabel, title  = rhesus_oa_volumes_by_timefrompellet_by_category(subplot=subplot, drinking_category=category, minutes=minutes, minutes_gap=minutes_gap, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME, collect_data=collect_data)
         subplot.yaxis.set_visible(False)
         subplot.xaxis.set_visible(False)
     subplot.xaxis.set_visible(True)
@@ -3836,7 +3848,7 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', output_format='png', dpi
     return figures, names
 
 
-def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format='png', dpi=80):
+def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format='png', dpi=80, minutes_gap=60):
     def dump_fig(fig, name, output_path, output_format, dpi):
         if output_format:
             filename = output_path + '%s.%s' % (name, output_format)
@@ -3862,19 +3874,19 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format=
         dump_fig(fig, name, output_path, output_format, dpi)
 
     if '5' in graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME-gkg' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '6' in graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME-gkg' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '7' in graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME-gkg' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
     if '8' in graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME-gkg' % minutes
         dump_fig(fig, name, output_path, output_format, dpi)
 
