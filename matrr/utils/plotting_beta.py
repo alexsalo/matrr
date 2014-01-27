@@ -1557,7 +1557,7 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         diff = (datetime.now() - md_start).seconds
         _duration_minutes = diff / 60
         _duration_seconds = diff % 60
-        print "%s:  Iteration Duration = %dm%ds" % (str(datetime.now()), _monkey, str(_date), _duration_minutes, _duration_seconds)
+        print "%s:  Iteration Duration = %dm%ds" % (str(datetime.now()), _duration_minutes, _duration_seconds)
     print "Damn yo, that shit finally finished.  Next round's on me."
     return gkg_by_minute_from_pellet
 
