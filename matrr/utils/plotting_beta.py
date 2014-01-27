@@ -1469,7 +1469,7 @@ def oa_eev_volume_summation_by_minutesFromPellet(drinking_category, minutes=20, 
     return volume_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
-def oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20, DAYTIME=True, NIGHTTIME=True):
+def oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20,  DAYTIME=True, NIGHTTIME=True):
     assert category_half in ('high', 'low')
     if category_half == 'high':
         monkey_set = RDD_56890['VHD']
@@ -1526,7 +1526,14 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
     mean_weight = monkey_set_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
     assert mean_weight, "If mean_weight is 0 or None, this method will throw an exception."
     date_and_weight = monkey_set_mtds.values_list('drinking_experiment__dex_date', 'mtd_weight', 'monkey')
+    total_loops = len(date_and_weight)
+    print_index = 0
+    current_loop = 0
     for _date, _weight, _monkey in date_and_weight:
+        current_loop += 1
+        if current_loop >= (total_loops / 10) * print_index:
+            print "%s:  Starting monkey-date loop# %d of %d" % (str(datetime.now()), current_loop, total_loops)
+            print_index += 1
         print "%s:  Starting Monkey %d" % (str(datetime.now()), _monkey)
         todays_weight = _weight if _weight else mean_weight
         monkey_date_eevs = monkey_set_eevs.filter(eev_occurred__year=_date.year)
@@ -1535,7 +1542,6 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         monkey_date_eevs = monkey_date_eevs.filter(monkey=_monkey)
         total_eevs = monkey_date_eevs.count() * 1.
         current_eevs = 0
-        print 'eevs to process:  %s' % str(total_eevs)
         md_start = datetime.now()
         for _minutes in range(0, minutes+1, minutes_gap):
             monkey_date_minute_eevs = monkey_date_eevs.filter(eev_pellet_time__gte=_minutes*60)
@@ -1553,6 +1559,7 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         _duration_minutes = diff / 60
         _duration_seconds = diff % 60
         print "%s:  Finished processing events for %d on %s. Duration=%dm%ds" % (str(datetime.now()), _monkey, str(_date), _duration_minutes, _duration_seconds)
+    print "Damn yo, that shit finally finished.  Next round's on me."
     return gkg_by_minute_from_pellet
 
 
