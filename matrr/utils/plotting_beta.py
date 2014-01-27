@@ -1534,7 +1534,6 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         if current_loop >= (total_loops / 10) * print_index:
             print "%s:  Starting monkey-date loop# %d of %d" % (str(datetime.now()), current_loop, total_loops)
             print_index += 1
-        print "%s:  Starting Monkey %d" % (str(datetime.now()), _monkey)
         todays_weight = _weight if _weight else mean_weight
         monkey_date_eevs = monkey_set_eevs.filter(eev_occurred__year=_date.year)
         monkey_date_eevs = monkey_date_eevs.filter(eev_occurred__month=_date.month)
@@ -1558,7 +1557,7 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         diff = (datetime.now() - md_start).seconds
         _duration_minutes = diff / 60
         _duration_seconds = diff % 60
-        print "%s:  Finished processing events for %d on %s. Duration=%dm%ds" % (str(datetime.now()), _monkey, str(_date), _duration_minutes, _duration_seconds)
+        print "%s:  Iteration Duration = %dm%ds" % (str(datetime.now()), _monkey, str(_date), _duration_minutes, _duration_seconds)
     print "Damn yo, that shit finally finished.  Next round's on me."
     return gkg_by_minute_from_pellet
 
