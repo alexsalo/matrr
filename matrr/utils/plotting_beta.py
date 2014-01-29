@@ -1526,6 +1526,8 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
     mean_weight = monkey_set_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
     assert mean_weight, "If mean_weight is 0 or None, this method will throw an exception."
     date_and_weight = monkey_set_mtds.values_list('drinking_experiment__dex_date', 'mtd_weight', 'monkey')
+
+    start_time = datetime.now()
     total_loops = len(date_and_weight)
     print_index = 0
     current_loop = 0
@@ -1533,6 +1535,11 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         current_loop += 1
         if current_loop >= (total_loops / 10) * print_index:
             print "%s:  Starting monkey-date loop# %d of %d" % (str(datetime.now()), current_loop, total_loops)
+            _time_per_loop = (datetime.now()-start_time).seconds / (current_loop - 1.)
+            print "%s:  Average time per loop:  %.2f" % (str(datetime.now()), _time_per_loop)
+            print "%s:  Guestimated total time:  %.2f" % (str(datetime.now()), _time_per_loop*total_loops)
+            _eta = start_time + timedelta(seconds=_time_per_loop*total_loops)
+            print "%s:  Guestimated ETA:  %s" % (str(datetime.now()), _eta)
             print_index += 1
         todays_weight = _weight if _weight else mean_weight
         monkey_date_eevs = monkey_set_eevs.filter(eev_occurred__year=_date.year)
