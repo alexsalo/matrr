@@ -56,6 +56,9 @@ DATABASES = {
     }
 }
 
+# Backend for case-insensitive username
+AUTHENTICATION_BACKENDS = ('matrr.backends.CaseInsensitiveModelBackend',)
+
 # This view is what handled a failed CSRF test, pointing users to the FAQ page
 # for instructions on how to enable cookies.  This worked in 1.3 (woohoo!), it
 # should still work in 1.5 (I didn't see any release notes related to it).  I
