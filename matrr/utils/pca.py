@@ -1,4 +1,5 @@
 import numpy
+import json
 from matplotlib import pyplot
 from matrr import models, plotting
 from matrr.utils import plotting_beta
