@@ -558,4 +558,8 @@ def collect_bout_startdiff_normratesum_data(subplot, monkey_one, monkey_two):
         subplot.set_xlabel("Bout start time difference")
         return subplot, x, y
 
+def dump_figure_to_file(fig, name, output_path='', output_format='png', dpi=80):
+    if output_format:
+        filename = output_path + '%s.%s' % (name, output_format)
+        fig.savefig(filename, format=output_format,dpi=dpi)
 
