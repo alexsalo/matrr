@@ -26,6 +26,10 @@ from matrr.utils import apriori, gadgets
 from matrr.plotting import monkey_plots, plot_tools
 from matrr.plotting import *
 
+def dump_figure_to_file(fig, name, output_path='', output_format='png', dpi=80):
+    if output_format:
+        filename = output_path + '%s.%s' % (name, output_format)
+        fig.savefig(filename, format=output_format,dpi=dpi)
 
 doc_snippet = \
     """
@@ -1536,10 +1540,10 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         if current_loop >= (total_loops / 10) * print_index:
             print "%s:  Starting monkey-date loop# %d of %d" % (str(datetime.now()), current_loop, total_loops)
             _time_per_loop = (datetime.now()-start_time).seconds / (current_loop - 1.)
-            print "%s:  Average time per loop:  %.2f" % (str(datetime.now()), _time_per_loop)
-            print "%s:  Guestimated total time:  %.2f" % (str(datetime.now()), _time_per_loop*total_loops)
-            _eta = start_time + timedelta(seconds=_time_per_loop*total_loops)
-            print "%s:  Guestimated ETA:  %s" % (str(datetime.now()), _eta)
+            print "%s:  Average time per loop:  %.2f" % (str(datetime.now()), time_per_loop)
+            print "%s:  Guestimated total time:  %.2f" % (str(datetime.now()), time_per_loop*total_loops)
+            _eta
+            print "%s:  Guestimated ETA:  %s" % (str(datetime.now()), time_per_loop)
             print_index += 1
         todays_weight = _weight if _weight else mean_weight
         monkey_date_eevs = monkey_set_eevs.filter(eev_occurred__year=_date.year)
@@ -3862,45 +3866,40 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', output_format='png', dpi
 
 
 def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4', output_format='png', dpi=80, minutes_gap=60):
-    def dump_fig(fig, name, output_path, output_format, dpi):
-        if output_format:
-            filename = output_path + '%s.%s' % (name, output_format)
-            fig.savefig(filename, format=output_format,dpi=dpi)
-
     minutes = 12*60
     graphs = graphs.split(',')
     if '1' in graphs:
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False, collect_data=oa_eev_volume_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME' % minutes
-        dump_fig(fig, name, output_path, output_format, dpi)
+        dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '2' in graphs:
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False, collect_data=oa_eev_volume_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME' % minutes
-        dump_fig(fig, name, output_path, output_format, dpi)
+        dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '3' in graphs:
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False, collect_data=oa_eev_volume_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME' % minutes
-        dump_fig(fig, name, output_path, output_format, dpi)
+        dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '4' in graphs:
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False, collect_data=oa_eev_volume_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
-        dump_fig(fig, name, output_path, output_format, dpi)
+        dump_figure_to_file(fig, name, output_path, output_format, dpi)
 
     if '5' in graphs:
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME-gkg' % minutes
-        dump_fig(fig, name, output_path, output_format, dpi)
+        dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '6' in graphs:
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME-gkg' % minutes
-        dump_fig(fig, name, output_path, output_format, dpi)
+        dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '7' in graphs:
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME-gkg' % minutes
-        dump_fig(fig, name, output_path, output_format, dpi)
+        dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '8' in graphs:
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME-gkg' % minutes
-        dump_fig(fig, name, output_path, output_format, dpi)
+        dump_figure_to_file(fig, name, output_path, output_format, dpi)
 
     return

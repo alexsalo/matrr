@@ -86,65 +86,90 @@ def find_empty_columns(cohort=8, empty_threshold=.5, MATRR_MODEL=models.MonkeyTo
             full_columns.append(field)
     return sorted(full_columns), sorted(empty_columns)
 
-class ConfigObjectNeedsBetterName(object):
-    cohort = 8
-    matrr_models = [models.MonkeyBEC, models.MonkeyToDrinkingExperiment]
-    empty_column_threshold = .5
+class PCAConfiguration(object):
+    figure_title = "Horray for PCA!"
+    notes = "Notes are for jokes"
+    cohort = 5
+    include_mtd_columns = True
+    columns = list()
 
-    def __init__(self, cohort=8, empty_column_threshold=.5):
+    def __init__(self, cohort=cohort, include_mtd_columns=True):
         self.cohort = cohort
-        self.empty_column_threshold = empty_column_threshold
+        self.figure_title = "cohort_pk=%d" % cohort
+        self.include_mtd_columns = include_mtd_columns
+        self.generate_columns()
 
-    def get_matrr_models_columns(self):
+    def dump_self_to_json(self):
+        ego = {'figure_title': self.figure_title, 'notes': self.notes, 'cohort': str(self.cohort)}
+        ego['include_mtd_columns'] = self.include_mtd_columns
+        serialiazed_ego = json.dumps(ego)
+        return serialiazed_ego
+
+    def fetch_mtd_columns(self):
+        mtd_columns = ['mtd_total_pellets', 'mtd_weight', 'mtd_pct_etoh', 'mtd_etoh_g_kg', 'mtd_etoh_conc', 'mtd_pct_etoh_in_1st_bout', 'mtd_drinks_1st_bout',
+                       'mtd_mean_drink_vol_1st_bout', 'mtd_mean_seconds_between_meals']
+        mtd_columns = ['mtd__'+_c for _c in mtd_columns]
+        return mtd_columns
+
+    def generate_columns(self):
         columns = list()
-        columns.extend(['mtd_etoh_intake', 'mtd_veh_intake', 'mtd_total_pellets', 'mtd_weight', 'mtd_pct_etoh', ])
-        columns.extend(['mtd_etoh_g_kg', 'mtd_etoh_bout', 'mtd_etoh_drink_bout'])
-        columns.extend(['bec_record__bec_daily_gkg_etoh', 'bec_record__bec_exper_day', 'bec_record__bec_gkg_etoh', 'bec_record__bec_mg_pct', 'bec_record__bec_pct_intake', 'bec_record__bec_vol_etoh', 'bec_record__bec_weight'])
-        return columns
+        if self.include_mtd_columns:
+            columns.extend(self.fetch_mtd_columns())
+        self.columns = columns
 
     def get_data_row_count(self, data_model):
         data = data_model.objects.OA().exclude_exceptions().filter(monkey__cohort=self.cohort)
         return data.count()
 
-    def __swoon(self):
-        data = models.MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__cohort=self.cohort)
-
-        categories = data.values_list('monkey__mky_drinking_category', flat=True) # only needed for colors, but need to pull the categories before casting data to a list
-        color_values = [plotting.RHESUS_COLORS[cat] for cat in categories]
-
-        field_list = self.get_matrr_models_columns()
-        data = list(data.values_list(*field_list))
-        return data, categories, color_values
-
     def gather_pca_data(self):
-        data, categories, color_values = self.__swoon()
+        data = list()
+        categories = list()
+        color_values = list()
         return data, categories, color_values
 
 
-def PCA_data_collection_all_nonempty_model_fields(cfg=ConfigObjectNeedsBetterName()):
+class PCAConfigMonkeyBEC(PCAConfiguration):
+    def __init__(self, *args, **kwargs):
+        super(PCAConfigMonkeyBEC, self).__init__(*args, **kwargs)
+        self.figure_title += " - BEC"
+        self.notes = "\n".join(self.columns)
+
+    def generate_columns(self):
+        super(PCAConfigMonkeyBEC, self).generate_columns()
+        self.columns.extend(['bec_daily_gkg_etoh', 'bec_gkg_etoh', 'bec_mg_pct', 'bec_pct_intake', 'bec_vol_etoh', 'bec_weight'])
+
+    def gather_pca_data(self): # Used to be named self.__swoon() and swoon()
+        becs = models.MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey__cohort=self.cohort)
+        categories = becs.values_list('monkey__mky_drinking_category', flat=True) # only needed for colors, but need to pull the categories before casting data to a list
+        color_values = [plotting.RHESUS_COLORS[cat] for cat in categories]
+        data = list(becs.values_list(*self.columns))
+        return data, categories, color_values
+
+
+class PCAConfigMonkeyHormone(PCAConfiguration):
+    def __init__(self, *args, **kwargs):
+        super(PCAConfigMonkeyHormone, self).__init__(*args, **kwargs)
+        self.figure_title += " - Hormones"
+        self.notes = "\n".join(self.columns)
+
+    def generate_columns(self):
+        super(PCAConfigMonkeyHormone, self).generate_columns()
+        self.columns.extend(['mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas'])
+
+    def gather_pca_data(self): # Used to be named self.__swoon() and swoon()
+        mhms = models.MonkeyHormone.objects.OA().exclude_exceptions().filter(monkey__cohort=self.cohort)
+        categories = mhms.values_list('monkey__mky_drinking_category', flat=True) # only needed for colors, but need to pull the categories before casting data to a list
+        color_values = [plotting.RHESUS_COLORS[cat] for cat in categories]
+        data = list(mhms.values_list(*self.columns))
+        return data, categories, color_values
+
+
+def pca_data_collections(cfg=PCAConfigMonkeyBEC()):
     """
     """
     from matplotlib import mlab
-
-    this_code_is_deprecated = """ I started cherry picking columns instead.
-    full_columns, empty_columns = find_empty_columns(cfg.cohort, cfg.empty_column_threshold, cfg.matrr_model)
-
-    all_columns = [f for f in full_columns] # lazy way to recopy the variable
-    all_columns.extend(empty_columns)
-
-#    start_index = 0
-#    end_index = 3
-#    not_all_columns = all_columns[start_index:end_index]
-    print full_columns
-    """
     data, categories, colors = cfg.gather_pca_data()
-    data = numpy.ma.masked_invalid(numpy.array(data, dtype=float))
-    print data[0]
-    for index, column in enumerate(data.T):
-        avg = column.mean()
-        centered = column / avg
-        data[:,index] = centered
-    print data[0]
+    data = numpy.array(data, dtype=float)
     pca = mlab.PCA(data)
 
     first_principle_component = pca.Wt[0] * data
@@ -153,22 +178,41 @@ def PCA_data_collection_all_nonempty_model_fields(cfg=ConfigObjectNeedsBetterNam
     Y_axis = first_principle_component.sum(axis=1)
     return X_axis, Y_axis, categories, colors
 
-def matrr_pca_scatter(cfg=ConfigObjectNeedsBetterName()):
-    X_axis, Y_axis, categories, colors = PCA_data_collection_all_nonempty_model_fields(cfg=cfg)
+def pca_data_exploration(cfg=PCAConfigMonkeyBEC()):
+    from matplotlib import mlab
+
+    bec_field_names = ['bec_daily_gkg_etoh', 'bec_gkg_etoh', 'bec_mg_pct', 'bec_pct_intake', 'bec_vol_etoh', 'bec_weight']
+    mtd_field_names = []
+    bad_field_names = list()
+    for field_index, _field in enumerate(models.MonkeyToDrinkingExperiment._meta.fields):
+        try:
+            data, categories, colors = cfg.get_data_find_bad_columns(bec_field_names=bec_field_names, mtd_field_names=mtd_field_names)
+            data = numpy.array(data, dtype=float)
+            pca = mlab.PCA(data)
+            mtd_field_names.append(_field.name)
+        except:
+            bad_field_names.append(_field.name)
+    print bad_field_names
+    print '--'
+    print mtd_field_names
+
+def matrr_pca_scatter(cfg=PCAConfiguration()):
+    X_axis, Y_axis, categories, colors = pca_data_collections(cfg=cfg)
 
     from matrr.utils import plotting_beta
     fig = pyplot.figure(figsize=plotting_beta.DEFAULT_FIG_SIZE, dpi=plotting_beta.DEFAULT_DPI)
     main_gs = plotting_beta.gridspec.GridSpec(3, 40)
     main_gs.update(left=0.08, right=.98, wspace=0, hspace=0)
     main_plot = fig.add_subplot(main_gs[:, :])
-    main_plot.set_title("Horray for PCA!")
+    main_plot.set_title(cfg.figure_title)
     main_plot.set_xlabel("PC2")
     main_plot.set_ylabel("PC1")
 
-    main_plot.scatter(X_axis, Y_axis, color=colors, alpha=1)
+    main_plot.text(.98, .98, cfg.notes, bbox=dict(facecolor='black', alpha=0.1), transform=main_plot.transAxes, horizontalalignment='right', verticalalignment='top')
+    main_plot.scatter(X_axis, Y_axis, color=colors, alpha=1, s=50)
     return fig
 
-def matrr_pca_scatter_centroids(cfg=ConfigObjectNeedsBetterName()):
+def matrr_pca_scatter_centroids(cfg=PCAConfigMonkeyBEC()):
     import collections
     from scipy import cluster
     from matrr.utils import plotting_beta
@@ -181,7 +225,7 @@ def matrr_pca_scatter_centroids(cfg=ConfigObjectNeedsBetterName()):
     main_plot.set_xlabel("PC2 Centroids")
     main_plot.set_ylabel("PC1 Centroids")
 
-    unorganized_data = PCA_data_collection_all_nonempty_model_fields(cfg=cfg)
+    unorganized_data = pca_data_collections(cfg=cfg)
     organized_data = collections.defaultdict(lambda: list())
     for datapoint in zip(*unorganized_data):
         X_value, Y_value, category, color = datapoint
@@ -195,3 +239,29 @@ def matrr_pca_scatter_centroids(cfg=ConfigObjectNeedsBetterName()):
         main_plot.scatter(centroid_xaxis, centroid_yaxis, color=plotting.RHESUS_COLORS[category], s=300, marker='x')
     return fig
 
+def dump_BEC_MHM_PCA_graphs(cohorts=(5,6,9,10), BEC=True, MHM=True, dump_image=False):
+    def dump_json_config(cfg, file_path):
+        f = open(file_path, 'w')
+        json_data = cfg.dump_self_to_json()
+        f.write(json_data)
+        f.close()
+    counter = 0
+    filename_template = "%s_PCA_Figure_%d"
+    for include_mtd_columns in [True, False]:
+        for cohort_pk in cohorts:
+            if BEC:
+                bec_cfg = PCAConfigMonkeyBEC(cohort_pk, include_mtd_columns=include_mtd_columns)
+                bec_fig = matrr_pca_scatter(bec_cfg)
+                if dump_image:
+                    filename = filename_template % ('BEC', counter)
+                    plotting_beta.dump_figure_to_file(bec_fig, filename+'.png')
+                    dump_json_config(bec_cfg, filename+'.json')
+                counter += 1
+            if MHM:
+                mhm_cfg = PCAConfigMonkeyHormone(cohort_pk, include_mtd_columns=include_mtd_columns)
+                mhm_fig = matrr_pca_scatter(mhm_cfg)
+                if dump_image:
+                    filename = filename_template % ('MHM', counter)
+                    plotting_beta.dump_figure_to_file(mhm_fig, filename+'.png')
+                    dump_json_config(mhm_cfg, filename+'.json')
+                counter += 1
