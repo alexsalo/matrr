@@ -1,6 +1,7 @@
 import numpy
 from matplotlib import pyplot
 from matrr import models, plotting
+from matrr.utils import plotting_beta
 
 
 def matplotlib_pca_test():
