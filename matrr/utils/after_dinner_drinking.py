@@ -242,7 +242,7 @@ def oa_eev_h2o_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=2
     except IOError:
         print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
         gkg_by_minute_from_pellet = eev_gkg_summation_by_minute_general(monkey_set, minutes=minutes, minutes_gap=minutes_gap,
-                                                                        DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME, summed_field='eev_veh_intake')
+                                                                        DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME, summed_field='eev_veh_volume')
         try:
             if not os.path.exists(folder_name):
                 os.makedirs(folder_name)
@@ -281,7 +281,7 @@ def oa_eev_h2o_gkg_summation_high_vs_low(category_half='high', minutes=20, minut
     except IOError:
         print "%s:  Generating and dumping '%s' to file..." % (str(datetime.datetime.now()), file_path)
         highlow_gkg_by_minute_from_pellet  = eev_gkg_summation_by_minute_general(monkey_set, minutes=minutes, minutes_gap=minutes_gap,
-                                                                                 DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME, summed_field='eev_veh_intake')
+                                                                                 DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME, summed_field='eev_veh_volume')
         try:
             if not os.path.exists(folder_name):
                 os.makedirs(folder_name)
