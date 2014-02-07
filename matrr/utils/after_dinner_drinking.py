@@ -121,7 +121,6 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         print "%s:  Guestimated total time:  %.2f minutes" % (str(datetime.datetime.now()), (_time_per_loop/60)*total_loops)
         _etc = start_time + datetime.timedelta(seconds=_time_per_loop*total_loops)
         print "%s:  Guestimated ETC:  %s" % (str(datetime.datetime.now()), _etc)
-        print "--"
         _monkey_weight = monkey_set_mtds.filter(monkey=_monkey).aggregate(models.Avg('mtd_weight'))['mtd_weight__avg']
         _monkey_eevs = monkey_set_drink_eevs.filter(monkey=_monkey)
         _monkey_eevs_count = _monkey_eevs.count() * 1.
@@ -140,6 +139,7 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
             current_eevs += _monkey_minute_eevs.count()
             if current_eevs == _monkey_eevs_count:
                 break
+        print "!!--!!"
     return gkg_by_minute_from_pellet
 
 
