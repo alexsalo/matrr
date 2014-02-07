@@ -4,7 +4,7 @@ import datetime
 import json
 from matrr import models, plotting
 from matrr.utils import gadgets
-from matplotlib import pyplot
+from matplotlib import pyplot, gridspec
 
 def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category, minutes=20, DAYTIME=True, NIGHTTIME=True):
     """
@@ -299,8 +299,8 @@ def oa_eev_h2o_gkg_summation_high_vs_low(category_half='high', minutes=20, minut
 
 
 def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, minutes_gap=10, DAYTIME=True, NIGHTTIME=True, collect_data=oa_eev_volume_summation_high_vs_low):
-    fig = plotting.pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
-    main_gs = plotting.gridspec.GridSpec(2,1)
+    fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+    main_gs = gridspec.GridSpec(2,1)
     main_gs.update(left=0.08, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.05)
     hi_subplot = fig.add_subplot(main_gs[0, :])
     lo_subplot = fig.add_subplot(main_gs[1, :], sharey=hi_subplot)
@@ -352,8 +352,8 @@ def rhesus_oa_volumes_by_timefrompellet_by_category(subplot, drinking_category, 
 
 
 def rhesus_oa_intake_from_pellet_by_category(minutes=120, minutes_gap=10, DAYTIME=True, NIGHTTIME=True, collect_data=oa_eev_volume_summation_by_minutes_from_pellet):
-    fig = plotting.pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
-    main_gs = plotting.gridspec.GridSpec(4,1)
+    fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+    main_gs = gridspec.GridSpec(4,1)
     main_gs.update(left=0.05, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.02)
     indexes = range(4)
     drinking_categories = list(reversed(plotting.DRINKING_CATEGORIES)) # reversed so that LD is on the bottom, cast to list so .pop() works
@@ -407,7 +407,6 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=_oa_eev_gkg_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME-gkg' % minutes
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
-
 
     if '9' in _graphs:
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_h2o_gkg_summation_high_vs_low)
