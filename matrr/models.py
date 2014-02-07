@@ -932,6 +932,8 @@ class MonkeyToDrinkingExperiment(models.Model):
                                                   help_text="Seconds it took for monkey to reach day's ethanol allotment")
     mtd_mean_seconds_between_meals = models.FloatField('Mean seconds between meals.', blank=True, null=True,
                                                        help_text='Average time between pellet meals, in seconds')
+    mtd_pct_etoh_post_pellets = models.FloatField('% EToH consumed post pellets', blank=False, null=False, default=-1,
+                                                       help_text='The percentage of ethanol consumed after the last pellet was dispensed ')
     mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
     def __unicode__(self):
@@ -996,6 +998,22 @@ class MonkeyToDrinkingExperiment(models.Model):
         if not eevs:
             return
         self.mtd_mean_seconds_between_meals = meal_pellets.aggregate(Avg('eev_pellet_time'))['eev_pellet_time__avg']
+        if save:
+            self.save()
+
+    def _populate_mtd_pct_etoh_post_pellets(self, save=True):
+        dex_date = self.drinking_experiment.dex_date
+        todays_eevs = ExperimentEvent.objects.filter(monkey=self.monkey, eev_occurred__year=dex_date.year,
+                                              eev_occurred__month=dex_date.month, eev_occurred__day=dex_date.day)
+        todays_etoh = todays_eevs.filter(eev_event_type=ExperimentEventType.Drink)
+        todays_pellets = todays_eevs.filter(eev_event_type=ExperimentEventType.Pellet)
+        last_pellet = todays_pellets.latest('eev_session_time')
+        time_of_last_pellet = last_pellet.eev_occurred
+        eevs_before_last_pellet = todays_etoh.filter(eev_occurred__lte=time_of_last_pellet)
+        eevs_after_last_pellet = todays_etoh.filter(eev_occurred__gt=time_of_last_pellet)
+        vol_before_last_pellet = eevs_before_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+        vol_after_last_pellet = eevs_after_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+        self.mtd_pct_etoh_post_pellets = vol_after_last_pellet / (vol_before_last_pellet + vol_after_last_pellet)
         if save:
             self.save()
 
