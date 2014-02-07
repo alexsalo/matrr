@@ -1012,8 +1012,13 @@ class MonkeyToDrinkingExperiment(models.Model):
         eevs_before_last_pellet = todays_etoh.filter(eev_occurred__lte=time_of_last_pellet)
         eevs_after_last_pellet = todays_etoh.filter(eev_occurred__gt=time_of_last_pellet)
         vol_before_last_pellet = eevs_before_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+        vol_before_last_pellet = vol_before_last_pellet if vol_before_last_pellet else 0 # captures None values
         vol_after_last_pellet = eevs_after_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-        self.mtd_pct_etoh_post_pellets = vol_after_last_pellet / (vol_before_last_pellet + vol_after_last_pellet)
+        vol_after_last_pellet = vol_after_last_pellet if vol_after_last_pellet else 0 # Captures null values
+        if vol_before_last_pellet + vol_after_last_pellet == 0: # captures zero division
+            self.mtd_pct_etoh_post_pellets = 0
+        else:
+            self.mtd_pct_etoh_post_pellets = vol_after_last_pellet / (vol_before_last_pellet + vol_after_last_pellet)
         if save:
             self.save()
 
