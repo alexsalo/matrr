@@ -4,6 +4,7 @@ import datetime
 import json
 from matrr import models, plotting
 from matrr.utils import gadgets
+from matplotlib import pyplot
 
 def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category, minutes=20, DAYTIME=True, NIGHTTIME=True):
     """
