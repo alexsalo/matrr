@@ -122,11 +122,11 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         current_loop += 1
         if current_loop >= (total_loops / 10) * print_index:
             print "%s:  Starting monkey-date loop# %d of %d" % (str(datetime.datetime.now()), current_loop, total_loops)
-            _time_per_loop = (datetime.datetime.now()-start_time).seconds / (current_loop - 1.)
+            _time_per_loop = (datetime.datetime.now()-start_time).seconds / current_loop
             print "%s:  Average time per loop:  %.2f" % (str(datetime.datetime.now()), _time_per_loop)
             print "%s:  Guestimated total time:  %.2f" % (str(datetime.datetime.now()), _time_per_loop*total_loops)
-            _eta = start_time + datetime.timedelta(seconds=_time_per_loop*total_loops)
-            print "%s:  Guestimated ETA:  %s" % (str(datetime.datetime.now()), _eta)
+            _etc = start_time + datetime.timedelta(seconds=_time_per_loop*total_loops)
+            print "%s:  Guestimated ETC:  %s" % (str(datetime.datetime.now()), _etc)
             print_index += 1
         todays_weight = _weight if _weight else mean_weight
         monkey_date_eevs = monkey_set_eevs.filter(eev_occurred__year=_date.year)
