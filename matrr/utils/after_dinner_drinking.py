@@ -143,12 +143,12 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
     return gkg_by_minute_from_pellet
 
 
-def oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
+def oa_eev_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
     filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
-    file_name = "oa_eev_gkg_summation_by_minutesFromPellet-%s-%s-%s.json" % (drinking_category, str(minutes), filename_concatination)
+    file_name = "oa_eev_gkg_summation_by_minutesFromPellet-%s-%s-%s-%s.json" % (drinking_category, str(minutes), str(minutes_gap), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
 
     monkey_set = plotting.RDD_56890[drinking_category]
@@ -188,7 +188,7 @@ def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_g
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
     filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
-    file_name = "oa_eev_gkg_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
+    file_name = "oa_eev_gkg_summation_high_vs_low-%s-%s-%s-%s.json" % (category_half, str(minutes), str(minutes_gap), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
     try:
         f = open(file_path, 'r')
@@ -364,71 +364,71 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,
 
     ###  Half-day graphs, NightTime vs DayTime
     if '1' in _graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False, collect_data=oa_eev_volume_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME' % minutes
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, DAYTIME=False, collect_data=oa_eev_volume_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '2' in _graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False, collect_data=oa_eev_volume_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME' % minutes
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, NIGHTTIME=False, collect_data=oa_eev_volume_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '3' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False, collect_data=oa_eev_volume_summation_by_minutes_from_pellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME' % minutes
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, DAYTIME=False, collect_data=oa_eev_volume_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '4' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False, collect_data=oa_eev_volume_summation_by_minutes_from_pellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME' % minutes
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, NIGHTTIME=False, collect_data=oa_eev_volume_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
 
     if '5' in _graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '6' in _graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '7' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_gkg_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '8' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
 
     if '9' in _graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_h2o_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME-h20-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_h2o_gkg_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '10' in _graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_h2o_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME-h20-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_h2o_gkg_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '11' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_h2o_gkg_summation_by_minutes_from_pellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME-h20-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_h2o_gkg_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '12' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_h2o_gkg_summation_by_minutes_from_pellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME-h20-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_h2o_gkg_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
 
     ### All Day graphs
     if '13' in _graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-ALLDAY-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_gkg_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '14' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_gkg_summation_by_minutes_from_pellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-ALLDAY-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_gkg_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '15' in _graphs:
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_h2o_gkg_summation_high_vs_low)
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-ALLDAY-h20-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_h2o_gkg_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '16' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_h2o_gkg_summation_by_minutes_from_pellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-ALLDAY-h20-gkg-minutes_gap__%d' % (minutes, minutes_gap)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_h2o_gkg_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     return
