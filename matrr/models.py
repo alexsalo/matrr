@@ -1012,18 +1012,19 @@ class MonkeyToDrinkingExperiment(models.Model):
             todays_pellets = todays_eevs.filter(eev_event_type=ExperimentEventType.Pellet)
             if not todays_pellets:
                 self.mtd_pct_etoh_post_pellets = None
-            last_pellet = todays_pellets.latest('eev_session_time')
-            time_of_last_pellet = last_pellet.eev_occurred
-            eevs_before_last_pellet = todays_etoh.filter(eev_occurred__lte=time_of_last_pellet)
-            eevs_after_last_pellet = todays_etoh.filter(eev_occurred__gt=time_of_last_pellet)
-            vol_before_last_pellet = eevs_before_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-            vol_before_last_pellet = vol_before_last_pellet if vol_before_last_pellet else 0 # captures None values
-            vol_after_last_pellet = eevs_after_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-            vol_after_last_pellet = vol_after_last_pellet if vol_after_last_pellet else 0 # Captures null values
-            if vol_before_last_pellet + vol_after_last_pellet == 0: # captures zero division
-                self.mtd_pct_etoh_post_pellets = 0
             else:
-                self.mtd_pct_etoh_post_pellets = vol_after_last_pellet / (vol_before_last_pellet + vol_after_last_pellet)
+                last_pellet = todays_pellets.latest('eev_session_time')
+                time_of_last_pellet = last_pellet.eev_occurred
+                eevs_before_last_pellet = todays_etoh.filter(eev_occurred__lte=time_of_last_pellet)
+                eevs_after_last_pellet = todays_etoh.filter(eev_occurred__gt=time_of_last_pellet)
+                vol_before_last_pellet = eevs_before_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+                vol_before_last_pellet = vol_before_last_pellet if vol_before_last_pellet else 0 # captures None values
+                vol_after_last_pellet = eevs_after_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+                vol_after_last_pellet = vol_after_last_pellet if vol_after_last_pellet else 0 # Captures null values
+                if vol_before_last_pellet + vol_after_last_pellet == 0: # captures zero division
+                    self.mtd_pct_etoh_post_pellets = 0
+                else:
+                    self.mtd_pct_etoh_post_pellets = vol_after_last_pellet / (vol_before_last_pellet + vol_after_last_pellet)
         if save:
             self.save()
 
