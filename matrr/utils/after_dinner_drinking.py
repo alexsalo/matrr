@@ -114,7 +114,7 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
 
     start_time = datetime.datetime.now()
     total_loops = len(monkey_set)
-    for _loop_index, _monkey in enumerate(monkey_set):
+    for _loop_index, _monkey in enumerate(monkey_set, 1):
         print "%s:  Starting monkey loop# %d of %d" % (str(datetime.datetime.now()), _loop_index, total_loops)
         _time_per_loop = (datetime.datetime.now()-start_time).seconds / _loop_index
         print "%s:  Average time per loop:  %.2f minutes" % (str(datetime.datetime.now()), _time_per_loop/60)
