@@ -19,7 +19,7 @@ def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category, minutes=20
     folder_name = "matrr/utils/DATA/json/"
     filename_concatenation = "DAYTIME" if DAYTIME else ""
     filename_concatenation += "NIGHTTIME" if NIGHTTIME else ""
-    file_name = "_oa_eev_volume_summation_by_minutesFromPellet-%s-%s-%s.json" % (drinking_category, str(minutes), filename_concatenation)
+    file_name = "oa_eev_volume_summation_by_minutesFromPellet-%s-%s-%s.json" % (drinking_category, str(minutes), filename_concatenation)
     file_path = os.path.join(folder_name, file_name)
 
     monkey_set = plotting.RDD_56890[drinking_category]
@@ -68,7 +68,7 @@ def oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20,  DAYTI
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
     filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
-    file_name = "_oa_eev_volume_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
+    file_name = "oa_eev_volume_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
     try:
         f = open(file_path, 'r')
@@ -155,12 +155,12 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
     return gkg_by_minute_from_pellet
 
 
-def _oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
+def oa_eev_gkg_summation_by_minutesFromPellet(drinking_category, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
     filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
-    file_name = "_oa_eev_gkg_summation_by_minutesFromPellet-%s-%s-%s.json" % (drinking_category, str(minutes), filename_concatination)
+    file_name = "oa_eev_gkg_summation_by_minutesFromPellet-%s-%s-%s.json" % (drinking_category, str(minutes), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
 
     monkey_set = plotting.RDD_56890[drinking_category]
@@ -200,7 +200,7 @@ def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_g
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
     filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
-    file_name = "_oa_eev_gkg_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
+    file_name = "oa_eev_gkg_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
     try:
         f = open(file_path, 'r')
@@ -399,11 +399,11 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-DAYTIME-gkg' % minutes
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '7' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=_oa_eev_gkg_summation_by_minutesFromPellet)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME-gkg' % minutes
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '8' in _graphs:
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=_oa_eev_gkg_summation_by_minutesFromPellet)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, NIGHTTIME=False, collect_data=oa_eev_gkg_summation_by_minutesFromPellet)
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-DAYTIME-gkg' % minutes
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
 
