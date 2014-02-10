@@ -102,6 +102,13 @@ def oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20,  DAYTI
 
 
 def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True, summed_field='eev_etoh_volume'):
+    def convert_to_gkg(value, weight, field_name):
+        if field_name == 'eev_etoh_volume': # or any other ethanol field, where units are in mL of 4% ethanol
+            return value * .04 / weight
+        if field_name == 'eev_veh_volume': # or any other water field, where units are in mL
+            return value / weight
+        raise Exception("Unknown field name.  Please update this method or fix your use of it.")
+    
     gkg_by_minute_from_pellet = collections.defaultdict(lambda: 0)
     monkey_set_mtds = models.MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
     monkey_set_eevs = models.ExperimentEvent.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
@@ -126,7 +133,7 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         _monkey_eevs_count = _monkey_eevs.count() * 1.
         current_eevs = 0
         for _minutes in range(0, minutes+1, minutes_gap):
-            if _minutes % 60 == 0:
+            if _minutes % 6*60 == 0:
                 print "%s:  Starting minute %d of %d" % (str(datetime.datetime.now()), _minutes, minutes)
             _monkey_minute_eevs = _monkey_eevs.filter(eev_pellet_time__gte=_minutes*60)
             if _minutes != minutes: # if this isn't the last minutes loop, add an upper bound
@@ -134,7 +141,7 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
             summed_value = _monkey_minute_eevs.aggregate(sf=models.Sum(summed_field))['sf']
             if summed_value is None:
                 continue
-            gkg_conversion = summed_value * .04 / _monkey_weight
+            gkg_conversion = convert_to_gkg(summed_value, _monkey_weight, summed_field)
             gkg_by_minute_from_pellet[_minutes] +=  gkg_conversion
             current_eevs += _monkey_minute_eevs.count()
             if current_eevs == _monkey_eevs_count:
