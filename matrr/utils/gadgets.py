@@ -563,3 +563,10 @@ def dump_figure_to_file(fig, name, output_path='', output_format='png', dpi=80):
         filename = output_path + '%s.%s' % (name, output_format)
         fig.savefig(filename, format=output_format,dpi=dpi)
 
+def sum_dictionaries_by_key(first_dictionary, second_dictionary):
+    from collections import defaultdict
+    output_dictionary = defaultdict(lambda: 0)
+    for _key in first_dictionary.iterkeys():
+        output_dictionary[_key] += first_dictionary[_key]
+    for _key in second_dictionary.iterkeys():
+        output_dictionary[_key] += second_dictionary[_key]
