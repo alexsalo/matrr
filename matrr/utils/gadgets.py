@@ -570,3 +570,4 @@ def sum_dictionaries_by_key(first_dictionary, second_dictionary):
         output_dictionary[_key] += first_dictionary[_key]
     for _key in second_dictionary.iterkeys():
         output_dictionary[_key] += second_dictionary[_key]
+    return output_dictionary

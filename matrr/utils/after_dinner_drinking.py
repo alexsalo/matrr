@@ -68,6 +68,7 @@ def oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20,  DAYTI
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
     filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
+    filename_concatination = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatination
     file_name = "oa_eev_volume_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
     try:
@@ -155,6 +156,7 @@ def oa_eev_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=20, m
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
     filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
+    filename_concatination = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatination
     file_name = "oa_eev_gkg_summation_by_minutesFromPellet-%s-%s-%s-%s.json" % (drinking_category, str(minutes), str(minutes_gap), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
 
@@ -178,7 +180,9 @@ def oa_eev_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=20, m
         print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
     ylabel = "Average EtOH intake per monkey, g/kg"
-    title = "Average intake by minute after pellet"
+    title = "Average intake by minute after pellet, %s" % filename_concatination
+    gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
+                                      # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
@@ -195,6 +199,7 @@ def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_g
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
     filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
+    filename_concatination = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatination
     file_name = "oa_eev_gkg_summation_high_vs_low-%s-%s-%s-%s.json" % (category_half, str(minutes), str(minutes_gap), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
     try:
@@ -215,8 +220,10 @@ def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_g
         f.close()
         print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
-    ylabel = "Average volume per monkey (mL)"
-    title = "Average intake by minute after pellet"
+    ylabel = "Average EtOH per monkey (gkg)"
+    title = "Average intake by minute after pellet, %s" % filename_concatination
+    highlow_gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
+                                      # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return highlow_gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
@@ -266,6 +273,7 @@ def oa_eev_h2o_gkg_summation_high_vs_low(category_half='high', minutes=20, minut
     folder_name = "matrr/utils/DATA/json/"
     filename_concatination = "DAYTIME" if DAYTIME else ""
     filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
+    filename_concatination = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatination
     file_name = "oa_eev_h2o_gkg_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
     file_path = os.path.join(folder_name, file_name)
     try:
@@ -424,20 +432,59 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,
     ### Ethanol gkg All Day graphs
     if '13' in _graphs:
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-ALLDAY-gkg-minutes_gap_%d' % (minutes, minutes_gap)
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_gkg_summation_high_vs_low)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, collect_data=oa_eev_gkg_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '14' in _graphs:
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-ALLDAY-gkg-minutes_gap_%d' % (minutes, minutes_gap)
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_gkg_summation_by_minutes_from_pellet)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, collect_data=oa_eev_gkg_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
 
     ### h2o gkg All Day graphs
     if '15' in _graphs:
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-ALLDAY-h20-gkg-minutes_gap_%d' % (minutes, minutes_gap)
-        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_h2o_gkg_summation_high_vs_low)
+        fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, collect_data=oa_eev_h2o_gkg_summation_high_vs_low)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     if '16' in _graphs:
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-ALLDAY-h20-gkg-minutes_gap_%d' % (minutes, minutes_gap)
-        fig = rhesus_oa_intake_from_pellet_by_category(minutes=24*60, minutes_gap=minutes_gap, collect_data=oa_eev_h2o_gkg_summation_by_minutes_from_pellet)
+        fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, collect_data=oa_eev_h2o_gkg_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     return
+
+
+def create_allday_from_daynight():
+    folder_name = "matrr/utils/DATA/json/"
+    def _combine_daynight_json_to_allday(daytime_Filename, nighttime_filename, output_filename):
+        daytime_f = open(daytime_Filename, 'r')
+        nighttime_f = open(nighttime_filename, 'r')
+        daytime_highlow_gkg_by_minute_from_pellet = json.loads(daytime_f.readline())
+        nighttime_highlow_gkg_by_minute_from_pellet = json.loads(nighttime_f.readline())
+
+        print "%s:  Combining day/night and dumping '%s' to file..." % (str(datetime.datetime.now()), output_filename)
+        allday_highlow_gkg_by_minute_from_pellet = gadgets.sum_dictionaries_by_key(daytime_highlow_gkg_by_minute_from_pellet, nighttime_highlow_gkg_by_minute_from_pellet)
+
+        f = open(output_filename, 'w')
+        json_data = json.dumps(allday_highlow_gkg_by_minute_from_pellet)
+        f.write(json_data)
+        f.close()
+        print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), output_filename)
+        return
+    file_pairs = [
+            ['oa_eev_gkg_summation_by_minutesFromPellet-BD-720-1-DAYTIME.json',
+             'oa_eev_gkg_summation_by_minutesFromPellet-BD-720-1-NIGHTTIME.json',],
+             ['oa_eev_gkg_summation_by_minutesFromPellet-HD-720-1-DAYTIME.json',
+             'oa_eev_gkg_summation_by_minutesFromPellet-HD-720-1-NIGHTTIME.json',],
+             ['oa_eev_gkg_summation_by_minutesFromPellet-LD-720-1-DAYTIME.json',
+             'oa_eev_gkg_summation_by_minutesFromPellet-LD-720-1-NIGHTTIME.json',],
+             ['oa_eev_gkg_summation_by_minutesFromPellet-VHD-720-1-DAYTIME.json',
+             'oa_eev_gkg_summation_by_minutesFromPellet-VHD-720-1-NIGHTTIME.json',],
+             ['oa_eev_gkg_summation_high_vs_low-high-720-1-DAYTIME.json',
+             'oa_eev_gkg_summation_high_vs_low-high-720-1-NIGHTTIME.json',],
+             ['oa_eev_gkg_summation_high_vs_low-low-720-1-DAYTIME.json',
+             'oa_eev_gkg_summation_high_vs_low-low-720-1-NIGHTTIME.json',],
+    ]
+    for _day, _night in file_pairs:
+        _day_path = os.path.join(folder_name, _day)
+        _night_path = os.path.join(folder_name, _night)
+        _output_path = _day_path.replace('DAYTIME', 'ALLDAY')
+        _combine_daynight_json_to_allday(daytime_Filename=_day_path, nighttime_filename=_night_path, output_filename=_output_path)
+
