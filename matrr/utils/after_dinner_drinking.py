@@ -134,7 +134,7 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
         _monkey_eevs_count = _monkey_eevs.count() * 1.
         current_eevs = 0
         for _minutes in range(0, minutes+1, minutes_gap):
-            if _minutes % 6*60 == 0:
+            if _minutes % 100*60 == 0:
                 print "%s:  Starting minute %d of %d" % (str(datetime.datetime.now()), _minutes, minutes)
             _monkey_minute_eevs = _monkey_eevs.filter(eev_pellet_time__gte=_minutes*60)
             if _minutes != minutes: # if this isn't the last minutes loop, add an upper bound
