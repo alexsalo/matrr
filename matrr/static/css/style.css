@@ -530,6 +530,10 @@ table.overview {
     width: 600;
 }
 
+table.rush {
+    background-color: #ff0000;
+}
+
 table.overview td {
     padding: 2px 2px 2px 2px;
     font-weight: bold;

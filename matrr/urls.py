@@ -84,9 +84,11 @@ urlpatterns += patterns('',
     url(r'^reviews_overviews/(?P<req_request_id>\d+)/process/?$', review.request_review_process, name='review-overview-process'),
     # Shipping
     url(r'^shipping/overview/$', shipping.shipping_overview, name='shipping-overview'),
+    url(r'^shipping/status/$', shipping.shipping_status, name='shipping-status'),
     url(r'^shipping/history/$', shipping.shipping_history, name='shipping-history'),
     url(r'^shipping/history/(?P<user_id>\d+)/$', shipping.shipping_history_user, name='shipping-history-user'),
     url(r'^shipping/creator/(?P<req_request_id>\d+)/$', shipping.shipment_creator, name='shipment-creator'),
+    url(r'^shipping/processing/(?P<shipment_id>\d+)/$', shipping.shipment_processing, name='shipment-processing'),
     url(r'^shipping/detail/(?P<shipment_id>\d+)/$', shipping.shipment_detail, name='shipment-detail'),
     url(r'^shipping/detail/(?P<shipment_id>\d+)/manifest/$', shipping.shipment_manifest_export, name='shipment-manifest'),
 )

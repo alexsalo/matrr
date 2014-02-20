@@ -14,7 +14,7 @@ from string import lower, replace
 from django.core.files.base import File
 from django.db import models
 from django.db.models import Q, Min, Max, Avg, Sum, Count, StdDev
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import User, Permission, Group
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -168,8 +168,9 @@ RequestStatus = Enumeration([
 ])
 ShipmentStatus = Enumeration([
     ('UN', 'Unshipped', 'Unshipped'), # built, but not shipped
+    ('PG', 'Processing', 'Processing'), # shipment has been sent to the in-house DNA/RNA collection facility
+    ('PD', 'Processed', 'Processed'), # shipment has returned from the in-house DNA/RNA collection facility
     ('SH', 'Shipped', 'Shipped'), # shipment has been sent to the customer
-    ('GN', 'Genetics', 'Genetics'), # shipment has been sent to the in-house DNA/RNA collection facility
 ])
 VerificationStatus = Enumeration([
     ('CP', 'Complete', 'Complete'),
@@ -765,7 +766,6 @@ class Account(models.Model):
             ('po_manifest_email', 'Receive PO shipping manifest email'),
             ('provide_po_number', 'Can provide PO number'),
             ('verify_mta', 'Can verify MTA uploads'),
-            ('ship_genetics', 'Can ship RNA/DNA'),
         )
 
 
@@ -2436,10 +2436,17 @@ class Shipment(models.Model):
     req_request = models.ForeignKey(Request, null=False, related_name='shipments')
     shp_tracking = models.CharField('Tracking Number', null=True, blank=True, max_length=100,
                                     help_text='Please enter the tracking number for this shipment.')
-    shp_shipment_date = models.DateField('Shipped Date', blank=True, null=True,
-                                         help_text='The date these tissues were shipped.')
+    shp_created_at = models.DateTimeField('Creation Timestamp', blank=False, null=False, auto_now_add=True,
+                                          help_text='When this shipment was created.')
+    shp_processing = models.DateTimeField('Creation Timestamp', blank=True, null=True,
+                                          help_text='When this shipment was created.')
+    shp_processed= models.DateTimeField('Creation Timestamp', blank=True, null=True,
+                                        help_text='When this shipment was created.')
+    shp_shipment_date = models.DateTimeField('Shipped Date', blank=True, null=True,
+                                             help_text='The date these tissues were shipped to the requester.')
     shp_shipment_status = models.CharField("Shipment Status", null=False, blank=False, max_length=2,
                                            default=ShipmentStatus.Unshipped, choices=ShipmentStatus)
+    shp_rush = models.BooleanField("Rush This Shipment", default=False)
 
     def get_tissue_requests(self):
         return TissueRequest.objects.filter(shipment=self)
@@ -2449,32 +2456,79 @@ class Shipment(models.Model):
             return True
         return False
 
+    def needs_processing(self):
+        # A shipment needs processing if
+            # this shipment contains genetics
+                # AND this shipment isn't processing
+                #                   isn't processed
+                #                   isn't shipped
+        return self.contains_genetics() and (not self.shp_processing or not self.shp_proccessed or not self.shp_shipment_date)
+
+    def can_be_processed(self):
+        # A shipment can be processed if
+            # this shipment contains genetics
+                # AND this shipment is processing
+                #                   isn't processed
+                #                   isn't shipped
+        return self.shp_processing and not self.shp_processed and not self.shp_shipment_date
+
+    def can_be_shipped(self):
+        # A shipment can be shipped if
+            # this shipment DOES NOT contain genetic tissues
+            # OR
+            # this shipment contains genetics
+            #               is processed
+            #               isn't shipped
+        return not self.contains_genetics() or (self.contains_genetics() and self.shp_processed and not self.shp_shipment_date)
+
+    def send_shipment_for_processing(self, sending_user):
+        if not sending_user.has_perm('matrr.ship_shipments'):
+            raise PermissionDenied("You do not have permission to ship shipments.")
+        if self.needs_processing():
+            self.shp_processing= datetime.datetime.now()
+            self.user = sending_user
+            self.shp_shipment_status = ShipmentStatus.Processing
+            self.save()
+            from matrr import emails
+            emails.shipment_sent_for_processing(self)
+        else:
+            raise Exception("This shipment cannot be processed.  I don't think this should ever happen, but it's probably already in processing.")
+        return self.shp_shipment_status
+
+    def process_shipment(self, processing_user):
+        if not processing_user.has_perm('matrr.process_shipments'):
+            raise PermissionDenied("You do not have permission to process shipments.")
+        if self.can_be_processed():
+            self.shp_processed = datetime.datetime.now()
+            self.user = processing_user
+            self.shp_shipment_status = ShipmentStatus.Processed
+            self.save()
+            from matrr import emails
+            emails.shipment_processed(self)
+        else:
+            raise Exception("This shipment cannot be processed yet.")
+        return self.shp_shipment_status
+
     def ship_to_user(self, sending_user):
-        if self.contains_genetics():
-            if self.shp_shipment_status == ShipmentStatus.Unshipped:
-                return self._send_to_DNA_processing(
-                    sending_user) # staff user sent the tissue to the DNA/RNA processing facility
-            if self.shp_shipment_status == ShipmentStatus.Genetics:
-                # if the user isn't part of the DNA processing facility, raise a permission exception
-                if not sending_user.has_perm('matrr.ship_genetics'):
-                    raise PermissionDenied("User does not have permission to ship genetic tissues.")
-                # otherwise behave normally, because this tissue is either not genetic, or is being shipped with appropriate permissions.
-        self.shp_shipment_date = datetime.today()
-        self.user = sending_user
-        self.shp_shipment_status = ShipmentStatus.Shipped
-        self.save()
+        if not sending_user.has_perm('matrr.ship_shipments'):
+            raise PermissionDenied("User does not have permission to ship tissue to users.")
+        if self.can_be_shipped():
+            self.shp_shipment_date = datetime.datetime.now()
+            self.user = sending_user
+            self.shp_shipment_status = ShipmentStatus.Shipped
+            self.save()
+            from matrr import emails
+            emails.send_po_manifest_upon_shipment(self)
+            emails.notify_user_upon_shipment(self)
+            self.req_request.ship_request()
+        else:
+            raise Exception("This shipment is not ready to be shipped to the user.  This usually means DNA/RNA needs to be extracted first.  Please do that first.")
         return self.shp_shipment_status
-
-    def _send_to_DNA_processing(self, sending_user):
-        # updates self to indicate it has been sent to the DNA processing facility
-        self.shp_shipment_date = datetime.today()
-        self.user = sending_user
-        self.shp_shipment_status = ShipmentStatus.Genetics
-        self.save()
-        return self.shp_shipment_status
-
 
     class Meta:
+        permissions = ( ('process_shipments', 'Can process shipments'),
+                        ('handle_shipments', 'Can handle/ship shipments'),
+        )
         db_table = 'shp_shipments'
 
 
@@ -2589,6 +2643,14 @@ class TissueRequest(models.Model):
                 ['Prep', self.rtt_prep_type],
                 ['Amount', self.get_amount()],
                 ['Estimated Cost', "$%.2f" % self.get_estimated_cost()]
+        ]
+
+    def get_shipment_processing_data(self):
+        return [['Tissue Type', self.tissue_type],
+                ['RTT ID', self.pk],
+                ['Fix', self.rtt_fix_type],
+                ['Prep', self.rtt_prep_type],
+                ['Amount', self.get_amount()],
         ]
 
     def get_latex_data(self):

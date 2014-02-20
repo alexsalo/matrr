@@ -124,14 +124,13 @@ def urge_po_mta():
     If a user has submitted a requests, but have not submitted a Purchase Order, or have not agreed to an MTA, the user will be emailed, informing them that they must do these things before
     the tissue can ship
     """
+    from_email = Account.objects.get(user__username='matrr_admin').email
     accepted = Request.objects.accepted_and_partially()
     for req in accepted:
         if req.req_purchase_order and req.user.account.has_mta():
             continue
 
-        from_email = Account.objects.get(user__username='matrr_admin').email
         to_email = req.user.email
-
         recipients = list()
         recipients.append(to_email)
 
@@ -571,4 +570,38 @@ def send_rud_data_available_email(rud):
         if ret > 0:
             print "%s rud data available email sent to user: %s" % (
             datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
+
+# matrr
+def shipment_sent_for_processing(shipment):
+    from_email = Account.objects.get(user__username='matrr_admin').email
+
+    processors_group = Group.objects.get(name='ShipmentProcessors')
+    recipients = processors_group.user_set.all().values_list('email', flat=True)
+
+    subject = "%s has dropped off tissue for MATRR DNA/RNA processing" % shipment.user.username
+    email_template = 'matrr/shipping/shipment_processing_email.txt'
+    body = render_to_string(email_template, {'shipment': shipment})
+    body = re.sub('(\r?\n){2,}', '\n\n', body)
+
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+        if ret > 0:
+            print "%s: Shipment %d sent for DNA/RNA processing" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), shipment.pk)
+
+# matrr
+def shipment_processed(shipment):
+    from_email = Account.objects.get(user__username='matrr_admin').email
+
+    handlers_group = Group.objects.get(name='ShipmentHandlers')
+    recipients = handlers_group.user_set.all().values_list('email', flat=True)
+
+    subject = "%s has dropped off tissue for MATRR DNA/RNA processing" % shipment.user.username
+    email_template = 'matrr/shipping/shipment_processed_email.txt'
+    body = render_to_string(email_template, {'shipment': shipment})
+    body = re.sub('(\r?\n){2,}', '\n\n', body)
+
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
+        if ret > 0:
+            print "%s: Shipment %d sent for DNA/RNA processing" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), shipment.pk)
 

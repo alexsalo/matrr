@@ -11,7 +11,22 @@ from matrr.forms import TissueShipmentForm, TrackingNumberForm
 from matrr.models import Request, User, Shipment, ShipmentStatus, RequestStatus
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.process_shipments') or u.has_perm('matrr.handle_shipments'), login_url='/denied/')
+def shipping_status(request):
+    shipments = Shipment.objects.all().order_by('-shp_created_at')
+    count_per_page = 25
+    if shipments.count() > count_per_page:
+        page_obj = gizmo.create_paginator_instance(request=request, queryset=shipments, count=count_per_page)
+        shipment_list = page_obj.object_list
+    else:
+        page_obj = None
+        shipment_list = shipments
+    return render_to_response('matrr/shipping/shipping_status.html',
+                              {'shipments': shipment_list, 'page_obj': page_obj},
+                              context_instance=RequestContext(request))
+
+
+@user_passes_test(lambda u: u.has_perm('matrr.process_shipments') or u.has_perm('matrr.handle_shipments'), login_url='/denied/')
 def shipping_history(request):
 #	Shipped Requests
     shipped_requests = Request.objects.shipped().order_by('-shipments__shp_shipment_date').distinct()
@@ -24,7 +39,7 @@ def shipping_history(request):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.process_shipments') or u.has_perm('matrr.handle_shipments'), login_url='/denied/')
 def shipping_history_user(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     shipped_requests = Request.objects.shipped().order_by('pk').filter(user=user)
@@ -33,20 +48,20 @@ def shipping_history_user(request, user_id):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'),login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.process_shipments') or u.has_perm('matrr.handle_shipments'),login_url='/denied/')
 def shipping_overview(request):
     #Requests Pending Shipment
     accepted_requests = Request.objects.none()
     for req_request in Request.objects.accepted_and_partially().order_by('req_request_date'):
         if req_request.is_missing_shipments():
-            if request.user.has_perm('matrr.change_shipment') or (
-                req_request.contains_genetics() and request.user.has_perm('matrr.ship_genetics')):
+            if request.user.has_perm('matrr.process_shipments') or (
+                req_request.contains_genetics() and request.user.has_perm('matrr.handle_shipments')):
                 accepted_requests |= Request.objects.filter(pk=req_request.pk)
     # Pending Shipments
     pending_shipments = Shipment.objects.none()
-    if request.user.has_perm('matrr.change_shipment'):
+    if request.user.has_perm('matrr.process_shipments'):
         pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Unshipped)
-    if request.user.has_perm('matrr.ship_genetics'):
+    if request.user.has_perm('matrr.handle_shipments'):
         pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Genetics)
     # Shipped Shipments
     shipped_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Shipped).exclude(req_request__req_status=RequestStatus.Shipped)
@@ -58,7 +73,7 @@ def shipping_overview(request):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.handle_shipments'), login_url='/denied/')
 def shipment_creator(request, req_request_id):
     req_request = get_object_or_404(Request, pk=req_request_id)
     acc_rtt_wo_shipment = req_request.tissue_request_set.filter(shipment=None).exclude(accepted_monkeys=None)
@@ -109,12 +124,13 @@ def shipment_creator(request, req_request_id):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.handle_shipments'), login_url='/denied/')
 def shipment_detail(request, shipment_id):
     confirm_ship = False
     confirm_delete_shipment = False
 
     shipment = get_object_or_404(Shipment, pk=shipment_id)
+    initial_shp_status = shipment.shp_shipment_status
     req_request = shipment.req_request
 
     if req_request.req_status != RequestStatus.Shipped or shipment.shp_shipment_date is None:
@@ -136,29 +152,31 @@ def shipment_detail(request, shipment_id):
             messages.info(request, "This request is ready to ship.  If this shipment has been shipped, click the ship button again to confirm. \
             An email notifying %s, billing, and MATRR admins of this shipment will be sent." % req_request.user.username)
         if 'confirm_ship' in request.POST:
-            try:
-                shipment_status = shipment.ship_to_user(request.user)
-            except PermissionDenied as pd:
-                messages.error(request, str(pd))
+            if shipment.can_be_shipped():
+                try:
+                    shipment.ship_to_user(request.user)
+                except Exception as e:
+                    messages.error(request, str(e))
+            elif shipment.needs_processing():
+                try:
+                    shipment.send_shipment_for_processing(request.user)
+                except Exception as e:
+                    messages.error(request, str(e))
             else:
+                # I don't want it to be able to hit both, in the (impossible) event that the shipment both can be shipped and also needs processing.
+                pass
+            shipment_status = shipment.shp_shipment_status
+            if initial_shp_status != shipment_status:
                 if shipment_status == ShipmentStatus.Shipped:
                     messages.success(request, "Shipment #%d has been shipped." % shipment.pk)
-                    emails.send_po_manifest_upon_shipment(shipment)
-                    emails.notify_user_upon_shipment(shipment)
-                if shipment_status == ShipmentStatus.Genetics:
-                    messages.success(request, "Shipment #%d has been sent to the DNA processing facility." % shipment.pk)
-                req_request.ship_request()
+                if shipment_status == ShipmentStatus.Processing:
+                    messages.success(request, "The DNA processing facility has been notified that Shipment #%d is in their freezer." % shipment.pk)
                 return redirect(reverse('shipping-overview'))
 
         if 'delete_shipment' in request.POST:
-            if shipment.shp_shipment_status == ShipmentStatus.Genetics:
-                messages.warning(request, "You cannot delete a shipment once it has been sent for genetics processing.")
-            else:
-                messages.warning(request,
-                                 "Are you sure you want to delete this shipment?  You will have to recreate it before shipping the tissue.")
-                confirm_delete_shipment = True
-                messages.info(request,
-                              "If you are certain you want to delete this shipment, click the delete button again to confirm.")
+            messages.warning(request, "Are you sure you want to delete this shipment?  You will have to recreate it before shipping the tissue.")
+            confirm_delete_shipment = True
+            messages.info(request, "If you are certain you want to delete this shipment, click the delete button again to confirm.")
         if 'confirm_delete_shipment' in request.POST:
             messages.success(request, "Shipment %d deleted." % shipment.pk)
             shipment.delete() # super important that TissueRequest.shipment FK is set to on_delete=SET_NULL
@@ -174,7 +192,7 @@ def shipment_detail(request, shipment_id):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.has_perm('matrr.change_shipment') or u.has_perm('matrr.ship_genetics'), login_url='/denied/')
+@user_passes_test(lambda u: u.has_perm('matrr.process_shipments') or u.has_perm('matrr.handle_shipments'), login_url='/denied/')
 def shipment_manifest_export(request, shipment_id):
     shipment = get_object_or_404(Shipment, pk=shipment_id)
     req_request = shipment.req_request
@@ -186,5 +204,16 @@ def shipment_manifest_export(request, shipment_id):
     context = {'shipment': shipment, 'req_request': req_request, 'account': req_request.user.account,
                'time': datetime.today()}
     return gizmo.export_template_to_pdf('pdf_templates/shipment_manifest.html', context, outfile=response)
+
+
+@user_passes_test(lambda u: u.has_perm('matrr.process_shipments'), login_url='/denied/')
+def shipment_processing(request, shipment_id):
+    shipment = get_object_or_404(Shipment, pk=shipment_id)
+    req_request = shipment.req_request
+
+    if request.method == 'POST' and 'process' in request.POST:
+        shipment.process_shipment(request.user)
+        messages.info(request, "Users in the ShipmentProcessors group will be notified these tissues are processed.  Thank you %s :)" % request.user.first_name)
+    return render_to_response('matrr/shipping/shipment_processing.html', {'req_request': req_request, 'shipment': shipment,}, context_instance=RequestContext(request))
 
 
