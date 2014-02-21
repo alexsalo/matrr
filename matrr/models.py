@@ -2373,7 +2373,7 @@ class Request(models.Model, DiffingMixin):
     def get_rud_weeks_overdue(self):
         if self.rud_set.filter(rud_progress=ResearchProgress.Complete).count():
             return 0
-        today = date.today()
+        today = datetime.now()
         grace_period = 0 # this default value shouldn't ever be used.  Conditions for all ResearchProgress states exist.
         try:
             latest_rud = self.rud_set.order_by('-rud_date')[0]
