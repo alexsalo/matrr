@@ -62,7 +62,7 @@ def shipping_overview(request):
     if request.user.has_perm('matrr.process_shipments'):
         pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Unshipped)
     if request.user.has_perm('matrr.handle_shipments'):
-        pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Genetics)
+        pending_shipments |= Shipment.objects.filter(shp_shipment_status__in=[ShipmentStatus.Unshipped, ShipmentStatus.Proccessed])
     # Shipped Shipments
     shipped_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Shipped).exclude(req_request__req_status=RequestStatus.Shipped)
 

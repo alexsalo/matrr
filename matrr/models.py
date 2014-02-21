@@ -2423,8 +2423,11 @@ class ShipmentManager(models.Manager):
     def unshipped(self):
         return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Unshipped)
 
-    def genetics(self):
-        return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Genetics)
+    def processing(self):
+        return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Processing)
+
+    def processed(self):
+        return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Processed)
 
     def shipped(self):
         return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Shipped)
