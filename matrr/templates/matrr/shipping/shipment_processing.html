@@ -70,8 +70,7 @@
 				{% if forloop.counter == 1 %}
 					<div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
 					<div style='float:left; width: 69%; color: #4E4E4E;'>
-                        Monkeys:  {% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}, {% endfor %}
-                        <hr style="color: #4E4E4E;">
+                        Monkeys:  {% for monkey in tissue_request.accepted_monkeys.all %}{{ monkey.mky_id }}, {% endfor %}<br>
                         Notes:  {{ tissue_request.rtt_notes }}
                     </div>
 				{% else %}
@@ -79,10 +78,10 @@
 					<br/>
 				{% endif %}
 			{% endfor %}
-            <hr><br>
 		{% endif %}
 		<div class='clearfix'></div>
-	{% endfor %}
+        <hr style="color: #4E4E4E;"><br>
+    {% endfor %}
 
 	<br>
 	<div class=clearfix></div>
