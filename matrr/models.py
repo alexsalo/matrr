@@ -2373,7 +2373,8 @@ class Request(models.Model, DiffingMixin):
     def get_rud_weeks_overdue(self):
         if self.rud_set.filter(rud_progress=ResearchProgress.Complete).count():
             return 0
-        today = datetime.now()
+        now = datetime.now()
+        today = date.today() # you should totally be able to subtract datetimes and dates.  jerks.
         grace_period = 0 # this default value shouldn't ever be used.  Conditions for all ResearchProgress states exist.
         try:
             latest_rud = self.rud_set.order_by('-rud_date')[0]
@@ -2381,7 +2382,7 @@ class Request(models.Model, DiffingMixin):
             max_shipment = self.get_max_shipment()
             if not max_shipment or not max_shipment.shp_shipment_date:
                 return 0 # nothing shipped yet
-            age = (today - max_shipment.shp_shipment_date).days
+            age = (now - max_shipment.shp_shipment_date).days
             grace_period = settings.ResearchUpdateInitialGrace
         else:
             age = (today - latest_rud.rud_date).days
