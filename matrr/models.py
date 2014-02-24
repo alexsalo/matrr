@@ -2517,7 +2517,7 @@ class Shipment(models.Model):
         if not sending_user.has_perm('matrr.ship_shipments'):
             raise PermissionDenied("User does not have permission to ship tissue to users.")
         if self.can_be_shipped():
-            self.shp_shipment_date = datetime.datetime.now()
+            self.shp_shipment_date = datetime.now()
             self.user = sending_user
             self.shp_shipment_status = ShipmentStatus.Shipped
             self.save()
