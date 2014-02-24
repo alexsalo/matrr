@@ -2466,7 +2466,7 @@ class Shipment(models.Model):
                 # AND this shipment isn't processing
                 #                   isn't processed
                 #                   isn't shipped
-        return self.contains_genetics() and (not self.shp_processing or not self.shp_proccessed or not self.shp_shipment_date)
+        return self.contains_genetics() and (not self.shp_processing or not self.shp_processed or not self.shp_shipment_date)
 
     def can_be_processed(self):
         # A shipment can be processed if
@@ -2489,7 +2489,7 @@ class Shipment(models.Model):
         if not sending_user.has_perm('matrr.ship_shipments'):
             raise PermissionDenied("You do not have permission to ship shipments.")
         if self.needs_processing():
-            self.shp_processing= datetime.datetime.now()
+            self.shp_processing= datetime.now()
             self.user = sending_user
             self.shp_shipment_status = ShipmentStatus.Processing
             self.save()
