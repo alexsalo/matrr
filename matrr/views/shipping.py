@@ -13,7 +13,7 @@ from matrr.models import Request, User, Shipment, ShipmentStatus, RequestStatus
 
 @user_passes_test(lambda u: u.has_perm('matrr.process_shipments') or u.has_perm('matrr.handle_shipments'), login_url='/denied/')
 def shipping_status(request):
-    shipments = Shipment.objects.all().order_by('-shp_created_at')
+    shipments = Shipment.objects.all().order_by('-shp_shipment_date', '-shp_processed', '-shp_processing', '-shp_created_at')
     count_per_page = 25
     if shipments.count() > count_per_page:
         page_obj = gizmo.create_paginator_instance(request=request, queryset=shipments, count=count_per_page)

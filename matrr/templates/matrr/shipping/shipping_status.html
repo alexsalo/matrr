@@ -19,10 +19,9 @@
             <tr>
                 <th>Shipment Details</th>
                 <th>Request ID</th>
-                <th>Cohort</th>
                 <th>Shipment Status</th>
                 <th>Shipment Built</th>
-                <th>In Processing</th>
+                <th>Processing</th>
                 <th>Processed</th>
                 <th>Sent on</th>
             </tr>
@@ -30,17 +29,16 @@
                 <tr>
                     <td><a href="{% url 'shipment-detail' shipment.pk %}">{{ shipment.pk }}</a></td>
                     <td><a href="{% url 'order-detail' shipment.req_request.pk %}">{{ shipment.req_request.pk }}</a></td>
-                    <td><a href="{% url 'cohort-details' shipment.req_request.cohort.pk %}">{{ shipment.req_request.cohort.coh_cohort_name }}</a></td>
-                    <td>{{ shipment.shp_shipment_status }}</td>
+                    <td>{{ shipment.get_shp_shipment_status_display }}</td>
                     <td>{{ shipment.shp_created_at|date:"Y-m-d" }}</td>
                     {% if shipment.contains_genetics %}
-                        <td style="background-color: {{ shipment.shp_processing|yesno_truthy:"green" }}">{{ shipment.shp_processing|date:"y-m-d" }}</td>
-                        <td style="background-color: {{ shipment.shp_processed|yesno_truthy:"green" }}">{{ shipment.shp_processed|date:"y-m-d" }}</td>
+                        <td style="background-color: {{ shipment.shp_processing|yesno_truthy:"green" }}">{{ shipment.shp_processing|date:"Y-m-d" }}</td>
+                        <td style="background-color: {{ shipment.shp_processed|yesno_truthy:"green" }}">{{ shipment.shp_processed|date:"Y-m-d" }}</td>
                     {% else %}
                         <td>N/A</td>
                         <td>N/A</td>
                     {% endif %}
-                    <td style="background-color: {{ shipment.shp_shipment_date|yesno_truthy:"green,orange" }}">{{ shipment.shp_shipment_date|date:"y-m-d" }}</td>
+                    <td style="background-color: {{ shipment.shp_shipment_date|yesno_truthy:"green,orange" }}">{{ shipment.shp_shipment_date|date:"Y-m-d" }}</td>
                 </tr>
             {% endfor %}
         </table>
