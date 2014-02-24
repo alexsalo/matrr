@@ -4,7 +4,7 @@ import os
 project =  os.path.dirname(os.path.realpath(__file__))
 sys.path.append(project)
 from django.core.management import setup_environ
-import settings
+from matrr import settings
 setup_environ(settings)
 
 from django.contrib.contenttypes.models import ContentType
@@ -13,7 +13,10 @@ from django.contrib.auth.models import Permission
 def sync_permissions():
 	cts =  ContentType.objects.all()
 	for ct in cts:
-		perms = ct.model_class()._meta.permissions
+		try:
+			perms = ct.model_class()._meta.permissions
+		except:
+			continue
 		if perms:
 			for codename, desc in perms:
 				print desc

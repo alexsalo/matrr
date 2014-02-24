@@ -56,14 +56,15 @@ def shipping_overview(request):
         if req_request.is_missing_shipments():
             accepted_requests |= Request.objects.filter(pk=req_request.pk)
     # Pending Shipments
-    pending_shipments = Shipment.objects.none()
+    pending_shipments = processing_shipments = Shipment.objects.none()
     if request.user.has_perm('matrr.process_shipments'):
-        pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Processing)
+        processing_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Processing)
     if request.user.has_perm('matrr.handle_shipments'):
-        pending_shipments |= Shipment.objects.filter(shp_shipment_status__in=[ShipmentStatus.Unshipped, ShipmentStatus.Processed])
+        pending_shipments = Shipment.objects.filter(shp_shipment_status__in=[ShipmentStatus.Unshipped, ShipmentStatus.Processed])
     return render_to_response('matrr/shipping/shipping_overview.html',
                               {'accepted_requests': accepted_requests,
-                               'pending_shipments': pending_shipments, },
+                               'pending_shipments': pending_shipments,
+                               'processing_shipments': processing_shipments, },
                               context_instance=RequestContext(request))
 
 

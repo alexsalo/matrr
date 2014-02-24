@@ -575,7 +575,7 @@ def send_rud_data_available_email(rud):
 def shipment_sent_for_processing(shipment):
     from_email = Account.objects.get(user__username='matrr_admin').email
 
-    processors_group = Group.objects.get(name='ShipmentProcessors')
+    processors_group = Group.objects.get(name='ShippingProcessors')
     recipients = processors_group.user_set.all().values_list('email', flat=True)
 
     subject = "%s has dropped off tissue for MATRR DNA/RNA processing" % shipment.user.username
@@ -592,7 +592,7 @@ def shipment_sent_for_processing(shipment):
 def shipment_processed(shipment):
     from_email = Account.objects.get(user__username='matrr_admin').email
 
-    handlers_group = Group.objects.get(name='ShipmentHandlers')
+    handlers_group = Group.objects.get(name='ShippingHandlers')
     recipients = handlers_group.user_set.all().values_list('email', flat=True)
 
     subject = "%s has dropped off tissue for MATRR DNA/RNA processing" % shipment.user.username

@@ -89,7 +89,7 @@
 		<a href='{% url 'shipment-manifest' shipment.pk %}' class='blockLinkButton'>Download Shipping Manifest</a>
 	</div>
 	<div class='right'>
-		{% if shipment.needs_to_be_processed %}
+		{% if shipment.needs_processing %}
             <form action='' method='post'>
                 {% csrf_token %}
                 <button type='submit' name='process' class="blockLinkCheckoutButton">Process Order</button>

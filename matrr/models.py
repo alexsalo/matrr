@@ -2503,7 +2503,7 @@ class Shipment(models.Model):
         if not processing_user.has_perm('matrr.process_shipments'):
             raise PermissionDenied("You do not have permission to process shipments.")
         if self.can_be_processed():
-            self.shp_processed = datetime.datetime.now()
+            self.shp_processed = datetime.now()
             self.user = processing_user
             self.shp_shipment_status = ShipmentStatus.Processed
             self.save()

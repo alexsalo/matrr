@@ -47,7 +47,7 @@
 
 	<br>
 	<div class='large-headline'>
-		Shipments
+		Pending Shipments
 	</div>
 	<div>
 		{% if pending_shipments %}
@@ -74,6 +74,36 @@
 			<div class="messages">
 				<div class="info">
 					There are no Pending Shipments.
+				</div>
+			</div>
+		{% endif %}
+	</div>
+	<div class='large-headline'>
+		In Betsy's Lab
+	</div>
+	<div>
+		{% if processing_shipments %}
+			<table class="common_center" cellpadding='4' cellspacing='2'>
+				<tr>
+					<th>Request</th>
+					<th>User</th>
+					<th>Cohort</th>
+					<th>Sent for processing on</th>
+				</tr>
+				{% for shipment in processing_shipments %}
+					<tr>
+						<td><a href='{% url 'order-detail' shipment.req_request.req_request_id %}'>{{ shipment.req_request.pk }}</a></td>
+						<td><a href="{% url 'account-reviewer-view' shipment.req_request.user.id %}">{{ shipment.req_request.user }}</a></td>
+						<td>{{ shipment.req_request.cohort.coh_cohort_name }}</td>
+						<td>{{ shipment.shp_processing|date:"Y-m-d" }}</td>
+						<td><a class='blockLinkButton' href='{% url 'shipment-processing' shipment.pk %}'>Process</a></td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			<div class="messages">
+				<div class="info">
+					There are no processing Shipments.
 				</div>
 			</div>
 		{% endif %}
