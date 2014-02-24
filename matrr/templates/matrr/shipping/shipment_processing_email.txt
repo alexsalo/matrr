@@ -10,7 +10,7 @@ User {{ shipment.req_request.user.username }} requested the following tissues fr
 
 Request: <a href='http://gleek.ecs.baylor.edu{% url 'order-detail' shipment.req_request.pk%}'>{{ shipment.req_request.pk }}</a>
 Cohort: <a href='http://gleek.ecs.baylor.edu{% url 'cohort-details' shipment.req_request.cohort.coh_cohort_id %}'>{{ shipment.req_request.cohort }}</a>
-Requesting User: {{ shipment.req_request.user.username }}
+Requesting User: {{ shipment.req_request.user.first_name }} {{ shipment.req_request.user.last_name }}
 Requested On: {{ shipment.req_request.req_request_date|date:"m/d/Y" }}
 Request's Notes: {% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}
 
