@@ -1,17 +1,17 @@
 {% load i18n %}
 These tissue requests were or will be left in your lab for processing. It can be assumed the requesting user wants 5 micrograms of DNA/RNA extracted.
 
-DON'T LOSE THIS EMAIL!  The link below is easiest, fastest, and only-est way to notify the MATRR shipping team that the tissue is ready for pickup.  We'll
-add a page soon so you don't HAVE to save the email, but for now you should do exactly that.
+The link below will take you to the shipment processing page for this shipment, where you can notify the MATRR shipping team that the tissue is ready
+for pickup.
 
 <a href="http://gleek.ecs.baylor.edu{% url 'shipment-processing' shipment.pk %}">Click here for all the same info as the email, but now with more buttons!</a>
 
 User {{ shipment.req_request.user.username }} requested the following tissues from {{ shipment.req_request.cohort }}:
 
 Request: <a href='http://gleek.ecs.baylor.edu{% url 'order-detail' shipment.req_request.pk%}'>{{ shipment.req_request.pk }}</a>
-Cohort: <a href='{% url 'cohort-details' shipment.req_request.cohort.coh_cohort_id %}'>{{ shipment.req_request.cohort }}</a>
-Requesting User: {{ req_request.user }}
-Requested On: {{ req_request.req_request_date|date:"m/d/Y" }}
+Cohort: <a href='http://gleek.ecs.baylor.edu{% url 'cohort-details' shipment.req_request.cohort.coh_cohort_id %}'>{{ shipment.req_request.cohort }}</a>
+Requesting User: {{ shipment.req_request.user.username }}
+Requested On: {{ shipment.req_request.req_request_date|date:"m/d/Y" }}
 Request's Notes: {% if req_request.req_notes %}{{ req_request.req_notes }}{% else %}None{% endif %}
 
 Rush this order?: {% if shipment.shp_rush %}YES, rush this shipment please{% else %}Na, no rush{% endif %}
