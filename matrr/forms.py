@@ -842,6 +842,9 @@ class GraphSubjectSelectForm(forms.Form):
 
 
 class TissueShipmentForm(forms.Form):
+    rush = forms.BooleanField(required=False, label="Rush this shipment", help_text="This will notify the genetics lab to process these tissues "
+                                                                                    "before other jobs.  This is probably only necessary if the "
+                                                                                    "customer needs these tissues ASAP.")
     def __init__(self, tissue_request_queryset, *args, **kwargs):
         super(TissueShipmentForm, self).__init__(*args, **kwargs)
         self.fields['tissue_requests'] = forms.ModelMultipleChoiceField(queryset=tissue_request_queryset,
