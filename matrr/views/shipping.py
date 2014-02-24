@@ -54,8 +54,8 @@ def shipping_overview(request):
     accepted_requests = Request.objects.none()
     for req_request in Request.objects.accepted_and_partially().order_by('req_request_date'):
         if req_request.is_missing_shipments():
-            if request.user.has_perm('matrr.process_shipments') or (
-                req_request.contains_genetics() and request.user.has_perm('matrr.handle_shipments')):
+            if request.user.has_perm('matrr.handle_shipments') or (
+                req_request.contains_genetics() and request.user.has_perm('matrr.process_shipments')):
                 accepted_requests |= Request.objects.filter(pk=req_request.pk)
     # Pending Shipments
     pending_shipments = Shipment.objects.none()
