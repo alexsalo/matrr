@@ -66,10 +66,10 @@ def oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20,  DAYTI
         monkey_set.extend(plotting.RDD_56890['LD'])
 
     folder_name = "matrr/utils/DATA/json/"
-    filename_concatination = "DAYTIME" if DAYTIME else ""
-    filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
-    filename_concatination = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatination
-    file_name = "oa_eev_volume_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
+    filename_concatenation = "DAYTIME" if DAYTIME else ""
+    filename_concatenation += "NIGHTTIME" if NIGHTTIME else ""
+    filename_concatenation = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatenation
+    file_name = "oa_eev_volume_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatenation)
     file_path = os.path.join(folder_name, file_name)
     try:
         f = open(file_path, 'r')
@@ -154,10 +154,10 @@ def eev_gkg_summation_by_minute_general(monkey_set, minutes=20, minutes_gap=1, D
 def oa_eev_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     folder_name = "matrr/utils/DATA/json/"
-    filename_concatination = "DAYTIME" if DAYTIME else ""
-    filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
-    filename_concatination = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatination
-    file_name = "oa_eev_gkg_summation_by_minutesFromPellet-%s-%s-%s-%s.json" % (drinking_category, str(minutes), str(minutes_gap), filename_concatination)
+    filename_concatenation = "DAYTIME" if DAYTIME else ""
+    filename_concatenation += "NIGHTTIME" if NIGHTTIME else ""
+    filename_concatenation = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatenation
+    file_name = "oa_eev_gkg_summation_by_minutesFromPellet-%s-%s-%s-%s.json" % (drinking_category, str(minutes), str(minutes_gap), filename_concatenation)
     file_path = os.path.join(folder_name, file_name)
 
     monkey_set = plotting.RDD_56890[drinking_category]
@@ -179,8 +179,8 @@ def oa_eev_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=20, m
         f.close()
         print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
-    ylabel = "Average EtOH intake per monkey, g/kg"
-    title = "Average intake by minute after pellet, %s" % filename_concatination
+    ylabel = "Average EtOH intake per monkey (g/kg)"
+    title = "Average intake by minute after pellet, %s" % filename_concatenation
     gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
                                       # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
@@ -197,10 +197,10 @@ def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_g
         monkey_set.extend(plotting.RDD_56890['LD'])
 
     folder_name = "matrr/utils/DATA/json/"
-    filename_concatination = "DAYTIME" if DAYTIME else ""
-    filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
-    filename_concatination = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatination
-    file_name = "oa_eev_gkg_summation_high_vs_low-%s-%s-%s-%s.json" % (category_half, str(minutes), str(minutes_gap), filename_concatination)
+    filename_concatenation = "DAYTIME" if DAYTIME else ""
+    filename_concatenation += "NIGHTTIME" if NIGHTTIME else ""
+    filename_concatenation = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatenation
+    file_name = "oa_eev_gkg_summation_high_vs_low-%s-%s-%s-%s.json" % (category_half, str(minutes), str(minutes_gap), filename_concatenation)
     file_path = os.path.join(folder_name, file_name)
     try:
         f = open(file_path, 'r')
@@ -220,8 +220,8 @@ def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_g
         f.close()
         print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
-    ylabel = "Average EtOH per monkey (gkg)"
-    title = "Average intake by minute after pellet, %s" % filename_concatination
+    ylabel = "Average EtOH intake per monkey (gkg)"
+    title = "Average EtOH intake by minute after pellet, %s" % filename_concatenation
     highlow_gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
                                       # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return highlow_gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
@@ -255,8 +255,10 @@ def oa_eev_h2o_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=2
         f.close()
         print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
-    ylabel = "Average EtOH intake per monkey, g/kg"
-    title = "Average intake by minute after pellet"
+    ylabel = "Average H2O intake per monkey (g/kg)"
+    title = "Average H2O intake by minute after pellet, %s" % filename_concatenation
+    gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
+                                      # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
@@ -271,10 +273,10 @@ def oa_eev_h2o_gkg_summation_high_vs_low(category_half='high', minutes=20, minut
         monkey_set.extend(plotting.RDD_56890['LD'])
 
     folder_name = "matrr/utils/DATA/json/"
-    filename_concatination = "DAYTIME" if DAYTIME else ""
-    filename_concatination += "NIGHTTIME" if NIGHTTIME else ""
-    filename_concatination = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatination
-    file_name = "oa_eev_h2o_gkg_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatination)
+    filename_concatenation = "DAYTIME" if DAYTIME else ""
+    filename_concatenation += "NIGHTTIME" if NIGHTTIME else ""
+    filename_concatenation = "ALLDAY" if DAYTIME and NIGHTTIME else filename_concatenation
+    file_name = "oa_eev_h2o_gkg_summation_high_vs_low-%s-%s-%s.json" % (category_half, str(minutes), filename_concatenation)
     file_path = os.path.join(folder_name, file_name)
     try:
         f = open(file_path, 'r')
@@ -295,8 +297,10 @@ def oa_eev_h2o_gkg_summation_high_vs_low(category_half='high', minutes=20, minut
         f.close()
         print "%s:  '%s' successfully dumped." % (str(datetime.datetime.now()), file_path)
     xlabel = "Minutes since last pellet"
-    ylabel = "Average volume per monkey (mL)"
-    title = "Average intake by minute after pellet"
+    ylabel = "Average H2O intake per monkey (g/kg)"
+    title = "Average H2O intake by minute after pellet, %s" % filename_concatenation
+    highlow_gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
+                                      # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return highlow_gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
 
@@ -311,24 +315,29 @@ def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, minutes_gap=10, D
     lo_data, lo_count, xlabel, ylabel, title = collect_data(category_half='low', minutes=minutes, minutes_gap=minutes_gap, DAYTIME=DAYTIME, NIGHTTIME=NIGHTTIME)
 
     sorted_minutes = sorted([int(x) for x in hi_data.keys()])
+    _max = 0
     for x in sorted_minutes:
         unicode_x = unicode(x)
         # lower, light drinkers
         if unicode_x in lo_data.keys():
             _a = 0 if lo_data[unicode_x] is None else lo_data[unicode_x]
-            _ld = _a / float(hi_count)
+            _ld = _a / float(lo_count)
         else:
             _ld = 0
         lo_subplot.bar(x, _ld, color='purple', edgecolor='none')
         # higher, heavy drinkers
         _y = 0 if hi_data[unicode_x] is None else hi_data[unicode_x]
-        _hd = _y / float(lo_count)
+        _hd = _y / float(hi_count)
+        _max = max(_max, _ld, _hd)
         hi_subplot.bar(x, _hd, color='gold', edgecolor='none')
     hi_subplot.legend([], title="VHD+HD", loc='upper right')
     lo_subplot.legend([], title="BD+LD", loc='upper right')
 
     hi_subplot.xaxis.set_visible(False)
     lo_subplot.set_xlabel(xlabel)
+    _max = _max * 1.05
+    hi_subplot.set_ylim(0, _max)
+    lo_subplot.set_ylim(0, _max)
     fig.text(.01, .5, ylabel, rotation='vertical', verticalalignment='center')
     hi_subplot.set_title(title)
     return fig
