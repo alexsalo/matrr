@@ -54,22 +54,16 @@ def shipping_overview(request):
     accepted_requests = Request.objects.none()
     for req_request in Request.objects.accepted_and_partially().order_by('req_request_date'):
         if req_request.is_missing_shipments():
-            if request.user.has_perm('matrr.handle_shipments') or (
-                req_request.contains_genetics() and request.user.has_perm('matrr.process_shipments')):
-                accepted_requests |= Request.objects.filter(pk=req_request.pk)
+            accepted_requests |= Request.objects.filter(pk=req_request.pk)
     # Pending Shipments
     pending_shipments = Shipment.objects.none()
     if request.user.has_perm('matrr.process_shipments'):
-        pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Unshipped)
+        pending_shipments |= Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Processing)
     if request.user.has_perm('matrr.handle_shipments'):
         pending_shipments |= Shipment.objects.filter(shp_shipment_status__in=[ShipmentStatus.Unshipped, ShipmentStatus.Processed])
-    # Shipped Shipments
-    shipped_shipments = Shipment.objects.filter(shp_shipment_status=ShipmentStatus.Shipped).exclude(req_request__req_status=RequestStatus.Shipped)
-
     return render_to_response('matrr/shipping/shipping_overview.html',
                               {'accepted_requests': accepted_requests,
-                               'pending_shipments': pending_shipments,
-                               'shipped_shipments': shipped_shipments, },
+                               'pending_shipments': pending_shipments, },
                               context_instance=RequestContext(request))
 
 
