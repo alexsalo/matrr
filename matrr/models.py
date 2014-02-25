@@ -1111,7 +1111,14 @@ class ExperimentBout(models.Model):
                 weight_mtds = weight_mtds.filter(drinking_experiment__dex_date__gte=min_date)
                 weight_mtds = weight_mtds.filter(drinking_experiment__dex_date__lt=max_date)
                 weight = weight_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
-
+            if not weight: # we STILL couldn't find his weight
+                # try to get the average over lifetime
+                weight_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.mtd.monkey)
+                weight = weight_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
+            if not weight: # fuck it, i gave up
+                self.ebt_intake_rate = -1
+                self.save()
+                return
             grams = self.ebt_volume * .04
             grams_kg = grams / weight
             grams_kg_min = grams_kg / (self.ebt_length / 60.)
