@@ -1099,7 +1099,7 @@ class ExperimentBout(models.Model):
     def _populate_intake_rate(self, recalculate=False, save=True):
         if self.ebt_intake_rate is None or recalculate:
             weight = self.mtd.mtd_weight
-            if not weight:
+            if not weight and self.mtd.mtd_etoh_g_kg:
                 # try to deduce the monkey's weight with its g/kg and mL intakes
                 ml_kg = self.mtd.mtd_etoh_g_kg / .04
                 weight = (ml_kg / self.mtd.mtd_etoh_intake)**-1
