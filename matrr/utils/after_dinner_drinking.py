@@ -393,7 +393,7 @@ def rhesus_oa_intake_from_pellet_by_category(minutes=120, minutes_gap=10, DAYTIM
     return fig
 
 
-def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18', output_format='png', dpi=80, minutes_gap=1):
+def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19', output_format='png', dpi=80, minutes_gap=1):
     minutes = 12*60
     _graphs = graphs.split(',')
 
@@ -476,6 +476,11 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,
     if '18' in _graphs:
         name = 'rhesus_oa_intake_from_pellet_by_category-%d-NIGHTTIME-gkg-minutes_gap_%d-nobec' % (minutes, minutes_gap)
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, exclude_bec_days=True, collect_data=oa_eev_gkg_summation_by_minutes_from_pellet)
+        gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
+
+    if '19' in _graphs:
+        name = 'rhesus_oa_percent_etoh_after_last_pellet'
+        fig = rhesus_oa_percent_etoh_after_last_pellet()
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
     return
 
