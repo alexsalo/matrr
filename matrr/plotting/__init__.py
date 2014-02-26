@@ -41,6 +41,7 @@ RDD_56890['HD'] = [10082, 10049, 10064, 10097, 10065, 10067]
 RDD_56890['VHD'] = [10088, 10091, 10066, 10098, 10063, 10061, 10062, 10073, 10075]
 
 ALL_RHESUS_DRINKERS = [__x for __d in RHESUS_DRINKERS_DISTINCT.itervalues() for __x in __d]
+ALL_RDD56890 = [__x for __d in RDD_56890.itervalues() for __x in __d]
 
 DRINKING_CATEGORY_MARKER = {'LD': 'v', 'BD': '<', 'HD': '>', 'VHD': '^'}
 

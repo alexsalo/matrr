@@ -517,22 +517,27 @@ def rhesus_oa_percent_etoh_after_last_pellet__category(subplot, drinking_categor
 
 def rhesus_oa_bout_intake_rate_vs_TSLPellet():
     fig = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
-    main_gs = gridspec.GridSpec(1,1)
-    main_gs.update(left=0.05, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.02)
-    subplot = fig.add_subplot(main_gs[:,:])
-    for key in plotting.RDD_56890.iterkeys():
+    main_gs = gridspec.GridSpec(4,1)
+    main_gs.update(left=0.065, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.06)
+    subplot = None
+    for index, key in enumerate(plotting.RDD_56890.iterkeys()):
+        subplot = fig.add_subplot(main_gs[index,:], sharex=subplot, sharey=subplot)
         _monkeys = plotting.RDD_56890[key]
         category_bouts = models.ExperimentBout.objects.OA().filter(mtd__monkey__in=_monkeys)
         color = plotting.RHESUS_COLORS[key]
         x = category_bouts.values_list("ebt_pellet_elapsed_time_since_last", flat=True)
         y = category_bouts.values_list("ebt_intake_rate", flat=True)
-        subplot.scatter(x, y, label=key, color=color, s=25, alpha=.35)
-        x = numpy.array(x)
-        y = numpy.array(y)
-        plot_tools.create_convex_hull_polygon(subplot, x, y, color)
+        subplot.scatter(x, y, label=key, color=color, s=15, alpha=.15)
+        subplot.xaxis.set_visible(False)
+    subplot.xaxis.set_visible(True)
+    subplot.set_xlim(xmin=0)
+    subplot.set_ylim(ymin=0)
     fig.suptitle("Time since last pellet vs rate of EtOH intake, by drinking category")
+    ylabel = "Rate of drinking during bout, gkg/minute"
+    fontsize = 12
+    fig.text(.01, .5, ylabel, rotation='vertical', verticalalignment='center', fontsize=fontsize)
     subplot.set_xlabel("Seconds since last last pellet")
-    subplot.set_ylabel("Rate of drinking during bout, gkg/minute")
+#    subplot.set_ylabel()
     return fig
 
 
