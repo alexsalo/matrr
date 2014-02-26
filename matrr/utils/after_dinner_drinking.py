@@ -503,6 +503,7 @@ def rhesus_oa_percent_etoh_after_last_pellet():
     fig.text(.01, .5, "Count of days", rotation='vertical', verticalalignment='center')
     return fig
 
+
 def rhesus_oa_percent_etoh_after_last_pellet__category(subplot, drinking_category):
     monkey_set = plotting.RDD_56890[drinking_category]
     mtds = models.MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
