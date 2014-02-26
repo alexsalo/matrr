@@ -105,7 +105,7 @@
 
 				{% if user.is_authenticated and user_is_verified %}
 					<ul>
-						<li class='top'><a href="{% url 'tools-landing' %}">Tools</a></li>
+						<li class='top'><a href="{% url 'tools-landing' %}">Analysis</a></li>
 						<li class='drop-down'><a href="{% url 'tools-protein' %}">Protein</a></li>
 						{% if perms.matrr.view_hormone_tools %}
     						<li class='drop-down'><a href="{% url 'tools-hormone' %}">Hormone</a></li>
