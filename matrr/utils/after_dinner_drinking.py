@@ -191,7 +191,7 @@ def oa_eev_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=20, m
     xlabel = "Minutes since last pellet"
     ylabel = "Average EtOH intake per monkey (g/kg)"
     title = "Average intake by minute after pellet, %s" % filename_concatenation
-    gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
+    gkg_by_minute_from_pellet.pop('720', None) # There is an artifact in the JSON data that took like 2 weeks to generate
                                       # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
@@ -233,7 +233,7 @@ def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_g
     xlabel = "Minutes since last pellet"
     ylabel = "Average EtOH intake per monkey (gkg)"
     title = "Average EtOH intake by minute after pellet, %s" % filename_concatenation
-    highlow_gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
+    highlow_gkg_by_minute_from_pellet.pop('720', None) # There is an artifact in the JSON data that took like 2 weeks to generate
                                       # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return highlow_gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
@@ -268,7 +268,7 @@ def oa_eev_h2o_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=2
     xlabel = "Minutes since last pellet"
     ylabel = "Average H2O intake per monkey (g/kg)"
     title = "Average H2O intake by minute after pellet, %s" % filename_concatenation
-    gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
+    gkg_by_minute_from_pellet.pop('720', None) # There is an artifact in the JSON data that took like 2 weeks to generate
                                       # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
@@ -310,7 +310,7 @@ def oa_eev_h2o_gkg_summation_high_vs_low(category_half='high', minutes=20, minut
     xlabel = "Minutes since last pellet"
     ylabel = "Average H2O intake per monkey (g/kg)"
     title = "Average H2O intake by minute after pellet, %s" % filename_concatenation
-    highlow_gkg_by_minute_from_pellet.pop('720') # There is an artifact in the JSON data that took like 2 weeks to generate
+    highlow_gkg_by_minute_from_pellet.pop('720', None) # There is an artifact in the JSON data that took like 2 weeks to generate
                                       # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return highlow_gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
