@@ -183,7 +183,8 @@ urlpatterns += patterns('',
     url(r'^tools/genealogy/$', tools.tools_genealogy, name='tools-genealogy'),
     url(r'^tools/genealogy/(?P<coh_id>\d+)/$', tools.tools_cohort_genealogy, name='tools-cohort-genealogy'),
     # Exports
-    url(r'^tools/graph-as-pdf/$', tools.create_pdf_fragment, name='pdf-fragment'),
+#    url(r'^tools/graph-as-pdf/$', tools.create_pdf_fragment, name='pdf-fragment'),
+    url(r'^tools/graph-as-pdf/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', tools.create_pdf_fragment_v2, name='pdf-fragment'),
     url(r'^tools/graph-as-svg/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', tools.create_svg_fragment, name='svg-fragment'),
 )
 urlpatterns += patterns('',

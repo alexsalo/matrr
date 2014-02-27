@@ -878,6 +878,29 @@ def tools_sandbox_familytree(request):
                               context_instance=RequestContext(request))
 
 
+def create_pdf_fragment_v2(request, klass, imageID):
+    import matrr.models as mmodels
+    im = get_object_or_404(getattr(mmodels, klass), pk=imageID)
+
+    if not isinstance(im, MATRRImage):
+        raise Http404()
+    if not im.verify_user_access_to_file(request.user):
+        raise Http404()
+
+    try:
+        with open(im.html_fragment.path, 'r') as f:
+            html = f.read()
+    except:
+        raise Http404()
+
+    result = StringIO.StringIO()
+    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), dest=result, link_callback=gizmo.fetch_resources)
+    if not pdf.err:
+        resp = HttpResponse(result.getvalue(), mimetype='application/pdf')
+        resp['Content-Disposition'] = 'attachment; filename=%s' % im.html_fragment.path.replace("html", "pdf")
+        return resp
+    raise Http404()
+
 def create_pdf_fragment(request):
     if request.method == 'GET':
         fragment_filename = request.GET['html']
