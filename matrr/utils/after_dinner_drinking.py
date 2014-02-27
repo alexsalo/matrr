@@ -469,6 +469,7 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,
         fig = rhesus_oa_intake_from_pellet_by_category(minutes=minutes, minutes_gap=minutes_gap, collect_data=oa_eev_h2o_gkg_summation_by_minutes_from_pellet)
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
 
+    ### ethanol gkg graphs, excluding days where BEC was taken (or rather, days where we have a BEC record
     if '17' in _graphs:
         name = 'rhesus_oa_discrete_minute_volumes_high_vs_low-%d-NIGHTTIME-gkg-minutes_gap_%d-nobec' % (minutes, minutes_gap)
         fig = rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=minutes, minutes_gap=minutes_gap, DAYTIME=False, exclude_bec_days=True, collect_data=oa_eev_gkg_summation_high_vs_low)
@@ -571,6 +572,20 @@ def create_allday_from_daynight():
              'oa_eev_gkg_summation_high_vs_low-high-720-1-NIGHTTIME.json',],
              ['oa_eev_gkg_summation_high_vs_low-low-720-1-DAYTIME.json',
              'oa_eev_gkg_summation_high_vs_low-low-720-1-NIGHTTIME.json',],
+
+             ['oa_eev_h2o_gkg_summation_by_minutes_from_pellet-BD-720-DAYTIME.json',
+              'oa_eev_h2o_gkg_summation_by_minutes_from_pellet-BD-720-NIGHTTIME.json',],
+             ['oa_eev_h2o_gkg_summation_by_minutes_from_pellet-HD-720-DAYTIME.json',
+              'oa_eev_h2o_gkg_summation_by_minutes_from_pellet-HD-720-NIGHTTIME.json',],
+             ['oa_eev_h2o_gkg_summation_by_minutes_from_pellet-LD-720-DAYTIME.json',
+              'oa_eev_h2o_gkg_summation_by_minutes_from_pellet-LD-720-NIGHTTIME.json',],
+             ['oa_eev_h2o_gkg_summation_by_minutes_from_pellet-VHD-720-DAYTIME.json',
+              'oa_eev_h2o_gkg_summation_by_minutes_from_pellet-VHD-720-NIGHTTIME.json',],
+             ['oa_eev_h2o_gkg_summation_high_vs_low-high-720-DAYTIME.json',
+              'oa_eev_h2o_gkg_summation_high_vs_low-high-720-NIGHTTIME.json',],
+             ['oa_eev_h2o_gkg_summation_high_vs_low-low-720-DAYTIME.json',
+              'oa_eev_h2o_gkg_summation_high_vs_low-low-720-NIGHTTIME.json',]
+
     ]
     for _day, _night in file_pairs:
         _day_path = os.path.join(folder_name, _day)

@@ -1446,7 +1446,7 @@ class MATRRImage(models.Model):
     image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
     svg_image = models.ImageField('Image', upload_to='matrr_images/', default='', null=False, blank=False)
     thumbnail = models.ImageField('Thumbnail Image', upload_to='matrr_images/', default='', null=True, blank=True)
-    html_fragment = models.FileField('HTML Fragement', upload_to='matrr_images/fragments/', null=True, blank=False)
+    html_fragment = models.FileField('HTML Fragment', upload_to='matrr_images/fragments/', null=True, blank=False)
     canonical = models.BooleanField("MATRR Canonical Image", blank=False, null=False, default=False)
 
     thumbnail_size = (240, 240)
