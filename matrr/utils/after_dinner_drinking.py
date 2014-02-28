@@ -7,8 +7,8 @@ from matrr import models, plotting
 from matrr.plotting import plot_tools
 from matrr.utils import gadgets
 from matplotlib import pyplot, gridspec
-
-def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category, minutes=20, DAYTIME=True, NIGHTTIME=True):
+# todo: write in the exclude_bec_days bit
+def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category, minutes=20, DAYTIME=True, NIGHTTIME=True, exclude_bec_days=False):
     """
     This method will return a tuple.
 
@@ -57,8 +57,8 @@ def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category, minutes=20
     title = "Average intake by minute after pellet"
     return volume_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
-
-def oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20,  DAYTIME=True, NIGHTTIME=True):
+# todo: write in the exclude_bec_days bit
+def oa_eev_volume_summation_high_vs_low(category_half='high', minutes=20,  DAYTIME=True, NIGHTTIME=True, exclude_bec_days=False):
     assert category_half in ('high', 'low')
     if category_half == 'high':
         monkey_set = plotting.RDD_56890['VHD']
@@ -237,8 +237,8 @@ def oa_eev_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_g
                                       # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return highlow_gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
-
-def oa_eev_h2o_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
+# todo: write in the exclude_bec_days bit
+def oa_eev_h2o_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True, exclude_bec_days=False):
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     folder_name = "matrr/utils/DATA/json/"
     filename_concatenation = "DAYTIME" if DAYTIME else ""
@@ -272,8 +272,8 @@ def oa_eev_h2o_gkg_summation_by_minutes_from_pellet(drinking_category, minutes=2
                                       # pretty sure its from a <,>,<=, >= type thing, but the last minute has a comparatively HUGE value.
     return gkg_by_minute_from_pellet, len(monkey_set), xlabel, ylabel, title
 
-
-def oa_eev_h2o_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True):
+# todo: write in the exclude_bec_days bit
+def oa_eev_h2o_gkg_summation_high_vs_low(category_half='high', minutes=20, minutes_gap=1, DAYTIME=True, NIGHTTIME=True, exclude_bec_days=False):
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     assert category_half in ('high', 'low'), "Use 'low' or 'high' for the category_half argument."
     if category_half == 'high':
