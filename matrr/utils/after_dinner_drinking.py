@@ -8,7 +8,7 @@ from matrr.plotting import plot_tools
 from matrr.utils import gadgets
 from matplotlib import pyplot, gridspec
 # todo: write in the exclude_bec_days bit
-def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category='ERROR', minutes=20, DAYTIME=True, NIGHTTIME=True, exclude_bec_days=False, damn_config_object=None):
+def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category=None, minutes=20, DAYTIME=True, NIGHTTIME=True, exclude_bec_days=False, damn_config_object=None):
     """
     This method will return a tuple.
 
@@ -17,11 +17,18 @@ def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category='ERROR', mi
 
     Tuple[1] will be the count of monkeys in drinking_category, typically used for averages.
     """
+    if damn_config_object:
+        minutes = damn_config_object.minutes
+        DAYTIME = damn_config_object.DAYTIME
+        NIGHTTIME = damn_config_object.NIGHTTIME
+        exclude_bec_days = damn_config_object.exclude_bec_days
+        drinking_category = None
     assert DAYTIME or NIGHTTIME, "You need to include SOME data, ya big dummy."
     folder_name = "matrr/utils/DATA/json/"
     filename_concatenation = "DAYTIME" if DAYTIME else ""
     filename_concatenation += "NIGHTTIME" if NIGHTTIME else ""
-    file_name = "oa_eev_volume_summation_by_minutesFromPellet-%s-%s-%s.json" % (drinking_category, str(minutes), filename_concatenation)
+    _subject = drinking_category if drinking_category else damn_config_object.monkey
+    file_name = "oa_eev_volume_summation_by_minutesFromPellet-%s-%s-%s.json" % (_subject, str(minutes), filename_concatenation)
     file_path = os.path.join(folder_name, file_name)
 
     if plotting.RDD_56890.has_key(drinking_category):
@@ -702,9 +709,9 @@ def rhesus_hourly_gkg_boxplot_by_category(fig_size=plotting.HISTOGRAM_FIG_SIZE):
 
 
 class DamnThisConfigObject():
-    minutes = 120
+    minutes = 12*60
     minutes_gap = 1
-    DAYTIME = True
+    DAYTIME = False
     NIGHTTIME = True
     exclude_bec_days = False
     collect_data = oa_eev_volume_summation_by_minutes_from_pellet
