@@ -8,7 +8,7 @@ from matrr.plotting import plot_tools
 from matrr.utils import gadgets
 from matplotlib import pyplot, gridspec
 # todo: write in the exclude_bec_days bit
-def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category, minutes=20, DAYTIME=True, NIGHTTIME=True, exclude_bec_days=False):
+def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category='ERROR', minutes=20, DAYTIME=True, NIGHTTIME=True, exclude_bec_days=False, damn_config_object=None):
     """
     This method will return a tuple.
 
@@ -24,7 +24,13 @@ def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category, minutes=20
     file_name = "oa_eev_volume_summation_by_minutesFromPellet-%s-%s-%s.json" % (drinking_category, str(minutes), filename_concatenation)
     file_path = os.path.join(folder_name, file_name)
 
-    monkey_set = plotting.RDD_56890[drinking_category]
+    if plotting.RDD_56890.has_key(drinking_category):
+        monkey_set = plotting.RDD_56890[drinking_category]
+    elif damn_config_object:
+        monkey_set = [damn_config_object.monkey,]
+    else:
+        raise Exception("I need either a drinking_category or a damn_config_object")
+
     try:
         f = open(file_path, 'r')
         json_string = f.readline()
@@ -393,7 +399,7 @@ def rhesus_oa_intake_from_pellet_by_category(minutes=120, minutes_gap=10, DAYTIM
     return fig
 
 
-def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19', output_format='png', dpi=80, minutes_gap=1):
+def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20', output_format='png', dpi=80, minutes_gap=1):
     minutes = 12*60
     _graphs = graphs.split(',')
 
@@ -483,6 +489,17 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,
         name = 'rhesus_oa_percent_etoh_after_last_pellet'
         fig = rhesus_oa_percent_etoh_after_last_pellet()
         gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
+
+    if '20' in _graphs:  # individual monkey nighttime etoh volume after pellet graphs
+        for _category in plotting.RDD_56890.iterkeys():
+            for _mky in plotting.RDD_56890[_category]:
+                _cfg = DamnThisConfigObject()
+                _cfg.monkey = _mky
+                _cfg.monkey_category = _category
+                fig = monkey_oa_intake_from_pellet(_cfg)
+                name = 'monkey_oa_intake_from_pellet-%d-default' % _mky
+                gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
+                break
     return
 
 
@@ -592,4 +609,143 @@ def create_allday_from_daynight():
         _night_path = os.path.join(folder_name, _night)
         _output_path = _day_path.replace('DAYTIME', 'ALLDAY')
         _combine_daynight_json_to_allday(daytime_Filename=_day_path, nighttime_filename=_night_path, output_filename=_output_path)
+
+
+def rhesus_hourly_gkg_boxplot_by_category(fig_size=plotting.HISTOGRAM_FIG_SIZE):
+    def _hourly_eev_gkg_summation(eevs, monkey_category, start_time):
+        """
+        This method will return a list of each monkey's gkg consumed within the events passed in (eevs), for each monkey in monkey_category
+        ex.
+        [3.2, 1.4, 5.7, 3.5, 2.9]
+        """
+        folder_name = "matrr/utils/DATA/json/"
+        file_name = "rhesus_hourly_gkg_boxplot_by_category-%s-%s.json" % (monkey_category, str(start_time))
+        file_path = os.path.join(folder_name, file_name)
+        try:
+            f = open(file_path, 'r')
+            json_string = f.readline()
+            events_gkg = json.loads(json_string)
+        except Exception as e:
+            print "%s:  Generating and dumping '%s' to file..." % (str(datetime.now()), file_path)
+            events_gkg = list()
+            for monkey in RDD_56890[monkey_category]:
+                # first, get the subset of events associated with this monkey
+                _eevs = eevs.filter(monkey=monkey)
+                # Next, get this monkey's average OPEN ACCESS weight
+                mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
+                avg_weight = mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
+                # to get g/kg, aggregate the volume consumed, multiply by .04 and divide by weight
+                etoh_volume = _eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+                if etoh_volume and avg_weight:
+                    gkg = etoh_volume * .04 / avg_weight
+                else:
+                    gkg = 0
+                events_gkg.append(gkg)
+            try:
+                if not os.path.exists(folder_name):
+                    os.makedirs(folder_name)
+            except IOError:
+                pass
+            f = open(file_path, 'w')
+            json_data = json.dumps(events_gkg)
+            f.write(json_data)
+            f.close()
+            print "%s:  '%s' successfully dumped." % (str(datetime.now()), file_path)
+        return events_gkg
+
+    fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
+    main_gs = gridspec.GridSpec(3, 3)
+    main_gs.update(left=0.04, right=0.98, top=.95, bottom=.07)
+    subplot = fig.add_subplot(main_gs[:, :])
+
+    gap_factor = 2
+    width = .6 * ONE_HOUR / len(DRINKING_CATEGORIES)
+    offset = ONE_HOUR / len(DRINKING_CATEGORIES)
+    for index, mky_cat in enumerate(DRINKING_CATEGORIES):
+        x_values = numpy.arange(index * offset, TWENTYTWO_HOUR * gap_factor, ONE_HOUR * gap_factor)
+        subplot = rhesus_eev_by_hour_boxplot(subplot, x_values, mky_cat, _hourly_eev_gkg_summation, width=width, color=RHESUS_COLORS[mky_cat])
+
+    # Makes all boxplots fully visible
+    subplot.set_xlim(xmin=-.5 * ONE_HOUR, xmax=TWENTYTWO_HOUR * gap_factor)
+    # shades the graph gray for light-out hours
+    subplot.axvspan(gap_factor * LIGHTS_OUT - width * gap_factor, gap_factor * LIGHTS_ON - width * gap_factor, color='black', alpha=.2, zorder=-100)
+
+    # defines X labels
+    x_labels = ['%d' % i for i in range(1, 23)]
+    # centers xticks, so labels are place in the middle of the hour, rotated
+    new_xticks = numpy.arange(0, TWENTYTWO_HOUR * gap_factor, ONE_HOUR * gap_factor)
+    subplot.set_xticks(new_xticks)
+    xtick_labels = numpy.arange(ONE_HOUR, TWENTYTWO_HOUR+ONE_HOUR, ONE_HOUR) / 60 / 60
+    subplot.set_xticklabels(xtick_labels)
+    subplot.set_yticklabels([])
+
+    # Create legend
+    handles = list()
+    labels = list()
+    for key in DRINKING_CATEGORIES:
+        color = RHESUS_COLORS[key]
+        wrect = patches.Rectangle((0, 0), 1, 1, fc=color)
+        handles.append(wrect)
+        labels.append(key)
+
+    tick_size = 24
+    title_size = 32
+    label_size = 32
+    legend_size = 32
+    subplot.legend(handles, labels, loc='upper right', prop={'size': legend_size})
+    subplot.tick_params(axis='both', which='major', labelsize=tick_size)
+    subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
+    subplot.set_title("Intake per hour by Drinking Category", size=title_size)
+    subplot.set_ylabel("Total EtOH Intake of Category, g/kg", size=label_size)
+    subplot.set_xlabel("Hour of session", size=label_size)
+    return fig
+
+
+class DamnThisConfigObject():
+    minutes = 120
+    minutes_gap = 1
+    DAYTIME = True
+    NIGHTTIME = True
+    exclude_bec_days = False
+    collect_data = oa_eev_volume_summation_by_minutes_from_pellet
+    figure = None
+    subplot = None
+    monkey = None
+    monkey_category = 'LD'
+    xlabel = "Minutes since last pellet"
+    ylabel = "Average volume per monkey (mL)"
+    title = "Average intake by minute after pellet"
+
+    def gimme_that_data(self):
+        a_data, a_count, xlabel, ylabel, title  = self.collect_data(damn_config_object=self)
+        a_count = float(a_count)
+        colors = (plotting.RHESUS_COLORS[self.monkey.mky_drinking_category], plotting.RHESUS_COLORS_ACCENT[self.monkey.mky_drinking_category])
+        minutes = [int(x) for x in a_data.keys()] # the a_data.keys are dumped to json as strings, which matplotlib doesn't appreciate.
+        minutes = sorted(minutes)
+        for index, x in enumerate(minutes):
+            # lower, light drinkers
+            _x = str(x)
+            _y = 0 if a_data[_x] is None else a_data[_x]
+            _y /= a_count
+            self.subplot.bar(x, _y, width=1, color=colors[index%2], edgecolor='none')
+        # rotate the xaxis labels
+        self.subplot.set_xlabel(xlabel)
+        self.subplot.set_ylabel(ylabel)
+        self.subplot.legend((), title=self.monkey.pk, loc=1, frameon=False)
+
+
+def monkey_oa_intake_from_pellet(config_object):
+    config_object.figure = pyplot.figure(figsize=plotting.DEFAULT_FIG_SIZE, dpi=plotting.DEFAULT_DPI)
+    main_gs = gridspec.GridSpec(1,1)
+    main_gs.update(left=0.05, right=.98, top=.94, bottom=.05, wspace=.1, hspace=.02)
+    config_object.subplot = config_object.figure.add_subplot(main_gs[:,:])
+    config_object.gimme_that_data()
+    config_object.subplot.yaxis.set_visible(False)
+    config_object.subplot.xaxis.set_visible(False)
+    config_object.subplot.xaxis.set_visible(True)
+    config_object.figure.suptitle(config_object.title)
+    fontsize = 18
+    config_object.figure.text(.01, .5, config_object.ylabel, rotation='vertical', verticalalignment='center', fontsize=fontsize)
+    return config_object.figure
+
 
