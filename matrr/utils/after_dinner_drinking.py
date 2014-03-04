@@ -331,16 +331,16 @@ def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, minutes_gap=10, D
         unicode_x = unicode(x)
         # lower, light drinkers
         if unicode_x in lo_data.keys():
-            _a = 0 if lo_data[unicode_x] is None else lo_data[unicode_x]
-            _ld = _a / float(lo_count)
+            _ld = 0 if lo_data[unicode_x] is None else lo_data[unicode_x]
+            _ld /= float(lo_count)
         else:
             _ld = 0
-        lo_subplot.bar(x, _ld, color='purple', edgecolor='none')
         # higher, heavy drinkers
-        _y = 0 if hi_data[unicode_x] is None else hi_data[unicode_x]
-        _hd = _y / float(hi_count)
-        _max = max(_max, _ld, _hd)
+        _hd = 0 if hi_data[unicode_x] is None else hi_data[unicode_x]
+        _hd /= float(hi_count)
         hi_subplot.bar(x, _hd, color='gold', edgecolor='none')
+        lo_subplot.bar(x, _ld, color='purple', edgecolor='none')
+        _max = max(_max, _ld, _hd)
     hi_subplot.legend([], title="VHD+HD", loc='upper right')
     lo_subplot.legend([], title="BD+LD", loc='upper right')
 
