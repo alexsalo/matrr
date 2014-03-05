@@ -738,7 +738,7 @@ class DamnThisConfigObject():
         # rotate the xaxis labels
         self.subplot.set_xlabel(xlabel)
         self.subplot.set_ylabel(ylabel)
-        self.subplot.legend((), title=self.monkey.pk, loc=1, frameon=False)
+        self.subplot.legend((), title=self.monkey, loc=1, frameon=False)
 
 
 def monkey_oa_intake_from_pellet(config_object):
