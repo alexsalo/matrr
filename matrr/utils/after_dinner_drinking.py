@@ -506,7 +506,6 @@ def create_pellet_volume_graphs(output_path='', graphs='1,2,3,4,5,6,7,8,9,10,11,
                 fig = monkey_oa_intake_from_pellet(_cfg)
                 name = 'monkey_oa_intake_from_pellet-%d-default' % _mky
                 gadgets.dump_figure_to_file(fig, name, output_path, output_format, dpi)
-                break
     return
 
 
