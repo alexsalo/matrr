@@ -617,7 +617,7 @@ def create_allday_from_daynight():
         _output_path = _day_path.replace('DAYTIME', 'ALLDAY')
         _combine_daynight_json_to_allday(daytime_Filename=_day_path, nighttime_filename=_night_path, output_filename=_output_path)
 
-
+#todo: this whole thing
 def rhesus_hourly_gkg_boxplot_by_category(fig_size=plotting.HISTOGRAM_FIG_SIZE):
     def _hourly_eev_gkg_summation(eevs, monkey_category, start_time):
         """
@@ -726,7 +726,7 @@ class DamnThisConfigObject():
     def gimme_that_data(self):
         a_data, a_count, xlabel, ylabel, title  = self.collect_data(damn_config_object=self)
         a_count = float(a_count)
-        colors = (plotting.RHESUS_COLORS[self.monkey.mky_drinking_category], plotting.RHESUS_COLORS_ACCENT[self.monkey.mky_drinking_category])
+        colors = (plotting.RHESUS_COLORS[self.monkey_category], plotting.RHESUS_COLORS_ACCENT[self.monkey_category])
         minutes = [int(x) for x in a_data.keys()] # the a_data.keys are dumped to json as strings, which matplotlib doesn't appreciate.
         minutes = sorted(minutes)
         for index, x in enumerate(minutes):
