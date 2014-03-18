@@ -1268,7 +1268,11 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=HISTOGRAM_FIG_SIZE):
     tick_size = 28
     title_size = 30
     label_size = 32
+    panel_label_size = 20
+
     fig.text(.01, .96, "Figure 1", fontsize=title_size)
+    fig.text(.23, .96, "Panel (A)", fontsize=panel_label_size)
+    fig.text(.71, .96, "Panel (B)", fontsize=panel_label_size)
 
 #	Histogram, left
     subplot = fig.add_subplot(gs[:,:])
@@ -1369,7 +1373,10 @@ def etoh_gkg_monkeybargraph(subplot, limit, cutoff=None, tick_size=12, title_siz
 
     subplot.set_xlim(xmax=len(monkeys))
     subplot.set_xticks([])
-    subplot.set_xlabel("%% Days > %d g/kg" % limit, size=tick_size)
+    subplot.set_xlabel("Monkey", size=tick_size)
+    stupid_legend = subplot.legend((), title="%% Days > %d g/kg" % limit, loc=9, frameon=False)
+    stupid_title = stupid_legend.get_title()
+    stupid_title.set_fontsize(int(label_size*.75))
     ytick_labels = ["%d" % (2*10*x) for x in range(6)]
     subplot.set_yticklabels(ytick_labels, size=tick_size)
     return subplot
@@ -3275,6 +3282,70 @@ def rhesus_N_bec_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
     ax1.set_xticklabels(sorted_data[:,0])
     return fig
 
+def rhesus_cohort_bargraph_gkg_per_quartile():
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+    main_gs = gridspec.GridSpec(2, 2)
+    gs_gap = .035
+    main_gs.update(left=gs_gap, right=(1-gs_gap), top=(1-gs_gap), bottom=gs_gap, wspace=3*gs_gap, hspace=3*gs_gap)
+
+    monkeys = RHESUS_DRINKERS_DISTINCT["LD"]
+    monkeys.extend(RHESUS_DRINKERS_DISTINCT["BD"])
+    monkeys.extend(RHESUS_DRINKERS_DISTINCT["HD"])
+    monkeys.extend(RHESUS_DRINKERS_DISTINCT["VHD"])
+    subplot = None
+    for _quarter in range(4):
+        _row = 0 if _quarter < 2 else 1
+        _col = _quarter % 2
+        subplot = fig.add_subplot(main_gs[_row, _col], sharey=subplot)
+        subplot.set_title("Three Month Quarter:  %d" % (_quarter+1))
+        subplot.set_xlabel("Monkey")
+        subplot.set_ylabel("Ethanol (g/kg)")
+        subplot.set_xticks([])
+        subplot.set_yticks([])
+        for _mky in monkeys:
+            _mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=_mky)
+            if _quarter == 0:
+                _mtds = _mtds.first_three_months_oa()
+            elif _quarter == 1:
+                _mtds = _mtds.second_three_months_oa()
+            elif _quarter == 2:
+                _mtds = _mtds.third_three_months_oa()
+            elif _quarter == 3:
+                _mtds = _mtds.fourth_three_months_oa()
+            else:
+                raise Exception("CONGRATULATIONS!  You broke python!")  # unreachable code
+            _category = gadgets.identify_drinking_category(_mtds)
+            _color = RHESUS_COLORS[_category]
+            _gkg_sum = _mtds.aggregate(gkg_sum=Sum('mtd_etoh_g_kg'))['gkg_sum']
+            _bar = subplot.bar(monkeys.index(_mky), _gkg_sum, width=.8, color=_color, linewidth=1.2, align='center')[0]
+            subplot.text(_bar.get_x()+_bar.get_width()/2., 10, "%d" % _mky, ha='center', va='bottom', rotation='vertical', color='white', size=8)
+    return fig
+
+def rhesus_cohort_bargraph_gkg_per_year():
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+    main_gs = gridspec.GridSpec(2, 2)
+    gs_gap = .035
+    main_gs.update(left=gs_gap, right=(1-gs_gap), top=(1-gs_gap), bottom=gs_gap, wspace=3*gs_gap, hspace=3*gs_gap)
+
+    monkeys = RHESUS_DRINKERS_DISTINCT["LD"]
+    monkeys.extend(RHESUS_DRINKERS_DISTINCT["BD"])
+    monkeys.extend(RHESUS_DRINKERS_DISTINCT["HD"])
+    monkeys.extend(RHESUS_DRINKERS_DISTINCT["VHD"])
+    subplot = fig.add_subplot(main_gs[:, :])
+    subplot.set_title("Twelve Months")
+    subplot.set_xlabel("Monkey")
+    subplot.set_ylabel("Ethanol (g/kg)")
+    subplot.set_xticks([])
+    subplot.set_yticks([])
+    for _mky in monkeys:
+        _mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=_mky)
+        _category = gadgets.identify_drinking_category(_mtds)
+        _color = RHESUS_COLORS[_category]
+        _gkg_sum = _mtds.aggregate(gkg_sum=Sum('mtd_etoh_g_kg'))['gkg_sum']
+        _bar = subplot.bar(monkeys.index(_mky), _gkg_sum, width=.8, color=_color, linewidth=1.2, align='center')[0]
+        subplot.text(_bar.get_x()+_bar.get_width()/2., 10, "  %d" % _mky, ha='center', va='bottom', rotation='vertical', color='white', size=16)
+    return fig
+
 #----------------------
 def create_age_graphs():
     from matrr import settings
@@ -3506,7 +3577,7 @@ def create_kathy_graphs():
         fig.savefig(filename, dpi=DPI)
 
 
-def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,', png=True, fig_size=(25, 15), dpi=800):
+def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b', png=True, fig_size=(25, 15), dpi=800):
     figures = list()
     names = list()
     all_categories = DRINKING_CATEGORIES
@@ -3535,6 +3606,14 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,', png=Tr
         fig = rhesus_N_gkg_days(2.5)
         figures.append(fig)
         names.append('S2b')
+    if 's3a' in graphs:
+        fig = rhesus_cohort_bargraph_gkg_per_quartile()
+        figures.append(fig)
+        names.append('S3a')
+    if 's3b' in graphs:
+        fig = rhesus_cohort_bargraph_gkg_per_year()
+        figures.append(fig)
+        names.append('S3b')
 
     if png:
         for FigName in zip(figures, names):
