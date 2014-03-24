@@ -189,8 +189,7 @@ def urge_progress_reports():
             if ret > 0:
                 print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
 
-    if way_overdue and date.today().isocalendar()[
-        1] % 2 == 0: # there exist overdue updates, and today is an even week of the year
+    if way_overdue and date.today().isocalendar()[1] % 2 == 0: # there exist overdue updates, and today is an even week of the year
         from_email = Account.objects.get(user__username='matrr_admin').email
         recipients = [user.email for user in Group.objects.get(name='Uberuser').user_set.all()]
         subject = 'Overdue Progress Report'
