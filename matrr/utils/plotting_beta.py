@@ -3021,7 +3021,94 @@ def rhesus_category_parallel_classification_stability_popcount(categories, y_val
     pyplot.setp(legend.get_title(), fontsize=title_size)
     return fig
 
+def rhesus_category_parallel_classification_stability_popcount_3moAssignment(categories, y_value_callable, y_label, fig_size=(25, 15), tick_size=22, title_size=30,  label_size=26):
+    fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
+    fig.text(.82, .96, "Supplement 4", fontsize=title_size)
+    gs = gridspec.GridSpec(6, 1)
+    gs.update(left=0.05, right=0.98, top=.95, bottom=.04, hspace=.25)
+    etoh_subplot = fig.add_subplot(gs[0:4,:])
+    pop_subplot = fig.add_subplot(gs[4:,:], sharex=etoh_subplot)
 
+    etoh_subplot.set_ylabel(y_label, fontdict={'fontsize': label_size})
+
+    # Identify each monkey's category based on the first three months of OA, cuz that's what reviewer 2 thought was a good idea -.-
+    three_mo_categories= dict()
+    for _mky in ALL_RHESUS_DRINKERS:
+        _mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=_mky).first_three_months_oa()
+        three_mo_categories[_mky] = gadgets.identify_drinking_category(_mtds)
+
+    # Next, collect each monkey's average gkg intake for each quarter, organized by category (as assigned by the first 3 months OA) and quarter
+    plot_x = range(1,5,1)
+    etoh_category_values = defaultdict(lambda: defaultdict(lambda: list()))
+    for three_months in plot_x:
+        etoh_data = y_value_callable(ALL_RHESUS_DRINKERS, fieldname='mtd_etoh_g_kg',  three_months=three_months)
+        for monkey in etoh_data.iterkeys():
+            _mky_category = three_mo_categories[monkey]
+            etoh_category_values[_mky_category][three_months].append(etoh_data[monkey])
+
+    # Now we build the top subplot
+    # The top subplot shows the 4 categories average intake by quarter.  categories are assigned in based on the first 3 months of OA.
+    # The average of each category is plotted, and the standard error of monkey values in each quarter/category are plotted around the avg
+    base_alpha = .35
+    for key in categories:
+        category_dict = etoh_category_values[key]
+        plot_y = list()
+        std_error = list()
+        for x in plot_x:
+            _yvalues = category_dict[x]
+            _avg = numpy.average(_yvalues)
+            _err = stats.sem(_yvalues)
+            plot_y.append(_avg)
+            std_error.append(_err)
+        plot_y = numpy.array(plot_y)
+        std_error = numpy.array(std_error)
+
+        if key in ['HD', 'BD']:
+            alpha = .5 * base_alpha
+        else:
+            alpha = base_alpha
+        etoh_subplot.plot(plot_x, plot_y, c=RHESUS_COLORS[key], linewidth=5)
+        etoh_subplot.scatter(plot_x, plot_y, c=RHESUS_COLORS[key], edgecolor=RHESUS_COLORS[key], s=150, marker=DRINKING_CATEGORY_MARKER[key], label=key)
+        etoh_subplot.fill_between(plot_x, plot_y-std_error, plot_y+std_error, alpha=alpha, edgecolor=RHESUS_COLORS[key], facecolor=RHESUS_COLORS[key])
+    etoh_subplot.legend(loc=1, frameon=True, prop={'size': tick_size})
+
+    ###############
+    ordinals = ["First", "Second", "Third", "Fourth"]
+
+    first_quarter_categories = list(gadgets.get_category_population_by_quarter('first', monkeys=ALL_RHESUS_DRINKERS))
+    three_mo_category_pop_count = dict()
+    for key in DRINKING_CATEGORIES:
+        three_mo_category_pop_count[key] = first_quarter_categories.count(key)
+
+    x_base = numpy.array(range(1,5,1))
+    for ordinal, x_start in zip(ordinals, x_base - .2):
+        x_val = x_start
+        quarter_population = list(gadgets.get_category_population_by_quarter(ordinal, monkeys=ALL_RHESUS_DRINKERS))
+        for key in DRINKING_CATEGORIES:
+            x_values = list()
+            y_values = list()
+            x_values.append(x_val)
+            y_value = quarter_population.count(key) - three_mo_category_pop_count[key]
+            y_values.append(y_value)
+            color = RHESUS_COLORS[key]
+            x_val += .1
+            pop_subplot.bar(x_values, y_values, width=.05, color=color, edgecolor=color)
+    for index, subplot in enumerate([etoh_subplot, pop_subplot]):
+        subplot.tick_params(axis='both', which='both', labelsize=tick_size)
+        subplot.set_xlim(xmin=.75, xmax=len(plot_x)+.2)
+        subplot.yaxis.set_major_locator(MaxNLocator(prune='lower'))
+    etoh_subplot.grid(True, which='major', axis='both')
+    pop_subplot.set_ylabel(r'$\Delta$ Population', fontdict={'fontsize': label_size})
+    pop_subplot.grid(True, which='major', axis='y')
+    pop_subplot.axhspan(-.1, .1, color='black', alpha=.7, zorder=-100)
+    pop_subplot.set_yticks(range(-6,7,2))
+    etoh_subplot.get_xaxis().set_visible(False)
+    pop_subplot.set_xticks(plot_x)
+    x_labels = ["%s 3 months" % x for x in ordinals]
+    pop_subplot.set_xticklabels(x_labels, size=tick_size)
+    legend = pop_subplot.legend((), title="Population change from Three Month Study", loc=9, frameon=False)
+    pyplot.setp(legend.get_title(), fontsize=title_size)
+    return fig
 
 
 class RhesusAdjacencyNetwork():
@@ -3577,7 +3664,7 @@ def create_kathy_graphs():
         fig.savefig(filename, dpi=DPI)
 
 
-def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b', png=True, fig_size=(25, 15), dpi=800):
+def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s4', png=True, fig_size=(25, 15), dpi=800):
     figures = list()
     names = list()
     all_categories = DRINKING_CATEGORIES
@@ -3614,6 +3701,10 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b',
         fig = rhesus_cohort_bargraph_gkg_per_year()
         figures.append(fig)
         names.append('S3b')
+    if 's4' in graphs:
+        fig = rhesus_category_parallel_classification_stability_popcount_3moAssignment(all_categories, gadgets.gather_three_month_monkey_average_by_fieldname, "Average Daily EtOH Intake by Category (g/kg)")
+        figures.append(fig)
+        names.append('S4')
 
     if png:
         for FigName in zip(figures, names):
