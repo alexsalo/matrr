@@ -436,7 +436,6 @@ def create_bec_summary_plots(cohorts=True, monkeys=True):
                 for graph in mky_plots:
                     MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=monkey_plots.MONKEY_PLOTS[graph][1], canonical=True)
                     gc.collect()
-                break
 
 
 def create_mtd_histograms():
