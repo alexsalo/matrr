@@ -23,7 +23,7 @@ def monkey_necropsy_avg_22hr_g_per_kg(monkey):
         graph_title = 'Average Ethanol Intake for Monkey %s during 22 Hour Free Access Phase' % str(monkey.pk)
         x_label = "Ethanol Intake (in g/kg)"
         legend_labels = ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk))
-        return monkey_necropsy_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
+        return _monkey_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
 
 
 def monkey_necropsy_etoh_4pct(monkey):
@@ -35,7 +35,7 @@ def monkey_necropsy_etoh_4pct(monkey):
         graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
         x_label = "Ethanol Intake (in 4% ml)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
-        return monkey_necropsy_summary_general(specific_callables.necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, monkey)
+        return _monkey_summary_general(specific_callables.necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, monkey)
 
 
 def monkey_necropsy_sum_g_per_kg(monkey):
@@ -47,10 +47,24 @@ def monkey_necropsy_sum_g_per_kg(monkey):
         graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
         x_label = "Ethanol Intake (in g/kg)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
-        return monkey_necropsy_summary_general(specific_callables.necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, monkey)
+        return _monkey_summary_general(specific_callables.necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, monkey)
 
 
-def monkey_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, monkey, cohort=None):
+def monkey_summary_avg_bec_mgpct(monkey):
+    """
+    This method will create a monkey graph (horizontal bar graph) showing each monkey's average open access bec values, highlighting monkey's values
+    """
+    if MonkeyBEC.objects.filter(monkey=monkey).count():
+        graph_title = 'Average Blood Ethanol Concentration for Monkey %s (22hr open access)' % str(monkey.pk)
+        x_label = "Average BEC (mg percent)"
+        legend_labels = ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk))
+        return _monkey_summary_general(specific_callables.summary_avg_bec_mgpct, x_label, graph_title, legend_labels, monkey)
+    else:
+        return False, False
+
+
+
+def _monkey_summary_general(specific_callable, x_label, graph_title, legend_labels, monkey, cohort=None):
     from matrr.models import Monkey, Cohort
     ##  Verify argument is actually a monkey
     if not isinstance(monkey, Monkey):
@@ -1731,6 +1745,7 @@ MONKEY_PLOTS.update(MONKEY_TOOLS_PLOTS)
 MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_22hr_g_per_kg, "Average Monkey Ethanol Intake, 22hr"),
                      "monkey_necropsy_etoh_4pct": (monkey_necropsy_etoh_4pct, "Total Monkey Ethanol Intake, ml"),
                      "monkey_necropsy_sum_g_per_kg": (monkey_necropsy_sum_g_per_kg, "Total Monkey Ethanol Intake, g per kg"),
+                     "monkey_summary_avg_bec_mgpct": (monkey_summary_avg_bec_mgpct, "Average BEC, 22hr"),
                      'monkey_etoh_bouts_drinks_intraday': (monkey_etoh_bouts_drinks_intraday, "Intra-day Ethanol Intake"),
                      'mtd_histogram_general': (monkey_mtd_histogram_general, 'Monkey Histogram'),
                      'bec_histogram_general': (monkey_bec_histogram_general, 'Monkey Histogram'),

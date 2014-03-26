@@ -101,11 +101,13 @@ def summary_avg_bec_mgpct(queryset):
         _12mo_avg_mgpct = _oa_becs.aggregate(avg=Avg('bec_mg_pct'))['avg']
         _6mo_avg_mgpct = _6mo_becs.aggregate(avg=Avg('bec_mg_pct'))['avg']
 
-        twelve_mo_avg.append(_12mo_avg_mgpct if _12mo_avg_mgpct else 0)
-        six_months_avg.append(_6mo_avg_mgpct if _6mo_avg_mgpct else 0)
+        if not (_12mo_avg_mgpct or _6mo_avg_mgpct):
+            continue
+        twelve_mo_avg.append(_12mo_avg_mgpct)
+        six_months_avg.append(_6mo_avg_mgpct)
         labels.append(str(mky.pk))
 
     # sort the three matched lists by the 12 month average
     twelve_mo_avg, six_months_avg, labels = zip(*sorted(zip(twelve_mo_avg, six_months_avg, labels)))
     # python is badass, amirite?
-    return six_months_avg, twelve_mo_avg, labels
+    return list(six_months_avg), list(twelve_mo_avg), list(labels)

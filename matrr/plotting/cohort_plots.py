@@ -10,7 +10,7 @@ from matrr.models import *
 from matrr.utils.gadgets import Treemap
 from matrr.plotting import specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE
 
-def _cohort_necropsy_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
+def _cohort_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
     """
     This generalized method will create the necropsy summary graph using the parameters passed it.  These parameters
     are used to collect the graph's data and customize the labels/appearance to match that data.
@@ -89,7 +89,7 @@ def cohort_necropsy_avg_22hr_g_per_kg(cohort):
         graph_title = 'Average Daily EtOH Intake (22hr open access)'
         x_label = "Average Daily Ethanol Intake (g/kg)"
         legend_labels = ('12 Month Average', '6 Month Average')
-        return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
+        return _cohort_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
     else:
         return False, False
 
@@ -102,7 +102,7 @@ def cohort_necropsy_etoh_4pct(cohort):
         graph_title = "Total EtOH Intake (mL)"
         x_label = "Ethanol intake (4% w/v)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
-        return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
+        return _cohort_summary_general(specific_callables.necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
     else:
         return False, False
 
@@ -115,7 +115,7 @@ def cohort_necropsy_sum_g_per_kg(cohort):
         graph_title = 'Total EtOH Intake (g/kg)'
         x_label = "Ethanol Intake (g/kg)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
-        return _cohort_necropsy_summary_general(specific_callables.necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
+        return _cohort_summary_general(specific_callables.necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
     else:
         return False, False
 
@@ -127,7 +127,7 @@ def cohort_summary_avg_bec_mgpct(cohort):
         graph_title = 'Average Blood Ethanol Concentration (22hr open access)'
         x_label = "Average BEC (mg percent)"
         legend_labels = ('12 Month Average', '6 Month Average')
-        return _cohort_necropsy_summary_general(specific_callables.summary_avg_bec_mgpct, x_label, graph_title, legend_labels, cohort)
+        return _cohort_summary_general(specific_callables.summary_avg_bec_mgpct, x_label, graph_title, legend_labels, cohort)
     else:
         return False, False
 

@@ -412,6 +412,33 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
                 gc.collect()
                 CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
 
+def create_bec_summary_plots(cohorts=True, monkeys=True):
+    from matrr.models import MonkeyImage, CohortImage, Cohort, MonkeyBEC
+    from matrr.plotting import monkey_plots, cohort_plots
+
+    bec_cohorts = set(MonkeyBEC.objects.OA().values_list('monkey__cohort', flat=True))
+    approved_cohorts = {2, 3, 5, 6, 9, 10}  # Cyno 1 & 2, Rhesus 4, 5, 7a, 7b
+    actionable_cohorts = bec_cohorts & approved_cohorts
+
+    coh_plots = ['cohort_summary_avg_bec_mgpct', ]
+    mky_plots = ['monkey_summary_avg_bec_mgpct',]
+
+    for _cohort in actionable_cohorts:
+        cohort = Cohort.objects.get(pk=_cohort)
+        if cohorts:
+            print cohort
+            for graph in coh_plots:
+                gc.collect()
+                CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
+        if monkeys:
+            for monkey in cohort.monkey_set.all():
+                print monkey
+                for graph in mky_plots:
+                    MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=monkey_plots.MONKEY_PLOTS[graph][1], canonical=True)
+                    gc.collect()
+                break
+
+
 def create_mtd_histograms():
     names = [
      'mtd_etoh_intake',
