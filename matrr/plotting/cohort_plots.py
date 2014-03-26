@@ -119,6 +119,17 @@ def cohort_necropsy_sum_g_per_kg(cohort):
     else:
         return False, False
 
+def cohort_summary_avg_bec_mgpct(cohort):
+    """
+    This method will create a cohort graph (horizontal bar graph) showing each monkey's average open access bec values
+    """
+    if MonkeyBEC.objects.filter(monkey__cohort=cohort).count():
+        graph_title = 'Average Blood Ethanol Concentration (22hr open access)'
+        x_label = "Average BEC (mg percent)"
+        legend_labels = ('12 Month Average', '6 Month Average')
+        return _cohort_necropsy_summary_general(specific_callables.summary_avg_bec_mgpct, x_label, graph_title, legend_labels, cohort)
+    else:
+        return False, False
 
 def _cohort_tools_boxplot(data, title, x_label, y_label, scale_x=(), scale_y=()):
     tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
@@ -727,6 +738,7 @@ COHORT_PLOTS.update(COHORT_TOOLS_PLOTS)
 COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake, 22hr'),
                      "cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, "Total Ethanol Intake, ml"),
                      "cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake, g per kg"),
+                     "cohort_summary_avg_bec_mgpct": (cohort_summary_avg_bec_mgpct, "Average BEC, 22hr"),
                      'cohort_etoh_induction_cumsum': (cohort_etoh_induction_cumsum, 'Cohort Induction Daily Ethanol Intake'),
                      'cohort_etoh_gkg_quadbar': (cohort_etoh_gkg_quadbar, "Cohort Daily Ethanol Intake Counts"),
 })

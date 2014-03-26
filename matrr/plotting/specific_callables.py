@@ -6,7 +6,7 @@ they can be quite useful, especially for reducing/eliminating redundant code.
 
 """
 __author__ = 'developer'
-from matrr.models import NecropsySummary, MonkeyBEC
+from matrr.models import NecropsySummary, MonkeyBEC, Avg
 
 
 def etoh_intake(queryset):
@@ -81,3 +81,31 @@ def necropsy_summary_sum_g_per_kg(queryset):
         raw_labels.append(str(mky.pk))
     return [summary.ncm_sum_g_per_kg_22hr for summary in summaries], [summary.ncm_sum_g_per_kg_lifetime for summary in summaries], raw_labels
 
+def summary_avg_bec_mgpct(queryset):
+    """
+    This method, used by necropsy graphs, will collect 12 month and 6 month average bec of the [queryset]
+
+    Args:
+    queryset is expected to be a queryset of monkeys
+
+    return:
+    tuple, ( list of 6 month averages, list of 12 month averages, list of monkey pk labels )
+    """
+    twelve_mo_avg = list()
+    six_months_avg = list()
+    labels = list()
+    for mky in queryset.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
+        _oa_becs = MonkeyBEC.objects.OA().filter(monkey=mky)
+        _6mo_becs = _oa_becs.first_six_months_oa()
+
+        _12mo_avg_mgpct = _oa_becs.aggregate(avg=Avg('bec_mg_pct'))['avg']
+        _6mo_avg_mgpct = _6mo_becs.aggregate(avg=Avg('bec_mg_pct'))['avg']
+
+        twelve_mo_avg.append(_12mo_avg_mgpct if _12mo_avg_mgpct else 0)
+        six_months_avg.append(_6mo_avg_mgpct if _6mo_avg_mgpct else 0)
+        labels.append(str(mky.pk))
+
+    # sort the three matched lists by the 12 month average
+    twelve_mo_avg, six_months_avg, labels = zip(*sorted(zip(twelve_mo_avg, six_months_avg, labels)))
+    # python is badass, amirite?
+    return six_months_avg, twelve_mo_avg, labels
