@@ -1535,6 +1535,9 @@ class MATRRImage(models.Model):
     def populate_svg(self):
         return
 
+    def get_filename(self):
+        from django.utils.encoding import iri_to_uri
+        return iri_to_uri(str(self))
 
     class Meta:
         abstract = True

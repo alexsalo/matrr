@@ -77,7 +77,6 @@ def __cohorts_view(request, cohorts, template_name):
             cohort_list = paginator.page(paginator.num_pages)
     else:
         cohort_list = cohorts
-    has_categories = bool(cohort.monkey_set.all().values_list('mky_drinking_category', flat=True))
     return render_to_response(template_name, {'cohort_list': cohort_list}, context_instance=RequestContext(request))
 
 

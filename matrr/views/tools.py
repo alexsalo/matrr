@@ -897,36 +897,9 @@ def create_pdf_fragment_v2(request, klass, imageID):
     pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), dest=result, link_callback=gizmo.fetch_resources)
     if not pdf.err:
         resp = HttpResponse(result.getvalue(), mimetype='application/pdf')
-        resp['Content-Disposition'] = 'attachment; filename=%s' % im.html_fragment.path.replace("html", "pdf")
+        resp['Content-Disposition'] = 'attachment; filename=%s' % (im.get_filename() + '.pdf')
         return resp
     raise Http404()
-
-def create_pdf_fragment(request):
-    if request.method == 'GET':
-        fragment_filename = request.GET['html']
-        htmlfile = os.path.join('matrr_images/fragments/', fragment_filename)
-
-        # if user does not have permissions, sendfile will raise Http404()
-        # this is just a lazy permission check so we do not have to repeat code
-        sendfile(request, htmlfile)
-
-        htmlfile = os.path.join(settings.MEDIA_ROOT, htmlfile)
-        try:
-            with open(htmlfile, 'r') as f:
-                html = f.read()
-        except:
-            raise Http404()
-        result = StringIO.StringIO()
-
-        pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), dest=result, link_callback=gizmo.fetch_resources)
-        if not pdf.err:
-            resp = HttpResponse(result.getvalue(), mimetype='application/pdf')
-            resp['Content-Disposition'] = 'attachment; filename=%s' % fragment_filename.replace("html", "pdf")
-            return resp
-        raise Http404()
-    else:
-        raise Http404()
-
 
 def create_svg_fragment(request, klass, imageID):
     import matrr.models as mmodels
@@ -937,6 +910,6 @@ def create_svg_fragment(request, klass, imageID):
         raise Http404()
     image_data = open(os.path.join(settings.MEDIA_ROOT, im.svg_image.name), "rb").read()
     resp = HttpResponse(image_data, mimetype="image/svg+xml")
-    resp['Content-Disposition'] = 'attachment; filename=%s' % (str(im) + '.svg')
+    resp['Content-Disposition'] = 'attachment; filename=%s' % (im.get_filename() + '.svg')
     return resp
 
