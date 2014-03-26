@@ -417,7 +417,7 @@ def create_bec_summary_plots(cohorts=True, monkeys=True):
     from matrr.plotting import monkey_plots, cohort_plots
 
     bec_cohorts = set(MonkeyBEC.objects.OA().values_list('monkey__cohort', flat=True))
-    approved_cohorts = {2, 3, 5, 6, 9, 10}  # Cyno 1 & 2, Rhesus 4, 5, 7a, 7b
+    approved_cohorts = set([2, 3, 5, 6, 9, 10])  # Cyno 1 & 2, Rhesus 4, 5, 7a, 7b
     actionable_cohorts = bec_cohorts & approved_cohorts
 
     coh_plots = ['cohort_summary_avg_bec_mgpct', ]
