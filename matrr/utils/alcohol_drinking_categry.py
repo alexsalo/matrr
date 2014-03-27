@@ -9,7 +9,7 @@ import operator
 from matrr.models import Monkey, MonkeyToDrinkingExperiment, MonkeyBEC
 from matrr.plotting import DRINKING_CATEGORIES, DEFAULT_DPI, RDD_56890, RHESUS_COLORS, RHESUS_MONKEY_COLORS, \
     RHESUS_MONKEY_MARKERS, ALL_RHESUS_DRINKERS, DRINKING_CATEGORY_MARKER, RHESUS_DRINKERS_DISTINCT, \
-    RHESUS_MONKEY_CATEGORY, plot_tools
+    RHESUS_MONKEY_CATEGORY, plot_tools, DEFAULT_FIG_SIZE
 from matrr.utils import gadgets
 
 
@@ -526,7 +526,7 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=(25, 15), include_regression=Fa
         inset_legend.get_frame().set_alpha(0) # hide the legend's background, so it doesn't hide the scatterplot
     return fig
 
-def rhesus_N_gkg_days(upper_limit, fig_size=(25, 15), dpi=DEFAULT_DPI):
+def rhesus_N_gkg_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
     from matplotlib import pyplot
     from matrr import plotting
     import numpy
@@ -549,7 +549,7 @@ def rhesus_N_gkg_days(upper_limit, fig_size=(25, 15), dpi=DEFAULT_DPI):
     return fig
 
 def rhesus_cohort_bargraph_gkg_per_quartile():
-    fig = pyplot.figure(figsize=(25, 15), dpi=DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(2, 2)
     gs_gap = .035
     main_gs.update(left=gs_gap, right=(1-gs_gap), top=(1-gs_gap), bottom=gs_gap, wspace=3*gs_gap, hspace=3*gs_gap)
@@ -588,7 +588,7 @@ def rhesus_cohort_bargraph_gkg_per_quartile():
     return fig
 
 def rhesus_cohort_bargraph_gkg_per_year():
-    fig = pyplot.figure(figsize=(25, 15), dpi=DEFAULT_DPI)
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     main_gs = gridspec.GridSpec(2, 2)
     gs_gap = .035
     main_gs.update(left=gs_gap, right=(1-gs_gap), top=(1-gs_gap), bottom=gs_gap, wspace=3*gs_gap, hspace=3*gs_gap)
@@ -614,7 +614,9 @@ def rhesus_cohort_bargraph_gkg_per_year():
 
 
 
-def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s4', png=True, fig_size=(25, 15), dpi=800):
+
+
+def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s4,s5', png=True, fig_size=(25, 15), dpi=800):
     figures = list()
     names = list()
     all_categories = DRINKING_CATEGORIES
@@ -655,6 +657,10 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s
         fig = rhesus_category_parallel_classification_stability_popcount_3moAssignment(all_categories, gadgets.gather_three_month_monkey_average_by_fieldname, "Average Daily EtOH Intake by Category (g/kg)")
         figures.append(fig)
         names.append('S4')
+    if 's5' in graphs:
+        fig = (all_categories, gadgets.gather_three_month_monkey_average_by_fieldname, "Average Daily EtOH Intake by Category (g/kg)")
+        figures.append(fig)
+        names.append('S5')
 
     if png:
         for FigName in zip(figures, names):

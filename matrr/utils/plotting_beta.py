@@ -1178,51 +1178,6 @@ def rhesus_etoh_gkg_bargraph(limit_step=1):
     return fig
 
 
-def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=HISTOGRAM_FIG_SIZE):
-    fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
-    gs = gridspec.GridSpec(3, 3)
-    gs.update(left=0.035, right=0.98, top=.95, bottom=.08, wspace=.00, hspace=0)
-    subplot = fig.add_subplot(gs[:, :])
-
-    limits = numpy.arange(1, 9, limit_step)
-    bottom = numpy.zeros(len(limits))
-    color_index = 0
-    for key in DRINKING_CATEGORIES:
-        width = 1 / (1. / limit_step)
-        gkg_daycounts = numpy.zeros(len(limits))
-        for monkey in RDD_56890[key]:
-            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
-            if not mtds.count():
-                continue
-            max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
-            min_date = mtds.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
-            days = float((max_date - min_date).days)
-            for index, limit in enumerate(limits):
-                _count = mtds.filter(mtd_etoh_g_kg__gt=limit).count()
-                gkg_daycounts[index] += _count / days
-
-        gkg_daycounts = list(gkg_daycounts)
-        color = RHESUS_COLORS[key]
-        color_index += 1
-        subplot.bar(limits, gkg_daycounts, bottom=bottom, width=width, color=color, label=key, alpha=1)
-        bottom += gkg_daycounts
-
-    subplot.set_xlim(xmin=1, xmax=7)
-
-    tick_size=22
-    title_size=30
-    label_size=26
-    fig.text(.01, .96, "Figure 2", fontsize=title_size)
-
-    subplot.legend(prop={'size': tick_size})
-    subplot.set_yticklabels([])
-    subplot.tick_params(axis='both', which='major', labelsize=tick_size)
-    subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
-    subplot.set_ylabel("Aggregation of EtOH Intake Days by Category", size=label_size)
-    subplot.set_xlabel("Percentage of Days Exceeding EtOH Intake(g/kg)", size=label_size)
-    return fig
-
-
 def s_qq_plot(dpi=DEFAULT_DPI, dist='norm', verbose_dist='Normal'):
     fig = pyplot.figure(figsize=(8,6), dpi=dpi)
     gs = gridspec.GridSpec(1, 1)
