@@ -7,7 +7,7 @@ import numpy
 from matplotlib import pyplot, gridspec
 import operator
 from matrr.models import Monkey, MonkeyToDrinkingExperiment, MonkeyBEC
-from matrr.plotting import DRINKING_CATEGORIES, DEFAULT_DPI, RDD_56890, RHESUS_COLORS, RHESUS_MONKEY_COLORS, \
+from matrr.plotting import DRINKING_CATEGORIES, DEFAULT_DPI, RHESUS_COLORS, RHESUS_MONKEY_COLORS, \
     RHESUS_MONKEY_MARKERS, ALL_RHESUS_DRINKERS, DRINKING_CATEGORY_MARKER, RHESUS_DRINKERS_DISTINCT, \
     RHESUS_MONKEY_CATEGORY, plot_tools, DEFAULT_FIG_SIZE
 from matrr.utils import gadgets
@@ -182,7 +182,7 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=(25, 15)):
     for key in DRINKING_CATEGORIES:
         width = 1 / (1. / limit_step)
         gkg_daycounts = numpy.zeros(len(limits))
-        for monkey in RDD_56890[key]:
+        for monkey in RHESUS_DRINKERS_DISTINCT[key]:
             mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
             if not mtds.count():
                 continue
@@ -253,7 +253,7 @@ def rhesus_etoh_bec_scatter(monkey_one=10065, monkey_two=10052, monkey_three=0, 
             x_axis.append(x_dates[x])
         y_axis = becs.values_list('bec_mg_pct', flat=True)
         bottom_subplot_left.scatter(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], marker=RHESUS_MONKEY_MARKERS[monkey], s=marker_size, label=str(monkey))
-        if monkey in RDD_56890['VHD']:
+        if monkey in RHESUS_DRINKERS_DISTINCT['VHD']:
             y_axis = becs.values_list('bec_gkg_etoh', 'bec_daily_gkg_etoh')
             y_axis = [y[0]/y[1] for y in y_axis]
             bottom_subplot_right.plot(x_axis, y_axis, color=RHESUS_MONKEY_COLORS[monkey], lw=3, alpha=.5, label="Percent Daily Intake at Sample, %d" % monkey)
@@ -461,7 +461,7 @@ def rhesus_category_parallel_classification_stability_popcount_3moAssignment(cat
 
 def rhesus_oa_pelletvolume_perday_perkg(fig_size=(25, 15), include_regression=False):
     def _oa_pelletvolume_perday_perkg(monkey_category):
-        monkey_set = RDD_56890[monkey_category]
+        monkey_set = RHESUS_DRINKERS_DISTINCT[monkey_category]
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         x_data = list()
         y_data = list()
@@ -476,7 +476,7 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=(25, 15), include_regression=Fa
         return x_data, y_data
 
     def _oa_pelletwater_perday_perkg(monkey_category):
-        monkey_set = RDD_56890[monkey_category]
+        monkey_set = RHESUS_DRINKERS_DISTINCT[monkey_category]
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
         x_data = list()
         y_data = list()
@@ -532,7 +532,9 @@ def rhesus_N_gkg_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
     import numpy
     monkeys = plotting.ALL_RHESUS_DRINKERS
     fig = pyplot.figure(figsize=fig_size, dpi=dpi)
-    ax1 = fig.add_subplot(111)
+    gs = gridspec.GridSpec(1, 1)
+    gs.update(left=0.07, right=0.98, top=.95, bottom=.045, hspace=.25)
+    ax1 = fig.add_subplot(gs[:, :])
     ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
     ax1.set_axisbelow(True)
     ax1.set_title("Days below %.02f g/kg" % float(upper_limit))
@@ -546,6 +548,10 @@ def rhesus_N_gkg_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
         if _y and _y != 0:
             ax1.bar(_x, _y, width, color=plotting.RHESUS_MONKEY_COLORS[int(_mky)])
     ax1.set_xticklabels([])
+
+    supplement_title_size = 16
+    supplement_title = "Supplement 2a" if upper_limit < 1 else "Supplement 2b"
+    fig.text(.82, .96, supplement_title, fontsize=supplement_title_size)
     return fig
 
 def rhesus_cohort_bargraph_gkg_per_quartile():
@@ -559,11 +565,11 @@ def rhesus_cohort_bargraph_gkg_per_quartile():
     monkeys.extend(RHESUS_DRINKERS_DISTINCT["HD"])
     monkeys.extend(RHESUS_DRINKERS_DISTINCT["VHD"])
     subplot = None
-    for _quarter in range(4):
+    for _quarter, _phonetic in enumerate(['1st', '2nd', '3rd', '4th']):
         _row = 0 if _quarter < 2 else 1
         _col = _quarter % 2
         subplot = fig.add_subplot(main_gs[_row, _col], sharey=subplot)
-        subplot.set_title("Three Month Quarter:  %d" % (_quarter+1))
+        subplot.set_title("%s Qtr" % _phonetic)
         subplot.set_xlabel("Monkey")
         subplot.set_ylabel("Ethanol (g/kg)")
         subplot.set_xticks([])
@@ -585,6 +591,9 @@ def rhesus_cohort_bargraph_gkg_per_quartile():
             _gkg_sum = _mtds.aggregate(gkg_sum=Sum('mtd_etoh_g_kg'))['gkg_sum']
             _bar = subplot.bar(monkeys.index(_mky), _gkg_sum, width=.8, color=_color, linewidth=1.2, align='center')[0]
             subplot.text(_bar.get_x()+_bar.get_width()/2., 10, "%d" % _mky, ha='center', va='bottom', rotation='vertical', color='white', size=8)
+
+    supplement_title_size = 16
+    fig.text(.82, .973, "Supplement 3a", fontsize=supplement_title_size)
     return fig
 
 def rhesus_cohort_bargraph_gkg_per_year():
@@ -610,6 +619,32 @@ def rhesus_cohort_bargraph_gkg_per_year():
         _gkg_sum = _mtds.aggregate(gkg_sum=Sum('mtd_etoh_g_kg'))['gkg_sum']
         _bar = subplot.bar(monkeys.index(_mky), _gkg_sum, width=.8, color=_color, linewidth=1.2, align='center')[0]
         subplot.text(_bar.get_x()+_bar.get_width()/2., 10, "  %d" % _mky, ha='center', va='bottom', rotation='vertical', color='white', size=16)
+
+    supplement_title_size = 16
+    fig.text(.82, .973, "Supplement 3b", fontsize=supplement_title_size)
+    return fig
+
+def rhesus_category_bec_boxplot():
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(1, 1)
+    gs.update(left=0.07, right=0.98, top=.95, bottom=.045, hspace=.25)
+    subplot = fig.add_subplot(gs[:, :])
+
+    for x_location, key in enumerate(DRINKING_CATEGORIES, start=1):
+        category_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey__in=RHESUS_DRINKERS_DISTINCT[key])
+        bec_values = category_becs.values_list('bec_mg_pct', flat=True)
+        boxplot = subplot.boxplot(bec_values, positions=[x_location])
+        pyplot.setp(boxplot['boxes'], linewidth=3, color=RHESUS_COLORS[key])
+        pyplot.setp(boxplot['whiskers'], linewidth=3, color=RHESUS_COLORS[key])
+    subplot.set_xlim(xmin=0, xmax=len(DRINKING_CATEGORIES)+1)
+
+    supplement_title_size = 16
+    fig.text(.82, .97, "Supplement 5", fontsize=supplement_title_size)
+
+    subplot.legend()
+    subplot.set_ylabel("BEC value, percent mg")
+    subplot.set_xlabel("Category")
+    subplot.set_xticks([])
     return fig
 
 
@@ -658,7 +693,7 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s
         figures.append(fig)
         names.append('S4')
     if 's5' in graphs:
-        fig = (all_categories, gadgets.gather_three_month_monkey_average_by_fieldname, "Average Daily EtOH Intake by Category (g/kg)")
+        fig = rhesus_category_bec_boxplot()
         figures.append(fig)
         names.append('S5')
 
