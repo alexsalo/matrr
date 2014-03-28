@@ -22,7 +22,7 @@
 					
 				</div></div>
 		{% endif %}
-		<form method="post" action="">{% csrf_token %}
+		<form method="post" action="" enctype="multipart/form-data">{% csrf_token %}
 			<table class='common'>
                 <tr>
 					<th>{{ form.update_file.label }}<br><div class="small">{{ form.update_file.help_text }}</div></th>

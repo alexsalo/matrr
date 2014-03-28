@@ -51,7 +51,6 @@ def rud_progress(request):
     progress_form = ''
     rud_update_data = request.session.get('rud_form', '')
     update_form = RudUpdateForm(user=request.user.pk, data=rud_update_data)
-    update_form.is_valid()
     assert update_form.is_valid(), "This form must be valid when passed POST data via session cache."
     if not update_form:
         messages.error(request, "There was an issue loading the first part of your research update, please start over.  If this continues to happen, please contact a MATRR administrator.")
