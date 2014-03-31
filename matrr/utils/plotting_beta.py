@@ -3111,7 +3111,7 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', output_format='png', dpi
 
 def create_all_mtd_category_boxplots(output_path='', output_format='png', dpi=80):
     from django.db.models import AutoField, ForeignKey, ManyToManyField
-    for field in MonkeyToDrinkingExperiment._beta.fields:
+    for field in MonkeyToDrinkingExperiment._meta.fields:
         if type(field) in (AutoField, ForeignKey, ManyToManyField):
             continue
         fig = rhesus_category_mtd_column_boxplot(field.name)
