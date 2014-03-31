@@ -2840,9 +2840,11 @@ def rhesus_category_mtd_column_boxplot(mtd_column='mtd_etoh_intake'):
     subplot = fig.add_subplot(gs[:, :])
 
     for x_location, key in enumerate(DRINKING_CATEGORIES, start=1):
-        category_becs = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=RHESUS_DRINKERS_DISTINCT[key])
-        bec_values = category_becs.values_list(mtd_column, flat=True)
-        boxplot = subplot.boxplot(bec_values, positions=[x_location])
+        category_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=RHESUS_DRINKERS_DISTINCT[key])
+        mtd_values = category_mtds.exclude(**{mtd_column: None}).values_list(mtd_column, flat=True)
+        if not len(mtd_values):
+            continue
+        boxplot = subplot.boxplot(mtd_values, positions=[x_location])
         pyplot.setp(boxplot['boxes'], linewidth=3, color=RHESUS_COLORS[key])
         pyplot.setp(boxplot['whiskers'], linewidth=3, color=RHESUS_COLORS[key])
     subplot.set_xlim(xmin=0, xmax=len(DRINKING_CATEGORIES)+1)
@@ -3110,9 +3112,9 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', output_format='png', dpi
 
 
 def create_all_mtd_category_boxplots(output_path='', output_format='png', dpi=80):
-    from django.db.models import AutoField, ForeignKey, ManyToManyField
+    from django.db.models import AutoField, ForeignKey, ManyToManyField, TextField
     for field in MonkeyToDrinkingExperiment._meta.fields:
-        if type(field) in (AutoField, ForeignKey, ManyToManyField):
+        if type(field) in (AutoField, ForeignKey, ManyToManyField, TextField):
             continue
         fig = rhesus_category_mtd_column_boxplot(field.name)
         filename = output_path + "%s.%s.%s" % ('rhesus_category_mtd_column_boxplot', field.name, output_format)
