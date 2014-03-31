@@ -2833,6 +2833,27 @@ def rhesus_N_bec_days(upper_limit, fig_size=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI):
     ax1.set_xticklabels(sorted_data[:,0])
     return fig
 
+def rhesus_category_mtd_column_boxplot(mtd_column='mtd_etoh_intake'):
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(1, 1)
+    gs.update(left=0.08, right=0.98, top=.95, bottom=.045, hspace=.25)
+    subplot = fig.add_subplot(gs[:, :])
+
+    for x_location, key in enumerate(DRINKING_CATEGORIES, start=1):
+        category_becs = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=RHESUS_DRINKERS_DISTINCT[key])
+        bec_values = category_becs.values_list(mtd_column, flat=True)
+        boxplot = subplot.boxplot(bec_values, positions=[x_location])
+        pyplot.setp(boxplot['boxes'], linewidth=3, color=RHESUS_COLORS[key])
+        pyplot.setp(boxplot['whiskers'], linewidth=3, color=RHESUS_COLORS[key])
+    subplot.set_xlim(xmin=0, xmax=len(DRINKING_CATEGORIES)+1)
+
+    subplot.legend()
+    subplot.set_ylabel(mtd_column)
+    subplot.set_xlabel("Category")
+    subplot.set_xticks([])
+    return fig
+
+
 #----------------------
 def create_age_graphs():
     from matrr import settings
@@ -3086,3 +3107,13 @@ def create_jims_graphs(output_path='', graphs='1,2,3,', output_format='png', dpi
             filename = output_path + '%s.%s' % (name, output_format)
             fig.savefig(filename, format=output_format,dpi=dpi)
     return figures, names
+
+
+def create_all_mtd_category_boxplots(output_path='', output_format='png', dpi=80):
+    from django.db.models import AutoField, ForeignKey, ManyToManyField
+    for field in MonkeyToDrinkingExperiment._beta.fields:
+        if type(field) in (AutoField, ForeignKey, ManyToManyField):
+            continue
+        fig = rhesus_category_mtd_column_boxplot(field.name)
+        filename = output_path + "%s.%s.%s" % ('rhesus_category_mtd_column_boxplot', field.name, output_format)
+        fig.savefig(filename, format=format, dpi=dpi)
