@@ -3116,4 +3116,4 @@ def create_all_mtd_category_boxplots(output_path='', output_format='png', dpi=80
             continue
         fig = rhesus_category_mtd_column_boxplot(field.name)
         filename = output_path + "%s.%s.%s" % ('rhesus_category_mtd_column_boxplot', field.name, output_format)
-        fig.savefig(filename, format=format, dpi=dpi)
+        fig.savefig(filename, format=output_format, dpi=dpi)
