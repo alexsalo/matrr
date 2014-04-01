@@ -8,7 +8,9 @@ from scipy.linalg import LinAlgError
 from scipy.cluster import vq
 from matrr.models import *
 from matrr.utils.gadgets import Treemap
-from matrr.plotting import specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE
+from matrr.plotting import specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE, \
+    RHESUS_MONKEY_COLORS
+
 
 def _cohort_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
     """
@@ -716,6 +718,176 @@ def cohort_bec_mcd_beta(cohort, from_date=None, to_date=None, dex_type='', sampl
                                                         from_date, to_date, dex_type, sample_before, sample_after)
 
 
+def _cohort_etoh_max_bout_cumsum(cohort, subplot):
+    mkys = Monkey.objects.Drinkers().filter(cohort=cohort).values_list('pk', flat=True)
+
+    subplot.set_title("Induction St. 3 Cumulative Max Bout EtOH Intake for %s" % str(cohort))
+    subplot.set_ylabel("Volume EtOH / Monkey Weight, mL./kg")
+
+    mky_colors = dict()
+    mky_ymax = dict()
+    for idx, m in enumerate(mkys):
+        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m, drinking_experiment__dex_type="Induction").exclude(
+            mtd_max_bout_vol=None).order_by('drinking_experiment__dex_date')
+        mtds = mtds.filter(mtd_etoh_g_kg__gte=1.4).filter(mtd_etoh_g_kg__lte=1.6)
+        if not mtds.count():
+            continue
+        mky_colors[m] = RHESUS_MONKEY_COLORS[m]
+        volumes = numpy.array(mtds.values_list('mtd_max_bout_vol', flat=True))
+        weights = numpy.array(mtds.values_list('mtd_weight', flat=True))
+        vw_div = volumes / weights
+        yaxis = numpy.cumsum(vw_div)
+        mky_ymax[m] = yaxis[-1]
+        xaxis = numpy.array(mtds.values_list('drinking_experiment__dex_date', flat=True))
+        subplot.plot(xaxis, yaxis, alpha=1, linewidth=3, color=mky_colors[m], label=str(m))
+    pyplot.setp(subplot.xaxis.get_majorticklabels(), rotation=45)
+    legend = subplot.legend(loc=2)
+    pyplot.setp(legend.legendHandles, lw=15)
+    if not len(mky_ymax.values()):
+        raise Exception("no MTDs found")
+    return subplot, mky_ymax, mky_colors
+
+def _cohort_etoh_horibar_ltgkg(cohort, subplot, mky_ymax, mky_colors):
+    subplot.set_title("Lifetime EtOH Intake for %s" % str(cohort))
+    subplot.set_xlabel("EtOH Intake, g/kg")
+
+    sorted_ymax = sorted(mky_ymax.iteritems(), key=operator.itemgetter(1))
+
+    bar_height = max(mky_ymax.itervalues()) / len(mky_ymax.keys()) / 5.
+    bar_widths = list()
+    bar_y = list()
+    bar_colors = list()
+    for mky, ymax in sorted_ymax:
+        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_intake=None)
+        etoh_sum = mtds.aggregate(Sum('mtd_etoh_g_kg'))['mtd_etoh_g_kg__sum']
+        bar_widths.append(etoh_sum)
+        bar_colors.append(mky_colors[mky])
+        if len(bar_y):
+            highest_bar = bar_y[len(bar_y) - 1] + bar_height
+        else:
+            highest_bar = 0 + bar_height
+        if ymax > highest_bar:
+            bar_y.append(ymax)
+        else:
+            bar_y.append(highest_bar)
+    subplot.barh(bar_y, bar_widths, height=bar_height, color=bar_colors)
+    subplot.set_yticks([])
+    subplot.xaxis.set_major_locator(MaxNLocator(4, prune='lower'))
+    pyplot.setp(subplot.xaxis.get_majorticklabels(), rotation=45)
+    return subplot
+
+def _cohort_etoh_horibar_3gkg(cohort, subplot, mky_ymax, mky_colors):
+    subplot.set_title("# days over 3 g/kg")
+
+    sorted_ymax = sorted(mky_ymax.iteritems(), key=operator.itemgetter(1))
+
+    bar_height = max(mky_ymax.itervalues()) / len(mky_ymax.keys()) / 5.
+    bar_3widths = list()
+    bar_y = list()
+    bar_colors = list()
+    for mky, ymax in sorted_ymax:
+        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_intake=None)
+        bar_3widths.append(mtds.filter(mtd_etoh_g_kg__gt=3).count())
+        bar_colors.append(mky_colors[mky])
+        if len(bar_y):
+            highest_bar = bar_y[len(bar_y) - 1] + bar_height
+        else:
+            highest_bar = 0 + bar_height
+        if ymax > highest_bar:
+            bar_y.append(ymax)
+        else:
+            bar_y.append(highest_bar)
+    subplot.barh(bar_y, bar_3widths, height=bar_height, color=bar_colors)
+    subplot.set_yticks([])
+    subplot.xaxis.set_major_locator(MaxNLocator(4, prune='lower'))
+    pyplot.setp(subplot.xaxis.get_majorticklabels(), rotation=45)
+    return subplot
+
+def _cohort_etoh_horibar_4gkg(cohort, subplot, mky_ymax, mky_colors):
+    subplot.set_title("# days over 4 g/kg")
+    sorted_ymax = sorted(mky_ymax.iteritems(), key=operator.itemgetter(1))
+    bar_height = max(mky_ymax.itervalues()) / len(mky_ymax.keys()) / 5.
+    bar_4widths = list()
+    bar_y = list()
+    bar_colors = list()
+    for mky, ymax in sorted_ymax:
+        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_intake=None)
+        bar_4widths.append(mtds.filter(mtd_etoh_g_kg__gt=4).count())
+        bar_colors.append(mky_colors[mky])
+        if len(bar_y):
+            highest_bar = bar_y[len(bar_y) - 1] + bar_height
+        else:
+            highest_bar = 0 + bar_height
+        if ymax > highest_bar:
+            bar_y.append(ymax)
+        else:
+            bar_y.append(highest_bar)
+    subplot.barh(bar_y, bar_4widths, height=bar_height, color=bar_colors)
+    subplot.set_yticks([])
+    subplot.xaxis.set_major_locator(MaxNLocator(4, prune='lower'))
+    pyplot.setp(subplot.xaxis.get_majorticklabels(), rotation=45)
+    return subplot
+
+def cohort_etoh_max_bout_cumsum_horibar_3gkg(cohort):
+    if not isinstance(cohort, Cohort):
+        try:
+            cohort = Cohort.objects.get(pk=cohort)
+        except Cohort.DoesNotExist:
+            print("That's not a valid cohort.")
+            return False, False
+
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(3, 3)
+    gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
+    line_subplot = fig.add_subplot(gs[:, :2])
+    try:
+        line_subplot, mky_ymax, mky_colors = _cohort_etoh_max_bout_cumsum(cohort, line_subplot)
+    except Exception as e:
+        return None, False
+    bar_subplot = fig.add_subplot(gs[:, 2:], sharey=line_subplot)
+    bar_subplot = _cohort_etoh_horibar_3gkg(cohort, bar_subplot, mky_ymax, mky_colors)
+    return fig, 'build HTML fragment'
+
+def cohort_etoh_max_bout_cumsum_horibar_4gkg(cohort):
+    if not isinstance(cohort, Cohort):
+        try:
+            cohort = Cohort.objects.get(pk=cohort)
+        except Cohort.DoesNotExist:
+            print("That's not a valid cohort.")
+            return False, False
+
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(3, 3)
+    gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
+    line_subplot = fig.add_subplot(gs[:, :2])
+    try:
+        line_subplot, mky_ymax, mky_colors = _cohort_etoh_max_bout_cumsum(cohort, line_subplot)
+    except Exception as e:
+        return None, False
+    bar_subplot = fig.add_subplot(gs[:, 2:], sharey=line_subplot)
+    bar_subplot = _cohort_etoh_horibar_4gkg(cohort, bar_subplot, mky_ymax, mky_colors)
+    return fig, 'build HTML fragment'
+
+def cohort_etoh_max_bout_cumsum_horibar_ltgkg(cohort):
+    if not isinstance(cohort, Cohort):
+        try:
+            cohort = Cohort.objects.get(pk=cohort)
+        except Cohort.DoesNotExist:
+            print("That's not a valid cohort.")
+            return False, False
+
+    fig = pyplot.figure(figsize=HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+    gs = gridspec.GridSpec(3, 3)
+    gs.update(left=0.06, right=0.98, wspace=.00, hspace=0)
+    line_subplot = fig.add_subplot(gs[:, :2])
+    try:
+        line_subplot, mky_ymax, mky_colors = _cohort_etoh_max_bout_cumsum(cohort, line_subplot)
+    except Exception as e:
+        return None, False
+    bar_subplot = fig.add_subplot(gs[:, 2:], sharey=line_subplot)
+    bar_subplot = _cohort_etoh_horibar_ltgkg(cohort, bar_subplot, mky_ymax, mky_colors)
+    return fig, 'build HTML fragment'
+
 # Dictionary of ethanol cohort plots VIPs can customize
 COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_etoh_bihourly_treemap, "Cohort Bihourly Drinking Pattern"),}
 # BEC plots
@@ -740,5 +912,8 @@ COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_2
                      "cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake, g per kg"),
                      "cohort_summary_avg_bec_mgpct": (cohort_summary_avg_bec_mgpct, "Average BEC, 22hr"),
                      'cohort_etoh_induction_cumsum': (cohort_etoh_induction_cumsum, 'Cohort Induction Daily Ethanol Intake'),
+                     'cohort_etoh_max_bout_cumsum_horibar_ltgkg': (cohort_etoh_max_bout_cumsum_horibar_ltgkg, "Cohort Cumulative Daily Max Bout, Lifetime EtOH Intake"),
+                     'cohort_etoh_max_bout_cumsum_horibar_3gkg': (cohort_etoh_max_bout_cumsum_horibar_3gkg, "Cohort Cumulative Daily Max Bout, Day count over 3 g per kg"),
+                     'cohort_etoh_max_bout_cumsum_horibar_4gkg': (cohort_etoh_max_bout_cumsum_horibar_4gkg, "Cohort Cumulative Daily Max Bout, Day count over 4 g per kg"),
                      'cohort_etoh_gkg_quadbar': (cohort_etoh_gkg_quadbar, "Cohort Daily Ethanol Intake Counts"),
 })

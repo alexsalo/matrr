@@ -565,3 +565,17 @@ def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
                 for method in plots:
                     MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=MONKEY_PLOTS[method][1], canonical=True)
                     gc.collect()
+
+def create_max_bout_cumsum_horibar_canonicals(cohort):
+    from matrr.plotting.cohort_plots import COHORT_PLOTS
+    if not isinstance(cohort, Cohort):
+        try:
+            cohort = Cohort.objects.get(pk=cohort)
+        except Cohort.DoesNotExist:
+            print "That's not a valid cohort."
+            return
+
+    plots  = ['cohort_etoh_max_bout_cumsum_horibar_ltgkg', 'cohort_etoh_max_bout_cumsum_horibar_3gkg', 'cohort_etoh_max_bout_cumsum_horibar_4gkg']
+    print "Creating cohort horibar plots for %s." % str(cohort)
+    for method in plots:
+        CohortImage.objects.get_or_create(cohort=cohort, method=method, title=COHORT_PLOTS[method][1], canonical=True)
