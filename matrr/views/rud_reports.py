@@ -84,6 +84,8 @@ def rud_progress(request):
                     grace_period = settings.ResearchUpdateInProgressGrace
                 else: # ResearchProgress.Complete
                     grace_period = 0
+                    from matrr import emails
+                    emails.send_rud_complete_email(request.user.username)
                 if grace_period:
                     messages.info(request, "You will be emailed again in %d days to provide another research update." % grace_period)
                 return redirect(reverse('account-view'))

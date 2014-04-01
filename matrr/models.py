@@ -2581,6 +2581,7 @@ class ResearchUpdate(models.Model):
         db_table = 'rud_research_update'
         permissions = (
             ('view_rud_detail', 'Can view research updates of other users.'),
+            ('receive_rud_complete_email', "Receive email when user submits 'Complete' reseach update."),
         )
 
 

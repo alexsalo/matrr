@@ -571,6 +571,31 @@ def send_rud_data_available_email(rud):
             datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
 
 # matrr
+def send_rud_complete_email(rud_username):
+    """
+    In the unlikely event that we ever receive a research update informing us that they have data to provide us, this email is what we would see.
+    """
+    admin = Account.objects.get(user__username='matrr_admin')
+    from_email = admin.email
+
+    recipients = Account.objects.users_with_perm('receive_rud_complete_email')
+    recipient_list = [a.email for a in recipients]
+    subject = 'User %s has completed his/her research.' % rud_username
+    body = "Yo yo,\n"
+    body += "That's right %s, you read that subject line correctly.\n" % admin.username
+    body += "\n"
+    body += "%s has submitted a 'Complete' research update.\n" % rud_username
+    body += "Now would be a good time to get some data from the %s, before they 'lose' their data.\n"
+    body += "\n"
+    body += "You should probably buy Jon a celebratory beer too.  ;)\n"
+
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        ret = send_mail(subject, body, from_email, recipient_list=recipient_list, fail_silently=False)
+        if ret > 0:
+            print "%s rud complete email sent to user: %s" % (
+            datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), admin.username)
+
+# matrr
 def shipment_sent_for_processing(shipment):
     from_email = Account.objects.get(user__username='matrr_admin').email
 
