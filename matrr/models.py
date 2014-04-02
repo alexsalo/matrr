@@ -3030,6 +3030,7 @@ class Publication(models.Model):
     isbn = models.IntegerField('ISBN', null=True, blank=True)
     abstract = models.TextField('Abstract', null=True, blank=True)
     keywords = models.TextField('Keywords', null=True, blank=True)
+    cites_matrr = models.BooleanField('Acknowledges MATRR', defaul=False)
 
     pub_date = models.DateField("Publication Date", null=True, blank=True)
 
