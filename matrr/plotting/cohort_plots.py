@@ -8,8 +8,7 @@ from scipy.linalg import LinAlgError
 from scipy.cluster import vq
 from matrr.models import *
 from matrr.utils.gadgets import Treemap
-from matrr.plotting import specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE, \
-    RHESUS_MONKEY_COLORS
+from matrr.plotting import specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE, RHESUS_COLORS
 
 
 def _cohort_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
@@ -732,7 +731,7 @@ def _cohort_etoh_max_bout_cumsum(cohort, subplot):
         mtds = mtds.filter(mtd_etoh_g_kg__gte=1.4).filter(mtd_etoh_g_kg__lte=1.6)
         if not mtds.count():
             continue
-        mky_colors[m] = RHESUS_MONKEY_COLORS[m]
+        mky_colors[m] = RHESUS_COLORS[m.mky_drinking_category]
         volumes = numpy.array(mtds.values_list('mtd_max_bout_vol', flat=True))
         weights = numpy.array(mtds.values_list('mtd_weight', flat=True))
         vw_div = volumes / weights
