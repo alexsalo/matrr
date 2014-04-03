@@ -703,11 +703,11 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     else:
         return None, False
 
-    bar_y_label = ''
-    bar_color_label = ''
-    scatter_y_label = ''
-    scatter_color_label = ''
-    scatter_size_label = ''
+    bar_y_label = 'BEC (% mg)'
+    bar_color_label = 'Sample Vol. / Total Intake'
+    scatter_y_label = 'Ethanol Intake (g/kg)'
+    scatter_color_label = 'Ethanol Bouts'
+    scatter_size_label = 'Avg bout volume'
     induction_days = list()
     scatter_size = list()
     scatter_y = list() # yaxis
@@ -724,8 +724,6 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
             bar_xaxis.append(index)
             if not bar_color_label:
                 bar_color_label = bec_rec._meta.get_field('bec_pct_intake').verbose_name
-            if not bar_y_label:
-                bar_y_label = bec_rec._meta.get_field('bec_mg_pct').verbose_name
 
         de = drinking_experiments.get(drinking_experiment__dex_date=date)
         if de.drinking_experiment.dex_type == 'Induction':
@@ -734,12 +732,6 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
         scatter_color.append(de.mtd_etoh_bout) # color
         bouts_volume = de.bouts_set.all().aggregate(Avg('ebt_volume'))['ebt_volume__avg']
         scatter_size.append(bouts_volume if bouts_volume else 0) # size
-        if not scatter_y_label:
-            scatter_y_label = de._meta.get_field('mtd_etoh_g_kg').verbose_name
-        if not scatter_color_label:
-            scatter_color_label = de._meta.get_field('mtd_etoh_bout').verbose_name
-        if not scatter_size_label:
-            scatter_size_label = "Avg bout volume"
 
     xaxis = numpy.array(range(1, len(scatter_size) + 1))
     scatter_size = numpy.array(scatter_size)
@@ -748,9 +740,12 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     induction_days = numpy.array(induction_days)
 
     fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+    tick_size = 18
+    label_size = 22
+    title_size = 30
     #   main graph
     main_gs = gridspec.GridSpec(3, 40)
-    main_gs.update(left=0.05, right=0.95, top=.95, bottom=.05, hspace=.05, wspace=.05)
+    main_gs.update(left=0.07, right=0.93, top=.95, bottom=.08, hspace=.07, wspace=.05)
     bec_con_main_plot = fig.add_subplot(main_gs[0:2, 0:39])
     bec_con_main_plot.set_xticks([])
 
@@ -770,7 +765,8 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
     bec_con_main_plot.set_ylabel(scatter_y_label)
     bec_con_main_plot.set_title('Monkey %d: from %s to %s' % (
-        monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count() - 1]).strftime("%d/%m/%y")))
+        monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count() - 1]).strftime("%d/%m/%y")),
+                                fontsize=title_size)
 
     bec_con_main_plot.set_ylim(0, graph_y_max)
     bec_con_main_plot.set_xlim(0, len(xaxis) + 2)
@@ -779,8 +775,15 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     y_tick_int = max(int(round(max_y_int / 5)), 1)
     bec_con_main_plot.set_yticks(range(0, max_y_int, y_tick_int))
     bec_con_main_plot.yaxis.get_label().set_position((0, 0.6))
+    bec_con_main_plot.yaxis.get_label().set_fontsize(label_size)
+
+    bec_con_main_plot.tick_params(axis='both', which='major', labelsize=tick_size)
+    bec_con_main_plot.tick_params(axis='both', which='minor', labelsize=tick_size)
 
     bec_con_main_color_plot = fig.add_subplot(main_gs[0:2, 39:])
+    bec_con_main_color_plot.yaxis.get_label().set_fontsize(label_size)
+    bec_con_main_color_plot.tick_params(axis='both', which='major', labelsize=tick_size)
+    bec_con_main_color_plot.tick_params(axis='both', which='minor', labelsize=tick_size)
     cb = fig.colorbar(s, alpha=1, cax=bec_con_main_color_plot)
     cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
     cb.set_label(scatter_color_label)
@@ -807,21 +810,30 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     bout_labels.append("")
 
     bec_con_size_plot = fig.add_subplot(931)
-    bec_con_size_plot.set_position((0.05, .88, .3, .07))
+    bec_con_size_plot.set_position((0.07, .879, .3, .07))
     bec_con_size_plot.scatter(x, y, s=size, alpha=0.4)
     bec_con_size_plot.set_xlabel(scatter_size_label)
     bec_con_size_plot.yaxis.set_major_locator(NullLocator())
     pyplot.setp(bec_con_size_plot, xticklabels=bout_labels)
 
+    size_plot_xaxis_fontsize = 20
+    size_plot_tick_fontsize = 16
+    bec_con_size_plot.xaxis.get_label().set_fontsize(size_plot_xaxis_fontsize)
+    bec_con_size_plot.tick_params(axis='both', which='major', labelsize=size_plot_tick_fontsize)
+    bec_con_size_plot.tick_params(axis='both', which='minor', labelsize=size_plot_tick_fontsize)
+
     #	barplot
     bec_con_bar_plot = fig.add_subplot(main_gs[-1:, 0:39])
 
-    bec_con_bar_plot.set_xlabel("Days")
-    bec_con_bar_plot.set_ylabel(bar_y_label)
+    bec_con_bar_plot.set_xlabel("Days", fontdict={'size': label_size})
+    bec_con_bar_plot.set_ylabel(bar_y_label, fontdict={'size': label_size})
+    bec_con_bar_plot.tick_params(axis='both', which='major', labelsize=tick_size)
+    bec_con_bar_plot.tick_params(axis='both', which='minor', labelsize=tick_size)
+
     bec_con_bar_plot.set_autoscalex_on(False)
 
     # normalize colors to use full range of colormap
-    norm = colors.normalize(cbc.cbc_bec_pct_intake_min, cbc.cbc_bec_pct_intake_max)
+    norm = colors.normalize(max(0, cbc.cbc_bec_pct_intake_min), min(cbc.cbc_bec_pct_intake_max, 1))
 
     facecolors = list()
     for bar, x, color_value in zip(bar_yaxis, bar_xaxis, bar_color):
@@ -829,7 +841,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
         bec_con_bar_plot.bar(x, bar, width=2, color=color, edgecolor='none')
         facecolors.append(color)
     bec_con_bar_plot.axhspan(79, 81, color='black', alpha=.4, zorder=-100)
-    bec_con_bar_plot.text(0, 82, "80 mg pct")
+    bec_con_bar_plot.text(0, 82, "80 mg pct", fontsize=size_plot_xaxis_fontsize)
 
     bec_con_bar_plot.set_xlim(0, len(xaxis) + 2)
     if len(induction_days) and len(induction_days) != len(xaxis):
@@ -842,8 +854,11 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
     # colorbar for bar plot
     bec_con_bar_color = fig.add_subplot(main_gs[-1:, 39:])
-    cb = fig.colorbar(col, alpha=1, cax=bec_con_bar_color)
-    cb.set_label(bar_color_label)
+    v = numpy.linspace(0., 1., 6, endpoint=True)
+    cb = fig.colorbar(col, alpha=1, cax=bec_con_bar_color, ticks=v)
+    cb.set_label(bar_color_label, fontsize=label_size)
+    bec_con_bar_color.tick_params(axis='both', which='major', labelsize=tick_size)
+    bec_con_bar_color.tick_params(axis='both', which='minor', labelsize=tick_size)
 
     return fig
 
