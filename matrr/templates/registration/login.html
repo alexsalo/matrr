@@ -6,7 +6,8 @@
 {% block content %}
 
 
-<div id='headline'>Login to MATRR</div>
+<div id='headline'>Login</div>
+<div class=small>The MATRR is a controlled community resource. In order to view data or request tissues from the MATRR you must be a registered user. Complete the form below to log in. <a href="/public-faq">FAQs for account creation can be found here.</a>”</div>
 
 {% if form.errors %}
 <div class="messages"><div class="error">
@@ -19,8 +20,6 @@
 {% endif %}
 
 <form method="post" action="">{% csrf_token %}
-    <div id="table-wrap">
-
     <div id='table-left'><a href="{% url 'auth_password_reset' %}">{% trans "Forgot Password" %}</a></div>
     <div id='table-right'><div id="text-right"><a href="{% url 'registration_register' %}">{% trans "Create an Account" %}</a></div></div>
 

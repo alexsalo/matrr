@@ -24,8 +24,10 @@
 
     <!-- Left-aligned Content -->
     <div class='left-content'>
+{% comment %}
     	{% if user_is_verified %}
         <!-- Buttons div -->
+{% endcomment %}
         <div class='content-block-lower'>
             <div class='headline'>Request Tissues</div>
             <div class='buttons'>
@@ -34,12 +36,15 @@
 				<a class="cohortButton cohortAssay" href='{% url 'assay' %}'>Request tissues for Assay Development</a>
             </div>
         </div>
+{% comment %}
 		{% else %}
         <div class='content-block-lower'>
             <div class='headline'>Request Tissues</div>
-			"MATRR is a controlled community resource. In order to view data or request material registered users must be authenticated by our staff."
+			{% load basic_filters %}
+            The MATRR is a controlled community resource. In order to view data or request tissues from the MATRR you must be a registered user. First time users can <a href="{% url 'registration_register' %}">click here to register</a>. If you are already registered <a href="{% url 'auth_login' %}?next={{ request.path|strip_account }}">login here.</a>
         </div>
 		{% endif %}
+{% endcomment %}
         <!-- general information on the use of monkeys in researchs div -->
         <div class='content-block-lower'>
             <div class='headline'>Information on the Use of Monkeys in Research</div>
