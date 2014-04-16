@@ -159,6 +159,16 @@ class TissueRequestForm(forms.ModelForm):
         widgets = {'rtt_prep_type': widgets.FixTypeSelection(choices=PREP_CHOICES)}
 
 
+class DataRequestForm(TissueRequestForm):
+    def __init__(self, req_request, tissue, *args, **kwargs):
+        super(DataRequestForm, self).__init__(req_request, tissue, *args, **kwargs)
+        self.fields['rtt_fix_type'].required = False
+        self.fields['rtt_prep_type'].required = False
+        self.fields['rtt_amount'].required = False
+        self.fields['rtt_units'].required = False
+
+
+
 class CartCheckoutForm(forms.ModelForm):
     def clean(self):
         super(CartCheckoutForm, self).clean()
@@ -307,16 +317,9 @@ class RudProgressForm(forms.Form):
         cleaned_data = super(RudProgressForm, self).clean()
         progress = cleaned_data.get("progress")
 
-        if progress == "IP":
-            # If the user chose "In Progress" the comments field is required.
-            if not cleaned_data.get('comments'):
-                msg = u"Did not provide any comments for the research update."
-                self._errors["comments"] = self.error_class([msg])
-                del cleaned_data["comments"]
-        if progress == "CP":
-            # If the user chose "Complete", any 1 of the pmid, update_file or comments fields is required.
-            if not cleaned_data.get('pmid') and not cleaned_data.get('update_file') and not cleaned_data.get(
-                    'comments'):
+        if progress == "IP" or progress == "CP":
+            # If the user chose "Complete" or "In Progress", any 1 of the pmid, update_file or comments fields is required.
+            if not cleaned_data.get('pmid') and not cleaned_data.get('update_file') and not cleaned_data.get('comments'):
                 msg = u"Did not provide any information for the research update."
                 self._errors["pmid"] = self.error_class([msg])
                 self._errors["update_file"] = self.error_class([msg])
