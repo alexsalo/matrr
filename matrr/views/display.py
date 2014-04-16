@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.views.generic import DetailView, ListView
 from matrr import gizmo
 from matrr.models import Cohort, CohortImage, Monkey, MonkeyImage, TissueType, TissueRequest, TissueCategory, Event
-from matrr.forms import TissueRequestForm
+from matrr.forms import TissueRequestForm, DataRequestForm
 
 cohort_timeline = DetailView.as_view(queryset=Cohort.objects.filter(),
                                      context_object_name='cohort',
@@ -136,8 +136,13 @@ def tissue_shop_detail_view(request, coh_id, tissue_id):
 
     # get the current tissue
     current_tissue = TissueType.objects.get(tst_type_id=tissue_id)
+    # Shuffle it off to the data_shop view if the user is requesting data
+    if current_tissue.category.cat_name == "Data":
+        return data_shop_detail_view(request, current_cohort, current_tissue, cart_request)
+
+    # kathy has a special disclaimer for plasma requests.
     if current_tissue.tst_tissue_name == "Plasma":
-        messages.info(request, "The policy for blood samples is not the same as most of the other tissue.")
+        messages.info(request, "The policy for blood samples is not the same as most of the other tissues.")
         messages.info(request,
                       """
                       You will need to contact Kathy Grant directly (grantka@ohsu.edu) due to the
@@ -171,10 +176,6 @@ def tissue_shop_detail_view(request, coh_id, tissue_id):
                                                 initial={'monkeys': current_cohort.monkey_set.all()})
         # create the response
         tissue_request_form.visible_fields()
-        return render_to_response('matrr/tissue_shopping.html', {'form': tissue_request_form,
-                                                                 'cohort': current_cohort,
-                                                                 'page_title': current_tissue.tst_tissue_name, },
-                                  context_instance=RequestContext(request))
     else:
         data = request.POST.copy()
         tissue_request_form = TissueRequestForm(data=data,
@@ -193,11 +194,58 @@ def tissue_shop_detail_view(request, coh_id, tissue_id):
 
             messages.success(request, 'Item added to cart')
             return redirect(url)
-        else:
-            return render_to_response('matrr/tissue_shopping.html', {'form': tissue_request_form,
-                                                                     'cohort': current_cohort,
-                                                                     'page_title': current_tissue.tst_tissue_name},
-                                      context_instance=RequestContext(request))
+    return render_to_response('matrr/tissue_shopping.html', {'form': tissue_request_form,
+                                                             'cohort': current_cohort,
+                                                             'page_title': current_tissue.tst_tissue_name},
+                              context_instance=RequestContext(request))
+
+
+def data_shop_detail_view(request, current_cohort, current_tissue, cart_request):
+    tissue_request = TissueRequest(tissue_type=current_tissue, req_request=cart_request)
+    bogus_initial_data = {'rtt_fix_type': 'data',
+                          'rtt_amount': 1,
+                          'rtt_prep_type': 'data',
+                          'rtt_units': 'whole'}
+    if request.method != 'POST':
+        # first, give them the disclaimer.
+        messages.info(request, "The availability and policy of MATRR data is not the same as the tissues.")
+        messages.info(request,
+                      """
+                      The MATRR site is a user-driven service and the data availability is thus limited to users' prior research AND the submission
+                      of researchers' data back into the MATRR after publication.  All users who receive tissues through MATRR have agreed to submit
+                      their data to us for distribution to other users like you.  As a results, only data submitted to the MATRR repository is
+                      available for dissemination.  In addition, a core concern of the MATRR is the appropriate ascription of prior researchers' work
+                      and citation of their publication.  A faithful engagement of this concern will be required to receive data.
+                      """)
+        # now we need to create the form for the tissue type
+        data_request_form = DataRequestForm(req_request=cart_request,
+                                              tissue=current_tissue,
+                                              instance=tissue_request,
+                                              initial={'monkeys': current_cohort.monkey_set.all(),})
+        # create the response
+        data_request_form.visible_fields()
+    else:
+        data = request.POST.copy()
+        data.update(bogus_initial_data)
+        data_request_form = DataRequestForm(data=data,
+                                              req_request=cart_request,
+                                              tissue=current_tissue,
+                                              instance=tissue_request)
+        if data_request_form.is_valid():
+            url = reverse('tissue-shop-landing', args=[cart_request.cohort.coh_cohort_id, ])
+            try:
+                data_request_form.save()
+            except Exception as e:
+                messages.error(request,
+                               'Error adding tissue to cart.  Possible duplicate tissue request already in cart.')
+                return redirect(url)
+
+            messages.success(request, 'Item added to cart')
+            return redirect(url)
+    return render_to_response('matrr/data_shopping.html', {'form': data_request_form,
+                                                           'cohort': current_cohort,
+                                                           'page_title': current_tissue.tst_tissue_name},
+                              context_instance=RequestContext(request))
 
 
 def tissue_shop_landing_view(request, coh_id):

@@ -2678,3 +2678,22 @@ def load_cohort2_electrophys(file_path):
             ephy['mep_rel_time'] = row[16]
             mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
     print 'Success'
+
+def create_data_tissue_tree():
+    """
+        This function will create (if needed) TissueCategory, TissueTypes, and TissueSamples for all data types available in MATRR
+    """
+    all_monkeys = Monkey.objects.all()
+    data_category, cat_is_new = TissueCategory.objects.get_or_create(cat_name='Data')
+    data_types = ["Blood Ethanol Concentration", "Hormone", "Daily Ethanol Summary", "Ethanol Bouts", "Ethanol Drinks", "Ethanol Events", "Necropsy Summary", "Electrophysiology", "Metabolite", "Protein"]
+    for _dt in data_types:
+        _tst, tst_is_new = TissueType.objects.get_or_create(tst_tissue_name=_dt, category=data_category)
+        new_tss_count = 0
+        for _mky in all_monkeys:
+            _tss, tss_is_new = TissueSample.objects.get_or_create(monkey=_mky, tissue_type=_tst, tss_sample_quantity=1, tss_units='whole')
+            if tss_is_new:
+                new_tss_count += 1
+        print "%s Data Type %s:  %d new data samples created" % ("New" if tst_is_new else "Old", _dt, new_tss_count)
+    print "Success."
+
+

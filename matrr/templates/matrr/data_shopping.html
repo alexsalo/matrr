@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block extra_js %}
+	{{ block.super }}
+	<script type="text/javascript" src="{{ STATIC_URL }}js/widgets/fix_type_selection.js"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}js/toggle-checked.js"></script>
+{% endblock %}
+
+{% block cart %}
+	{% include 'matrr/cart/cart.html' %}
+{% endblock %}
+
+{% block warning %}
+	{% include 'matrr/cart/cohort_warning.html' %}
+{% endblock %}
+
+{% block login %}
+{% endblock %}
+
+
+{% block content %}
+	{% block shopping-head %}
+		<div id="large-headline">Data Request</div>
+		<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL }}/images/order_timeline_4.png" width='700' height='25'
+			 alt='order timeline'/>
+	{% endblock %}
+	<div id="headline">{% block title %}{{ page_title }}{% endblock %}</div>
+	<br/>
+
+
+	<form action='' method='post'>
+		{% csrf_token %}
+		{# Include the hidden fields in the form #}
+		{% for hidden in form.hidden_fields %}
+			{{ hidden }}
+		{% endfor %}
+
+		{% if form.non_field_errors %}
+			<div class="messages">
+				<div class="error">
+					{% for error in form.non_field_errors %}
+						{{ error }}
+					{% endfor %}
+				</div>
+			</div>
+		{% endif %}
+		<table>
+			{% for field in form.visible_fields %}
+				{% if field.label == 'Tissue Notes' %}
+					<tr>
+						<th>
+                            Detailed Description of the Request
+						</th>
+						<td>{{ field }}</td>
+					</tr>
+                {% endif %}
+				{% if field.label == 'Requested Monkeys' %}
+					<tr>
+						<th>
+                            {{ field.label }}
+						</th>
+						<td>{{ field }}</td>
+					</tr>
+                {% endif %}
+                {% if field.errors %}
+                    <tr>
+                        <td align=right>Error: {{ field.label }}</td>
+                        <td class='field-error'>{{ field.errors }}</td>
+                    </tr>
+                {% endif %}
+			{% endfor %}
+		</table>
+		{% block buttons %}
+			<button type='submit' name='Submit' class="blockLinkCheckoutButton">Add to cart</button>
+		{% endblock %}
+	</form>
+{% endblock %}
+
