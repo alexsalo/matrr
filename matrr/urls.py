@@ -33,7 +33,6 @@ urlpatterns += patterns('',
     url(r'^archived-events/$', display.archived_event_list, name='archived-events'),
     url(r'^cohort/(?P<pk>\d+)/publications/$', display.cohort_publication_list, name='cohort-publications'),
 )
-
 urlpatterns += patterns('',
     ## Monkey/Cohort/Tissue display views
     url(r'^available/$', display.cohorts_view_available, name='available'),
@@ -45,8 +44,8 @@ urlpatterns += patterns('',
     url(r'^cohort/(?P<pk>\d+)/timeline$', display.cohort_timeline, name='cohort-timeline'),
     url(r'^cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', display.monkey_cohort_detail_view, name='monkey-detail'),
     url(r'^monkey/(?P<mky_id>\d+)/$', display.monkey_detail_view, name='monkey-detail'),
-    url(r'^cohort/(?P<coh_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', display.tissue_list, name='tissue-category'),
     url(r'^cohort/(?P<coh_id>\d+)/tissues/$', display.tissue_shop_landing_view, name='tissue-shop-landing'),
+    url(r'^cohort/(?P<coh_id>\d+)/tissues/(?P<tissue_category>[^/]*)/$', display.tissue_list, name='tissue-category'),
     url(r'^cohort/(?P<coh_id>\d+)/tissues/add-to-cart/(?P<tissue_id>\d+)/$', display.tissue_shop_detail_view, name='tissue-shop-detail'),
 )
 

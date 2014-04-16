@@ -260,6 +260,10 @@ def tissue_shop_landing_view(request, coh_id):
         custom = TissueCategory.objects.get(cat_name='Custom')
         categories.remove(custom)
         categories.append(custom)
+    if TissueCategory.objects.filter(cat_name='Data'):
+        data = TissueCategory.objects.get(cat_name='Data')
+        categories.remove(data)
+        categories.append(data)
 
     context['categories'] = categories
     context['cohort'] = cohort

@@ -69,7 +69,8 @@ All Cohorts
 					{% if perms.matrr.browse_inventory %}
 					<a href="{% url 'inventory-cohort' cohort.coh_cohort_id %}">Browse Cohort Inventory</a><br/>
 					{% endif %}
-					<a href="{% url 'tissue-shop-landing' cohort.coh_cohort_id %}">Request Tissue from {{ cohort.coh_cohort_name }}</a>
+					<a href="{% url 'tissue-shop-landing' cohort.coh_cohort_id %}">Request tissue from {{ cohort.coh_cohort_name }}</a><br>
+                    <a href='{% url 'tissue-category' cohort.coh_cohort_id 'Data' %}'>Request data from {{ cohort.coh_cohort_name }}</a>
 					{% with images=cohort.images %}
 						{% if images %}
 							<div class="image_container">

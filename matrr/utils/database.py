@@ -2683,17 +2683,43 @@ def create_data_tissue_tree():
     """
         This function will create (if needed) TissueCategory, TissueTypes, and TissueSamples for all data types available in MATRR
     """
-    all_monkeys = Monkey.objects.all()
     data_category, cat_is_new = TissueCategory.objects.get_or_create(cat_name='Data')
-    data_types = ["Blood Ethanol Concentration", "Hormone", "Daily Ethanol Summary", "Ethanol Bouts", "Ethanol Drinks", "Ethanol Events", "Necropsy Summary", "Electrophysiology", "Metabolite", "Protein"]
-    for _dt in data_types:
-        _tst, tst_is_new = TissueType.objects.get_or_create(tst_tissue_name=_dt, category=data_category)
+    data_names = ["Blood Ethanol Concentration", "Hormone", "Daily Ethanol Summary", "Ethanol Events", "Necropsy Summary", "Electrophysiology", "Metabolite", "Protein"]
+    data_models = [MonkeyBEC, MonkeyHormone, MonkeyToDrinkingExperiment, ExperimentEvent, NecropsySummary, MonkeyEphys, MonkeyMetabolite, MonkeyProtein]
+    for _name, _model in zip(data_names, data_models):
+        _tst, tst_is_new = TissueType.objects.get_or_create(tst_tissue_name=_name, category=data_category)
         new_tss_count = 0
-        for _mky in all_monkeys:
+        for _mky in _model.objects.order_by().values_list('monkey', flat=True).distinct():
+            _mky = Monkey.objects.get(pk=_mky)
             _tss, tss_is_new = TissueSample.objects.get_or_create(monkey=_mky, tissue_type=_tst, tss_sample_quantity=1, tss_units='whole')
             if tss_is_new:
                 new_tss_count += 1
-        print "%s Data Type %s:  %d new data samples created" % ("New" if tst_is_new else "Old", _dt, new_tss_count)
+        print "%s Data Type %s:  %d new data samples created" % ("New" if tst_is_new else "Old", _name, new_tss_count)
+
+
+    # "Ethanol Drinks",
+    # ExperimentBout, ExperimentDrink,
+
+    ### Experiment Bouts don't have an ebt.monkey field....
+    _tst, tst_is_new = TissueType.objects.get_or_create(tst_tissue_name="Ethanol Bouts", category=data_category)
+    new_tss_count = 0
+    for _mky in ExperimentBout.objects.order_by().values_list('mtd__monkey', flat=True).distinct():
+        _mky = Monkey.objects.get(pk=_mky)
+        _tss, tss_is_new = TissueSample.objects.get_or_create(monkey=_mky, tissue_type=_tst, tss_sample_quantity=1, tss_units='whole')
+        if tss_is_new:
+            new_tss_count += 1
+    print "%s Data Type %s:  %d new data samples created" % ("New" if tst_is_new else "Old", "Ethanol Bouts", new_tss_count)
+
+    ### Experiment Drinks don't have an edr.monkey field....
+    _tst, tst_is_new = TissueType.objects.get_or_create(tst_tissue_name="Ethanol Drinks", category=data_category)
+    new_tss_count = 0
+    for _mky in ExperimentDrink.objects.order_by().values_list('ebt__mtd__monkey', flat=True).distinct():
+        _mky = Monkey.objects.get(pk=_mky)
+        _tss, tss_is_new = TissueSample.objects.get_or_create(monkey=_mky, tissue_type=_tst, tss_sample_quantity=1, tss_units='whole')
+        if tss_is_new:
+            new_tss_count += 1
+    print "%s Data Type %s:  %d new data samples created" % ("New" if tst_is_new else "Old", "Ethanol Drinks", new_tss_count)
+
     print "Success."
 
 
