@@ -2122,6 +2122,9 @@ class Request(models.Model, DiffingMixin):
     req_safety_agreement = models.BooleanField(
         'I acknowledge that I have read and understand the potential biohazards associated with tissue shipment.  There are no known biohazards associated with data requests.',
         blank=False, null=False)
+    req_data_agreement = models.BooleanField(
+        "I acknowledge that any data requested and provided are for research purposes only.  All published research associated with the data are required to acknowledge the lab that produced the data.",
+        blank=False, null=False)
     req_referred_by = models.CharField('How did you hear about MATRR?', choices=REFERRAL_CHOICES, null=False,
                                        max_length=100)
     req_notes = models.TextField('Request Notes', null=True, blank=True)
@@ -2254,7 +2257,7 @@ class Request(models.Model, DiffingMixin):
         collisions = collisions.filter(tissue_type=tissue_type, accepted_monkeys__in=[monkey])
         return self.__get_rtt_collision_request(collisions)
 
-    def save(self, force_insert=False, force_update=False, using=None):
+    def save(self, *args, **kwargs):
         if self.req_status != self._original_state['req_status'] \
             and (self._original_state['req_status'] == RequestStatus.Cart or
                          self._original_state['req_status'] == RequestStatus.Revised or
@@ -2262,7 +2265,7 @@ class Request(models.Model, DiffingMixin):
             self.req_request_date = datetime.now()
         self.req_modified_date = datetime.now()
         self._previous_status = self._original_state['req_status']
-        super(Request, self).save(force_insert, force_update, using)
+        super(Request, self).save(*args, **kwargs)
 
     def can_be_revised(self):
         if self.req_status == RequestStatus.Rejected or self.req_status == RequestStatus.Partially:
@@ -2399,6 +2402,17 @@ class Request(models.Model, DiffingMixin):
             return True
         return False
 
+    def is_requesting_data(self):
+        for rtt in self.tissue_request_set.all():
+            if rtt.is_requesting_data():
+                return True
+        return False
+
+    def is_requesting_tissue(self):
+        for rtt in self.tissue_request_set.all():
+            if rtt.is_requesting_tissue():
+                return True
+        return False
 
     class Meta:
         db_table = 'req_requests'
@@ -2768,6 +2782,12 @@ class TissueRequest(models.Model):
         if self.rtt_prep_type in ['RNA', 'DNA']:
             return True
         return False
+
+    def is_requesting_data(self):
+        return 'data' in self.tissue_type.category.cat_name.lower()
+
+    def is_requesting_tissue(self):
+        return not self.is_requesting_data()
 
     def _migrate_fix_prep(self):
         if self.rtt_fix_type == 'RNA':

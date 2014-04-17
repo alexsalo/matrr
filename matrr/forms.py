@@ -174,16 +174,17 @@ class CartCheckoutForm(forms.ModelForm):
         super(CartCheckoutForm, self).clean()
         if not self.cleaned_data.get('req_progress_agreement'):
             raise forms.ValidationError('You must agree to submit a progress report.')
-        if not self.cleaned_data.get('req_safety_agreement'):
-            raise forms.ValidationError(
-                "You must acknowledge you understand the risks of shipping potential biohazards.")
+        if self.instance.is_requesting_tissue() and not self.cleaned_data.get('req_safety_agreement'):
+            raise forms.ValidationError("You must acknowledge you understand the risks of shipping potential biohazards when requesting tissues.")
+        if self.instance.is_requesting_data() and not self.cleaned_data.get('req_data_agreement'):
+            raise forms.ValidationError("You must agree to cite the research lab that provided this data when publishing your research.")
         return self.cleaned_data
 
 
     class Meta:
         model = models.Request
         fields = ('req_experimental_plan', 'req_project_title', 'req_reason', 'req_funding', 'req_progress_agreement',
-                  'req_safety_agreement', 'req_referred_by', 'req_notes')
+                  'req_safety_agreement', 'req_referred_by', 'req_notes', 'req_data_agreement')
         widgets = {'req_project_title': forms.TextInput(attrs={'size': 50})}
 
 

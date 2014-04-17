@@ -47,7 +47,7 @@
 			<div>
 
 				{% for field in form.visible_fields %}
-					{% if field.html_name != "req_progress_agreement" and field.html_name != "req_safety_agreement" %}
+					{% if field.html_name != "req_progress_agreement" and field.html_name != "req_safety_agreement" and field.html_name != "req_data_agreement" %}
 						{% if field.html_name != 'req_reason' %}
 							{% if field.errors %}
 								<div class="messages">
@@ -97,16 +97,29 @@
 
 			<div class="messages">
 				<div class="forms">
-					{{ form.req_progress_agreement.label_tag }}{{ form.req_progress_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
+					{{ form.req_progress_agreement.label_tag }}<br>
+                    {{ form.req_progress_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
 				</div>
 			</div>
 
-			<div class="messages">
-				<div class="forms">
-					{{ form.req_safety_agreement.label_tag }}{{ form.req_safety_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span><br>
-					<a href='/safety/' target="_blank">Read it here.<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a>
-				</div>
-			</div>
+            {% if form.instance.is_requesting_tissue %}
+                <div class="messages">
+                    <div class="forms">
+                        {{ form.req_safety_agreement.label_tag }}<br>
+                        <a href='/safety/' target="_blank">Read it here.<img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top"></a><br>
+                        {{ form.req_safety_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if form.instance.is_requesting_data %}
+                <div class="messages">
+                    <div class="forms">
+                        {{ form.req_data_agreement.label_tag }}<br>
+                        {{ form.req_data_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
+                    </div>
+                </div>
+            {% endif %}
 
 			<div class="messages">
 				<div class="warning">
