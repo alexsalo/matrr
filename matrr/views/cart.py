@@ -110,13 +110,11 @@ def cart_checkout(request):
     # get the context (because it loads the cart as well)
     context = RequestContext(request)
     if not context['cart_exists']:
-        return render_to_response('matrr/cart/cart_checkout.html', {},
-                                  context_instance=context)
+        return render_to_response('matrr/cart/cart_checkout.html', {}, context_instance=context)
     cart_request = context['cart']
     if request.method != 'POST':
         checkout_form = CartCheckoutForm(instance=cart_request)
-        return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form},
-                                  context_instance=context)
+        return render_to_response('matrr/cart/cart_checkout.html', {'form': checkout_form}, context_instance=context)
     else:
         data = request.POST.copy()
         data['user'] = cart_request.user.id

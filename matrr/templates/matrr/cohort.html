@@ -59,12 +59,20 @@
 			{% endif %}
 		</div>
 
-		<div style='float: right;'>
-			<a class='blockLinkButton' href='{% url 'tissue-shop-landing' cohort.coh_cohort_id %}'>Request Tissues from this Cohort</a>
+        <div class="text-right">
+			<a class='blockLinkButton{% if cohort.coh_upcoming %} cohortUpcoming{% else %} cohortAvailable{% endif %}' href='{% url 'tissue-shop-landing' cohort.coh_cohort_id %}'>
+                Request tissues from this cohort
+            </a>
+            <br>
+			<a class='blockLinkButton{% if cohort.coh_upcoming %} cohortUpcoming{% else %} cohortAvailable{% endif %}' href='{% url 'tissue-category' cohort.coh_cohort_id 'Data' %}'>
+                Request data from this cohort
+            </a>
 			{% if perms.matrr.add_cohortdata %}
-				<div class="text-right"><a href="{% url 'cod-upload' cohort.coh_cohort_id %}" class='blockLinkButton'>Add Cohort Data</a></div>
+                <br>
+				<a href="{% url 'cod-upload' cohort.coh_cohort_id %}" class='blockLinkButton'>Add Cohort Data</a>
 			{% endif %}
             {% if has_categories %}
+                <br>
                 <table class='table-drink-cats table-drink-cats-legend blocklinkbutton'>
                     <tbody class='drink-cat-rows'>
                         <tr>

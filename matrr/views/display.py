@@ -237,7 +237,7 @@ def data_shop_detail_view(request, current_cohort, current_tissue, cart_request)
                 data_request_form.save()
             except Exception as e:
                 messages.error(request,
-                               'Error adding tissue to cart.  Possible duplicate tissue request already in cart.')
+                               'Error adding data to cart.  Possible duplicate data request already in cart.')
                 return redirect(url)
 
             messages.success(request, 'Item added to cart')

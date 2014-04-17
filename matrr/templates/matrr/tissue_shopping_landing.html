@@ -13,10 +13,10 @@
 
 {% block content %}
 
-	<div id="large-headline">Tissue Request for Cohort: {{ cohort.coh_cohort_name }}</div>
+	<div id="large-headline">Request Tissue or Data from {{ cohort.coh_cohort_name }}</div>
 	<img style="padding: 4px 5px 4px 5px" src="{{ STATIC_URL}}/images/order_timeline_2.png" width='700' height='25'
 		 alt='order timeline'/>
-	<div id="headline">{% block title %}Select Tissue Type{% endblock %}</div>
+	<div id="headline">{% block title %}Select Type{% endblock %}</div>
 	<br/>
 
 	{% for category in categories %}

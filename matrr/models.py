@@ -87,32 +87,11 @@ LIGHTS_ON = LIGHTS_OUT + TWELVE_HOUR
 
 InventoryStatus = (('Unverified', 'Unverified'), ('Sufficient', 'Sufficient'), ('Insufficient', 'Insufficient'))
 
-#Units =  (('ul','μl'), ('ug','μg'), ('whole','whole'), ('mg','mg'), ('ml','ml'), ('g','g'))
-#LatexUnits = {
-#			'ul': '$\mu l$',
-#			'ug': '$\mu g$',
-#			'whole': '$whole$',
-#			'mg': '$mg$',
-#			'ml': '$ml$',
-#			'g': '$g$',
-#			}
-
 Units = (
 ('ul', 'μl'), ('ug', 'μg'), ('whole', 'whole'), ('mg', 'mg'), ('ml', 'ml'), ('g', 'g'), ('mm', 'mm'), ('cm', 'cm'))
 
 ProteinUnits = (('mg/mL', 'mg/mL'), ('ng/mL', 'ng/mL'), ('ug/mL', 'μg/mL'), ('pg/mL', 'pg/mL'), ('uIU/mL', 'μIU/mL'),
                 ('nmol/L', 'nmol/L'))
-
-LatexUnits = {
-'ul': '$\mu l$',
-'ug': '$\mu g$',
-'whole': '$whole$',
-'mg': '$mg$',
-'ml': '$ml$',
-'g': '$g$',
-'cm': '$cm$',
-'mm': '$mm$',
-}
 
 DexType = Enumeration([
     ('O', 'OA', "Open Access"),
@@ -2133,7 +2112,7 @@ class Request(models.Model, DiffingMixin):
                                              help_text='You may upload a detailed description of your research plans for the tissues you are requesting.')
     req_project_title = models.CharField('Project Title', null=False, blank=False, max_length=200,
                                          help_text='The name of the project or proposal these tissues will be used in.')
-    req_reason = models.TextField('Purpose of Tissue Request', null=False, blank=False,
+    req_reason = models.TextField('Purpose of Request', null=False, blank=False,
                                   help_text='Please provide a short paragraph describing the hypothesis and methods proposed.')
     req_funding = models.TextField('Source of Funding', null=True, blank=False,
                                    help_text='Please describe the source of funding which will be used for this request.')
@@ -2141,9 +2120,9 @@ class Request(models.Model, DiffingMixin):
         'I acknowledge that I will be required to submit a progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.',
         blank=False, null=False)
     req_safety_agreement = models.BooleanField(
-        'I acknowledge that I have read and understand the potential biohazards associated with tissue shipment.',
+        'I acknowledge that I have read and understand the potential biohazards associated with tissue shipment.  There are no known biohazards associated with data requests.',
         blank=False, null=False)
-    req_referred_by = models.CharField('How did you hear about the tissue bank?', choices=REFERRAL_CHOICES, null=False,
+    req_referred_by = models.CharField('How did you hear about MATRR?', choices=REFERRAL_CHOICES, null=False,
                                        max_length=100)
     req_notes = models.TextField('Request Notes', null=True, blank=True)
     req_purchase_order = models.CharField("Purchase Order", max_length=200, null=True, blank=True)
@@ -2648,9 +2627,6 @@ class TissueRequest(models.Model):
     def get_amount(self):
         return str(self.rtt_amount) + ' ' + self.get_rtt_units_display().encode('UTF-8')
 
-    def get_latex_amount(self):
-        return str(self.rtt_amount) + ' ' + LatexUnits[self.rtt_units]
-
     def get_data(self):
         return [['Tissue Type', self.tissue_type],
                 ['RTT ID', self.pk],
@@ -2667,13 +2643,6 @@ class TissueRequest(models.Model):
                 ['Prep', self.rtt_prep_type],
                 ['Amount', self.get_amount()],
         ]
-
-    def get_latex_data(self):
-        return [['Tissue Type', self.tissue_type],
-                ['RTT ID', self.pk],
-                ['Fix', self.rtt_fix_type],
-                ['Amount', self.get_latex_amount()],
-                ['Estimated Cost', "$%.2f" % self.get_estimated_cost()]]
 
     def get_type_url(self):
         return self.tissue_type.category
@@ -2702,6 +2671,7 @@ class TissueRequest(models.Model):
         brain = 250        #  Base brain tissue cost
         peripheral = 100    #  Base peripheral tissue cost
         special = 100    #  Cost for special fixation
+        data = 0    #  Cost for data
 
         monkey_cost = 0
         if self.rtt_fix_type != "Flash Frozen" or self.rtt_prep_type != 'Tissue':
@@ -2710,6 +2680,8 @@ class TissueRequest(models.Model):
             monkey_cost += brain
         elif "Peripheral" in self.tissue_type.category.cat_name:
             monkey_cost += peripheral
+        elif "Data" in self.tissue_type.category.cat_name:
+            monkey_cost = data  # this is intentionally =, not +=
         else:
             monkey_cost += (brain + peripheral) * .5
 
