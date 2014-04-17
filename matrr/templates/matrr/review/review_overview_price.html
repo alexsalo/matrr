@@ -15,7 +15,7 @@
 		{{ forms.management_form }}
 		{% for form in forms %}
 		
-		{% for datum in form.instance.get_data %}
+		{% for datum in form.instance.get_rtt_information %}
 			{% if forloop.first %}
 			<div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
 			{% else %}

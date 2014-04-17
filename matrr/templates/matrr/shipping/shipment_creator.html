@@ -113,7 +113,7 @@
 	<div class='headline'>Requested Tissues</div>
 	{% for tissue_request in req_request.get_requested_tissues %}
 		{% if tissue_request.get_accepted %}
-			{% for datum in tissue_request.get_data %}
+			{% for datum in tissue_request.get_rtt_information %}
 				{% if forloop.counter == 1 %}
 					<div class="mini-headline">{{ datum.0 }}: {{ datum.1 }}</div>
 					<div style='float:left; width: 69%'>{% include 'matrr/shipping/item_inventory.html' %}</div>

@@ -8,7 +8,7 @@ We can not ship tissues to individuals who do not have a Fed Ex number associate
 You will be expected to provide updates on your research 6 months after you receive your order.
 
 You requested the following tissues from {{ req_request.cohort }}:
-{% for tissue_request in req_request.get_requested_tissues %}{% for datum in tissue_request.get_data %}
+{% for tissue_request in req_request.get_requested_tissues %}{% for datum in tissue_request.get_rtt_information %}
 {{ datum.0 }}: {{ datum.1 }}{% endfor %}
 {% if tissue_request.has_notes %}Notes: {{ tissue_request.get_notes }}
 {% endif %}

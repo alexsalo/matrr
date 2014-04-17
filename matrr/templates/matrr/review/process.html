@@ -36,7 +36,7 @@
 						{% for tissue_request in req_request.get_requested_tissues %}
 							<div class="clearfix">
 							{% ifequal tissue_request|stringformat:"s" field.name %}
-								{% for datum in tissue_request.get_data %}
+								{% for datum in tissue_request.get_rtt_information %}
 									{% if forloop.first %}
 										<div class="mini-headline">
 											{% if tissue_request.get_accepted %}

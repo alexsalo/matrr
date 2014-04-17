@@ -1,6 +1,6 @@
 {% with tissue_request=form.instance %}
 	<div style="float:left; width:100%">
-	{% for datum in tissue_request.get_data %}
+	{% for datum in tissue_request.get_rtt_information %}
 		{% if forloop.counter == 1 %}
 			<div class="headline">{{ datum.0 }}: {{ datum.1 }}</div>
 			{% comment %}

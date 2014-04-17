@@ -24,7 +24,7 @@
 		<hr style="margin-bottom: 5px;margin-top: 0">
 		{% if tissue_request.get_accepted %}
 			<table style='text-align: left; width:500px' align="left">
-				{% for datum in tissue_request.get_data %}
+				{% for datum in tissue_request.get_rtt_information %}
 					<tr>
 						<th style='width:100px; text-align:left'>{{ datum.0 }}:</th><td>{{ datum.1 }}</td>
 					</tr>

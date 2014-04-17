@@ -2627,7 +2627,7 @@ class TissueRequest(models.Model):
     def get_amount(self):
         return str(self.rtt_amount) + ' ' + self.get_rtt_units_display().encode('UTF-8')
 
-    def get_data(self):
+    def get_rtt_information(self):
         return [['Tissue Type', self.tissue_type],
                 ['RTT ID', self.pk],
                 ['Fix', self.rtt_fix_type],

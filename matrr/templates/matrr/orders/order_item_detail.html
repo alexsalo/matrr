@@ -7,7 +7,7 @@
 {% endif %}
 <table class='common_small'>
   <tr>
-    {% for datum in item.get_data %}
+    {% for datum in item.get_rtt_information %}
       <th>{{ datum.0 }}:</th><td>{{ datum.1 }}</td>
     {% endfor %}
   </tr>

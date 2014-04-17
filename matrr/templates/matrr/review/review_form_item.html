@@ -3,7 +3,7 @@
 <div id=eighty class='margin'><!-- style='border-style:solid;border-width:2px;' -->
 	{% with tissue_request=tform.instance.get_request %}
 		<table>
-			{% for datum in tissue_request.get_data %}
+			{% for datum in tissue_request.get_rtt_information %}
 				<tr>
 					<th>{{ datum.0 }}:</th>
 					<td>{{ datum.1 }}</td>
