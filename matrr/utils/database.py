@@ -1398,9 +1398,9 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
                     continue
                 dex = dexs[0]
 
-            if entry[10].strip() == 'BoutRec':
+            if 'bout' in entry[10].strip().lower():
                 bouts.append((dex, line_number, line, entry[2:-1]))
-            elif entry[10].strip() == 'DrinkRec':
+            elif 'drink' in entry[10].strip().lower():
                 drinks.append((dex, line_number, line, entry[2:-1]))
             else:
                 err = "unknown format at line %d -->%s<--" % (line_number, line)
