@@ -1045,7 +1045,7 @@ class ExperimentBout(models.Model):
     ebt_pct_vol_total_etoh = models.FloatField('Bout Volume as % of Total Etoh', blank=True, null=True, help_text="Bout's volume as a percentage of total ethanol consumed that day")
     ebt_contains_pellet = models.NullBooleanField('Pellet distributed during bout', blank=True, null=True, default=None,db_index=True, help_text='If True, a pellet was distributed during this bout.  If None, value not yet calculated.')
     ebt_pellet_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True,null=True, default=None, db_index=True)
-    ebt_intake_rate = models.FloatField('Rate of Ethanol Intake', blank=False, null=True, default=None)
+    ebt_intake_rate = models.FloatField('Rate of Ethanol Intake', null=True, blank=True, default=None)
 
     def _populate_pct_vol_total_etoh(self, recalculate=False, save=True):
         if recalculate or not self.ebt_pct_vol_total_etoh:

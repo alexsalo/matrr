@@ -944,8 +944,7 @@ def load_mtd(file_name, dex_type, cohort_name, dump_duplicates=True, has_headers
             if line_number == 0 and has_headers: # cyno 2 had column headers
                 continue
             data = line.split(',')
-            if data[0] == '0.5' or data[0] == '1' or data[0] == '1.5' or data[
-                0] == '1.0': # for some damn reason they added a column in cyno 2's induction file.
+            if data[0] == '0.5' or data[0] == '1' or data[0] == '1.5' or data[0] == '1.0': # for some damn reason they added a column in cyno 2's induction file.
                 ind_portion = data.pop(0)
             _truncate_columns = min(38, truncate_data_columns)
             data_fields = data[2:_truncate_columns]
@@ -1114,10 +1113,8 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
 
         if data_fields[i] != '':
             setattr(ebt, field, data_fields[i])
-
     try:
         ebt.full_clean()
-
     except Exception as e:
         err = ERROR_OUTPUT % (line_number, e, line)
         if dump_file:
@@ -2196,12 +2193,20 @@ def load_bec_data(file_name, overwrite=False, header=True):
             raise Exception("WTF Line endings are in this file?")
         offset = 1 if header else 0
         for line_number, line in enumerate(read_data[offset:]):
+            if not line:
+                continue # usually just the last line, which is blank
+            # split the line assuming its tab-delimited
             data = line.split("\t")
-            if not data[0]:
-                continue
+            # BUT!
+            if len(data) == 1: # if there's only one value in the list...
+                # then homie decided 'fuck the man AND your standards!'
+                # see if it's comma-separated -.-
+                data = line.split(',')
+            if len(data) == 1: # If it's STILL not right
+                # fuck it, i quit.
+                raise Exception("WTF!  I have no idea how this file's cells are separated.  Tabs and commas failed.")
             try:
                 monkey = Monkey.objects.get(mky_real_id=data[0])
-            #				assert monkey.pk == int(data[1])
             except Monkey.DoesNotExist:
                 print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
                 continue
