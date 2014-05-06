@@ -50,7 +50,7 @@ def queryset_iterator(queryset, chunksize=5000):
 def get_datetime_from_steve(steve_date):
     def minimalist_xldate_as_datetime(xldate, datemode):
         # datemode: 0 for 1900-based, 1 for 1904-based
-        return datetime.datetime(1899, 12, 30) + datetime.timedelta(days=int(xldate) + 1462 * datemode)
+        return datetime(1899, 12, 30) + timedelta(days=int(xldate) + 1462 * datemode)
 
     try:
         real_date = dt.strptime(steve_date, "%m/%d/%y")
@@ -554,7 +554,7 @@ def dump_MATRR_stats():
     accepted = ['AC', 'PA', 'SH']
     official = ['SB', 'RJ', 'AC', 'PA', 'SH']
     project_start = 2010
-    current_year = datetime.now().year if datetime.now().month < 6 else datetime.now().year + 1
+    current_year = dt.now().year if dt.now().month < 6 else dt.now().year + 1
     dates = [("%s-06-01" % `year`, "%s-05-31" % `year + 1`) for year in range(project_start, current_year)]
 
     requests = Request.objects.filter(req_status__in=official)
@@ -626,7 +626,7 @@ def load_monkey_data(input_file):
         monkey.mky_gender = str(row[4])
         year = int(row[5].split('/')[2])
         year = year + 2000 if year < 12 else year + 1900
-        monkey.mky_birthdate = datetime.datetime(year, int(row[5].split('/')[0]), int(row[5].split('/')[1]))
+        monkey.mky_birthdate = dt(year, int(row[5].split('/')[0]), int(row[5].split('/')[1]))
         if row[6]:
             monkey.mky_weight = float(row[6])
         monkey.mky_drinking = row[7] == 'TRUE'
@@ -634,7 +634,7 @@ def load_monkey_data(input_file):
         if row[9]:
             year = int(row[9].split('/')[2])
             year = year + 2000 if year < 12 else year + 1900
-            monkey.mky_necropsy_start_date = datetime.datetime(year, int(row[9].split('/')[0]),
+            monkey.mky_necropsy_start_date = dt(year, int(row[9].split('/')[0]),
                                                                int(row[9].split('/')[1]))
         monkey.mky_study_complete = row[13] == 'TRUE'
         monkey.mky_stress_model = row[14]
@@ -1666,8 +1666,7 @@ def load_necropsy_summary(filename, six_month_cohort=False):
     except IndexError:
         csv_infile = csv.reader(open(filename, 'rU'), delimiter="\t")
         columns = csv_infile.next()
-    if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
-        pre_columns_offset = 2
+
     if columns[1] == 'matrr_number' and columns[2] == 'primary_cohort':
         pre_columns_offset = 2
     elif columns[0] == 'matrr_number' and columns[1] == 'cohort_broad_title':
@@ -1702,12 +1701,12 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             except NecropsySummary.DoesNotExist:
                 nec_sum = NecropsySummary(monkey=monkey)
 
-            monkey.mky_birthdate = datetime.datetime.strptime(row[5 + columns_offset], '%m/%d/%y')
-            monkey.mky_necropsy_start_date = datetime.datetime.strptime(row[6 + columns_offset], '%m/%d/%y')
+            monkey.mky_birthdate = dt.strptime(row[5 + columns_offset], '%m/%d/%y')
+            monkey.mky_necropsy_start_date = dt.strptime(row[6 + columns_offset], '%m/%d/%y')
             monkey.mky_age_at_necropsy = row[7]
             monkey.save()
 
-            nec_sum.ncm_etoh_onset = None if row[10 + columns_offset] == "control" else datetime.datetime.strptime(row[8 + columns_offset], '%m/%d/%y')
+            nec_sum.ncm_etoh_onset = None if row[10 + columns_offset] == "control" else dt.strptime(row[8 + columns_offset], '%m/%d/%y')
             nec_sum.ncm_age_onset_etoh = row[9 + columns_offset]
             nec_sum.ncm_etoh_4pct_induction = row[10 + columns_offset] if row[10 + columns_offset] != "control" else 0
             nec_sum.ncm_etoh_4pct_22hr = row[11 + columns_offset] if row[11 + columns_offset] != "control" else 0
@@ -1716,12 +1715,17 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             nec_sum.ncm_sum_g_per_kg_induction = row[14 + columns_offset] if row[14 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_22hr = row[15 + columns_offset] if row[15 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_lifetime = row[16 + columns_offset] if row[16 + columns_offset] != "control" else 0
-            nec_sum.ncm_6_mo_start = None if row[17 + columns_offset] == "control" else datetime.datetime.strptime(row[17 + columns_offset], '%m/%d/%y')
-            nec_sum.ncm_6_mo_end = None if row[18 + columns_offset] == "control" else datetime.datetime.strptime(row[18 + columns_offset], '%m/%d/%y')
+            nec_sum.ncm_6_mo_start = None if row[17 + columns_offset] == "control" else dt.strptime(row[17 + columns_offset], '%m/%d/%y')
+            nec_sum.ncm_6_mo_end = None if row[18 + columns_offset] == "control" else dt.strptime(row[18 + columns_offset], '%m/%d/%y')
             nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[19 + columns_offset] if row[19 + columns_offset] != "control" else 0
-            if not six_month_cohort:
+            if six_month_cohort:
                 nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
-                nec_sum.ncm_12_mo_end = None if row[19 + columns_offset] == "control" else datetime.datetime.strptime(row[19 + columns_offset], '%m/%d/%y')
+                nec_sum.ncm_12_mo_end = None
+                nec_sum.ncm_22hr_2nd_6mos_avg_g_per_kg = None
+                nec_sum.ncm_22hr_12mo_avg_g_per_kg = None
+            else:
+                nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
+                nec_sum.ncm_12_mo_end = None if row[19 + columns_offset] == "control" else dt.strptime(row[19 + columns_offset], '%m/%d/%y')
                 if extra_22hr_column:
                     nec_sum.ncm_22hr_2nd_6mos_avg_g_per_kg = row[21 + columns_offset] if row[21 + columns_offset] != "control" else 0
                     columns_offset += 1
@@ -1802,7 +1806,7 @@ def load_monkey_metabolites(filename, values_normalized):
                     monkey_datas[idx]['mmb_group'] = cell
             elif row[0] == 'DATE':
                 for idx, cell in enumerate(row[1:]):
-                    monkey_datas[idx]['mmb_date'] = datetime.datetime.strptime(cell, '%m/%d/%y')
+                    monkey_datas[idx]['mmb_date'] = dt.strptime(cell, '%m/%d/%y')
             elif row[0] == 'TREATMENT':
                 for idx, cell in enumerate(row[1:]):
                     monkey_datas[idx]['mmb_treatment'] = cell
@@ -1875,7 +1879,7 @@ def load_monkey_proteins(filename):
     for row in csv_infile:
         if row[0]:
             monkey = Monkey.objects.get(mky_real_id=row.pop(0))
-            mpn_date = datetime.datetime.strptime(row.pop(0), '%m/%d/%y')
+            mpn_date = dt.strptime(row.pop(0), '%m/%d/%y')
             for index, value in enumerate(row):
                 monkey_protein = {}
                 monkey_protein['monkey'] = monkey
@@ -1940,7 +1944,7 @@ def load_cohort_timelines(filename, delete_replaced_cvts=False):
                 continue
             elif row[idx]:
                 event_type = EventType.objects.get(evt_name__contains=event)
-                cev_date = datetime.datetime.strptime(row[idx], '%m/%d/%y')
+                cev_date = dt.strptime(row[idx], '%m/%d/%y')
                 cev, is_new = CohortEvent.objects.get_or_create(cohort=cohort, event=event_type, cev_date=cev_date)
                 if is_new:
                     cev.save()
