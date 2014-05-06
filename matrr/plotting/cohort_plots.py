@@ -52,12 +52,6 @@ def _cohort_summary_general(specific_callable, x_label, graph_title, legend_labe
         logging.warning("Cohort pk=%d doesn't have any necropsy summary data for this callable" % cohort.pk)
         return False, False
 
-    idx = numpy.arange(len(coh_data_1))
-    width = 0.4
-
-    cohort_bar1 = ax1.barh(idx, coh_data_1, width, color=cohort_colors[0])
-    cohort_bar2 = ax1.barh(idx+width, coh_data_2, width, color=cohort_colors[1])
-
     def autolabel(rects, text_color=None):
         import locale
         locale.setlocale(locale.LC_ALL, '')
@@ -72,10 +66,17 @@ def _cohort_summary_general(specific_callable, x_label, graph_title, legend_labe
             if width > 0:
                 ax1.text(xloc, yloc, text_width, horizontalalignment=align, verticalalignment='center', color=clr, weight='bold')
 
-    autolabel(cohort_bar1, 'white')
-    autolabel(cohort_bar2, 'white')
+    idx = numpy.arange(len(coh_data_1))
+    width = 0.4
 
-    ax1.legend( (cohort_bar2[0], cohort_bar1[0]), legend_labels, loc=2)
+    cohort_bar1 = ax1.barh(idx, coh_data_1, width, color=cohort_colors[0])
+    autolabel(cohort_bar1, 'white')
+    if all(coh_data_2):
+        cohort_bar2 = ax1.barh(idx+width, coh_data_2, width, color=cohort_colors[1])
+        autolabel(cohort_bar2, 'white')
+        ax1.legend( (cohort_bar2[0], cohort_bar1[0]), legend_labels, loc=2)
+    else:
+        ax1.legend( (cohort_bar1[0], ), legend_labels, loc=2)
 
     ax1.set_yticks(idx+width)
     ax1.set_yticklabels(cohort_labels)
