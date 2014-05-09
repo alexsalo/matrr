@@ -1,0 +1,117 @@
+{% block extra_js %}
+    <script src="/static/js/d3.v3.js" charset="utf-8"></script>
+    <script src="/static/js/d3_plots.js" charset="utf-8"></script>
+{% endblock %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Streamgraph</title>
+<style>
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: auto;
+  position: relative;
+  width: 960px;
+}
+
+button {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+</style>
+<button onclick="transition()">Update</button>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var number_of_layers = 8, // number of layers
+    samples_per_layer = 50, // number of samples per layer
+    stack = d3.layout.stack().offset("wiggle"),
+    layers0 = stack(d3.range(number_of_layers).map(function() { return bumpLayer(samples_per_layer); })),
+    layers1 = stack(d3.range(number_of_layers).map(function() { return bumpLayer(samples_per_layer); }));
+
+var boo = [[Object { x=0, y=0.25052409642163054, y0=0.7990300704413824}, Object { x=1, y=0.3971734559389495, y0=1.2937309167488384}, Object { x=2, y=0.5784979138693844, y0=1.269412723564166}, 47 more...], [Object { x=0, y=8.669600561307251e-10, y0=1.0495541668630128}, Object { x=1, y=1.1047076999226152e-10, y0=1.690904372687788}, Object { x=2, y=1.2835067508078031e-11, y0=1.8479106374335503}, 47 more...], [Object { x=0, y=1.442000144542798, y0=1.049554167729973}, Object { x=1, y=0.8563464727134124, y0=1.6909043727982587}, Object { x=2, y=0.4392084307442248, y0=1.8479106374463854}, 47 more...], 5 more...]
+
+
+var width = 960,
+    height = 500;
+
+var x_axis = d3.scale.linear()
+    .domain([0, samples_per_layer - 1])
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([0, d3.max(layers0.concat(layers1), function(layer) { return d3.max(layer, function(d) { return d.y0 + d.y; }); })])
+    .range([height, 0]);
+
+var color = d3.scale.linear()
+    .range(["#0f0", "#f0f"]);
+
+var area = d3.svg.area()
+    .x(function(d) { return x_axis(d.x); })
+    .y0(function(d) { return y(d.y0); })
+    .y1(function(d) { return y(d.y0 + d.y); });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.selectAll("path")
+    .data(layers0)
+  .enter().append("path")
+    .attr("d", area)
+    .style("fill", function() { return color(Math.random()); });
+
+function transition() {
+  d3.selectAll("path")
+      .data(function() {
+        var d = layers1;
+        layers1 = layers0;
+        return layers0 = d;
+      })
+    .transition()
+      .duration(2500)
+      .attr("d", area);
+}
+
+// Inspired by Lee Byron's test data generator.
+function bumpLayer(samples_per_layer) {
+
+  function bump(a) {
+    var x = 1 / (.1 + Math.random()),
+        y = 2 * Math.random() - .5,
+        z = 10 / (.1 + Math.random());
+    for (var i = 0; i < samples_per_layer; i++) {
+      var w = (i / samples_per_layer - y) * z;
+      a[i] += x * Math.exp(-w * w);
+    }
+  }
+
+  var a = [], i;
+  for (i = 0; i < samples_per_layer; ++i) a[i] = 0;
+  for (i = 0; i < 5; ++i) bump(a);
+  return a.map(function(d, i) { return {x: i, y: Math.max(0, d)}; });
+}
+
+</script>
+
+
+	{% if chord_data %}
+        <form method='GET'>
+        Min Confidence: <input type="text" name="min_conf"><br>
+        Include NtoN relationships: <input type="checkbox" name="NtoN"> <input type="submit" value="Submit"> <br>
+        </form>
+        {% for data in chord_data %}
+            <div id="coh_{{ data.cohort.pk }}" style="width: 70%;">
+                <center><h3>{{ data.cohort }} Confederate Drinkers</h3></center>
+                <script type="text/javascript">
+                    draw_chord_plot({{ data.cohort.pk }}, {{ data.dataset }}, {{ data.labels_colors }})
+                </script>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endblock %}
