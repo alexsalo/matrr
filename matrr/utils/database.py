@@ -622,8 +622,8 @@ def render_MATRR_current_data_grid():
     for _type, _field, _class in zip(data_types, cohort_fields, data_classes):
         _row = [_type, ]
         for _cohort in cohorts:
-            data_exists = _class.objects.filter(**{_field: _cohort}).exists()
-            _row.append(data_exists)
+            row_count = _class.objects.filter(**{_field: _cohort}).count()
+            _row.append(row_count)
         data_rows.append(_row)
 
     page_template = 'matrr/data_repo_template.html'
@@ -631,6 +631,11 @@ def render_MATRR_current_data_grid():
     outfile = open('matrr/static/current_data_grid.html', 'w')
     outfile.write(body)
     outfile.close()
+    outcsv = open('matrr/utils/DATA/current_data_grid.csv', 'w')
+    writer = csv.writer(outcsv)
+    writer.writerow(headers)
+    writer.writerows(data_rows)
+    outcsv.close()
 
 def load_monkey_data(input_file):
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
