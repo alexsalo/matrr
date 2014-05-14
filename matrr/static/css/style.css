@@ -761,6 +761,7 @@ table.reviews_table .tissue_info {
     background-image: url('images/badge-circle-cross-24.png');
 }
 
+
 .forms {
     color: #4E4E4E;
     border-color: #7B7E82;
@@ -917,3 +918,21 @@ td.mbb_1 {
     background: #E67373;
 }
 
+th.rotate_header {
+  height: 140px;
+  white-space: nowrap;
+  background-color: white;
+}
+
+th.rotate_header > div {
+  transform:
+    /* Magic Numbers */
+    translate(0px, 51px)
+    /* 45 is really 360 - 45 */
+    rotate(315deg);
+  width: 30px;
+}
+th.rotate_header > div > span {
+  border-bottom: 2px solid #ccc;
+  padding: 3px 5px;
+}

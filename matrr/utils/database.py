@@ -1,7 +1,7 @@
 from datetime import datetime as dt
 from datetime import timedelta, time
 import string
-import datetime
+import django.template.loader as template_loader
 import csv
 import re
 import gc
@@ -609,6 +609,28 @@ def dump_MATRR_stats():
     output += "Peripheral Tissue Inventory: %d tissues\n" % (peripheral_tissue_count * available_monkey_count)
     return output
 
+
+def render_MATRR_current_data_grid():
+    cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
+    data_types = ["Necropsy", "Drinking Summary", "Bouts", ]#"Drinks", "Raw Drinking data", "Exceptions", "BEC", "Hormone", "Metabolite", "Protein", 'ElectroPhys', ]
+    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout,]# ExperimentDrink, ExperimentEvent, MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys]
+    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', ]#'ebt__mtd__monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', ]
+
+    headers = ['Data Type']
+    headers.extend(cohorts.values_list('coh_cohort_name', flat=True))
+    data_rows = list()
+    for _type, _field, _class in zip(data_types, cohort_fields, data_classes):
+        _row = [_type, ]
+        for _cohort in cohorts:
+            data_exists = _class.objects.filter(**{_field: _cohort}).exists()
+            _row.append(data_exists)
+        data_rows.append(_row)
+
+    page_template = 'matrr/data_repo_template.html'
+    body = template_loader.render_to_string(page_template, {'cohorts': cohorts, 'headers': headers, 'data_rows': data_rows, 'now': datetime.now() })
+    outfile = open('matrr/static/current_data_grid.html', 'w')
+    outfile.write(body)
+    outfile.close()
 
 def load_monkey_data(input_file):
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
