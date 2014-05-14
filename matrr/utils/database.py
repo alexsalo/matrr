@@ -612,9 +612,9 @@ def dump_MATRR_stats():
 
 def render_MATRR_current_data_grid():
     cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
-    data_types = ["Necropsy", "Drinking Summary", "Bouts", ]#"Drinks", "Raw Drinking data", "Exceptions", "BEC", "Hormone", "Metabolite", "Protein", 'ElectroPhys', ]
-    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout,]# ExperimentDrink, ExperimentEvent, MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys]
-    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', ]#'ebt__mtd__monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', ]
+    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC", "Hormone", "Metabolite", "Protein", 'ElectroPhys', ]
+    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent, MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys]
+    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', ]
 
     headers = ['Data Type']
     headers.extend(cohorts.values_list('coh_cohort_name', flat=True))
