@@ -925,12 +925,12 @@ th.rotate_header {
 }
 
 th.rotate_header > div {
-  transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
-  -webkit-transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
-  -moz-transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
-  -o-transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
-  -ms-transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
   width: 30px;
+  transform:translate(0, 50px) rotate(315deg);
+  -ms-transform:transform:translate(0, 50px) rotate(315deg);
+  -moz-transform:transform:translate(0, 50px) rotate(315deg);
+  -webkit-transform:transform:translate(0, 50px) rotate(315deg);
+  -o-transform:transform:translate(0, 50px) rotate(315deg);
 }
 th.rotate_header > div > span {
   border-bottom: 2px solid #ccc;
