@@ -927,10 +927,10 @@ th.rotate_header {
 th.rotate_header > div {
   width: 30px;
   transform:translate(0, 50px) rotate(315deg);
-  -ms-transform:transform:translate(0, 50px) rotate(315deg);
-  -moz-transform:transform:translate(0, 50px) rotate(315deg);
-  -webkit-transform:transform:translate(0, 50px) rotate(315deg);
-  -o-transform:transform:translate(0, 50px) rotate(315deg);
+  -ms-transform:translate(0, 50px) rotate(315deg);
+  -moz-transform:translate(0, 50px) rotate(315deg);
+  -webkit-transform:translate(0, 50px) rotate(315deg);
+  -o-transform:translate(0, 50px) rotate(315deg);
 }
 th.rotate_header > div > span {
   border-bottom: 2px solid #ccc;
