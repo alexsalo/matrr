@@ -610,7 +610,7 @@ def dump_MATRR_stats():
     return output
 
 
-def render_MATRR_current_data_grid():
+def render_MATRR_current_data_grid(dump_json=True, dump_csv=False):
     cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
     data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC", "Hormone", "Metabolite", "Protein", 'ElectroPhys', ]
     data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent, MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys]
@@ -626,16 +626,19 @@ def render_MATRR_current_data_grid():
             _row.append(row_count)
         data_rows.append(_row)
 
-    page_template = 'matrr/data_repo_template.html'
-    body = template_loader.render_to_string(page_template, {'cohorts': cohorts, 'headers': headers, 'data_rows': data_rows, 'now': datetime.now() })
-    outfile = open('matrr/static/current_data_grid.html', 'w')
-    outfile.write(body)
-    outfile.close()
-    outcsv = open('matrr/utils/DATA/current_data_grid.csv', 'w')
-    writer = csv.writer(outcsv)
-    writer.writerow(headers)
-    writer.writerows(data_rows)
-    outcsv.close()
+    if dump_csv:
+        outcsv = open('matrr/utils/DATA/current_data_grid.csv', 'w')
+        writer = csv.writer(outcsv)
+        writer.writerow(headers)
+        writer.writerows(data_rows)
+        outcsv.close()
+    if dump_json:
+        context = {'headers': headers, 'data_rows': data_rows, 'last_updated': datetime.now().strftime('%Y-%m-%d') }
+        outjson = open('matrr/utils/DATA/json/current_data_grid.json', 'w')
+        json_string = json.dumps(context)
+        outjson.write(json_string)
+        outjson.close()
+
 
 def load_monkey_data(input_file):
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')

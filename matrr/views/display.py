@@ -1,4 +1,6 @@
 from datetime import datetime
+import json
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import Http404
 from django.shortcuts import render_to_response, redirect, get_object_or_404
@@ -299,5 +301,17 @@ def tissue_list(request, tissue_category=None, coh_id=None):
                                                      'cohort': cohort,
                                                      'plot_gallery': True, },
                               context_instance=RequestContext(request))
+
+@login_required
+def data_repository_grid(request):
+    try:
+        json_file = open('matrr/utils/DATA/json/current_data_grid.json', 'r')
+    except IOError:
+        messages.error(request, "MATRR could not find the information needed for this page.  If this problem persists please notify a MATRR admin.")
+        context = {}
+    else:
+        context = json.loads(json_file.read())
+
+    return render_to_response('matrr/data_repository_grid.html', context, context_instance=RequestContext(request))
 
 

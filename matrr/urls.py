@@ -35,6 +35,7 @@ urlpatterns += patterns('',
 )
 urlpatterns += patterns('',
     ## Monkey/Cohort/Tissue display views
+    url(r'^data_repository_grid/$', display.data_repository_grid, name='data-repository-grid'),
     url(r'^available/$', display.cohorts_view_available, name='available'),
     url(r'^upcoming/$', display.cohorts_view_upcoming, name='upcoming'),
     url(r'^cohort/$', display.cohorts_view_all, name='cohorts'),
