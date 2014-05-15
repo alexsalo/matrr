@@ -925,11 +925,11 @@ th.rotate_header {
 }
 
 th.rotate_header > div {
-  transform:
-    /* Magic Numbers */
-    translate(0px, 51px)
-    /* 45 is really 360 - 45 */
-    rotate(315deg);
+  transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
+  -webkit-transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
+  -moz-transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
+  -o-transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
+  -ms-transform: rotate(315deg) scale(1) skew(1deg) translate(51px);
   width: 30px;
 }
 th.rotate_header > div > span {
