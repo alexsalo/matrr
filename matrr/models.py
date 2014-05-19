@@ -2445,10 +2445,10 @@ class Shipment(models.Model):
                                     help_text='Please enter the tracking number for this shipment.')
     shp_created_at = models.DateTimeField('Creation Timestamp', blank=False, null=False, auto_now_add=True,
                                           help_text='When this shipment was created.')
-    shp_processing = models.DateTimeField('Creation Timestamp', blank=True, null=True,
-                                          help_text='When this shipment was created.')
-    shp_processed= models.DateTimeField('Creation Timestamp', blank=True, null=True,
-                                        help_text='When this shipment was created.')
+    shp_processing = models.DateTimeField('Processing Timestamp', blank=True, null=True,
+                                          help_text='When this shipment was sent for genetics processing.')
+    shp_processed= models.DateTimeField('Processed Timestamp', blank=True, null=True,
+                                        help_text='When this shipment was finished processing.')
     shp_shipment_date = models.DateTimeField('Shipped Date', blank=True, null=True,
                                              help_text='The date these tissues were shipped to the requester.')
     shp_shipment_status = models.CharField("Shipment Status", null=False, blank=False, max_length=2,
