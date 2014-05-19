@@ -3375,6 +3375,10 @@ class MonkeyHormone(models.Model):
     monkey = models.ForeignKey(Monkey, null=False, related_name='hormone_records', db_column='mky_id', editable=False)
     mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='mhm_record', editable=False,
                                on_delete=models.SET_NULL)
+
+    mhm_ep_num = models.CharField("EP Num", help_text="See database.load_hormone_data__cyno2() docstring for more information", max_length=5, blank=True, null=True, default='')
+    mhm_time = models.CharField("Time", help_text="No one has told me what -840 means....", max_length=5, blank=True, null=True, default="")
+
     mhm_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
     mhm_cort = models.FloatField("Cortisol", null=True, blank=True)
     mhm_acth = models.FloatField("ACTH", null=True, blank=True)

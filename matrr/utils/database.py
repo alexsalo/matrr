@@ -610,7 +610,7 @@ def dump_MATRR_stats():
     return output
 
 
-def render_MATRR_current_data_grid(dump_json=True, dump_csv=False):
+def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
     cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
     data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC", "Hormone", "Metabolite", "Protein", 'ElectroPhys', ]
     data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent, MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys]
@@ -2184,6 +2184,62 @@ def load_hormone_data__cyno1(file_name, overwrite=False, header=True):
     print "Data load complete."
 
 
+def load_hormone_data__cyno2(file_path):
+    """
+    Ok so, the hormone data I've gotten hasn't been consistent between cohorts, as made evident by database.load_hormone_data(),
+    database.load_hormone_data__cyno1() and database.load_hormone_data__cyno2().  Fun times....
+
+    The __cyno2() dataset didn't come with dates, only an 'EP Num' column.  This is a mysterious key:value relationship associated
+    with the cohort's timeline.  This is what little I know about this key:value table:
+
+    Included in the dataset file:
+    7 = A1
+    8 = A1.1
+    9 = A2
+    10 = A2.1
+    11 = EP7
+    12 = A3
+    13 = A3.1
+
+    BUT, values in this dataset file for EP_Num were in range(3, 14).  Fun times....  I emailed Gin Cuzon (sp) and she told me...
+
+    '''
+    Hi Jon,
+    Sorry I saw this email on my phone and forgot to look it up when i got to my computer. I dont actually know what those other
+    times mean exactly. I am looking at the cort graph from the file kathy gave me and the cort graph from my paper and I think
+    3 = Baseline, 4= induction, 5 = 6 mo, 6 = 12 mo, w1 = withdrawal 1 early, w.1.1 = withdrawal 1 late, w1= withdrawal 2 early,
+    w2.1 = withdrawal 2 late, ep7 = ethanol drinking period between withdrawal 1 and 2.
+
+    Hope that helps and sorry for the delay.
+    Gin
+    '''
+
+    And, for a maximum level of fun, there are only 9 'EP Start' records in the cyno 2's cohort timeline, not 11 (11 == len(range(3,13)). )
+
+    One could assume the extra two are 'baseline' and 'post-necropsy' readings, but I'm not that one.  I have three non-overlapping
+    definitions of the __cyno2() dataset timeline, even after a direct inquiry for a clear definition.  This is an island of data
+    with no friends, as far as I'm concerned.
+    """
+    input_data = csv.reader(open(file_path, 'rU'), delimiter=',')
+    columns = input_data.next()
+
+    for row in input_data:
+        if row[4]:
+            try:
+                assert row[3].lower() == 'acth', "This method was written assuming only ACTH values were given."
+            except AssertionError as e:
+                print e
+                continue
+            monkey = get_monkey_by_number(row[0])
+            mhm_row = dict()
+            mhm_row['monkey'] = monkey
+            mhm_row['mhm_ep_num'] = row[1]
+            mhm_row['mhm_time'] = row[2]
+            mhm_row['mhm_acth'] = row[4]
+            MonkeyHormone.objects.get_or_create(**mhm_row)
+    print 'Success'
+
+
 def load_bec_data(file_name, overwrite=False, header=True):
     def format_time(unformatted):
         """ Converts "hh:MM AM" into HH:MM """
@@ -2690,6 +2746,7 @@ def dump_rhesus_summed_gkg_by_quarter():
     f.close()
     return
 
+
 def load_cohort2_electrophys(file_path):
     input_data = csv.reader(open(file_path, 'rU'), delimiter=',')
     columns = input_data.next()
@@ -2717,6 +2774,7 @@ def load_cohort2_electrophys(file_path):
             ephy['mep_rel_time'] = row[16]
             mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
     print 'Success'
+
 
 def create_data_tissue_tree():
     """
