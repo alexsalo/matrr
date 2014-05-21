@@ -2303,7 +2303,7 @@ def load_bec_data(file_name, overwrite=False, header=True):
 
             bec_collect_date = get_datetime_from_steve(data[2])
             bec_run_date = get_datetime_from_steve(data[3])
-            if not bec_collect_date or not bec_run_date:
+            if not bec_collect_date:
                 print ERROR_OUTPUT % (line_number, "Wrong date format", line)
                 continue
 
