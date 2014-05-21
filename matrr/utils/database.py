@@ -68,6 +68,11 @@ def get_datetime_from_steve(steve_date):
     except Exception as e:
         pass
     try:
+        real_date = dt.strptime(steve_date, "%Y%m%d")
+        return real_date
+    except Exception as e:
+        pass
+    try:
         real_date = minimalist_xldate_as_datetime(steve_date, 1)
         return real_date
     except Exception as e:
@@ -2242,16 +2247,21 @@ def load_hormone_data__cyno2(file_path):
 
 def load_bec_data(file_name, overwrite=False, header=True):
     def format_time(unformatted):
-        """ Converts "hh:MM AM" into HH:MM """
+        """
+        Converts "hh:MM AM" into HH:MM
+        --OR--
+        -- because consistency is overrated--
+        Converts "hh:MM:SS AM" into HH:MM
+        """
         if 'am' in unformatted.lower() or 'pm' in unformatted.lower():
             time, afternoon = unformatted.split(' ')
-            hh, MM = time.split(":")
+            colon_separated_time = time.split(":")
             if afternoon.lower() == 'pm':
-                HH = int(hh) + 12
+                HH = int(colon_separated_time[0]) + 12
             else:
-                HH = int(hh)
+                HH = int(colon_separated_time[0])
             HH = 12 if HH == 24 else HH
-            return "%s:%s" % (str(HH), str(MM))
+            return "%s:%s" % (str(HH), str(colon_separated_time[1]))
         return unformatted
 
     fields = (
