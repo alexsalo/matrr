@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 from datetime import timedelta, time
+import dateutil.parser
 import string
 import django.template.loader as template_loader
 import csv
@@ -575,8 +576,7 @@ def dump_MATRR_stats():
         for o in official:
             output += "%s Requests: %d\n" % (o, yearly_requests.filter(req_status=o).count())
         # requested tissue stats
-        requested_tissues = yearly_requests.aggregate(Count('tissue_request_set__monkeys'))[
-            'tissue_request_set__monkeys__count']
+        requested_tissues = yearly_requests.aggregate(Count('tissue_request_set__monkeys'))['tissue_request_set__monkeys__count']
         output += "Requested Tissues: %d\n" % requested_tissues
         # accepted tissue stats
         approved_yearly_requests = yearly_requests.filter(req_status__in=accepted)
@@ -594,7 +594,7 @@ def dump_MATRR_stats():
             partially_accepted += part_acc.tissue_request_set.all().aggregate(Count('accepted_monkeys'))[
                 'accepted_monkeys__count']
         rejected_tissues += (partially_requested - partially_accepted)
-        output += "Rejcted Tissues: %d\n" % rejected_tissues
+        output += "Rejected Tissues: %d\n" % rejected_tissues
         # shipment stats
         yearly_shipments = Shipment.objects.filter(shp_shipment_date__gte=start_date).filter(
             shp_shipment_date__lte=end_date)
@@ -1381,13 +1381,12 @@ def load_edr_one_file(file_name, dex):
             edr.save()
 
 
-def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_index=1, drink_index=2,
-                                         create_dex=False, create_mtd=False, dump_file=False):
+def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_index=1, drink_index=2, create_dex=False, create_mtd=False, dump_file=False):
+    """ Input file may start with header, but ONLY if entry[1] == 'Date'! """
     if not dex_type in DexTypes:
         raise Exception(
             "'%s' is not an acceptable drinking experiment type.  Please choose from:  %s" % (dex_type, DexTypes))
 
-    """ Input file may start with header, but ONLY if entry[1] == 'Date'! """
     if dump_file:
         _filename = file_name.split('/')
         _filename.reverse()
@@ -1447,7 +1446,7 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
             last_date = date
         if dump_file:
             dump_file.flush()
-        #	return  bouts, drinks
+#       	return  bouts, drinks
     print "Loading bouts ..."
     for (dex, line_number, line, bout) in bouts:
         load_ebt_one_inst(bout, line_number, create_mtd, dex, line, bout_index=bout_index, dump_file=dump_file)
@@ -1527,7 +1526,7 @@ def parse_left_right(side_string):
 
 
 @commit_on_success
-def load_eev_one_file(file_name, dex_type, date):
+def load_eev_one_file(file_name, dex_type, filename_date):
     fields = (
         #		'eev_occurred',
         'eev_dose',
@@ -1585,10 +1584,10 @@ def load_eev_one_file(file_name, dex_type, date):
                 continue
 
             eev_date = convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
-            if date.date() != eev_date.date():
+            if filename_date.date() != eev_date.date():
                 msg = ERROR_OUTPUT % (line_number,
                                       "Filename date does not match line date.  Will use line date. filename_date=%s" % str(
-                                          date), line)
+                                          filename_date), line)
                 logging.info(msg)
 
             #			eevs = ExperimentEvent.objects.filter(monkey=monkey, dex_type=dex_type, eev_source_row_number=line_number, eev_occurred=eev_date)
