@@ -9,6 +9,15 @@
     border-bottom: 1px solid #eee;
 }
 
+/* Added by jf */
+.form-row.field-user_permissions {
+    height: 199px;
+}
+#id_user_permissions {
+    height: 180px;
+}
+/* end of added by jf */
+
 .form-row img, .form-row input {
     vertical-align: middle;
 }
