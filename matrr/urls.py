@@ -22,7 +22,7 @@ urlpatterns += patterns('',
     ## Miscellaneous views.  Many of these are public facing
     url(r'^$', basic.index_view, name='matrr-home'),
     url(r'^logout/$', basic.logout, name='matrr-logout'),
-    url(r'^(?P<static_page>privacy|data|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', basic.pages_view), #  These are non-dynamic pages. Mostly text/html.
+    url(r'^(?P<static_page>privacy|data-sharing|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', basic.pages_view), #  These are non-dynamic pages. Mostly text/html.
     url(r'^contact_us/$', basic.contact_us, name='contact-us'),
     url(r'^search/$', basic.search, name='search'),
     url(r'^advanced_search/$', basic.advanced_search, name='advanced-search'),
@@ -42,6 +42,7 @@ urlpatterns += patterns('',
     url(r'^assay/$', display.cohorts_view_assay, name='assay'),
 
     url(r'^cohort/(?P<pk>\d+)/$', display.cohort_details, name='cohort-details'),
+    url(r'^cohort/(?P<coh_id>\d+)/upload/$', uploads.cod_upload, name='cod-upload'),
     url(r'^cohort/(?P<pk>\d+)/timeline$', display.cohort_timeline, name='cohort-timeline'),
     url(r'^cohort/(?P<coh_id>\d+)/monkey/(?P<mky_id>\d+)/$', display.monkey_cohort_detail_view, name='monkey-detail'),
     url(r'^monkey/(?P<mky_id>\d+)/$', display.monkey_detail_view, name='monkey-detail'),
@@ -101,14 +102,8 @@ urlpatterns += patterns('',
     url(r'^account/address/$', account.account_address, name='account-address'),
     url(r'^account/info/$', account.account_info, name='account-info'),
     url(r'^account/mta/$', account.account_mta, name='account-mta'),
+    url(r'^accunt/mta/upload/$', uploads.mta_upload, name='mta-upload'),
     url(r'^account/verify/(?P<user_id>\d+)/$', account.account_verify, name='account-verify'),
-)
-
-urlpatterns += patterns('',
-    ## Upload views
-    url(r'^upload/$', uploads.raw_data_upload, name='raw-upload'),
-    url(r'^upload/mta/$', uploads.mta_upload, name='mta-upload'),
-    url(r'^upload/cohort_data/(?P<coh_id>\d+)/$', uploads.cod_upload, name='cod-upload'),
 )
 
 urlpatterns += patterns('',
@@ -189,14 +184,28 @@ urlpatterns += patterns('',
 )
 urlpatterns += patterns('',
     ## data views
-    url(r'^tools/data/$', data.data_landing, name='data-landing'),
-    url(r'^tools/data/(?P<data_type>[a-zA-Z_]+)/$', data.data_cohort, name='data-cohort'),
-    url(r'^tools/data/(?P<data_type>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', data.data_cohort_dates, name='data-cohort-submit'),
+    url(r'^data/$', data.data_landing, name='data-landing'),
+    url(r'^data/(?P<data_type>[a-zA-Z_]+)/$', data.data_cohort, name='data-cohort'),
+    url(r'^data/(?P<data_type>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', data.data_cohort_dates, name='data-cohort-submit'),
+    url(r'^data/upload/$', uploads.raw_data_upload, name='raw-upload'),
 )
 
 urlpatterns += patterns('',
     ## ajax views, should not be visible by themselves
     url(r'^ajax/advanced_search$', ajax.ajax_advanced_search, name='ajax-advanced-search'),
+)
+
+urlpatterns += patterns('',
+    ## Deprecated urls
+    ## These urls are exist for legacy.  The name= should all appear in urls above, and thus all links inside
+    ## MATRR should direct to the newer urls listed above.
+
+    url(r'^upload/$', uploads.raw_data_upload, ),#name='raw-upload'),
+    url(r'^upload/mta/$', uploads.mta_upload, ),#name='mta-upload'),
+    url(r'^upload/cohort_data/(?P<coh_id>\d+)/$', uploads.cod_upload, ),#name='cod-upload'),
+    url(r'^tools/data/$', data.data_landing, ),#name='data-landing'),
+    url(r'^tools/data/(?P<data_type>[a-zA-Z_]+)/$', data.data_cohort, ),#name='data-cohort'),
+    url(r'^tools/data/(?P<data_type>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', data.data_cohort_dates, ),#name='data-cohort-submit'),
 )
 
 if PRODUCTION:
