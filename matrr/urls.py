@@ -22,7 +22,7 @@ urlpatterns += patterns('',
     ## Miscellaneous views.  Many of these are public facing
     url(r'^$', basic.index_view, name='matrr-home'),
     url(r'^logout/$', basic.logout, name='matrr-logout'),
-    url(r'^(?P<static_page>privacy|data-sharing|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', basic.pages_view), #  These are non-dynamic pages. Mostly text/html.
+    url(r'^(?P<static_page>privacy|data|usage|browser|faq|public-faq|about|benefits|denied|fee|safety|not-verified)/$', basic.pages_view), #  These are non-dynamic pages. Mostly text/html.
     url(r'^contact_us/$', basic.contact_us, name='contact-us'),
     url(r'^search/$', basic.search, name='search'),
     url(r'^advanced_search/$', basic.advanced_search, name='advanced-search'),
@@ -184,10 +184,10 @@ urlpatterns += patterns('',
 )
 urlpatterns += patterns('',
     ## data views
-    url(r'^data/$', data.data_landing, name='data-landing'),
-    url(r'^data/(?P<data_type>[a-zA-Z_]+)/$', data.data_cohort, name='data-cohort'),
-    url(r'^data/(?P<data_type>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', data.data_cohort_dates, name='data-cohort-submit'),
     url(r'^data/upload/$', uploads.raw_data_upload, name='raw-upload'),
+    url(r'^data/download/$', data.data_landing, name='data-landing'),
+    url(r'^data/download/(?P<data_type>[a-zA-Z_]+)/$', data.data_cohort, name='data-cohort'),
+    url(r'^data/download/(?P<data_type>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', data.data_cohort_dates, name='data-cohort-submit'),
 )
 
 urlpatterns += patterns('',
