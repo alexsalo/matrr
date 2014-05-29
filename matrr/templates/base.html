@@ -93,7 +93,7 @@
 
 				{% if perms.matrr.can_download_data or perms.auth.upload_raw_data %}
 					<ul>
-						<li class='top'><a>Data</a></li>
+						<li class='top'><a href="/data">Data</a></li>
                         {% if perms.matrr.can_download_data %}
 				    		<li class='drop-down'><a href="{% url 'data-landing' %}">Download</a></li>
 		        		{% endif %}
@@ -281,7 +281,7 @@
 		<div class='footer clearfix'>
 			The Monkey Alcohol and Tissue Research Resource (MATRR) is supported by <a href="http://www.niaaa.nih.gov">NIAAA</a> as an R24.
             This site is maintained by <a href="mailto:erich_baker@baylor.edu">Erich Baker</a>.
-            For applicable policies see our <a href="/privacy">privacy</a>, <a href="/data-sharing">data sharing</a>, and <a href="/usage">usage</a> documents.
+            For applicable policies see our <a href="/privacy">privacy</a>, <a href="/data">data sharing</a>, and <a href="/usage">usage</a> documents.
 		</div>
 
 	{% endblock %}
