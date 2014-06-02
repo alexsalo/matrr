@@ -741,8 +741,8 @@ class Account(models.Model):
             ('view_sandbox', 'Can view sandbox tools'),
             ('view_etoh_data', 'Can view ethanol data'),
             ('view_confederates', 'Can view confederate data'),
-            ('bcc_request_email', 'Receive BCC of processed request emails'),
-            ('po_manifest_email', 'Receive PO shipping manifest email'),
+            ('bcc_request_email', 'Will receive BCC of processed request emails'),
+            ('po_manifest_email', 'Will receive Purchase Order shipping manifest email'),
             ('provide_po_number', 'Can provide PO number'),
             ('verify_mta', 'Can verify MTA uploads'),
         )
