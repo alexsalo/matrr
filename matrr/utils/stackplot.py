@@ -201,7 +201,7 @@ class MATRRStackPlot():
         return x, y
 
     def gather_data(self):
-        folder_name = "/web/www/matrr-local/matrr/utils/DATA/json/"
+        folder_name = path + "/DATA/json/"
         m = hashlib.sha224()
         m.update(str(self))
         hash_name = m.hexdigest()
@@ -242,7 +242,7 @@ class MATRRStackPlot():
         s = hashlib.sha224()
         s.update(df)
         file_name = 'MATRRStackPlot.normalizationParameters.%s.json' % s.hexdigest()
-        folder_name = "/web/www/matrr-local/matrr/utils/DATA/json/"
+        folder_name = path + "/DATA/json/"
         file_path = os.path.join(folder_name, file_name)
         try:
             fx = open(file_path, 'r')
