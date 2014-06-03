@@ -300,7 +300,7 @@ class MATRRStackPlot():
         data = data if data else self.smoothed_data
         for mtd_field in self.mtd_data_fields:
             for _field_data in data[mtd_field]:
-                _new_values = list(numpy.zeros(len(_field_data)))
+                _new_values = list(numpy.zeros(self.max_data_length+1))
                 for index, value in enumerate(_field_data):
                     averaged = value / self.monkey_count
                     _new_values[index] += averaged # add the monkey value to the summed values
