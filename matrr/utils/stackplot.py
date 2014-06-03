@@ -1,8 +1,17 @@
+import sys
+import os
+path = os.path.dirname(os.path.realpath(__file__))
+if 'matrr-prod' in path:
+    sys.path.append('/web/www/matrr-prod')
+elif 'matrr-dev' in path:
+    sys.path.append('/web/www/matrr-dev')
+else:
+    sys.path.append('/web/www/matrr-local')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "matrr.settings")
+
 from collections import defaultdict
 import hashlib
 import json
-import os
-import sys
 from django.db.models import Avg, StdDev
 import matplotlib
 import numpy
