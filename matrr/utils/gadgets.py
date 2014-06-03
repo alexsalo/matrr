@@ -391,7 +391,7 @@ def gather_three_month_monkey_average_by_fieldname(monkeys, fieldname, three_mon
 
 
 def identify_drinking_category(mtd_queryset):
-    assert len(mtd_queryset.values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function will work with an MTD queryset with multiple monkeys"
+    assert len(mtd_queryset.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function will work with an MTD queryset with multiple monkeys"
     max_date = mtd_queryset.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
     min_date = mtd_queryset.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
     total_days = float((max_date-min_date).days)
