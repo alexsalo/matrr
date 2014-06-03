@@ -39,5 +39,6 @@ def sync_permissions():
     print "You should delete these permissions, they're old."
     for perm in stale_permissions:
         print "pk=%d, %s - %s" % (perm.pk, perm.codename, perm.name)
+    print "But before you go willy-nilly deleting stuff, make sure they're actually old and unused."
 
 sync_permissions()
