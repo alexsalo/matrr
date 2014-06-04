@@ -257,6 +257,8 @@ class MATRRParallelPlot():
 
     def gather_max_min_data(self, monkey_pk):
         mtds = models.MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk).order_by('drinking_experiment__dex_date')
+        if mtds.count() < 1: # we need more data.  We always need more data.
+            return
         for gather_function in self.mtd_gather_functions:
             _label = gather_function()
             _value = gather_function(mtds)
