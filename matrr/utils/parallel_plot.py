@@ -20,7 +20,7 @@ from matrr.plotting import DEFAULT_DPI, RHESUS_COLORS, DRINKING_CATEGORY_MARKER
 
 
 def _percentage_of_days_over_x_gkg(mtds, x_gkg):
-    assert len(mtds.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function will work with an MTD queryset with multiple monkeys"
+    assert len(mtds.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function will work with an MTD queryset with multiple/zero monkeys"
     max_date = mtds.aggregate(models.Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
     min_date = mtds.aggregate(models.Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
     total_days = float((max_date-min_date).days)
@@ -267,6 +267,8 @@ class MATRRParallelPlot():
         if not self.min_data and self.max_data:
             raise Exception("where'd my mins and maxs go?")
         mtds = models.MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk).order_by('drinking_experiment__dex_date')
+        if mtds.count() < 1: # we need more data.  We always need more data.
+            return
         for gather_function in self.mtd_gather_functions:
             _label = gather_function()
             _value = gather_function(mtds)
