@@ -210,7 +210,10 @@ class MATRRParallelPlot():
         for _monkey in self.monkeys:
             _category = models.Monkey.objects.get(pk=_monkey).mky_drinking_category
             _color = RHESUS_COLORS[_category] if _category else 'black'
-            subplot.plot(x_values, self.parallel_data[_monkey], color=_color, alpha=1)
+            y_values = self.parallel_data[_monkey]
+            if len(y_values) != len(x_values):  # we don't have enough data to plot this monkey.  It's probably 10107.
+                continue
+            subplot.plot(x_values, y_values, color=_color, alpha=1)
         subplot.set_title(self.figure_title)
         subplot.set_yticks([.15, .5, .85])
         subplot.set_yticklabels(['Low', 'Med', 'High'])
