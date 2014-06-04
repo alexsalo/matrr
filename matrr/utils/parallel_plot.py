@@ -193,9 +193,9 @@ class MATRRParallelPlot():
     def __init__(self, monkeys, cached=False):
         self.cached = cached
         if type(monkeys) == query.QuerySet:
-            self.monkeys = [u'%s' % m for m in monkeys.order_by('pk').values_list('pk', flat=True)]
+            self.monkeys = [str(m) for m in monkeys.order_by('pk').values_list('pk', flat=True)]
         else:
-            self.monkeys = [u'%s' for m in sorted(monkeys)]
+            self.monkeys = [str(m) for m in sorted(monkeys)]
         self.parallel_labels = [g(mtds=None) for g in self.mtd_gather_functions]
 
     def draw_parallel_plot(self):
@@ -229,16 +229,6 @@ class MATRRParallelPlot():
             for _mky in self.monkeys:
                 self.gather_monkey_data(_mky)
 
-        folder_name = path + "/DATA/json/"
-        file_path = folder_name+'7350ce5f6f41cc2dde164f153ebbd7ee2a08223689adca76ac191c6c.MATRRParallelPlot.json'
-        fx = open(file_path, 'r')
-        docstring = fx.readline()
-        json_string = fx.readline()
-        data = json.loads(json_string)
-        self.parallel_data = data['parallel_data']
-        self.max_data = data['max_data']
-        self.monkeys = sorted(self.parallel_data.keys())
-        return
         if self.cached:
             folder_name = path + "/DATA/json/"
             m = hashlib.sha224()
