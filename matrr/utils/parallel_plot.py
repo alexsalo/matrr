@@ -251,6 +251,7 @@ class MATRRParallelPlot():
                 fx.write(str(self) + "\n")
                 json_data = json.dumps(data)
                 fx.write(json_data)
+                fx.flush()
                 fx.close()
         else:
             _gather_data()
