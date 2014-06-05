@@ -3053,19 +3053,6 @@ class Publication(models.Model):
         db_table = 'pub_publications'
 
 
-class GenBankSequence(models.Model):
-    id = models.AutoField(primary_key=True)
-    accession = models.CharField('Accession Number', max_length=20)
-    cohort = models.ManyToManyField(Cohort, db_table='gtc_genbank_to_cohorts',
-                                    verbose_name='Cohorts',
-                                    related_name='genbank_set',
-                                    help_text='The cohorts involved with this genbank sequence.')
-
-
-    class Meta:
-        db_table = 'gen_genbank_sequences'
-
-
 class TissueInventoryVerification(models.Model):
     tiv_id = models.AutoField(primary_key=True)
 
