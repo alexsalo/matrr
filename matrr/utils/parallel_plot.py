@@ -198,7 +198,7 @@ class MATRRParallelPlot():
             self.monkeys = [str(m) for m in sorted(monkeys)]
         self.parallel_labels = [g(mtds=None) for g in self.mtd_gather_functions]
 
-    def draw_parallel_plot(self):
+    def draw_parallel_plot(self, lw=1, alpha=1):
         if not self.parallel_data:
             self.gather_data()
         fig = pyplot.figure(figsize=(23, 6), dpi=DEFAULT_DPI)
@@ -213,7 +213,7 @@ class MATRRParallelPlot():
                 continue
             _category = models.Monkey.objects.get(pk=_monkey).mky_drinking_category
             _color = RHESUS_COLORS[_category] if _category else 'black'
-            subplot.plot(x_values, y_values, color=_color, alpha=.5)
+            subplot.plot(x_values, y_values, color=_color, alpha=alpha, lw=lw)
         subplot.set_title(self.figure_title)
         subplot.set_yticks([.15, .5, .85])
         subplot.set_yticklabels(['Low', 'Med', 'High'])
