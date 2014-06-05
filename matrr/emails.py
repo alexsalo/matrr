@@ -33,7 +33,7 @@ def send_colliding_requests_info():
             collisions.append((request, sub_coll, acc_coll))
 
     if len(collisions) > 0:
-        users = Account.objects.users_with_perm('can_receive_colliding_requests_info')
+        users = Account.objects.users_with_perm('can_receive_colliding_requests_email')
         collision_text = ""
         for req, sub, acc in collisions:
 
@@ -71,7 +71,7 @@ def send_verify_tissues_info():
     """
     If there are submitted requests which need tissue verification, this cron task will email users who have permission to verify tissue that they need to do so.
     """
-    users = Account.objects.users_with_perm('can_verify_tissues')
+    users = Account.objects.users_with_perm('receive_verify_tissues_email')
     time_now = datetime.now()
     time_yesterday = time_now - timedelta(days=1)
     requests = Request.objects.submitted().filter(req_request_date__gte=time_yesterday, req_request_date__lte=time_now)
@@ -235,7 +235,7 @@ def send_shipment_ready_notification(assay_ready=False):
     if assay_ready:
         users = [User.objects.get(username='jdaunais'), User.objects.get(username='adaven')]
     else:
-        users = Account.objects.users_with_perm('change_shipment').exclude(username='garyjmurray')
+        users = Account.objects.users_with_perm('handle_shipments_email')
     from_email = User.objects.get(username='matrr_admin').email
     for user in users:
         email = user.email
@@ -599,8 +599,7 @@ def send_rud_complete_email(rud_username):
 def shipment_sent_for_processing(shipment):
     from_email = Account.objects.get(user__username='matrr_admin').email
 
-    processors_group = Group.objects.get(name='ShippingProcessors')
-    recipients = processors_group.user_set.all().values_list('email', flat=True)
+    recipients = Account.objects.users_with_perm('process_shipments_email').values_list('email', flat=True)
 
     subject = "%s has dropped off tissue for MATRR DNA/RNA processing" % shipment.user.username
     email_template = 'matrr/shipping/shipment_processing_email.txt'
@@ -616,8 +615,7 @@ def shipment_sent_for_processing(shipment):
 def shipment_processed(shipment):
     from_email = Account.objects.get(user__username='matrr_admin').email
 
-    handlers_group = Group.objects.get(name='ShippingHandlers')
-    recipients = handlers_group.user_set.all().values_list('email', flat=True)
+    recipients = Account.objects.users_with_perm('handle_shipments_email').values_list('email', flat=True)
 
     subject = "%s has dropped off tissue for MATRR DNA/RNA processing" % shipment.user.username
     email_template = 'matrr/shipping/shipment_processed_email.txt'
@@ -627,5 +625,5 @@ def shipment_processed(shipment):
     if settings.PRODUCTION and settings.ENABLE_EMAILS:
         ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
         if ret > 0:
-            print "%s: Shipment %d sent for DNA/RNA processing" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), shipment.pk)
+            print "%s: Email notified that Shipment %d DNA/RNA has been processed" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), shipment.pk)
 

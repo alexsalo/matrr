@@ -2418,7 +2418,7 @@ class Request(models.Model, DiffingMixin):
         db_table = 'req_requests'
         permissions = (
             ('view_experimental_plan', 'Can view experimental plans of other users'),
-            ('can_receive_colliding_requests_info', 'Can receive colliding requests info'),
+            ('can_receive_colliding_requests_email', 'Can receive colliding requests email'),
         )
 
 
@@ -2535,6 +2535,8 @@ class Shipment(models.Model):
     class Meta:
         permissions = ( ('process_shipments', 'Can process shipments'),
                         ('handle_shipments', 'Can handle/ship shipments'),
+                        ('handle_shipments_email', 'Will receive handle/ship shipments emails'),
+                        ('process_shipments_email', 'Will receive process shipments emails'),
         )
         db_table = 'shp_shipments'
 
@@ -3150,6 +3152,7 @@ class TissueInventoryVerification(models.Model):
         db_table = 'tiv_tissue_verification'
         permissions = (
             ('can_verify_tissues', 'Can verify tissues'),
+            ('receive_verify_tissues_email', 'Will receive verify tissues email'),
         )
 
 
