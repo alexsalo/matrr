@@ -281,6 +281,14 @@ class MATRRParallelPlot():
             _scaled_value = self.rescale_value(_value, self.min_data[_label], self.max_data[_label], limitMin=0.0, limitMax=1.0)
             self.parallel_data[monkey_pk].append(_scaled_value)
 
+    def savefig(self, dpi=200):
+        fig = self.draw_parallel_plot()
+        m = hashlib.sha224()
+        m.update(str(self))
+        hash_name = m.hexdigest()
+        file_name = str(self) + hash_name + '.png'
+        fig.savefig(file_name, dpi=dpi)
+
     @staticmethod
     def rescale_value(valueIn, baseMin, baseMax, limitMin=0.0, limitMax=1.0):
         return (float(limitMax - limitMin) * float(valueIn - baseMin) / float(baseMax - baseMin)) + limitMin
@@ -290,47 +298,4 @@ class MATRRParallelPlot():
         labels = slugify(self.parallel_labels)
         monkeys = slugify(self.monkeys)
         return "MATRRParallelPlot.%s.%s" % (labels, monkeys)
-
-
-def render_stackplot( category='VHD',smooth_method='polyfit', smooth_period=3, baseline='sym', mtd_data_fields=()):
-    raise Exception()
-    """
-    smooth_method = ('polyfit', 'moving average' )
-    smooth_period = 3
-    baseline = ('zero', 'sym', 'wiggle', 'weighted_wiggle')
-    """
-    category = category.upper()
-    assert category in ('VHD', 'HD', 'BD', 'LD'), "You made up that category="
-    if not mtd_data_fields:
-        mtd_data_fields = ['mtd_etoh_g_kg', 'bec_record__bec_mg_pct', 'mhm_record__mhm_cort', 'mhm_record__mhm_acth',
-                           'mhm_record__mhm_t', 'mhm_record__mhm_doc', 'mhm_record__mhm_ald', 'mhm_record__mhm_dheas',
-                           #'mtd_total_pellets', 'mtd_veh_intake', 'mtd_pct_max_bout_vol_total_etoh', 'mtd_pct_etoh_post_pellets'
-                           ]
-    else:
-        raise Exception("I haven't added anything to handle colors for len(mtd_data_field) > 8.  You should probably do that now.")
-
-    MSP = MATRRStackPlot(drinking_category=category, smooth_period=smooth_period, baseline=baseline, smooth_method=smooth_method)
-    MSP.mtd_data_fields = mtd_data_fields
-    fig = MSP.draw_figure()
-    m = hashlib.sha224()
-    m.update(str(MSP))
-    hash_name = m.hexdigest()
-    file_name = str(MSP) + hash_name + '.png'
-    fig.savefig(file_name, dpi=200)
-    return 0
-
-def main():
-    import optparse
-    p = optparse.OptionParser()
-    p.add_option('--category', '-c', default="VHD")
-    p.add_option('--smooth_method', '-s', default="polyfit")
-    p.add_option('--smooth_period', '-p', default="3")
-    p.add_option('--baseline', '-b', default="sym")
-    options, arguments = p.parse_args()
-    render_stackplot(options.category, options.smooth_method, int(options.smooth_period), options.baseline)
-
-if __name__ == '__main__':
-           main()
-
-
 
