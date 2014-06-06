@@ -492,8 +492,6 @@ def dump_all_TissueSample(output_file):
         row[len(row):] = [" "]
         row[len(row):] = [str(TS.tissue_type.tst_tissue_name)]
         row[len(row):] = [str(TS.tissue_type.tst_description)]
-        row[len(row):] = [TS.tissue_type.tst_count_per_monkey]
-        row[len(row):] = [TS.tissue_type.tst_cost]
         row[len(row):] = [" "]
         row[len(row):] = [TS.monkey]
         row[len(row):] = [str(TS.tss_details)]
