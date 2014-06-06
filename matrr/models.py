@@ -628,11 +628,11 @@ class Mta(models.Model):
     def __unicode__(self):
         return str(self.mta_id)
 
-    def save(self, force_insert=False, force_update=False, using=None):
+    def save(self, *args, **kwargs):
         self.mta_date = datetime.now()
         if self.mta_title is None:
             self.mta_title = self.mta_file.name
-        super(Mta, self).save(force_insert, force_update, using)
+        super(Mta, self).save(*args, **kwargs)
 
     def verify_user_access_to_file(self, user):
         if self.user == user:
@@ -1218,7 +1218,7 @@ class ExperimentEvent(models.Model):
                                           null=True)
 
     eev_pct_etoh = models.FloatField('EtOH %', help_text="EtOH intake at event as a percentage of total drinking.",
-                                     default=0, blank=False, null=True)
+                                     default=None, blank=False, null=True)
     mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
     def _populate_eev_pct_etoh(self, recalculate=False, save=True):
@@ -3735,15 +3735,15 @@ class RNARecord(models.Model):
     monkey = models.ForeignKey(Monkey, db_column='mky_id', related_name='rna_set', blank=True, null=True)
     rna_modified = models.DateTimeField('Last Updated', auto_now_add=True, editable=False, auto_now=True)
     rna_extracted = models.DateField('Date Extracted', blank=False, null=True)
-    rna_value_a = models.FloatField("RNA Value, Nanodrop (ng/ul)", blank=False, null=False, default=0)
-    rna_a260_280 = models.FloatField("'A260/280'", blank=False, null=False, default=0)
-    rna_value_b = models.FloatField("RNA Value, Bioanalyzer (ng/ul)", blank=False, null=False, default=0)
-    rna_rin = models.FloatField("RIN", blank=False, null=False, default=0)
-    rna_vol = models.FloatField("vol", blank=False, null=False, default=0)
-    rna_total_ug = models.FloatField("Total ug", blank=False, null=False, default=0)
-    rna_10_ug = models.FloatField("for 10 ug", blank=False, null=False, default=0)
-    rna_min = models.IntegerField("Minimum yield (in micrograms)", "Min Yield", blank=False, null=False, default=0)
-    rna_max = models.IntegerField("Maximum yield (in micrograms)", "Max Yield", blank=False, null=False, default=0)
+    rna_value_a = models.FloatField("RNA Value, Nanodrop (ng/ul)", blank=False, null=True, default=None)
+    rna_a260_280 = models.FloatField("'A260/280'", blank=False, null=True, default=None)
+    rna_value_b = models.FloatField("RNA Value, Bioanalyzer (ng/ul)", blank=False, null=True, default=None)
+    rna_rin = models.FloatField("RIN", blank=False, null=True, default=None)
+    rna_vol = models.FloatField("vol", blank=False, null=True, default=None)
+    rna_total_ug = models.FloatField("Total ug", blank=False,null=True, default=None)
+    rna_10_ug = models.FloatField("for 10 ug", blank=False, null=True, default=None)
+    rna_min = models.IntegerField("Minimum yield (in micrograms)", "Min Yield", blank=False, null=True, default=None)
+    rna_max = models.IntegerField("Maximum yield (in micrograms)", "Max Yield", blank=False, null=True, default=None)
 
     def __unicode__(self):
         return "%s-%s | %s" % (str(self.cohort), str(self.monkey), str(self.tissue_type))
