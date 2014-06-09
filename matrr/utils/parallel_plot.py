@@ -50,17 +50,17 @@ def _average_mtd_field_wrapper(mtds, fieldname):
 
 def average_oa_etoh_intake_gkg(mtds=None):
     if mtds is None:
-        return u"Daily Avg Etoh Intake"
+        return u"Average Daily Etoh Intake"
     return _average_mtd_field_wrapper(mtds, 'mtd_etoh_g_kg')
 
 def average_oa_water_intake(mtds=None):
     if mtds is None:
-        return u"Daily Avg Water Intake"
+        return u"Average Daily Water Intake"
     return _average_mtd_field_wrapper(mtds, 'mtd_veh_intake')
 
 def average_oa_pellet_intake(mtds=None):
     if mtds is None:
-        return u"Daily Avg Pellet Intake"
+        return u"Average Daily Pellet Intake"
     return _average_mtd_field_wrapper(mtds, 'mtd_total_pellets')
 
 def average_oa_BEC(mtds=None):
@@ -160,11 +160,6 @@ class MATRRParallelPlot():
         percentage_of_days_over_3_gkg,
         percentage_of_days_over_2_gkg,
         average_oa_etoh_intake_gkg,
-        average_oa_water_intake,
-        average_oa_pellet_intake,
-        average_oa_max_bout_pct_total_etoh,
-        average_oa_BEC,
-        average_oa_BEC_pct_intake,
         average_oa_pct_etoh_post_pellets,
         average_oa_daily_bout,
         average_oa_bout_volume,
@@ -173,7 +168,12 @@ class MATRRParallelPlot():
         average_oa_bout_pct_volume,
         average_oa_bout_intake_rate,
         average_oa_bout_time_since_pellet,
+        average_oa_max_bout_pct_total_etoh,
         average_oa_drink_volume,
+        average_oa_pellet_intake,
+        average_oa_water_intake,
+        average_oa_BEC,
+        average_oa_BEC_pct_intake,
         average_oa_Cortisol,
         average_oa_ACTH,
         average_oa_Testosterone,
