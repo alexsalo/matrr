@@ -25,8 +25,7 @@ from matrr.utils import apriori, gadgets
 #from matrr import plotting
 from matrr.plotting import monkey_plots, plot_tools
 from matrr.plotting import *
-from matrr.utils.alcohol_drinking_categry import etoh_gkg_forced_histogram, etoh_gkg_monkeybargraph, \
-    rhesus_category_scatterplot
+from matrr.utils.alcohol_drinking_category import etoh_gkg_forced_histogram, etoh_gkg_monkeybargraph, rhesus_category_scatterplot
 
 doc_snippet = \
     """
