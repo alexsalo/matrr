@@ -134,8 +134,7 @@ def gkg_count_upperlimit(upper_limit, monkeys):
 
 
 
-
-def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=(25, 15)):
+def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=(25, 15), fig_title="Figure 1"):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(1, 1)
     gs.update(left=0.03, right=0.492, top=.95, bottom=.08)
@@ -145,7 +144,7 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=(25, 15)):
     label_size = 32
     panel_label_size = 20
 
-    fig.text(.01, .96, "Figure 1", fontsize=title_size)
+    fig.text(.01, .96, fig_title, fontsize=title_size)
     fig.text(.23, .96, "Panel (A)", fontsize=panel_label_size)
     fig.text(.71, .96, "Panel (B)", fontsize=panel_label_size)
 
