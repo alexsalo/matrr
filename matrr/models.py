@@ -745,7 +745,7 @@ class Account(models.Model):
             ('po_manifest_email', 'Will receive Purchase Order shipping manifest email'),
             ('provide_po_number', 'Can provide PO number'),
             ('verify_mta', 'Can verify MTA uploads'),
-            {'data_repository_grid', 'Can view data repository grid page'}
+            ('data_repository_grid', 'Can view data repository grid page')
         )
 
 
