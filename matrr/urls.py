@@ -41,6 +41,8 @@ urlpatterns += patterns('',
     url(r'^cohort/$', display.cohorts_view_all, name='cohorts'),
     url(r'^assay/$', display.cohorts_view_assay, name='assay'),
 
+    url(r'^drinking_category_definition/$', display.drinking_category_definition, name='drinking-category-definition'),
+
     url(r'^cohort/(?P<pk>\d+)/$', display.cohort_details, name='cohort-details'),
     url(r'^cohort/(?P<coh_id>\d+)/upload/$', uploads.cod_upload, name='cod-upload'),
     url(r'^cohort/(?P<pk>\d+)/timeline$', display.cohort_timeline, name='cohort-timeline'),

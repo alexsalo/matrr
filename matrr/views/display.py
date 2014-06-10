@@ -315,7 +315,11 @@ def data_repository_grid(request):
         context = {}
     else:
         context = json.loads(json_file.read())
-
     return render_to_response('matrr/data_repository_grid.html', context, context_instance=RequestContext(request))
+
+@login_required
+def drinking_category_definition(request):
+    context = {}
+    return render_to_response('matrr/drinking_category_definition.html', context, context_instance=RequestContext(request))
 
 

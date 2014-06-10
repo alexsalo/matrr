@@ -76,12 +76,12 @@
                 <table class='table-drink-cats table-drink-cats-legend blocklinkbutton'>
                     <tbody class='drink-cat-rows'>
                         <tr>
-                            <td class='VHD'>Very High Drinker</td>
-                            <td class='HD'>High Drinker</td>
+                            <td class='VHD'><a href="{% url 'drinking-category-definition' %}">Very High Drinker</a></td>
+                            <td class='HD'><a href="{% url 'drinking-category-definition' %}">High Drinker</a></td>
                         </tr>
                         <tr>
-                            <td class='BD'>Binge Drinker</td>
-                            <td class='LD'>Low Drinker</td>
+                            <td class='BD'><a href="{% url 'drinking-category-definition' %}">Binge Drinker</a></td>
+                            <td class='LD'><a href="{% url 'drinking-category-definition' %}">Low Drinker</a></td>
                         </tr>
                     </tbody>
                 </table>
@@ -178,7 +178,7 @@
                             <td>{{ monkey.mky_stress_model }}</td>
                             <td>{% if monkey.mky_study_complete %}Complete{% else %}Incomplete{% endif %}</td>
                             {% if has_categories %}
-                                <td class={{ monkey.mky_drinking_category }}>{{ monkey.mky_drinking_category|default:'' }}</td>
+                                <td class={{ monkey.mky_drinking_category }}><a href="{% url 'drinking-category-definition' %}">{{ monkey.mky_drinking_category|default:'' }}</a></td>
                             {% endif %}
                         </tr>
                     {% endfor %}

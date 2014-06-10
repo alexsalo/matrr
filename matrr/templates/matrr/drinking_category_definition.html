@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load basic_filters %}
+
+{% block title %}Drinking Category Definitions{% endblock %}
+
+{% block content %}
+	<div id='large-headline'>
+		Drinking Category Definitions
+	</div>
+    <br>
+    <div>
+        <a rel="plot_gallery" title="Drinking Category Definition" href="{{ STATIC_URL }}images/drinking_category_definition.png" target="_blank">
+            <img src="{{ STATIC_URL }}images/drinking_category_definition.png" width=100%>
+        </a>
+    </div>
+    <br>
+    <table style="float:left;" class='table-drink-cats table-drink-cats-legend blocklinkbutton'>
+        <tbody class='drink-cat-rows'>
+            <tr>
+                <td class='VHD'>VHD</td>
+                <td class='VHD'>Very High Drinker</td>
+                <td>defined by having >= 10% of open access days' ethanol intake exceeding 4 g/kg
+                    <br>AND<br>
+                    an average daily ethanol intake exceeding 3 g/kg
+                </td>
+            </tr>
+            <tr>
+                <td class='HD'>HD</td>
+                <td class='HD'>High Drinker</td>
+                <td>defined by having >= 20% of open access days' ethanol intake exceeding 3 g/kg</td>
+            </tr>
+            <tr>
+                <td class='BD'>BD</td>
+                <td class='BD'>Binge Drinker</td>
+                <td>defined by having >= 55% of open access days' ethanol intake exceeding 2 g/kg</td>
+            </tr>
+            <tr>
+                <td class='LD'>LD</td>
+                <td class='LD'>Low Drinker</td>
+                <td>defined as not BD, not HD, and not VHD.</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class='clearfix'></div>
+    <br>
+{% endblock %}
