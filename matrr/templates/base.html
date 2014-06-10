@@ -153,6 +153,9 @@
 						{% if perms.matrr.browse_inventory %}
 							<li class='drop-down'><a href="{% url 'inventory' %}">Browse Inventory</a></li>
 						{% endif %}
+						{% if perms.matrr.data_repository_grid %}
+							<li class='drop-down'><a href="{% url 'data-repository-grid' %}">Browse Data Repository Grid</a></li>
+						{% endif %}
 						{% if perms.matrr.rna_display or perms.matrr.rna_submit %}
 							<li class='drop-down'><a href='{% url 'rna-landing' %}'>RNA Yields</a></li>
 						{% endif %}
