@@ -304,6 +304,10 @@ def tissue_list(request, tissue_category=None, coh_id=None):
 
 @login_required
 def data_repository_grid(request):
+    """
+    To update, run:
+    utils.database.dump_MATRR_current_data_grid(dump_json=True, dump_csv=False)
+    """
     try:
         json_file = open('matrr/utils/DATA/json/current_data_grid.json', 'r')
     except IOError:
