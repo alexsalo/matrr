@@ -404,9 +404,10 @@ def identify_drinking_category(mtd_queryset):
     pct_over_three = days_over_three / total_days
     pct_over_four = days_over_four / total_days
 
+    etoh_gkg_avg = mtd_queryset.aggregate(Avg('mtd_etoh_g_kg'))['mtd_etoh_g_kg__avg']
     is_BD = pct_over_two >= .55
     is_HD = pct_over_three >= .2
-    is_VHD = pct_over_four >= .1
+    is_VHD = pct_over_four >= .1 and etoh_gkg_avg > 3.
 
     if is_VHD:
         return 'VHD'
