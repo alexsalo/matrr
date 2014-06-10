@@ -89,7 +89,7 @@ def popcount_figure(categories, y_value_callable, y_label, fig_size=(25, 15), ti
     return fig
 
 
-def create_rca_graphs(output_path='', graphs='figa3,figa4,mdr', format='png', dpi=1000):
+def create_rsa_graphs(output_path='', graphs='figa3,figa4,mdr', format='png', dpi=1000):
     figures = list()
     names = list()
 
