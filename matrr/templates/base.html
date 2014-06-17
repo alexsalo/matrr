@@ -165,7 +165,7 @@
 				{% if user.is_staff or perms.matrr.verify_mta %}
 					<ul>
 						<li class='top'>{% if user.is_staff %}<a href="/admin/">Admin</a>{% else %}Admin{% endif %}</li>
-						{% if perms.matrr.view_rud_file %}
+						{% if perms.matrr.view_rud_detail %}
 							<li class='drop-down'><a href='{% url 'rud-overdue' %}'>Research Updates</a></li>
 						{% endif %}
 						{% if perms.matrr.verify_mta %}
