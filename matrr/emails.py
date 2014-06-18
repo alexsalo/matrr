@@ -585,7 +585,7 @@ def send_rud_complete_email(rud_username):
     body += "That's right %s, you read that subject line correctly.\n" % admin.username
     body += "\n"
     body += "%s has submitted a 'Complete' research update.\n" % rud_username
-    body += "Now would be a good time to get some data from the %s, before they 'lose' their data.\n"
+    body += "Now would be a good time to get some data from the user, before they 'lose' their data.\n"
     body += "\n"
     body += "You should probably buy Jon a celebratory beer too.  ;)\n"
 
