@@ -252,11 +252,12 @@ LOGGING = {
     },
 
     'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        },
+# Had to disable emailing errors.  Sending 7k emails a day to gmail is apparently no bueno.
+#        'mail_admins': {
+#            'level': 'ERROR',
+#            'filters': ['require_debug_false'],
+#            'class': 'django.utils.log.AdminEmailHandler'
+#        },
         'logfile': {
             'class': 'logging.handlers.WatchedFileHandler',
             'filename': '/web/www/matrr-prod/MATRR.log'
