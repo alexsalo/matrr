@@ -18,7 +18,7 @@ develop_settings.py
 *hokus*.py
 /media
 /matrr/migrations
-/MATRR.log
+/matrr/logs
 /matrr/utils/DATA/
 /log_archive
 
