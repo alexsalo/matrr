@@ -219,6 +219,11 @@ def data_shop_detail_view(request, current_cohort, current_tissue, cart_request)
                       available for dissemination.  In addition, a core concern of the MATRR is the appropriate ascription of prior researchers' work
                       and citation of their publication.  A faithful engagement of this concern will be required to receive data.
                       """)
+        messages.warning(request,
+                         """
+                         All data requests must include date ranges being requested.  Please look at the cohort's timeline and include
+                         specific date ranges of interest.
+                         """)
         # now we need to create the form for the tissue type
         data_request_form = DataRequestForm(req_request=cart_request,
                                               tissue=current_tissue,
