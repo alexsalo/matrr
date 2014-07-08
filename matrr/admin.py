@@ -85,8 +85,10 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class VerificationAccountAdmin(admin.ModelAdmin):
-    form = OtOAcountForm
-    readonly_fields = ['username', 'verified', 'first_name', 'last_name', 'act_real_address1', 'act_real_address1',
+    list_display = ['username', 'first_name', 'last_name', 'email', 'institution', 'verified']
+    list_filter = ['institution', 'act_state', 'act_country', 'verified']
+
+    readonly_fields = ['username', 'first_name', 'last_name', 'act_real_address1', 'act_real_address1',
                        'act_real_address2', 'act_real_city', 'act_real_state', 'act_real_country', 'act_shipping_name',
                        'email', 'phone_number', 'institution', 'act_address1', 'act_address2', 'act_city', 'act_state',
                        'act_country', 'act_fedex']
@@ -94,9 +96,11 @@ class VerificationAccountAdmin(admin.ModelAdmin):
     ('Account information', {
     'fields': ('username', 'first_name', 'last_name', 'email', 'phone_number', 'institution', 'verified'),
     }),
+
     ('Address', {
     'fields': ('act_real_address1', 'act_real_address2', 'act_real_city', 'act_real_state', 'act_real_country'),
     }),
+
     ('Shipping information', {
     'fields': (
     'act_shipping_name', 'act_address1', 'act_address2', 'act_city', 'act_state', 'act_country', 'act_fedex'),
