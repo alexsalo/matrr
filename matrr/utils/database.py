@@ -1747,8 +1747,8 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             nec_sum.ncm_sum_g_per_kg_induction = row[14 + columns_offset] if row[14 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_22hr = row[15 + columns_offset] if row[15 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_lifetime = row[16 + columns_offset] if row[16 + columns_offset] != "control" else 0
-            nec_sum.ncm_6_mo_start = None if row[17 + columns_offset] == "control" else dt.strptime(row[17 + columns_offset], '%m/%d/%y')
-            nec_sum.ncm_6_mo_end = None if row[18 + columns_offset] == "control" else dt.strptime(row[18 + columns_offset], '%m/%d/%y')
+            nec_sum.ncm_6_mo_start = dt.strptime(row[17 + columns_offset], '%m/%d/%y') if row[17 + columns_offset] != "control" else None
+            nec_sum.ncm_6_mo_end = dt.strptime(row[18 + columns_offset], '%m/%d/%y') if row[18 + columns_offset] != "control" else None
             nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[19 + columns_offset] if row[19 + columns_offset] != "control" else 0
             if six_month_cohort:
                 nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
@@ -1757,7 +1757,7 @@ def load_necropsy_summary(filename, six_month_cohort=False):
                 nec_sum.ncm_22hr_12mo_avg_g_per_kg = None
             else:
                 nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
-                nec_sum.ncm_12_mo_end = None if row[19 + columns_offset] == "control" else dt.strptime(row[19 + columns_offset], '%m/%d/%y')
+                nec_sum.ncm_12_mo_end = dt.strptime(row[19 + columns_offset], '%m/%d/%y') if row[19 + columns_offset] != "control" else None
                 if extra_22hr_column:
                     nec_sum.ncm_22hr_2nd_6mos_avg_g_per_kg = row[21 + columns_offset] if row[21 + columns_offset] != "control" else 0
                     columns_offset += 1
