@@ -2,7 +2,8 @@ from django.conf.urls import patterns, include, url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from django.contrib import admin
-from views import cart, account, orders, review, rna, rud_reports, shipping, uploads, verification, inventory, ajax, basic, tools, display, data
+from views import cart, account, orders, review, rna, rud_reports, shipping
+from views import uploads, verification, inventory, ajax, basic, tools, display, data, symposium
 from settings import MEDIA_URL, MEDIA_ROOT, PRODUCTION
 admin.autodiscover()
 
@@ -190,6 +191,13 @@ urlpatterns += patterns('',
     url(r'^data/download/$', data.data_landing, name='data-landing'),
     url(r'^data/download/(?P<data_type>[a-zA-Z_]+)/$', data.data_cohort, name='data-cohort'),
     url(r'^data/download/(?P<data_type>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', data.data_cohort_dates, name='data-cohort-submit'),
+)
+
+urlpatterns += patterns('',
+    ## symposium views
+    url(r'^symposium/landing/$', symposium.symposium_landing, name='symposium-landing'),
+    url(r'^symposium/registration/$', symposium.symposium_registration, name='symposium-registration'),
+    url(r'^symposium/roster/$', symposium.symposium_roster, name='symposium-roster'),
 )
 
 urlpatterns += patterns('',

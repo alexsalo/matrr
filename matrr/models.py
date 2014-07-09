@@ -749,6 +749,39 @@ class Account(models.Model):
         )
 
 
+class DataSymposium(models.Model):
+    dsm_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, related_name='symposium_registration', editable=False)
+    dsm_registered_at = models.DateTimeField('Registered at', editable=False, auto_now=True)
+
+    dsm_first_name = models.CharField(max_length=35, null=True, blank=False, help_text="First Name")
+    dsm_last_name = models.CharField(max_length=35, null=True, blank=False, help_text="Last Name")
+
+    dsm_inst_name = models.CharField('Institution name', max_length=50, null=True, blank=True)
+    dsm_inst_address1 = models.CharField('Institution address 1', max_length=50, null=True, blank=True)
+    dsm_inst_address2 = models.CharField('Institution address 2', max_length=50, null=True, blank=True)
+    dsm_inst_city = models.CharField('Institution city', max_length=25, null=True, blank=True)
+    dsm_inst_state = models.CharField('Institution state', max_length=2, null=True, blank=True)
+    dsm_inst_zip = models.CharField('Institution ZIP', max_length=10, null=True, blank=True)
+    dsm_inst_country = models.CharField('Institution country', max_length=25, null=True, blank=True)
+
+    dsm_home_address1 = models.CharField('Home address 1', max_length=50, null=True, blank=False)
+    dsm_home_address2 = models.CharField('Home address 2', max_length=50, null=True, blank=True)
+    dsm_home_city = models.CharField('Home city', max_length=25, null=True, blank=False)
+    dsm_home_state = models.CharField('Home state', max_length=2, null=True, blank=False)
+    dsm_home_zip = models.CharField('Home ZIP', max_length=10, null=True, blank=True)
+    dsm_home_country = models.CharField('Home country', max_length=25, null=True, blank=False)
+
+    dsm_speaker = models.BooleanField("Speaker", help_text="I am a speaker.", default=False, blank=True)
+    dsm_poster = models.BooleanField("Poster", help_text="I am presenting a poster.", default=False, blank=True)
+
+    class Meta:
+        db_table = 'dsm_data_symposium'
+        permissions = (
+            ('view_symposium_roster', 'Can view data symposium roster')
+        )
+
+
 class DrinkingExperiment(models.Model):
     dex_id = models.AutoField('ID', primary_key=True)
     cohort = models.ForeignKey(Cohort, related_name='cohort_drinking_experiment_set', db_column='coh_cohort_id',

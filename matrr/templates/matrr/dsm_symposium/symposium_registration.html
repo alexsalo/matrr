@@ -1,0 +1,37 @@
+{% extends "tools/tools_base.html" %}
+
+{% block content %}
+    <div class="small">Fields marked * are required.</div>
+    <form action='' method='post'>
+        {% csrf_token %}
+        First name:  {{ form.dsm_first_name }}*<br>
+        Last name:  {{ form.dsm_last_name }}*<br>
+        <br>
+        Institution Name:  {{ form.dsm_inst_name }}<br>
+        Institution Address 1:  {{ form.dsm_inst_address1 }}<br>
+        Institution Address 2:  {{ form.dsm_inst_address2 }}<br>
+        Institution City:  {{ form.dsm_inst_city }}<br>
+        Institution State:  {{ form.dsm_inst_state }}<br>
+        Institution Zip:  {{ form.dsm_inst_zip }}<br>
+        Institution Country:  {{ form.dsm_inst_country }}<br>
+        <br>
+        <div class='messages clearfix'>
+            <div class="warning">
+                Because OHSU is a secure facility we must collect a home address of anyone coming on-site.
+                This is for security reasons only, we won't be mailing you anything.
+            </div>
+        </div>
+        Home Address 1:  {{ form.dsm_home_address1 }}*<br>
+        Home Address 2:  {{ form.dsm_home_address2 }}*<br>
+        Home City:  {{ form.dsm_home_city }}*<br>
+        Home State:  {{ form.dsm_home_state }}*<br>
+        Home Zip:  {{ form.dsm_home_zip }}*<br>
+        Home Country:  {{ form.dsm_home_country }}*<br>
+        <br>
+        {{ form.dsm_speaker }} - {{ form.dsm_speaker.help_text }}<br>
+        {{ form.dsm_poster }} - {{ form.dsm_poster.help_text }}<br>
+        <br>
+        <button type='submit' class="blockLinkToolsButton">Register</button>
+    </form>
+    <br>
+{% endblock %}

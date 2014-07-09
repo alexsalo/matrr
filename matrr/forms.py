@@ -168,7 +168,6 @@ class DataRequestForm(TissueRequestForm):
         self.fields['rtt_units'].required = False
 
 
-
 class CartCheckoutForm(forms.ModelForm):
     def clean(self):
         super(CartCheckoutForm, self).clean()
@@ -946,4 +945,29 @@ class DataSelectForm(forms.Form):
     DATA_CHOICES = (("MonkeyToDrinkingExperiment", "Daily Drinking Summary"), ("MonkeyBEC", "BEC Data"), ("MonkeyHormone", "Hormone Data"), ("MonkeyProtein", "Protein Data"), ("MonkeyException", "Excluded Dates"))
     data_type = forms.ChoiceField(choices=DATA_CHOICES, label="Data Type", help_text="Choose the kind of data you'd like to download.")
 
+
+class SymposiumForm(forms.ModelForm):
+    from django.forms.util import ErrorList
+    def __init__(self, account=None, data=None, files=None, auto_id='id_%s', prefix=None,
+                 initial=None, error_class=ErrorList, label_suffix=':',
+                 empty_permitted=False, instance=None):
+        super(SymposiumForm, self).__init__(data, files, auto_id, prefix, initial, error_class, label_suffix,
+                                          empty_permitted, instance)
+        if account:
+            self.fields['dsm_first_name'].initial = account.user.first_name
+            self.fields['dsm_last_name'].initial = account.user.last_name
+            self.fields['dsm_inst_name'].initial = account.user.account.institution
+            self.fields['dsm_inst_address1'].initial = account.user.account.act_address1
+            self.fields['dsm_inst_address2'].initial = account.user.account.act_address2
+            self.fields['dsm_inst_city'].initial = account.user.account.act_city
+            self.fields['dsm_inst_state'].initial = account.user.account.act_state
+            self.fields['dsm_inst_zip'].initial = account.user.account.act_zip
+            self.fields['dsm_inst_country'].initial = account.user.account.act_country
+
+    class Meta:
+        model = models.DataSymposium
+        fields = ['dsm_first_name', 'dsm_last_name',
+                  'dsm_inst_name', 'dsm_inst_address1', 'dsm_inst_address2', 'dsm_inst_city', 'dsm_inst_state', 'dsm_inst_zip', 'dsm_inst_country',
+                  'dsm_home_address1', 'dsm_home_address2', 'dsm_home_city', 'dsm_home_state', 'dsm_home_zip', 'dsm_home_country',
+                  'dsm_speaker', 'dsm_poster', ]
 
