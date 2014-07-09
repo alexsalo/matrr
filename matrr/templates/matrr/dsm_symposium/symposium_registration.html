@@ -4,32 +4,33 @@
     <div class="small">Fields marked * are required.</div>
     <form action='' method='post'>
         {% csrf_token %}
-        First name:  {{ form.dsm_first_name }}*<br>
-        Last name:  {{ form.dsm_last_name }}*<br>
-        <br>
-        Institution Name:  {{ form.dsm_inst_name }}<br>
-        Institution Address 1:  {{ form.dsm_inst_address1 }}<br>
-        Institution Address 2:  {{ form.dsm_inst_address2 }}<br>
-        Institution City:  {{ form.dsm_inst_city }}<br>
-        Institution State:  {{ form.dsm_inst_state }}<br>
-        Institution Zip:  {{ form.dsm_inst_zip }}<br>
-        Institution Country:  {{ form.dsm_inst_country }}<br>
-        <br>
-        <div class='messages clearfix'>
-            <div class="warning">
-                Because OHSU is a secure facility we must collect a home address of anyone coming on-site.
-                This is for security reasons only, we won't be mailing you anything.
-            </div>
-        </div>
-        Home Address 1:  {{ form.dsm_home_address1 }}*<br>
-        Home Address 2:  {{ form.dsm_home_address2 }}*<br>
-        Home City:  {{ form.dsm_home_city }}*<br>
-        Home State:  {{ form.dsm_home_state }}*<br>
-        Home Zip:  {{ form.dsm_home_zip }}*<br>
-        Home Country:  {{ form.dsm_home_country }}*<br>
-        <br>
-        {{ form.dsm_speaker }} - {{ form.dsm_speaker.help_text }}<br>
-        {{ form.dsm_poster }} - {{ form.dsm_poster.help_text }}<br>
+        <table class="common_center center">
+            <tr><td style="text-align: right">First name:<td style="text-align: left">{{ form.dsm_first_name }}*</td></tr>
+            <tr><td style="text-align: right">Last name:<td style="text-align: left">{{ form.dsm_last_name }}*</td></tr>
+            <tr><td style="text-align: right">Institution name:<td style="text-align: left">{{ form.dsm_inst_name }}*</td></tr>
+            <tr><td style="text-align: right">Institution address 1:<td style="text-align: left">{{ form.dsm_inst_address1 }}</td></tr>
+            <tr><td style="text-align: right">Institution address 2:<td style="text-align: left">{{ form.dsm_inst_address2 }}</td></tr>
+            <tr><td style="text-align: right">Institution city:<td style="text-align: left">{{ form.dsm_inst_city}}</td></tr>
+            <tr><td style="text-align: right">Institution state:<td style="text-align: left">{{ form.dsm_inst_state}}</td></tr>
+            <tr><td style="text-align: right">Institution zip:<td style="text-align: left">{{ form.dsm_inst_zip}}</td></tr>
+            <tr><td style="text-align: right">Institution country:<td style="text-align: left">{{ form.dsm_inst_country}}</td></tr>
+            <tr><td colspan="2">
+                <div class='messages clearfix'>
+                    <div class="warning">
+                        Because OHSU is a secure facility we must collect a home address of anyone coming on-site.
+                        This is for security reasons only, we won't be mailing you anything.
+                    </div>
+                </div>
+            </td></tr>
+            <tr><td style="text-align: right">Home address 1:<td style="text-align: left">{{ form.dsm_home_address1 }}</td></tr>
+            <tr><td style="text-align: right">Home address 2:<td style="text-align: left">{{ form.dsm_home_address2 }}</td></tr>
+            <tr><td style="text-align: right">Home city:<td style="text-align: left">{{ form.dsm_home_city}}</td></tr>
+            <tr><td style="text-align: right">Home state:<td style="text-align: left">{{ form.dsm_home_state}}</td></tr>
+            <tr><td style="text-align: right">Home zip:<td style="text-align: left">{{ form.dsm_home_zip}}</td></tr>
+            <tr><td style="text-align: right">Home country:<td style="text-align: left">{{ form.dsm_home_country}}</td></tr>
+            <tr><td style="text-align: right">{{ form.dsm_speaker.help_text }}:<td style="text-align: left">{{ form.dsm_speaker}}</td></tr>
+            <tr><td style="text-align: right">{{ form.dsm_speaker.help_text }}<td style="text-align: left">{{ form.dsm_poster}}</td></tr>
+        </table>
         <br>
         <button type='submit' class="blockLinkToolsButton">Register</button>
     </form>

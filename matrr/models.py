@@ -73,6 +73,15 @@ class Enumeration(object):
         return self.enum_list.__iter__()
 
 
+US_State_Choices = [ ('AL', 'AL'), ('AK', 'AK'), ('AZ', 'AZ'), ('AR', 'AR'), ('CA', 'CA'), ('CO', 'CO'), ('CT', 'CT'),
+                     ('DE', 'DE'), ('DC', 'DC'), ('FL', 'FL'), ('GA', 'GA'), ('HI', 'HI'), ('ID', 'ID'), ('IL', 'IL'),
+                     ('IN', 'IN'), ('IA', 'IA'), ('KS', 'KS'), ('KY', 'KY'), ('LA', 'LA'), ('ME', 'ME'), ('MT', 'MT'),
+                     ('NE', 'NE'), ('NV', 'NV'), ('NH', 'NH'), ('NJ', 'NJ'), ('NM', 'NM'), ('NY', 'NY'), ('NC', 'NC'),
+                     ('ND', 'ND'), ('OH', 'OH'), ('OK', 'OK'), ('OR', 'OR'), ('MD', 'MD'), ('MA', 'MA'), ('MI', 'MI'),
+                     ('MN', 'MN'), ('MS', 'MS'), ('MO', 'MO'), ('PA', 'PA'), ('RI', 'RI'), ('SC', 'SC'), ('SD', 'SD'),
+                     ('TN', 'TN'), ('TX', 'TX'), ('UT', 'UT'), ('VT', 'VT'), ('VA', 'VA'), ('WA', 'WA'), ('WV', 'WV'),
+                     ('WI', 'WI'), ('WY', 'WY') ]
+
 ONE_HOUR = 60 * 60
 TWO_HOUR = 2 * ONE_HOUR
 SIX_HOUR = 6 * ONE_HOUR # time before lights out
@@ -750,6 +759,7 @@ class Account(models.Model):
 
 
 class DataSymposium(models.Model):
+    COUNTRY_CHOICES = [ ('USA', 'USA'), ('Canada', 'Canada'), ('Australia', 'Australia'), ('other', 'other')]
     dsm_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, related_name='symposium_registration', editable=False)
     dsm_registered_at = models.DateTimeField('Registered at', editable=False, auto_now=True)
@@ -757,20 +767,20 @@ class DataSymposium(models.Model):
     dsm_first_name = models.CharField(max_length=35, null=True, blank=False, help_text="First Name")
     dsm_last_name = models.CharField(max_length=35, null=True, blank=False, help_text="Last Name")
 
-    dsm_inst_name = models.CharField('Institution name', max_length=50, null=True, blank=True)
+    dsm_inst_name = models.CharField('Institution name', max_length=50, null=True, blank=False)
     dsm_inst_address1 = models.CharField('Institution address 1', max_length=50, null=True, blank=True)
     dsm_inst_address2 = models.CharField('Institution address 2', max_length=50, null=True, blank=True)
     dsm_inst_city = models.CharField('Institution city', max_length=25, null=True, blank=True)
-    dsm_inst_state = models.CharField('Institution state', max_length=2, null=True, blank=True)
+    dsm_inst_state = models.CharField('Institution state', choices=US_State_Choices, max_length=2, null=True, blank=True)
     dsm_inst_zip = models.CharField('Institution ZIP', max_length=10, null=True, blank=True)
-    dsm_inst_country = models.CharField('Institution country', max_length=25, null=True, blank=True)
+    dsm_inst_country = models.CharField('Institution country', choices=COUNTRY_CHOICES, max_length=25, null=True, blank=True)
 
     dsm_home_address1 = models.CharField('Home address 1', max_length=50, null=True, blank=False)
     dsm_home_address2 = models.CharField('Home address 2', max_length=50, null=True, blank=True)
     dsm_home_city = models.CharField('Home city', max_length=25, null=True, blank=False)
-    dsm_home_state = models.CharField('Home state', max_length=2, null=True, blank=False)
+    dsm_home_state = models.CharField('Home state', choices=US_State_Choices, max_length=2, null=True, blank=False)
     dsm_home_zip = models.CharField('Home ZIP', max_length=10, null=True, blank=True)
-    dsm_home_country = models.CharField('Home country', max_length=25, null=True, blank=False)
+    dsm_home_country = models.CharField('Home country', choices=COUNTRY_CHOICES, max_length=25, null=True, blank=False)
 
     dsm_speaker = models.BooleanField("Speaker", help_text="I am a speaker.", default=False, blank=True)
     dsm_poster = models.BooleanField("Poster", help_text="I am presenting a poster.", default=False, blank=True)
