@@ -777,9 +777,7 @@ class DataSymposium(models.Model):
 
     class Meta:
         db_table = 'dsm_data_symposium'
-        permissions = (
-            ('view_symposium_roster', 'Can view data symposium roster')
-        )
+        permissions = ( ('view_symposium_roster', 'Can view data symposium roster'), )
 
 
 class DrinkingExperiment(models.Model):
