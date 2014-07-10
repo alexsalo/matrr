@@ -89,16 +89,14 @@
 						<li class='top'><a href="{% url 'account-view' %}">My Account</a></li>
 						<li class='drop-down'><a href="{% url 'order-list' %}">My Orders</a></li>
 					</ul>
-                    {% if perms.matrr.view_symposium_roster %}
                         <ul>
                             <li class='top'><a href="{% url 'symposium-landing' %}">Symposium</a></li>
                             {% if perms.matrr.view_symposium_roster %}
                                 <li class='drop-down'><a href="{% url 'symposium-roster' %}">Roster</a></li>
                             {% endif %}
-                            <li class='drop-down'><a href="{{ STATIC_URL }}pdf/MATRR_Symposium_Agenda.docx">Agenda</a></li>
+                            <li class='drop-down'><a href="{{ STATIC_URL }}pdf/MATRR_Symposium_Agenda.pdf">Agenda</a></li>
                             <li class='drop-down'><a href="{{ STATIC_URL }}pdf/MATRR_Symposium_Logistics.docx">Logistics</a></li>
                         </ul>
-    				{% endif %}
 				{% endif %}
 
 				{% if perms.matrr.can_download_data or perms.auth.upload_raw_data %}
