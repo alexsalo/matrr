@@ -760,12 +760,17 @@ class Account(models.Model):
 
 class DataSymposium(models.Model):
     COUNTRY_CHOICES = [ ('USA', 'USA'), ('Canada', 'Canada'), ('Australia', 'Australia'), ('other', 'other')]
+    ROLE_CHOICES = [ ('Speaker', 'Speaker'), ('EAB', "EAB"), ('Participant', 'Participant')]
     dsm_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, related_name='symposium_registration', editable=False)
     dsm_registered_at = models.DateTimeField('Registered at', editable=False, auto_now=True)
 
-    dsm_first_name = models.CharField(max_length=35, null=True, blank=False, help_text="First Name")
-    dsm_last_name = models.CharField(max_length=35, null=True, blank=False, help_text="Last Name")
+    dsm_first_name = models.CharField('First Name', max_length=35, null=True, blank=False, help_text="First Name")
+    dsm_last_name = models.CharField('Last Name', max_length=35, null=True, blank=False, help_text="Last Name")
+    dsm_badge_name = models.CharField('Preferred Badge Name', max_length=70, null=True, blank=True, help_text="Preferred Badge Name")
+    dsm_title = models.CharField('Title', max_length=25, null=True, blank=True, help_text="Title")
+
+    dsm_email = models.EmailField("Email Address", help_text="Preferred contact email", blank=False)
 
     dsm_inst_name = models.CharField('Institution name', max_length=50, null=True, blank=False)
     dsm_inst_address1 = models.CharField('Institution address 1', max_length=50, null=True, blank=True)
@@ -782,8 +787,15 @@ class DataSymposium(models.Model):
     dsm_home_zip = models.CharField('Home ZIP', max_length=10, null=True, blank=True)
     dsm_home_country = models.CharField('Home country', choices=COUNTRY_CHOICES, max_length=25, null=True, blank=False)
 
-    dsm_speaker = models.BooleanField("Speaker", help_text="I am a speaker.", default=False, blank=True)
-    dsm_poster = models.BooleanField("Poster", help_text="I am presenting a poster.", default=False, blank=True)
+    dsm_role = models.CharField("Role", help_text="Role at symposium", max_length=12, choices=ROLE_CHOICES, blank=False)
+
+    # Above here is page 1, below is page 2
+    hotel_help = "If yes please indicate arrival and departure dates. All hotel reservations will be made by Louise Sacha, who will send you a confirmation. There is no need to contact the hotel directly."
+    dsm_hotel = models.CharField("Do you require a hotel room?", max_length=100, help_text=hotel_help, default='', blank=True)
+    dsm_reception= models.BooleanField("Reception", help_text="I am attending the Reception on Sunday Sept 7th.", default=False, blank=True)
+    dsm_poster = models.BooleanField("Poster", help_text="I am presenting a poster at the poster session on Monday Sept 8th.", default=False, blank=True)
+    dsm_lunch = models.BooleanField("Lunch", help_text="I am attending the Lunch on Tuesday Sept 9th.", default=False, blank=True)
+    dsm_diet = models.TextField("Diet Requirements", help_text="Special dietary requirements? If yes p  lease explain.", default="No restrictions.", blank=True)
 
     class Meta:
         db_table = 'dsm_data_symposium'

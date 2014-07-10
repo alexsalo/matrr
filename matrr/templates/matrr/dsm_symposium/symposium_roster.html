@@ -1,19 +1,19 @@
-{% extends "tools/tools_base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
     <table class='common_center'>
         <tr>
             <th>Name</th>
             <th>Institution</th>
-            <th>Speaker</th>
+            <th>Role</th>
             <th>Poster</th>
             <th>Home</th>
         </tr>
         {% for dsm in dsms %}
             <tr>
-                <td>{{ dsm.dsm_first_name }}<br>{{ dsm.dsm_last_name }}</td>
+                <td>{{ dsm.dsm_badge_name }}</td>
                 <td>{{ dsm.dsm_inst_name }}</td>
-                <td {% if dsm.dsm_speaker %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_speaker %}Yarr{% else %}Na{% endif %}</td>
+                <td>{{ dsm.dsm_role }}</td>
                 <td {% if dsm.dsm_poster %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_poster %}Yarr{% else %}Na{% endif %}</td>
 
                 <td style="text-align: left">{{ dsm.dsm_home_address1 }}<br>{{ dsm.dsm_home_address2 }}<br>{{ dsm.dsm_home_city }}, {{ dsm.dsm_home_state}} {{ dsm.dsm_home_zip}} {{ dsm.dsm_home_country}}</td>

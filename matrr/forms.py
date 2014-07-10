@@ -946,16 +946,18 @@ class DataSelectForm(forms.Form):
     data_type = forms.ChoiceField(choices=DATA_CHOICES, label="Data Type", help_text="Choose the kind of data you'd like to download.")
 
 
-class SymposiumForm(forms.ModelForm):
+class SymposiumFormOne(forms.ModelForm):
     from django.forms.util import ErrorList
     def __init__(self, account=None, data=None, files=None, auto_id='id_%s', prefix=None,
                  initial=None, error_class=ErrorList, label_suffix=':',
                  empty_permitted=False, instance=None):
-        super(SymposiumForm, self).__init__(data, files, auto_id, prefix, initial, error_class, label_suffix,
+        super(SymposiumFormOne, self).__init__(data, files, auto_id, prefix, initial, error_class, label_suffix,
                                           empty_permitted, instance)
         if account:
             self.fields['dsm_first_name'].initial = account.user.first_name
             self.fields['dsm_last_name'].initial = account.user.last_name
+            self.fields['dsm_badge_name'].initial = "%s %s" % (account.user.first_name, account.user.last_name)
+            self.fields['dsm_email'].initial = account.user.email
             self.fields['dsm_inst_name'].initial = account.user.account.institution
             self.fields['dsm_inst_address1'].initial = account.user.account.act_address1
             self.fields['dsm_inst_address2'].initial = account.user.account.act_address2
@@ -966,8 +968,13 @@ class SymposiumForm(forms.ModelForm):
 
     class Meta:
         model = models.DataSymposium
-        fields = ['dsm_first_name', 'dsm_last_name',
+        fields = ['dsm_first_name', 'dsm_last_name', 'dsm_badge_name', 'dsm_title', 'dsm_email',
                   'dsm_inst_name', 'dsm_inst_address1', 'dsm_inst_address2', 'dsm_inst_city', 'dsm_inst_state', 'dsm_inst_zip', 'dsm_inst_country',
                   'dsm_home_address1', 'dsm_home_address2', 'dsm_home_city', 'dsm_home_state', 'dsm_home_zip', 'dsm_home_country',
-                  'dsm_speaker', 'dsm_poster', ]
+                  'dsm_role',]
 
+
+class SymposiumFormTwo(forms.ModelForm):
+    class Meta:
+        model = models.DataSymposium
+        fields = ['dsm_hotel', 'dsm_reception', 'dsm_poster', 'dsm_lunch', 'dsm_diet',]
