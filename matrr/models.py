@@ -795,11 +795,13 @@ class DataSymposium(models.Model):
     dsm_reception= models.BooleanField("Reception", help_text="I am attending the Reception on Sunday Sept 7th.", default=False, blank=True)
     dsm_poster = models.BooleanField("Poster", help_text="I am presenting a poster at the poster session on Monday Sept 8th.", default=False, blank=True)
     dsm_lunch = models.BooleanField("Lunch", help_text="I am attending the Lunch on Tuesday Sept 9th.", default=False, blank=True)
-    dsm_diet = models.TextField("Diet Requirements", help_text="Special dietary requirements? If yes please explain.", default="No restrictions.", blank=True)
+    dsm_diet = models.TextField("Diet Requirements", help_text="Special dietary requirements? If yes please explain, or leave blank for none.", default="", blank=True)
 
     class Meta:
         db_table = 'dsm_data_symposium'
-        permissions = ( ('view_symposium_roster', 'Can view data symposium roster'), )
+        permissions = ( ('view_symposium_roster', 'Can view data symposium roster'),
+                        ('receive_symposium_roster_email', 'Will receive email when someone registers for symposium'),
+        )
 
 
 class DrinkingExperiment(models.Model):

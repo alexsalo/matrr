@@ -199,6 +199,7 @@ urlpatterns += patterns('',
     url(r'^symposium/registration/$', symposium.symposium_registration_pg1, name='symposium-registration'),
     url(r'^symposium/registration/(?P<dsm_id>\d+)/$', symposium.symposium_registration_pg2, name='symposium-registration-pg2'),
     url(r'^symposium/roster/$', symposium.symposium_roster, name='symposium-roster'),
+    url(r'^symposium/roster/(?P<dsm_id>\d+)/$', symposium.symposium_roster_detail, name='symposium-roster-detail'),
 )
 
 urlpatterns += patterns('',

@@ -49,4 +49,8 @@ def symposium_roster(request):
     dsms = DataSymposium.objects.all().order_by('dsm_registered_at')
     return render_to_response('matrr/dsm_symposium/symposium_roster.html', {'dsms': dsms}, context_instance=RequestContext(request))
 
+@user_passes_test(lambda u: u.has_perm('matrr.view_symposium_roster'), login_url='/denied/')
+def symposium_roster_detail(request, dsm_id):
+    dsm = get_object_or_404(DataSymposium, pk=dsm_id)
+    return render_to_response('matrr/dsm_symposium/symposium_roster_detail.html', {'dsm': dsm}, context_instance=RequestContext(request))
 

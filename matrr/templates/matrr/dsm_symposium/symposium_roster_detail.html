@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+    dsm_first_name = models.CharField('First Name', max_length=35, null=True, blank=False, help_text="First Name")
+    dsm_last_name = models.CharField('Last Name', max_length=35, null=True, blank=False, help_text="Last Name")
+    dsm_badge_name = models.CharField('Preferred Badge Name', max_length=70, null=True, blank=True, help_text="Preferred Badge Name")
+    dsm_title = models.CharField('Title', max_length=25, null=True, blank=True, help_text="Title")
+
+    dsm_email = models.EmailField("Email Address", help_text="Preferred contact email", blank=False)
+
+    dsm_inst_name = models.CharField('Institution name', max_length=50, null=True, blank=False)
+    dsm_inst_address1 = models.CharField('Institution address 1', max_length=50, null=True, blank=True)
+    dsm_inst_address2 = models.CharField('Institution address 2', max_length=50, null=True, blank=True)
+    dsm_inst_city = models.CharField('Institution city', max_length=25, null=True, blank=True)
+    dsm_inst_state = models.CharField('Institution state', choices=US_State_Choices, max_length=2, null=True, blank=True)
+    dsm_inst_zip = models.CharField('Institution ZIP', max_length=10, null=True, blank=True)
+    dsm_inst_country = models.CharField('Institution country', choices=COUNTRY_CHOICES, max_length=25, null=True, blank=True)
+
+    dsm_home_address1 = models.CharField('Home address 1', max_length=50, null=True, blank=False)
+    dsm_home_address2 = models.CharField('Home address 2', max_length=50, null=True, blank=True)
+    dsm_home_city = models.CharField('Home city', max_length=25, null=True, blank=False)
+    dsm_home_state = models.CharField('Home state', choices=US_State_Choices, max_length=2, null=True, blank=False)
+    dsm_home_zip = models.CharField('Home ZIP', max_length=10, null=True, blank=True)
+    dsm_home_country = models.CharField('Home country', choices=COUNTRY_CHOICES, max_length=25, null=True, blank=False)
+
+{% block content %}
+    <table class='common_center'>
+        <tr>
+            <th>Registered On</th>
+            <td>{{ dsm.dsm_registered_at|date:"Y-m-d" }} </td>
+        </tr>
+        <tr>
+            <th>Title</th>
+            <td>{{ dsm.dsm_title }}</td>
+        </tr>
+        <tr>
+            <th>Name</th>
+            <td>{{ dsm.dsm_first_name }} {{ dsm.dsm_last_name }}</td>
+        </tr>
+        <tr>
+            <th>Badge Name</th>
+            <td>{{ dsm.dsm_badge_name }}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{ dsm.dsm_email }}</td>
+        </tr>
+        <tr>
+            <th>Institution Name</th>
+            <td>{{ dsm.dsm_inst_name }}</td>
+        </tr>
+        <tr>
+            <th>Institution Address 1</th>
+            <td>{{ dsm.dsm_inst_address1 }}</td>
+        </tr>
+        <tr>
+            <th>Institution Address 2</th>
+            <td>{{ dsm.dsm_inst_address2 }}</td>
+        </tr>
+        <tr>
+            <th>Institution City</th>
+            <td>{{ dsm.dsm_inst_city }}</td>
+        </tr>
+        <tr>
+            <th>Institution State</th>
+            <td>{{ dsm.dsm_inst_state }}</td>
+        </tr>
+        <tr>
+            <th>Institution Zip</th>
+            <td>{{ dsm.dsm_inst_zip }}</td>
+        </tr>
+        <tr>
+            <th>Institution Country</th>
+            <td>{{ dsm.dsm_inst_country }}</td>
+        </tr>
+        <tr>
+            <th>Home Address 1</th>
+            <td>{{ dsm.dsm_home_address1 }}</td>
+        </tr>
+        <tr>
+            <th>Home Address 2</th>
+            <td>{{ dsm.dsm_home_address2 }}</td>
+        </tr>
+        <tr>
+            <th>Home City</th>
+            <td>{{ dsm.dsm_home_city }}</td>
+        </tr>
+        <tr>
+            <th>Home State</th>
+            <td>{{ dsm.dsm_home_state }}</td>
+        </tr>
+        <tr>
+            <th>Home Zip</th>
+            <td>{{ dsm.dsm_home_zip }}</td>
+        </tr>
+        <tr>
+            <th>Home Country</th>
+            <td>{{ dsm.dsm_home_country }}</td>
+        </tr>
+        <tr>
+            <th>Role</th>
+            <td>{{ dsm.dsm_role }}</td>
+        </tr>
+        <tr>
+            <th>Hotel</th>
+            <td>{{ dsm.dsm_hotel }}</td>
+        </tr>
+        <tr>
+            <th>Reception</th>
+            <td {% if dsm.dsm_reception %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_reception %}Yarr{% else %}Na{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Poster</th>
+            <td {% if dsm.dsm_poster %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_poster %}Yarr{% else %}Na{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Lunch</th>
+            <td {% if dsm.dsm_lunch %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_lunch %}Yarr{% else %}Na{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Diet Restrictions</th>
+            <td>{{ dsm.dsm_diet }}</td>
+        </tr>
+    </table>
+
+{% endblock %}

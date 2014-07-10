@@ -6,17 +6,24 @@
             <th>Name</th>
             <th>Institution</th>
             <th>Role</th>
+            <th>Hotel</th>
+            <th>Reception</th>
             <th>Poster</th>
-            <th>Home</th>
+            <th>Lunch</th>
+            <th>Diet Restrictions</th>
+            <th>See Details</th>
         </tr>
         {% for dsm in dsms %}
             <tr>
-                <td>{{ dsm.dsm_badge_name }}</td>
+                <td>{{ dsm.dsm_title }} {{ dsm.dsm_badge_name }}</td>
                 <td>{{ dsm.dsm_inst_name }}</td>
                 <td>{{ dsm.dsm_role }}</td>
+                <td {% if dsm.dsm_hotel %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_hotel %}Yarr{% else %}Na{% endif %}</td>
+                <td {% if dsm.dsm_reception %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_reception %}Yarr{% else %}Na{% endif %}</td>
                 <td {% if dsm.dsm_poster %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_poster %}Yarr{% else %}Na{% endif %}</td>
-
-                <td style="text-align: left">{{ dsm.dsm_home_address1 }}<br>{{ dsm.dsm_home_address2 }}<br>{{ dsm.dsm_home_city }}, {{ dsm.dsm_home_state}} {{ dsm.dsm_home_zip}} {{ dsm.dsm_home_country}}</td>
+                <td {% if dsm.dsm_lunch %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_lunch %}Yarr{% else %}Na{% endif %}</td>
+                <td {% if dsm.dsm_diet %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_diet %}Probably{% else %}Probably not{% endif %}</td>
+                <td><a href='{% url 'symposium-roster-detail' dsm.pk %}'>Click here</a></td>
             </tr>
         {% endfor %}
     </table>
