@@ -95,7 +95,8 @@
                             {% if perms.matrr.view_symposium_roster %}
                                 <li class='drop-down'><a href="{% url 'symposium-roster' %}">Roster</a></li>
                             {% endif %}
-                            <li class='drop-down'><a href="{{ STATIC_URL }}pdf/MATRR_Symposium_Agenda.pdf">Agenda</a></li>
+                            <li class='drop-down'><a href="{{ STATIC_URL }}pdf/MATRR_Symposium_Agenda.docx">Agenda</a></li>
+                            <li class='drop-down'><a href="{{ STATIC_URL }}pdf/MATRR_Symposium_Logistics.docx">Logistics</a></li>
                         </ul>
     				{% endif %}
 				{% endif %}
