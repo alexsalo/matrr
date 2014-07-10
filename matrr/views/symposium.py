@@ -1,11 +1,9 @@
-from matrr import settings
-from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
+from matrr import emails
 from matrr.forms import SymposiumFormOne, SymposiumFormTwo
 from matrr.models import DataSymposium
 
@@ -37,6 +35,7 @@ def symposium_registration_pg2(request, dsm_id):
             form.instance.user = request.user
             form.save()
             messages.success(request, "You are registered for the MATRR Data Symposium")
+            emails.dsm_registration_notification(form.instance.pk)
             return redirect(reverse('account-view'))
         else:
             messages.error(request, "Your form submission had errors.  Please make sure you've filled out all required fields.")

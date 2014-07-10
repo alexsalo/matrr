@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group
 
 from matrr import gizmo
 from matrr import settings
-from matrr.models import Request, User, Shipment, Account, RequestStatus, Acceptance, Review
+from matrr.models import Request, User, Shipment, Account, RequestStatus, Acceptance, Review, DataSymposium
 
 
 # regular_tasks
@@ -626,4 +626,27 @@ def shipment_processed(shipment):
         ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
         if ret > 0:
             print "%s: Email notified that Shipment %d DNA/RNA has been processed" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), shipment.pk)
+
+# matrr
+def dsm_registration_notification(dsm):
+    """
+    Notify all permissioned users, via email, that a user has registered for the MATRR Data Symposium.
+    """
+    if not isinstance(dsm, DataSymposium):
+        dsm = DataSymposium.objects.get(pk=dsm)
+    recipents = Account.objects.users_with_perm('receive_symposium_roster_email')
+    to_list = recipents.values_list('user__email', flat=True)
+
+    subject = "Someone has registered for the MATRR Data Symposium"
+    body = "%s %s %s has registered for the symposium.  Click the link below to see more details.\n" % (dsm.dsm_title, dsm.dsm_first_name, dsm.dsm_last_name)
+    body += "\n"
+    body += 'https://gleek.ecs.baylor.edu%s\n' % reverse('symposium-roster-detail', args=[dsm.pk,])
+    body += "\n"
+    body += 'Full roster of attendants:  https://gleek.ecs.baylor.edu%s\n' % reverse('symposium-roster')
+    body += "\n"
+    body += 'Please, do not respond. This is an automated message.\n'
+
+    email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, to_list)
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        email.send()
 
