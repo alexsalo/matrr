@@ -703,7 +703,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
         return None, False
 
     bar_y_label = 'BEC (% mg)'
-    bar_color_label = 'Sample Vol. / Total Intake'
+    bar_color_label = 'Ethanol at BEC sample (g/kg)'
     scatter_y_label = 'Ethanol Intake (g/kg)'
     scatter_color_label = 'Ethanol Bouts'
     scatter_size_label = 'Avg bout volume'
@@ -719,7 +719,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
         if bec_rec.count():
             bec_rec = bec_rec[0]
             bar_yaxis.append(bec_rec.bec_mg_pct)
-            bar_color.append(bec_rec.bec_pct_intake)
+            bar_color.append(bec_rec.bec_daily_gkg_etoh)
             bar_xaxis.append(index)
             if not bar_color_label:
                 bar_color_label = bec_rec._meta.get_field('bec_pct_intake').verbose_name
@@ -826,13 +826,14 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
     bec_con_bar_plot.set_xlabel("Days", fontdict={'size': label_size})
     bec_con_bar_plot.set_ylabel(bar_y_label, fontdict={'size': label_size})
+    bec_con_bar_plot.set_ylim(ymin=0, ymax=250)
     bec_con_bar_plot.tick_params(axis='both', which='major', labelsize=tick_size)
     bec_con_bar_plot.tick_params(axis='both', which='minor', labelsize=tick_size)
 
     bec_con_bar_plot.set_autoscalex_on(False)
 
     # normalize colors to use full range of colormap
-    norm = colors.normalize(max(0, cbc.cbc_bec_pct_intake_min), min(cbc.cbc_bec_pct_intake_max, 1))
+    norm = colors.normalize(cbc.cbc_bec_gkg_etoh_min, cbc.cbc_bec_gkg_etoh_max)
 
     facecolors = list()
     for bar, x, color_value in zip(bar_yaxis, bar_xaxis, bar_color):
@@ -853,7 +854,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
     # colorbar for bar plot
     bec_con_bar_color = fig.add_subplot(main_gs[-1:, 39:])
-    v = numpy.linspace(0., 1., 6, endpoint=True)
+    v = numpy.linspace(cbc.cbc_bec_gkg_etoh_min, cbc.cbc_bec_gkg_etoh_max, 4, endpoint=True)
     cb = fig.colorbar(col, alpha=1, cax=bec_con_bar_color, ticks=v)
     cb.set_label(bar_color_label, fontsize=label_size)
     bec_con_bar_color.tick_params(axis='both', which='major', labelsize=tick_size)
@@ -875,7 +876,7 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s
         figures.append(rhesus_etoh_gkg_stackedbargraph(fig_size=fig_size))
         names.append('Figure2')
     if '3' in graphs:
-#        figures.append(monkey_bec_consumption(monkey=10062))
+        figures.append(monkey_bec_consumption(monkey=10062))
 #        names.append('VHD')
 
 #        figures.append(monkey_bec_consumption(monkey=10060))
