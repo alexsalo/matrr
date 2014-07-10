@@ -635,7 +635,7 @@ def dsm_registration_notification(dsm):
     if not isinstance(dsm, DataSymposium):
         dsm = DataSymposium.objects.get(pk=dsm)
     recipents = Account.objects.users_with_perm('receive_symposium_roster_email')
-    to_list = recipents.values_list('user__email', flat=True)
+    to_list = recipents.values_list('email', flat=True)
 
     subject = "Someone has registered for the MATRR Data Symposium"
     body = "%s %s %s has registered for the symposium.  Click the link below to see more details.\n" % (dsm.dsm_title, dsm.dsm_first_name, dsm.dsm_last_name)
