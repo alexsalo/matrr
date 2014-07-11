@@ -262,17 +262,6 @@ def request_review_process(request, req_request_id):
             # get the submitted form
             form = ReviewResponseForm(data=request.POST, tissue_requests=req_request.get_requested_tissues())
             if form.is_valid():
-                # update the unavailable_lists
-                for tissue_request in req_request.get_requested_tissues():
-                    if tissue_request.get_tissue():
-                        tissue = tissue_request.get_tissue()
-                        unavailable_list = tissue.unavailable_list.all()
-                        monkey_list = tissue_request.monkeys.all()
-                        # remove any monkeys in the request from the list
-                        unavailable_list = gizmo.remove_values_from_list(unavailable_list, monkey_list)
-                        unavailable_list.extend(Monkey.objects.filter(mky_id__in=form.cleaned_data[str(tissue_request)]))
-                        tissue.unavailable_list = unavailable_list
-                        tissue.save()
                 req_request.req_status = status
                 req_request.save()
                 messages.success(request, "The tissue request has been processed.")
