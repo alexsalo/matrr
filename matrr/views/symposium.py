@@ -53,3 +53,5 @@ def symposium_roster_detail(request, dsm_id):
     dsm = get_object_or_404(DataSymposium, pk=dsm_id)
     return render_to_response('matrr/dsm_symposium/symposium_roster_detail.html', {'dsm': dsm}, context_instance=RequestContext(request))
 
+def symposium_instructions(request):
+    return render_to_response('matrr/dsm_symposium/symposium_instructions.html', {}, context_instance=RequestContext(request))
