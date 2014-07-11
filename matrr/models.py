@@ -3553,6 +3553,10 @@ class CohortMetaData(models.Model):
     cbc_bec_gkg_etoh_max = models.FloatField("Maximum Etoh Intake at BEC Blood Sample, in g/kg", null=True, blank=False)
     cbc_bec_gkg_etoh_avg = models.FloatField("Average Etoh Intake at BEC Blood Sample, in g/kg", null=True, blank=False)
 
+    cbc_bec_daily_gkg_etoh_min = models.FloatField("Minimum Daily Etoh Intake on BEC day, in g/kg", null=True, blank=False)
+    cbc_bec_daily_gkg_etoh_max = models.FloatField("Maximum Daily Etoh Intake on BEC day, in g/kg", null=True, blank=False)
+    cbc_bec_daily_gkg_etoh_avg = models.FloatField("Average Daily Etoh Intake on BEC day, in g/kg", null=True, blank=False)
+
     cbc_bec_pct_intake_min = models.FloatField("Minimum Percentage Intake at BEC Blood Sample", null=True, blank=False)
     cbc_bec_pct_intake_max = models.FloatField("Maximum Percentage Intake at BEC Blood Sample", null=True, blank=False)
     cbc_bec_pct_intake_avg = models.FloatField("Average Percentage Intake at BEC Blood Sample", null=True, blank=False)
@@ -3664,6 +3668,11 @@ class CohortMetaData(models.Model):
         self.cbc_bec_pct_intake_min = data['bec_pct_intake__min']
         self.cbc_bec_pct_intake_max = data['bec_pct_intake__max']
         self.cbc_bec_pct_intake_avg = data['bec_pct_intake__avg']
+
+        data = becs.aggregate(Min('bec_daily_gkg_etoh'), Max('bec_daily_gkg_etoh'), Avg('bec_daily_gkg_etoh'))
+        self.cbc_bec_daily_gkg_etoh_min = data['bec_daily_gkg_etoh__min']
+        self.cbc_bec_daily_gkg_etoh_max = data['bec_daily_gkg_etoh__max']
+        self.cbc_bec_daily_gkg_etoh_avg = data['bec_daily_gkg_etoh__avg']
         print "Model not yet saved"
 
     def _populate_mtd_fields(self):
