@@ -703,7 +703,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
         return None, False
 
     bar_y_label = 'BEC (% mg)'
-    bar_color_label = 'Ethanol at BEC sample (g/kg)'
+    bar_color_label = 'Ethanol Intake (g/kg)'
     scatter_y_label = 'Ethanol Intake (g/kg)'
     scatter_color_label = 'Ethanol Bouts'
     scatter_size_label = 'Avg bout volume'
@@ -833,7 +833,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     bec_con_bar_plot.set_autoscalex_on(False)
 
     # normalize colors to use full range of colormap
-    norm = colors.normalize(cbc.cbc_bec_gkg_etoh_min, cbc.cbc_bec_gkg_etoh_max)
+    norm = colors.normalize(cbc.cbc_bec_daily_gkg_etoh_min, cbc.cbc_bec_daily_gkg_etoh_max)
 
     facecolors = list()
     for bar, x, color_value in zip(bar_yaxis, bar_xaxis, bar_color):
@@ -877,16 +877,16 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s
         names.append('Figure2')
     if '3' in graphs:
         figures.append(monkey_bec_consumption(monkey=10062))
-#        names.append('VHD')
+        names.append('VHD')
 
-#        figures.append(monkey_bec_consumption(monkey=10060))
-#        names.append('HD')
+        figures.append(monkey_bec_consumption(monkey=10060))
+        names.append('HD')
 
-#        figures.append(monkey_bec_consumption(monkey=10056))
-#        names.append('BD')
+        figures.append(monkey_bec_consumption(monkey=10056))
+        names.append('BD')
 
-#        figures.append(monkey_bec_consumption(monkey=10052))
-#        names.append('LD')
+        figures.append(monkey_bec_consumption(monkey=10052))
+        names.append('LD')
         print 'Figure 3 MUST BE RENDERED SPECIAL!!!!'
         print 'Look thru the code of this script.  Render them individually, save them manually, then stich them together in photoshop, adding labels.'
     if '4' in graphs:
