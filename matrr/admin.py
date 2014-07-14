@@ -108,6 +108,10 @@ class VerificationAccountAdmin(admin.ModelAdmin):
     }),
     )
 
+class DataSymposiumAdmin(admin.ModelAdmin):
+    list_display = ['dsm_last_name', 'dsm_badge_name', 'dsm_role', 'dsm_hotel', 'dsm_reception', 'dsm_lunch', 'dsm_poster', 'dsm_diet']
+    list_filter = ['dsm_role', 'dsm_hotel', 'dsm_reception', 'dsm_lunch', 'dsm_poster', 'dsm_diet']
+
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
@@ -132,4 +136,5 @@ admin.site.register(TissueInventoryVerification)
 admin.site.register(TissueRequest, TissueRequestAdmin)
 admin.site.register(TissueRequestReview)
 admin.site.register(Permission)
+admin.site.register(DataSymposium, DataSymposiumAdmin)
 
