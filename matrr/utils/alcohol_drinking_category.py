@@ -857,6 +857,9 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     v = numpy.linspace(cbc.cbc_bec_gkg_etoh_min, cbc.cbc_bec_gkg_etoh_max, 4, endpoint=True)
     cb = fig.colorbar(col, alpha=1, cax=bec_con_bar_color, ticks=v)
     cb.set_label(bar_color_label, fontsize=label_size)
+    _ticks = [1.0,3.0,5.0]
+    cb.set_ticks(_ticks)
+    cb.set_ticklabels(["%.1f" % t for t in _ticks])
     bec_con_bar_color.tick_params(axis='both', which='major', labelsize=tick_size)
     bec_con_bar_color.tick_params(axis='both', which='minor', labelsize=tick_size)
 
