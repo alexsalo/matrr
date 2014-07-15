@@ -91,6 +91,7 @@
 					</ul>
                         <ul>
                             <li class='top'><a href="{% url 'symposium-landing' %}">Symposium</a></li>
+                            <li class='drop-down'><a href="{% url 'symposium-instructions' %}">Instructions</a></li>
                             {% if perms.matrr.view_symposium_roster %}
                                 <li class='drop-down'><a href="{% url 'symposium-roster' %}">Roster</a></li>
                             {% endif %}
