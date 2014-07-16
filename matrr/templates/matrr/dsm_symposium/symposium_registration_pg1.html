@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <div class="headline">Instructions</div>
+    Detailed instructions for Speakers and attendees with posters can be found here:  <a href="{% url 'symposium-instructions' %}">Symposium Instructions</a>
+    <br><br><div class="clearfix"></div>
     <div class="small">Fields marked * are required.</div>
     <form action='' method='post'>
         {% csrf_token %}

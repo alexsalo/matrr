@@ -6,6 +6,15 @@
 {% endblock %}
 
 {% block additional_messages %}
+    {% if user.is_authenticated %}
+        <div class="info">
+            The MATRR Data Symposium on September 7th – 9th 2014 in Portland, OR is open for registration.<br>
+            <br>
+            More information is available in the main menu.<br>
+            <br>
+            <a href="{% url 'symposium-landing' %}">Click here for details.</a>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
