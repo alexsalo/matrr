@@ -1089,7 +1089,7 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s
         bplot = PaneledMATRRBECEthanolIntakeScatterPlot()
         fig = bplot.draw_figure()
         figures.append(fig)
-        names.append('S6')
+        names.append('S7')
 
     if png:
         for FigName in zip(figures, names):
