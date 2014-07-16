@@ -874,7 +874,7 @@ class MATRRBECEthanolIntakeScatterPlot():
         pass
 
     figure = None
-    title = "Supplement 6"
+    title = "Supplement 7"
     scatter_x_label = 'Daily Ethanol Intake'
     scatter_y_label = 'BEC'
     scatter_color_label = 'Category'
