@@ -649,7 +649,6 @@ def rhesus_category_bec_boxplot():
     subplot.set_xticks([])
     return fig
 
-
 def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='', sample_before=None, sample_after=None, circle_max=plotting.DEFAULT_CIRCLE_MAX, circle_min=plotting.DEFAULT_CIRCLE_MIN):
     if not isinstance(monkey, Monkey):
         try:
@@ -705,8 +704,8 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     bar_y_label = 'BEC (% mg)'
     bar_color_label = 'Ethanol Intake (g/kg)'
     scatter_y_label = 'Ethanol Intake (g/kg)'
-    scatter_color_label = 'Ethanol Bouts'
-    scatter_size_label = 'Avg bout volume'
+    scatter_color_label = 'Sample Vol. / Total Intake'
+    scatter_size_label = 'Ethanol Bouts'
     induction_days = list()
     scatter_size = list()
     scatter_y = list() # yaxis
@@ -720,17 +719,21 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
             bec_rec = bec_rec[0]
             bar_yaxis.append(bec_rec.bec_mg_pct)
             bar_color.append(bec_rec.bec_daily_gkg_etoh)
+#            scatter_size.append(bec_rec.bec_pct_intake)
+            scatter_color.append(bec_rec.bec_pct_intake)
             bar_xaxis.append(index)
             if not bar_color_label:
                 bar_color_label = bec_rec._meta.get_field('bec_pct_intake').verbose_name
+        else:
+            scatter_color.append(0)
+#            scatter_size.append(.001)
 
         de = drinking_experiments.get(drinking_experiment__dex_date=date)
         if de.drinking_experiment.dex_type == 'Induction':
             induction_days.append(index)
-        scatter_y.append(de.mtd_etoh_g_kg) # y-axis
-        scatter_color.append(de.mtd_etoh_bout) # color
-        bouts_volume = de.bouts_set.all().aggregate(Avg('ebt_volume'))['ebt_volume__avg']
-        scatter_size.append(bouts_volume if bouts_volume else 0) # size
+        scatter_y.append(de.mtd_etoh_g_kg)
+#        scatter_color.append(de.mtd_etoh_bout)
+        scatter_size.append(de.mtd_etoh_bout)
 
     xaxis = numpy.array(range(1, len(scatter_size) + 1))
     scatter_size = numpy.array(scatter_size)
@@ -750,8 +753,8 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
     size_min = circle_min
     size_scale = circle_max - size_min
-    volume_max = cbc.cbc_ebt_volume_max
-    rescaled_volumes = [(vol / volume_max) * size_scale + size_min for vol in
+    size_max = cbc.cbc_mtd_etoh_bout_max
+    rescaled_volumes = [(vol / size_max) * size_scale + size_min for vol in
                         scatter_size] # rescaled, so that circles will be in range (size_min, size_scale)
 
     s = bec_con_main_plot.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_volumes, alpha=0.4)
@@ -784,7 +787,8 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     bec_con_main_color_plot.tick_params(axis='both', which='major', labelsize=tick_size)
     bec_con_main_color_plot.tick_params(axis='both', which='minor', labelsize=tick_size)
     cb = fig.colorbar(s, alpha=1, cax=bec_con_main_color_plot)
-    cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
+    cb.set_clim(cbc.cbc_bec_pct_intake_min, cbc.cbc_bec_pct_intake_max)
+#    cb.set_clim(cbc.cbc_mtd_etoh_bout_min, cbc.cbc_mtd_etoh_bout_max)
     cb.set_label(scatter_color_label)
 
     #	regression line
@@ -802,7 +806,7 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
     size.insert(0, 1 + size_min)
     size = numpy.array(size)
 
-    m = volume_max / (len(y) - 1)
+    m = size_max / (len(y) - 1)
     bout_labels = [int(round(i * m)) for i in range(1, len(y))] # labels in the range as number of bouts
     bout_labels.insert(0, "1")
     bout_labels.insert(0, "")
@@ -865,6 +869,162 @@ def monkey_bec_consumption(monkey=None, from_date=None, to_date=None, dex_type='
 
     return fig
 
+class MATRRBECEthanolIntakeScatterPlot():
+    def __init__(self):
+        pass
+
+    figure = None
+    title = "Supplement 6"
+    scatter_x_label = 'Daily Ethanol Intake'
+    scatter_y_label = 'BEC'
+    scatter_color_label = 'Category'
+    scatter_alpha = .7
+
+    tick_size = 18
+    label_size = 22
+    title_size = 30
+
+    becs = None
+
+    def draw_figure(self):
+        fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+        main_gs = gridspec.GridSpec(3, 3)
+        main_gs.update(left=0.07, right=0.93, top=.95, bottom=.08, hspace=.07, wspace=.05)
+        subplot = fig.add_subplot(main_gs[:,:])
+        all_x = list()
+        all_y = list()
+        for category in plotting.DRINKING_CATEGORIES:
+            x_axis = self.get_x_axis(category)
+            y_axis = self.get_y_axis(category)
+            all_x.extend(x_axis)
+            all_y.extend(y_axis)
+            subplot.scatter(x_axis,
+                            y_axis,
+                            c=self.get_color_axis(category),
+                            alpha=self.scatter_alpha,
+                            label=category,
+                            s=60,)
+
+        subplot.set_xlim(xmin=0)
+        subplot.set_ylim(ymin=0)
+        fig.text(.45, .96, self.title, fontsize=self.title_size)
+        subplot.tick_params(axis='both', which='major', labelsize=self.tick_size)
+        subplot.tick_params(axis='both', which='minor', labelsize=self.tick_size)
+        subplot.set_xlabel(self.scatter_x_label, size=self.label_size)
+        subplot.set_ylabel(self.scatter_y_label, size=self.label_size)
+
+        # regression line
+        all_x = numpy.array(all_x)
+        all_y = numpy.array(all_y)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(all_x, all_y)
+
+        reg_label = "Fit: p=%f" % p_value
+        subplot.plot(all_x, all_x * slope + intercept, color='black', label=reg_label)
+        subplot.legend(loc=2, prop={'size': self.tick_size})
+        return fig
+
+    def get_x_axis(self, category):
+        x_axis = list()
+        for mky in plotting.RHESUS_DRINKERS_DISTINCT[category]:
+            becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
+            x_axis.extend(becs.values_list('bec_daily_gkg_etoh', flat=True))
+        return numpy.array(x_axis)
+
+    def get_y_axis(self, category):
+        y_axis = list()
+        for mky in plotting.RHESUS_DRINKERS_DISTINCT[category]:
+            becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
+            y_axis.extend(becs.values_list('bec_mg_pct', flat=True))
+        return y_axis
+
+    def get_color_axis(self, category):
+        color_axis = list()
+        for mky in plotting.RHESUS_DRINKERS_DISTINCT[category]:
+            datapoint_count = MonkeyBEC.objects.OA().filter(monkey=mky).count()
+            color = [plotting.RHESUS_COLORS[category] for _empty in range(datapoint_count)]
+            color_axis.extend(color)
+        return color_axis
+
+
+class AveragedMATRRBECEthanolIntakeScatterPlot(MATRRBECEthanolIntakeScatterPlot):
+    title = "Supplement 6"
+    scatter_x_label = 'Average Daily Ethanol Intake'
+    scatter_y_label = 'Average BEC'
+
+    def get_x_axis(self, category):
+        x_axis = list()
+        for mky in plotting.RHESUS_DRINKERS_DISTINCT[category]:
+            becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
+            x_axis.append(becs.aggregate(Avg('bec_daily_gkg_etoh'))['bec_daily_gkg_etoh__avg'])
+        return numpy.array(x_axis)
+
+    def get_y_axis(self, category):
+        y_axis = list()
+        for mky in plotting.RHESUS_DRINKERS_DISTINCT[category]:
+            becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
+            y_axis.append(becs.aggregate(Avg('bec_mg_pct'))['bec_mg_pct__avg'])
+        return y_axis
+
+    def get_color_axis(self, category):
+        color_axis = list()
+        for mky in plotting.RHESUS_DRINKERS_DISTINCT[category]:
+            color_axis.append(plotting.RHESUS_COLORS[category])
+        return color_axis
+
+
+class PaneledMATRRBECEthanolIntakeScatterPlot(MATRRBECEthanolIntakeScatterPlot):
+    def draw_figure(self):
+        fig = pyplot.figure(figsize=plotting.HISTOGRAM_FIG_SIZE, dpi=DEFAULT_DPI)
+        main_gs = gridspec.GridSpec(2, 2)
+        main_gs.update(left=0.07, right=0.93, top=.95, bottom=.08, hspace=.01, wspace=.008)
+        subplot = None
+        for index, category in enumerate(plotting.DRINKING_CATEGORIES):
+            if index == 0:
+                xindex = 0
+                yindex = 0
+            elif index == 1:
+                xindex = 0
+                yindex = 1
+            elif index == 2:
+                xindex = 1
+                yindex = 0
+            else:
+                xindex = 1
+                yindex = 1
+            subplot = fig.add_subplot(main_gs[xindex,yindex], sharex=subplot, sharey=subplot)
+            x_axis = self.get_x_axis(category)
+            y_axis = self.get_y_axis(category)
+            subplot.scatter(x_axis,
+                            y_axis,
+                            c=self.get_color_axis(category),
+                            alpha=self.scatter_alpha,
+                            label=category,
+                            s=60,)
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x_axis, y_axis)
+            reg_label = "Fit: p=%f" % p_value
+            subplot.plot(x_axis, x_axis * slope + intercept, color='black', label=reg_label)
+            subplot.legend(loc=2, prop={'size': self.tick_size})
+            subplot.set_xlim(xmin=0, xmax=7)
+            subplot.set_ylim(ymin=0)
+            if not xindex:
+                subplot.get_xaxis().set_visible(False)
+                subplot.set_xlabel('')
+            else:
+                subplot.set_xlabel(self.scatter_x_label, size=self.label_size)
+            if yindex:
+                subplot.get_yaxis().set_visible(False)
+                subplot.set_ylabel('')
+            else:
+                subplot.set_ylabel(self.scatter_y_label, size=self.label_size)
+            subplot.xaxis.set_major_locator(MaxNLocator(6, prune='lower'))
+            subplot.yaxis.set_major_locator(MaxNLocator(6, prune='lower'))
+            subplot.tick_params(axis='both', which='major', labelsize=self.tick_size)
+            subplot.tick_params(axis='both', which='minor', labelsize=self.tick_size)
+
+        fig.text(.45, .96, self.title, fontsize=self.title_size)
+
+        return fig
+
 
 def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s4,s5,s6', png=True, fig_size=(25, 15), dpi=800):
     figures = list()
@@ -924,6 +1084,11 @@ def create_manuscript_graphs(output_path='', graphs='1,2,3,4,5,s2a,s2b,s3a,s3b,s
         names.append('S5')
     if 's6' in graphs:
         figures.append(rhesus_etoh_bec_scatter(monkey_two=10098, monkey_one=10092, fig_size=fig_size))
+        names.append('S6')
+    if 's7' in graphs:
+        bplot = PaneledMATRRBECEthanolIntakeScatterPlot()
+        fig = bplot.draw_figure()
+        figures.append(fig)
         names.append('S6')
 
     if png:
