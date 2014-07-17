@@ -1152,7 +1152,7 @@ class ExperimentBout(models.Model):
                 weight_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.mtd.monkey)
                 weight = weight_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
             if not weight: # fuck it, i gave up
-                self.ebt_intake_rate = -1
+                self.ebt_intake_rate = None
                 self.save()
                 return
             grams = self.ebt_volume * .04
