@@ -978,3 +978,15 @@ class SymposiumFormTwo(forms.ModelForm):
     class Meta:
         model = models.DataSymposium
         fields = ['dsm_hotel', 'dsm_reception', 'dsm_poster', 'dsm_lunch', 'dsm_diet',]
+
+
+class DataIntegrationTrackingForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(DataIntegrationTrackingForm, self).__init__(*args, **kwargs)
+        for field_name in self.fields.keys():
+            if 'notes' in field_name.lower():
+                self.fields[field_name].widget.attrs['rows'] = 2
+
+    class Meta:
+        model = models.DataIntegrationTracking
+        exclude = ['dit_id', ]

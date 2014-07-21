@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %} Data Integration Tracking {% endblock %}
+
+{% block content %}
+    {% if dit_form %}
+        <div class="headline">Submit data integration information</div>
+        <div class="small">Use the text areas to provide detail about the data integration, such as contributing researchers or data's incompleteness</div>
+        <form action='' method='post'>
+            {% csrf_token %}
+            <table>
+                {% for field in dit_form %}
+                    {% if field.label.lower == 'cohort' %}
+                        <tr>
+                            <th colspan="15">{{ field.label }}:  {{ field }}</th>
+                        </tr>
+                    {% else %}
+                        {% if 'notes' in field.label.lower %}
+                                <td colspan="15">{{ field }}</td>
+                            </tr>
+                            <tr>
+                        {% else %}
+                            <th style="min-width: 300px">{{ field.label }}</th>
+                            <td>{{ field }}</td>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </table>
+            <button class='blockLinkCheckoutButton' type='submit' name='tracking'>Save</button>
+        </form>
+    {% endif %}
+
+    <div class="clearfix"><br><br><br><br><br></div>
+    {% if dit_results %}
+        <table>
+            <thead>
+            <tr>
+                {% for head in headers %}
+                    <th class="rotate_header" style="min-height:'1000px'">
+                        <div><span>{{ head }}</span></div>
+                    </th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for dit in dit_results %}
+                <tr>
+                    {% for cell in dit %}
+                        {% if forloop.counter0 == 0 %}
+                            <td>{{ cell }}</td>
+                        {% else %}
+                            <td style="text-align: center; background-color: {% if cell %}green{% else %}red{% endif %}"></td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        This table is a self-reported record that is tracking data integration.
+    {% endif %}
+{% endblock %}

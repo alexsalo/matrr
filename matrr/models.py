@@ -3903,6 +3903,45 @@ class MonkeyEphys(models.Model):
         )
 
 
+class DataIntegrationTracking(models.Model):
+    dit_id = models.AutoField(primary_key=True)
+    cohort = models.ForeignKey(Cohort, verbose_name='Cohort', related_name='data_integration_set', db_column='coh_cohort_id', null=False, blank=False,
+                               help_text='Choose a cohort associated with this information.')
+    dit_nec = models.BooleanField('Necropsy Data Integrated', null=False, default=False,)
+    dit_nec_notes = models.TextField('Notes about Necropsy data', null=True, blank=True, default='',)
+    dit_mtd_ind = models.BooleanField('Induction Daily Summary Data Integrated', )
+    dit_mtd_oa = models.BooleanField('OA Daily Summary Data Integrated', null=False, default=False, )
+    dit_mtd_notes = models.TextField('Notes about Summary data', null=True, blank=True, default='',)
+    dit_ebt_ind = models.BooleanField('Induction Bout Data Integrated', null=False, default=False, )
+    dit_ebt_oa = models.BooleanField('OA Bout Data Integrated', null=False, default=False, )
+    dit_ebt_notes = models.TextField('Notes about Bout data', null=True, blank=True, default='',)
+    dit_edr_ind = models.BooleanField('Induction Drink Data Integrated', null=False, default=False, )
+    dit_edr_oa = models.BooleanField('OA Drink Data Integrated', null=False, default=False, )
+    dit_edr_notes = models.TextField('Notes about Drink data', null=True, blank=True, default='',)
+    dit_eev_ind = models.BooleanField('Induction Event Data Integrated', null=False, default=False, )
+    dit_eev_oa = models.BooleanField('OA Event Data Integrated', null=False, default=False, )
+    dit_eev_notes = models.TextField('Notes about Event data', null=True, blank=True, default='',)
+    dit_mex = models.BooleanField('Monkey Exception Data Integrated', null=False, default=False, )
+    dit_mex_notes = models.TextField('Notes about Exception data', null=True, blank=True, default='',)
+    dit_bec_ind = models.BooleanField('Induction BEC Data Integrated', null=False, default=False, )
+    dit_bec_oa = models.BooleanField('OA BEC Data Integrated', null=False, default=False, )
+    dit_bec_notes = models.TextField('Notes about BEC data', null=True, blank=True, default='',)
+    dit_mhm_ind = models.BooleanField('Induction Hormone Data Integrated', null=False, default=False, )
+    dit_mhm_oa = models.BooleanField('OA Hormone Data Integrated', null=False, default=False, )
+    dit_mhm_notes = models.TextField('Notes about Hormone data', null=True, blank=True, default='',)
+    dit_mmb_ind = models.BooleanField('Induction Metabolite Data Integrated', null=False, default=False, )
+    dit_mmb_oa = models.BooleanField('OA Metabolite Integrated', null=False, default=False, )
+    dit_mmb_notes = models.TextField('Notes about Metabolite data', null=True, blank=True, default='',)
+    dit_pro_ind = models.BooleanField('Induction Protein Data Integrated', null=False, default=False, )
+    dit_pro_oa = models.BooleanField('OA Protein Integrated', null=False, default=False, )
+    dit_pro_notes = models.TextField('Notes about Protein data', null=True, blank=True, default='',)
+
+    class Meta:
+        db_table = 'dit_data_integration'
+        permissions = (
+            ('view_dit_data', 'Can view data integration information'),
+        )
+
 
 # put any signal callbacks down here after the model declarations
 

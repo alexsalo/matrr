@@ -135,6 +135,7 @@ urlpatterns += patterns('',
     url(r'^inventory/cohort/(?P<coh_id>\d+)/$', inventory.inventory_cohort, name="inventory-cohort"),
     url(r'^inventory/cohort/(?P<coh_id>\d+)/brains/$', inventory.inventory_brain_cohort, name="inventory-brain-cohort"),
     url(r'^inventory/monkey/(?P<mig_id>\d+)/brains/$', inventory.inventory_brain_monkey, name="inventory-brain-monkey"),
+    url(r'^inventory/data/$', inventory.DataIntegrationTrackingView.as_view(), name='data-integration-tracking'),
 )
 
 urlpatterns += patterns('',

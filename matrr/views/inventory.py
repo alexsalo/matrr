@@ -1,10 +1,13 @@
-from django.shortcuts import render_to_response, get_object_or_404
+from django.core.urlresolvers import reverse
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib import messages
-from django.views.generic import ListView
-from matrr.forms import InventoryBrainForm
-from matrr.models import Cohort, Monkey, MonkeyBrainBlock, TissueType, MonkeyImage, Availability
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView, View
+from django.http import HttpResponse
+from matrr import forms, models
+from matrr.models import Cohort, MonkeyBrainBlock, TissueType, MonkeyImage, Availability, DataIntegrationTracking
 
 inventory_landing = user_passes_test(lambda u: u.has_perm('matrr.browse_inventory'), login_url='/denied/')(
     ListView.as_view(model=Cohort, template_name="matrr/inventory/inventory.html")
@@ -59,7 +62,7 @@ def inventory_brain_monkey(request, mig_id):
     monkey = mig.monkey
 
     if request.method == 'POST':
-        brain_form = InventoryBrainForm(data=request.POST)
+        brain_form = forms.InventoryBrainForm(data=request.POST)
         if brain_form.is_valid():
             data = brain_form.cleaned_data
             mbb = MonkeyBrainBlock.objects.get(monkey=monkey, mbb_block_name=data['block'], mbb_hemisphere='L')
@@ -69,7 +72,7 @@ def inventory_brain_monkey(request, mig_id):
         else:
             messages.error(request, "Invalid form submission")
     else:
-        brain_form = InventoryBrainForm()
+        brain_form = forms.InventoryBrainForm()
 
     blocks = MonkeyBrainBlock.objects.all().values_list('mbb_block_name', flat=True).distinct().count()
     matrix = list()
@@ -94,3 +97,29 @@ def inventory_brain_monkey(request, mig_id):
     return render_to_response('matrr/inventory/inventory_brain_monkey.html', context, context_instance=RequestContext(request))
 
 
+class DataIntegrationTrackingView(View):
+    def permission_decorator(self):
+        return user_passes_test(lambda u: u.has_perm('matrr.view_dit_data'), login_url='/denied/')
+
+#    @method_decorator(permission_decorator)
+    def get(self, request, *args, **kwargs):
+        dit_form = forms.DataIntegrationTrackingForm()
+        dit_results = DataIntegrationTracking.objects.all().order_by('cohort__coh_cohort_name')
+        fields = list(dit_results[0]._meta.fields)
+        fields.pop(0)
+        headers = [f.verbose_name for f in fields]
+        field_names = [f.name for f in fields]
+        field_names[0] = 'cohort__coh_cohort_name'
+        dit_results = dit_results.values_list(*field_names)
+        return render_to_response('matrr/inventory/data_integration_tracking.html', {'headers': headers, 'dit_results': dit_results, 'dit_form': dit_form}, context_instance=RequestContext(request))
+
+#    @method_decorator(permission_decorator)
+    def post(self, request, *args, **kwargs):
+        dit_form = forms.DataIntegrationTrackingForm(data=request.POST)
+        if dit_form.is_valid():
+            dit, is_new = DataIntegrationTracking.objects.get_or_create(cohort=dit_form.cleaned_data['cohort'])
+            dit_form = forms.DataIntegrationTrackingForm(data=request.POST, instance=dit)
+            dit_form.save()
+            messages.success(request, "Data has been saved.")
+            return redirect(reverse('data-integration-tracking'))
+        return render_to_response('matrr/inventory/data_integration_tracking.html', {'dit_form': dit_form}, context_instance=RequestContext(request))
