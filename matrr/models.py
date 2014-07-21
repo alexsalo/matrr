@@ -792,9 +792,10 @@ class DataSymposium(models.Model):
     # Above here is page 1, below is page 2
     hotel_help = "If yes please indicate arrival and departure dates. All hotel reservations will be made by Louise Sacha, who will send you a confirmation. There is no need to contact the hotel directly."
     dsm_hotel = models.CharField("Do you require a hotel room?", max_length=100, help_text=hotel_help, default='', blank=True)
-    dsm_reception= models.BooleanField("Reception", help_text="I am attending the Reception on Sunday Sept 7th.", default=False, blank=True)
+    dsm_reception= models.BooleanField("Reception", help_text="I am attending the reception on Sunday Sept 7th.", default=False, blank=True)
+    dsm_dinner = models.BooleanField("Dinner", help_text="I am attending the dinner on Monday Sept 8th.", default=False, blank=True)
     dsm_poster = models.BooleanField("Poster", help_text="I am presenting a poster at the poster session on Monday Sept 8th.", default=False, blank=True)
-    dsm_lunch = models.BooleanField("Lunch", help_text="I am attending the Lunch on Tuesday Sept 9th.", default=False, blank=True)
+    dsm_lunch = models.BooleanField("Lunch", help_text="I am attending the lunch on Tuesday Sept 9th.", default=False, blank=True)
     dsm_diet = models.TextField("Diet Requirements", help_text="Special dietary requirements? If yes please explain, or leave blank for none.", default="", blank=True)
 
     class Meta:

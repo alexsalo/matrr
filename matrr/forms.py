@@ -977,7 +977,7 @@ class SymposiumFormOne(forms.ModelForm):
 class SymposiumFormTwo(forms.ModelForm):
     class Meta:
         model = models.DataSymposium
-        fields = ['dsm_hotel', 'dsm_reception', 'dsm_poster', 'dsm_lunch', 'dsm_diet',]
+        fields = ['dsm_hotel', 'dsm_reception', 'dsm_dinner', 'dsm_poster', 'dsm_lunch', 'dsm_diet',]
 
 
 class DataIntegrationTrackingForm(forms.ModelForm):
