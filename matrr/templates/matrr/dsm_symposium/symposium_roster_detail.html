@@ -1,26 +1,4 @@
 {% extends "base.html" %}
-    dsm_first_name = models.CharField('First Name', max_length=35, null=True, blank=False, help_text="First Name")
-    dsm_last_name = models.CharField('Last Name', max_length=35, null=True, blank=False, help_text="Last Name")
-    dsm_badge_name = models.CharField('Preferred Badge Name', max_length=70, null=True, blank=True, help_text="Preferred Badge Name")
-    dsm_title = models.CharField('Title', max_length=25, null=True, blank=True, help_text="Title")
-
-    dsm_email = models.EmailField("Email Address", help_text="Preferred contact email", blank=False)
-
-    dsm_inst_name = models.CharField('Institution name', max_length=50, null=True, blank=False)
-    dsm_inst_address1 = models.CharField('Institution address 1', max_length=50, null=True, blank=True)
-    dsm_inst_address2 = models.CharField('Institution address 2', max_length=50, null=True, blank=True)
-    dsm_inst_city = models.CharField('Institution city', max_length=25, null=True, blank=True)
-    dsm_inst_state = models.CharField('Institution state', choices=US_State_Choices, max_length=2, null=True, blank=True)
-    dsm_inst_zip = models.CharField('Institution ZIP', max_length=10, null=True, blank=True)
-    dsm_inst_country = models.CharField('Institution country', choices=COUNTRY_CHOICES, max_length=25, null=True, blank=True)
-
-    dsm_home_address1 = models.CharField('Home address 1', max_length=50, null=True, blank=False)
-    dsm_home_address2 = models.CharField('Home address 2', max_length=50, null=True, blank=True)
-    dsm_home_city = models.CharField('Home city', max_length=25, null=True, blank=False)
-    dsm_home_state = models.CharField('Home state', choices=US_State_Choices, max_length=2, null=True, blank=False)
-    dsm_home_zip = models.CharField('Home ZIP', max_length=10, null=True, blank=True)
-    dsm_home_country = models.CharField('Home country', choices=COUNTRY_CHOICES, max_length=25, null=True, blank=False)
-
 {% block content %}
     <table class='common_center'>
         <tr>
@@ -106,6 +84,10 @@
         <tr>
             <th>Reception</th>
             <td {% if dsm.dsm_reception %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_reception %}Yarr{% else %}Na{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Dinner</th>
+            <td {% if dsm.dsm_dinner %}bgcolor="lightgreen"{% endif %}>{% if dsm.dsm_dinner %}Yarr{% else %}Na{% endif %}</td>
         </tr>
         <tr>
             <th>Poster</th>
