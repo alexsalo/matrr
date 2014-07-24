@@ -217,6 +217,7 @@ def search(request):
                     logging.exception(se)
                     logging.error(se.message + "\n")
                     logging.error('-------\n')
+                    break
 
             num_results = 0
             for key in results:
