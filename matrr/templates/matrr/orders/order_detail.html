@@ -115,6 +115,7 @@
 					<td><a href="{% url 'shipment-detail' shipment.pk %}">{{ shipment.pk }}</a></td>
 					<td>{% if shipment.shp_shipment_date %}{{ shipment.shp_shipment_date }}{% else %}Not yet shipped{% endif %}</td>
 					<td>{% if shipment.shp_tracking %}{{ shipment.shp_tracking }}{% else %}None{% endif %}</td>
+        			<td><a href='{% url 'shipment-manifest' shipment.pk %}' class='blockLinkButton small'>Download Manifest</a></td>
 				</tr>
 			</table>
 		{% endfor %}
@@ -127,17 +128,11 @@
 	{% if edit %}
 		<a href='{% url 'order-list' %}' class='blockLinkButton' style="float:left">Finish Editing</a>
 	{% endif %}
-	{% if shipped %}
-		<div class='left'>
-			<a href='{% url 'shipment-manifest' order.req_request_id %}' style="float:left" class='blockLinkButton'>Download Shipping Manifest</a>
-		</div>
-	{% else %}
-		{% if not after_submitted %}
-			<div>
-				<a href='{% url 'order-delete' order.req_request_id %}' style="float:left" class='blockLinkDeleteButton'>Delete</a>
-			</div>
-		{% endif %}
-	{% endif %}
+    {% if not after_submitted %}
+        <div>
+            <a href='{% url 'order-delete' order.req_request_id %}' style="float:left" class='blockLinkDeleteButton'>Delete</a>
+        </div>
+    {% endif %}
 	{% if edit %}
 		<a href='{% url 'order-checkout' order.req_request_id %}' class='blockLinkCheckoutButton' style="float:right">Proceed to checkout</a>
 	{% endif %}
