@@ -9,7 +9,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from registration.backends.default import views
-from djangosphinx.models import SphinxQuerySet
+from djangosphinx.models import SphinxQuerySet, SearchError
 from registration.models import RegistrationProfile
 from matrr.settings import MEDIA_ROOT, STATIC_URL
 from matrr import emails, gizmo
@@ -208,7 +208,15 @@ def search(request):
                 #					results['monkeys'] = search_index(terms, SEARCH_INDEXES[key], Monkey)
 
             for key, value in SEARCH_INDEXES.items():
-                results[key] = search_index(terms, value[0], get_model('matrr', value[1]))
+                try:
+                    results[key] = search_index(terms, value[0], get_model('matrr', value[1]))
+                except SearchError as se:
+                    messages.error(request, "There was an error in your search query.  Please notify a MATRR admin if this continues.")
+                    logging.error('-------\n')
+                    logging.error(str(datetime.now()) + '\n')
+                    logging.exception(se)
+                    logging.error(se.message + "\n")
+                    logging.error('-------\n')
 
             num_results = 0
             for key in results:
