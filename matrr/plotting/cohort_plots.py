@@ -90,7 +90,7 @@ def cohort_necropsy_avg_22hr_g_per_kg(cohort):
     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
         graph_title = 'Average Daily EtOH Intake (22hr open access)'
         x_label = "Average Daily Ethanol Intake (g/kg)"
-        legend_labels = ('12 Month Average', '6 Month Average')
+        legend_labels = ('6 Month Average', '12 Month Average')
         return _cohort_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
     else:
         return False, False
