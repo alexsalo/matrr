@@ -898,7 +898,7 @@ ERROR_OUTPUT = "%d %s # %s"
 
 
 @transaction.commit_on_success
-def load_mtd(file_name, dex_type, cohort_name, dump_duplicates=True, has_headers=True, dump_file=False,
+def load_mtd(file_name, dex_type, cohort_name, update_duplcates=False, dump_duplicates=True, has_headers=True, dump_file=False,
              truncate_data_columns=48):
     """
         0 - date
@@ -1050,8 +1050,12 @@ def load_mtd(file_name, dex_type, cohort_name, dump_duplicates=True, has_headers
                 else:
                     if dump_duplicates:
                         print err
-                continue
-            mtd = MonkeyToDrinkingExperiment()
+                if update_duplcates and mtds.count() == 1:
+                    mtd = mtds[0]
+                else:
+                    continue
+            else:
+                mtd = MonkeyToDrinkingExperiment()
             mtd.monkey = monkey
             mtd.drinking_experiment = de
 
