@@ -606,6 +606,8 @@ class Monkey(models.Model):
 
     def populate_drinking_category(self):
         from matrr.utils.gadgets import identify_drinking_category
+        if not self.mky_drinking:
+            return
         oa_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
         if oa_mtds:
             self.mky_drinking_category = identify_drinking_category(oa_mtds)
