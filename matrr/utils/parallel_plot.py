@@ -153,6 +153,11 @@ def average_oa_drink_volume(mtds=None):
         return u"Average Drink Volume"
     return _average_mtd_field_wrapper(mtds, 'bouts_set__drinks_set__edr_volume')
 
+def average_oa_pct_etoh_in_1st_bout(mtds=None):
+    if mtds is None:
+        return u"First Bout's Average % of Total Intake"
+    return _average_mtd_field_wrapper(mtds, 'mtd_pct_etoh_in_1st_bout')
+
 
 class MATRRParallelPlot():
     mtd_gather_functions = [
@@ -190,12 +195,14 @@ class MATRRParallelPlot():
     max_data = defaultdict(lambda: -1*10**10) # key: parallel_label, value: maximum observed value # for rescaling
     parallel_labels = list()
 
-    def __init__(self, monkeys, cached=False):
+    def __init__(self, monkeys, cached=False, gather_functions=None):
         self.cached = cached
         if type(monkeys) == query.QuerySet:
             self.monkeys = [str(m) for m in monkeys.order_by('pk').values_list('pk', flat=True)]
         else:
             self.monkeys = [str(m) for m in sorted(monkeys)]
+        if gather_functions:
+            self.mtd_gather_functions = gather_functions
         self.parallel_labels = [g(mtds=None) for g in self.mtd_gather_functions]
 
     def draw_parallel_plot(self, lw=1, alpha=1):
@@ -299,3 +306,40 @@ class MATRRParallelPlot():
         monkeys = slugify(self.monkeys)
         return "MATRRParallelPlot.%s.%s" % (labels, monkeys)
 
+
+class SpeakerInstructionPP(MATRRParallelPlot):
+    mtd_gather_functions = [
+            percentage_of_days_over_4_gkg,
+            percentage_of_days_over_3_gkg,
+            percentage_of_days_over_2_gkg,
+            average_oa_etoh_intake_gkg,
+            average_oa_pct_etoh_in_1st_bout,
+            average_oa_pct_etoh_post_pellets,
+        ]
+
+    def draw_parallel_plot(self, lw=3, alpha=.4):
+        if not self.parallel_data:
+            self.gather_data()
+        fig = pyplot.figure(figsize=(23, 6), dpi=DEFAULT_DPI)
+        gs = gridspec.GridSpec(1, 1)
+        gs.update(left=0.06, right=0.99, top=.95, bottom=.25, hspace=.25)
+        subplot = fig.add_subplot(gs[:, :])
+
+        x_values = range(0, len(self.parallel_labels))
+        for _monkey in self.monkeys:
+            y_values = self.parallel_data.get(_monkey, [])
+            if len(y_values) != len(x_values):  # we don't have enough data to plot this monkey.  It's probably 10107.
+                continue
+            _category = models.Monkey.objects.get(pk=_monkey).mky_drinking_category
+            _color = RHESUS_COLORS[_category] if _category else 'black'
+            subplot.plot(x_values, y_values, color=_color, alpha=alpha, lw=lw)
+        subplot.set_title(self.figure_title)
+        subplot.set_yticks([.15, .5, .85])
+        subplot.set_yticklabels(['Low', 'Med', 'High'])
+        subplot.set_xticks(x_values)
+        subplot.set_xticklabels(self.parallel_labels, rotation=20, ha='right')
+#        subplot.set_xlim(xmin=0, xmax=len(self.parallel_labels))
+        subplot.set_ylim(ymin=-.1, ymax=1.1)
+        subplot.xaxis.grid(True, which='major', linestyle='-', linewidth=2)
+        self.figure = fig
+        return fig
