@@ -898,7 +898,7 @@ ERROR_OUTPUT = "%d %s # %s"
 
 
 @transaction.commit_on_success
-def load_mtd(file_name, dex_type, cohort_name, update_duplcates=False, dump_duplicates=True, has_headers=True, dump_file=False,
+def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_duplicates=True, has_headers=True, dump_file=False,
              truncate_data_columns=48):
     """
         0 - date
@@ -1737,12 +1737,14 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             except NecropsySummary.DoesNotExist:
                 nec_sum = NecropsySummary(monkey=monkey)
 
-            monkey.mky_birthdate = dt.strptime(row[5 + columns_offset], '%m/%d/%y')
-            monkey.mky_necropsy_start_date = dt.strptime(row[6 + columns_offset], '%m/%d/%y')
+#            monkey.mky_birthdate = dt.strptime(row[5 + columns_offset], '%m/%d/%y')
+            monkey.mky_birthdate = get_datetime_from_steve(row[5+columns_offset])
+#            monkey.mky_necropsy_start_date = dt.strptime(row[6 + columns_offset], '%m/%d/%y')
+            monkey.mky_necropsy_start_date = get_datetime_from_steve(row[6+columns_offset])
             monkey.mky_age_at_necropsy = row[7]
             monkey.save()
 
-            nec_sum.ncm_etoh_onset = None if row[10 + columns_offset] == "control" else dt.strptime(row[8 + columns_offset], '%m/%d/%y')
+            nec_sum.ncm_etoh_onset = None if row[10 + columns_offset] == "control" else get_datetime_from_steve(row[8+columns_offset])
             nec_sum.ncm_age_onset_etoh = row[9 + columns_offset]
             nec_sum.ncm_etoh_4pct_induction = row[10 + columns_offset] if row[10 + columns_offset] != "control" else 0
             nec_sum.ncm_etoh_4pct_22hr = row[11 + columns_offset] if row[11 + columns_offset] != "control" else 0
@@ -1751,8 +1753,8 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             nec_sum.ncm_sum_g_per_kg_induction = row[14 + columns_offset] if row[14 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_22hr = row[15 + columns_offset] if row[15 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_lifetime = row[16 + columns_offset] if row[16 + columns_offset] != "control" else 0
-            nec_sum.ncm_6_mo_start = dt.strptime(row[17 + columns_offset], '%m/%d/%y') if row[17 + columns_offset] != "control" else None
-            nec_sum.ncm_6_mo_end = dt.strptime(row[18 + columns_offset], '%m/%d/%y') if row[18 + columns_offset] != "control" else None
+            nec_sum.ncm_6_mo_start = get_datetime_from_steve(row[17+columns_offset]) if row[17 + columns_offset] != "control" else None
+            nec_sum.ncm_6_mo_end = get_datetime_from_steve(row[18+columns_offset]) if row[18 + columns_offset] != "control" else None
             nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[19 + columns_offset] if row[19 + columns_offset] != "control" else 0
             if six_month_cohort:
                 nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
@@ -1761,7 +1763,7 @@ def load_necropsy_summary(filename, six_month_cohort=False):
                 nec_sum.ncm_22hr_12mo_avg_g_per_kg = None
             else:
                 nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
-                nec_sum.ncm_12_mo_end = dt.strptime(row[19 + columns_offset], '%m/%d/%y') if row[19 + columns_offset] != "control" else None
+                nec_sum.ncm_12_mo_end = get_datetime_from_steve(row[19+columns_offset]) if row[19 + columns_offset] != "control" else None
                 if extra_22hr_column:
                     nec_sum.ncm_22hr_2nd_6mos_avg_g_per_kg = row[21 + columns_offset] if row[21 + columns_offset] != "control" else 0
                     columns_offset += 1
@@ -1980,7 +1982,8 @@ def load_cohort_timelines(filename, delete_replaced_cvts=False):
                 continue
             elif row[idx]:
                 event_type = EventType.objects.get(evt_name__contains=event)
-                cev_date = dt.strptime(row[idx], '%m/%d/%y')
+                date_string = str(row[idx]).replace('"', '').replace("'", "") # remove " and ' from the string
+                cev_date = get_datetime_from_steve(date_string)
                 cev, is_new = CohortEvent.objects.get_or_create(cohort=cohort, event=event_type, cev_date=cev_date)
                 if is_new:
                     cev.save()
