@@ -2536,7 +2536,7 @@ class Shipment(models.Model):
         return not self.contains_genetics() or (self.contains_genetics() and self.shp_processed and not self.shp_shipment_date)
 
     def send_shipment_for_processing(self, sending_user):
-        if not sending_user.has_perm('matrr.ship_shipments'):
+        if not sending_user.has_perm('matrr.handle_shipments'):
             raise PermissionDenied("You do not have permission to ship shipments.")
         if self.needs_processing():
             self.shp_processing= datetime.now()
@@ -2564,7 +2564,7 @@ class Shipment(models.Model):
         return self.shp_shipment_status
 
     def ship_to_user(self, sending_user):
-        if not sending_user.has_perm('matrr.ship_shipments'):
+        if not sending_user.has_perm('matrr.handle_shipments'):
             raise PermissionDenied("User does not have permission to ship tissue to users.")
         if self.can_be_shipped():
             self.shp_shipment_date = datetime.now()
