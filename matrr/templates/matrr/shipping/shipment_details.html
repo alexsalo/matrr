@@ -7,7 +7,7 @@
 
 {% block content %}
 	<div class="headline">{% block title %}Shipment {{ shipment.pk }}{% endblock %}</div>
-    {% if perms.matrr.change_shipment or perms.matrr.ship_genetics %}
+    {% if perms.matrr.change_shipment or perms.matrr.process_shipments or perms.matrr.handle_shipments %}
         <div class='clearfix'>
             <div class='left'>
                 <a href="{% url 'shipping-overview' %}"><img src="{{ STATIC_URL }}/images/goto.png" width='12' height='12'>&nbsp;Shipping Overview</a>

@@ -534,9 +534,7 @@ def send_dna_request_details(req_request):
 
         The attached invoice should provide any details required for the extraction.  If you have any questions please contact a MATRR administrator.
         """
-    perm = Permission.objects.get(codename='ship_genetics')
-    recipients = User.objects.filter(Q(groups__permissions=perm) | Q(user_permissions=perm)).distinct().values_list(
-        'email', flat=True)
+    recipients = Account.objects.users_with_perm('process_shipments_email').values_list('email', flat=True)
     email = EmailMessage(subject, body, from_email, recipients)
 
     outfile = open('/tmp/MATRR_Invoice-%s.pdf' % str(req_request.pk), 'wb')
