@@ -143,7 +143,7 @@
 					</ul>
 				{% endif %}
 
-				    {% if perms.matrr.change_shipment or perms.matrr.process_shipments or perms.matrr.handle_shipments %}
+                {% if perms.matrr.change_shipment or perms.matrr.process_shipments or perms.matrr.handle_shipments %}
 					<ul>
 						<li class='top'>
 							<a href='{% url 'shipping-overview' %}'>Shipping</a>
