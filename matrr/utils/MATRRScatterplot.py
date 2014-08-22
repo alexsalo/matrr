@@ -1,22 +1,12 @@
-import os
-import sys
 import hashlib
 import warnings
-import logging
-import json
-import itertools
 import numpy
-import operator
-from datetime import timedelta, datetime, date
-import networkx as nx
-from matplotlib import pyplot, gridspec, ticker, cm, patches, ticker
-from scipy import cluster, stats
-from django.db.models import Sum, Avg, Min, Max, query
-from matrr import models, utils, plotting
+from matplotlib import pyplot, gridspec
+from matrr import models, plotting
 
-cached_data_path = "matrr/utils/DATA/MATRRScatterPlot/"
+cached_data_path = "matrr/utils/DATA/MATRRScatterplot/"
 
-class MATRRScatterPlot(object):
+class MATRRScatterplot(object):
     figure = None
     subplot = None
 
@@ -24,7 +14,7 @@ class MATRRScatterPlot(object):
         self.prepare_plot()
         
     def __str__(self):
-        return "MATRRScatterPlot"
+        return "MATRRScatterplot"
 
     def prepare_plot(self):
         self.figure = pyplot.figure(figsize=(14, 9), dpi=plotting.DEFAULT_DPI)
@@ -39,7 +29,7 @@ class MATRRScatterPlot(object):
         file_name = str(self) + hash_name + '.png'
         self.figure.savefig(file_name, dpi=dpi)
 
-    def draw_scatter_plot(self, data_object):
+    def draw_scatterplot(self, data_object):
         self.subplot.scatter(data_object.gather_xaxis_data(),
                              data_object.gather_yaxis_data(),
                              s=data_object.gather_scale_data(),
@@ -58,7 +48,7 @@ class MATRRScatterPlot(object):
         self.subplot.legend(ncol=style_object.legend_columns(),)
 
 
-class PlotData(object):
+class ScatterplotData(object):
     def gather_xaxis_data(self):
         raise NotImplementedError()
 
@@ -84,7 +74,7 @@ class PlotData(object):
     def get_label(self): return ""
 
 
-class StyleData(object):
+class ScatterplotStyle(object):
     def __init__(self):
         raise NotImplementedError()
 
@@ -107,7 +97,7 @@ class StyleData(object):
         return 1
 
 
-class MonkeyBingeScatterplotData(PlotData):
+class MonkeyBingeScatterplotData(ScatterplotData):
     """
     xaxis = days since binge day
     yaxis = gkg intake on binge day
@@ -171,7 +161,7 @@ class MonkeyBingeScatterplotData(PlotData):
     def get_label(self): return str(self.monkey_pk)
 
 
-class MonkeyBingeScatterplotStyle(StyleData):
+class MonkeyBingeScatterplotStyle(ScatterplotStyle):
     def __init__(self, binge_definition, xmax, ymax):
         self.binge_definition = binge_definition
         self.xmin = 0
