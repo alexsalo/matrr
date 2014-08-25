@@ -2834,3 +2834,60 @@ def create_data_tissue_tree():
     print "Success."
 
 
+def dump_data_req_request_425_thru_431():
+    from matrr.utils.parallel_plot import  percentage_of_days_over_4_gkg, percentage_of_days_over_3_gkg, \
+        percentage_of_days_over_2_gkg, average_oa_etoh_intake_gkg, average_oa_bout_start_time, average_oa_daily_bout, \
+        average_oa_bout_volume, average_oa_volume_first_bout, average_oa_bout_intake_rate, average_oa_bout_pct_volume, \
+        average_oa_max_bout_pct_total_etoh, average_oa_bout_time_since_pellet, average_oa_drink_volume, \
+        average_oa_pct_etoh_post_pellets, average_oa_pellet_intake, average_oa_water_intake, average_oa_BEC, \
+        average_oa_BEC_pct_intake, average_oa_Cortisol, average_oa_ACTH, average_oa_Testosterone, \
+        average_oa_Deoxycorticosterone, average_oa_Aldosterone, average_oa_DHEAS
+    from matrr.models import Request, MonkeyToDrinkingExperiment, Monkey
+    import csv
+    # HOORAY for DRY principles :P
+
+    def gather_monkey_data(monkey_pk):
+        # I did have to (mostly) repeat this code though -.-
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk).order_by('drinking_experiment__dex_date')
+        if mtds.count() < 1: # we need more data.  We always need more data.
+            return [], []
+        labels = ['matrr id' ]
+        values = [str(monkey_pk), ]
+        for gather_function in mtd_gather_functions:
+            labels.append(gather_function()) # empty calls return the data's label
+            values.append(gather_function(mtds)) # calls with mtd= calculate the described value given the input mtds
+        return labels, values
+
+    mtd_gather_functions = [
+        percentage_of_days_over_4_gkg, percentage_of_days_over_3_gkg,
+        percentage_of_days_over_2_gkg, average_oa_etoh_intake_gkg, average_oa_bout_start_time, average_oa_daily_bout,
+        average_oa_bout_volume, average_oa_volume_first_bout, average_oa_bout_intake_rate, average_oa_bout_pct_volume,
+        average_oa_max_bout_pct_total_etoh, average_oa_bout_time_since_pellet, average_oa_drink_volume,
+        average_oa_pct_etoh_post_pellets, average_oa_pellet_intake, average_oa_water_intake, average_oa_BEC,
+        average_oa_BEC_pct_intake, average_oa_Cortisol, average_oa_ACTH, average_oa_Testosterone,
+        average_oa_Deoxycorticosterone, average_oa_Aldosterone, average_oa_DHEAS,
+    ]
+    req_requests = Request.objects.filter(pk__in=range(425, 432))
+#    req_requests = Request.objects.filter(pk__in=(202,))
+    cohorts = req_requests.values_list('cohort', flat=True)
+    monkeys = Monkey.objects.filter(cohort__in=cohorts).order_by('cohort').values_list('pk', 'cohort__coh_cohort_name', 'mky_drinking')
+    header = ['monkey', 'cohort', 'control']
+    all_data = list()
+    for mky in monkeys:
+        labels, values = gather_monkey_data(mky[0])
+        if not len(values):
+            continue
+        if len(header) == 3:
+            header.extend(labels)
+        row = [str(m) for m in mky]
+        row[2] = not mky[2] # db stores drinkers, ie NOT control
+        row.extend(values)
+        all_data.append(row)
+    f = open('dump_data_req_request_425_thru_431.csv', 'w')
+    writer = csv.writer(f)
+    writer.writerow(header)
+    writer.writerows(all_data)
+    f.flush()
+    f.close()
+    print "all done"
+    return
