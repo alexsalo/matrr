@@ -1989,7 +1989,9 @@ class DataFile(models.Model):
     dat_data_file = models.FileField('Data File', upload_to='data_files/', null=True, blank=False)
 
     def verify_user_access_to_file(self, user):
-        return user.is_authenticated() and user.account.verified and user.account == self.account and user.has_perm('matrr.can_download_data')
+	if user.is_superuser:
+		return True
+        return user.is_authenticated() and user.account.verified and user.account == self.account
 
     def __unicode__(self):
         # You should override this method too
