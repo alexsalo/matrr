@@ -1434,13 +1434,13 @@ def rhesus_bec_age_mtd_general(subplot, phase, bec_onset, mtd_callable_xvalue_ge
     for key in DRINKING_CATEGORIES:
         x = list()
         y = list()
-        for monkey_pk in RDD_56890[key]:
+        for monkey_pk in RHESUS_DRINKERS_DISTINCT[key]:
             monkey = Monkey.objects.get(pk=monkey_pk)
             monkey_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
             monkey_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
             if phase:
-                monkey_becs = monkey_becs.filter(**{mtd_oa_phases[phase]: COHORT_END_FIRST_OPEN_ACCESS[monkey.cohort.pk]})
-                monkey_mtds = monkey_mtds.filter(**{bec_oa_phases[phase]: COHORT_END_FIRST_OPEN_ACCESS[monkey.cohort.pk]})
+                monkey_becs = monkey_becs.filter(**{bec_oa_phases[phase]: COHORT_END_FIRST_OPEN_ACCESS[monkey.cohort.pk]})
+                monkey_mtds = monkey_mtds.filter(**{mtd_oa_phases[phase]: COHORT_END_FIRST_OPEN_ACCESS[monkey.cohort.pk]})
 
             min_bec_onset_date = monkey_becs.filter(bec_mg_pct__gte=bec_onset).aggregate(Min('bec_collect_date'))[
                 'bec_collect_date__min']
@@ -1455,6 +1455,11 @@ def rhesus_bec_age_mtd_general(subplot, phase, bec_onset, mtd_callable_xvalue_ge
         subplot.scatter(x, y, label=key, color=color, s=150)
         if len(x) > 1:
             plot_tools.create_convex_hull_polygon(subplot, x, y, color)
+    regression, xlabel = rhesus_bec_age_mtd_regression(phase, bec_onset, mtd_call_gkg_etoh)
+    x_values, regression_data = regression
+    slope, intercept, r_value, p_value, std_err = regression_data
+    reg_label = "BEC Onset=%d, Fit: r=%f, p=%f" % (bec_onset, r_value, p_value)
+    subplot.plot(x_values, x_values * slope + intercept, label=reg_label, color='black', linewidth=5, alpha=.7)
     return subplot, label
 
 
