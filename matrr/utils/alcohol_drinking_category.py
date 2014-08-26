@@ -461,7 +461,7 @@ def rhesus_category_parallel_classification_stability_popcount_3moAssignment(cat
     pyplot.setp(legend.get_title(), fontsize=title_size)
     return fig
 
-def rhesus_oa_pelletvolume_perday_perkg(fig_size=(25, 15), include_regression=False):
+def rhesus_oa_pelletvolume_perday_perkg(fig_size=(25, 15), include_regression=False, fig_title="Figure 5"):
     def _oa_pelletvolume_perday_perkg(monkey_category):
         monkey_set = RHESUS_DRINKERS_DISTINCT[monkey_category]
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkey_set)
@@ -499,7 +499,7 @@ def rhesus_oa_pelletvolume_perday_perkg(fig_size=(25, 15), include_regression=Fa
     tick_size=22
     title_size=30
     label_size=26
-    fig.text(.92, .96, "Figure 5", fontsize=title_size)
+    fig.text(.92, .96, fig_title, fontsize=title_size)
 
     # main scatterplot, pellet vs etoh
     main_subplot = fig.add_subplot(main_gs[:])
