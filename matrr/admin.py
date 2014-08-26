@@ -1,8 +1,96 @@
 from django.contrib import admin
-from django.contrib.auth.models import User
+from django.contrib.admin import SimpleListFilter
 
 from matrr.models import *
 from matrr.forms import OtOAcountForm
+
+
+class CohortExcludeListFilter(SimpleListFilter):
+    # Human-readable title which will be displayed in the
+    # right admin sidebar just above the filter options.
+    title = 'EXCLUDE cohort'
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'exclude_cohort'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        return (
+            ('80s', ('in the eighties',)),
+            ('90s', ('in the nineties',)),
+        )
+        """
+        cohorts = model_admin.model.objects.all().values_list('cohorts', 'cohorts__coh_cohort_name').distinct()
+        cohorts = cohorts.exclude(cohorts=None).order_by('cohorts__coh_cohort_name')
+        cohorts = list(cohorts)
+        cohorts.append(('none', 'none'), )
+        return cohorts
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        # Compare the requested value (either '80s' or '90s')
+        # to decide how to filter the queryset.
+        if self.value() == '80s':
+            return queryset.filter(birthday__gte=date(1980, 1, 1),
+                                    birthday__lte=date(1989, 12, 31))
+        if self.value() == '90s':
+            return queryset.filter(birthday__gte=date(1990, 1, 1),
+                                    birthday__lte=date(1999, 12, 31))
+        """
+        if not self.value():
+            return queryset
+        if self.value() == "none":
+            return queryset.exclude(cohorts=None)
+        return queryset.exclude(cohorts=self.value())
+
+
+class PublicationAdmin(admin.ModelAdmin):
+    """
+    id = models.AutoField(primary_key=True)
+    authors = models.TextField('Authors', null=True, blank=True)
+    title = models.CharField('Title', max_length=200, null=True, blank=True)
+    journal = models.CharField('Journal', max_length=200, null=True, blank=True)
+    cohorts = models.ManyToManyField(Cohort, db_table='ptc_publications_to_cohorts',
+                                     verbose_name='Cohorts',
+                                     related_name='publication_set',
+                                     help_text='The cohorts involved in this publication.',
+                                     null=True, blank=True)
+    published_year = models.CharField('Year Published', max_length=10, null=True, blank=True)
+    published_month = models.CharField('Month Published', max_length=10, null=True, blank=True)
+    issue = models.CharField('Issue Number', max_length=20, null=True, blank=True)
+    volume = models.CharField('Volume', max_length=20, null=True, blank=True)
+    pmid = models.IntegerField('PubMed ID', unique=True, null=True, blank=True)
+    pmcid = models.CharField('PubMed Central ID', max_length=20, null=True, blank=True)
+    isbn = models.IntegerField('ISBN', null=True, blank=True)
+    abstract = models.TextField('Abstract', null=True, blank=True)
+    keywords = models.TextField('Keywords', null=True, blank=True)
+    cites_matrr = models.BooleanField('Acknowledges MATRR', default=False)
+
+    pub_date = models.DateField("Publication Date", null=True, blank=True)
+
+    """
+    list_display = ['title', 'authors', 'journal', 'get_cohorts', 'published_year', 'pmid', 'pmcid', 'isbn', 'cites_matrr']
+    list_filter = ['cohorts', CohortExcludeListFilter, 'published_year', 'cites_matrr', 'journal']
+
+    def get_cohorts(self, obj):
+        return ", ".join(obj.cohorts.order_by('coh_cohort_name').values_list('coh_cohort_name', flat=True))
+    get_cohorts.short_description = 'Cohorts'
+
+    def get_cohort(self, obj):
+        return obj.req_request.cohort.coh_cohort_name
+    get_cohort.short_description = 'Cohort'
+
+    def get_user(self, obj):
+        return obj.req_request.user.username
+    get_user.short_description = 'Username'
 
 
 class TissueAdmin(admin.ModelAdmin):
@@ -128,7 +216,7 @@ admin.site.register(MonkeyToDrinkingExperiment)
 admin.site.register(Institution)
 admin.site.register(Event)
 admin.site.register(TissueSample, TissueSampleAdmin)
-admin.site.register(Publication)
+admin.site.register(Publication, PublicationAdmin)
 admin.site.register(Mta)
 admin.site.register(Account, VerificationAccountAdmin)
 admin.site.register(Request, RequestAdmin)
@@ -137,4 +225,5 @@ admin.site.register(TissueRequest, TissueRequestAdmin)
 admin.site.register(TissueRequestReview)
 admin.site.register(Permission)
 admin.site.register(DataSymposium, DataSymposiumAdmin)
+admin.site.register(DataFile, )
 
