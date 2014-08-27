@@ -405,3 +405,103 @@ class ConfederateNetwork_all_closest_bouts(ConfederateNetwork):
             f.write(json.dumps(self.nearest_bout_times))
             f.close()
 
+#  ----
+
+def load_cohort_kinship(filename):
+    import csv
+    from matrr.models import FamilyNode, FamilyRelationship, Monkey
+    input_data = csv.reader(open(filename, 'rU'), delimiter=',')
+    header = input_data.next()
+    for row in input_data:
+        if not any(row):
+            break
+        monkey_y = None
+        for head, cell in zip(header, row):
+            if not head: # this is the first column
+                monkey_y = cell
+                monkey_y = Monkey.objects.get(mky_real_id=monkey_y)
+                monkey_y, _ = FamilyNode.objects.get_or_create(monkey=monkey_y)
+                continue
+            cell = float(cell)
+            if cell == 0 or cell == 1:
+                continue # monkey's share no heritage
+            monkey_x = head
+            monkey_x = Monkey.objects.get(mky_real_id=monkey_x)
+            monkey_x, _ = FamilyNode.objects.get_or_create(monkey=monkey_x)
+            xy, _ = FamilyRelationship.objects.get_or_create(me=monkey_x, relative=monkey_y, fmr_coeff=cell)
+            yx, _ = FamilyRelationship.objects.get_or_create(me=monkey_y, relative=monkey_x, fmr_coeff=cell)
+
+    return
+
+
+class CohortKinship(object):
+    family_graph = None
+    cohort_nodes = None
+    depth = None
+    visual_style = None
+
+    def __init__(self, cohort_nodes, graph=None, depth=3, visual_style=None):
+        from matrr.models import FamilyNode
+
+        if cohort_nodes.model is FamilyNode:
+            self.cohort_nodes = cohort_nodes
+        else:
+            raise Exception("family_node is not a queryset of matrr.models.FamilyNode")
+        self.family_graph = graph if graph else nx.Graph()
+        self.depth = depth
+        self.visual_style = visual_style if visual_style else CytoVisualStyle(self)
+        self.construct_kinships()
+
+    def dump_graphml(self):
+        return "".join(nx.generate_graphml(self.family_graph))
+
+    def construct_kinships(self):
+        for node in self.cohort_nodes:
+            self._add_node(node)
+        for node in self.cohort_nodes:
+            for relation in node.my_relations.all():
+                self._add_edge(relation.me, relation.relative, relation=relation)
+
+    def _construct_node_data(self, node, data=None):
+        from matrr.plotting import DRINKING_CATEGORIES_COLORS
+        #  IMPORTANT NOTE
+        # Data put in here _will_ be visible in the GraphML, and in turn the web page's source code
+        data = data if data else dict()
+        data['label'] = node.monkey.pk
+        data['shape_input'] = node.monkey.mky_gender
+        category = node.monkey.mky_drinking_category
+        if category is None:
+            data['color'] = 'yellow'
+            data['borderColor_color'] = 'purple'
+        else:
+            data['color'] = DRINKING_CATEGORIES_COLORS[category]
+            data['borderColor_color'] = DRINKING_CATEGORIES_COLORS[category]
+        data['borderWidth_input'] = 500
+        return data
+
+    def _construct_edge_data(self, source, target, data=None, relation=None):
+        from matrr.plotting import DRINKING_CATEGORIES_COLORS
+        #  IMPORTANT NOTE
+        # Data put in here _will_ be visible in the GraphML, and in turn the web page's source code
+        data = data if data else dict()
+        data['label'] = "%d->%d" % (source.monkey.pk, target.monkey.pk)
+        data['edge_width'] = relation.fmr_coeff * 250
+        if source.monkey.mky_drinking_category == target.monkey.mky_drinking_category:
+            if source.monkey.mky_drinking_category is None:
+                color = 'yellow'
+            else:
+                color = DRINKING_CATEGORIES_COLORS[source.monkey.mky_drinking_category]
+        else:
+            color = 'black'
+        data['color'] = color
+        return data
+
+    def _add_node(self, node):
+        self.family_graph.add_node(node.monkey.pk, **self._construct_node_data(node))
+
+    def _add_edge(self, source, target, relation=None):
+        self.family_graph.add_edge(source.monkey.pk, target.monkey.pk,
+                                   **self._construct_edge_data(source, target, relation=relation))
+
+
+

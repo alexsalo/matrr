@@ -852,17 +852,19 @@ def tools_supersandbox(request):
 
 @user_passes_test(lambda u: u.is_superuser, login_url='/denied/')
 def tools_sandbox_familytree(request):
-    from matrr.utils.network_tools import ExampleFamilyTree
+    from matrr.utils.network_tools import CohortKinship
 
     def male_female_shape(node):
         shape = 'circle' if node[1]['shape_input'] == 'F' else 'square'
         return shape
 
-    me = FamilyNode.objects.get(pk=12)
-    tree = ExampleFamilyTree(me)
+    cohort = 10
+    us = FamilyNode.objects.filter(monkey__cohort=cohort)
+    tree = CohortKinship(us)
 
     tree.visual_style.discrete_node_shapes(shape_method=male_female_shape)
     tree.visual_style.continuous_node_colors('color_input', min_value='blue', max_value='orange')
+    tree.visual_style.passthru_node_borderColors('color')
     tree.visual_style.passthru_node_borderColors('borderColor_color')
     tree.visual_style.discrete_node_borderWidth()
 
@@ -874,7 +876,7 @@ def tools_sandbox_familytree(request):
     draw_options['visualStyle'] = tree.visual_style.get_visual_style()
     draw_options = mark_safe(str(draw_options))
     return render_to_response('matrr/tools/sandbox/sandbox_familytree.html',
-                              {'monkey': me.monkey, 'draw_options': draw_options},
+                              {'cohort': cohort, 'draw_options': draw_options},
                               context_instance=RequestContext(request))
 
 
