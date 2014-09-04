@@ -53,7 +53,7 @@ def etoh_gkg_forced_histogram(subplot, tick_size=16, label_size=20):
     subplot.set_xlabel("EtOH Intake (g/kg)",  size=label_size)
     subplot.tick_params(axis='both', which='major', labelsize=tick_size)
     subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
-    subplot.set_yticklabels([])
+#    subplot.set_yticklabels([])
     return subplot
 
 def etoh_gkg_monkeybargraph(subplot, limit, cutoff=None, tick_size=12, label_size=16):
@@ -91,7 +91,7 @@ def etoh_gkg_monkeybargraph(subplot, limit, cutoff=None, tick_size=12, label_siz
     subplot.set_xlabel("Monkey", size=tick_size)
     stupid_legend = subplot.legend((), title="%% Days > %d g/kg" % limit, loc=9, frameon=False)
     stupid_title = stupid_legend.get_title()
-    stupid_title.set_fontsize(int(label_size*.75))
+    stupid_title.set_fontsize(int(tick_size*.9))
     ytick_labels = ["%d" % (2*10*x) for x in range(6)]
     subplot.set_yticklabels(ytick_labels, size=tick_size)
     return subplot
@@ -137,14 +137,14 @@ def gkg_count_upperlimit(upper_limit, monkeys):
 def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=(25, 15), fig_title="Figure 1"):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(1, 1)
-    gs.update(left=0.03, right=0.492, top=.95, bottom=.08)
+    gs.update(left=0.055, right=0.492, top=.95, bottom=.08)
 
-    tick_size = 28
-    title_size = 30
-    label_size = 32
-    panel_label_size = 20
+    tick_size = 30
+    title_size = 32
+    label_size = 34
+    panel_label_size = 28
 
-    fig.text(.01, .96, fig_title, fontsize=title_size)
+    fig.text(.03, .96, fig_title, fontsize=title_size)
     fig.text(.23, .96, "Panel (A)", fontsize=panel_label_size)
     fig.text(.71, .96, "Panel (B)", fontsize=panel_label_size)
 
@@ -154,7 +154,7 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=(25, 15), fig_title=
 
 #	Histograms, right
     gs = gridspec.GridSpec(1, 3)
-    gs.update(left=0.507, right=0.95, top=.95, bottom=.08, wspace=.1, hspace=0)
+    gs.update(left=0.507, right=0.945, top=.95, bottom=.08, wspace=.1, hspace=0)
     subplot = None
     cutoffs = {2:.55, 3:.2, 4:.1}
     for limit in range(2, 5, 1):
