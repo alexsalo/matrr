@@ -858,8 +858,11 @@ def tools_sandbox_familytree(request):
         shape = 'circle' if node[1]['shape_input'] == 'F' else 'square'
         return shape
 
-    cohort = 10
-    us = FamilyNode.objects.filter(monkey__cohort=cohort)
+    cohort = request.GET.get('cohort', 0)
+    if cohort:
+        us = FamilyNode.objects.filter(monkey__cohort=cohort)
+    else:
+        us = FamilyNode.objects.all()
     tree = CohortKinship(us)
 
     tree.visual_style.discrete_node_shapes(shape_method=male_female_shape)
