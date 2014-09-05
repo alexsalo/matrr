@@ -175,7 +175,7 @@ def rhesus_etoh_gkg_forced_monkeybargraphhistogram(fig_size=(25, 15), fig_title=
 def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=(25, 15), fig_title="Figure 2"):
     fig = pyplot.figure(figsize=fig_size, dpi=DEFAULT_DPI)
     gs = gridspec.GridSpec(3, 3)
-    gs.update(left=0.035, right=0.98, top=.95, bottom=.08, wspace=.00, hspace=0)
+    gs.update(left=0.05, right=0.98, top=.95, bottom=.08, wspace=.00, hspace=0)
     subplot = fig.add_subplot(gs[:, :])
 
     limits = numpy.arange(1, 9, limit_step)
@@ -203,13 +203,13 @@ def rhesus_etoh_gkg_stackedbargraph(limit_step=.1, fig_size=(25, 15), fig_title=
 
     subplot.set_xlim(xmin=1, xmax=7)
 
-    tick_size=22
-    title_size=30
-    label_size=26
-    fig.text(.01, .96, fig_title, fontsize=title_size)
+    tick_size = 30
+    title_size = 32
+    label_size = 34
+    fig.text(.05, .96, fig_title, fontsize=title_size)
 
     subplot.legend(prop={'size': tick_size})
-    subplot.set_yticklabels([])
+#    subplot.set_yticklabels([])
     subplot.tick_params(axis='both', which='major', labelsize=tick_size)
     subplot.tick_params(axis='both', which='minor', labelsize=tick_size)
     subplot.set_ylabel("Aggregation of EtOH Intake Days by Category", size=label_size)
