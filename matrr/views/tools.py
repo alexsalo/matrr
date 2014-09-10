@@ -1,5 +1,6 @@
 import json, numpy, os
 import cStringIO as StringIO
+from django.db.models import Q
 import ho.pisa as pisa
 from django.core.files import File
 from django.core.urlresolvers import reverse
@@ -227,12 +228,14 @@ def tools_monkey_protein_graphs(request, coh_id, mky_id=None):
                                   'Some image files could not be created.  This is usually caused by requesting insufficient or non-existent data.')
             else:
                 for mon in monkeys:
-                    mpis = MonkeyProteinImage.objects.filter(monkey=mon,
-                                                             method=yaxis,
-                                                             parameters=`{'afternoon_reading': afternoon_reading}`)
+                    protein_query = Q()
                     for protein in proteins:
-                        mpis = mpis.filter(proteins=protein)
+                        protein_query = protein_query & Q(proteins__exact=protein)
 
+                    mpis = MonkeyProteinImage.objects.filter(protein_query)
+                    mpis = mpis.filter(monkey=mon,
+                                       method=yaxis,
+                                       parameters=`{'afternoon_reading': afternoon_reading}`)
                     if len(mpis) == 0:
                         mpi = MonkeyProteinImage.objects.create(monkey=mon,
                                                                 method=yaxis,
