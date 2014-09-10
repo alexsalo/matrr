@@ -139,19 +139,28 @@ def urge_po_mta():
         elif req.req_status == RequestStatus.Partially:
             email_template = 'matrr/review/request_partially_accepted_email.txt'
         else:
-            print "How did you get here?!"
-            raise Exception('How did you get here?!')
+            print "How did you get here?! urge_po_mta trap"
+            raise Exception('How did you get here?! urge_po_mta trap')
 
         request_url = reverse('order-detail', args=[req.req_request_id])
         body = render_to_string(email_template,
                                 {'request_url': request_url, 'req_request': req, 'Acceptance': Acceptance})
         body = re.sub('(\r?\n){2,}', '\n\n', body)
-        subject = "MATRR needs more information before request %s can be shipped." % str(req.pk)
+
+        if not req.req_purchase_order and not req.user.account.has_mta():
+            matrr_needs = "your MTA and Purchase Order Number"
+        else:
+            if not req.req_purchase_order:
+                matrr_needs = "your Purchase Order Number"
+            else: # because of the continue at the top of the loop the only remaining option is it's missing a PO number
+                matrr_needs = "your MTA"
+
+        subject = "MATRR needs %s before request %s can be shipped." % (matrr_needs, str(req.pk))
 
         if settings.PRODUCTION and settings.ENABLE_EMAILS:
             ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
             if ret > 0:
-                print "%s Report urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
+                print "%s PO/MTA urged for request: %s" % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), `req`)
 
 # regular_tasks
 def urge_progress_reports():
