@@ -21,4 +21,5 @@ develop_settings.py
 /matrr/logs
 /matrr/utils/DATA/
 /log_archive
-
+/MATRR.log
+/matrr/utils/test.py
