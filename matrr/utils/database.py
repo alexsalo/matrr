@@ -1050,7 +1050,7 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
                 else:
                     if dump_duplicates:
                         print err
-                if update_duplcates and mtds.count() == 1:
+                if update_duplicates and mtds.count() == 1:
                     mtd = mtds[0]
                 else:
                     continue
