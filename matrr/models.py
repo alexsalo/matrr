@@ -970,7 +970,7 @@ class MonkeyToDrinkingExperiment(models.Model):
                                                   help_text="Seconds it took for monkey to reach day's ethanol allotment")
     mtd_mean_seconds_between_meals = models.FloatField('Mean seconds between meals.', blank=True, null=True,
                                                        help_text='Average time between pellet meals, in seconds')
-    mtd_pct_etoh_post_pellets = models.FloatField('% EToH consumed post pellets', blank=False, null=True, default=None,
+    mtd_pct_etoh_post_pellets = models.FloatField('% EToH consumed post pellets', blank=True, null=True, default=None,
                                                        help_text='The percentage of ethanol consumed after the last pellet was dispensed ')
     mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 

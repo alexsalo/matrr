@@ -2254,8 +2254,11 @@ def load_bec_data(file_name, overwrite=False, header=True):
         """
         Converts "hh:MM AM" into HH:MM
         --OR--
-        -- because consistency is overrated--
+        -- because consistency is overrated --
         Converts "hh:MM:SS AM" into HH:MM
+        --OR--
+        -- BECAUSE CONSISTENCY IS WILDLY OVERRATED --
+        Converts "HH:MM:SS" into HH:MM
         """
         if 'am' in unformatted.lower() or 'pm' in unformatted.lower():
             time, afternoon = unformatted.split(' ')
@@ -2266,6 +2269,9 @@ def load_bec_data(file_name, overwrite=False, header=True):
                 HH = int(colon_separated_time[0])
             HH = 12 if HH == 24 else HH
             return "%s:%s" % (str(HH), str(colon_separated_time[1]))
+        HHMMSS = unformatted.split(":")
+        if len(HHMMSS) == 3:
+            return "%s:%s" % (HHMMSS[0], HHMMSS[1])
         return unformatted
 
     fields = (
@@ -2497,10 +2503,11 @@ def load_monkey_exceptions(file_name, overwrite=False, header=True):
         try:
             mex.full_clean()
         except Exception as e:
-            msg = ERROR_OUTPUT % (line_number, e, str(row))
-            logging.error(msg)
-            print msg
-            continue
+            if not u"Exception records must have an exception" in e.messages:
+                msg = ERROR_OUTPUT % (line_number, e, str(row))
+                logging.error(msg)
+                print msg
+                continue
 
         mex.save()
 
