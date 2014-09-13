@@ -1103,7 +1103,7 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
         monkey = Monkey.objects.get(mky_real_id=data_list[MONKEY_DATA_INDEX])
     except:
         err = ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
-        logging.log(30, err)
+        logging.log(20, err)
         print err
         return
 
@@ -1117,11 +1117,11 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
             print "%d Creating MTD." % line_number
         else:
             err = ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
-            logging.log(30, err)
+            logging.log(20, err)
             return
     if mtds.count() > 1:
         err = ERROR_OUTPUT % (line_number, "More than one MTD.", line)
-        logging.log(30, err)
+        logging.log(20, err)
         print err
         return
     mtd = mtds[0]
@@ -1129,7 +1129,7 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
     ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number=data_list[BOUT_NUMBER_DATA_INDEX])
     if ebts.count() != 0:
         err = ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
-        logging.log(30, err)
+        logging.log(20, err)
         print err
         return
 
@@ -1145,7 +1145,7 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
         ebt.full_clean()
     except Exception as e:
         err = ERROR_OUTPUT % (line_number, e, line)
-        logging.log(30, err)
+        logging.log(20, err)
         return
     ebt.save()
 
@@ -1233,18 +1233,18 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
         monkey = Monkey.objects.get(mky_real_id=data_list[MONKEY_DATA_INDEX])
     except:
         err = ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
-        logging.log(30, err)
+        logging.log(20, err)
         print err
         return
 
     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
     if mtds.count() == 0:
         err = ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
-        logging.log(30, err)
+        logging.log(20, err)
         return
     if mtds.count() > 1:
         err = ERROR_OUTPUT % (line_number, "More than one MTD.", line)
-        logging.log(30, err)
+        logging.log(20, err)
         print err
         return
     mtd = mtds[0]
@@ -1252,11 +1252,11 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
     ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number=data_list[BOUT_NUMBER_DATA_INDEX])
     if ebts.count() == 0:
         err = ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
-        logging.log(30, err)
+        logging.log(20, err)
         return
     if ebts.count() > 1:
         err = ERROR_OUTPUT % (line_number, "More than one EBT.", line)
-        logging.log(30, err)
+        logging.log(20, err)
         print err
         return
     ebt = ebts[0]
@@ -1264,7 +1264,7 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
     edrs = ExperimentDrink.objects.filter(ebt=ebt, edr_number=data_list[DRINK_NUMBER_DATA_INDEX])
     if edrs.count() != 0:
         err = ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
-        logging.log(30, err)
+        logging.log(20, err)
         print err
         return
 
@@ -1281,7 +1281,7 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
         edr.full_clean()
     except Exception as e:
         err = ERROR_OUTPUT % (line_number, e, line)
-        logging.log(30, err)
+        logging.log(20, err)
         print err
         return
     edr.save()
@@ -1381,11 +1381,11 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
                 dexs = DrinkingExperiment.objects.filter(cohort=cohort, dex_type=dex_type, dex_date=date)
                 if dexs.count() == 0:
                     err = "DEX does not exist: %s" % entry
-                    logging.log(30, err)
+                    logging.log(20, err)
                     continue
                 if len(dexs) > 1:
                     err = "More than one DEX: %s" % entry
-                    logging.log(30, err)
+                    logging.log(20, err)
                     print err
                     continue
                 dex = dexs[0]
@@ -1396,7 +1396,7 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
                 drinks.append((dex, line_number, line, entry[2:-1]))
             else:
                 err = "unknown format at line %d -->%s<--" % (line_number, line)
-                logging.log(30, err)
+                logging.log(20, err)
                 print err
                 continue
             last_date = date
