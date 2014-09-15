@@ -1910,7 +1910,8 @@ def load_cohort_timelines(filename, delete_replaced_cvts=False):
             print "New Event Type: %s" % evt.evt_name
 
     for row in csv_infile:
-        cohort = Cohort.objects.filter(coh_cohort_name__icontains=row[2]).filter(coh_cohort_name__icontains=row[3])
+        cohort_name_ish = "inia %s %s" % (row[3], row[2])
+        cohort = Cohort.objects.filter(coh_cohort_name__iexact=cohort_name_ish)
         if cohort.count() == 1:
             cohort = cohort[0]
         else:
