@@ -66,8 +66,9 @@ def raw_data_upload(request):
             for chunk in f.chunks():
                 destination.write(chunk)
             destination.close()
+            messages.success(request, "Your data has been uploaded successfully.")
             return render_to_response('matrr/upload_forms/raw_data_upload.html',
-                                      {'form': RawDataUploadForm(), 'success': True},
+                                      {'form': RawDataUploadForm()},
                                       context_instance=RequestContext(request))
     else:
         form = RawDataUploadForm()

@@ -5,19 +5,41 @@
 {% endblock %}
 
 {% block content %}
-	{% if success %}
-	<div class="messages" >
-			<div class="info">
-				Your data has been uploaded successfully.
-			</div>
-	</div>
-	{% endif %}
+
 	<div class='center-content'>
 		<div id='large-headline'>MATRR Data Upload</div>
-		You can upload your MATRR data here.
+		<a href="{{ STATIC_URL }}/pdf/MATRR-Data-Upload.pdf">
+            The MATRR Data Symposium slides detailing what data to upload and how to format/upload data to MATRR can be found here.
+		</a>
+        <br><br>
+        <div class="headline">In summary</div>
+        <div class="left" style="width: 49%">
+            <div class="mini-headline">DO</div>
+            <ul>
+                <li>Format data consistently.</li>
+                <li>Add as many columns as you could possibly want.  Instead of flagging or coloring data just add a new column</li>
+                <li>Name/label data consistently<br>('22hr' != '22 hour')</li>
+                <li>Describe your data and SOP, in detail, in a separate file</li>
+                <li><a href="http://www.w3.org/TR/NOTE-datetime">Use a standardized date format</a></li>
+                <li>Send us ALL your final data</li>
+            </ul>
+        </div>
+        <div class="right" style="width: 49%">
+            <div class="mini-headline">DON'T</div>
+            <ul>
+                <li>Rearrange columns</li>
+                <li>Insert new columns between existing columns. Append new columns to the end</li>
+                <li>Color/flag/mark data cells. Add new columns to denote/describe the data.</li>
+                <li>Merge cells together. All rows should have the same number of columns, all columns should have the same number of rows.</li>
+                <li>Merge disparate spreadsheets together</li>
+                <li>Send us images or graphs</li>
+                <li>Send us unfinished data</li>
+            </ul>
+        </div>
+        <div class="clearfix"></div>
 		<form method="post" action="" enctype="multipart/form-data">
 				{% csrf_token %}
-				{{ form.as_p }}
+				{{ form }}
 				<button type='submit' name='submit'>Upload</button>
 		</form>
 		
