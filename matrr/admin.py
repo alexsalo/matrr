@@ -53,30 +53,6 @@ class CohortExcludeListFilter(SimpleListFilter):
 
 
 class PublicationAdmin(admin.ModelAdmin):
-    """
-    id = models.AutoField(primary_key=True)
-    authors = models.TextField('Authors', null=True, blank=True)
-    title = models.CharField('Title', max_length=200, null=True, blank=True)
-    journal = models.CharField('Journal', max_length=200, null=True, blank=True)
-    cohorts = models.ManyToManyField(Cohort, db_table='ptc_publications_to_cohorts',
-                                     verbose_name='Cohorts',
-                                     related_name='publication_set',
-                                     help_text='The cohorts involved in this publication.',
-                                     null=True, blank=True)
-    published_year = models.CharField('Year Published', max_length=10, null=True, blank=True)
-    published_month = models.CharField('Month Published', max_length=10, null=True, blank=True)
-    issue = models.CharField('Issue Number', max_length=20, null=True, blank=True)
-    volume = models.CharField('Volume', max_length=20, null=True, blank=True)
-    pmid = models.IntegerField('PubMed ID', unique=True, null=True, blank=True)
-    pmcid = models.CharField('PubMed Central ID', max_length=20, null=True, blank=True)
-    isbn = models.IntegerField('ISBN', null=True, blank=True)
-    abstract = models.TextField('Abstract', null=True, blank=True)
-    keywords = models.TextField('Keywords', null=True, blank=True)
-    cites_matrr = models.BooleanField('Acknowledges MATRR', default=False)
-
-    pub_date = models.DateField("Publication Date", null=True, blank=True)
-
-    """
     list_display = ['title', 'authors', 'journal', 'get_cohorts', 'published_year', 'pmid', 'pmcid', 'isbn', 'cites_matrr']
     list_filter = ['cohorts', CohortExcludeListFilter, 'published_year', 'cites_matrr', 'journal']
 
@@ -144,7 +120,6 @@ class ShipmentAdmin(admin.ModelAdmin):
     req_request_pk.short_description = 'Request'
 
 
-
 class RequestAdmin(admin.ModelAdmin):
     list_display = ['req_request_id', 'cohort', 'user', 'req_request_date', 'req_status']
     list_filter = ('cohort', 'req_status', 'req_request_date', 'user')
@@ -196,9 +171,15 @@ class VerificationAccountAdmin(admin.ModelAdmin):
     }),
     )
 
+
 class DataSymposiumAdmin(admin.ModelAdmin):
     list_display = ['dsm_last_name', 'dsm_badge_name', 'dsm_role', 'dsm_hotel', 'dsm_reception', 'dsm_lunch', 'dsm_poster', 'dsm_diet']
     list_filter = ['dsm_role', 'dsm_reception', 'dsm_lunch', 'dsm_poster', 'dsm_diet']
+
+
+class CohortEventAdmin(admin.ModelAdmin):
+    list_display = ['cohort', 'event', 'cev_date',]
+    list_filter = ['cohort', 'event', ]
 
 
 admin.site.unregister(User)
@@ -206,7 +187,7 @@ admin.site.register(User, UserAdmin)
 admin.site.register(TissueType, TissueAdmin)
 admin.site.register(TissueCategory)
 admin.site.register(Cohort)
-admin.site.register(CohortEvent)
+admin.site.register(CohortEvent, CohortEventAdmin)
 admin.site.register(CohortData)
 admin.site.register(EventType)
 admin.site.register(Monkey, MonkeyAdmin)
