@@ -1,109 +1,12 @@
 from datetime import datetime as dt
-from datetime import timedelta, time
-import dateutil.parser
 import string
-import django.template.loader as template_loader
 import csv
 import re
-import gc
-import logging
-
-from django.db.models.query import QuerySet
 from django.db.transaction import commit_on_success
 from django.db import transaction
 
 from matrr.models import *
-from matrr.utils import gadgets
-
-def get_monkey_by_number(mystery_number):
-    try:
-        monkey = Monkey.objects.get(pk=mystery_number)
-    except Monkey.DoesNotExist:
-        try:
-            monkey = Monkey.objects.get(mky_real_id=mystery_number)
-        except Monkey.DoesNotExist:
-            raise Exception("No such monkey:  %s" % str(mystery_number))
-    return monkey
-
-def queryset_iterator(queryset, chunksize=5000):
-    '''
-    http://djangosnippets.org/snippets/1949/
-
-    Iterate over a Django Queryset ordered by the primary key
-
-    This method loads a maximum of chunksize (default: 1000) rows in it's
-    memory at the same time while django normally would load all rows in it's
-    memory. Using the iterator() method only causes it to not preload all the
-    classes.
-
-    Note that the implementation of the iterator does not support ordered query sets.
-    '''
-    pk = 0
-    last_pk = queryset.order_by('-pk')[0].pk
-    queryset = queryset.order_by('pk')
-    while pk < last_pk:
-        for row in queryset.filter(pk__gt=pk)[:chunksize]:
-            pk = row.pk
-            yield row
-        gc.collect()
-
-
-def get_datetime_from_steve(steve_date):
-    def minimalist_xldate_as_datetime(xldate, datemode):
-        # datemode: 0 for 1900-based, 1 for 1904-based
-        return datetime(1899, 12, 30) + timedelta(days=int(xldate) + 1462 * datemode)
-
-    try:
-        real_date = dt.strptime(steve_date, "%m/%d/%y")
-        return real_date
-    except Exception as e:
-        pass
-    try:
-        real_date = dt.strptime(steve_date, "%Y-%m-%d")
-        return real_date
-    except Exception as e:
-        pass
-    try:
-        real_date = dt.strptime(steve_date, "%Y_%m_%d")
-        return real_date
-    except Exception as e:
-        pass
-    try:
-        real_date = dt.strptime(steve_date, "%Y%m%d")
-        return real_date
-    except Exception as e:
-        pass
-    try:
-        real_date = minimalist_xldate_as_datetime(steve_date, 1)
-        return real_date
-    except Exception as e:
-        pass
-    return None
-
-
-def convert_MonkeyProtein_dates_to_correct_datetimes():
-    dates = (
-    (2002, 4, 15),
-    (2003, 3, 5),
-    (2003, 4, 28),
-    (2003, 4, 30),
-    (2003, 12, 19),
-    (2004, 8, 2),
-    )
-    times = (
-    (12, 0),
-    (17, 30),
-    (12, 0),
-    (17, 30),
-    (7, 0),
-    (12, 0),
-    )
-    for d, t in zip(dates, times):
-        old_datetime = dt(*d)
-        monkeys = MonkeyProtein.objects.filter(mpn_date=old_datetime)
-        new_datetime = old_datetime.combine(old_datetime.date(), time(*t))
-        monkeys.update(mpn_date=new_datetime)
-
+from matrr.utils.database import dingus, create
 
 @transaction.commit_on_success
 def load_initial_inventory(file, output_file, load_tissue_types=False, delete_name_duplicates=False,
@@ -223,7 +126,6 @@ def load_initial_inventory(file, output_file, load_tissue_types=False, delete_na
             unknown_monkeys.writerow(row)
         #raise Exception('Just testing') #uncomment for testing purposes
 
-
 def load_cohort_6a_inventory(input_file):
     unmatched_output_file = input_file + "-unmatched-output.csv"
 
@@ -284,7 +186,6 @@ def load_cohort_6a_inventory(input_file):
             row.append(error)
             unmatched_output.writerow(row)
             print error
-
 
 def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_duplicates=False,
                             create_tissue_samples=False):
@@ -350,7 +251,6 @@ def load_cohort_8_inventory(input_file, load_tissue_types=False, delete_name_dup
             unmatched_output.writerow(row)
             print error
 
-
 def load_cohort_7b_inventory(input_file):
     output = input_file.split('/')
     output.reverse()
@@ -411,238 +311,6 @@ def load_cohort_7b_inventory(input_file):
             unmatched_output.writerow(row)
             print error
 
-# dumps the monkey table to a csv
-def dump_monkey_data():
-    f = open('MATRR_Monkeys.csv', 'w')
-    output = csv.writer(f, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-    columns = [
-        'mky_id',
-        'cohort', # doesnt work with getattr()
-        'mky_real_id',
-        'mky_name',
-        'mky_gender',
-        'mky_birthdate',
-        'mky_weight',
-        'mky_drinking',
-        'mky_housing_control',
-        'mky_necropsy_start_date',
-        'mky_necropsy_start_date_comments',
-        'mky_necropsy_end_date',
-        'mky_necropsy_end_date_comments',
-        'mky_study_complete',
-        'mky_stress_model',
-        'mky_age_at_necropsy',
-        'mky_notes',
-        'mky_species',
-        'mky_high_drinker',
-        'mky_low_drinker',
-        'mky_age_at_intox'
-    ]
-    output.writerow(columns)
-    for mky in Monkey.objects.all().order_by('cohort', 'pk'):
-        row = list()
-        for col in columns:
-            if col == 'cohort':
-                row.append(mky.cohort.coh_cohort_name)
-            else:
-                row.append(getattr(mky, col))
-        output.writerow(row)
-    f.flush()
-    f.close()
-
-## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
-## -jf
-def dump_all_TissueSample(output_file):
-    """
-        This function will dump existing tissue samples to CSV
-        It writes columns in this order
-        0 - Category.cat_internal
-        1 - Category.parent_category
-        2 - Catagory.cat_name
-        3 - Category.cat_description
-        --- Empty
-        4 - TissueType.tst_tissue_name
-        5 - TissueType.tst_description
-        6 - TissueType.tst_count_per_monkey
-        7 - TissueType.tst_cost
-        --- Empty
-        8 - TissueSample.tss.monkey
-        9 - TissueSample.tss_details
-        10- TissueSample.tss_freezer
-        11- TissueSample.tss_location
-        12- TissueSample.tss_sample_count
-        13- TissueSample.tss_distributed_count
-
-    """
-    output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-    columns = \
-        ["Internal Category", "Parent Category", "Category:Name", "Category:Description", "Empty Column",
-         "TissueType:Name", "TissueType:Description", "TissueType:count_per_monkey",
-         "TissueType:cost", "Empty Column", "TissueSample:Monkey", "TissueSample:Details", "TissueSample:Freezer",
-         "TissueSample:Location", "TissueSample:sample_count",
-         "TissueSample:distributed_count"]
-    output.writerow(columns)
-
-    for TS in TissueSample.objects.all():
-        row = []
-        row[len(row):] = [str(TS.tissue_type.category.cat_internal)]
-        row[len(row):] = [str(TS.tissue_type.category.parent_category)]
-        row[len(row):] = [str(TS.tissue_type.category.cat_name)]
-        row[len(row):] = [str(TS.tissue_type.category.cat_description)]
-        row[len(row):] = [" "]
-        row[len(row):] = [str(TS.tissue_type.tst_tissue_name)]
-        row[len(row):] = [str(TS.tissue_type.tst_description)]
-        row[len(row):] = [" "]
-        row[len(row):] = [TS.monkey]
-        row[len(row):] = [str(TS.tss_details)]
-        row[len(row):] = [str(TS.tss_freezer)]
-        row[len(row):] = [str(TS.tss_location)]
-        row[len(row):] = [TS.tss_sample_count]
-        row[len(row):] = [TS.tss_distributed_count]
-        output.writerow(row)
-    print "Success"
-
-## Dumps database rows into a CSV.  I'm sure i'll need this again at some point
-## -jf
-def dump_distinct_TissueType(output_file):
-    """
-        This function will dump existing tissue catagories and tissuetypes to CSV
-        It writes columns in this order
-        0 - Catagory.cat_name
-        1 - TissueType.tst_tissue_name
-    """
-    output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-    columns = \
-        ["Category:Name", "TissueType:Name"]
-    output.writerow(columns)
-
-    for TT in TissueType.objects.distinct().order_by("category"):
-        row = []
-        row[len(row):] = [str(TT.category.cat_name)]
-        row[len(row):] = [str(TT.tst_tissue_name)]
-        output.writerow(row)
-    print "Success."
-
-
-def dump_monkey_protein_data(queryset, output_file):
-    if isinstance(queryset, QuerySet) and isinstance(queryset[0], MonkeyProtein):
-        with open(output_file, 'w') as f:
-            output = csv.writer(f, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-            columns = ['monkey', 'protein', 'mpn_date', 'mpn_value']
-            output.writerow(columns)
-            for mpn in queryset:
-                output.writerow([mpn.monkey, "%s" % mpn.protein.pro_name, mpn.mpn_date, mpn.mpn_value])
-    else:
-        raise Exception("queryset kwarg can only be a QuerySet of MonkeyProteins.")
-
-
-def dump_MATRR_stats():
-    """
-    Returns a string
-
-    String contains MATRR stats for each year (ending May 31) since project launch (2010)
-
-    Stats include:
-    New user signups
-    Submitted+ request count
-    Requested tissue count
-    Accepted tissue count
-    Rejected tissue count
-    Shipped shipment count
-    Shipped tissue count
-    Cohort count
-    Monkey count
-    Brain tissue inventory count (total)
-    Peripheral tissue inventory count (total)
-    """
-    accepted = ['AC', 'PA', 'SH']
-    official = ['SB', 'RJ', 'AC', 'PA', 'SH']
-    project_start = 2010
-    current_year = dt.now().year if dt.now().month < 6 else dt.now().year + 1
-    dates = [("%s-06-01" % `year`, "%s-05-31" % `year + 1`) for year in range(project_start, current_year)]
-
-    requests = Request.objects.filter(req_status__in=official)
-
-    output = ''
-    for start_date, end_date in dates:
-        output += "For the daterange %s -> %s:\n" % (start_date, end_date)
-        yearly_requests = requests.filter(req_request_date__gte=start_date).filter(req_request_date__lte=end_date)
-        # User stats
-        output += "Users joined: %d\n" % User.objects.filter(date_joined__gte=start_date).filter(
-            date_joined__lte=end_date).count()
-        # Request stats
-        for o in official:
-            output += "%s Requests: %d\n" % (o, yearly_requests.filter(req_status=o).count())
-        # requested tissue stats
-        requested_tissues = yearly_requests.aggregate(Count('tissue_request_set__monkeys'))['tissue_request_set__monkeys__count']
-        output += "Requested Tissues: %d\n" % requested_tissues
-        # accepted tissue stats
-        approved_yearly_requests = yearly_requests.filter(req_status__in=accepted)
-        approved_tissues = approved_yearly_requests.aggregate(Count('tissue_request_set__monkeys'))[
-            'tissue_request_set__monkeys__count']
-        output += "Accepted Tissues: %d\n" % approved_tissues
-        # rejected tissue stats
-        rejected_yearly_requests = yearly_requests.filter(req_status='RJ')
-        rejected_tissues = rejected_yearly_requests.aggregate(Count('tissue_request_set__monkeys'))[
-            'tissue_request_set__monkeys__count']
-        partially_requested = 0
-        partially_accepted = 0
-        for part_acc in yearly_requests.filter(req_status="PA"):
-            partially_requested += part_acc.tissue_request_set.all().aggregate(Count('monkeys'))['monkeys__count']
-            partially_accepted += part_acc.tissue_request_set.all().aggregate(Count('accepted_monkeys'))[
-                'accepted_monkeys__count']
-        rejected_tissues += (partially_requested - partially_accepted)
-        output += "Rejected Tissues: %d\n" % rejected_tissues
-        # shipment stats
-        yearly_shipments = Shipment.objects.filter(shp_shipment_date__gte=start_date).filter(
-            shp_shipment_date__lte=end_date)
-        output += "Shipped Shipments: %d\n" % yearly_shipments.count()
-        output += "Shipped Tissues: %d\n" % yearly_shipments.aggregate(Count('tissue_request_set__monkeys'))[
-            'tissue_request_set__monkeys__count']
-        output += '-------\n'
-    # Cohort/Monkey stats
-    output += "Number of Cohorts:  %d\n" % Cohort.objects.all().count()
-    output += "Number of Monkeys:  %d\n" % Monkey.objects.all().count()
-    # inventory stats
-    available_monkey_count = Monkey.objects.filter(cohort__coh_upcoming=False).count()
-    brain_tissue_count = TissueType.objects.filter(category__cat_name='Brain Tissues').count()
-    peripheral_tissue_count = TissueType.objects.filter(
-        category__cat_name="Peripheral Tissues").count() + 1 # +1 is an internal 'serum' tissue in the "Interal Peripheral Tissue" category
-    output += "Brain Tissue Inventory: %d tissues\n" % (brain_tissue_count * available_monkey_count)
-    output += "Peripheral Tissue Inventory: %d tissues\n" % (peripheral_tissue_count * available_monkey_count)
-    return output
-
-
-def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
-    cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
-    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC", "Hormone", "Metabolite", "Protein", 'ElectroPhys', ]
-    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent, MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys]
-    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', ]
-
-    headers = ['Data Type']
-    headers.extend(cohorts.values_list('coh_cohort_name', flat=True))
-    data_rows = list()
-    for _type, _field, _class in zip(data_types, cohort_fields, data_classes):
-        _row = [_type, ]
-        for _cohort in cohorts:
-            row_count = _class.objects.filter(**{_field: _cohort}).count()
-            _row.append(row_count)
-        data_rows.append(_row)
-
-    if dump_csv:
-        outcsv = open('matrr/utils/DATA/current_data_grid.csv', 'w')
-        writer = csv.writer(outcsv)
-        writer.writerow(headers)
-        writer.writerows(data_rows)
-        outcsv.close()
-    if dump_json:
-        context = {'headers': headers, 'data_rows': data_rows, 'last_updated': datetime.now().strftime('%Y-%m-%d') }
-        outjson = open('matrr/utils/DATA/json/current_data_grid.json', 'w')
-        json_string = json.dumps(context)
-        outjson.write(json_string)
-        outjson.close()
-
-
 def load_monkey_data(input_file):
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
     columns = input_data.next()
@@ -675,7 +343,6 @@ def load_monkey_data(input_file):
         monkey.save()
     print "Success"
 
-
 def load_nicotine_monkey_data(input_file):
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
     columns = input_data.next()
@@ -688,15 +355,14 @@ def load_nicotine_monkey_data(input_file):
         mky['mky_real_id'] = row[3]
         mky['mky_name'] = row[5]
         mky['mky_gender'] = row[6]
-        mky['mky_birthdate'] = get_datetime_from_steve(row[7])
+        mky['mky_birthdate'] = dingus.get_datetime_from_steve(row[7])
         mky['mky_drinking'] = row[8] == 'TRUE'
         mky['mky_housing_control'] = row[8] == 'TRUE'
         if row[9]:
-            mky['mky_necropsy_start_date'] = get_datetime_from_steve(row[9])
+            mky['mky_necropsy_start_date'] = dingus.get_datetime_from_steve(row[9])
         monkey, is_new = Monkey.objects.get_or_create(**mky)
         monkey.save()
     print 'Success'
-
 
 def load_cyno_9_monkeys(input_file):
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
@@ -711,10 +377,10 @@ def load_cyno_9_monkeys(input_file):
             mky['mky_real_id'] = row[0]
             mky['mky_name'] = ''
             mky['mky_gender'] = row[4]
-            mky['mky_birthdate'] = get_datetime_from_steve(row[5])
+            mky['mky_birthdate'] = dingus.get_datetime_from_steve(row[5])
             mky['mky_drinking'] = row[10] != 'control'
             mky['mky_housing_control'] = False
-            mky['mky_necropsy_start_date'] = get_datetime_from_steve(row[6])
+            mky['mky_necropsy_start_date'] = dingus.get_datetime_from_steve(row[6])
             monkey, is_new = Monkey.objects.get_or_create(**mky)
             monkey.save()
     print 'Success'
@@ -742,13 +408,12 @@ def load_rhesus_10_monkeys(input_file):
             mky['mky_real_id'] = row[3]
             mky['mky_name'] = row[4]
             mky['mky_gender'] = row[5]
-            mky['mky_birthdate'] = get_datetime_from_steve(row[6])
+            mky['mky_birthdate'] = dingus.get_datetime_from_steve(row[6])
             mky['mky_drinking'] = not row[7]
             mky['mky_housing_control'] = row[7] and not row[8]
             monkey, is_new = Monkey.objects.get_or_create(**mky)
             monkey.save()
     print 'Success'
-
 
 # Creates Tissue Types from following format:
 # each tissue on a separate line
@@ -832,7 +497,7 @@ def load_TissueTypes(file_name, delete_name_duplicates=False, create_tissue_samp
 
     if create_tissue_samples:
         print "Creating tissue samples"
-        create_TissueSamples()
+        create.create_TissueSamples()
 
 # Creates TissueCategories consistent with format agreed on 8/30/2011
 # No parent categories yet.
@@ -852,50 +517,6 @@ def load_TissueCategories():
         tc.cat_description = categories[key][0]
         tc.cat_internal = categories[key][1]
         tc.save()
-
-
-@transaction.commit_on_success
-# Creates ALL tissue samples in the database, for every monkey:tissuetype combination.
-def create_TissueSamples(tissue_type=None):
-    units = Units[2][0]
-    for monkey in Monkey.objects.all():
-        quantity = 0
-        if not tissue_type:
-            tissuetypes = TissueType.objects.all()
-            # Only create the "be specific" tissue samples for upcoming cohorts
-            if monkey.cohort.coh_upcoming:
-                quantity = 1
-            else:
-                tissuetypes = tissuetypes.exclude(tst_tissue_name__icontains="Be specific")
-        else:
-            tissuetypes = [tissue_type]
-
-        for tt in tissuetypes:
-            sample, is_new = TissueSample.objects.get_or_create(monkey=monkey, tissue_type=tt)
-            if is_new:
-                sample.tss_freezer = "<new record, no data>"
-                sample.tss_location = "<new record, no data>"
-                sample.save()
-                # Can be incredibly spammy
-                print "New tissue sample: " + sample.__unicode__()
-
-
-@transaction.commit_on_success
-def create_Assay_Development_tree():
-    institution = Institution.objects.all()[0]
-    cohort = Cohort.objects.get_or_create(coh_cohort_name="Assay Development", coh_upcoming=False,
-                                          institution=institution)
-    monkey = Monkey.objects.get_or_create(mky_real_id=0, mky_drinking=False, cohort=cohort[0])
-    for tt in TissueType.objects.exclude(category__cat_name__icontains="Internal"):
-        tissue_sample = TissueSample.objects.get_or_create(tissue_type=tt, monkey=monkey[0])
-        tissue_sample[0].tss_sample_quantity = 999 # Force quantity
-        tissue_sample[0].tss_freezer = "Assay Tissue"
-        tissue_sample[0].tss_location = "Assay Tissue"
-        tissue_sample[0].tss_details = "MATRR does not track assay inventory."
-
-
-ERROR_OUTPUT = "%d %s # %s"
-
 
 @transaction.commit_on_success
 def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_duplicates=True, has_headers=True, dump_file=False,
@@ -985,9 +606,9 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
                 data_fields.extend(data[40:truncate_data_columns])
 
             # create or get experiment - date, cohort, dex_type
-            dex_date = get_datetime_from_steve(data[0])
+            dex_date = dingus.get_datetime_from_steve(data[0])
             if not dex_date:
-                err = ERROR_OUTPUT % (line_number, "Wrong date format", line)
+                err = dingus.ERROR_OUTPUT % (line_number, "Wrong date format", line)
                 if dump_file:
                     dump_file.write(err + '\n')
                 else:
@@ -1001,7 +622,7 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
                 elif des.count() == 1:
                     de = des[0]
                 else:
-                    err = ERROR_OUTPUT % (line_number,
+                    err = dingus.ERROR_OUTPUT % (line_number,
                                           "Too many drinking experiments with type %s, cohort %d and specified date." % (
                                           dex_type, cohort.coh_cohort_id), line)
                     if dump_file:
@@ -1014,7 +635,7 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
             if truncate_data_columns > 38:
                 monkey_real_id_check = data[39]
                 if monkey_real_id != monkey_real_id_check:
-                    err = ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
+                    err = dingus.ERROR_OUTPUT % (line_number, "Monkey real id check failed", line)
                     if dump_file:
                         dump_file.write(err + '\n')
                     else:
@@ -1023,7 +644,7 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
             try:
                 monkey = Monkey.objects.get(mky_real_id=monkey_real_id)
             except:
-                err = ERROR_OUTPUT % (line_number, "Monkey does not exist", line)
+                err = dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist", line)
                 if dump_file:
                     dump_file.write(err + '\n')
                 else:
@@ -1035,7 +656,7 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
             except IndexError:
                 bad_data = ''
             if bad_data != '':
-                err = ERROR_OUTPUT % (line_number, "Bad data flag", line)
+                err = dingus.ERROR_OUTPUT % (line_number, "Bad data flag", line)
                 if dump_file:
                     dump_file.write(err + '\n')
                 else:
@@ -1044,7 +665,7 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
 
             mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment=de, monkey=monkey)
             if mtds.count() != 0:
-                err = ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
+                err = dingus.ERROR_OUTPUT % (line_number, "MTD with monkey and date already exists.", line)
                 if dump_file:
                     dump_file.write(err + '\n')
                 else:
@@ -1074,14 +695,13 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
             try:
                 mtd.clean_fields()
             except Exception as e:
-                err = ERROR_OUTPUT % (line_number, e, line)
+                err = dingus.ERROR_OUTPUT % (line_number, e, line)
                 if dump_file:
                     dump_file.write(err + '\n')
                 else:
                     print err
                 continue
             mtd.save()
-
 
 def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=1,):
     fields = (
@@ -1102,7 +722,7 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
     try:
         monkey = Monkey.objects.get(mky_real_id=data_list[MONKEY_DATA_INDEX])
     except:
-        err = ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+        err = dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
         logging.log(20, err)
         print err
         return
@@ -1116,11 +736,11 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
             mtd = [mtd, ]
             print "%d Creating MTD." % line_number
         else:
-            err = ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+            err = dingus.ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
             logging.log(20, err)
             return
     if mtds.count() > 1:
-        err = ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+        err = dingus.ERROR_OUTPUT % (line_number, "More than one MTD.", line)
         logging.log(20, err)
         print err
         return
@@ -1128,7 +748,7 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
 
     ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number=data_list[BOUT_NUMBER_DATA_INDEX])
     if ebts.count() != 0:
-        err = ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
+        err = dingus.ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
         logging.log(20, err)
         print err
         return
@@ -1144,11 +764,10 @@ def load_ebt_one_inst(data_list, line_number, create_mtd, dex, line, bout_index=
     try:
         ebt.full_clean()
     except Exception as e:
-        err = ERROR_OUTPUT % (line_number, e, line)
+        err = dingus.ERROR_OUTPUT % (line_number, e, line)
         logging.log(20, err)
         return
     ebt.save()
-
 
 def load_ebt_one_file(file_name, dex, create_mtd=False):
     fields = (
@@ -1172,7 +791,7 @@ def load_ebt_one_file(file_name, dex, create_mtd=False):
             try:
                 monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
             except:
-                print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
                 continue
 
             mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
@@ -1184,16 +803,16 @@ def load_ebt_one_file(file_name, dex, create_mtd=False):
                     mtd = [mtd, ]
                     print "%d Creating MTD." % line_number
                 else:
-                    print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+                    print dingus.ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
                     continue
             if mtds.count() > 1:
-                print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "More than one MTD.", line)
                 continue
             mtd = mtds[0]
 
             ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number=data[BOUT_NUMBER_DATA_INDEX])
             if ebts.count() != 0:
-                print ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "EBT with MTD and bout number already exists.", line)
                 continue
 
             ebt = ExperimentBout()
@@ -1208,10 +827,9 @@ def load_ebt_one_file(file_name, dex, create_mtd=False):
                 ebt.full_clean()
 
             except Exception as e:
-                print ERROR_OUTPUT % (line_number, e, line)
+                print dingus.ERROR_OUTPUT % (line_number, e, line)
                 continue
             ebt.save()
-
 
 def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_index=2,):
     fields = (
@@ -1232,18 +850,18 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
     try:
         monkey = Monkey.objects.get(mky_real_id=data_list[MONKEY_DATA_INDEX])
     except:
-        err = ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+        err = dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
         logging.log(20, err)
         print err
         return
 
     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
     if mtds.count() == 0:
-        err = ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+        err = dingus.ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
         logging.log(20, err)
         return
     if mtds.count() > 1:
-        err = ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+        err = dingus.ERROR_OUTPUT % (line_number, "More than one MTD.", line)
         logging.log(20, err)
         print err
         return
@@ -1251,11 +869,11 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
 
     ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number=data_list[BOUT_NUMBER_DATA_INDEX])
     if ebts.count() == 0:
-        err = ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
+        err = dingus.ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
         logging.log(20, err)
         return
     if ebts.count() > 1:
-        err = ERROR_OUTPUT % (line_number, "More than one EBT.", line)
+        err = dingus.ERROR_OUTPUT % (line_number, "More than one EBT.", line)
         logging.log(20, err)
         print err
         return
@@ -1263,7 +881,7 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
 
     edrs = ExperimentDrink.objects.filter(ebt=ebt, edr_number=data_list[DRINK_NUMBER_DATA_INDEX])
     if edrs.count() != 0:
-        err = ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
+        err = dingus.ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
         logging.log(20, err)
         print err
         return
@@ -1280,12 +898,11 @@ def load_edr_one_inst(data_list, dex, line_number, line, bout_index=1, drink_ind
     try:
         edr.full_clean()
     except Exception as e:
-        err = ERROR_OUTPUT % (line_number, e, line)
+        err = dingus.ERROR_OUTPUT % (line_number, e, line)
         logging.log(20, err)
         print err
         return
     edr.save()
-
 
 def load_edr_one_file(file_name, dex):
     fields = (
@@ -1310,30 +927,30 @@ def load_edr_one_file(file_name, dex):
             try:
                 monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
             except:
-                print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
                 continue
 
             mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey, drinking_experiment=dex)
             if mtds.count() == 0:
-                print ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "MonkeyToDrinkingExperiment does not exist.", line)
                 continue
             if mtds.count() > 1:
-                print ERROR_OUTPUT % (line_number, "More than one MTD.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "More than one MTD.", line)
                 continue
             mtd = mtds[0]
 
             ebts = ExperimentBout.objects.filter(mtd=mtd, ebt_number=data[BOUT_NUMBER_DATA_INDEX])
             if ebts.count() == 0:
-                print ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "EBT does not exist.", line)
                 continue
             if ebts.count() > 1:
-                print ERROR_OUTPUT % (line_number, "More than one EBT.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "More than one EBT.", line)
                 continue
             ebt = ebts[0]
 
             edrs = ExperimentDrink.objects.filter(ebt=ebt, edr_number=data[DRINK_NUMBER_DATA_INDEX])
             if edrs.count() != 0:
-                print ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "EDR with EBT and drink number already exists.", line)
                 continue
 
             edr = ExperimentDrink()
@@ -1349,10 +966,9 @@ def load_edr_one_file(file_name, dex):
                 edr.full_clean()
 
             except Exception as e:
-                print ERROR_OUTPUT % (line_number, e, line)
+                print dingus.ERROR_OUTPUT % (line_number, e, line)
                 continue
             edr.save()
-
 
 def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_index=1, drink_index=2, create_mtd=False,):
     """ Input file may start with header, but ONLY if entry[1] == 'Date'! """
@@ -1376,7 +992,7 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
             entry = line.split("\t")
             if entry[1] == 'Date':
                 continue
-            date = get_datetime_from_steve(entry[1])
+            date = dingus.get_datetime_from_steve(entry[1])
             if last_date != date:
                 dexs = DrinkingExperiment.objects.filter(cohort=cohort, dex_type=dex_type, dex_date=date)
                 if dexs.count() == 0:
@@ -1407,7 +1023,6 @@ def load_edrs_and_ebts_all_from_one_file(cohort_name, dex_type, file_name, bout_
     print "Loading drinks ..."
     for (dex, line_number, line, drink) in drinks:
         load_edr_one_inst(drink, dex, line_number, line, bout_index=bout_index, drink_index=drink_index,)
-
 
 def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
     if not dex_type in DexTypes:
@@ -1452,25 +1067,6 @@ def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
     for (dex, drink) in drinks:
         print "Loading %s..." % drink
         load_edr_one_file(drink, dex)
-
-
-def convert_excel_time_to_datetime(time_string):
-    DATE_BASE = dt(day=1, month=1, year=1904)
-    SECONDS_BASE = 24 * 60 * 60
-    data_days = int(time_string.split('.')[0])
-    date_time = float("0.%s" % time_string.split('.')[1])
-    seconds = round(date_time * SECONDS_BASE)
-    return DATE_BASE + timedelta(days=data_days, seconds=seconds)
-
-
-def parse_left_right(side_string):
-    if string.count(side_string, "Left") != 0:
-        return LeftRight.Left
-    elif string.count(side_string, "Right") != 0:
-        return LeftRight.Right
-    else:
-        return None
-
 
 @commit_on_success
 def load_eev_one_file(file_name, dex_type, filename_date):
@@ -1526,20 +1122,20 @@ def load_eev_one_file(file_name, dex_type, filename_date):
             try:
                 monkey = Monkey.objects.get(mky_real_id=data[MONKEY_DATA_INDEX])
             except:
-                msg = ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+                msg = dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
                 logging.warning(msg)
                 continue
 
-            eev_date = convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
+            eev_date = dingus.convert_excel_time_to_datetime(data[DATE_DATA_INDEX])
             if filename_date.date() != eev_date.date():
-                msg = ERROR_OUTPUT % (line_number,
+                msg = dingus.ERROR_OUTPUT % (line_number,
                                       "Filename date does not match line date.  Will use line date. filename_date=%s" % str(
                                           filename_date), line)
                 logging.info(msg)
 
             #			eevs = ExperimentEvent.objects.filter(monkey=monkey, dex_type=dex_type, eev_source_row_number=line_number, eev_occurred=eev_date)
             #			if eevs.count() != 0:
-            #				msg = ERROR_OUTPUT % (line_number, "EEV with monkey, dex_type, date occurred and source row number already exists.", line)
+            #				msg = dingus.ERROR_OUTPUT % (line_number, "EEV with monkey, dex_type, date occurred and source row number already exists.", line)
             #				logging.debug(msg)
             #				continue
 
@@ -1548,8 +1144,8 @@ def load_eev_one_file(file_name, dex_type, filename_date):
             eev.dex_type = dex_type
             eev.eev_occurred = eev_date
             eev.eev_event_type = data[DATA_TYPE_D_INDEX] or data[DATA_TYPE_P_INDEX] or data[DATA_TYPE_T_INDEX]
-            eev.eev_veh_side = parse_left_right(data[DATA_VEH_SIDE_INDEX])
-            eev.eev_etoh_side = parse_left_right(data[DATA_ETOH_SIDE_INDEX])
+            eev.eev_veh_side = dingus.parse_left_right(data[DATA_VEH_SIDE_INDEX])
+            eev.eev_etoh_side = dingus.parse_left_right(data[DATA_ETOH_SIDE_INDEX])
             eev.eev_source_row_number = line_number
 
             if data[DATA_HIB_INDEX] == 'X':
@@ -1570,12 +1166,11 @@ def load_eev_one_file(file_name, dex_type, filename_date):
                 eev.full_clean()
 
             except Exception as e:
-                msg = ERROR_OUTPUT % (line_number, e, line)
+                msg = dingus.ERROR_OUTPUT % (line_number, e, line)
                 print msg
                 logging.error(msg)
                 continue
             eev.save()
-
 
 def load_eevs(file_dir, dex_type):
     if not dex_type in DexTypes:
@@ -1603,7 +1198,6 @@ def load_eevs(file_dir, dex_type):
             logging.debug(msg)
             print msg
             load_eev_one_file(file_name, dex_type, day)
-
 
 def load_necropsy_summary(filename, six_month_cohort=False):
     """
@@ -1683,13 +1277,13 @@ def load_necropsy_summary(filename, six_month_cohort=False):
                 nec_sum = NecropsySummary(monkey=monkey)
 
 #            monkey.mky_birthdate = dt.strptime(row[5 + columns_offset], '%m/%d/%y')
-            monkey.mky_birthdate = get_datetime_from_steve(row[5+columns_offset])
+            monkey.mky_birthdate = dingus.get_datetime_from_steve(row[5+columns_offset])
 #            monkey.mky_necropsy_start_date = dt.strptime(row[6 + columns_offset], '%m/%d/%y')
-            monkey.mky_necropsy_start_date = get_datetime_from_steve(row[6+columns_offset])
+            monkey.mky_necropsy_start_date = dingus.get_datetime_from_steve(row[6+columns_offset])
             monkey.mky_age_at_necropsy = row[7]
             monkey.save()
 
-            nec_sum.ncm_etoh_onset = None if row[10 + columns_offset] == "control" else get_datetime_from_steve(row[8+columns_offset])
+            nec_sum.ncm_etoh_onset = None if row[10 + columns_offset] == "control" else dingus.get_datetime_from_steve(row[8+columns_offset])
             nec_sum.ncm_age_onset_etoh = row[9 + columns_offset]
             nec_sum.ncm_etoh_4pct_induction = row[10 + columns_offset] if row[10 + columns_offset] != "control" else 0
             nec_sum.ncm_etoh_4pct_22hr = row[11 + columns_offset] if row[11 + columns_offset] != "control" else 0
@@ -1698,8 +1292,8 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             nec_sum.ncm_sum_g_per_kg_induction = row[14 + columns_offset] if row[14 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_22hr = row[15 + columns_offset] if row[15 + columns_offset] != "control" else 0
             nec_sum.ncm_sum_g_per_kg_lifetime = row[16 + columns_offset] if row[16 + columns_offset] != "control" else 0
-            nec_sum.ncm_6_mo_start = get_datetime_from_steve(row[17+columns_offset]) if row[17 + columns_offset] != "control" else None
-            nec_sum.ncm_6_mo_end = get_datetime_from_steve(row[18+columns_offset]) if row[18 + columns_offset] != "control" else None
+            nec_sum.ncm_6_mo_start = dingus.get_datetime_from_steve(row[17+columns_offset]) if row[17 + columns_offset] != "control" else None
+            nec_sum.ncm_6_mo_end = dingus.get_datetime_from_steve(row[18+columns_offset]) if row[18 + columns_offset] != "control" else None
             nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[19 + columns_offset] if row[19 + columns_offset] != "control" else 0
             if six_month_cohort:
                 nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
@@ -1708,13 +1302,12 @@ def load_necropsy_summary(filename, six_month_cohort=False):
                 nec_sum.ncm_22hr_12mo_avg_g_per_kg = None
             else:
                 nec_sum.ncm_22hr_6mo_avg_g_per_kg = row[20 + columns_offset] if row[20 + columns_offset] != "control" else 0
-                nec_sum.ncm_12_mo_end = get_datetime_from_steve(row[19+columns_offset]) if row[19 + columns_offset] != "control" else None
+                nec_sum.ncm_12_mo_end = dingus.get_datetime_from_steve(row[19+columns_offset]) if row[19 + columns_offset] != "control" else None
                 if extra_22hr_column:
                     nec_sum.ncm_22hr_2nd_6mos_avg_g_per_kg = row[21 + columns_offset] if row[21 + columns_offset] != "control" else 0
                     columns_offset += 1
                 nec_sum.ncm_22hr_12mo_avg_g_per_kg = row[21 + columns_offset] if row[21 + columns_offset] != "control" else 0
             nec_sum.save()
-
 
 def load_metabolites(filename):
     """
@@ -1749,7 +1342,6 @@ def load_metabolites(filename):
             metabolite, isnew = Metabolite.objects.get_or_create(**met_dict)
             if isnew:
                 metabolite.save()
-
 
 def load_monkey_metabolites(filename, values_normalized):
     """
@@ -1821,7 +1413,6 @@ def load_monkey_metabolites(filename, values_normalized):
             if isnew:
                 monkey_metabolite.save()
 
-
 def load_proteins(filename):
     """
         This function will load a csv file in the format
@@ -1841,7 +1432,6 @@ def load_proteins(filename):
             protein, isnew = Protein.objects.get_or_create(**pro_dict)
             if isnew:
                 protein.save()
-
 
 def load_monkey_proteins(filename):
     """
@@ -1876,7 +1466,6 @@ def load_monkey_proteins(filename):
         if isnew:
             monkey_protein.save()
 
-
 def load_institutions(file_name):
     with open(file_name, 'r') as f:
         read_data = f.readlines()
@@ -1888,7 +1477,6 @@ def load_institutions(file_name):
             ins_institution_name="Non-UBMTA Institution") # required to exist for MTA operations
         if isnew:
             institution.save()
-
 
 def load_cohort_timelines(filename, delete_replaced_cvts=False):
     """
@@ -1929,113 +1517,11 @@ def load_cohort_timelines(filename, delete_replaced_cvts=False):
             elif row[idx]:
                 event_type = EventType.objects.get(evt_name__contains=event)
                 date_string = str(row[idx]).replace('"', '').replace("'", "") # remove " and ' from the string
-                cev_date = get_datetime_from_steve(date_string)
+                cev_date = dingus.get_datetime_from_steve(date_string)
                 cev, is_new = CohortEvent.objects.get_or_create(cohort=cohort, event=event_type, cev_date=cev_date)
                 if is_new:
                     cev.save()
                     print "New CohortEvent: %s" % str(cev)
-
-
-def assign_cohort_institutions():
-    wfu = Institution.objects.get(ins_institution_name='Wake Forest University')
-    ohsu = Institution.objects.get(ins_institution_name='Oregon Health Sciences University, Technology Management')
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 1')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 3')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Cyno 8')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 1')
-    cohort.institution = wfu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 2')
-    cohort.institution = wfu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
-    cohort.institution = ohsu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Vervet 1')
-    cohort.institution = wfu
-    cohort.save()
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Vervet 2')
-    cohort.institution = wfu
-    cohort.save()
-
-
-def populate_mtd_fields(queryset=None):
-    qs = queryset if queryset else MonkeyToDrinkingExperiment.objects.all()
-    for mtd in qs:
-        mtd.populate_max_bout_hours()
-
-
-def create_7b_control_monkeys():
-    import datetime
-
-    cohort = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
-    monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
-                    mky_real_id=24818,
-                    mky_birthdate=datetime.date(2005, 3, 13),
-                    mky_necropsy_start_date=datetime.date(2012, 7, 23),
-                    mky_age_at_necropsy='7 yrs 4 mos 10 days',
-    )
-    monkey.save()
-    monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
-                    mky_real_id=25207,
-                    mky_birthdate=datetime.date(2005, 6, 1),
-                    mky_necropsy_start_date=datetime.date(2012, 7, 27),
-                    mky_age_at_necropsy='7 yrs 1 mos 26 days',
-    )
-    monkey.save()
-    monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
-                    mky_real_id=25407,
-                    mky_birthdate=datetime.date(2005, 4, 1),
-                    mky_necropsy_start_date=datetime.date(2012, 7, 26),
-                    mky_age_at_necropsy='7 yrs 3 mos 25 days',
-    )
-    monkey.save()
-    monkey = Monkey(cohort=cohort, mky_drinking=False, mky_study_complete=False, mky_gender='M', mky_stress_model='',
-                    mky_real_id=25526,
-                    mky_birthdate=datetime.date(2005, 2, 1),
-                    mky_necropsy_start_date=datetime.date(2012, 7, 24),
-                    mky_age_at_necropsy='7 yrs 5 mos 23 days',
-    )
-    monkey.save()
-
 
 def load_hormone_data(file_name, overwrite=False, header=True):
     fields = (
@@ -2065,14 +1551,14 @@ def load_hormone_data(file_name, overwrite=False, header=True):
                 mhm_date = dt.strptime(data[0], "%m/%d/%y")
                 monkey = Monkey.objects.get(mky_real_id=data[1])
             except Monkey.DoesNotExist:
-                print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
                 continue
             except Exception as e:
-                print ERROR_OUTPUT % (line_number, "Wrong date format", line)
+                print dingus.ERROR_OUTPUT % (line_number, "Wrong date format", line)
                 continue
             mhm, is_new = MonkeyHormone.objects.get_or_create(monkey=monkey, mhm_date=mhm_date)
             if not is_new and not overwrite:
-                print ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
+                print dingus.ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
                 continue
 
             data_fields = data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
@@ -2084,11 +1570,10 @@ def load_hormone_data(file_name, overwrite=False, header=True):
             try:
                 mhm.full_clean()
             except Exception as e:
-                print ERROR_OUTPUT % (line_number, e, line)
+                print dingus.ERROR_OUTPUT % (line_number, e, line)
                 continue
             mhm.save()
     print "Data load complete."
-
 
 def load_hormone_data__cyno1(file_name, overwrite=False, header=True):
     fields = (
@@ -2107,16 +1592,16 @@ def load_hormone_data__cyno1(file_name, overwrite=False, header=True):
             try:
                 monkey = Monkey.objects.get(mky_real_id=row[0])
             except Monkey.DoesNotExist:
-                print ERROR_OUTPUT % (line_number, "Monkey does not exist.", str(row))
+                print dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist.", str(row))
                 continue
             try:
                 mhm_date = dt.strptime(row[1], "%m/%d/%y")
             except Exception as e:
-                print ERROR_OUTPUT % (line_number, "Wrong date format", str(row))
+                print dingus.ERROR_OUTPUT % (line_number, "Wrong date format", str(row))
                 continue
             mhm, is_new = MonkeyHormone.objects.get_or_create(monkey=monkey, mhm_date=mhm_date)
             if not is_new and not overwrite:
-                print ERROR_OUTPUT % (line_number, "Monkey+Date exists", str(row))
+                print dingus.ERROR_OUTPUT % (line_number, "Monkey+Date exists", str(row))
                 continue
             try:
                 float(row[2])
@@ -2133,11 +1618,10 @@ def load_hormone_data__cyno1(file_name, overwrite=False, header=True):
             try:
                 mhm.full_clean()
             except Exception as e:
-                print ERROR_OUTPUT % (line_number, e, str(row))
+                print dingus.ERROR_OUTPUT % (line_number, e, str(row))
                 continue
             mhm.save()
     print "Data load complete."
-
 
 def load_hormone_data__cyno2(file_path):
     """
@@ -2185,7 +1669,7 @@ def load_hormone_data__cyno2(file_path):
             except AssertionError as e:
                 print e
                 continue
-            monkey = get_monkey_by_number(row[0])
+            monkey = dingus.get_monkey_by_number(row[0])
             mhm_row = dict()
             mhm_row['monkey'] = monkey
             mhm_row['mhm_ep_num'] = row[1]
@@ -2193,7 +1677,6 @@ def load_hormone_data__cyno2(file_path):
             mhm_row['mhm_acth'] = row[4]
             MonkeyHormone.objects.get_or_create(**mhm_row)
     print 'Success'
-
 
 def load_bec_data(file_name, overwrite=False, header=True):
     def format_time(unformatted):
@@ -2264,13 +1747,13 @@ def load_bec_data(file_name, overwrite=False, header=True):
             try:
                 monkey = Monkey.objects.get(mky_real_id=data[0])
             except Monkey.DoesNotExist:
-                print ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
+                print dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
                 continue
 
-            bec_collect_date = get_datetime_from_steve(data[2])
-            bec_run_date = get_datetime_from_steve(data[3])
+            bec_collect_date = dingus.get_datetime_from_steve(data[2])
+            bec_run_date = dingus.get_datetime_from_steve(data[3])
             if not bec_collect_date:
-                print ERROR_OUTPUT % (line_number, "Wrong date format", line)
+                print dingus.ERROR_OUTPUT % (line_number, "Wrong date format", line)
                 continue
 
             bec = MonkeyBEC.objects.filter(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
@@ -2279,7 +1762,7 @@ def load_bec_data(file_name, overwrite=False, header=True):
                     bec.delete()
                     bec = MonkeyBEC(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
                 else:
-                    print ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
+                    print dingus.ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
                     continue
             else:
                 bec = MonkeyBEC(monkey=monkey, bec_collect_date=bec_collect_date, bec_run_date=bec_run_date)
@@ -2304,16 +1787,10 @@ def load_bec_data(file_name, overwrite=False, header=True):
             try:
                 bec.full_clean()
             except Exception as e:
-                print ERROR_OUTPUT % (line_number, e, line)
+                print dingus.ERROR_OUTPUT % (line_number, e, line)
                 continue
             bec.save()
     print "Data load complete."
-
-
-def populate_mky_species():
-    for coh in Cohort.objects.exclude(coh_cohort_name__icontains='assay'):
-        coh.monkey_set.all().update(mky_species=coh.coh_species)
-
 
 def load_mbb_images(image_dir):
     def create_mbb(image_path):
@@ -2370,7 +1847,6 @@ def load_mbb_images(image_dir):
     for filename in files:
         create_mbb(os.path.join(image_dir, filename))
 
-
 def load_monkey_exceptions(file_name, overwrite=False, header=True):
     """
     Pre-7b format:
@@ -2409,26 +1885,26 @@ def load_monkey_exceptions(file_name, overwrite=False, header=True):
         try:
             monkey = Monkey.objects.get(mky_real_id=row[6])
         except Monkey.DoesNotExist:
-            msg = ERROR_OUTPUT % (line_number, "Monkey Does Not Exist", str(row))
+            msg = dingus.ERROR_OUTPUT % (line_number, "Monkey Does Not Exist", str(row))
             logging.error(msg)
             print msg
             continue
         except ValueError:
-            msg = ERROR_OUTPUT % (line_number, "Monkey value isn't an integer", str(row))
+            msg = dingus.ERROR_OUTPUT % (line_number, "Monkey value isn't an integer", str(row))
             logging.error(msg)
             print msg
             continue
 
-        date = get_datetime_from_steve(row[5])
+        date = dingus.get_datetime_from_steve(row[5])
         if date is None:
-            msg = ERROR_OUTPUT % (line_number, "Unknown Date Format", str(row))
+            msg = dingus.ERROR_OUTPUT % (line_number, "Unknown Date Format", str(row))
             logging.error(msg)
             print msg
             continue
 
         exists = MonkeyException.objects.filter(monkey=monkey, mex_date=date).count()
         if exists >= 1 and not overwrite:
-            msg = ERROR_OUTPUT % (line_number, "Exception Record Already Exists", str(row))
+            msg = dingus.ERROR_OUTPUT % (line_number, "Exception Record Already Exists", str(row))
             logging.warning(msg)
             print msg
             continue
@@ -2438,7 +1914,7 @@ def load_monkey_exceptions(file_name, overwrite=False, header=True):
         elif row[1].lower() == '22hr':
             stage = DexType.OA
         else:
-            msg = ERROR_OUTPUT % (line_number, "Unknown Experiment Stage", str(row))
+            msg = dingus.ERROR_OUTPUT % (line_number, "Unknown Experiment Stage", str(row))
             logging.error(msg)
             print msg
             continue
@@ -2454,102 +1930,12 @@ def load_monkey_exceptions(file_name, overwrite=False, header=True):
             mex.full_clean()
         except Exception as e:
             if not u"Exception records must have an exception" in e.messages:
-                msg = ERROR_OUTPUT % (line_number, e, str(row))
+                msg = dingus.ERROR_OUTPUT % (line_number, e, str(row))
                 logging.error(msg)
                 print msg
                 continue
 
         mex.save()
-
-
-def delete_wonky_monkeys():
-    monkey_pks = [10043, 10050, 10053]
-    models = [MonkeyToDrinkingExperiment, MonkeyBEC, ExperimentEvent, MonkeyImage]
-
-    for model in models:
-        for mky in monkey_pks:
-            print "Deleting mky %d from table %s" % (mky, model.__name__)
-            model.objects.filter(monkey=mky).delete()
-
-
-def find_outlier_datapoints(cohort, stdev_min):
-    search_models = [MonkeyToDrinkingExperiment, MonkeyBEC, ]# ExperimentEvent, ExperimentBout, ExperimentDrink]
-    search_field = ['monkey__cohort',
-                    'monkey__cohort', ]#'monkey__cohort', 'mtd__monkey__cohort', 'mtd__ebt__monkey__cohort']
-
-    field_types = [models.FloatField, models.IntegerField, models.BigIntegerField, models.PositiveIntegerField,
-                   models.PositiveSmallIntegerField, models.SmallIntegerField]
-
-    for model, search in zip(search_models, search_field):
-        search_field_names = list()
-        for field in model._meta.fields:
-            if type(field) in field_types:
-                search_field_names.append(field.name)
-        for _name in search_field_names:
-            all_rows = model.objects.filter(**{search: cohort}).exclude(**{_name: None})
-            if all_rows.count():
-                all_values = all_rows.values_list(_name, flat=True)
-                all_values = numpy.array(all_values)
-                mean = all_values.mean()
-                std = all_values.std()
-                low_std = mean - stdev_min * std
-                high_std = mean + stdev_min * std
-                low_search_dict = {_name + "__lt": low_std}
-                high_search_dict = {_name + "__gt": high_std}
-                low_outliers = all_rows.filter(**low_search_dict)
-                high_outliers = all_rows.filter(**high_search_dict)
-
-                if low_outliers or high_outliers:
-                    output_file = "%d.%s__%s-outliers.csv" % (cohort, model.__name__, _name)
-                    output = csv.writer(open(output_file, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-                    header = ["Outlier Value", "Mean value", "StDev"]
-                    all_field_names = [f.name for f in model._meta.fields]
-                    header.extend(all_field_names)
-                    output.writerow(header)
-                    for out in low_outliers | high_outliers:
-                        row = list()
-                        row.append(getattr(out, _name))
-                        row.append(mean)
-                        row.append(std)
-                        for f in all_field_names:
-                            row.append(getattr(out, f))
-                        output.writerow(row)
-            else:
-                print "No data: %s " % _name
-
-    print 'done'
-
-
-def dump_tissue_inventory_csv(cohort):
-    """
-        This function will dump the browse inventory page to CSV
-        It writes columns == monkey, row == tissue.
-        Cells where the tissue exists are given "Exists", non-existent tissues are left blank.
-    """
-    if not isinstance(cohort, Cohort):
-        try:
-            cohort = Cohort.objects.get(pk=cohort)
-        except Cohort.DoesNotExist:
-            print("That's not a valid cohort.")
-            return False, False
-
-    filename = str(cohort).replace(' ', '_') + "-Inventory.csv"
-    output = csv.writer(open(filename, 'w'), delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-    columns = ["Tissue Type \ Monkey"]
-    columns.extend(["%s/%s" % (str(m.pk), str(m.mky_real_id)) for m in cohort.monkey_set.all().order_by('pk')])
-    output.writerow(columns)
-
-    for tst in TissueType.objects.all().order_by('category__cat_name', 'tst_tissue_name'):
-        row = [tst.tst_tissue_name]
-        for mky in cohort.monkey_set.all().order_by('pk'):
-            availability = tst.get_monkey_availability(mky)
-            if availability == Availability.Unavailable:
-                row.append("")
-            else:
-                row.append("Exists")
-        output.writerow(row)
-    print "Success."
-
 
 def load_tissue_inventory_csv(filename):
     """
@@ -2596,68 +1982,6 @@ def load_tissue_inventory_csv(filename):
                 print "New TissueSample record: %s" % str(tss)
     print "Success."
 
-
-def _create_cbts(drinks, date, cohort, gap_definition_seconds=0, overwrite=False):
-    """
-    This recursive function will iterate thru the drinks' start and end times to create a CohortBout.
-    When it finds a drink start time that is over gap_definition_seconds from this function's CohortBout it will call itself again to create a new CohortBout with the remaining drink times.
-    """
-    def _get_or_create_cbt(date, cohort, cbt_number, overwrite, gap_definition_seconds):
-        cbt, is_new = CohortBout.objects.get_or_create(cohort=cohort, dex_date=date, cbt_number=cbt_number, cbt_gap_definition=gap_definition_seconds)
-        needs_times = is_new or overwrite
-        return cbt, needs_times
-
-    cbt_index = 0
-    if len(drinks):
-        cbt, needs_times = _get_or_create_cbt(date, cohort, cbt_number=cbt_index, overwrite=overwrite, gap_definition_seconds=gap_definition_seconds)
-        for index, drink in enumerate(drinks):
-            if needs_times:
-                cbt.cbt_start_time = drink['edr_start_time']
-                cbt.cbt_end_time = drink['edr_end_time']
-                needs_times = False
-            drink_gap = drink['edr_start_time'] - cbt.cbt_end_time
-            if drink_gap >= gap_definition_seconds:
-                cbt.save() # first, save this CBT
-                cbt_index += 1
-                cbt, needs_times = _get_or_create_cbt(date=date, cohort=cohort, cbt_number=cbt_index, overwrite=overwrite, gap_definition_seconds=gap_definition_seconds)
-                if needs_times:
-                    cbt.cbt_start_time = drink['edr_start_time']
-                    cbt.cbt_end_time = drink['edr_end_time']
-                    cbt.save()
-                    needs_times = False
-            else:
-                cbt.cbt_end_time = max(cbt.cbt_end_time, drink['edr_end_time'])
-
-
-def _create_cohort_bouts(cohort, overwrite, gap_definition_seconds=0):
-    if not isinstance(cohort, Cohort):
-        try:
-            cohort = Cohort.objects.get(pk=cohort)
-        except Cohort.DoesNotExist:
-            raise Exception("That's not a valid cohort")
-
-    all_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort)
-    # Get all the dates for this cohort
-    all_dates = all_mtds.dates('drinking_experiment__dex_date', 'day', 'ASC').order_by('drinking_experiment__dex_date')
-    for date in all_dates:
-        # Get all the drink start times from each date
-        drinks = ExperimentDrink.objects.filter(ebt__mtd__monkey__cohort=cohort, ebt__mtd__drinking_experiment__dex_date=date).order_by('edr_start_time')
-        drink_values = drinks.values('edr_start_time', 'edr_end_time')
-
-        # And send the times into a recursion loop
-        _create_cbts(drink_values, date, cohort, overwrite=overwrite, gap_definition_seconds=gap_definition_seconds)
-        # After we've created all the cohort bouts, we need to update the drinks' cbt foreign key association
-        cbts = CohortBout.objects.filter(cohort=cohort, dex_date=date, cbt_gap_definition=gap_definition_seconds)
-        for cbt in cbts:
-            # I didn't assign the cbt fk in the recursion because this update should be faster
-            cbt.populate_edr_set()
-
-
-def create_cohort_bouts(cohort, gap_seconds, overwrite=False):
-    for seconds in gap_seconds:
-        _create_cohort_bouts(cohort, overwrite, seconds)
-
-
 def load_rna_records(filename):
     csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
     columns = csv_infile.next() # junk
@@ -2670,7 +1994,7 @@ def load_rna_records(filename):
             rna_record['monkey'] = monkey
             rna_record['cohort'] = cohort
             rna_record['tissue_type'] = TissueType.objects.get(tst_tissue_name=row.pop(0))
-            rna_record['rna_extracted'] = get_datetime_from_steve(row.pop(0))
+            rna_record['rna_extracted'] = dingus.get_datetime_from_steve(row.pop(0))
             for column, cell in zip(db_columns, row):
                 if cell:
                     rna_record[column] = cell
@@ -2681,50 +2005,13 @@ def load_rna_records(filename):
                 print row
                 print ''
 
-
-def dump_rhesus_summed_gkg_by_quarter():
-    f = open('summed_gkg_by_category.csv', 'w')
-    writer = csv.writer(f)
-    writer.writerow([
-        'cohort', 'monkey',
-        '12mo summed gkg', '12mo category',
-        'first 3mo summed gkg', 'first 3mo category',
-        'second 3mo summed gkg', 'second 3mo category',
-        'third 3mo summed gkg', 'third 3mo category',
-        'fourth 3mo summed gkg', 'fourth 3mo category'
-    ])
-
-    data_rows = list()
-    for cohort_name, cohort_pk  in Cohort.objects.filter(pk__in=[5,6,9,10]).order_by('coh_cohort_name').values_list('coh_cohort_name', 'pk'):
-        for monkey_pk in Monkey.objects.Drinkers().filter(cohort=cohort_pk).order_by('pk').values_list('pk', flat=True):
-            row = list()
-            row.extend([cohort_name, monkey_pk])
-
-            oa_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk)
-            first_mtds = oa_mtds.first_three_months_oa()
-            second_mtds = oa_mtds.second_three_months_oa()
-            third_mtds = oa_mtds.third_three_months_oa()
-            fourth_mtds = oa_mtds.fourth_three_months_oa()
-            mtd_sets = [oa_mtds, first_mtds, second_mtds, third_mtds, fourth_mtds]
-
-            for _mtds in mtd_sets:
-                gkg_sum = _mtds.aggregate(Sum('mtd_etoh_g_kg'))['mtd_etoh_g_kg__sum']
-                period_category = gadgets.identify_drinking_category(_mtds)
-                row.append(gkg_sum)
-                row.append(period_category)
-            data_rows.append(row)
-    writer.writerows(data_rows)
-    f.close()
-    return
-
-
 def load_cohort2_electrophys(file_path):
     input_data = csv.reader(open(file_path, 'rU'), delimiter=',')
     columns = input_data.next()
 
     for row in input_data:
         if row[0]:
-            monkey = get_monkey_by_number(row[0])
+            monkey = dingus.get_monkey_by_number(row[0])
             ephy = dict()
             ephy['monkey'] = monkey
             ephy['mep_bal'] = row[1]
@@ -2747,104 +2034,7 @@ def load_cohort2_electrophys(file_path):
     print 'Success'
 
 
-def create_data_tissue_tree():
-    """
-        This function will create (if needed) TissueCategory, TissueTypes, and TissueSamples for all data types available in MATRR
-    """
-    data_category, cat_is_new = TissueCategory.objects.get_or_create(cat_name='Data')
-    data_names = ["Blood Ethanol Concentration", "Hormone", "Daily Ethanol Summary", "Ethanol Events", "Necropsy Summary", "Electrophysiology", "Metabolite", "Protein"]
-    data_models = [MonkeyBEC, MonkeyHormone, MonkeyToDrinkingExperiment, ExperimentEvent, NecropsySummary, MonkeyEphys, MonkeyMetabolite, MonkeyProtein]
-    for _name, _model in zip(data_names, data_models):
-        _tst, tst_is_new = TissueType.objects.get_or_create(tst_tissue_name=_name, category=data_category)
-        new_tss_count = 0
-        for _mky in _model.objects.order_by().values_list('monkey', flat=True).distinct():
-            _mky = Monkey.objects.get(pk=_mky)
-            _tss, tss_is_new = TissueSample.objects.get_or_create(monkey=_mky, tissue_type=_tst, tss_sample_quantity=1, tss_units='whole')
-            if tss_is_new:
-                new_tss_count += 1
-        print "%s Data Type %s:  %d new data samples created" % ("New" if tst_is_new else "Old", _name, new_tss_count)
 
 
-    # "Ethanol Drinks",
-    # ExperimentBout, ExperimentDrink,
-
-    ### Experiment Bouts don't have an ebt.monkey field....
-    _tst, tst_is_new = TissueType.objects.get_or_create(tst_tissue_name="Ethanol Bouts", category=data_category)
-    new_tss_count = 0
-    for _mky in ExperimentBout.objects.order_by().values_list('mtd__monkey', flat=True).distinct():
-        _mky = Monkey.objects.get(pk=_mky)
-        _tss, tss_is_new = TissueSample.objects.get_or_create(monkey=_mky, tissue_type=_tst, tss_sample_quantity=1, tss_units='whole')
-        if tss_is_new:
-            new_tss_count += 1
-    print "%s Data Type %s:  %d new data samples created" % ("New" if tst_is_new else "Old", "Ethanol Bouts", new_tss_count)
-
-    ### Experiment Drinks don't have an edr.monkey field....
-    _tst, tst_is_new = TissueType.objects.get_or_create(tst_tissue_name="Ethanol Drinks", category=data_category)
-    new_tss_count = 0
-    for _mky in ExperimentDrink.objects.order_by().values_list('ebt__mtd__monkey', flat=True).distinct():
-        _mky = Monkey.objects.get(pk=_mky)
-        _tss, tss_is_new = TissueSample.objects.get_or_create(monkey=_mky, tissue_type=_tst, tss_sample_quantity=1, tss_units='whole')
-        if tss_is_new:
-            new_tss_count += 1
-    print "%s Data Type %s:  %d new data samples created" % ("New" if tst_is_new else "Old", "Ethanol Drinks", new_tss_count)
-
-    print "Success."
 
 
-def dump_data_req_request_425_thru_431():
-    from matrr.utils.parallel_plot import  percentage_of_days_over_4_gkg, percentage_of_days_over_3_gkg, \
-        percentage_of_days_over_2_gkg, average_oa_etoh_intake_gkg, average_oa_bout_start_time, average_oa_daily_bout, \
-        average_oa_bout_volume, average_oa_volume_first_bout, average_oa_bout_intake_rate, average_oa_bout_pct_volume, \
-        average_oa_max_bout_pct_total_etoh, average_oa_bout_time_since_pellet, average_oa_drink_volume, \
-        average_oa_pct_etoh_post_pellets, average_oa_pellet_intake, average_oa_water_intake, average_oa_BEC, \
-        average_oa_BEC_pct_intake, average_oa_Cortisol, average_oa_ACTH, average_oa_Testosterone, \
-        average_oa_Deoxycorticosterone, average_oa_Aldosterone, average_oa_DHEAS
-    from matrr.models import Request, MonkeyToDrinkingExperiment, Monkey
-    import csv
-    # HOORAY for DRY principles :P
-
-    def gather_monkey_data(monkey_pk):
-        # I did have to (mostly) repeat this code though -.-
-        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey_pk).order_by('drinking_experiment__dex_date')
-        if mtds.count() < 1: # we need more data.  We always need more data.
-            return [], []
-        labels = ['matrr id' ]
-        values = [str(monkey_pk), ]
-        for gather_function in mtd_gather_functions:
-            labels.append(gather_function()) # empty calls return the data's label
-            values.append(gather_function(mtds)) # calls with mtd= calculate the described value given the input mtds
-        return labels, values
-
-    mtd_gather_functions = [
-        percentage_of_days_over_4_gkg, percentage_of_days_over_3_gkg,
-        percentage_of_days_over_2_gkg, average_oa_etoh_intake_gkg, average_oa_bout_start_time, average_oa_daily_bout,
-        average_oa_bout_volume, average_oa_volume_first_bout, average_oa_bout_intake_rate, average_oa_bout_pct_volume,
-        average_oa_max_bout_pct_total_etoh, average_oa_bout_time_since_pellet, average_oa_drink_volume,
-        average_oa_pct_etoh_post_pellets, average_oa_pellet_intake, average_oa_water_intake, average_oa_BEC,
-        average_oa_BEC_pct_intake, average_oa_Cortisol, average_oa_ACTH, average_oa_Testosterone,
-        average_oa_Deoxycorticosterone, average_oa_Aldosterone, average_oa_DHEAS,
-    ]
-    req_requests = Request.objects.filter(pk__in=range(425, 432))
-#    req_requests = Request.objects.filter(pk__in=(202,))
-    cohorts = req_requests.values_list('cohort', flat=True)
-    monkeys = Monkey.objects.filter(cohort__in=cohorts).order_by('cohort').values_list('pk', 'cohort__coh_cohort_name', 'mky_drinking')
-    header = ['monkey', 'cohort', 'control']
-    all_data = list()
-    for mky in monkeys:
-        labels, values = gather_monkey_data(mky[0])
-        if not len(values):
-            continue
-        if len(header) == 3:
-            header.extend(labels)
-        row = [str(m) for m in mky]
-        row[2] = not mky[2] # db stores drinkers, ie NOT control
-        row.extend(values)
-        all_data.append(row)
-    f = open('dump_data_req_request_425_thru_431.csv', 'w')
-    writer = csv.writer(f)
-    writer.writerow(header)
-    writer.writerows(all_data)
-    f.flush()
-    f.close()
-    print "all done"
-    return
