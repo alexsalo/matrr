@@ -2354,13 +2354,17 @@ def load_mbb_images(image_dir):
         mig._build_html_fragment(None, add_footer=False, save_fragment=True, image_filename=filename)
 
         for i in range(1, 16, 1):
-            MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', brain_image=mig, mbb_block_name='Block %02d' % i)
-            mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', brain_image=mig, mbb_block_name='Block %02d' % i)
+            left_mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='L', mbb_block_name='Block %02d' % i)
+            left_mbb.brain_image = mig
+            left_mbb.save()
+            right_mbb, is_new = MonkeyBrainBlock.objects.get_or_create(monkey=monkey, mbb_hemisphere='R', mbb_block_name='Block %02d' % i)
+            right_mbb.brain_image = mig
+            right_mbb.save()
         if is_new:
             # The last brain block receives all brain tissues, but only if it is new.
             # if it isn't new, it could have been updated and we don't want to overwrite that.
             brain_tissues = TissueType.objects.filter(category__cat_name__icontains='brain')
-            mbb.assign_tissues(brain_tissues)
+            right_mbb.assign_tissues(brain_tissues)
 
     files = os.listdir(image_dir)
     for filename in files:
