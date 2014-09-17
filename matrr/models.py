@@ -4007,7 +4007,8 @@ def request_post_save(**kwargs):
             send_jim_hippocampus_notification(req_request)
     # For Accepted and Partially accepted Requests
     if previous_status == RequestStatus.Submitted \
-        and (current_status == RequestStatus.Accepted or current_status == RequestStatus.Partially):
+            and (current_status == RequestStatus.Accepted or current_status == RequestStatus.Partially):
+        req_request.user.groups.add(Group.objects.get(name='DataUploader')) # give users with approved requests permission to upload data
         for tissue_request in tissue_requests:
             tivs = TissueInventoryVerification.objects.filter(tissue_request=tissue_request)
             for tiv in tivs:
