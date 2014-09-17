@@ -1705,23 +1705,22 @@ def load_bec_data(file_name, overwrite=False, header=True):
 
     fields = (
     'mky_real_id', # 0
-    'mky_id', # 1
-    'bec_collect_date', # 2
-    'bec_run_date', # 3
-    'bec_exper', # 4
-    'bec_exper_day', # 5
-    'bec_session_start', # 6
-    'bec_sample', # 7
-    'bec_weight', # 8
-    'bec_vol_etoh', # 9
-    'bec_gkg_etoh', # 10
-    'bec_daily_gkg_etoh', # 11
-    '__(bec_gkg_etoh - bec_daily_gkg_etoh)', # 12, this column is ignored
-    'bec_mg_pct', # 13
-    'bec_daily_vol_etoh', # 14
+    'bec_collect_date', # 1
+    'bec_run_date', # 2
+    'bec_exper', # 3
+    'bec_exper_day', # 4
+    'bec_session_start', # 5
+    'bec_sample', # 6
+    'bec_weight', # 7
+    'bec_vol_etoh', # 8
+    'bec_gkg_etoh', # 9
+    'bec_daily_gkg_etoh', # 10
+    '__(bec_gkg_etoh - bec_daily_gkg_etoh)', # 11, this column is ignored
+    'bec_mg_pct', # 12
+    'bec_daily_vol_etoh', # 13
     )
     print_warning = True
-    FIELDS_INDEX = (4, 15) #(4,15) => 4,5,6,7,8,9,10,11,12,13,14
+    FIELDS_INDEX = (4, 14) #(4,15) => 4,5,6,7,8,9,10,11,12,13,14
     with open(file_name, 'r') as f:
         read_data = f.read()
         if '\r' in read_data:
@@ -1750,8 +1749,8 @@ def load_bec_data(file_name, overwrite=False, header=True):
                 print dingus.ERROR_OUTPUT % (line_number, "Monkey does not exist.", line)
                 continue
 
-            bec_collect_date = dingus.get_datetime_from_steve(data[2])
-            bec_run_date = dingus.get_datetime_from_steve(data[3])
+            bec_collect_date = dingus.get_datetime_from_steve(data[1])
+            bec_run_date = dingus.get_datetime_from_steve(data[2])
             if not bec_collect_date:
                 print dingus.ERROR_OUTPUT % (line_number, "Wrong date format", line)
                 continue
@@ -1779,6 +1778,7 @@ def load_bec_data(file_name, overwrite=False, header=True):
                     if print_warning:
                         print "There was an index error, probably means this file doesn't have a bec_daily_vol_etoh column."
                         print_warning = False
+                    continue
                 if value != '':
                     if i in (2, 3): # time fields, fields[6] and fields[7]
                         setattr(bec, field, format_time(value))
