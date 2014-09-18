@@ -1,5 +1,5 @@
 from datetime import datetime as dt
-from datetime import timedelta, time
+from datetime import time
 from matrr import models
 
 def convert_MonkeyProtein_dates_to_correct_datetimes():
@@ -98,3 +98,28 @@ def delete_wonky_monkeys():
             print "Deleting mky %d from table %s" % (mky, model.__name__)
             model.objects.filter(monkey=mky).delete()
 
+def update_data_tissue_availability():
+    data_category, cat_is_new = models.TissueCategory.objects.get_or_create(cat_name='Data')
+    data_names = ["Blood Ethanol Concentration", "Hormone", "Daily Ethanol Summary", "Ethanol Events",
+                  "Necropsy Summary", "Electrophysiology", "Metabolite", "Protein"]
+    data_models = [models.MonkeyBEC, models.MonkeyHormone, models.MonkeyToDrinkingExperiment, models.ExperimentEvent,
+                   models.NecropsySummary, models.MonkeyEphys, models.MonkeyMetabolite, models.MonkeyProtein]
+    for _name, _model in zip(data_names, data_models):
+        _tst, tst_is_new = models.TissueType.objects.get_or_create(tst_tissue_name=_name, category=data_category)
+        mkys = _model.objects.order_by().values_list('monkey', flat=True).distinct()
+        models.TissueSample.objects.filter(monkey__in=mkys, tissue_type=_tst).update(tss_sample_quantity=1, tss_units='whole')
+
+    # "Ethanol Drinks",
+    # ExperimentBout, ExperimentDrink,
+    ### Experiment Bouts don't have an ebt.monkey field....
+    _tst, tst_is_new = models.TissueType.objects.get_or_create(tst_tissue_name="Ethanol Bouts", category=data_category)
+    for _mky in models.ExperimentBout.objects.order_by().values_list('mtd__monkey', flat=True).distinct():
+        _mky = models.Monkey.objects.get(pk=_mky)
+        models.TissueSample.objects.filter(monkey=_mky, tissue_type=_tst).update(tss_sample_quantity=1, tss_units='whole')
+
+    ### Experiment Drinks don't have an edr.monkey field....
+    _tst, tst_is_new = models.TissueType.objects.get_or_create(tst_tissue_name="Ethanol Drinks", category=data_category)
+    for _mky in models.ExperimentDrink.objects.order_by().values_list('ebt__mtd__monkey', flat=True).distinct():
+        _mky = models.Monkey.objects.get(pk=_mky)
+        models.TissueSample.objects.filter(monkey=_mky, tissue_type=_tst).update(tss_sample_quantity=1, tss_units='whole')
+    print "Success."
