@@ -195,7 +195,7 @@ def search(request):
         form = FulltextSearchForm(request.POST)
         if form.is_valid():
             terms = form.cleaned_data['terms']
-
+            print (terms)
             from django.db.models.loading import get_model
             from matrr.settings import PRIVATE_SEARCH_INDEXES, PUBLIC_SEARCH_INDEXES
 
