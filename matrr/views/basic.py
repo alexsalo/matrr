@@ -177,12 +177,12 @@ def search_index(terms, index, model):
     
     results = search.query(terms)
     
-    print (terms)
+    
     final_results = list()
-
+    print ('1' + terms)S
     for result in results:
         final_results.append(model.objects.get(pk=result['id']))
-
+    print ('2' + terms)
     return final_results
 
 
