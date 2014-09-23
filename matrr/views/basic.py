@@ -181,6 +181,7 @@ def search_index(terms, index, model):
     final_results = list()
     
     for result in results:
+        print ('0 ' + index)
         pk=result['id']
         print ('1 ' + index)
         t = model.objects.get(pk)
@@ -215,16 +216,16 @@ def search(request):
                 #					results['monkeys'] = search_index(terms, SEARCH_INDEXES[key], Monkey)
 
             for key, value in SEARCH_INDEXES.items():
-                try:
-                    results[key] = search_index(terms, value[0], get_model('matrr', value[1]))
-                except SearchError as se:
-                    messages.error(request, "There was an error in your search query.  Please notify a MATRR admin if this continues.")
-                    logging.error('-------\n')
-                    logging.error(str(datetime.now()) + '\n')
-                    logging.exception(se)
-                    logging.error(se.message + "\n")
-                    logging.error('-------\n')
-                    break
+                #try:
+                results[key] = search_index(terms, value[0], get_model('matrr', value[1]))
+                #except SearchError as se:
+                    #messages.error(request, "There was an error in your search query.  Please notify a MATRR admin if this continues.")
+                    #logging.error('-------\n')
+                    #logging.error(str(datetime.now()) + '\n')
+                    #logging.exception(se)
+                    #logging.error(se.message + "\n")
+                    #logging.error('-------\n')
+                    #break
 
             num_results = 0
             for key in results:
