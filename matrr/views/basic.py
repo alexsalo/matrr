@@ -174,8 +174,10 @@ def search_index(terms, index, model):
         index=index,
         mode='SPH_MATCH_EXTENDED2',
         rankmode='SPH_RANK_NONE')
-    print (terms)
+    
     results = search.query(terms)
+    
+    print (terms)
     final_results = list()
 
     for result in results:
