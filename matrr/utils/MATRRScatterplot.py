@@ -41,9 +41,10 @@ class MATRRScatterplot(object):
         )
 
     def draw_regression_line(self, data_object):
+        from scipy import stats
         _x = data_object.gather_xaxis_data()
         _y = data_object.gather_yaxis_data()
-        regression_data = scipy.stats.linregress(_x, _y) # slope, intercept, r_value, p_value, std_err = regression_data
+        regression_data = stats.linregress(_x, _y) # slope, intercept, r_value, p_value, std_err = regression_data
         slope, intercept, r_value, p_value, std_err = regression_data
         reg_label = "Fit: r=%f, p=%f" % (r_value, p_value)
         self.subplot.plot(_x, _x * slope + intercept, label=reg_label, color='black', linewidth=2, alpha=.7)
