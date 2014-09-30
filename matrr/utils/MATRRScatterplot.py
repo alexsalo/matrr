@@ -2,6 +2,7 @@ import hashlib
 import warnings
 import numpy
 from matplotlib import pyplot, gridspec
+import scipy
 from matrr import models, plotting
 
 cached_data_path = "matrr/utils/DATA/MATRRScatterplot/"
@@ -19,7 +20,7 @@ class MATRRScatterplot(object):
     def prepare_plot(self):
         self.figure = pyplot.figure(figsize=(14, 9), dpi=plotting.DEFAULT_DPI)
         gs = gridspec.GridSpec(1, 1)
-        gs.update(left=0.05, right=0.99, top=.97, bottom=.1)
+        gs.update(left=0.06, right=0.98, top=.97, bottom=.08)
         self.subplot = self.figure.add_subplot(gs[:, :])
 
     def savefig(self, dpi=120):
@@ -38,6 +39,14 @@ class MATRRScatterplot(object):
                              alpha=data_object.gather_alpha_data(),
                              label=data_object.get_label(),
         )
+
+    def draw_regression_line(self, data_object):
+        _x = data_object.gather_xaxis_data()
+        _y = data_object.gather_yaxis_data()
+        regression_data = scipy.stats.linregress(_x, _y) # slope, intercept, r_value, p_value, std_err = regression_data
+        slope, intercept, r_value, p_value, std_err = regression_data
+        reg_label = "Fit: r=%f, p=%f" % (r_value, p_value)
+        self.subplot.plot(_x, _x * slope + intercept, label=reg_label, color='black', linewidth=2, alpha=.7)
 
     def style_subplot(self, style_object):
         self.subplot.set_title(style_object.title())
@@ -75,9 +84,6 @@ class ScatterplotData(object):
 
 
 class ScatterplotStyle(object):
-    def __init__(self):
-        raise NotImplementedError()
-
     def title(self):
         return "Title"
 
@@ -180,3 +186,208 @@ class MonkeyBingeScatterplotStyle(ScatterplotStyle):
     def ylim(self): return self.ymin, self.ymax
 
     def legend_columns(self): return 3
+
+
+class CohortEphysHormoneScatterplotData(ScatterplotData):
+    """
+    xaxis = MonkeyEphys.mep_iei
+    yaxis = Cortisol Value
+
+    cort values are from EP events, which are stored as str(int) in the MonkeyHormone.mhm_ep_num field
+
+    Values are mapped:
+    7 = A1
+    8 = A1.1
+    9 = A2
+    10 = A2.1
+    11 = EP7
+    12 = A3
+    13 = A3.1
+
+    """
+
+    mep_col = 'mep_iei'
+    mhm_col = 'mhm_acth'
+    x_values = list()
+    y_values = list()
+
+    def __init__(self, cohort_pk, ep_num='11', alpha=1):
+        self.cohort = models.Cohort.objects.get(pk=cohort_pk)
+        self.monkeys = models.Monkey.objects.Drinkers().filter(cohort=self.cohort).order_by('pk')
+        self.ep_num = ep_num
+        self.alpha = alpha
+
+    def _gather_xy_data(self):
+        x_values = list()
+        y_values = list()
+        for mky in self.monkeys:
+            mep_values = models.MonkeyEphys.objects.filter(monkey=mky).values_list(self.mep_col, flat=True)
+            mhm_values = models.MonkeyHormone.objects.filter(monkey=mky, mhm_ep_num=self.ep_num).values_list(self.mhm_col, flat=True)
+            if not len(mep_values) or not len(mhm_values):
+                continue
+            size_dif = len(mep_values) - len(mhm_values)
+            if size_dif is 0:
+                x_values.extend(mep_values)
+                y_values.extend(mhm_values)
+            else:
+                if size_dif < 0: # more cort values than ephys values
+                    avg = numpy.mean(mep_values)
+                    _x = list(mep_values)
+                    _x.extend([avg for i in xrange(size_dif, 0)])
+                    x_values.extend(_x)
+                    y_values.extend(mhm_values)
+                if size_dif > 0: # more ephys values than cort values
+                    avg = numpy.mean(mhm_values)
+                    _y = list(mhm_values)
+                    _y.extend([avg for i in xrange(0, size_dif)])
+                    y_values.extend(_y)
+                    x_values.extend(mep_values)
+        self.x_values = numpy.array(x_values)
+        self.y_values = numpy.array(y_values)
+
+    def gather_xaxis_data(self):
+        if not len(self.x_values):
+            self._gather_xy_data()
+        return self.x_values
+
+    def gather_yaxis_data(self):
+        if not len(self.y_values):
+            self._gather_xy_data()
+        return self.y_values
+
+    def gather_scale_data(self):
+        return 100
+
+    def gather_color_data(self):
+        colors = list()
+        for monkey in self.monkeys:
+            if monkey.mky_drinking_category:
+                colors.append(plotting.RHESUS_COLORS[monkey.mky_drinking_category])
+            else:
+                colors.append('black')
+        return colors
+
+    def gather_marker_data(self):
+        return 'o'
+        markers = list()
+        for monkey in self.monkeys:
+            markers.append(plotting.DRINKING_CATEGORY_MARKER[monkey.mky_drinking_category])
+        return markers
+
+    def gather_alpha_data(self):
+        return self.alpha
+
+    def get_label(self): return "%s Ephys vs Hormone" % str(self.cohort)
+
+
+class CohortEphysHormoneScatterplotStyle(ScatterplotStyle):
+    mep_col = 'mep_iei'
+    mhm_col = 'mhm_acth'
+
+    def __init__(self, cohort_pk, ep_num='11',):
+        self.cohort = models.Cohort.objects.get(pk=cohort_pk)
+        self.monkeys = models.Monkey.objects.Drinkers().filter(cohort=self.cohort).order_by('pk')
+        self.ep_num = ep_num
+
+    def title(self): return "MATRRScatterplot: Ephys vs Hormone EP %s" % self.ep_num
+
+    def xlabel(self): return models.MonkeyEphys._meta.get_field(self.mep_col).verbose_name
+
+    def ylabel(self): return models.MonkeyHormone._meta.get_field(self.mhm_col).verbose_name
+
+    def xlim(self):
+        return None
+
+    def ylim(self):
+        return None
+
+    def legend_columns(self): return 1
+
+
+class CohortEphysNecropsyScatterplotData(ScatterplotData):
+    """
+    xaxis = NecropsySummary field
+    yaxis = MonkeyEphys field
+    """
+    mep_col = 'mep_iei'
+    nec_col = 'ncm_sum_g_per_kg_lifetime'
+    x_values = list()
+    y_values = list()
+    alpha=1
+
+    def __init__(self, cohort_pk):
+        self.cohort = models.Cohort.objects.get(pk=cohort_pk)
+        self.monkeys = models.Monkey.objects.Drinkers().filter(cohort=self.cohort).order_by('pk')
+
+    def _gather_xy_data(self):
+        x_values = list()
+        y_values = list()
+        for mky in self.monkeys:
+            meps = models.MonkeyEphys.objects.filter(monkey=mky)
+            mep = meps.aggregate(models.Avg(self.mep_col))[self.mep_col+'__avg']
+            nec = getattr(models.NecropsySummary.objects.get(monkey=mky), self.nec_col)
+            if not mep or not nec:
+                self.monkeys = self.monkeys.exclude(pk=mky.pk)
+                continue
+            x_values.append(nec)
+            y_values.append(mep)
+        self.x_values = numpy.array(x_values)
+        self.y_values = numpy.array(y_values)
+
+    def gather_xaxis_data(self):
+        if not len(self.x_values):
+            self._gather_xy_data()
+        return self.x_values
+
+    def gather_yaxis_data(self):
+        if not len(self.y_values):
+            self._gather_xy_data()
+        return self.y_values
+
+    def gather_scale_data(self):
+        return 100
+
+    def gather_color_data(self):
+        colors = list()
+        for monkey in self.monkeys:
+            if monkey.mky_drinking_category:
+                colors.append(plotting.RHESUS_COLORS[monkey.mky_drinking_category])
+            else:
+                colors.append('black')
+        return colors
+
+    def gather_marker_data(self):
+        return 'o'
+
+    def gather_alpha_data(self):
+        return self.alpha
+
+    def get_label(self): return "%s Ephys vs Necropsy" % str(self.cohort)
+
+
+class CohortEphysNecropsyScatterplotStyle(ScatterplotStyle):
+    """
+    xaxis = NecropsySummary field
+    yaxis = MonkeyEphys field
+    """
+    mep_col = 'mep_iei'
+    nec_col = 'ncm_sum_g_per_kg_lifetime'
+
+    def __init__(self, cohort_pk):
+        self.cohort = models.Cohort.objects.get(pk=cohort_pk)
+        self.monkeys = models.Monkey.objects.Drinkers().filter(cohort=self.cohort).order_by('pk')
+
+    def title(self): return "MATRRScatterplot: Ephys vs Necropsy"
+
+    def xlabel(self): return models.MonkeyEphys._meta.get_field(self.mep_col).verbose_name
+
+    def ylabel(self): return models.NecropsySummary._meta.get_field(self.nec_col).verbose_name
+
+    def xlim(self):
+        return None
+
+    def ylim(self):
+        return None
+
+    def legend_columns(self): return 1
+
