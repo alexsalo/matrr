@@ -1324,8 +1324,11 @@ class CohortBout(models.Model):
     cbt_start_time = models.IntegerField('Start time [s]', blank=False, null=False, default=-1)
     cbt_end_time = models.IntegerField('End time [s]', blank=False, null=False, default=-1)
 
-    cbt_gap_definition = models.PositiveIntegerField('Elapsed time since last pellet [s]', blank=True, null=True, default=None,
-                                                                     help_text="This is the threshold to allow a drink's inclusion in this CohortBout.  If a drink starts after self.cbt_end_time+self.cbt_gap_definition, the drink is part of a different CBT.")
+    cbt_gap_definition = models.PositiveIntegerField('Minimum Time Between CBouts', blank=True, null=True,
+                                                     default=None, help_text="This is the threshold to allow a drink's \
+                                                     inclusion in this CohortBout.  If a drink starts after \
+                                                     self.cbt_end_time+self.cbt_gap_definition, the drink is part of a \
+                                                     different CBT.")
 
     def populate_edr_set(self):
         edrs = ExperimentDrink.objects.filter(ebt__mtd__monkey__cohort=self.cohort, ebt__mtd__drinking_experiment__dex_date=self.dex_date)
