@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+import datetime
 import string
 import gc
 from matrr import models
@@ -76,7 +77,7 @@ def convert_excel_time_to_datetime(time_string):
     data_days = int(time_string.split('.')[0])
     date_time = float("0.%s" % time_string.split('.')[1])
     seconds = round(date_time * SECONDS_BASE)
-    return DATE_BASE + dt.timedelta(days=data_days, seconds=seconds)
+    return DATE_BASE + datetime.timedelta(days=data_days, seconds=seconds)
 
 def parse_left_right(side_string):
     if string.count(side_string, "Left") != 0:
