@@ -289,7 +289,7 @@ class OASplitQueryset(models.query.QuerySet):
         # Collect the cohorts we need to sort thru
         cohorts = self.values_list('monkey__cohort', flat=True).distinct()
         # Collect the cohort events for our cohorts that mark the end of the first 6 months
-        event = EventType.objects.get(evt_name='22 hr Open Access Start')
+        event = EventType.objects.get(evt_name='First 6 Month Open Access Begin')
         cohort_events = CohortEvent.objects.filter(cohort__in=cohorts, event=event).values('cohort', 'cev_date').distinct()
 
         # Instantiate an empty MTDQueryset, into which we store all our first six month oa MTDs
@@ -307,7 +307,7 @@ class OASplitQueryset(models.query.QuerySet):
         # Collect the cohorts we need to sort thru
         cohorts = self.values_list('monkey__cohort', flat=True).distinct()
         # Collect the cohort events for our cohorts that mark the end of the first 6 months
-        event = EventType.objects.get(evt_name='6 mo Open Access End')
+        event = EventType.objects.get(evt_name="First 6 Month Open Access End")
         cohort_events = CohortEvent.objects.filter(cohort__in=cohorts, event=event).values('cohort', 'cev_date').distinct()
 
         # Instantiate an empty MTDQueryset, into which we store all our first six month oa MTDs
