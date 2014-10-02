@@ -1279,7 +1279,7 @@ class ExperimentEvent(models.Model):
                                           null=True)
 
     eev_pct_etoh = models.FloatField('EtOH %', help_text="EtOH intake at event as a percentage of total drinking.",
-                                     default=None, blank=False, null=True)
+                                     default=None, blank=True, null=True)
     mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
     def _populate_eev_pct_etoh(self, recalculate=False, save=True):
