@@ -545,7 +545,7 @@ def collect_overlapping_bout_intake_rate_data(monkey_A, monkey_B):
 def collect_overlapping_bout_volume_data(monkey_A, monkey_B):
     return _generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_volume')
 
-def collect_overlapping_bout_volume_data(monkey_A, monkey_B):
+def collect_overlapping_bout_length_data(monkey_A, monkey_B):
     return _generic_collect_overlapping_bout_data(monkey_A, monkey_B, 'ebt_length')
 
 def competitive_bout_grid(cohort, support=.2, collect_data_method=collect_overlapping_bout_intake_rate_data):
