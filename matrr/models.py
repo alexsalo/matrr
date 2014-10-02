@@ -508,7 +508,9 @@ class CohortEvent(models.Model):
     cev_id = models.AutoField(primary_key=True)
     cohort = models.ForeignKey(Cohort, related_name='cohort_event_set', db_column='coh_cohort_id',
                                verbose_name='Cohort',
-                               help_text='The cohort this event is for.')
+                               help_text='The cohort this event is for.',
+                               null=True,
+                               on_delete=models.SET_NULL)
     event = models.ForeignKey(EventType, related_name='cohort_event_set', db_column='evt_id',
                               verbose_name='Event Type',
                               help_text='The type of event.')
