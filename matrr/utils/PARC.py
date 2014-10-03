@@ -26,7 +26,7 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
                 print("That's not a valid monkey.")
                 return False, False
 
-    drinking_experiments = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=monkey).first_six_months_oa()
+    drinking_experiments = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).first_six_months_oa()
     bec_records = monkey.bec_records.all().first_six_months_oa()
     drinking_experiments = drinking_experiments.exclude(mtd_etoh_bout=None, mtd_etoh_drink_bout=None)
 
@@ -97,6 +97,7 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
     y_max = cbc.cbc_mtd_etoh_g_kg_max
     graph_y_max = y_max + y_max * 0.25
     if len(induction_days) and len(induction_days) != len(xaxis):
+        # create the shaded area behind induction days
         bec_con_main_plot.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2,
                               edgecolor='black', zorder=-100)
 
@@ -105,7 +106,7 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
         monkey.mky_id, (dates[0]).strftime("%d/%m/%y"), (dates[dates.count() - 1]).strftime("%d/%m/%y")),
                                 fontsize=title_size)
 
-    bec_con_main_plot.set_ylim(0, graph_y_max)
+    bec_con_main_plot.set_ylim(0, 8)
     bec_con_main_plot.set_xlim(0, len(xaxis) + 2)
 
     max_y_int = int(round(y_max * 1.25))
@@ -183,6 +184,7 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
 
     bec_con_bar_plot.set_xlim(0, len(xaxis) + 2)
     if len(induction_days) and len(induction_days) != len(xaxis):
+        # shades the induction region, if present
         bec_con_bar_plot.bar(induction_days.min(), bec_con_bar_plot.get_ylim()[1], width=induction_days.max(), bottom=0,
                              color='black', alpha=.2, edgecolor='black', zorder=-100)
 
