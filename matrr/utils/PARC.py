@@ -94,9 +94,8 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
                         scatter_size] # rescaled, so that circles will be in range (size_min, size_scale)
     s = bec_con_main_plot.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_volumes, alpha=0.4)
 
-    y_max = cbc.cbc_mtd_etoh_g_kg_max
+    y_max = 8
     graph_y_max = y_max + y_max * 0.25
-    graph_y_max = 8
     if len(induction_days) and len(induction_days) != len(xaxis):
         # create the shaded area behind induction days
         bec_con_main_plot.bar(induction_days.min(), graph_y_max, width=induction_days.max(), bottom=0, color='black', alpha=.2,
