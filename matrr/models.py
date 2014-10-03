@@ -1994,8 +1994,8 @@ class DataFile(models.Model):
     dat_data_file = models.FileField('Data File', upload_to='data_files/', null=True, blank=False)
 
     def verify_user_access_to_file(self, user):
-	if user.is_superuser:
-		return True
+    if user.is_superuser:
+        return True
         return user.is_authenticated() and user.account.verified and user.account == self.account
 
     def __unicode__(self):
@@ -3951,6 +3951,33 @@ class DataIntegrationTracking(models.Model):
         permissions = (
             ('view_dit_data', 'Can view data integration information'),
         )
+
+
+class DataOwnership(models.Model):
+    dto_id = models.AutoField(primary_key=True)
+    account = models.ForeignKey(Account, null=False, blank=False)
+    cohort = models.ManyToManyField(Cohort, null=True, blank=True, related_name='dto_set')
+    dto_date = models.DateField('Integration Date', editable=False, auto_now=True)
+    dto_type = models.CharField('Data Type', blank=False, null=True, max_length=40,
+                                help_text='Brief description of this data type')
+    dto_data_file = models.FileField('Data File', upload_to='dto/files/', null=True, blank=False)
+    dto_data_notes = models.FileField('Data Notes', upload_to='dto/notes/', null=True, blank=False)
+
+    def verify_user_access_to_data(self, user):
+        #todo: our data permissions need a more robust authentication, but I don't think we have decided on a policy yet
+        if user.is_superuser:
+            return True
+        return user.is_authenticated() and user.account.verified and user.account == self.account
+
+    def __unicode__(self):
+        # You should override this method too
+        return "%s: %s" % (self.dat_type, self.account.username)
+
+
+    class Meta:
+        permissions = (  )
+        db_table = 'dto_data_ownership'
+
 
 
 # put any signal callbacks down here after the model declarations
