@@ -842,7 +842,7 @@ class MTDManager(models.Manager):
 class MonkeyToDrinkingExperiment(models.Model):
     objects = MTDManager()
     mtd_id = models.AutoField(primary_key=True)
-    dto = models.ForeignKey(DataOwnership, null=True, blank=True, related_name='mtd_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mtd_records', db_column='dto_id', editable=False)
     monkey = models.ForeignKey(Monkey, null=False, related_name='mtd_set', db_column='mky_id', editable=False)
     drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
                                             editable=False)
@@ -1096,7 +1096,7 @@ class ExperimentBout(models.Model):
     objects = EBTManager()
     ebt_id = models.AutoField(primary_key=True)
     mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=False, db_column='mtd_id', related_name='bouts_set')
-    dto = models.ForeignKey(DataOwnership, null=True, blank=True, related_name='ebt_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='ebt_records', db_column='dto_id', editable=False)
     ebt_number = models.PositiveIntegerField('Bout number', blank=False, null=False)
     ebt_start_time = models.PositiveIntegerField('Start time [s]', blank=False, null=False, db_index=True)
     ebt_end_time = models.PositiveIntegerField('End time [s]', blank=False, null=False, db_index=True)
@@ -1204,7 +1204,7 @@ class ExperimentDrink(models.Model):
     objects = EDRManager()
     edr_id = models.AutoField(primary_key=True)
     ebt = models.ForeignKey(ExperimentBout, null=False, db_column='ebt_id', related_name='drinks_set')
-    dto = models.ForeignKey(DataOwnership, null=True, blank=True, related_name='edr_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='edr_records', db_column='dto_id', editable=False)
     edr_number = models.PositiveIntegerField('Drink number', blank=False, null=False)
     edr_start_time = models.PositiveIntegerField('Start time [s]', blank=False, null=False)
     edr_end_time = models.PositiveIntegerField('End time [s]', blank=False, null=False)
@@ -1246,7 +1246,7 @@ class ExperimentEvent(models.Model):
     objects = EEVManager()
     eev_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, related_name='event_set', db_column='mky_id', editable=False)
-    dto = models.ForeignKey(DataOwnership, null=True, blank=True, related_name='eev_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='eev_records', db_column='dto_id', editable=False)
     dex_type = models.CharField('Experiment Type', choices=DexTypesChoices, max_length=100,
                                 help_text='The type of experiment. (ex. "Open Access")')
     eev_source_row_number = models.PositiveIntegerField('Source file row number', blank=False, null=False)
@@ -3242,7 +3242,7 @@ class Metabolite(models.Model):
 class MonkeyMetabolite(models.Model):
     mmb_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='metabolite_set', db_column='mky_id', editable=False)
-    dto = models.ForeignKey(DataOwnership, null=True, blank=True, related_name='mmb_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mmb_records', db_column='dto_id', editable=False)
     metabolite = models.ForeignKey(Metabolite, null=False, related_name='monkey_set', db_column='met_id',
                                    editable=False)
     mmb_sample_name = models.CharField(null=False, max_length=50)
@@ -3296,7 +3296,7 @@ class MonkeyProtein(models.Model):
     objects = MPNManager()
     mpn_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='protein_set', db_column='mky_id', editable=False)
-    dto = models.ForeignKey(DataOwnership, null=True, blank=True, related_name='mpn_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mpn_records', db_column='dto_id', editable=False)
     mtd = models.ForeignKey(MonkeyToDrinkingExperiment, null=True, related_name='mpn_record', editable=False, on_delete=models.SET_NULL)
     protein = models.ForeignKey(Protein, null=False, related_name='monkey_set', db_column='pro_id', editable=False)
     mpn_date = models.DateTimeField("Date Collected", editable=False)
@@ -3423,7 +3423,7 @@ class MonkeyHormone(models.Model):
              'mhm_dheas': 'micrograms/ml'}
     mhm_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='hormone_records', db_column='mky_id', editable=False)
-    dto = models.ForeignKey(DataOwnership, null=True, blank=True, related_name='mhm_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mhm_records', db_column='dto_id', editable=False)
     mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='mhm_record', editable=False,
                                on_delete=models.SET_NULL)
 
@@ -3505,7 +3505,7 @@ class MonkeyBEC(models.Model):
     objects = BECManager()
     bec_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='bec_records', db_column='mky_id', editable=False)
-    dto = models.ForeignKey(DataOwnership, null=True, blank=True, related_name='bec_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='bec_records', db_column='dto_id', editable=False)
     mtd = models.OneToOneField(MonkeyToDrinkingExperiment, null=True, related_name='bec_record', editable=False, on_delete=models.SET_NULL)
     bec_collect_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
     bec_run_date = models.DateTimeField("Date Run", editable=False, null=True, blank=False)
@@ -3894,7 +3894,7 @@ class MonkeyEphys(models.Model):
     """
     mep_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='mep_records', db_column='mky_id', editable=False)
-    dto = models.ForeignKey(DataOwnership, null=True, blank=True, related_name='mep_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mep_records', db_column='dto_id', editable=False)
     mep_bal = models.FloatField("Blood Alcohol Level", editable=False, null=False, blank=False, help_text="Average blood alcohol level of the last 6 months.")
     mep_lifetime_gkg = models.FloatField("Lifetime Intake (g/kg)", editable=False, null=False, blank=False)
     mep_lifetime_vol = models.FloatField("Lifetime Intake (mL)", editable=False, null=False, blank=False)
