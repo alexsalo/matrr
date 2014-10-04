@@ -1998,8 +1998,8 @@ class DataFile(models.Model):
     dat_data_file = models.FileField('Data File', upload_to='data_files/', null=True, blank=False)
 
     def verify_user_access_to_file(self, user):
-    if user.is_superuser:
-        return True
+        if user.is_superuser:
+            return True
         return user.is_authenticated() and user.account.verified and user.account == self.account
 
     def __unicode__(self):
