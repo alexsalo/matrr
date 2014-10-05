@@ -42,37 +42,39 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
     scatter_color_label = 'Sample Vol. / Total Intake'
     scatter_size_label = 'Ethanol Bouts'
     induction_days = list()
-    scatter_size = list()
-    scatter_y = list() # yaxis
-    scatter_color = list()
+    scatter_xaxis = [list(), list()] # [list for BEC days, list for non-BEC days]
+    scatter_size = [list(), list()] # [list for BEC days, list for non-BEC days]
+    scatter_y = [list(), list()] # [list for BEC days, list for non-BEC days]
+    scatter_color = [list(), list()] # [list for BEC days, list for non-BEC days]
     bar_xaxis = list()
     bar_yaxis = list()
     bar_color = list()
+    xaxis = list()
+    yaxis = list()
     for index, date in enumerate(dates, 1):
+        de = drinking_experiments.get(drinking_experiment__dex_date=date)
+        if de.drinking_experiment.dex_type == 'Induction':
+            induction_days.append(index)
         bec_rec = bec_records.filter(bec_collect_date=date)
         if bec_rec.count():
             bec_rec = bec_rec[0]
+            scatter_xaxis[0].append(index)
             bar_yaxis.append(bec_rec.bec_mg_pct)
             bar_color.append(bec_rec.bec_daily_gkg_etoh)
-#            scatter_size.append(bec_rec.bec_pct_intake)
-            scatter_color.append(bec_rec.bec_pct_intake)
+            scatter_size[0].append(de.mtd_etoh_bout)
+            scatter_y[0].append(de.mtd_etoh_g_kg)
+            scatter_color[0].append(bec_rec.bec_pct_intake)
             bar_xaxis.append(index)
             if not bar_color_label:
                 bar_color_label = bec_rec._meta.get_field('bec_pct_intake').verbose_name
         else:
-            scatter_color.append(0)
-#            scatter_size.append(.001)
+            scatter_xaxis[1].append(index)
+            scatter_size[1].append(de.mtd_etoh_bout)
+            scatter_y[1].append(de.mtd_etoh_g_kg)
+            scatter_color[1].append('white')
+        xaxis.append(index)
+        yaxis.append(de.mtd_etoh_g_kg)
 
-        de = drinking_experiments.get(drinking_experiment__dex_date=date)
-        if de.drinking_experiment.dex_type == 'Induction':
-            induction_days.append(index)
-        scatter_y.append(de.mtd_etoh_g_kg)
-#        scatter_color.append(de.mtd_etoh_bout)
-        scatter_size.append(de.mtd_etoh_bout)
-
-    xaxis = numpy.array(range(1, len(scatter_size) + 1))
-    scatter_size = numpy.array(scatter_size)
-    scatter_color = numpy.array(scatter_color)
     bar_color = numpy.array(bar_color)
     induction_days = numpy.array(induction_days)
 
@@ -90,9 +92,12 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
     size_scale = plotting.DEFAULT_CIRCLE_MAX - size_min
     cbc = monkey.cohort.cbc
     size_max = cbc.cbc_mtd_etoh_bout_max
-    rescaled_volumes = [(vol / size_max) * size_scale + size_min for vol in
-                        scatter_size] # rescaled, so that circles will be in range (size_min, size_scale)
-    s = bec_con_main_plot.scatter(xaxis, scatter_y, c=scatter_color, s=rescaled_volumes, alpha=0.4)
+
+    # rescale the sizes so that circles will be in range (size_min, size_scale)
+    bec_rescaled_volumes = [(vol / size_max) * size_scale + size_min for vol in scatter_size[0]]
+    bec_scatter = bec_con_main_plot.scatter(scatter_xaxis[0], scatter_y[0], c=scatter_color[0], s=bec_rescaled_volumes, alpha=1)
+    mtd_rescaled_volumes = [(vol / size_max) * size_scale + size_min for vol in scatter_size[1]]
+    mtd_scatter = bec_con_main_plot.scatter(scatter_xaxis[1], scatter_y[1], c=scatter_color[1], s=mtd_rescaled_volumes, alpha=1, zorder=-100)
 
     y_max = 8
     graph_y_max = y_max + y_max * 0.25
@@ -122,12 +127,12 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
     bec_con_main_color_plot.yaxis.get_label().set_fontsize(label_size)
     bec_con_main_color_plot.tick_params(axis='both', which='major', labelsize=tick_size)
     bec_con_main_color_plot.tick_params(axis='both', which='minor', labelsize=tick_size)
-    cb = fig.colorbar(s, alpha=1, cax=bec_con_main_color_plot)
+    cb = fig.colorbar(bec_scatter, alpha=1, cax=bec_con_main_color_plot)
     cb.set_clim(cbc.cbc_bec_pct_intake_min, cbc.cbc_bec_pct_intake_max)
     cb.set_label(scatter_color_label)
 
     #	regression line
-    fit = numpy.polyfit(xaxis, scatter_y, 3)
+    fit = numpy.polyfit(xaxis, yaxis, 3)
     xr = numpy.polyval(fit, xaxis)
     bec_con_main_plot.plot(xaxis, xr, '-r', linewidth=3, alpha=.6)
 
