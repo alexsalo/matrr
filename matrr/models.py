@@ -3429,8 +3429,8 @@ class MHMManager(models.Manager):
 
 class MonkeyHormone(models.Model):
     objects = MHMManager()
-    UNITS = {'mhm_cort': 'micrograms/dl', 'mhm_acth': 'pg/ml', 'mhm_t': 'ng/ml', 'mhm_doc': 'pg/ml', 'mhm_ald': 'ng/ml',
-             'mhm_dheas': 'micrograms/ml'}
+    UNITS = {'mhm_cort': 'ug/dl', 'mhm_acth': 'pg/ml', 'mhm_t': 'ng/ml', 'mhm_doc': 'pg/ml', 'mhm_ald': 'ng/ml',
+             'mhm_dheas': 'ug/ml'}
     mhm_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='hormone_records', db_column='mky_id', editable=False)
     dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mhm_records', db_column='dto_id', editable=False)
@@ -4001,6 +4001,40 @@ class DataOwnership(models.Model):
             ('receive_dto_uploaded_email', 'Receive Data Uploaded Email'),
         )
         db_table = 'dto_data_ownership'
+
+
+class CRHChallenge(models.Model):
+    """
+    Monkey Corticotropin-releasing hormone challenge data, from Christa
+
+    Look, this is really, really similar to MonkeyHormone.  It's basically the same thing.
+
+    It is exactly the same thing, except so far the Rhesus 6a data has come in a be
+    """
+    UNITS = {'crc_acth': 'pg/dl', 'crc_cort': 'ug/ml', 'crc_e': 'pg/ml', 'crc_doc': 'pg/ml', 'crc_ald': 'pg/ml',
+             'crc_dheas': 'ug/ml'}
+    crc_id = models.AutoField(primary_key=True)
+    monkey = models.ForeignKey(Monkey, null=False, related_name='crc_records', db_column='mky_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mep_records', db_column='dto_id', editable=False)
+    crc_date = models.DateField('Date', help_text='The date this experiment was conducted.')
+    crc_time = models.PositiveIntegerField('Time', help_text='Minutes after challenge the sample was collected. 0 = baseline')
+    crc_ep = models.PositiveIntegerField('Endocrine Profile Number', help_text='I wish I could map this to a timeline event....')
+
+    crc_acth = models.FloatField("ACTH", editable=False, null=False, blank=False)
+    crc_cort = models.FloatField("Cortisol", editable=False, null=False, blank=False)
+    crc_e= models.FloatField("17beta-estradiol", editable=False, null=False, blank=False)
+    crc_doc = models.FloatField("Deoxycorticosterone", editable=False, null=False, blank=False)
+    crc_ald = models.FloatField("Aldosterone", editable=False, null=False, blank=False)
+    crc_dheas = models.FloatField("DHEA-S", editable=False, null=False, blank=False)
+
+    def __unicode__(self):
+        return "%s - CRH Challenge" % str(self.monkey)
+
+    class Meta:
+        db_table = 'crc_crh_challenge'
+        permissions = (
+            ('view_crc_data', 'Can view CRH challenge data'),
+        )
 
 
 
