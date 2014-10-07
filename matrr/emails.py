@@ -669,10 +669,10 @@ def send_dto_uploaded_email(dto):
     recipients = Account.objects.users_with_perm('receive_dto_uploaded_email')
     to_list = recipients.values_list('email', flat=True)
     subject = 'Data uploaded to the MATRR'
-    body = "That's right %s, you read that subject line correctly!\n" % admin.username
+    body = "That's right, you read that subject line correctly!\n"
     body += "\n"
     body += "%s has uploaded '%s' data to the MATRR.\n" % (dto.account.user.username, dto.dto_type)
-    body += "View uploaded data here:  http://gleek.ecs.baylor.edu%s" % reverse('view-dto-data')
+    body += "View uploaded data here:  http://gleek.ecs.baylor.edu%s\n" % reverse('view-dto-data')
     body += "\n"
     body += "You should probably give %s a high-five :)\n" % dto.account.user.username
 

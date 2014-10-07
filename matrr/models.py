@@ -3983,7 +3983,7 @@ class DataOwnership(models.Model):
     dto_data_notes = models.FileField('Data Notes', null=True, blank=False,
                                       upload_to=lambda instance, filename: "dto/notes/%s.%s" % (str(instance.pk), filename))
 
-    def verify_user_access_to_data(self, user):
+    def verify_user_access_to_file(self, user):
         # This is effectively just tracking raw data uploads.  Allow users to see their data, but not others'
         if user.is_superuser:
             return True
