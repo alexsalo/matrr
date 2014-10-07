@@ -1246,7 +1246,6 @@ class ExperimentEvent(models.Model):
     objects = EEVManager()
     eev_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, related_name='event_set', db_column='mky_id', editable=False)
-    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='eev_records', db_column='dto_id', editable=False)
     dex_type = models.CharField('Experiment Type', choices=DexTypesChoices, max_length=100,
                                 help_text='The type of experiment. (ex. "Open Access")')
     eev_source_row_number = models.PositiveIntegerField('Source file row number', blank=False, null=False)
