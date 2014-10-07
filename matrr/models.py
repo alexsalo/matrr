@@ -3964,7 +3964,7 @@ class DataIntegrationTracking(models.Model):
 class DataOwnership(models.Model):
     dto_id = models.AutoField(primary_key=True)
     account = models.ForeignKey(Account, null=False, blank=False)
-    cohort = models.ManyToManyField(Cohort, null=True, blank=True, related_name='dto_set')
+    cohorts = models.ManyToManyField(Cohort, null=True, blank=True, related_name='dto_set')
     dto_date = models.DateField('Integration Date', editable=False, auto_now=True)
     dto_type = models.CharField('Data Type', blank=False, null=True, max_length=40,
                                 help_text='Brief description of this data type')
