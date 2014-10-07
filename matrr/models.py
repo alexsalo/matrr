@@ -4207,7 +4207,7 @@ def rud_pre_save(**kwargs):
 def dto_post_save(**kwargs):
     #check to see if user exists in accounts relation
     dto = kwargs['instance']
-    if dto.dto_date != date.today():
+    if dto.dto_date == date.today():
         from matrr import emails
         emails.send_dto_uploaded_email(dto)
 
