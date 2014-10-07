@@ -192,6 +192,7 @@ urlpatterns += patterns('',
     url(r'^data/download/$', data.data_landing, name='data-landing'),
     url(r'^data/download/(?P<data_type>[a-zA-Z_]+)/$', data.data_cohort, name='data-cohort'),
     url(r'^data/download/(?P<data_type>[a-zA-Z_]+)/(?P<coh_id>\d+)/$', data.data_cohort_dates, name='data-cohort-submit'),
+    url(r'^data/view/$', data.view_dto_data, name='view-dto-data'),
 )
 
 urlpatterns += patterns('',

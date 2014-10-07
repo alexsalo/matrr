@@ -67,7 +67,7 @@ def raw_data_upload(request):
             dto.save()
             dto.cohorts.add(*form.cleaned_data['cohorts'])
             messages.success(request, "Your data has been uploaded successfully.")
-            return redirect('raw-upload')
+            return redirect('view-dto-data')
     else:
         form = RawDataUploadForm(account=request.user.account)
     return render_to_response('matrr/upload_forms/raw_data_upload.html', {'form': form},

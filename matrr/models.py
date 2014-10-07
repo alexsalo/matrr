@@ -3978,11 +3978,13 @@ class DataOwnership(models.Model):
     dto_date = models.DateField('Integration Date', editable=False, auto_now=True)
     dto_type = models.CharField('Data Type', blank=False, null=True, max_length=40,
                                 help_text='Brief description of this data type')
-    dto_data_file = models.FileField('Data File', upload_to='dto/files/', null=True, blank=False)
-    dto_data_notes = models.FileField('Data Notes', upload_to='dto/notes/', null=True, blank=False)
+    dto_data_file = models.FileField('Data File', null=True, blank=False,
+                                     upload_to=lambda instance, filename: "dto/files/%s.%s" % (str(instance.pk), filename))
+    dto_data_notes = models.FileField('Data Notes', null=True, blank=False,
+                                      upload_to=lambda instance, filename: "dto/notes/%s.%s" % (str(instance.pk), filename))
 
     def verify_user_access_to_data(self, user):
-        #todo: our data permissions need a more robust authentication, but I don't think we have decided on a policy yet
+        # This is effectively just tracking raw data uploads.  Allow users to see their data, but not others'
         if user.is_superuser:
             return True
         return user.is_authenticated() and user.account.verified and user.account == self.account
@@ -3993,7 +3995,10 @@ class DataOwnership(models.Model):
 
 
     class Meta:
-        permissions = (  )
+        permissions = (
+            ('view_dto_data', 'View raw uploaded data'),
+            ('receive_dto_uploaded_email', 'Receive Data Uploaded Email'),
+        )
         db_table = 'dto_data_ownership'
 
 
@@ -4194,6 +4199,17 @@ def rud_pre_save(**kwargs):
         from matrr import emails
 
         emails.send_rud_data_available_email(new_rud)
+
+
+# This is a method to check to see if the rud_data_available boolean has changed to True
+# If True, it will email matrr_admin that there is some data ready to be uploaded.
+@receiver(post_save, sender=DataOwnership)
+def dto_post_save(**kwargs):
+    #check to see if user exists in accounts relation
+    dto = kwargs['instance']
+    if dto.dto_date != date.today():
+        from matrr import emails
+        emails.send_dto_uploaded_email(dto)
 
 
 #### Model utilty functions

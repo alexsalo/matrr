@@ -348,6 +348,10 @@ def sendfile(request, pk):
     files.append((r, 'thumbnail'))
     r = MonkeyHormoneImage.objects.filter(svg_image=pk)
     files.append((r, 'svg_image'))
+    r = DataOwnership.objects.filter(dto_data_notes=pk)
+    files.append((r, 'dto_data_notes'))
+    r = DataOwnership.objects.filter(dto_data_file=pk)
+    files.append((r, 'dto_data_file'))
 
     #	this will work for all listed files
     _file = None

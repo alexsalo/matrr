@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}
+	MATRR Data Uploads
+{% endblock %}
+
+{% block content %}
+	<div id="large-headline">Data Ownership Table</div>
+    {% if dto_page %}
+        <table class='common center'>
+            <tr>
+                <th>Upload Date</th>
+                <th>User</th>
+                <th>Data Type</th>
+                <th>Data Notes</th>
+                <th>Data File</th>
+            </tr>
+        {% for dto in dto_page.object_list %}
+            <tr>
+                <td class='text-center-common-td'>{{ dto.dto_date|date:'Y-m-d' }}</td>
+                <td class='text-center-common-td'><a href='{% url 'account-reviewer-view' dto.account.pk %}'>{{ dto.account.user.username }}</a></td>
+                <td class='text-center-common-td'>{{ dto.dto_type }}</td>
+                <td class='text-center-common-td'>
+                    {% if dto.dto_data_notes %}
+                        <a href='{{ MEDIA_URL}}{{dto.dto_data_notes }}'>View Notes</a>
+                    {% else %}
+                        None!! :(
+                    {% endif %}
+                </td>
+                <td class='text-center-common-td'>
+                    {% if dto.dto_data_file %}
+                        <a href='{{ MEDIA_URL}}{{dto.dto_data_file }}'>View Data</a>
+                    {% else %}
+                        None??
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% endif %}
+	<center>
+		{% load inclusion_tags %}
+		{% pagination dto_page %}
+	</center>
+
+{% endblock %}

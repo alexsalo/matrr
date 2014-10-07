@@ -17,7 +17,8 @@ from matrr.models import Request, User, Shipment, Account, RequestStatus, Accept
 # regular_tasks
 def send_colliding_requests_info():
     """
-    If there are colliding requests (tissue requests for the same monkey:tissue) in the last day, this cron task will email users with permission 'can_receive_colliding_requests_info'
+    If there are colliding requests (tissue requests for the same monkey:tissue) in the last day,
+    this cron task will email users with permission 'can_receive_colliding_requests_email'
     which requests are colliding
     """
     time_now = datetime.now()
@@ -531,7 +532,8 @@ def send_mta_uploaded_email(account):
 # matrr
 def send_dna_request_details(req_request):
     """
-    This will notify 'ship_genetics' users that a tissue request has been submitted for DNA/RNA tissue.  Users should expect to receive tissue samples from which to extract this information.
+    This will notify 'process_shipments_email' users that a tissue request has been submitted for DNA/RNA tissue.
+    Users should expect to receive tissue samples from which to extract this information.
 
     They are expected to ship it to the user and notify MATRR of the deed
     """
@@ -569,7 +571,7 @@ def send_rud_data_available_email(rud):
     body += "%s has submitted a research update and indicated there is data ready to be submitted to MATRR.\n" % rud.req_request.user.username
     body += "I told them that MATRR admins would contact them shortly for upload instructions.\n"
     body += "\n"
-    body += "You should probably buy Jon a celebratory beer.  :)\n"
+    body += "You should probably give %s a high-five :)\n" % rud.req_request.user.username
 
     if settings.PRODUCTION and settings.ENABLE_EMAILS:
         ret = send_mail(subject, body, from_email, recipient_list=recipients, fail_silently=False)
@@ -594,7 +596,7 @@ def send_rud_complete_email(rud_username):
     body += "%s has submitted a 'Complete' research update.\n" % rud_username
     body += "Now would be a good time to get some data from the user, before they 'lose' their data.\n"
     body += "\n"
-    body += "You should probably buy Jon a celebratory beer too.  ;)\n"
+    body += "You should probably give %s a high-five :)\n" % rud_username
 
     if settings.PRODUCTION and settings.ENABLE_EMAILS:
         ret = send_mail(subject, body, from_email, recipient_list=recipient_list, fail_silently=False)
@@ -641,8 +643,8 @@ def dsm_registration_notification(dsm):
     """
     if not isinstance(dsm, DataSymposium):
         dsm = DataSymposium.objects.get(pk=dsm)
-    recipents = Account.objects.users_with_perm('receive_symposium_roster_email')
-    to_list = recipents.values_list('email', flat=True)
+    recipients = Account.objects.users_with_perm('receive_symposium_roster_email')
+    to_list = recipients.values_list('email', flat=True)
 
     subject = "Someone has registered for the MATRR Data Symposium"
     body = "%s %s %s has registered for the symposium.  Click the link below to see more details.\n" % (dsm.dsm_title, dsm.dsm_first_name, dsm.dsm_last_name)
@@ -656,4 +658,26 @@ def dsm_registration_notification(dsm):
     email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, to_list)
     if settings.PRODUCTION and settings.ENABLE_EMAILS:
         email.send()
+
+#matrr
+def send_dto_uploaded_email(dto):
+    """
+    When anyone uploads data to gleek, send an email to appropriate users.
+    """
+    admin = Account.objects.get(user__username='matrr_admin')
+    from_email = admin.email
+    recipients = Account.objects.users_with_perm('receive_dto_uploaded_email')
+    to_list = recipients.values_list('email', flat=True)
+    subject = 'Data uploaded to the MATRR'
+    body = "That's right %s, you read that subject line correctly!\n" % admin.username
+    body += "\n"
+    body += "%s has uploaded '%s' data to the MATRR.\n" % (dto.account.user.username, dto.dto_type)
+    body += "View uploaded data here:  http://gleek.ecs.baylor.edu%s" % reverse('view-dto-data')
+    body += "\n"
+    body += "You should probably give %s a high-five :)\n" % dto.account.user.username
+
+    if settings.PRODUCTION and settings.ENABLE_EMAILS:
+        ret = send_mail(subject, body, from_email, recipient_list=to_list, fail_silently=False)
+        if ret > 0:
+            print "%s User %s uploaded data." % (datetime.now().strftime("%Y-%m-%d,%H:%M:%S"), dto.account.username)
 
