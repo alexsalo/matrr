@@ -62,10 +62,11 @@ def raw_data_upload(request):
             dto = models.DataOwnership()
             dto.account = request.user.account
             dto.dto_type = form.cleaned_data['dto_type']
+            dto.save()
             dto.dto_data_notes = request.FILES['dto_data_notes']
             dto.dto_data_file = request.FILES['dto_data_file']
-            dto.save()
             dto.cohorts.add(*form.cleaned_data['cohorts'])
+            dto.save()
             messages.success(request, "Your data has been uploaded successfully.")
             return redirect('view-dto-data')
     else:
