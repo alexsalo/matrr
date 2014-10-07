@@ -743,6 +743,16 @@ class Account(models.Model):
                 return True
         return False
 
+    def get_requested_cohort_pks(self):
+        requests = Request.objects.filter(user=self.user)
+        cohorts = requests.values_list('cohort', flat=True).order_by().distinct()
+        return cohorts
+
+    def get_shipped_cohort_pks(self):
+        requests = Request.objects.shipped().filter(user=self.user)
+        cohorts = requests.values_list('cohort', flat=True).order_by().distinct()
+        return cohorts
+
     def save(self, *args, **kwargs):
         super(Account, self).save(*args, **kwargs)
 
@@ -3979,7 +3989,7 @@ class DataOwnership(models.Model):
 
     def __unicode__(self):
         # You should override this method too
-        return "%s: %s" % (self.dat_type, self.account.username)
+        return "%s: %s" % (self.dto_type, self.account.username)
 
 
     class Meta:

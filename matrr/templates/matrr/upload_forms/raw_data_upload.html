@@ -37,10 +37,41 @@
             </ul>
         </div>
         <div class="clearfix"></div>
+		{% if form.errors %}
+			<div class="messages">
+				<div class="error">
+					{% for field in form %}
+					{% if field.errors %}
+					{{ field.label_tag }}:
+						{% for error in field.errors %}
+							 {{ error }}<br>
+						{% endfor %}
+					{% endif %}
+					{% endfor %}
+
+				</div></div>
+		{% endif %}
 		<form method="post" action="" enctype="multipart/form-data">
-				{% csrf_token %}
-				{{ form }}
-				<button type='submit' name='submit'>Upload</button>
+            {% csrf_token %}
+			<table class='common'>
+                <tr>
+					<th>{{ form.dto_type.label }}<br><div class="small">{{ form.dto_type.help_text }}</div></th>
+					<td>{{ form.dto_type }}  </td>
+                </tr>
+				<tr>
+					<th width="30%">{{ form.cohorts.label }}<br><div class=small>{{ form.cohorts.help_text }}</div></th>
+					<td>{{ form.cohorts }}</td>
+				</tr>
+				<tr>
+					<th width="30%">{{ form.dto_data_notes.label }}<br><div class=small>{{ form.dto_data_notes.help_text }}</div></th>
+					<td>{{ form.dto_data_notes }}</td>
+				</tr>
+				<tr>
+					<th width="30%">{{ form.dto_data_file.label }}<br><div class=small>{{ form.dto_data_file.help_text }}</div></th>
+					<td>{{ form.dto_data_file }}</td>
+				</tr>
+			</table>
+            <button type='submit' name='submit'>Upload</button>
 		</form>
 		
 	</div>

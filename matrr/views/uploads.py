@@ -8,12 +8,12 @@ from django.contrib import messages
 from matrr.settings import UPLOAD_DIR
 from matrr import emails
 from matrr.forms import MtaForm, CodForm, RawDataUploadForm
-from matrr.models import Mta, Cohort
+from matrr import models
 
 
 def mta_upload(request):
     # make blank mta instance
-    mta_object = Mta(user=request.user)
+    mta_object = models.Mta(user=request.user)
     # make a MTA upload form if one does not exist
     if request.method == 'POST':
         if 'request_form' in request.POST:
@@ -48,7 +48,7 @@ def cod_upload(request, coh_id=1):
             messages.success(request, 'Upload Successful')
             return redirect(reverse('cohort-details', args=[str(coh_id)]))
     else:
-        cohort = Cohort.objects.get(pk=coh_id)
+        cohort = models.Cohort.objects.get(pk=coh_id)
         form = CodForm(cohort=cohort, user=request.user)
     return render_to_response('matrr/upload_forms/cod_upload_form.html', {'form': form, },
                               context_instance=RequestContext(request))
@@ -57,21 +57,19 @@ def cod_upload(request, coh_id=1):
 @user_passes_test(lambda u: u.has_perm('auth.upload_raw_data'), login_url='/denied/')
 def raw_data_upload(request):
     if request.method == 'POST':
-        form = RawDataUploadForm(request.POST, request.FILES)
+        form = RawDataUploadForm(account=request.user.account, data=request.POST, files=request.FILES)
         if form.is_valid():
-            f = request.FILES['data']
-            name = datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "." + f.name
-            upload_path = os.path.join(UPLOAD_DIR, name)
-            destination = open(upload_path, 'wb+')
-            for chunk in f.chunks():
-                destination.write(chunk)
-            destination.close()
+            dto = models.DataOwnership()
+            dto.account = request.user.account
+            dto.dto_type = form.cleaned_data['dto_type']
+            dto.dto_data_notes = request.FILES['dto_data_notes']
+            dto.dto_data_file = request.FILES['dto_data_file']
+            dto.save()
+            dto.cohorts.add(*form.cleaned_data['cohorts'])
             messages.success(request, "Your data has been uploaded successfully.")
-            return render_to_response('matrr/upload_forms/raw_data_upload.html',
-                                      {'form': RawDataUploadForm()},
-                                      context_instance=RequestContext(request))
+            return redirect('raw-upload')
     else:
-        form = RawDataUploadForm()
+        form = RawDataUploadForm(account=request.user.account)
     return render_to_response('matrr/upload_forms/raw_data_upload.html', {'form': form},
                               context_instance=RequestContext(request))
 
