@@ -177,7 +177,9 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
     bec_con_bar_plot.set_autoscalex_on(False)
 
     # normalize colors to use full range of colormap
-    norm = colors.normalize(cbc.cbc_bec_daily_gkg_etoh_min, cbc.cbc_bec_daily_gkg_etoh_max)
+    #norm = colors.normalize(cbc.cbc_bec_daily_gkg_etoh_min, cbc.cbc_bec_daily_gkg_etoh_max)
+    norm = colors.normalize(0, 7)
+
 
     facecolors = list()
     for bar, x, color_value in zip(bar_yaxis, bar_xaxis, bar_color):
@@ -199,12 +201,13 @@ def monkey_bec_consumption_FirstSixMonthsOA(monkey=None):
 
     # colorbar for bar plot
     bec_con_bar_color = fig.add_subplot(main_gs[-1:, 39:])
-    v = numpy.linspace(cbc.cbc_bec_gkg_etoh_min, cbc.cbc_bec_gkg_etoh_max, 4, endpoint=True)
+    #v = numpy.linspace(cbc.cbc_bec_gkg_etoh_min, cbc.cbc_bec_gkg_etoh_max, 4, endpoint=True)
+    v = numpy.linspace(0, 8, 4, endpoint=True)
     cb = fig.colorbar(col, alpha=1, cax=bec_con_bar_color, ticks=v)
     cb.set_label(bar_color_label, fontsize=label_size)
-    _ticks = [1.0,3.0,5.0]
-    cb.set_ticks(_ticks)
-    cb.set_ticklabels(["%.1f" % t for t in _ticks])
+    #_ticks = [1.0,3.0,5.0]
+    #cb.set_ticks(_ticks)
+    #cb.set_ticklabels(["%.1f" % t for t in _ticks])
     bec_con_bar_color.tick_params(axis='both', which='major', labelsize=tick_size)
     bec_con_bar_color.tick_params(axis='both', which='minor', labelsize=tick_size)
     return fig
