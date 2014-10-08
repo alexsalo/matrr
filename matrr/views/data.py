@@ -1,5 +1,6 @@
 import os
 from django.contrib import messages
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import FieldError
 from django.core.files import File
 from django.core.urlresolvers import reverse
@@ -101,7 +102,11 @@ def view_dto_data(request):
     if request.user.has_perm('matrr.view_dto_data'):
         dto_set = models.DataOwnership.objects.all().order_by('-dto_date')
     else:
-        dto_set = models.DataOwnership.objects.filter(account=request.user.account)
+        account = getattr(request.user, 'account', None)
+        if account is None:
+            return redirect_to_login(reverse('view-dto-data'))
+        else:
+            dto_set = models.DataOwnership.objects.filter(account=request.user.account)
     ## Paginator stuff
     dto_paginator = paginator.Paginator(dto_set, 5)
     # Make sure page request is an int. If not, deliver first page.
