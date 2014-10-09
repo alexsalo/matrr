@@ -68,6 +68,7 @@ def raw_data_upload(request):
             dto.cohorts.add(*form.cleaned_data['cohorts'])
             dto.save()
             messages.success(request, "Your data has been uploaded successfully.")
+            emails.send_dto_uploaded_email(dto)
             return redirect('view-dto-data')
     else:
         form = RawDataUploadForm(account=request.user.account)

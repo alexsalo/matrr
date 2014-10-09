@@ -4201,17 +4201,6 @@ def rud_pre_save(**kwargs):
         emails.send_rud_data_available_email(new_rud)
 
 
-# This is a method to check to see if the rud_data_available boolean has changed to True
-# If True, it will email matrr_admin that there is some data ready to be uploaded.
-@receiver(post_save, sender=DataOwnership)
-def dto_post_save(**kwargs):
-    #check to see if user exists in accounts relation
-    dto = kwargs['instance']
-    if dto.dto_date == date.today():
-        from matrr import emails
-        emails.send_dto_uploaded_email(dto)
-
-
 #### Model utilty functions
 def get_model_by_fieldname(fieldname):
     """
