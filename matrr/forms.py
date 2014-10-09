@@ -351,7 +351,7 @@ class ReviewResponseForm(forms.Form):
 class RawDataUploadForm(forms.Form):
     dto_type = forms.CharField(label='Data Type', help_text='Brief description of this data type',
                                max_length=40, widget=widgets.TextInput(attrs={'size': 40}))
-    cohorts = forms.ModelMultipleChoiceField(label="Cohorts", required=True, queryset=models.Cohort.objects.none())
+    cohorts = forms.ModelMultipleChoiceField(label="Cohorts", required=False, queryset=models.Cohort.objects.none())
     dto_data_notes = forms.FileField(label='Data Notes', help_text='Detailed description of the data', required=True)
     dto_data_file = forms.FileField(label='Data File', help_text='Data File', required=True)
 
