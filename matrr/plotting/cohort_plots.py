@@ -503,7 +503,8 @@ def cohort_bec_firstbout_monkeycluster(cohort, from_date=None, to_date=None, dex
     mky_datas = list()
     centeroids = list()
     for mky in mkys:
-        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, drinking_experiment__dex_date__in=dates).exclude(bec_record=None).order_by('drinking_experiment__dex_date')
+        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky, drinking_experiment__dex_date__in=dates)
+        mtds = mtds.exclude(bec_record=None).order_by('drinking_experiment__dex_date')
         xaxis = mtds.values_list('mtd_pct_etoh_in_1st_bout', flat=True)
         yaxis = mtds.values_list('bec_record__bec_mg_pct', flat=True)
         color = mky_color[mky]
@@ -608,7 +609,7 @@ def cohort_bec_monthly_centroid_distance_general(cohort, mtd_x_axis, mtd_y_axis,
 
     if bec_records.count() > 0:
         dates = sorted(set(bec_records.dates('bec_collect_date', 'month').distinct()))
-        bar_x_labels = [date.strftime('%h %Y') for date in dates]
+        bar_x_labels = [_date.strftime('%h %Y') for _date in dates]
         bar_x = numpy.arange(0, len(dates)-1)
     else:
         return False, False
@@ -625,10 +626,10 @@ def cohort_bec_monthly_centroid_distance_general(cohort, mtd_x_axis, mtd_y_axis,
     for mky in monkeys:
         bar_y = list()
         colors = list()
-        for date in dates:
-            min_date = date
-            max_date = add_1_month(date)
-            color = month_color[date]
+        for _date in dates:
+            min_date = _date
+            max_date = add_1_month(_date)
+            color = month_color[_date]
 
             cohort_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=cohort,
                                                                     drinking_experiment__dex_date__gte=min_date,

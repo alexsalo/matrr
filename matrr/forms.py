@@ -235,6 +235,7 @@ class AddressAccountForm(forms.ModelForm):
 
 
 class AccountForm(forms.ModelForm):
+    #todo 1.7: rename this import to from django.forms.utils
     from django.forms.util import ErrorList
 
     first_name = forms.CharField(label="First name", max_length=30)
@@ -958,6 +959,7 @@ class DataSelectForm(forms.Form):
 
 
 class SymposiumFormOne(forms.ModelForm):
+    #todo 1.7: rename this import to from django.forms.utils
     from django.forms.util import ErrorList
     def __init__(self, account=None, data=None, files=None, auto_id='id_%s', prefix=None,
                  initial=None, error_class=ErrorList, label_suffix=':',

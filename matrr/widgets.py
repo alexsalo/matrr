@@ -5,6 +5,7 @@ from itertools import chain
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_unicode
+#todo 1.7: rename this import to from django.forms.utils
 from django.forms.util import flatatt
 from django.core.urlresolvers import reverse
 from django.forms import * # i'd like to refactor this to not import *, instead use forms.Blah
@@ -507,6 +508,7 @@ class DateTimeWidget(forms.widgets.TextInput):
         jsdformat = self.dformat #.replace('%', '%%')
         cal = calbtn % (settings.STATIC_URL, id, id, jsdformat, id, final_attrs['min_date'], final_attrs['max_date'])
         a = u"<div class='datetime_widget_id'>"
+        #todo 1.7: rename this import to from forms.utils
         a += u'<input%s />%s%s' % (forms.util.flatatt(final_attrs), self.media, cal)
         a += u'</div>'
         return mark_safe(a)
