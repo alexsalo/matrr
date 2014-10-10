@@ -4005,17 +4005,32 @@ class DataOwnership(models.Model):
 
 class CRHChallenge(models.Model):
     """
-    Monkey Corticotropin-releasing hormone challenge data, from Christa
+    Monkey Corticotropin-releasing hormone challenge data, from Christa.  Data is similar to MonkeyHormone.  It's
+    basically the same thing, except these challenges were done during EPs.
 
-    Look, this is really, really similar to MonkeyHormone.  It's basically the same thing.
+    Hormone data was collected throughout the experiment in 3 (or 4) categories.
+    Basal = Weekly 8am blood draw
+    Durnal = Three blood samples per week (morning, noon, evening)
+    Menstrual = Three morning blood draws per week
+    EP = 'Pharmacological challenges of the hypothalamic-pituitary-adrenal (HPA) axis'
 
-    It is exactly the same thing, except so far the Rhesus 6a data has come in a be
+    This table was create for the first data I've gotten during an EP that has multiple samples
+
+    The units are usually:
+    Cortisol micrograms/dl
+    ACTH pg/ml
+    DHEAS micrograms/ml
+    Aldosterone pg/ml (for about half of the aldosterone assays, ETSL reported pg/ml as ng/ml; I didn't notice and
+        didn't change the values, so the values are fine, but all aldosterone they tell me is pg/ml)
+    DOC pg/ml Testosterone ng/ml
+    Estradiol - I don't know, I see they report ng/ml and pg/ml sometimes, the range of the assay is 5-4300 pg/ml (which
+        would be 0.005-4.3 ng/ml), so if they values of estradiol are high, it is probably pg/ml.
     """
-    UNITS = {'crc_acth': 'pg/dl', 'crc_cort': 'ug/ml', 'crc_e': 'pg/ml', 'crc_doc': 'pg/ml', 'crc_ald': 'pg/ml',
+    UNITS = {'crc_acth': 'pg/dl', 'crc_cort': 'ug/dl', 'crc_e': 'pg/ml', 'crc_doc': 'pg/ml', 'crc_ald': 'pg/ml',
              'crc_dheas': 'ug/ml'}
     crc_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='crc_records', db_column='mky_id', editable=False)
-    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mep_records', db_column='dto_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='dto_records', db_column='dto_id', editable=False)
     crc_date = models.DateField('Date', help_text='The date this experiment was conducted.')
     crc_time = models.PositiveIntegerField('Time', help_text='Minutes after challenge the sample was collected. 0 = baseline')
     crc_ep = models.PositiveIntegerField('Endocrine Profile Number', help_text='I wish I could map this to a timeline event....')
