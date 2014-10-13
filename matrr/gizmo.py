@@ -8,7 +8,8 @@ from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.template import loader, Context
-from ho import pisa
+#from ho import pisa
+from xhtml2pdf import pisa
 
 from matrr import settings
 from matrr.models import Request, RequestStatus

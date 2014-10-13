@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import ast
-import Image
+from PIL import Image
 import traceback
 import numpy
 import sys
@@ -551,7 +551,7 @@ class Monkey(models.Model):
     mky_birthdate = models.DateField('Date of Birth', blank=True, null=True, max_length=20, help_text='Please enter the date the monkey was born on.')
     mky_weight = models.FloatField('Weight', blank=True, null=True,
                                    help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
-    mky_drinking = models.BooleanField('Is Drinking', null=False, help_text='Was this monkey given alcohol?')
+    mky_drinking = models.BooleanField('Is Drinking', null=False, default=False, help_text='Was this monkey given alcohol?')
     mky_housing_control = models.BooleanField('Housing Control', null=False, default=False, help_text='Was this monkey part of a housing control group?')
     mky_necropsy_start_date = models.DateField('Necropsy Start Date', null=True, blank=True, help_text='Please enter the date the necropsy was performed on (or was started on).')
     mky_necropsy_start_date_comments = models.TextField('Necropsy Start Date Comments', null=True, blank=True)
@@ -1282,7 +1282,7 @@ class ExperimentEvent(models.Model):
     eev_veh_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last H20 drink [s]', blank=True,
                                                                   null=True)
     eev_scale_string = models.CharField('Original string data from scale', max_length=50, blank=True, null=True)
-    eev_hand_in_bar = models.BooleanField('Hand in bar', blank=False, null=False)
+    eev_hand_in_bar = models.BooleanField('Hand in bar', blank=False, null=False, default=False,)
     eev_blank = models.IntegerField('This should be blank but I found some values', blank=True, null=True)
     eev_etoh_bout_number = models.PositiveIntegerField('EtOh bout number', blank=True, null=True)
     eev_etoh_drink_number = models.PositiveIntegerField('EtOh drink number', blank=True, null=True)
@@ -2185,13 +2185,13 @@ class Request(models.Model, DiffingMixin):
                                    help_text='Please describe the source of funding which will be used for this request.')
     req_progress_agreement = models.BooleanField(
         'I acknowledge that I will be required to submit a progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.',
-        blank=False, null=False)
+        blank=False, null=False,  default=False,)
     req_safety_agreement = models.BooleanField(
         'I acknowledge that I have read and understand the potential biohazards associated with tissue shipment.  There are no known biohazards associated with data requests.',
-        blank=False, null=False)
+        blank=False, null=False,  default=False)
     req_data_agreement = models.BooleanField(
         "I acknowledge that any data requested and provided are for research purposes only.  All published research associated with the data are required to acknowledge the lab that produced the data.",
-        blank=False, null=False)
+        blank=False, null=False,  default=False)
     req_referred_by = models.CharField('How did you hear about MATRR?', choices=REFERRAL_CHOICES, null=False,
                                        max_length=100)
     req_notes = models.TextField('Request Notes', null=True, blank=True)
@@ -2617,7 +2617,8 @@ class ResearchUpdate(models.Model):
                                     null=False, default='IP')
     rud_pmid = models.CharField("PMID", max_length=20, blank=True, null=False, default='')
     rud_data_available = models.BooleanField("Data Available",
-                                             help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.")
+                                             help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.",
+                                             default=False)
     rud_comments = models.TextField("Comments", blank=True, null=False)
     rud_file = models.FileField('Research Update', upload_to='rud/', default='', null=False, blank=False,
                                 help_text='File to Upload')
@@ -3937,7 +3938,7 @@ class DataIntegrationTracking(models.Model):
                                help_text='Choose a cohort associated with this information.')
     dit_nec = models.BooleanField('Necropsy Data Integrated', null=False, default=False,)
     dit_nec_notes = models.TextField('Notes about Necropsy data', null=True, blank=True, default='',)
-    dit_mtd_ind = models.BooleanField('Induction Daily Summary Data Integrated', )
+    dit_mtd_ind = models.BooleanField('Induction Daily Summary Data Integrated', default=False,)
     dit_mtd_oa = models.BooleanField('OA Daily Summary Data Integrated', null=False, default=False, )
     dit_mtd_notes = models.TextField('Notes about Summary data', null=True, blank=True, default='',)
     dit_ebt_ind = models.BooleanField('Induction Bout Data Integrated', null=False, default=False, )
