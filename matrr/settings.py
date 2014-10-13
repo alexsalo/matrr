@@ -284,6 +284,7 @@ LOGGING = {
     }
 }
 
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 if DEVELOPMENT:
     from develop_settings import *

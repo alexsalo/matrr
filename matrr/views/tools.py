@@ -1,7 +1,7 @@
 import json, numpy, os
 import cStringIO as StringIO
 from django.db.models import Q
-import ho.pisa as pisa
+from xhtml2pdf import pisa
 from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect, HttpResponse
