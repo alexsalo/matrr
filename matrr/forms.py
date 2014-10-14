@@ -910,6 +910,11 @@ class AdvancedSearchFilterForm(forms.Form):
     hormones = forms.MultipleChoiceField(label="Hormones", required=False, choices=HORMONE_CHOICES,
                                               widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={
                                               'onchange': 'post_adv_form()'}))
+    #add Drinking category filter
+    DRINKING_CATEGORY_CHOICES = [(models.DrinkingCategory[i][0],models.DrinkingCategory[i][0]) for i in range(models.DrinkingCategory.__len__()) ]
+    drinking_category = forms.MultipleChoiceField(label="Drinking Category", required=False, choices=DRINKING_CATEGORY_CHOICES,
+                                              widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={
+                                              'onchange': 'post_adv_form()'}))
 
 
 class InventoryBrainForm(forms.Form):

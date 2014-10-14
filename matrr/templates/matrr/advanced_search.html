@@ -50,6 +50,12 @@
 				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in all of the selected hormones.</div>
 				{{ filter_form.hormones }}
 			</div>
+            <!--add filter drinking_category -->
+            <div class=headline><a onclick="javascript:toggle_visibility('drinking_category');"><img src='{{ STATIC_URL }}images/expand.gif'> drinking_category</a></div>
+			<div id='drinking_category' class="hidden">
+				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in all of the selected drinking_categories.</div>
+				{{ filter_form.drinking_category}}
+			</div>
 		</form>
 
 
@@ -66,6 +72,7 @@
 							<th>Cohort</th>
 							<th>Sex</th>
 							<th>Test Group</th>
+                            <th>Drinking Category</th> <!-- add col -->
 						</tr>
 						{% for monkey in monkeys %}
 							<tr id="monkey_{{ monkey.pk }}" class=" hidden">
@@ -94,6 +101,7 @@
 											Control
 										{% endif %}{% endif %}
 								</td>
+                                <td>{{ monkey.mky_drinking_category }}</td>  <!-- add col -->
 							</tr>
 						{% endfor %}
 					</table>
