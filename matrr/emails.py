@@ -174,7 +174,7 @@ def urge_progress_reports():
     way_overdue = False
     shipped_requests = Request.objects.shipped()
     for req in shipped_requests:
-        if not req.is_rud_overdue():
+        if not req.is_rud_overdue() or not req.user.is_active:
             continue
         else:
             way_overdue = way_overdue or req.get_rud_weeks_overdue() >= 2
