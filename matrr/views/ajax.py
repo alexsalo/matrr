@@ -33,6 +33,8 @@ def ajax_advanced_search(request):
                     for hormone in filters['hormones']:
                         _query = "hormone_records__%s_stdev__gte" % hormone
                         select_query = select_query & Q(**{_query:1})
+                if filters['drinking_category']: # add in 14 Oct,2104 by Yong Shui
+                    select_query = select_query & Q(mky_drinking_category__in=filters['drinking_category'])
 
             if select_query:
                 show_ids = Monkey.objects.filter(select_query).values_list('mky_id', flat=True).distinct()
