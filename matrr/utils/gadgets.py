@@ -4,11 +4,11 @@ import os
 from scipy import stats
 
 import pylab
-from django.db.models import Max, Min
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator
 
-from matrr.models import MonkeyToDrinkingExperiment, Avg, MonkeyBEC, MonkeyHormone, TWENTYFOUR_HOUR, ExperimentBout
+from django.db.models import Max, Min, Avg
+from matrr.models import MonkeyToDrinkingExperiment, MonkeyBEC, MonkeyHormone, TWENTYFOUR_HOUR, ExperimentBout
 from matrr import plotting
 
 

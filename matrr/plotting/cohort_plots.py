@@ -1,6 +1,6 @@
 __author__ = 'farro'
 from matplotlib import pyplot, cm, gridspec
-from django.db.models.aggregates import Sum, Max
+from django.db.models import Sum, Min, Max, Q
 from matplotlib.cm import get_cmap
 from matplotlib.ticker import MaxNLocator
 import numpy, operator
