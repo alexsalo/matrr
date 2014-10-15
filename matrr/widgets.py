@@ -237,9 +237,8 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
         final_attrs = self.build_attrs(attrs, name=name)
         output = [
             u'<fieldset><legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (
-            attrs['id'], name, attrs['id'])]
-        output.append(
-            u'<table class="full-width" ><thead><td></td><td>Monkey</td><td>Status</td><td>Assignment</td></thead>')
+                attrs['id'], name, attrs['id']),
+            u'<table class="full-width" ><thead><td></td><td>Monkey</td><td>Status</td><td>Assignment</td></thead>']
         # Normalize to strings
         str_values = set([force_unicode(v) for v in value])
         for i, (mky_id, mky_real_id) in enumerate(chain(self.choices, choices)):
@@ -344,9 +343,9 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 
 
 class FixTypeSelection(Input):
-    '''
+    """
       This widget will require some custom javascript in order for it to work.
-      '''
+    """
 
     def __init__(self, choices=(), attrs=None):
         self.choices = choices
@@ -502,7 +501,7 @@ class DateTimeWidget(forms.widgets.TextInput):
                 final_attrs['value'] = \
                     force_unicode(value)
         if not final_attrs.has_key('id'):
-            final_attrs['id'] = u'%s_id' % (name)
+            final_attrs['id'] = u'%s_id' % name
         id = final_attrs['id']
 
         jsdformat = self.dformat #.replace('%', '%%')

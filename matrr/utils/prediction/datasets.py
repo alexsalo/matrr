@@ -167,7 +167,7 @@ class RhesusPCADataset():
 
             if include_hormone or include_only_hormone:
                 for col in loop_mhm_columns:
-                    if mhm == None:
+                    if mhm is None:
                         row.append(0)
                     else:
                         row.append(getattr(mhm, col))
