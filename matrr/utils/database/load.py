@@ -2062,22 +2062,28 @@ def load_crh_challenge_data(file_name, dto_pk, overwrite=False, header=True):
         offset = 1 if header else 0
         for line_number, line in enumerate(read_data[offset:]):
             row_data = line.split("\t")
+            if not any(row_data):
+                continue
             crc_date = dingus.get_datetime_from_steve(row_data[0])
             monkey = dingus.get_monkey_by_number(row_data[1])
             crc_time = 0 if row_data[2].lower() == 'base' else int(row_data[2])
             crc_ep = int(row_data[10])
-            crc, is_new = CRHChallenge.objects.get_or_create(monkey=monkey, crc_date=crc_date, dto=dto,
-                                                             crc_time=crc_time, crc_ep=crc_ep)
-            if not is_new and not overwrite:
-                logging.warning(dingus.ERROR_OUTPUT % (line_number, "Monkey+Date exists", line))
-                print dingus.ERROR_OUTPUT % (line_number, "Monkey+Date exists", line)
-                continue
+            crc_exists = CRHChallenge.objects.filter(monkey=monkey, crc_date=crc_date,
+                                                     crc_time=crc_time, crc_ep=crc_ep)
+            if crc_exists.count():
+                raise Exception("STOP! This record already exists but it should be unique.")
+            else:
+                crc = CRHChallenge(monkey=monkey, crc_date=crc_date, dto=dto, crc_time=crc_time, crc_ep=crc_ep)
 
             data_fields = row_data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
             model_fields = fields[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
             for i, field in enumerate(model_fields):
                 if data_fields[i] != '' and model_fields != '':
-                    setattr(crc, field, data_fields[i])
+                    if data_fields[i].lower() == 'qns' or data_fields[i] == '<5':
+                        data_field = None
+                    else:
+                        data_field = data_fields[i]
+                    setattr(crc, field, data_field)
 
             try:
                 crc.full_clean()
