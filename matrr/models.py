@@ -13,7 +13,6 @@ from string import lower, replace
 
 from django.core.files.base import File
 from django.db import models
-#from django.db.models import Q, Min, Max, Avg, Sum, Count, StdDev
 from django.contrib.auth.models import User, Permission, Group
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver

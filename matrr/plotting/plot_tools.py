@@ -14,8 +14,8 @@ import matplotlib
 from matplotlib.cm import get_cmap
 from matplotlib.ticker import MaxNLocator
 
-from matrr.models import Monkey, MonkeyToDrinkingExperiment, MonkeyBEC, MonkeyImage, Cohort, CohortImage, ExperimentEvent, NecropsySummary, Q
-#from matrr.plotting import cohort_plots, monkey_plots
+from matrr.models import Monkey, MonkeyToDrinkingExperiment, MonkeyBEC, MonkeyImage, Cohort, CohortImage, ExperimentEvent, NecropsySummary
+from django.db.models import Q
 
 def validate_dates(from_date=False, to_date=False):
     if from_date and not isinstance(from_date, (datetime, date)):

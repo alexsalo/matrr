@@ -5,7 +5,7 @@ import gc
 from numpy import polyfit, polyval
 from scipy.cluster import vq
 
-from django.db.models.aggregates import Max, Avg
+from django.db.models import Min, Max, Avg, Q
 from matplotlib.cm import get_cmap
 from matplotlib.ticker import NullLocator, MaxNLocator
 import matplotlib

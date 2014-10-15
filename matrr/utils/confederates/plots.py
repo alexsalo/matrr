@@ -6,7 +6,8 @@ import os
 from scipy import stats
 from matrr.plotting import *
 from matrr.utils import apriori, gadgets
-from matrr.models import Monkey, Cohort, MonkeyToDrinkingExperiment, CohortBout, ExperimentBout, Min, TWENTYFOUR_HOUR, DrinkingExperiment
+from django.db.models import Min
+from matrr.models import Monkey, Cohort, MonkeyToDrinkingExperiment, CohortBout, ExperimentBout, TWENTYFOUR_HOUR, DrinkingExperiment
 
 #plot
 from matrr.utils.confederates import confederates
