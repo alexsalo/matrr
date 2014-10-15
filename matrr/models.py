@@ -3971,6 +3971,12 @@ class DataIntegrationTracking(models.Model):
         )
 
 
+def dto_data_file_upload_to(self, instance, filename):
+    return "dto/files/%s.%s" % (str(instance.pk), filename)
+
+def dto_data_notes_upload_to(self, instance, filename):
+    return "dto/notes/%s.%s" % (str(instance.pk), filename)
+
 class DataOwnership(models.Model):
     dto_id = models.AutoField(primary_key=True)
     account = models.ForeignKey(Account, null=False, blank=False)
@@ -3978,10 +3984,8 @@ class DataOwnership(models.Model):
     dto_date = models.DateField('Integration Date', editable=False, auto_now=True)
     dto_type = models.CharField('Data Type', blank=False, null=True, max_length=40,
                                 help_text='Brief description of this data type')
-    dto_data_file = models.FileField('Data File', null=True, blank=False,
-                                     upload_to=lambda instance, filename: "dto/files/%s.%s" % (str(instance.pk), filename))
-    dto_data_notes = models.FileField('Data Notes', null=True, blank=False,
-                                      upload_to=lambda instance, filename: "dto/notes/%s.%s" % (str(instance.pk), filename))
+    dto_data_file = models.FileField('Data File', null=True, blank=False, upload_to=dto_data_file_upload_to)
+    dto_data_notes = models.FileField('Data Notes', null=True, blank=False, upload_to=dto_data_notes_upload_to)
 
     def verify_user_access_to_file(self, user):
         # This is effectively just tracking raw data uploads.  Allow users to see their data, but not others'
@@ -4034,12 +4038,12 @@ class CRHChallenge(models.Model):
     crc_time = models.PositiveIntegerField('Time', help_text='Minutes after challenge the sample was collected. 0 = baseline')
     crc_ep = models.PositiveIntegerField('Endocrine Profile Number', help_text='I wish I could map this to a timeline event....')
 
-    crc_acth = models.FloatField("ACTH", editable=False, null=False, blank=False)
-    crc_cort = models.FloatField("Cortisol", editable=False, null=False, blank=False)
-    crc_e= models.FloatField("17beta-estradiol", editable=False, null=False, blank=False)
-    crc_doc = models.FloatField("Deoxycorticosterone", editable=False, null=False, blank=False)
-    crc_ald = models.FloatField("Aldosterone", editable=False, null=False, blank=False)
-    crc_dheas = models.FloatField("DHEA-S", editable=False, null=False, blank=False)
+    crc_acth = models.FloatField("ACTH", editable=False, null=True, blank=False)
+    crc_cort = models.FloatField("Cortisol", editable=False, null=True, blank=False)
+    crc_e= models.FloatField("17beta-estradiol", editable=False, null=True, blank=False)
+    crc_doc = models.FloatField("Deoxycorticosterone", editable=False, null=True, blank=False)
+    crc_ald = models.FloatField("Aldosterone", editable=False, null=True, blank=False)
+    crc_dheas = models.FloatField("DHEA-S", editable=False, null=True, blank=False)
 
     def __unicode__(self):
         return "%s - CRH Challenge" % str(self.monkey)

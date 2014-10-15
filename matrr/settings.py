@@ -214,7 +214,7 @@ INSTALLED_APPS = (
 
 		'matrr',
 		'registration',
-		'south',
+#		'south',
 		)
 
 ACCOUNT_ACTIVATION_DAYS = 2
