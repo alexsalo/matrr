@@ -68,7 +68,7 @@ def get_datetime_from_steve(steve_date):
         return real_date
     except Exception as e:
         pass
-    return None
+    raise Exception("Unrecognized date format:  %s" % steve_date)
 
 def convert_excel_time_to_datetime(time_string):
     DATE_BASE = dt(day=1, month=1, year=1904)
