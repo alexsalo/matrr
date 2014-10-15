@@ -1555,8 +1555,8 @@ class MATRRImage(models.Model):
 
         data_map = data_map if isinstance(data_map, collections.Iterable) else False
         t = get_template('html_fragments/%s.html' % self.method) # templates will be named identical to the plotting method
-        context = {'map': data_map, 'image': self, 'bigWidth': self.image.width * 1.1, 'bigHeight': self.image.height * 1.1}
-        context['image_filename'] = image_filename
+        context = {'map': data_map, 'image': self, 'bigWidth': self.image.width * 1.1,
+                   'bigHeight': self.image.height * 1.1, 'image_filename': image_filename}
         c = Context(context)
         foot_t = get_template('html_fragments/fragment_foot.html')
         foot_c = Context({'html_fragment': str(self).replace(" ", "_").replace('(', "").replace(")", ""),

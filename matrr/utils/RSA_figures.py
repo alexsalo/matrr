@@ -89,7 +89,7 @@ def popcount_figure(categories, y_value_callable, y_label, fig_size=(25, 15), ti
     return fig
 
 
-def create_rsa_graphs(output_path='', graphs='figa3,figa4,mdr', format='png', dpi=1000):
+def create_rsa_graphs(output_path='', graphs='figa3,figa4,mdr', output_format='png', dpi=1000):
     figures = list()
     names = list()
 
@@ -121,8 +121,8 @@ def create_rsa_graphs(output_path='', graphs='figa3,figa4,mdr', format='png', dp
         figures.append(pp.figure)
         names.append('mdr')
 
-    if format:
+    if output_format:
         for FigName in zip(figures, names):
             fig, name = FigName
-            filename = output_path + '%s.%s' % (name, format)
-            fig.savefig(filename, format=format ,dpi=dpi)
+            filename = output_path + '%s.%s' % (name, output_format)
+            fig.savefig(filename, format=output_format ,dpi=dpi)

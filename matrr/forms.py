@@ -668,9 +668,9 @@ class FilterForm(forms.Form):
                         elif _category == 'Char' or "Num-" in _category:
                             choice = data[_index + " " + _category + " Choice"]
                             operator = data[_index + " " + _category + " Operator"]
-                            filter = choice + operator
+                            filter_string = choice + operator
                             q_dict = {
-                            filter: value} # create a dict() that looks like {column_name__operator: user_entered_value}
+                            filter_string: value} # create a dict() that looks like {column_name__operator: user_entered_value}
                             logicalAND = data[_index + " " + _category + " Logical"] == 'AND'
                             if logicalAND:
                                 q_object = q_object & Q(

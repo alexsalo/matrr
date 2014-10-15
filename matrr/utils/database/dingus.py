@@ -17,7 +17,7 @@ def get_monkey_by_number(mystery_number):
     return monkey
 
 def queryset_iterator(queryset, chunksize=5000):
-    '''
+    """
     http://djangosnippets.org/snippets/1949/
 
     Iterate over a Django Queryset ordered by the primary key
@@ -28,7 +28,7 @@ def queryset_iterator(queryset, chunksize=5000):
     classes.
 
     Note that the implementation of the iterator does not support ordered query sets.
-    '''
+    """
     pk = 0
     last_pk = queryset.order_by('-pk')[0].pk
     queryset = queryset.order_by('pk')

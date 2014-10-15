@@ -32,7 +32,7 @@ def convex_hull(points, graphic=False, smidgen=0.0075):
     """
 
     def _angle_to_point(point, centre):
-        '''calculate angle in 2-D between points and x axis'''
+        """calculate angle in 2-D between points and x axis"""
         delta = point - centre
         res = numpy.arctan(delta[1] / delta[0])
         if delta[0] < 0:
@@ -46,7 +46,7 @@ def convex_hull(points, graphic=False, smidgen=0.0075):
 
     #time.sleep(0.2)
     def area_of_triangle(p1, p2, p3):
-        '''calculate area of any triangle given co-ordinates of the corners'''
+        """calculate area of any triangle given co-ordinates of the corners"""
         return numpy.linalg.norm(numpy.cross((p2 - p1), (p3 - p1), axis=0)) / 2.
 
 
@@ -72,16 +72,16 @@ def convex_hull(points, graphic=False, smidgen=0.0075):
         i = -2
         while i < (n_pts - 2):
             Aij = area_of_triangle(centre, pts[i], pts[(i + 1) % n_pts])
-            Ajk = area_of_triangle(centre, pts[(i + 1) % n_pts], \
+            Ajk = area_of_triangle(centre, pts[(i + 1) % n_pts],
                                    pts[(i + 2) % n_pts])
             Aik = area_of_triangle(centre, pts[i], pts[(i + 2) % n_pts])
             if graphic:
-                _draw_triangle(centre, pts[i], pts[(i + 1) % n_pts], \
+                _draw_triangle(centre, pts[i], pts[(i + 1) % n_pts],
                                facecolor='blue', alpha=0.2)
-                _draw_triangle(centre, pts[(i + 1) % n_pts], \
-                               pts[(i + 2) % n_pts], \
+                _draw_triangle(centre, pts[(i + 1) % n_pts],
+                               pts[(i + 2) % n_pts],
                                facecolor='green', alpha=0.2)
-                _draw_triangle(centre, pts[i], pts[(i + 2) % n_pts], \
+                _draw_triangle(centre, pts[i], pts[(i + 2) % n_pts],
                                facecolor='red', alpha=0.2)
             if Aij + Ajk < Aik:
                 if graphic: pylab.plot((pts[i + 1][0],), (pts[i + 1][1],), 'go')
@@ -93,7 +93,7 @@ def convex_hull(points, graphic=False, smidgen=0.0075):
 
 
 def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None):
-    def addnode(ax, node, color, lower=[0, 0], upper=[1, 1], axis=0):
+    def addnode(ax, node, color, lower=(0, 0), upper=(1, 1), axis=0):
         axis %= 2
         draw_rectangle(ax, lower, upper, node, color)
         width = upper[axis] - lower[axis]
