@@ -3971,11 +3971,13 @@ class DataIntegrationTracking(models.Model):
         )
 
 
-def dto_data_file_upload_to(self, instance, filename):
-    return "dto/files/%s.%s" % (str(instance.pk), filename)
+def dto_data_file_upload_to(instance, filename):
+    from django.utils import text
+    return "dto/files/%s.%s" % (str(instance.pk), text.slugify(filename))
 
-def dto_data_notes_upload_to(self, instance, filename):
-    return "dto/notes/%s.%s" % (str(instance.pk), filename)
+def dto_data_notes_upload_to(instance, filename):
+    from django.utils import text
+    return "dto/notes/%s.%s" % (str(instance.pk),  text.slugify(filename))
 
 class DataOwnership(models.Model):
     dto_id = models.AutoField(primary_key=True)
