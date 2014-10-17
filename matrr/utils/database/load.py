@@ -520,7 +520,7 @@ def load_TissueCategories():
 
 @transaction.commit_on_success
 def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_duplicates=True, has_headers=True, dump_file=False,
-             truncate_data_columns=48):
+             truncate_data_columns=48, flag_mex_excluded=False):
     """
         0 - date
         1 - monkey_real_id
@@ -691,7 +691,7 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
                     break
                 if not data_fields[i] in ['', '\n', '\r']:
                     setattr(mtd, field, data_fields[i])
-
+            mtd.mex_excluded = flag_mex_excluded
             try:
                 mtd.clean_fields()
             except Exception as e:
