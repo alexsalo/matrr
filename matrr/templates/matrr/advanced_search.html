@@ -51,9 +51,9 @@
 				{{ filter_form.hormones }}
 			</div>
             <!--add filter drinking_category -->
-            <div class=headline><a onclick="javascript:toggle_visibility('drinking_category');"><img src='{{ STATIC_URL }}images/expand.gif'> drinking_category</a></div>
+            <div class=headline><a onclick="javascript:toggle_visibility('drinking_category');"><img src='{{ STATIC_URL }}images/expand.gif'> Drinking Category</a></div>
 			<div id='drinking_category' class="hidden">
-				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in all of the selected drinking_categories.</div>
+				<div class=small>Will display monkeys whose drinking categories are the following selected ones.</div>
 				{{ filter_form.drinking_category}}
 			</div>
 		</form>
@@ -101,7 +101,18 @@
 											Control
 										{% endif %}{% endif %}
 								</td>
-                                <td>{{ monkey.mky_drinking_category }}</td>  <!-- add col -->
+								{% if monkey.mky_drinking_category == 'LD' %}
+								    <td bgcolor="#0088CC" class={{ monkey.mky_drinking_category }}><a href="{% url 'drinking-category-definition' %}">{{ monkey.mky_drinking_category|default:'' }}</a></td>
+							    {% endif %}
+							    {% if monkey.mky_drinking_category == 'BD' %}
+								    <td bgcolor="#00A000" class={{ monkey.mky_drinking_category }}><a href="{% url 'drinking-category-definition' %}">{{ monkey.mky_drinking_category|default:'' }}</a></td>
+							    {% endif %}
+							    {% if monkey.mky_drinking_category == 'HD' %}
+								    <td bgcolor="#FF6600" class={{ monkey.mky_drinking_category }}><a href="{% url 'drinking-category-definition' %}">{{ monkey.mky_drinking_category|default:'' }}</a></td>
+							    {% endif %}
+							    {% if monkey.mky_drinking_category == 'VHD' %}
+								    <td bgcolor="#FF0000" class={{ monkey.mky_drinking_category }}><a href="{% url 'drinking-category-definition' %}">{{ monkey.mky_drinking_category|default:'' }}</a></td>
+								{% endif %}
 							</tr>
 						{% endfor %}
 					</table>
