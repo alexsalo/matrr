@@ -4051,6 +4051,32 @@ class CRHChallenge(models.Model):
         )
 
 
+class BoneDensity(models.Model):
+    """
+
+    """
+    bdy_id = models.AutoField(primary_key=True)
+    monkey = models.ForeignKey(Monkey, null=False, related_name='bdy_records', db_column='mky_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='bdy_records', db_column='dto_id', editable=False)
+    tissue_type = models.ForeignKey(TissueType, db_column='tst_type_id', related_name='bdy_records', blank=False, null=False)
+
+    bdy_study = models.CharField('Study Number', max_length=15, null=True, blank=True)
+    bdy_comment = models.TextField('Comment', null=True, blank=True)
+
+    bdy_area = models.FloatField("Area", editable=False, null=True, blank=True)
+    bdy_bmc = models.FloatField("BMC", editable=False, null=True, blank=True)
+    bdy_bmd = models.FloatField("BMD", editable=False, null=True, blank=True)
+
+    def __unicode__(self):
+        return "%s - CRH Challenge" % str(self.monkey)
+
+    class Meta:
+        db_table = 'bdy_bone_density'
+        permissions = (
+            ('view_bdy_data', 'Can view Bone Density data'),
+        )
+
+
 
 # put any signal callbacks down here after the model declarations
 

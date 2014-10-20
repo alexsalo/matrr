@@ -2033,6 +2033,33 @@ def load_cohort2_electrophys(file_path):
             mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
     print 'Success'
 
+def load_bone_density(filename, dto_pk, tst_tissue_name='Bone (Rt tibia)'):
+    """
+    columns = [ N, Study #, Species, MATRR Cohort #, Gender, TRT, Group #, MATRR #, Monkey #, Area (cm_), BMC (g), BMD (g/cm_), Comment ]
+    """
+    import csv
+    from matrr import models
+    csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+    columns = csv_infile.next() # junk
+    db_columns = ['bdy_area', 'bdy_bmc', 'bdy_bmd', 'bdy_comment']
+    dto = models.DataOwnership.objects.get(pk=dto_pk) # let this raise an exception if the DTO can't be found.
+    tst = models.TissueType.objects.get(tst_tissue_name=tst_tissue_name) # let this raise an exception if you typo'd the tst
+    for row in csv_infile:
+        if row[1]:
+            bdy_record = {}
+            bdy_record['monkey'] = models.Monkey.objects.get(pk=row[7])
+            bdy_record['tissue_type'] = tst
+            bdy_record['dto'] = dto
+            bdy_record['bdy_study'] = row[1]
+            for column, cell in zip(db_columns, row[9:13]):
+                if cell:
+                    bdy_record[column] = cell
+            try:
+                models.BoneDensity.objects.get_or_create(**bdy_record)
+            except Exception as e:
+                print e
+                print row
+                print ''
 
 
 
