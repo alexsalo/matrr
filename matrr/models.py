@@ -406,16 +406,17 @@ class OASplitQueryset(models.query.QuerySet):
         # First, make sure all the MTDs we're working with are OA MTDs
         oa_mtds = self.filter(**{self.dex_type_lookup: "Open Access"})
         # Collect the monkeys we need to sort thru, have to find each monkey's necropsy date.
-        monkeys = self.values_list('monkey', flat=True).distinct()
+        monkeys = self.values_list('monkey', 'monkey__mky_necropsy_start_date').distinct()
         # Collect the NecropsySummary records for our monkeys
-        ncms = NecropsySummary.objects.filter(monkey__in=monkeys).values('monkey', 'ncm_date').distinct()
+#        ncms = NecropsySummary.objects.filter(monkey__in=monkeys.values_list('monkey', flat=True))
+#        ncms = ncms.values('monkey', 'ncm_date').distinct()
         # Instantiate an empty MTDQueryset, into which we store all our first six month oa MTDs
         return_queryset = MTDQuerySet(self.model, using=self._db).none()
-        for ncm in ncms:
+        for mky, necropsy_start in monkeys:
             # for each monkey, filter by the monkey and that monkey's necropsy date + days to the return_queryset
-            end_date = ncm['ncm_date']
+            end_date = necropsy_start
             start_date = end_date - timedelta(days=days)
-            return_queryset |= oa_mtds.filter(monkey=ncm['monkey'])\
+            return_queryset |= oa_mtds.filter(monkey=mky)\
                 .filter(**{self.dex_date_lookup+"__gte": start_date})\
                 .filter(**{self.dex_date_lookup+"__lt": end_date})
         return return_queryset
@@ -1510,7 +1511,6 @@ class MonkeyException(models.Model):
 class NecropsySummary(models.Model):
     ncm_id = models.AutoField(primary_key=True)
     monkey = models.OneToOneField(Monkey, null=False, db_column='ebt_id', related_name='necropsy_summary')
-    ncm_date = models.DateField("Date of Necropsy", blank=True, null=True)
     ncm_age_onset_etoh = models.CharField("Age at Ethanol Onset", max_length=100, blank=True, null=True)
     ncm_etoh_onset = models.DateTimeField("Date of Ethanol Onset", blank=True, null=True)
     ncm_6_mo_start = models.DateField('6 Month Start', blank=True, null=True)
