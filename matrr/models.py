@@ -396,8 +396,9 @@ class OASplitQueryset(models.query.QuerySet):
 
         The date of necropsy is determined by the NecropsySummary table.
 
-        days > 0 will return data from the days before necropsy.
-        days = 0 will return data from the day of necropsy (if available).
+        days > 1 will return data from the days before necropsy.
+        days = 1 will return data from the day of necropsy.
+        days = 0 will return no data.
 
         Steve didn't include the final week (ish?) before necropsy when uploading data until several years into the
         project. As such, this data is often not available for some cohorts.
@@ -407,14 +408,14 @@ class OASplitQueryset(models.query.QuerySet):
         # Collect the monkeys we need to sort thru, have to find each monkey's necropsy date.
         monkeys = self.values_list('monkey', flat=True).distinct()
         # Collect the NecropsySummary records for our monkeys
-        necs = NecropsySummary.objects.filter(monkey__in=monkeys).values('cohort', 'cev_date').distinct()
+        ncms = NecropsySummary.objects.filter(monkey__in=monkeys).values('monkey', 'ncm_date').distinct()
         # Instantiate an empty MTDQueryset, into which we store all our first six month oa MTDs
         return_queryset = MTDQuerySet(self.model, using=self._db).none()
-        for cev in cohort_events:
-            # for each cohort event, filter by the cev's cohort and that cev's date, and stuff them into the return_queryset
-            start_date = cev['cev_date'] - timedelta(days=days)
-            end_date = start_date + timedelta(days=30*split_by_months)
-            return_queryset |= oa_mtds.filter(monkey__cohort=cev['cohort'])\
+        for ncm in ncms:
+            # for each monkey, filter by the monkey and that monkey's necropsy date + days to the return_queryset
+            end_date = ncm['ncm_date']
+            start_date = end_date - timedelta(days=days)
+            return_queryset |= oa_mtds.filter(monkey=ncm['monkey'])\
                 .filter(**{self.dex_date_lookup+"__gte": start_date})\
                 .filter(**{self.dex_date_lookup+"__lt": end_date})
         return return_queryset
