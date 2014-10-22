@@ -214,7 +214,7 @@ INSTALLED_APPS = (
 
 		'matrr',
 		'registration',
-		'south',
+#		'south',
 		)
 
 ACCOUNT_ACTIVATION_DAYS = 2
@@ -284,6 +284,7 @@ LOGGING = {
     }
 }
 
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 if DEVELOPMENT:
     from develop_settings import *

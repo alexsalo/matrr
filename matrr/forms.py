@@ -235,6 +235,7 @@ class AddressAccountForm(forms.ModelForm):
 
 
 class AccountForm(forms.ModelForm):
+    #todo 1.7: rename this import to from django.forms.utils
     from django.forms.util import ErrorList
 
     first_name = forms.CharField(label="First name", max_length=30)
@@ -667,9 +668,9 @@ class FilterForm(forms.Form):
                         elif _category == 'Char' or "Num-" in _category:
                             choice = data[_index + " " + _category + " Choice"]
                             operator = data[_index + " " + _category + " Operator"]
-                            filter = choice + operator
+                            filter_string = choice + operator
                             q_dict = {
-                            filter: value} # create a dict() that looks like {column_name__operator: user_entered_value}
+                            filter_string: value} # create a dict() that looks like {column_name__operator: user_entered_value}
                             logicalAND = data[_index + " " + _category + " Logical"] == 'AND'
                             if logicalAND:
                                 q_object = q_object & Q(
@@ -958,6 +959,7 @@ class DataSelectForm(forms.Form):
 
 
 class SymposiumFormOne(forms.ModelForm):
+    #todo 1.7: rename this import to from django.forms.utils
     from django.forms.util import ErrorList
     def __init__(self, account=None, data=None, files=None, auto_id='id_%s', prefix=None,
                  initial=None, error_class=ErrorList, label_suffix=':',

@@ -93,7 +93,7 @@ class MATRRStandardErrorScatterplot():
 
     def collect_data_from_mtds(self, mtds=None):
         if not mtds:
-            return (numpy.nan, numpy.nan, numpy.nan, numpy.nan)
+            return numpy.nan, numpy.nan, numpy.nan, numpy.nan
         interval_intakes_averages = list()
         interval_intakes = list()
         daycounts = list()

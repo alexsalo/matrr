@@ -108,7 +108,7 @@ def view_dto_data(request):
         else:
             dto_set = models.DataOwnership.objects.filter(account=request.user.account)
     ## Paginator stuff
-    dto_paginator = paginator.Paginator(dto_set, 5)
+    dto_paginator = paginator.Paginator(dto_set, 20)
     # Make sure page request is an int. If not, deliver first page.
     try:
         page = int(request.GET.get('page', '1'))

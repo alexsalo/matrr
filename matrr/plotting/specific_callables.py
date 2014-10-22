@@ -6,7 +6,8 @@ they can be quite useful, especially for reducing/eliminating redundant code.
 
 """
 __author__ = 'developer'
-from matrr.models import NecropsySummary, MonkeyBEC, Avg
+from django.db.models import Avg
+from matrr.models import NecropsySummary, MonkeyBEC
 
 
 def etoh_intake(queryset):

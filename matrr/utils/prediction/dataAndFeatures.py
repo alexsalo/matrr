@@ -1,8 +1,8 @@
-'''
+"""
 Created on Jun 12, 2012
 
 @author: slavka
-'''
+"""
 
 from django.db.models import Q
 import numpy

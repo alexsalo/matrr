@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import ast
-import Image
+from PIL import Image
 import traceback
 import numpy
 import sys
@@ -13,7 +13,6 @@ from string import lower, replace
 
 from django.core.files.base import File
 from django.db import models
-from django.db.models import Q, Min, Max, Avg, Sum, Count, StdDev
 from django.contrib.auth.models import User, Permission, Group
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
@@ -551,7 +550,7 @@ class Monkey(models.Model):
     mky_birthdate = models.DateField('Date of Birth', blank=True, null=True, max_length=20, help_text='Please enter the date the monkey was born on.')
     mky_weight = models.FloatField('Weight', blank=True, null=True,
                                    help_text='The weight of the monkey.  This should be the weight at time of necropsy (or a recent weight if the necropsy has not yet occurred).')
-    mky_drinking = models.BooleanField('Is Drinking', null=False, help_text='Was this monkey given alcohol?')
+    mky_drinking = models.BooleanField('Is Drinking', null=False, default=False, help_text='Was this monkey given alcohol?')
     mky_housing_control = models.BooleanField('Housing Control', null=False, default=False, help_text='Was this monkey part of a housing control group?')
     mky_necropsy_start_date = models.DateField('Necropsy Start Date', null=True, blank=True, help_text='Please enter the date the necropsy was performed on (or was started on).')
     mky_necropsy_start_date_comments = models.TextField('Necropsy Start Date Comments', null=True, blank=True)
@@ -1048,7 +1047,7 @@ class MonkeyToDrinkingExperiment(models.Model):
         meal_pellets = pellet_eevs.exclude(eev_pellet_time__lte=7020)
         if not eevs:
             return
-        self.mtd_mean_seconds_between_meals = meal_pellets.aggregate(Avg('eev_pellet_time'))['eev_pellet_time__avg']
+        self.mtd_mean_seconds_between_meals = meal_pellets.aggregate(models.Avg('eev_pellet_time'))['eev_pellet_time__avg']
         if save:
             self.save()
 
@@ -1068,9 +1067,9 @@ class MonkeyToDrinkingExperiment(models.Model):
                 time_of_last_pellet = last_pellet.eev_occurred
                 eevs_before_last_pellet = todays_etoh.filter(eev_occurred__lte=time_of_last_pellet)
                 eevs_after_last_pellet = todays_etoh.filter(eev_occurred__gt=time_of_last_pellet)
-                vol_before_last_pellet = eevs_before_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+                vol_before_last_pellet = eevs_before_last_pellet.aggregate(models.Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
                 vol_before_last_pellet = vol_before_last_pellet if vol_before_last_pellet else 0 # captures None values
-                vol_after_last_pellet = eevs_after_last_pellet.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+                vol_after_last_pellet = eevs_after_last_pellet.aggregate(models.Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
                 vol_after_last_pellet = vol_after_last_pellet if vol_after_last_pellet else 0 # Captures null values
                 if vol_before_last_pellet + vol_after_last_pellet == 0: # captures zero division
                     self.mtd_pct_etoh_post_pellets = 0
@@ -1133,7 +1132,7 @@ class ExperimentBout(models.Model):
             previous_events = ExperimentEvent.objects.filter(monkey=self.mtd.monkey,
                                                              eev_session_time__lt=self.ebt_start_time)
             previous_pellets = previous_events.filter(eev_event_type=ExperimentEventType.Pellet)
-            pellet_max = previous_pellets.aggregate(Max('eev_session_time'))['eev_session_time__max']
+            pellet_max = previous_pellets.aggregate(models.models.Max('eev_session_time'))['eev_session_time__max']
             pellet_time = self.ebt_start_time - pellet_max if pellet_max else 0
             self.ebt_pellet_elapsed_time_since_last = pellet_time
             if save:
@@ -1163,11 +1162,11 @@ class ExperimentBout(models.Model):
                 weight_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.mtd.monkey)
                 weight_mtds = weight_mtds.filter(drinking_experiment__dex_date__gte=min_date)
                 weight_mtds = weight_mtds.filter(drinking_experiment__dex_date__lt=max_date)
-                weight = weight_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
+                weight = weight_mtds.aggregate(models.Avg('mtd_weight'))['mtd_weight__avg']
             if not weight: # we STILL couldn't find his weight
                 # try to get the average over lifetime
                 weight_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self.mtd.monkey)
-                weight = weight_mtds.aggregate(Avg('mtd_weight'))['mtd_weight__avg']
+                weight = weight_mtds.aggregate(models.Avg('mtd_weight'))['mtd_weight__avg']
             if not weight: # fuck it, i gave up
                 self.ebt_intake_rate = None
                 self.save()
@@ -1282,7 +1281,7 @@ class ExperimentEvent(models.Model):
     eev_veh_elapsed_time_since_last = models.PositiveIntegerField('Elapsed time since last H20 drink [s]', blank=True,
                                                                   null=True)
     eev_scale_string = models.CharField('Original string data from scale', max_length=50, blank=True, null=True)
-    eev_hand_in_bar = models.BooleanField('Hand in bar', blank=False, null=False)
+    eev_hand_in_bar = models.BooleanField('Hand in bar', blank=False, null=False, default=False,)
     eev_blank = models.IntegerField('This should be blank but I found some values', blank=True, null=True)
     eev_etoh_bout_number = models.PositiveIntegerField('EtOh bout number', blank=True, null=True)
     eev_etoh_drink_number = models.PositiveIntegerField('EtOh drink number', blank=True, null=True)
@@ -1308,8 +1307,8 @@ class ExperimentEvent(models.Model):
                                          eev_occurred__month=self.eev_occurred.month,
                                          eev_occurred__day=self.eev_occurred.day)
             earlier_eevs = todays_eevs.filter(eev_session_time__lt=self.eev_session_time)
-            todays_volume = todays_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
-            current_volume = earlier_eevs.aggregate(Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+            todays_volume = todays_eevs.aggregate(models.Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
+            current_volume = earlier_eevs.aggregate(models.Sum('eev_etoh_volume'))['eev_etoh_volume__sum']
             if current_volume and todays_volume:
                 self.eev_pct_etoh = current_volume / todays_volume
             else:
@@ -1556,8 +1555,8 @@ class MATRRImage(models.Model):
 
         data_map = data_map if isinstance(data_map, collections.Iterable) else False
         t = get_template('html_fragments/%s.html' % self.method) # templates will be named identical to the plotting method
-        context = {'map': data_map, 'image': self, 'bigWidth': self.image.width * 1.1, 'bigHeight': self.image.height * 1.1}
-        context['image_filename'] = image_filename
+        context = {'map': data_map, 'image': self, 'bigWidth': self.image.width * 1.1,
+                   'bigHeight': self.image.height * 1.1, 'image_filename': image_filename}
         c = Context(context)
         foot_t = get_template('html_fragments/fragment_foot.html')
         foot_c = Context({'html_fragment': str(self).replace(" ", "_").replace('(', "").replace(")", ""),
@@ -2075,7 +2074,7 @@ class TissueType(models.Model):
 
     def get_directly_in_stock_available_monkey_ids(self):
         tss = TissueSample.objects.filter(tissue_type=self).filter(
-            Q(tss_sample_quantity__gt=0) | Q(tss_sample_quantity=None))
+            models.Q(tss_sample_quantity__gt=0) | models.Q(tss_sample_quantity=None))
         monkey_ids = tss.values_list('monkey', flat=True)
 
         return monkey_ids
@@ -2141,7 +2140,7 @@ class RequestManager(models.Manager):
         return self.get_query_set().filter(req_status=RequestStatus.Duplicated)
 
     def revised_or_duplicated(self):
-        return self.get_query_set().filter(Q(req_status=RequestStatus.Revised) | Q(req_status=RequestStatus.Duplicated))
+        return self.get_query_set().filter(models.Q(req_status=RequestStatus.Revised) | models.Q(req_status=RequestStatus.Duplicated))
 
     def submitted(self):
         return self.get_query_set().filter(req_status=RequestStatus.Submitted)
@@ -2150,7 +2149,7 @@ class RequestManager(models.Manager):
         return self.get_query_set().filter(req_status=RequestStatus.Shipped)
 
     def accepted_and_partially(self):
-        return self.get_query_set().filter(Q(req_status=RequestStatus.Accepted) | Q(req_status=RequestStatus.Partially))
+        return self.get_query_set().filter(models.Q(req_status=RequestStatus.Accepted) | models.Q(req_status=RequestStatus.Partially))
 
     def cart(self):
         return self.get_query_set().filter(req_status=RequestStatus.Cart)
@@ -2185,13 +2184,13 @@ class Request(models.Model, DiffingMixin):
                                    help_text='Please describe the source of funding which will be used for this request.')
     req_progress_agreement = models.BooleanField(
         'I acknowledge that I will be required to submit a progress report on the tissue(s) that I have requested. In addition, I am willing to submit additional reports as required by the MATRR steering committee.',
-        blank=False, null=False)
+        blank=False, null=False,  default=False,)
     req_safety_agreement = models.BooleanField(
         'I acknowledge that I have read and understand the potential biohazards associated with tissue shipment.  There are no known biohazards associated with data requests.',
-        blank=False, null=False)
+        blank=False, null=False,  default=False)
     req_data_agreement = models.BooleanField(
         "I acknowledge that any data requested and provided are for research purposes only.  All published research associated with the data are required to acknowledge the lab that produced the data.",
-        blank=False, null=False)
+        blank=False, null=False,  default=False)
     req_referred_by = models.CharField('How did you hear about MATRR?', choices=REFERRAL_CHOICES, null=False,
                                        max_length=100)
     req_notes = models.TextField('Request Notes', null=True, blank=True)
@@ -2314,13 +2313,13 @@ class Request(models.Model, DiffingMixin):
     def get_acc_req_collisions(self):
         collisions = self.get_rtt_collisions()
         collisions = collisions.filter(
-            Q(req_request__req_status=RequestStatus.Accepted) | Q(req_request__req_status=RequestStatus.Partially))
+            models.Q(req_request__req_status=RequestStatus.Accepted) | models.Q(req_request__req_status=RequestStatus.Partially))
         return self.__get_rtt_collision_request(collisions)
 
     def get_acc_req_collisions_for_tissuetype_monkey(self, tissue_type, monkey):
         collisions = self.get_rtt_collisions()
         collisions = collisions.filter(
-            Q(req_request__req_status=RequestStatus.Accepted) | Q(req_request__req_status=RequestStatus.Partially))
+            models.Q(req_request__req_status=RequestStatus.Accepted) | models.Q(req_request__req_status=RequestStatus.Partially))
         collisions = collisions.filter(tissue_type=tissue_type, accepted_monkeys__in=[monkey])
         return self.__get_rtt_collision_request(collisions)
 
@@ -2617,7 +2616,8 @@ class ResearchUpdate(models.Model):
                                     null=False, default='IP')
     rud_pmid = models.CharField("PMID", max_length=20, blank=True, null=False, default='')
     rud_data_available = models.BooleanField("Data Available",
-                                             help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.")
+                                             help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.",
+                                             default=False)
     rud_comments = models.TextField("Comments", blank=True, null=False)
     rud_file = models.FileField('Research Update', upload_to='rud/', default='', null=False, blank=False,
                                 help_text='File to Upload')
@@ -3481,7 +3481,7 @@ class MonkeyHormone(models.Model):
             current_value = getattr(self, field)
             current_std = getattr(self, field_std)
             if current_value and (not current_std or repopulate):
-                _mhms = mhms.exclude(Q(**{field:None}))
+                _mhms = mhms.exclude(models.Q(**{field:None}))
                 cohort_values = numpy.array(_mhms.values_list(field, flat=True))
                 cohort_stdev = cohort_values.std()
                 cohort_mean = cohort_values.mean()
@@ -3676,27 +3676,27 @@ class CohortMetaData(models.Model):
 
     def _populate_bec_fields(self):
         becs = MonkeyBEC.objects.filter(monkey__cohort=self.cohort)
-        data = becs.aggregate(Min('bec_mg_pct'), Max('bec_mg_pct'), Avg('bec_mg_pct'))
+        data = becs.aggregate(models.Min('bec_mg_pct'), models.Max('bec_mg_pct'), models.Avg('bec_mg_pct'))
         self.cbc_bec_mg_pct_min = data['bec_mg_pct__min']
         self.cbc_bec_mg_pct_max = data['bec_mg_pct__max']
         self.cbc_bec_mg_pct_avg = data['bec_mg_pct__avg']
 
-        data = becs.aggregate(Min('bec_vol_etoh'), Max('bec_vol_etoh'), Avg('bec_vol_etoh'))
+        data = becs.aggregate(models.Min('bec_vol_etoh'), models.Max('bec_vol_etoh'), models.Avg('bec_vol_etoh'))
         self.cbc_bec_etoh_min = data['bec_vol_etoh__min']
         self.cbc_bec_etoh_max = data['bec_vol_etoh__max']
         self.cbc_bec_etoh_avg = data['bec_vol_etoh__avg']
 
-        data = becs.aggregate(Min('bec_gkg_etoh'), Max('bec_gkg_etoh'), Avg('bec_gkg_etoh'))
+        data = becs.aggregate(models.Min('bec_gkg_etoh'), models.Max('bec_gkg_etoh'), models.Avg('bec_gkg_etoh'))
         self.cbc_bec_gkg_etoh_min = data['bec_gkg_etoh__min']
         self.cbc_bec_gkg_etoh_max = data['bec_gkg_etoh__max']
         self.cbc_bec_gkg_etoh_avg = data['bec_gkg_etoh__avg']
 
-        data = becs.aggregate(Min('bec_pct_intake'), Max('bec_pct_intake'), Avg('bec_pct_intake'))
+        data = becs.aggregate(models.Min('bec_pct_intake'), models.Max('bec_pct_intake'), models.Avg('bec_pct_intake'))
         self.cbc_bec_pct_intake_min = data['bec_pct_intake__min']
         self.cbc_bec_pct_intake_max = data['bec_pct_intake__max']
         self.cbc_bec_pct_intake_avg = data['bec_pct_intake__avg']
 
-        data = becs.aggregate(Min('bec_daily_gkg_etoh'), Max('bec_daily_gkg_etoh'), Avg('bec_daily_gkg_etoh'))
+        data = becs.aggregate(models.Min('bec_daily_gkg_etoh'), models.Max('bec_daily_gkg_etoh'), models.Avg('bec_daily_gkg_etoh'))
         self.cbc_bec_daily_gkg_etoh_min = data['bec_daily_gkg_etoh__min']
         self.cbc_bec_daily_gkg_etoh_max = data['bec_daily_gkg_etoh__max']
         self.cbc_bec_daily_gkg_etoh_avg = data['bec_daily_gkg_etoh__avg']
@@ -3704,68 +3704,68 @@ class CohortMetaData(models.Model):
 
     def _populate_mtd_fields(self):
         mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=self.cohort)
-        data = mtds.aggregate(Min('mtd_etoh_g_kg'), Max('mtd_etoh_g_kg'), Avg('mtd_etoh_g_kg'))
+        data = mtds.aggregate(models.Min('mtd_etoh_g_kg'), models.Max('mtd_etoh_g_kg'), models.Avg('mtd_etoh_g_kg'))
         self.cbc_mtd_etoh_g_kg_min = data['mtd_etoh_g_kg__min']
         self.cbc_mtd_etoh_g_kg_max = data['mtd_etoh_g_kg__max']
         self.cbc_mtd_etoh_g_kg_avg = data['mtd_etoh_g_kg__avg']
 
-        data = mtds.aggregate(Min('mtd_etoh_bout'), Max('mtd_etoh_bout'), Avg('mtd_etoh_bout'))
+        data = mtds.aggregate(models.Min('mtd_etoh_bout'), models.Max('mtd_etoh_bout'), models.Avg('mtd_etoh_bout'))
         self.cbc_mtd_etoh_bout_min = data['mtd_etoh_bout__min']
         self.cbc_mtd_etoh_bout_max = data['mtd_etoh_bout__max']
         self.cbc_mtd_etoh_bout_avg = data['mtd_etoh_bout__avg']
 
-        data = mtds.aggregate(Min('mtd_etoh_drink_bout'), Max('mtd_etoh_drink_bout'), Avg('mtd_etoh_drink_bout'))
+        data = mtds.aggregate(models.Min('mtd_etoh_drink_bout'), models.Max('mtd_etoh_drink_bout'), models.Avg('mtd_etoh_drink_bout'))
         self.cbc_mtd_etoh_drink_bout_min = data['mtd_etoh_drink_bout__min']
         self.cbc_mtd_etoh_drink_bout_max = data['mtd_etoh_drink_bout__max']
         self.cbc_mtd_etoh_drink_bout_avg = data['mtd_etoh_drink_bout__avg']
 
-        data = mtds.aggregate(Min('mtd_pct_max_bout_vol_total_etoh'), Max('mtd_pct_max_bout_vol_total_etoh'),
-                              Avg('mtd_pct_max_bout_vol_total_etoh'))
+        data = mtds.aggregate(models.Min('mtd_pct_max_bout_vol_total_etoh'), models.Max('mtd_pct_max_bout_vol_total_etoh'),
+                              models.Avg('mtd_pct_max_bout_vol_total_etoh'))
         self.cbc_mtd_pct_max_bout_vol_total_etoh_min = data['mtd_pct_max_bout_vol_total_etoh__min']
         self.cbc_mtd_pct_max_bout_vol_total_etoh_max = data['mtd_pct_max_bout_vol_total_etoh__max']
         self.cbc_mtd_pct_max_bout_vol_total_etoh_avg = data['mtd_pct_max_bout_vol_total_etoh__avg']
 
-        data = mtds.aggregate(Min('mtd_max_bout_length'), Max('mtd_max_bout_length'), Avg('mtd_max_bout_length'))
+        data = mtds.aggregate(models.Min('mtd_max_bout_length'), models.Max('mtd_max_bout_length'), models.Avg('mtd_max_bout_length'))
         self.cbc_mtd_max_bout_length_min = data['mtd_max_bout_length__min']
         self.cbc_mtd_max_bout_length_max = data['mtd_max_bout_length__max']
         self.cbc_mtd_max_bout_length_avg = data['mtd_max_bout_length__avg']
 
-        data = mtds.aggregate(Min('mtd_max_bout_vol'), Max('mtd_max_bout_vol'), Avg('mtd_max_bout_vol'))
+        data = mtds.aggregate(models.Min('mtd_max_bout_vol'), models.Max('mtd_max_bout_vol'), models.Avg('mtd_max_bout_vol'))
         self.cbc_mtd_max_bout_vol_min = data['mtd_max_bout_vol__min']
         self.cbc_mtd_max_bout_vol_max = data['mtd_max_bout_vol__max']
         self.cbc_mtd_max_bout_vol_avg = data['mtd_max_bout_vol__avg']
 
-        data = mtds.aggregate(Min('mtd_vol_1st_bout'), Max('mtd_vol_1st_bout'), Avg('mtd_vol_1st_bout'))
+        data = mtds.aggregate(models.Min('mtd_vol_1st_bout'), models.Max('mtd_vol_1st_bout'), models.Avg('mtd_vol_1st_bout'))
         self.cbc_mtd_vol_1st_bout_min = data['mtd_vol_1st_bout__min']
         self.cbc_mtd_vol_1st_bout_max = data['mtd_vol_1st_bout__max']
         self.cbc_mtd_vol_1st_bout_avg = data['mtd_vol_1st_bout__avg']
 
-        data = mtds.aggregate(Min('mtd_pct_etoh_in_1st_bout'), Max('mtd_pct_etoh_in_1st_bout'),
-                              Avg('mtd_pct_etoh_in_1st_bout'))
+        data = mtds.aggregate(models.Min('mtd_pct_etoh_in_1st_bout'), models.Max('mtd_pct_etoh_in_1st_bout'),
+                              models.Avg('mtd_pct_etoh_in_1st_bout'))
         self.cbc_mtd_pct_etoh_in_1st_bout_min = data['mtd_pct_etoh_in_1st_bout__min']
         self.cbc_mtd_pct_etoh_in_1st_bout_max = data['mtd_pct_etoh_in_1st_bout__max']
         self.cbc_mtd_pct_etoh_in_1st_bout_avg = data['mtd_pct_etoh_in_1st_bout__avg']
 
-        data = mtds.aggregate(Min('mtd_etoh_intake'), Max('mtd_etoh_intake'), Avg('mtd_etoh_intake'))
+        data = mtds.aggregate(models.Min('mtd_etoh_intake'), models.Max('mtd_etoh_intake'), models.Avg('mtd_etoh_intake'))
         self.cbc_mtd_etoh_intake_min = data['mtd_etoh_intake__min']
         self.cbc_mtd_etoh_intake_max = data['mtd_etoh_intake__max']
         self.cbc_mtd_etoh_intake_avg = data['mtd_etoh_intake__avg']
 
-        data = mtds.aggregate(Min('mtd_etoh_mean_drink_vol'), Max('mtd_etoh_mean_drink_vol'),
-                              Avg('mtd_etoh_mean_drink_vol'))
+        data = mtds.aggregate(models.Min('mtd_etoh_mean_drink_vol'), models.Max('mtd_etoh_mean_drink_vol'),
+                              models.Avg('mtd_etoh_mean_drink_vol'))
         self.cbc_mtd_etoh_mean_drink_vol_min = data['mtd_etoh_mean_drink_vol__min']
         self.cbc_mtd_etoh_mean_drink_vol_max = data['mtd_etoh_mean_drink_vol__max']
         self.cbc_mtd_etoh_mean_drink_vol_avg = data['mtd_etoh_mean_drink_vol__avg']
 
-        data = mtds.aggregate(Min('mtd_etoh_mean_bout_vol'), Max('mtd_etoh_mean_bout_vol'),
-                              Avg('mtd_etoh_mean_bout_vol'))
+        data = mtds.aggregate(models.Min('mtd_etoh_mean_bout_vol'), models.Max('mtd_etoh_mean_bout_vol'),
+                              models.Avg('mtd_etoh_mean_bout_vol'))
         self.cbc_mtd_etoh_mean_bout_vol_min = data['mtd_etoh_mean_bout_vol__min']
         self.cbc_mtd_etoh_mean_bout_vol_max = data['mtd_etoh_mean_bout_vol__max']
         self.cbc_mtd_etoh_mean_bout_vol_avg = data['mtd_etoh_mean_bout_vol__avg']
 
         drink_counts = list()
         for mtd in mtds:
-            drink_counts.append(mtd.bouts_set.aggregate(Count('drinks_set'))['drinks_set__count'])
+            drink_counts.append(mtd.bouts_set.aggregate(models.Count('drinks_set'))['drinks_set__count'])
         data = numpy.array(drink_counts)
         if data.any():
             self.cbc_total_drinks_min = data.min()
@@ -3775,7 +3775,7 @@ class CohortMetaData(models.Model):
 
     def _populate_ebt_fields(self):
         bouts = ExperimentBout.objects.filter(mtd__monkey__cohort=self.cohort)
-        data = bouts.aggregate(Min('ebt_volume'), Max('ebt_volume'), Avg('ebt_volume'))
+        data = bouts.aggregate(models.Min('ebt_volume'), models.Max('ebt_volume'), models.Avg('ebt_volume'))
         self.cbc_ebt_volume_min = data['ebt_volume__min']
         self.cbc_ebt_volume_max = data['ebt_volume__max']
         self.cbc_ebt_volume_avg = data['ebt_volume__avg']
@@ -3783,32 +3783,32 @@ class CohortMetaData(models.Model):
 
     def _populate_mhm_fields(self):
         data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
-        data = data.aggregate(Min('mhm_cort'), Max('mhm_cort'), Avg('mhm_cort'))
+        data = data.aggregate(models.Min('mhm_cort'), models.Max('mhm_cort'), models.Avg('mhm_cort'))
         self.cbc_mhm_cort_min = data['mhm_cort__min']
         self.cbc_mhm_cort_max = data['mhm_cort__max']
         self.cbc_mhm_cort_avg = data['mhm_cort__avg']
         data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
-        data = data.aggregate(Min('mhm_acth'), Max('mhm_acth'), Avg('mhm_acth'))
+        data = data.aggregate(models.Min('mhm_acth'), models.Max('mhm_acth'), models.Avg('mhm_acth'))
         self.cbc_mhm_acth_min = data['mhm_acth__min']
         self.cbc_mhm_acth_max = data['mhm_acth__max']
         self.cbc_mhm_acth_avg = data['mhm_acth__avg']
         data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
-        data = data.aggregate(Min('mhm_t'), Max('mhm_t'), Avg('mhm_t'))
+        data = data.aggregate(models.Min('mhm_t'), models.Max('mhm_t'), models.Avg('mhm_t'))
         self.cbc_mhm_t_min = data['mhm_t__min']
         self.cbc_mhm_t_max = data['mhm_t__max']
         self.cbc_mhm_t_avg = data['mhm_t__avg']
         data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
-        data = data.aggregate(Min('mhm_doc'), Max('mhm_doc'), Avg('mhm_doc'))
+        data = data.aggregate(models.Min('mhm_doc'), models.Max('mhm_doc'), models.Avg('mhm_doc'))
         self.cbc_mhm_doc_min = data['mhm_doc__min']
         self.cbc_mhm_doc_max = data['mhm_doc__max']
         self.cbc_mhm_doc_avg = data['mhm_doc__avg']
         data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
-        data = data.aggregate(Min('mhm_ald'), Max('mhm_ald'), Avg('mhm_ald'))
+        data = data.aggregate(models.Min('mhm_ald'), models.Max('mhm_ald'), models.Avg('mhm_ald'))
         self.cbc_mhm_ald_min = data['mhm_ald__min']
         self.cbc_mhm_ald_max = data['mhm_ald__max']
         self.cbc_mhm_ald_avg = data['mhm_ald__avg']
         data = MonkeyHormone.objects.filter(monkey__cohort=self.cohort)
-        data = data.aggregate(Min('mhm_dheas'), Max('mhm_dheas'), Avg('mhm_dheas'))
+        data = data.aggregate(models.Min('mhm_dheas'), models.Max('mhm_dheas'), models.Avg('mhm_dheas'))
         self.cbc_mhm_dheas_min = data['mhm_dheas__min']
         self.cbc_mhm_dheas_max = data['mhm_dheas__max']
         self.cbc_mhm_dheas_avg = data['mhm_dheas__avg']
@@ -3937,7 +3937,7 @@ class DataIntegrationTracking(models.Model):
                                help_text='Choose a cohort associated with this information.')
     dit_nec = models.BooleanField('Necropsy Data Integrated', null=False, default=False,)
     dit_nec_notes = models.TextField('Notes about Necropsy data', null=True, blank=True, default='',)
-    dit_mtd_ind = models.BooleanField('Induction Daily Summary Data Integrated', )
+    dit_mtd_ind = models.BooleanField('Induction Daily Summary Data Integrated', default=False,)
     dit_mtd_oa = models.BooleanField('OA Daily Summary Data Integrated', null=False, default=False, )
     dit_mtd_notes = models.TextField('Notes about Summary data', null=True, blank=True, default='',)
     dit_ebt_ind = models.BooleanField('Induction Bout Data Integrated', null=False, default=False, )
@@ -3971,6 +3971,14 @@ class DataIntegrationTracking(models.Model):
         )
 
 
+def dto_data_file_upload_to(instance, filename):
+    from django.utils import text
+    return "dto/files/%s.%s" % (str(instance.pk), text.slugify(filename))
+
+def dto_data_notes_upload_to(instance, filename):
+    from django.utils import text
+    return "dto/notes/%s.%s" % (str(instance.pk),  text.slugify(filename))
+
 class DataOwnership(models.Model):
     dto_id = models.AutoField(primary_key=True)
     account = models.ForeignKey(Account, null=False, blank=False)
@@ -3978,10 +3986,8 @@ class DataOwnership(models.Model):
     dto_date = models.DateField('Integration Date', editable=False, auto_now=True)
     dto_type = models.CharField('Data Type', blank=False, null=True, max_length=40,
                                 help_text='Brief description of this data type')
-    dto_data_file = models.FileField('Data File', null=True, blank=False,
-                                     upload_to=lambda instance, filename: "dto/files/%s.%s" % (str(instance.pk), filename))
-    dto_data_notes = models.FileField('Data Notes', null=True, blank=False,
-                                      upload_to=lambda instance, filename: "dto/notes/%s.%s" % (str(instance.pk), filename))
+    dto_data_file = models.FileField('Data File', null=True, blank=False, upload_to=dto_data_file_upload_to)
+    dto_data_notes = models.FileField('Data Notes', null=True, blank=False, upload_to=dto_data_notes_upload_to)
 
     def verify_user_access_to_file(self, user):
         # This is effectively just tracking raw data uploads.  Allow users to see their data, but not others'
@@ -4034,12 +4040,12 @@ class CRHChallenge(models.Model):
     crc_time = models.PositiveIntegerField('Time', help_text='Minutes after challenge the sample was collected. 0 = baseline')
     crc_ep = models.PositiveIntegerField('Endocrine Profile Number', help_text='I wish I could map this to a timeline event....')
 
-    crc_acth = models.FloatField("ACTH", editable=False, null=False, blank=False)
-    crc_cort = models.FloatField("Cortisol", editable=False, null=False, blank=False)
-    crc_e= models.FloatField("17beta-estradiol", editable=False, null=False, blank=False)
-    crc_doc = models.FloatField("Deoxycorticosterone", editable=False, null=False, blank=False)
-    crc_ald = models.FloatField("Aldosterone", editable=False, null=False, blank=False)
-    crc_dheas = models.FloatField("DHEA-S", editable=False, null=False, blank=False)
+    crc_acth = models.FloatField("ACTH", editable=False, null=True, blank=False)
+    crc_cort = models.FloatField("Cortisol", editable=False, null=True, blank=False)
+    crc_e= models.FloatField("17beta-estradiol", editable=False, null=True, blank=False)
+    crc_doc = models.FloatField("Deoxycorticosterone", editable=False, null=True, blank=False)
+    crc_ald = models.FloatField("Aldosterone", editable=False, null=True, blank=False)
+    crc_dheas = models.FloatField("DHEA-S", editable=False, null=True, blank=False)
 
     def __unicode__(self):
         return "%s - CRH Challenge" % str(self.monkey)
