@@ -2030,7 +2030,11 @@ def load_cohort2_electrophys(file_path):
             mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
     print 'Success'
 
+<<<<<<< HEAD
 def load_crh_challenge_data(file_name, dto_pk, header=True):
+=======
+def load_crh_challenge_data(file_name, dto_pk, overwrite=False, header=True):
+>>>>>>> CRHChallenge
     """
     header  = Date	Monk	Time	ACTH	Cortisol	E	DOC	ALD	DHEAS	Group	EP
     Row     = 2010-06-01	25700	Base	111	36	442	490	72	0.169	0	1
