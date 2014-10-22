@@ -1276,9 +1276,7 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             except NecropsySummary.DoesNotExist:
                 nec_sum = NecropsySummary(monkey=monkey)
 
-#            monkey.mky_birthdate = dt.strptime(row[5 + columns_offset], '%m/%d/%y')
             monkey.mky_birthdate = dingus.get_datetime_from_steve(row[5+columns_offset])
-#            monkey.mky_necropsy_start_date = dt.strptime(row[6 + columns_offset], '%m/%d/%y')
             monkey.mky_necropsy_start_date = dingus.get_datetime_from_steve(row[6+columns_offset])
             monkey.mky_age_at_necropsy = row[7]
             monkey.save()
