@@ -483,11 +483,11 @@ class CohortQuerySet(models.query.QuerySet):
 
 
 class CohortManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return CohortQuerySet(self.model, using=self._db)
 
     def nicotine_filter(self, user=None):
-        return self.get_query_set().nicotine_filter(user)
+        return self.get_queryset().nicotine_filter(user)
 
 
 #  This model breaks MATRR field name scheme
@@ -587,7 +587,7 @@ class CohortEvent(models.Model):
 
 class MonkeyManager(models.Manager):
     def Drinkers(self):
-        return self.get_query_set().filter(mky_drinking=True).exclude(pk__in=[10043, 10050, 10053])
+        return self.get_queryset().filter(mky_drinking=True).exclude(pk__in=[10043, 10050, 10053])
 
 
 class Monkey(models.Model):
@@ -896,14 +896,14 @@ class DrinkingExperiment(models.Model):
 
 
 class MTDManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return MTDQuerySet(self.model, using=self._db)
 
     def Ind(self):
-        return self.get_query_set().filter(drinking_experiment__dex_type='Induction')
+        return self.get_queryset().filter(drinking_experiment__dex_type='Induction')
 
     def OA(self):
-        return self.get_query_set().filter(drinking_experiment__dex_type='Open Access')
+        return self.get_queryset().filter(drinking_experiment__dex_type='Open Access')
 
 
 class MonkeyToDrinkingExperiment(models.Model):
@@ -1150,12 +1150,12 @@ class MonkeyToDrinkingExperiment(models.Model):
 
 class EBTManager(models.Manager):
     def Ind(self):
-        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
+        return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Induction')
 
     def OA(self):
-        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Open Access')
+        return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Open Access')
 
-    def get_query_set(self):
+    def get_queryset(self):
         return EBTQuerySet(self.model, using=self._db)
 
 
@@ -1261,10 +1261,10 @@ class ExperimentBout(models.Model):
 
 class EDRManager(models.Manager):
     def Ind(self):
-        return self.get_query_set().filter(ebt__mtd__drinking_experiment__dex_type='Induction')
+        return self.get_queryset().filter(ebt__mtd__drinking_experiment__dex_type='Induction')
 
     def OA(self):
-        return self.get_query_set().filter(ebt__mtd__drinking_experiment__dex_type='Open Access')
+        return self.get_queryset().filter(ebt__mtd__drinking_experiment__dex_type='Open Access')
 
 
 class ExperimentDrink(models.Model):
@@ -1299,14 +1299,14 @@ class ExperimentDrink(models.Model):
 
 
 class EEVManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return EEVQuerySet(self.model, using=self._db)
 
     def Ind(self):
-        return self.get_query_set().filter(dex_type='Induction')
+        return self.get_queryset().filter(dex_type='Induction')
 
     def OA(self):
-        return self.get_query_set().filter(dex_type='Open Access')
+        return self.get_queryset().filter(dex_type='Open Access')
 
 
 class ExperimentEvent(models.Model):
@@ -1541,11 +1541,11 @@ class VIPQuerySet(models.query.QuerySet):
 
 
 class VIPManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return VIPQuerySet(self.model, using=self._db)
 
     def vip_filter(self, user):
-        return self.get_query_set().vip_filter(user)
+        return self.get_queryset().vip_filter(user)
 
 
 #  This model breaks MATRR field name scheme
@@ -2179,38 +2179,38 @@ class TissueType(models.Model):
 
 class RequestManager(models.Manager):
     def processed(self):
-        return self.get_query_set() \
+        return self.get_queryset() \
             .exclude(req_status=RequestStatus.Cart) \
             .exclude(req_status=RequestStatus.Revised) \
             .exclude(req_status=RequestStatus.Duplicated)
 
     def evaluated(self):
-        return self.get_query_set() \
+        return self.get_queryset() \
             .exclude(req_status=RequestStatus.Cart) \
             .exclude(req_status=RequestStatus.Revised) \
             .exclude(req_status=RequestStatus.Duplicated) \
             .exclude(req_status=RequestStatus.Submitted)
 
     def revised(self):
-        return self.get_query_set().filter(req_status=RequestStatus.Revised)
+        return self.get_queryset().filter(req_status=RequestStatus.Revised)
 
     def duplicated(self):
-        return self.get_query_set().filter(req_status=RequestStatus.Duplicated)
+        return self.get_queryset().filter(req_status=RequestStatus.Duplicated)
 
     def revised_or_duplicated(self):
-        return self.get_query_set().filter(models.Q(req_status=RequestStatus.Revised) | models.Q(req_status=RequestStatus.Duplicated))
+        return self.get_queryset().filter(models.Q(req_status=RequestStatus.Revised) | models.Q(req_status=RequestStatus.Duplicated))
 
     def submitted(self):
-        return self.get_query_set().filter(req_status=RequestStatus.Submitted)
+        return self.get_queryset().filter(req_status=RequestStatus.Submitted)
 
     def shipped(self):
-        return self.get_query_set().filter(req_status=RequestStatus.Shipped)
+        return self.get_queryset().filter(req_status=RequestStatus.Shipped)
 
     def accepted_and_partially(self):
-        return self.get_query_set().filter(models.Q(req_status=RequestStatus.Accepted) | models.Q(req_status=RequestStatus.Partially))
+        return self.get_queryset().filter(models.Q(req_status=RequestStatus.Accepted) | models.Q(req_status=RequestStatus.Partially))
 
     def cart(self):
-        return self.get_query_set().filter(req_status=RequestStatus.Cart)
+        return self.get_queryset().filter(req_status=RequestStatus.Cart)
 
 
 class Request(models.Model, DiffingMixin):
@@ -2548,16 +2548,16 @@ class Request(models.Model, DiffingMixin):
 
 class ShipmentManager(models.Manager):
     def unshipped(self):
-        return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Unshipped)
+        return self.get_queryset().filter(shp_shipment_status=ShipmentStatus.Unshipped)
 
     def processing(self):
-        return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Processing)
+        return self.get_queryset().filter(shp_shipment_status=ShipmentStatus.Processing)
 
     def processed(self):
-        return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Processed)
+        return self.get_queryset().filter(shp_shipment_status=ShipmentStatus.Processed)
 
     def shipped(self):
-        return self.get_query_set().filter(shp_shipment_status=ShipmentStatus.Shipped)
+        return self.get_queryset().filter(shp_shipment_status=ShipmentStatus.Shipped)
 
 
 class Shipment(models.Model):
@@ -3349,14 +3349,14 @@ class Protein(models.Model):
 
 
 class MPNManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return MEXQuerySet(self.model, using=self._db)
 
     def Ind(self):
-        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
+        return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Induction')
 
     def OA(self):
-        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Open Access')
+        return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Open Access')
 
 
 class MonkeyProtein(models.Model):
@@ -3474,14 +3474,14 @@ class FamilyRelationship(models.Model):
 
 
 class MHMManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return MHMQuerySet(self.model, using=self._db)
 
     def Ind(self):
-        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
+        return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Induction')
 
     def OA(self):
-        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Open Access')
+        return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Open Access')
 
 
 class MonkeyHormone(models.Model):
@@ -3558,14 +3558,14 @@ class MonkeyHormone(models.Model):
 
 
 class BECManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return BECQuerySet(self.model, using=self._db)
 
     def Ind(self):
-        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Induction')
+        return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Induction')
 
     def OA(self):
-        return self.get_query_set().filter(mtd__drinking_experiment__dex_type='Open Access')
+        return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Open Access')
 
 
 class MonkeyBEC(models.Model):
