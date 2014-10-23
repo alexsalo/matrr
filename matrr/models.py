@@ -407,9 +407,6 @@ class OASplitQueryset(models.query.QuerySet):
         oa_mtds = self.filter(**{self.dex_type_lookup: "Open Access"})
         # Collect the monkeys we need to sort thru, have to find each monkey's necropsy date.
         monkeys = self.values_list('monkey', 'monkey__mky_necropsy_start_date').distinct()
-        # Collect the NecropsySummary records for our monkeys
-#        ncms = NecropsySummary.objects.filter(monkey__in=monkeys.values_list('monkey', flat=True))
-#        ncms = ncms.values('monkey', 'ncm_date').distinct()
         # Instantiate an empty MTDQueryset, into which we store all our first six month oa MTDs
         return_queryset = MTDQuerySet(self.model, using=self._db).none()
         for mky, necropsy_start in monkeys:

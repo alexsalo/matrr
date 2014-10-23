@@ -216,10 +216,17 @@ def dump_MATRR_stats():
 
 def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
     cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
-    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC", "Hormone", "Metabolite", "Protein", 'ElectroPhys', ]
-    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent, MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys]
-    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', ]
-
+    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC",
+                  "Hormone", "Metabolite", "Protein", 'ElectroPhys', 'CRH Challenge', 'Bone Density']
+    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent,
+                    MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys,
+                    CRHChallenge, BoneDensity]
+    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
+                     'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort',
+                     'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort']
+    assert len(data_types) == len(data_classes) == len(cohort_fields), "data_types, data_classes, and cohort_fields " \
+                                                                       "aren't all the same length.  You probably " \
+                                                                       "forgot to add a value to one of them."
     headers = ['Data Type']
     headers.extend(cohorts.values_list('coh_cohort_name', flat=True))
     data_rows = list()
