@@ -390,8 +390,13 @@ def gather_three_month_monkey_average_by_fieldname(monkeys, fieldname, three_mon
     return data
 
 
-def identify_drinking_category(mtd_queryset):
-    assert len(mtd_queryset.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function will work with an MTD queryset with multiple monkeys"
+def identify_drinking_category(mtd_queryset, bec_queryset):
+    assert len(mtd_queryset.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function " \
+                                                                                          "will work with an MTD " \
+                                                                                          "queryset with multiple monkeys"
+    assert len(bec_queryset.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function " \
+                                                                                          "will work with a BEC " \
+                                                                                          "queryset with multiple monkeys"
     max_date = mtd_queryset.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
     min_date = mtd_queryset.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
     total_days = float((max_date-min_date).days)
@@ -399,13 +404,16 @@ def identify_drinking_category(mtd_queryset):
     days_over_two = mtd_values.filter(mtd_etoh_g_kg__gt=2).count()
     days_over_three = mtd_values.filter(mtd_etoh_g_kg__gt=3).count()
     days_over_four = mtd_values.filter(mtd_etoh_g_kg__gt=4).count()
+    bec_values = bec_queryset.values('bec_mg_pct')
+    days_over_80_bec = bec_values.filter(bec_mg_pct__gt=80).count()
+    has_one_binge_per_year = days_over_80_bec > (total_days/365.25)
 
     pct_over_two = days_over_two / total_days
     pct_over_three = days_over_three / total_days
     pct_over_four = days_over_four / total_days
 
     etoh_gkg_avg = mtd_queryset.aggregate(Avg('mtd_etoh_g_kg'))['mtd_etoh_g_kg__avg']
-    is_BD = pct_over_two >= .55
+    is_BD = pct_over_two >= .55 and has_one_binge_per_year
     is_HD = pct_over_three >= .2
     is_VHD = pct_over_four >= .1 and etoh_gkg_avg > 3.
 
