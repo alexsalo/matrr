@@ -662,12 +662,14 @@ class Monkey(models.Model):
 
     def populate_drinking_category(self):
         from matrr.utils.gadgets import identify_drinking_category
-        if not self.mky_drinking:
-            return
-        oa_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
-        if oa_mtds:
-            self.mky_drinking_category = identify_drinking_category(oa_mtds)
-            self.save()
+        if not self.mky_drinking or not self.mky_study_complete:
+            self.mky_drinking_category = None
+        else:
+            oa_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
+            oa_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=self)
+            if oa_mtds.count() and oa_becs.count():
+                self.mky_drinking_category = identify_drinking_category(oa_mtds, oa_becs)
+        self.save()
 
     class Meta:
         db_table = 'mky_monkeys'
