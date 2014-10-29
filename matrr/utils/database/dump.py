@@ -525,6 +525,7 @@ class StandardCohortDataSet(object):
             # if we don't have any MTDs
             # we still need to fill in the columns, to maintain column count integrity
             output_list.extend(['not available']*9)
+            return
         # MTD - Percentage of days with 1.0 g/kg in max bout where of bout length is less than 2 hours
         max_bout_mtds = mky_mtds.filter(mtd_max_bout_length__lt=2*60*60).values('mtd_max_bout_vol', 'mtd_weight', )
         max_bout_1_gkg_count = 0
@@ -577,6 +578,7 @@ class StandardCohortDataSet(object):
             # if we don't have any BECs
             # we still need to fill in the columns, to maintain column count integrity
             output_list.extend(['not available']*2)
+            return
         # BEC - Average BEC 1st 6 mos open access,
         six_months = mky_becs.first_six_months_oa().values_list('bec_mg_pct')
         avg_six_months = six_months.aggregate(models.Avg('bec_mg_pct'))['bec_mg_pct__avg']
