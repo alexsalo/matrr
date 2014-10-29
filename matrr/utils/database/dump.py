@@ -499,7 +499,9 @@ class StandardCohortDataSet(object):
         NEC - Lifetime consumption of ethanol, (ncm_etoh_g_lifetime)
         NEC - Total consumption of ethanol 4% during open access, (ncm_etoh_4pct_22hr)
         """
+        # if we don't have a Necropsy Summary
         mky_nec = NecropsySummary.objects.get(monkey=mky_pk)
+        # We probably can't provide much other data, so let this .get() error out
         output_list.append("%.1f" % float(mky_nec.ncm_etoh_4pct_lifetime))
         output_list.append("%.1f" % float(mky_nec.ncm_etoh_g_lifetime))
         output_list.append("%.1f" % float(mky_nec.ncm_etoh_4pct_22hr))
@@ -520,7 +522,9 @@ class StandardCohortDataSet(object):
         mky_necropsy_mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=mky_pk)
         mtd_count = float(mky_mtds.count())
         if mtd_count == 0:
-            return
+            # if we don't have any MTDs
+            # we still need to fill in the columns, to maintain column count integrity
+            output_list.extend(['not available']*9)
         # MTD - Percentage of days with 1.0 g/kg in max bout where of bout length is less than 2 hours
         max_bout_mtds = mky_mtds.filter(mtd_max_bout_length__lt=2*60*60).values('mtd_max_bout_vol', 'mtd_weight', )
         max_bout_1_gkg_count = 0
@@ -569,6 +573,10 @@ class StandardCohortDataSet(object):
         BEC - Average BEC 12 mos open access (includes 1st 6 months),
         """
         mky_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=mky_pk)
+        if mky_becs.count() == 0:
+            # if we don't have any BECs
+            # we still need to fill in the columns, to maintain column count integrity
+            output_list.extend(['not available']*2)
         # BEC - Average BEC 1st 6 mos open access,
         six_months = mky_becs.first_six_months_oa().values_list('bec_mg_pct')
         avg_six_months = six_months.aggregate(models.Avg('bec_mg_pct'))['bec_mg_pct__avg']
