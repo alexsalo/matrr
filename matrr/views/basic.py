@@ -211,7 +211,7 @@ def search(request):
                 try:
                     results[key] = search_index(terms, value[0], get_model('matrr', value[1]))
                 except SearchError as se:
-                    messages.error(request, "There was an error in your search query.  Please notify a MATRR admin if this continues.")
+                    messages.error(request, "Please not try single NOT query like (!monkey).  If other queries also trigger error, please notify a MATRR admin")
                     logging.error('-------\n')
                     logging.error(str(datetime.now()) + '\n')
                     logging.exception(se)
