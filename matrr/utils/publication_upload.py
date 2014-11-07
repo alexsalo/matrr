@@ -14,16 +14,16 @@ logging.getLogger('suds.client').setLevel(logging.CRITICAL)
 
 #  From the look of it, this method takes a csv file where the first column is the PMID (not pmcid) and the 2nd column is a list of cohorts used in the publication
 @transaction.commit_on_success
-def add_publications_from_csv(file):
-    input = csv.reader(open(file, 'rU'), delimiter=',')#, quoting=csv.QUOTE_NONNUMERIC)
+def add_publications_from_csv(filename):
+    input_csv = csv.reader(open(filename, 'rU'), delimiter=',')#, quoting=csv.QUOTE_NONNUMERIC)
     # get the column headers
-    columns = input.next()
+    columns = input_csv.next()
 
     url = 'http://www.ncbi.nlm.nih.gov/entrez/eutils/soap/v2.0/efetch_pubmed.wsdl'
     client = Client(url)
 
     results = []
-    for row in input:
+    for row in input_csv:
         pmid = row[0]
         print pmid
         result = client.service.run_eFetch(id=int(pmid), retmax=1, email='nicholas.soltau@gmail.com')
@@ -117,8 +117,8 @@ def add_publications_from_csv(file):
 
 #  This method takes a text file of rows matching "PMDI: <number>" format, also ignoring pmcids.
 @transaction.commit_on_success
-def add_publications_from_txt(file):
-    f = open(file, 'r')
+def add_publications_from_txt(filename):
+    f = open(filename, 'r')
     read_data = f.readlines()
     for line in read_data:
         PMID = re.match(r'(PMID: )(\d+)', line)

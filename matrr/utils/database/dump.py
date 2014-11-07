@@ -2,6 +2,7 @@ from datetime import datetime as dt
 from datetime import timedelta, time
 import dateutil.parser
 import string
+from django.db.models import Count, Sum
 import django.template.loader as template_loader
 import csv
 import re
@@ -216,10 +217,17 @@ def dump_MATRR_stats():
 
 def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
     cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
-    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC", "Hormone", "Metabolite", "Protein", 'ElectroPhys', ]
-    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent, MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys]
-    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', ]
-
+    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC",
+                  "Hormone", "Metabolite", "Protein", 'ElectroPhys', 'CRH Challenge', 'Bone Density']
+    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent,
+                    MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys,
+                    CRHChallenge, BoneDensity]
+    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
+                     'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort',
+                     'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort']
+    assert len(data_types) == len(data_classes) == len(cohort_fields), "data_types, data_classes, and cohort_fields " \
+                                                                       "aren't all the same length.  You probably " \
+                                                                       "forgot to add a value to one of them."
     headers = ['Data Type']
     headers.extend(cohorts.values_list('coh_cohort_name', flat=True))
     data_rows = list()
@@ -412,3 +420,186 @@ def dump_data_req_request_425_thru_431():
     f.close()
     print "all done"
     return
+
+class StandardCohortDataSet(object):
+    """
+    This will dump the data structure of the Standard Cohort Data Set.
+
+    It's a list of lists of data about a cohort.
+
+    It isn't incredibly idiot-proof; you'll need to make very sure your column names match the output_list order of
+    population.  Shouldn't be super hard to keep them lined up though.
+
+    If you want to send this via a webpage/view, use https://docs.djangoproject.com/en/1.7/howto/outputting-csv/
+    Otherwise, use dump_standard_cohort_data()
+    """
+    columns = ['MATRR ID',
+               'Drinking Category (VHD/HD/BD/LD/Control)',
+               'Lifetime consumption of ethanol, 4% solution (ml)', # 1 decimal place
+               'Lifetime consumption of ethanol (g)', # 1 decimal place
+               'Total consumption of ethanol 4% during open access (g)', # 1 decimal place
+               'Percentage of days with >=1 g/kg in max bout if bout < 2 hours', # 0 decimal place
+               'Percentage of days above 3 g/kg', # 0 decimal place
+               'Percentage of days above 4 g/kg', # 0 decimal place
+               'Percentage of days below 1 g/kg', # 0 decimal place
+               'Percentage of days below .5 g/kg', # 0 decimal place
+               'Average daily consumption of ethanol 4% solution 1st 6 months of open access (ml)', # 1 decimal place
+               'Average daily consumption of ethanol 4% solution 12 months of open access (includes 6 months) (ml)', # 1 decimal place
+               'Ethanol consumption on day before necropsy (ml) *** NOT PROVIDED FOR ALL COHORTS ***', # 1 decimal place
+               'Ethanol consumption for the 7 days before necropsy (ml) *** NOT PROVIDED FOR ALL COHORTS ***', # 1 decimal place
+               'Average BEC 1st 6 mos open access (ml)', # 1 decimal place
+               'Average BEC 12 mos open access (includes 1st 6 months) (ml)', # 1 decimal place
+    ]
+
+    def __init__(self, cohort_pk):
+        self.cohort = Cohort.objects.get(pk=cohort_pk)
+        self.monkeys = self.cohort.monkey_set.all().order_by('mky_id').values('pk', 'mky_drinking_category', 'mky_drinking')
+        self.data = list()
+        self.populate_data()
+
+    def populate_data(self):
+        for mky in self.monkeys:
+            data_row = []
+            self.populate_mky_columns(mky['pk'], data_row)
+            if data_row[1] != 'Control':
+                self._populate_nec_columns(mky['pk'], data_row)
+                self._populate_mtd_columns(mky['pk'], data_row)
+                self._populate_bec_columns(mky['pk'], data_row)
+            self.data.append(data_row)
+
+    def populate_mky_columns(self, mky_pk, output_list):
+        mky = self.monkeys.get(pk=mky_pk)
+        output_list.append(mky_pk)
+        drinking_category = mky['mky_drinking_category']
+        if drinking_category is None:
+            # lets run a consistency check
+            # We're going to make sure only control monkeys have mky_drinking_category == None
+            if mky['mky_drinking'] is False:
+                # no worries, all is well
+                drinking_category = 'Control'
+            else:
+                # we have an inconsistency
+                # this could be because we don't have sufficient data to assign a category
+                # or we've never assigned a category
+                _mky = Monkey.objects.get(pk=mky['pk'])
+                _mky.populate_drinking_category()
+                if _mky.mky_drinking_category is None:
+                    # log this issue
+                    logging.warning("POSSIBLE DATABASE INCONSISTENCY: The monkey %d is not a control animal but cannot "
+                                    "be assigned a drinking category. We probably don't have enough data to assign a "
+                                    "category.  You should verify this is normal.")
+                    drinking_category = "Drinking"
+                else:
+                    drinking_category = _mky.mky_drinking_category
+        output_list.append(drinking_category)
+
+    def _populate_nec_columns(self, mky_pk, output_list):
+        """
+        NEC - Lifetime consumption of ethanol 4% solution, (ncm_etoh_4pct_lifetime)
+        NEC - Lifetime consumption of ethanol, (ncm_etoh_g_lifetime)
+        NEC - Total consumption of ethanol 4% during open access, (ncm_etoh_4pct_22hr)
+        """
+        # if we don't have a Necropsy Summary
+        mky_nec = NecropsySummary.objects.get(monkey=mky_pk)
+        # We probably can't provide much other data, so let this .get() error out
+        output_list.append("%.1f" % float(mky_nec.ncm_etoh_4pct_lifetime))
+        output_list.append("%.1f" % float(mky_nec.ncm_etoh_g_lifetime))
+        output_list.append("%.1f" % float(mky_nec.ncm_etoh_4pct_22hr))
+
+    def _populate_mtd_columns(self, mky_pk, output_list):
+        """
+        MTD - Percentage of days with 1.0 g/kg in max bout where of bout length is less than 2 hours
+        MTD - Percentage of days above 3 g/kg,
+        MTD - Percentage of days above 4 g/kg,
+        MTD - Percentage of days below 1 g/kg,
+        MTD - Percentage of days below .5 g/kg,
+        MTD - Average daily consumption of ethanol 4% solution 1st 6 months of open access,
+        MTD - Average daily consumption of ethanol 4% solution 12 months of open access (includes 6 months),
+        MTD - Ethanol consumption on day before necropsy *** NOT PROVIDED FOR ALL COHORTS ***,
+        MTD - Ethanol consumption for the 7 days before necropsy *** NOT PROVIDED FOR ALL COHORTS ***,
+        """
+        mky_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=mky_pk)
+        mky_necropsy_mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=mky_pk)
+        mtd_count = float(mky_mtds.count())
+        if mtd_count == 0:
+            # if we don't have any MTDs
+            # we still need to fill in the columns, to maintain column count integrity
+            output_list.extend(['not available']*9)
+            return
+        # MTD - Percentage of days with 1.0 g/kg in max bout where of bout length is less than 2 hours
+        max_bout_mtds = mky_mtds.filter(mtd_max_bout_length__lt=2*60*60).values('mtd_max_bout_vol', 'mtd_weight', )
+        max_bout_1_gkg_count = 0
+        for mtd in max_bout_mtds:
+            if (mtd['mtd_max_bout_vol'] * .04)/mtd['mtd_weight'] >= 1:
+                max_bout_1_gkg_count += 1
+        output_list.append("%.0f" % (100*max_bout_1_gkg_count/mtd_count))
+        # MTD - Percentage of days above 4 g/kg,
+        gt_gkg = mky_mtds.filter(mtd_etoh_g_kg__gt=4).count()
+        output_list.append("%.0f" % (100*gt_gkg/mtd_count))
+        # MTD - Percentage of days above 3 g/kg,
+        gt_gkg = mky_mtds.filter(mtd_etoh_g_kg__gt=3).count()
+        output_list.append("%.0f" % (100*gt_gkg/mtd_count))
+        # MTD - Percentage of days below 1 g/kg,
+        lt_gkg = mky_mtds.filter(mtd_etoh_g_kg__lt=1).count()
+        output_list.append("%.0f" % (100*lt_gkg/mtd_count))
+        # MTD - Percentage of days below .5 g/kg,
+        lt_gkg = mky_mtds.filter(mtd_etoh_g_kg__lt=.5).count()
+        output_list.append("%.0f" % (100*lt_gkg/mtd_count))
+        # MTD - Average daily consumption of ethanol 4% solution 1st 6 months of open access,
+        six_months = mky_mtds.first_six_months_oa().values_list('mtd_etoh_intake')
+        avg_six_months = six_months.aggregate(models.Avg('mtd_etoh_intake'))['mtd_etoh_intake__avg']
+        output_list.append("%.1f" % float(avg_six_months))
+        # MTD - Average daily consumption of ethanol 4% solution 12 months of open access (includes 6 months),
+        twelve_months = mky_mtds.first_twelve_months_oa().values_list('mtd_etoh_intake')
+        avg_twelve_months = twelve_months.aggregate(models.Avg('mtd_etoh_intake'))['mtd_etoh_intake__avg']
+        output_list.append("%.1f" % float(avg_twelve_months))
+        # MTD - Ethanol consumption on day before necropsy *** NOT PROVIDED FOR ALL COHORTS ***,
+        day_before = mky_necropsy_mtds.days_before_necropsy(1).values_list('mtd_etoh_intake', flat=True)
+        if day_before.count() > 0:
+            day_before = "%.1f" % float(day_before[0])
+        else:
+            day_before = 'Not Available'
+        output_list.append(day_before)
+        # MTD - Ethanol consumption for the 7 days before necropsy *** NOT PROVIDED FOR ALL COHORTS ***,
+        seven_days_before = mky_necropsy_mtds.days_before_necropsy(7).values('mtd_etoh_intake')
+        if seven_days_before.count() > 0:
+            seven_days_before = seven_days_before.aggregate(models.Sum('mtd_etoh_intake'))['mtd_etoh_intake__sum']
+        else:
+            seven_days_before = 'Not Available'
+        output_list.append("%.1f" % float(seven_days_before))
+
+    def _populate_bec_columns(self, mky_pk, output_list):
+        """
+        BEC - Average BEC 1st 6 mos open access,
+        BEC - Average BEC 12 mos open access (includes 1st 6 months),
+        """
+        mky_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=mky_pk)
+        if mky_becs.count() == 0:
+            # if we don't have any BECs
+            # we still need to fill in the columns, to maintain column count integrity
+            output_list.extend(['not available']*2)
+            return
+        # BEC - Average BEC 1st 6 mos open access,
+        six_months = mky_becs.first_six_months_oa().values_list('bec_mg_pct')
+        avg_six_months = six_months.aggregate(models.Avg('bec_mg_pct'))['bec_mg_pct__avg']
+        output_list.append("%.0f" % float(avg_six_months))
+        # BEC - Average BEC 12 mos open access (includes 1st 6 months),
+        twelve_months = mky_becs.first_twelve_months_oa().values_list('bec_mg_pct')
+        avg_twelve_months = twelve_months.aggregate(models.Avg('bec_mg_pct'))['bec_mg_pct__avg']
+        output_list.append("%.0f" % float(avg_twelve_months))
+
+
+def dump_standard_cohort_data(cohort_pk=0):
+    """
+    This will dump the CSV to a file in the current directory.
+
+    If you want to send this via a webpage/view, use https://docs.djangoproject.com/en/1.7/howto/outputting-csv/
+    """
+    import csv
+    standard_dataset = StandardCohortDataSet(cohort_pk=cohort_pk)
+    output_file = open('dump_cohort_standard_data.%d.csv' % cohort_pk, 'w')
+    output_csv = csv.writer(output_file)
+    output_csv.writerow(standard_dataset.columns)
+    output_csv.writerows(standard_dataset.data)
+    output_file.flush()
+    output_file.close()

@@ -5,6 +5,7 @@ from itertools import chain
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_unicode
+#todo 1.7: rename this import to from django.forms.utils
 from django.forms.util import flatatt
 from django.core.urlresolvers import reverse
 from django.forms import * # i'd like to refactor this to not import *, instead use forms.Blah
@@ -236,9 +237,8 @@ class CheckboxSelectMultipleLink(CheckboxSelectMultiple):
         final_attrs = self.build_attrs(attrs, name=name)
         output = [
             u'<fieldset><legend><input type=\'checkbox\' id=\'%s\' onclick=\'toggle_checked(this, "%s")\'> <label for=\'%s\'>Select All Monkeys</label></legend>' % (
-            attrs['id'], name, attrs['id'])]
-        output.append(
-            u'<table class="full-width" ><thead><td></td><td>Monkey</td><td>Status</td><td>Assignment</td></thead>')
+                attrs['id'], name, attrs['id']),
+            u'<table class="full-width" ><thead><td></td><td>Monkey</td><td>Status</td><td>Assignment</td></thead>']
         # Normalize to strings
         str_values = set([force_unicode(v) for v in value])
         for i, (mky_id, mky_real_id) in enumerate(chain(self.choices, choices)):
@@ -343,9 +343,9 @@ class CheckboxSelectMultipleLinkByTable(CheckboxSelectMultipleLink):
 
 
 class FixTypeSelection(Input):
-    '''
+    """
       This widget will require some custom javascript in order for it to work.
-      '''
+    """
 
     def __init__(self, choices=(), attrs=None):
         self.choices = choices
@@ -501,12 +501,13 @@ class DateTimeWidget(forms.widgets.TextInput):
                 final_attrs['value'] = \
                     force_unicode(value)
         if not final_attrs.has_key('id'):
-            final_attrs['id'] = u'%s_id' % (name)
+            final_attrs['id'] = u'%s_id' % name
         id = final_attrs['id']
 
         jsdformat = self.dformat #.replace('%', '%%')
         cal = calbtn % (settings.STATIC_URL, id, id, jsdformat, id, final_attrs['min_date'], final_attrs['max_date'])
         a = u"<div class='datetime_widget_id'>"
+        #todo 1.7: rename this import to from forms.utils
         a += u'<input%s />%s%s' % (forms.util.flatatt(final_attrs), self.media, cal)
         a += u'</div>'
         return mark_safe(a)

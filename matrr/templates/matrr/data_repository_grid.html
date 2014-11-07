@@ -39,4 +39,12 @@
         <br>
         Last updated:  {{ last_updated }}
     {% endif %}
+    <br><br>
+    {% if perms.matrr.can_download_data %}
+        <form action='' method='post'>
+            {% csrf_token %}
+            <button type='submit' name='refresh_data' class="blockLinkCheckoutButton">Refresh Data</button><br>
+            This might take some time, but I assure you it's working once you click it. Come back after lunch.
+        </form>
+    {% endif %}
 {% endblock %}

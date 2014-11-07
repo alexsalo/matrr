@@ -1,6 +1,6 @@
 from datetime import datetime
 import json
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import Http404
 from django.shortcuts import render_to_response, redirect, get_object_or_404
@@ -307,12 +307,18 @@ def tissue_list(request, tissue_category=None, coh_id=None):
                                                      'plot_gallery': True, },
                               context_instance=RequestContext(request))
 
-@login_required
+@user_passes_test(lambda u: u.has_perm('matrr.data_repository_grid'), login_url='/denied/')
 def data_repository_grid(request):
     """
     To update, run:
-    utils.database.dump_MATRR_current_data_grid(dump_json=True, dump_csv=False)
+    matrr.utils.database.dump.dump_MATRR_current_data_grid(dump_json=True, dump_csv=False)
     """
+    if request.method == 'POST':
+        if 'refresh_data' in request.POST:
+            import thread
+            from matrr.utils.database import dump
+            thread.start_new_thread(dump.dump_MATRR_current_data_grid, (), {'dump_json':True, "dump_csv": False})
+            messages.success(request, "A background thread was started that will update the JSON file this table reads.")
     try:
         json_file = open('matrr/utils/DATA/json/current_data_grid.json', 'r')
     except IOError:

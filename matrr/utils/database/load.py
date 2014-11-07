@@ -9,7 +9,7 @@ from matrr.models import *
 from matrr.utils.database import dingus, create
 
 @transaction.commit_on_success
-def load_initial_inventory(file, output_file, load_tissue_types=False, delete_name_duplicates=False,
+def load_initial_inventory(filename, output_file, load_tissue_types=False, delete_name_duplicates=False,
                            create_tissue_samples=False):
     """
       This function will load freezer inventories from a csv file.
@@ -31,21 +31,21 @@ def load_initial_inventory(file, output_file, load_tissue_types=False, delete_na
       """
     if load_tissue_types:
         load_TissueTypes('matrr/utils/DATA/tissuetypes.txt', delete_name_duplicates, create_tissue_samples)
-    input = csv.reader(open(file, 'rU'), delimiter=',')
-    output = csv.writer(open(output_file, 'w'), delimiter=',')
+    input_csv = csv.reader(open(filename, 'rU'), delimiter=',')
+    output_csv = csv.writer(open(output_file, 'w'), delimiter=',')
     unknown_monkeys = csv.writer(open('unknown_monkeys.csv', 'w'), delimiter=',')
     # get the column headers
-    columns = input.next()
+    columns = input_csv.next()
     columns[11:] = ["MATRR parsing error"]
-    output.writerow(columns)
+    output_csv.writerow(columns)
     unknown_monkeys.writerow(columns)
     monkeys = []
     units = "whole"
-    for row in input:
+    for row in input_csv:
         # Empty monkey cell
         if row[1] is '' or row[1] is None:
             row[len(row):] = "empty monkey"
-            output.writerow(row)
+            output_csv.writerow(row)
             continue
         if "---" in row[4]:
             continue
@@ -85,7 +85,7 @@ def load_initial_inventory(file, output_file, load_tissue_types=False, delete_na
                     if tissue_name:
                         # If it isn't empty and doesn't exist, dump the row to the outfile
                         row[11:] = ["Unmatched tissue type, %s.  Check for typos" % tissue_name]
-                        output.writerow(row)
+                        output_csv.writerow(row)
 
             for tissue_type in tissue_types:
                 #  Must have created tissue samples before running this function
@@ -118,7 +118,7 @@ def load_initial_inventory(file, output_file, load_tissue_types=False, delete_na
                         dump = True
                 sample.save()
                 if dump:
-                    output.writerow(row)
+                    output_csv.writerow(row)
         else:
             # if the monkey does not exist, or we have more than 1 monkey record,
             # add the monkey to the list of left out monkeys
@@ -520,7 +520,7 @@ def load_TissueCategories():
 
 @transaction.commit_on_success
 def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_duplicates=True, has_headers=True, dump_file=False,
-             truncate_data_columns=48):
+             truncate_data_columns=48, flag_mex_excluded=False):
     """
         0 - date
         1 - monkey_real_id
@@ -537,49 +537,49 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
     """
     fields = (
     #	    data 2-37
-    ('mtd_etoh_intake'),
-    ('mtd_veh_intake'),
-    ('mtd_pct_etoh'),
-    ('mtd_etoh_g_kg'),
-    ('mtd_total_pellets'),
-    ('mtd_etoh_bout'),
-    ('mtd_etoh_drink_bout'),
-    ('mtd_veh_bout'),
-    ('mtd_veh_drink_bout'),
-    ('mtd_weight'),
-    ('mtd_etoh_conc'),
-    ('mtd_etoh_mean_drink_length'),
-    ('mtd_etoh_median_idi'),
-    ('mtd_etoh_mean_drink_vol'),
-    ('mtd_etoh_mean_bout_length'),
-    ('mtd_etoh_media_ibi'), ## typo matches model field
-    ('mtd_etoh_mean_bout_vol'),
-    ('mtd_etoh_st_1'),
-    ('mtd_etoh_st_2'),
-    ('mtd_etoh_st_3'),
-    ('mtd_veh_st_2'),
-    ('mtd_veh_st_3'),
-    ('mtd_pellets_st_1'),
-    ('mtd_pellets_st_3'),
-    ('mtd_length_st_1'),
-    ('mtd_length_st_2'),
-    ('mtd_length_st_3'),
-    ('mtd_vol_1st_bout'),
-    ('mtd_pct_etoh_in_1st_bout'),
-    ('mtd_drinks_1st_bout'),
-    ('mtd_mean_drink_vol_1st_bout'),
-    ('mtd_fi_wo_drinking_st_1'),
-    ('mtd_pct_fi_with_drinking_st_1'),
-    ('mtd_latency_1st_drink'),
-    ('mtd_pct_exp_etoh'),
-    ('mtd_st_1_ioc_avg'),
+    'mtd_etoh_intake',
+    'mtd_veh_intake',
+    'mtd_pct_etoh',
+    'mtd_etoh_g_kg',
+    'mtd_total_pellets',
+    'mtd_etoh_bout',
+    'mtd_etoh_drink_bout',
+    'mtd_veh_bout',
+    'mtd_veh_drink_bout',
+    'mtd_weight',
+    'mtd_etoh_conc',
+    'mtd_etoh_mean_drink_length',
+    'mtd_etoh_median_idi',
+    'mtd_etoh_mean_drink_vol',
+    'mtd_etoh_mean_bout_length',
+    'mtd_etoh_media_ibi', ## typo matches model field
+    'mtd_etoh_mean_bout_vol',
+    'mtd_etoh_st_1',
+    'mtd_etoh_st_2',
+    'mtd_etoh_st_3',
+    'mtd_veh_st_2',
+    'mtd_veh_st_3',
+    'mtd_pellets_st_1',
+    'mtd_pellets_st_3',
+    'mtd_length_st_1',
+    'mtd_length_st_2',
+    'mtd_length_st_3',
+    'mtd_vol_1st_bout',
+    'mtd_pct_etoh_in_1st_bout',
+    'mtd_drinks_1st_bout',
+    'mtd_mean_drink_vol_1st_bout',
+    'mtd_fi_wo_drinking_st_1',
+    'mtd_pct_fi_with_drinking_st_1',
+    'mtd_latency_1st_drink',
+    'mtd_pct_exp_etoh',
+    'mtd_st_1_ioc_avg',
     #		data 40-45
-    ('mtd_max_bout'),
-    ('mtd_max_bout_start'),
-    ('mtd_max_bout_end'),
-    ('mtd_max_bout_length'),
-    ('mtd_max_bout_vol'),
-    ('mtd_pct_max_bout_vol_total_etoh'),
+    'mtd_max_bout',
+    'mtd_max_bout_start',
+    'mtd_max_bout_end',
+    'mtd_max_bout_length',
+    'mtd_max_bout_vol',
+    'mtd_pct_max_bout_vol_total_etoh',
     )
     if not dex_type in DexTypes:
         raise Exception(
@@ -691,7 +691,7 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
                     break
                 if not data_fields[i] in ['', '\n', '\r']:
                     setattr(mtd, field, data_fields[i])
-
+            mtd.mex_excluded = flag_mex_excluded
             try:
                 mtd.clean_fields()
             except Exception as e:
@@ -1047,7 +1047,7 @@ def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
             except:
                 print "Invalid date format in file name: %s" % entry
                 continue
-            type = m.group(2)
+            bout_or_drink = m.group(2)
             dexs = DrinkingExperiment.objects.filter(cohort=cohort, dex_type=dex_type, dex_date=day)
             if dexs.count() == 0:
                 print "DEX does not exist: %s" % entry
@@ -1056,7 +1056,7 @@ def load_edrs_and_ebts(cohort_name, dex_type, file_dir, create_mtd=False):
                 print "More than one DEX: %s" % entry
                 continue
             dex = dexs[0]
-            if type == 'bout':
+            if bout_or_drink == 'bout':
                 bouts.append((dex, file_name))
             else:
                 drinks.append((dex, file_name))
@@ -1276,9 +1276,7 @@ def load_necropsy_summary(filename, six_month_cohort=False):
             except NecropsySummary.DoesNotExist:
                 nec_sum = NecropsySummary(monkey=monkey)
 
-#            monkey.mky_birthdate = dt.strptime(row[5 + columns_offset], '%m/%d/%y')
             monkey.mky_birthdate = dingus.get_datetime_from_steve(row[5+columns_offset])
-#            monkey.mky_necropsy_start_date = dt.strptime(row[6 + columns_offset], '%m/%d/%y')
             monkey.mky_necropsy_start_date = dingus.get_datetime_from_steve(row[6+columns_offset])
             monkey.mky_age_at_necropsy = row[7]
             monkey.save()
@@ -1454,11 +1452,8 @@ def load_monkey_proteins(filename):
             monkey = Monkey.objects.get(mky_real_id=row.pop(0))
             mpn_date = dt.strptime(row.pop(0), '%m/%d/%y')
             for index, value in enumerate(row):
-                monkey_protein = {}
-                monkey_protein['monkey'] = monkey
-                monkey_protein['mpn_date'] = mpn_date
-                monkey_protein['protein'] = proteins[index]
-                monkey_protein['mpn_value'] = value
+                monkey_protein = {'monkey': monkey, 'mpn_date': mpn_date, 'protein': proteins[index],
+                                  'mpn_value': value}
                 monkey_protein_datas.append(monkey_protein)
 
     for mpn in monkey_protein_datas:
@@ -2033,6 +2028,97 @@ def load_cohort2_electrophys(file_path):
             mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
     print 'Success'
 
+def load_crh_challenge_data(file_name, dto_pk, header=True):
+    """
+    header  = Date	Monk	Time	ACTH	Cortisol	E	DOC	ALD	DHEAS	Group	EP
+    Row     = 2010-06-01	25700	Base	111	36	442	490	72	0.169	0	1
+
+
+    """
+    fields = ['crc_date', # 0
+              'monkey', # 1
+              'crc_time', # 2
+              'crc_acth', # 3
+              'crc_cort', # 4
+              'crc_e', # 5
+              'crc_doc', # 6
+              'crc_ald', # 7
+              'crc_dheas', # 8
+              '', # 9, ignore control flag
+              'crc_ep', # 10
+              ]
+    FIELDS_INDEX = (3, 10)
+    dto = DataOwnership.objects.get(pk=dto_pk)
+    with open(file_name, 'r') as f:
+        read_data = f.read()
+        if '\r' in read_data:
+            read_data = read_data.split('\r')
+        elif '\n' in read_data:
+            read_data = read_data.split('\n')
+        else:
+            raise Exception("WTF Line endings are in this file?")
+        offset = 1 if header else 0
+        for line_number, line in enumerate(read_data[offset:]):
+            row_data = line.split("\t")
+            if not any(row_data):
+                continue
+            crc_date = dingus.get_datetime_from_steve(row_data[0])
+            monkey = dingus.get_monkey_by_number(row_data[1])
+            crc_time = 0 if row_data[2].lower() == 'base' else int(row_data[2])
+            crc_ep = int(row_data[10])
+            crc_exists = CRHChallenge.objects.filter(monkey=monkey, crc_date=crc_date,
+                                                     crc_time=crc_time, crc_ep=crc_ep)
+            if crc_exists.count():
+                raise Exception("STOP! This record already exists but it should be unique.")
+            else:
+                crc = CRHChallenge(monkey=monkey, crc_date=crc_date, dto=dto, crc_time=crc_time, crc_ep=crc_ep)
+
+            data_fields = row_data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+            model_fields = fields[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+            for i, field in enumerate(model_fields):
+                if data_fields[i] != '' and model_fields != '':
+                    if data_fields[i].lower() == 'qns' or data_fields[i] == '<5':
+                        data_field = None
+                    else:
+                        data_field = data_fields[i]
+                    setattr(crc, field, data_field)
+
+            try:
+                crc.full_clean()
+            except Exception as e:
+                print dingus.ERROR_OUTPUT % (line_number, e, line)
+                logging.error(dingus.ERROR_OUTPUT % (line_number, e, line))
+                continue
+            crc.save()
+    print "Data load complete."
+
+def load_bone_density(filename, dto_pk, tst_tissue_name='Bone (Rt tibia)'):
+    """
+    columns = [ N, Study #, Species, MATRR Cohort #, Gender, TRT, Group #, MATRR #, Monkey #, Area (cm_), BMC (g), BMD (g/cm_), Comment ]
+    """
+    import csv
+    from matrr import models
+    csv_infile = csv.reader(open(filename, 'rU'), delimiter=",")
+    columns = csv_infile.next() # junk
+    db_columns = ['bdy_area', 'bdy_bmc', 'bdy_bmd', 'bdy_comment']
+    dto = models.DataOwnership.objects.get(pk=dto_pk) # let this raise an exception if the DTO can't be found.
+    tst = models.TissueType.objects.get(tst_tissue_name=tst_tissue_name) # let this raise an exception if you typo'd the tst
+    for row in csv_infile:
+        if row[1]:
+            bdy_record = {}
+            bdy_record['monkey'] = models.Monkey.objects.get(pk=row[7])
+            bdy_record['tissue_type'] = tst
+            bdy_record['dto'] = dto
+            bdy_record['bdy_study'] = row[1]
+            for column, cell in zip(db_columns, row[9:13]):
+                if cell:
+                    bdy_record[column] = cell
+            try:
+                models.BoneDensity.objects.get_or_create(**bdy_record)
+            except Exception as e:
+                print e
+                print row
+                print ''
 
 
 

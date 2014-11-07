@@ -1,8 +1,8 @@
-'''
+"""
 Created on Jun 18, 2012
 
 @author: slavka
-'''
+"""
 
 from sklearn.svm import SVR
 from sklearn.cross_validation import cross_val_score
