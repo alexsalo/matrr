@@ -76,7 +76,7 @@
         <!-- Search div -->
         <div class='content-block-lower'>
             <div class='headline'>Search</div>
-            <form action='/search' method='post'>
+            <form action='/search/' method='post'>
                 {% csrf_token %}
                 <div class='common' style='width: 100%'>{{ search_form.terms }}
                 <button type='submit' name='submit' class="blockLinkCheckoutButton">Search</button>
