@@ -44,6 +44,6 @@ def ajax_advanced_search(request):
             hide_ids = list(hide_ids)
             show_ids = list(show_ids)
 
-        return HttpResponse(json.dumps({'show_ids': show_ids, 'hide_ids': hide_ids}), mimetype='application/json')
+        return HttpResponse(json.dumps({'show_ids': show_ids, 'hide_ids': hide_ids}), content_type='application/json')
     else:
         raise Http404
