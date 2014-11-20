@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+import datetime
 import string
 import gc
 from matrr import models
@@ -17,7 +18,7 @@ def get_monkey_by_number(mystery_number):
     return monkey
 
 def queryset_iterator(queryset, chunksize=5000):
-    '''
+    """
     http://djangosnippets.org/snippets/1949/
 
     Iterate over a Django Queryset ordered by the primary key
@@ -28,7 +29,7 @@ def queryset_iterator(queryset, chunksize=5000):
     classes.
 
     Note that the implementation of the iterator does not support ordered query sets.
-    '''
+    """
     pk = 0
     last_pk = queryset.order_by('-pk')[0].pk
     queryset = queryset.order_by('pk')
@@ -68,7 +69,7 @@ def get_datetime_from_steve(steve_date):
         return real_date
     except Exception as e:
         pass
-    return None
+    raise Exception("Unrecognized date format:  %s" % steve_date)
 
 def convert_excel_time_to_datetime(time_string):
     DATE_BASE = dt(day=1, month=1, year=1904)
@@ -76,7 +77,7 @@ def convert_excel_time_to_datetime(time_string):
     data_days = int(time_string.split('.')[0])
     date_time = float("0.%s" % time_string.split('.')[1])
     seconds = round(date_time * SECONDS_BASE)
-    return DATE_BASE + dt.timedelta(days=data_days, seconds=seconds)
+    return DATE_BASE + datetime.timedelta(days=data_days, seconds=seconds)
 
 def parse_left_right(side_string):
     if string.count(side_string, "Left") != 0:

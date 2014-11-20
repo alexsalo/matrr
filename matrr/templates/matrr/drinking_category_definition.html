@@ -4,10 +4,11 @@
 {% block title %}Drinking Category Definitions{% endblock %}
 
 {% block content %}
-	<div id='large-headline'>
-		Drinking Category Definitions
-	</div>
+        <div id='large-headline'>
+                Drinking Category Definitions
+        </div>
     <br>
+	<center>
     <div>
         <a rel="plot_gallery" title="Drinking Category Definition" href="{{ STATIC_URL }}images/drinking_category_definition_1.png" target="_blank">
             <img src="{{ STATIC_URL }}images/drinking_category_definition_1.png" width=48%>
@@ -22,28 +23,33 @@
             <tr>
                 <td class='VHD'>VHD</td>
                 <td class='VHD'>Very Heavy Drinker</td>
-                <td>defined by having >= 10% of open access days' ethanol intake exceeding 4 g/kg
+                <td>These animals are defined by having an average daily ethanol intake exceeding 3 g/kg
                     <br>AND<br>
-                    an average daily ethanol intake exceeding 3 g/kg
+                    have >= 10% of open access days with an ethanol intake exceeding 4 g/kg
                 </td>
             </tr>
             <tr>
                 <td class='HD'>HD</td>
                 <td class='HD'>Heavy Drinker</td>
-                <td>defined by having >= 20% of open access days' ethanol intake exceeding 3 g/kg</td>
+                <td>These animals are defined by having an ethanol consumption of >= 3 g/kg for >= 20% of days
+                </td>
             </tr>
             <tr>
                 <td class='BD'>BD</td>
                 <td class='BD'>Binge Drinker</td>
-                <td>defined by having >= 55% of open access days' ethanol intake exceeding 2 g/kg</td>
+                <td>These animals are defined by having an ethanol consumption of >= 2 g/kg for >= 55% of days
+                    <br>AND<br>
+                    a recorded BEC >= 80 mg/dl at least once per year
+                </td>
             </tr>
             <tr>
                 <td class='LD'>LD</td>
                 <td class='LD'>Low Drinker</td>
-                <td>defined as not BD, not HD, and not VHD.</td>
+                <td>These animals are defined as not BD, not HD, and not VHD.</td>
             </tr>
         </tbody>
     </table>
     <div class='clearfix'></div>
+    <div class="content-block"><p>Some animals can not be classified becuase of insufficient drinking or BEC data. These animals are: 10033, 10043, 10050, 10053, 10099, 10102, 10104, 10107, 10108, 10109, 10110, 10111, 10112, 10113, 10114, 10125, 10126, 10128, 10128, 10129, 10135</p></div>
     <br>
 {% endblock %}

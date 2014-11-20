@@ -174,13 +174,14 @@ def search_index(terms, index, model):
         index=index,
         mode='SPH_MATCH_EXTENDED2',
         rankmode='SPH_RANK_NONE')
-
+    
     results = search.query(terms)
+    
     final_results = list()
-
+    
     for result in results:
         final_results.append(model.objects.get(pk=result['id']))
-
+    
     return final_results
 
 
@@ -195,7 +196,7 @@ def search(request):
         form = FulltextSearchForm(request.POST)
         if form.is_valid():
             terms = form.cleaned_data['terms']
-
+            
             from django.db.models.loading import get_model
             from matrr.settings import PRIVATE_SEARCH_INDEXES, PUBLIC_SEARCH_INDEXES
 

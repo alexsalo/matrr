@@ -4,11 +4,11 @@ import os
 from scipy import stats
 
 import pylab
-from django.db.models import Max, Min
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator
 
-from matrr.models import MonkeyToDrinkingExperiment, Avg, MonkeyBEC, MonkeyHormone, TWENTYFOUR_HOUR, ExperimentBout
+from django.db.models import Max, Min, Avg
+from matrr.models import MonkeyToDrinkingExperiment, MonkeyBEC, MonkeyHormone, TWENTYFOUR_HOUR, ExperimentBout
 from matrr import plotting
 
 
@@ -32,7 +32,7 @@ def convex_hull(points, graphic=False, smidgen=0.0075):
     """
 
     def _angle_to_point(point, centre):
-        '''calculate angle in 2-D between points and x axis'''
+        """calculate angle in 2-D between points and x axis"""
         delta = point - centre
         res = numpy.arctan(delta[1] / delta[0])
         if delta[0] < 0:
@@ -46,7 +46,7 @@ def convex_hull(points, graphic=False, smidgen=0.0075):
 
     #time.sleep(0.2)
     def area_of_triangle(p1, p2, p3):
-        '''calculate area of any triangle given co-ordinates of the corners'''
+        """calculate area of any triangle given co-ordinates of the corners"""
         return numpy.linalg.norm(numpy.cross((p2 - p1), (p3 - p1), axis=0)) / 2.
 
 
@@ -72,16 +72,16 @@ def convex_hull(points, graphic=False, smidgen=0.0075):
         i = -2
         while i < (n_pts - 2):
             Aij = area_of_triangle(centre, pts[i], pts[(i + 1) % n_pts])
-            Ajk = area_of_triangle(centre, pts[(i + 1) % n_pts], \
+            Ajk = area_of_triangle(centre, pts[(i + 1) % n_pts],
                                    pts[(i + 2) % n_pts])
             Aik = area_of_triangle(centre, pts[i], pts[(i + 2) % n_pts])
             if graphic:
-                _draw_triangle(centre, pts[i], pts[(i + 1) % n_pts], \
+                _draw_triangle(centre, pts[i], pts[(i + 1) % n_pts],
                                facecolor='blue', alpha=0.2)
-                _draw_triangle(centre, pts[(i + 1) % n_pts], \
-                               pts[(i + 2) % n_pts], \
+                _draw_triangle(centre, pts[(i + 1) % n_pts],
+                               pts[(i + 2) % n_pts],
                                facecolor='green', alpha=0.2)
-                _draw_triangle(centre, pts[i], pts[(i + 2) % n_pts], \
+                _draw_triangle(centre, pts[i], pts[(i + 2) % n_pts],
                                facecolor='red', alpha=0.2)
             if Aij + Ajk < Aik:
                 if graphic: pylab.plot((pts[i + 1][0],), (pts[i + 1][1],), 'go')
@@ -93,7 +93,7 @@ def convex_hull(points, graphic=False, smidgen=0.0075):
 
 
 def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None):
-    def addnode(ax, node, color, lower=[0, 0], upper=[1, 1], axis=0):
+    def addnode(ax, node, color, lower=(0, 0), upper=(1, 1), axis=0):
         axis %= 2
         draw_rectangle(ax, lower, upper, node, color)
         width = upper[axis] - lower[axis]
@@ -390,8 +390,13 @@ def gather_three_month_monkey_average_by_fieldname(monkeys, fieldname, three_mon
     return data
 
 
-def identify_drinking_category(mtd_queryset):
-    assert len(mtd_queryset.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function will work with an MTD queryset with multiple monkeys"
+def identify_drinking_category(mtd_queryset, bec_queryset):
+    assert len(mtd_queryset.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function " \
+                                                                                          "will work with an MTD " \
+                                                                                          "queryset with multiple monkeys"
+    assert len(bec_queryset.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function " \
+                                                                                          "will work with a BEC " \
+                                                                                          "queryset with multiple monkeys"
     max_date = mtd_queryset.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
     min_date = mtd_queryset.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
     total_days = float((max_date-min_date).days)
@@ -399,13 +404,16 @@ def identify_drinking_category(mtd_queryset):
     days_over_two = mtd_values.filter(mtd_etoh_g_kg__gt=2).count()
     days_over_three = mtd_values.filter(mtd_etoh_g_kg__gt=3).count()
     days_over_four = mtd_values.filter(mtd_etoh_g_kg__gt=4).count()
+    bec_values = bec_queryset.values('bec_mg_pct')
+    days_over_80_bec = bec_values.filter(bec_mg_pct__gt=80).count()
+    has_one_binge_per_year = days_over_80_bec > (total_days/365.25)
 
     pct_over_two = days_over_two / total_days
     pct_over_three = days_over_three / total_days
     pct_over_four = days_over_four / total_days
 
     etoh_gkg_avg = mtd_queryset.aggregate(Avg('mtd_etoh_g_kg'))['mtd_etoh_g_kg__avg']
-    is_BD = pct_over_two >= .55
+    is_BD = pct_over_two >= .55 and has_one_binge_per_year
     is_HD = pct_over_three >= .2
     is_VHD = pct_over_four >= .1 and etoh_gkg_avg > 3.
 

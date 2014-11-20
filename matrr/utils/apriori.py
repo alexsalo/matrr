@@ -57,7 +57,7 @@ def apriori(dataset, minsupport=0.5):
     L1, support_data = scanD(D, C1, minsupport)
     L = [L1]
     k = 2
-    while (len(L[k - 2]) > 0):
+    while len(L[k - 2]) > 0:
         Ck = aprioriGen(L[k - 2], k)
         Lk, supK = scanD(D, Ck, minsupport)
         support_data.update(supK)
@@ -87,7 +87,7 @@ def generateRules(L, support_data, min_confidence=0.7):
     def rules_from_conseq(freqSet, H, support_data, rules, min_confidence=0.7):
         """Generate a set of candidate rules"""
         m = len(H[0])
-        if (len(freqSet) > (m + 1)):
+        if len(freqSet) > (m + 1):
             Hmp1 = aprioriGen(H, m + 1)
             Hmp1 = calc_confidence(freqSet, Hmp1,  support_data, rules, min_confidence)
             if len(Hmp1) > 1:
@@ -98,7 +98,7 @@ def generateRules(L, support_data, min_confidence=0.7):
         for freqSet in L[i]:
             H1 = [frozenset([item]) for item in freqSet]
 #			print "freqSet", freqSet, 'H1', H1
-            if (i > 1):
+            if i > 1:
                 rules_from_conseq(freqSet, H1, support_data, rules, min_confidence)
             else:
                 calc_confidence(freqSet, H1, support_data, rules, min_confidence)

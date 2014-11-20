@@ -561,7 +561,7 @@ def cohorts_daytime_volbouts_bargraph_split(phase):
         for start_time in range(0, TWENTYTWO_HOUR, ONE_HOUR):
             x_axis = list()
             y_axis = list()
-            if start_time >= LIGHTS_OUT and start_time <= LIGHTS_ON:
+            if LIGHTS_OUT <= start_time <= LIGHTS_ON:
                 night_time.append(index)
             for monkey in monkeys:
                 bouts = ExperimentBout.objects.OA().filter(mtd__monkey=monkey, ebt_start_time__gte=start_time,
@@ -1891,7 +1891,7 @@ def rhesus_pellet_time_histogram():
     data = eevs.values_list('eev_pellet_time', flat=True)
 
     data = numpy.array(data)
-    data = data / 60.
+    data /= 60.
     bin_edges = range(min(data), max(data), 5)
     subplot.hist(data, bins=bin_edges, normed=False, histtype='bar', log=True, color='slateblue')
     subplot.set_xlim(xmin=0)

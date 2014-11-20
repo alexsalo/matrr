@@ -86,8 +86,8 @@ def monkey_volumetric_monteFA(out_var='execute', iterations=10):
 	import numpy
 	from random import randint
 
-	def monte_carlo(input, more_input=None, iterations=10):
-		keys = input.keys()
+	def monte_carlo(mcarlo_input, more_input=None, iterations=10):
+		keys = mcarlo_input.keys()
 		output = dict()
 		for key in keys:
 			output[key] = list()
@@ -105,7 +105,7 @@ def monkey_volumetric_monteFA(out_var='execute', iterations=10):
 					if more_input and randint(0, 1): # randomly choose which input dictionary, if 2nd input dictionary exist
 						_d = more_input[real_id]
 					else:
-						_d = input[real_id]
+						_d = mcarlo_input[real_id]
 					if not _d in data:
 						data.append(_d)
 						monkeys.append(real_id)
@@ -337,11 +337,11 @@ def dump_rhesus_category_comparison_ttests(minutes=120):
 		labels.append("%s-all" % key)
 
 	matrix = [labels]
-	for label in labels:
-		xkey, xthird = label.split('-')
+	for xlabel in labels:
+		xkey, xthird = xlabel.split('-')
 		row = list()
-		for label in labels:
-			ykey, ythird = label.split('-')
+		for ylabel in labels:
+			ykey, ythird = ylabel.split('-')
 			if xkey == ykey and xthird == ythird:
 				row.append(1)
 				continue

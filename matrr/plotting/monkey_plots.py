@@ -5,7 +5,7 @@ import gc
 from numpy import polyfit, polyval
 from scipy.cluster import vq
 
-from django.db.models.aggregates import Max, Avg
+from django.db.models import Min, Max, Avg, Q
 from matplotlib.cm import get_cmap
 from matplotlib.ticker import NullLocator, MaxNLocator
 import matplotlib
@@ -23,7 +23,7 @@ def monkey_necropsy_avg_22hr_g_per_kg(monkey):
         graph_title = 'Average Ethanol Intake for Monkey %s during 22 Hour Free Access Phase' % str(monkey.pk)
         x_label = "Ethanol Intake (in g/kg)"
         legend_labels = ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk))
-        return _monkey_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
+        return _monkey_summary_general_with_days(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
 
 
 def monkey_necropsy_etoh_4pct(monkey):
@@ -134,6 +134,100 @@ def _monkey_summary_general(specific_callable, x_label, graph_title, legend_labe
     autolabel(cohort_bar2, 'white')
     autolabel(monkey_bar1, 'black')
     autolabel(monkey_bar2, 'black')
+
+    ax1.legend((cohort_bar2[0], cohort_bar1[0], monkey_bar2, monkey_bar1), legend_labels, loc=4)
+
+    idx = numpy.arange(len(coh_data_1) + 1)
+    cohort_labels.append(str(monkey.pk))
+    ax1.set_yticks(idx + width)
+    ax1.set_yticklabels(cohort_labels)
+    return fig, 'map'
+
+def _monkey_summary_general_with_days(specific_callable, x_label, graph_title, legend_labels, monkey, cohort=None):
+    from matrr.models import Monkey, Cohort
+    ##  Verify argument is actually a monkey
+    if not isinstance(monkey, Monkey):
+        try:
+            monkey = Monkey.objects.get(pk=monkey)
+        except Monkey.DoesNotExist:
+            try:
+                monkey = Monkey.objects.get(mky_real_id=monkey)
+            except Monkey.DoesNotExist:
+                print("That's not a valid monkey.")
+                return False, False
+    if cohort:
+        if not isinstance(cohort, Cohort):
+            try:
+                cohort = Cohort.objects.get(pk=cohort)
+            except Cohort.DoesNotExist:
+                print("That's not a valid cohort.  Using monkey's cohort")
+                cohort = monkey.cohort
+    else:
+        cohort = monkey.cohort
+
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+    ax1 = fig.add_subplot(111)
+    ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
+    ax1.set_axisbelow(True)
+    #	ax1.set_title('Average Ethanol Intake for Monkey %s during 22 Hour Free Access Phase' % str(monkey.pk))
+    ax1.set_title(graph_title)
+    ax1.set_ylabel("Monkey")
+    ax1.set_xlabel(x_label)
+
+    cohort_colors = ['navy', 'slateblue']
+    monkey_colors = ['goldenrod', 'gold']
+
+    if not monkey.necropsy_summary:
+        print("Monkey doesn't have any necropsy summary rows")
+        return False, False
+
+    coh_data_1, coh_data_2, coh_days_1, coh_days_2, cohort_labels = specific_callable(cohort.monkey_set.exclude(pk=monkey.pk))
+    mky_data_1, mky_data_2, mky_days_1, mky_days_2, monkey_label = specific_callable(cohort.monkey_set.filter(pk=monkey.pk))
+    if not mky_data_1[0] or not mky_data_2[0]: # don't draw plots for control monkeys
+        return False, False
+
+    idx = numpy.arange(len(coh_data_1))
+    width = 0.4
+
+    cohort_bar1 = ax1.barh(idx, coh_data_1, width, color=cohort_colors[0])
+    cohort_bar2 = ax1.barh(idx + width, coh_data_2, width, color=cohort_colors[1])
+    monkey_bar1 = ax1.barh(max(idx) + 1, mky_data_1, width, color=monkey_colors[0])
+    monkey_bar2 = ax1.barh(max(idx) + 1 + width, mky_data_2, width, color=monkey_colors[1])
+
+    zipped_c1 = zip(cohort_bar1, coh_days_1)
+    zipped_c2 = zip(cohort_bar2, coh_days_2)
+    zipped_m1 = zip(monkey_bar1, mky_days_1)
+    zipped_m2 = zip(monkey_bar2, mky_days_2)
+
+    def autolabel(zipped, text_color=None):
+        import locale
+
+        rects, days = zip(*zipped)
+
+        locale.setlocale(locale.LC_ALL, '')
+        for rect, day in zip(rects, days):
+            width = rect.get_width()
+            xloc = width * .98
+            align = 'right'
+            days_align = 'left'
+            days_xloc = width * .02
+            clr = text_color if text_color else "black"
+            yloc = rect.get_y() + rect.get_height() / 2.0
+
+            text_width = locale.format("%.1f", width, grouping=True)
+            day_width = str(day) + ' Days'
+            if width > 0:
+                ax1.text(xloc, yloc, text_width, horizontalalignment=align, verticalalignment='center', color=clr, weight='bold')
+                ax1.text(days_xloc, yloc, day_width, horizontalalignment=days_align, verticalalignment='center', color=clr, weight='bold')
+
+    # autolabel(cohort_bar1, 'white')
+    # autolabel(cohort_bar2, 'white')
+    # autolabel(monkey_bar1, 'black')
+    # autolabel(monkey_bar2, 'black')
+    autolabel(zipped_c1, 'white')
+    autolabel(zipped_c2, 'white')
+    autolabel(zipped_m1, 'black')
+    autolabel(zipped_m2, 'black')
 
     ax1.legend((cohort_bar2[0], cohort_bar1[0], monkey_bar2, monkey_bar1), legend_labels, loc=4)
 

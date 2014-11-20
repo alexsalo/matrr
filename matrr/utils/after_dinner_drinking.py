@@ -8,7 +8,8 @@ from matrr.plotting import plot_tools
 from matrr.utils import gadgets
 from matplotlib import pyplot, gridspec
 # todo: write in the exclude_bec_days bit
-def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category=None, minutes=20, DAYTIME=True, NIGHTTIME=True, exclude_bec_days=False, damn_config_object=None):
+def oa_eev_volume_summation_by_minutes_from_pellet(drinking_category=None, minutes=20, DAYTIME=True, NIGHTTIME=True,
+                                                   damn_config_object=None):
     """
     This method will return a tuple.
 
@@ -359,7 +360,7 @@ def rhesus_oa_discrete_minute_volumes_high_vs_low(minutes=120, minutes_gap=10, D
 
     hi_subplot.xaxis.set_visible(False)
     lo_subplot.set_xlabel(xlabel)
-    _max = _max * 1.05
+    _max *= 1.05
     hi_subplot.set_ylim(0, _max)
     lo_subplot.set_ylim(0, _max)
     fig.text(.01, .5, ylabel, rotation='vertical', verticalalignment='center')

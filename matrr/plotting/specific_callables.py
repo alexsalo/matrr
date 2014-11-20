@@ -6,7 +6,8 @@ they can be quite useful, especially for reducing/eliminating redundant code.
 
 """
 __author__ = 'developer'
-from matrr.models import NecropsySummary, MonkeyBEC, Avg
+from django.db.models import Avg
+from matrr.models import NecropsySummary, MonkeyBEC, MonkeyToDrinkingExperiment
 
 
 def etoh_intake(queryset):
@@ -20,6 +21,34 @@ def veh_intake(queryset):
 
 def mtd_weight(queryset):
     return queryset.exclude(mtd_weight=None).values_list('mtd_weight')
+
+def necropsy_summary_avg_with_days_22hr_g_per_kg(queryset):
+    """
+    This method, used by necropsy graphs, will collect 12 month and 6 month average g/kg etoh intake for the [queryset]
+
+    Args:
+    queryset is expected to be a queryset of monkeys
+
+    return:
+    tuple, ( list of 6 month averages, list of 12 month averages, number of actual days 6 months, number of actual days
+    in 12 months OA, list of monkey pk labels )
+    """
+    summaries = []
+    raw_labels = []
+    days = []
+    days_2 = []
+
+    for mky in queryset.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
+        try:
+            summaries.append(mky.necropsy_summary)
+            days_2.append(MonkeyToDrinkingExperiment.objects.OA().first_six_months_oa().exclude_exceptions().
+                          filter(monkey=mky).count())
+            days.append(MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=mky).count())
+        except NecropsySummary.DoesNotExist:
+            continue
+        raw_labels.append(str(mky.pk))
+    return [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries], \
+           [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries], days_2, days, raw_labels
 
 def necropsy_summary_avg_22hr_g_per_kg(queryset):
     """
