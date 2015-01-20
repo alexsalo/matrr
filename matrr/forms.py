@@ -178,7 +178,7 @@ class CartCheckoutForm(forms.ModelForm):
         if self.instance.is_requesting_data() and not self.cleaned_data.get('req_data_agreement'):
             raise forms.ValidationError("You must agree to cite the research lab that provided this data when publishing your research.")
         if not self.cleaned_data.get('req_data_sharing_agreement'):
-            raise forms.ValidationError("You must agree on data sharing. Read more at the attached pdf.")
+            raise forms.ValidationError("You must agree on data sharing. Please read more at the attached pdf.")
         return self.cleaned_data
 
 
