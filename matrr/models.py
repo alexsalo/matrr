@@ -2248,6 +2248,10 @@ class Request(models.Model, DiffingMixin):
     req_data_agreement = models.BooleanField(
         "I acknowledge that any data requested and provided are for research purposes only.  All published research associated with the data are required to acknowledge the lab that produced the data.",
         blank=False, null=False,  default=False)
+    req_data_sharing_agreement = models.BooleanField(
+        "I verify that I have read and accept the terms of the MATRR Data sharing agreement and policies.",
+        blank=False, null=False,  default=False)
+
     req_referred_by = models.CharField('How did you hear about MATRR?', choices=REFERRAL_CHOICES, null=False,
                                        max_length=100)
     req_notes = models.TextField('Request Notes', null=True, blank=True)

@@ -47,7 +47,7 @@
 			<div>
 
 				{% for field in form.visible_fields %}
-					{% if field.html_name != "req_progress_agreement" and field.html_name != "req_safety_agreement" and field.html_name != "req_data_agreement" %}
+					{% if field.html_name != "req_progress_agreement" and field.html_name != "req_safety_agreement" and field.html_name != "req_data_agreement" and field.html_name != "req_data_sharing_agreement"%}
 						{% if field.html_name != 'req_reason' %}
 							{% if field.errors %}
 								<div class="messages">
@@ -120,6 +120,14 @@
                     </div>
                 </div>
             {% endif %}
+
+            <div class="messages">
+                    <div class="forms">
+                        {{ form.req_data_sharing_agreement.label_tag }}<br>
+                        <a href="{{ STATIC_URL }}pdf/MATRR-Data-Policies-v1.pdf" target="_blank">Additional information can be found here.<img height=20px width=20px src="{{ STATIC_URL }}images/pdf.png"></a><br>
+                        {{ form.req_data_sharing_agreement }}<span style='color: #FF0000; font-size: 75%'>Required</span>
+                    </div>
+            </div>
 
 			<div class="messages">
 				<div class="warning">
