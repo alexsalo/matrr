@@ -41,6 +41,22 @@ def create_TissueSamples(tissue_type=None):
                 print "New tissue sample: " + sample.__unicode__()
 
 @transaction.commit_on_success
+# Creates ALL tissue samples in the database, for every monkey:tissuetype combination.
+#m_tissue_type and m_cohort_id are integer ids
+def create_TissueSamples_forCohort(m_tissue_type, m_cohort_id):
+    units = Units[2][0]
+    tt = TissueType.objects.get(tst_type_id = m_tissue_type)
+    for monkey in Monkey.objects.all().filter(cohort_id = m_cohort_id):
+        quantity = 0
+        sample, is_new = TissueSample.objects.get_or_create(monkey=monkey, tissue_type=tt)
+        if is_new:
+            sample.tss_freezer = "<new record, no data>"
+            sample.tss_location = "<new record, no data>"
+            sample.save()
+            # Can be incredibly spammy
+            print "New tissue sample: " + sample.__unicode__()
+
+@transaction.commit_on_success
 def create_Assay_Development_tree():
     institution = Institution.objects.all()[0]
     cohort = Cohort.objects.get_or_create(coh_cohort_name="Assay Development", coh_upcoming=False,
