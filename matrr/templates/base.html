@@ -241,7 +241,8 @@
 				<div class='headline'>
 					Info
 				</div>
-				<a href="/benefits">Account Benefits</a><br/>
+                <a href="{{ STATIC_URL }}pdf/MATRR-Data-Policies-v1.pdf" target="_blank">Data Sharing Policy<img height=16px width=16px src="{{ STATIC_URL }}images/pdf.png"></a><br>
+				<a href="/benefits">Account Benefits</a><br>
 				<a href="/safety">Tissue Safety</a><br/>
 				{% if user_is_verified %}
 					<a href="/fee">Tissue Fee Schedule</a><br/>
