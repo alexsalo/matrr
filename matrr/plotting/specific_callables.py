@@ -70,6 +70,32 @@ def necropsy_summary_avg_22hr_g_per_kg(queryset):
         raw_labels.append(str(mky.pk))
     return [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries], [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries], raw_labels
 
+def necropsy_summary_with_days_etoh_4pct(queryset):
+    """
+    This method, used by necropsy graphs, will collect 22hr and lifetime etoh intake (in ml) for the [queryset]
+
+    Args:
+    queryset is expected to be a queryset of monkeys
+
+    return:
+    tuple, ( list of open access total intakes, list of lifetime total intakes, list of monkey pk labels )
+    """
+    summaries = []
+    raw_labels = []
+    days = []
+    days_2 = []
+    for mky in queryset.order_by("necropsy_summary__ncm_etoh_4pct_lifetime", "necropsy_summary__ncm_etoh_4pct_22hr"):
+        try:
+            summaries.append(mky.necropsy_summary)
+            days_2.append(MonkeyToDrinkingExperiment.objects.OA().first_six_months_oa().exclude_exceptions().
+                          filter(monkey=mky).count())
+            days.append(MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=mky).count())
+        except NecropsySummary.DoesNotExist:
+            continue
+        raw_labels.append(str(mky.pk))
+    return [summary.ncm_etoh_4pct_22hr for summary in summaries], [summary.ncm_etoh_4pct_lifetime for summary in summaries],\
+           days_2, days, raw_labels
+
 def necropsy_summary_etoh_4pct(queryset):
     """
     This method, used by necropsy graphs, will collect 22hr and lifetime etoh intake (in ml) for the [queryset]
@@ -89,6 +115,22 @@ def necropsy_summary_etoh_4pct(queryset):
             continue
         raw_labels.append(str(mky.pk))
     return [summary.ncm_etoh_4pct_22hr for summary in summaries], [summary.ncm_etoh_4pct_lifetime for summary in summaries], raw_labels
+
+def necropsy_summary_with_days_sum_g_per_kg(queryset):
+    summaries = []
+    raw_labels = []
+    days = []
+    days_2 = []
+    for mky in queryset.order_by("necropsy_summary__ncm_sum_g_per_kg_22hr", "necropsy_summary__ncm_sum_g_per_kg_lifetime"):
+        try:
+            summaries.append(mky.necropsy_summary)
+            days_2.append(MonkeyToDrinkingExperiment.objects.OA().first_six_months_oa().exclude_exceptions().filter(monkey=mky).count())
+            days.append(MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=mky).count())
+        except NecropsySummary.DoesNotExist:
+            continue
+        raw_labels.append(str(mky.pk))
+    return [summary.ncm_sum_g_per_kg_22hr for summary in summaries], [summary.ncm_sum_g_per_kg_lifetime for summary in summaries],\
+        days_2, days, raw_labels
 
 def necropsy_summary_sum_g_per_kg(queryset):
     """

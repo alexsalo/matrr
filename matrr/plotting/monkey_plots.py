@@ -35,7 +35,7 @@ def monkey_necropsy_etoh_4pct(monkey):
         graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
         x_label = "Ethanol Intake (in 4% ml)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
-        return _monkey_summary_general(specific_callables.necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, monkey)
+        return _monkey_summary_general_with_days(specific_callables.necropsy_summary_with_days_etoh_4pct, x_label, graph_title, legend_labels, monkey)
 
 
 def monkey_necropsy_sum_g_per_kg(monkey):
@@ -47,7 +47,7 @@ def monkey_necropsy_sum_g_per_kg(monkey):
         graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
         x_label = "Ethanol Intake (in g/kg)"
         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)', '%s Total Intake (Lifetime)' % str(monkey.pk), '%s Total Intake (22hr)' % str(monkey.pk))
-        return _monkey_summary_general(specific_callables.necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, monkey)
+        return _monkey_summary_general_with_days(specific_callables.necropsy_summary_with_days_sum_g_per_kg, x_label, graph_title, legend_labels, monkey)
 
 
 def monkey_summary_avg_bec_mgpct(monkey):
