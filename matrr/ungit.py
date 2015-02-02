@@ -24,13 +24,15 @@ django.setup()
 #necropsy image do force render
 #mkplot.monkey_necropsy_etoh_4pct(m)
 #pylab.show()
-from matrr.utils.database import dump
-dump.dump_data_req_request_425_thru_431()
+#from matrr.utils.database import dump
+#dump.dump_data_req_request_425_thru_431()
 
 #CohortProteinImage.objects.all().delete()
+CohortHormoneImage.objects.all().delete()
 #CohortImage.objects.all().get(pk=2699).save(force_render = True)
 #http://127.0.0.1:8080/media/matrr_images/INIA_Cyno_1.Total_Ethanol_Intake_ml.2699-thumb_fd1XXi2.jpg
 
 #print MonkeyImage.objects.filter(method__contains = "necropsy").count()
 #for image in MonkeyImage.objects.filter(method__contains = "necropsy"):
+#    print image
 #    image.save(force_render = True)

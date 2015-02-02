@@ -904,7 +904,7 @@ def create_pdf_fragment_v2(request, klass, imageID):
     result = StringIO.StringIO()
     pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), dest=result, link_callback=gizmo.fetch_resources)
     if not pdf.err:
-        resp = HttpResponse(result.getvalue(), mimetype='application/pdf')
+        resp = HttpResponse(result.getvalue(), content_type='application/pdf')
         resp['Content-Disposition'] = 'attachment; filename=%s' % (im.get_filename() + '.pdf')
         return resp
     raise Http404()
@@ -917,7 +917,7 @@ def create_svg_fragment(request, klass, imageID):
     if not im.verify_user_access_to_file(request.user):
         raise Http404()
     image_data = open(os.path.join(settings.MEDIA_ROOT, im.svg_image.name), "rb").read()
-    resp = HttpResponse(image_data, mimetype="image/svg+xml")
+    resp = HttpResponse(image_data, content_type="image/svg+xml")
     resp['Content-Disposition'] = 'attachment; filename=%s' % (im.get_filename() + '.svg')
     return resp
 
