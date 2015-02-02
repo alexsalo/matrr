@@ -34,11 +34,11 @@ m = Monkey.objects.get(mky_id=10006)
 #http://127.0.0.1:8080/media/matrr_images/INIA_Cyno_1.Total_Ethanol_Intake_ml.2699-thumb_fd1XXi2.jpg
 
 #print MonkeyImage.objects.filter(method__contains = "necropsy").count()
-cnt = 0
-for image in MonkeyImage.objects.filter(method__contains = "necropsy"):
-    cnt += 1
-    print image, cnt
-    image.save(force_render = True)
+#cnt = 0
+#for image in MonkeyImage.objects.filter(method__contains = "necropsy"):
+#    cnt += 1
+#    print image, cnt
+#    image.save(force_render = True)
 
 #from matrr.utils.parallel_plot import *
 #hdmonekeys = Monkey.objects.all().filter(mky_drinking_category = "HD")
@@ -46,3 +46,7 @@ for image in MonkeyImage.objects.filter(method__contains = "necropsy"):
 #print hdmonekeys[1]
 #mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=hdmonekeys[1].)
 #print percentage_of_days_over_2_gkg(m[1])
+
+
+###Drinking Days Total
+print m.DrinkingDaysTotal()

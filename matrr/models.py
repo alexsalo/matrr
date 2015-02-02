@@ -671,6 +671,9 @@ class Monkey(models.Model):
                 self.mky_drinking_category = identify_drinking_category(oa_mtds, oa_becs)
         self.save()
 
+    def DrinkingDaysTotal(self):
+        return MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self).count()
+
     class Meta:
         db_table = 'mky_monkeys'
         ordering = ['mky_id']

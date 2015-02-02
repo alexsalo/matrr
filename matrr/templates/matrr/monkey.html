@@ -58,7 +58,7 @@
 				<th>Necropsy Start Date</th>
 				<th>Weight</th>
 				<th>Test Group</th>
-				<th>Stress Model</th>
+				<th>Drinking Days</th>
 				<th>Study Complete</th>
 				<th>Notes:</th>
 			</tr>
@@ -81,7 +81,7 @@
 						{% endif %}
 					{% endif %}
 				</td>
-				<td>{{ monkey.mky_stress_model }}</td>
+				<td>{{ monkey.DrinkingDaysTotal }}</td>
 				<td>{% if monkey.mky_study_complete %}<font color=Green>Complete</font>{% else %}<font color=red>Incomplete</font>{% endif %}
 				<td>{{ monkey.mky_notes }}</td>
 
