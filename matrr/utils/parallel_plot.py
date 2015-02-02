@@ -13,7 +13,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "matrr.settings")
 from collections import defaultdict
 import hashlib
 import json
-from django.db.models import query, Avg
+from django.db.models import query, Avg, Max, Min
 from matplotlib import pyplot, gridspec
 from matrr import models
 from matrr.plotting import DEFAULT_DPI, RHESUS_COLORS, DRINKING_CATEGORY_MARKER
@@ -21,8 +21,8 @@ from matrr.plotting import DEFAULT_DPI, RHESUS_COLORS, DRINKING_CATEGORY_MARKER
 
 def _percentage_of_days_over_x_gkg(mtds, x_gkg):
     assert len(mtds.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function will work with an MTD queryset with multiple/zero monkeys"
-    max_date = mtds.aggregate(models.Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
-    min_date = mtds.aggregate(models.Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
+    max_date = mtds.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
+    min_date = mtds.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
     total_days = float((max_date-min_date).days)
     mtd_values = mtds.values('mtd_etoh_g_kg')
     days_over_x = mtd_values.filter(mtd_etoh_g_kg__gt=x_gkg).count()

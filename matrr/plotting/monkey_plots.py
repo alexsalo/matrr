@@ -23,7 +23,7 @@ def monkey_necropsy_avg_22hr_g_per_kg(monkey):
         graph_title = 'Average Ethanol Intake for Monkey %s during 22 Hour Free Access Phase' % str(monkey.pk)
         x_label = "Ethanol Intake (in g/kg)"
         legend_labels = ('12 Month Average', '6 Month Average', '%s 12 Month Average' % str(monkey.pk), '%s 6 Month Average' % str(monkey.pk))
-        return _monkey_summary_general_with_days(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
+        return _monkey_summary_general_with_days(specific_callables.necropsy_summary_avg_with_days_22hr_g_per_kg, x_label, graph_title, legend_labels, monkey)
 
 
 def monkey_necropsy_etoh_4pct(monkey):
@@ -183,6 +183,7 @@ def _monkey_summary_general_with_days(specific_callable, x_label, graph_title, l
 
     coh_data_1, coh_data_2, coh_days_1, coh_days_2, cohort_labels = specific_callable(cohort.monkey_set.exclude(pk=monkey.pk))
     mky_data_1, mky_data_2, mky_days_1, mky_days_2, monkey_label = specific_callable(cohort.monkey_set.filter(pk=monkey.pk))
+
     if not mky_data_1[0] or not mky_data_2[0]: # don't draw plots for control monkeys
         return False, False
 
