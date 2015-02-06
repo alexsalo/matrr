@@ -919,7 +919,7 @@ class MonkeyToDrinkingExperiment(models.Model):
                                         help_text='Please enter the amount in mL of 4% EtOH consumed by the monkey.')
     mtd_veh_intake = models.FloatField('H2O Intake', null=True, blank=True,
                                        help_text='Please enter the amount in mL of H2O consumed by the monkey.')
-    mtd_total_pellets = models.IntegerField('Pellets Consumed', null=False, blank=False,
+    mtd_total_pellets = models.IntegerField('Pellets Consumed', null=False, blank=True,
                                             help_text='Please enter the total number of pellets consumed by the monkey.')
     mtd_weight = models.FloatField('Weight', null=True, blank=True,
                                    help_text='Please enter the weight of the monkey.')

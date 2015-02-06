@@ -13,8 +13,8 @@ django.setup()
 
 #print Monkey.objects.all().count()
 #print Monkey.objects.filter(mky_study_complete = True).count()
-#print Monkey.objects.all().filter(mky_drinking_category = "HD")
-m = Monkey.objects.get(mky_id=10006)
+#print Monkey.objects.all().filter(mky_drinking_category = "HD").count()
+#m = Monkey.objects.get(mky_id=10006)
 #ms = Monkey.objects.all()[3:6]
 #print ms
 
@@ -34,11 +34,12 @@ m = Monkey.objects.get(mky_id=10006)
 #http://127.0.0.1:8080/media/matrr_images/INIA_Cyno_1.Total_Ethanol_Intake_ml.2699-thumb_fd1XXi2.jpg
 
 #print MonkeyImage.objects.filter(method__contains = "necropsy").count()
-#cnt = 0
-#for image in MonkeyImage.objects.filter(method__contains = "necropsy"):
-#    cnt += 1
-#    print image, cnt
-#    image.save(force_render = True)
+print MonkeyImage.objects.count()
+cnt = 0
+for image in MonkeyImage.objects.all():#.filter(method__contains = "necropsy"):
+    cnt += 1
+    print image, cnt
+    image.save(force_render = True)
 
 #from matrr.utils.parallel_plot import *
 #hdmonekeys = Monkey.objects.all().filter(mky_drinking_category = "HD")
@@ -49,4 +50,7 @@ m = Monkey.objects.get(mky_id=10006)
 
 
 ###Drinking Days Total
-print m.DrinkingDaysTotal()
+#print m.DrinkingDaysTotal()
+
+
+
