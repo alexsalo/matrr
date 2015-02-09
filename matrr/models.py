@@ -623,7 +623,7 @@ class Monkey(models.Model):
     mky_drinking_category = models.CharField('Drinking Category', max_length=3, choices=DrinkingCategory, blank=False, null=True, help_text='The Drinking Category of the Monkey')
 
     def __unicode__(self):
-        return str(self.mky_id) + ' ' + str(self.mky_species) + ' ' + str(self.mky_drinking_category)
+        return str(self.mky_id) + ' ' + str(self.mky_name) + ' ' + str(self.mky_species) + ' ' + str(self.mky_drinking_category)
 
     def sex(self):
         if self.mky_gender == 'M':
@@ -672,7 +672,7 @@ class Monkey(models.Model):
         self.save()
 
     def DrinkingDaysTotal(self):
-        return MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self).count()
+        return MonkeyToDrinkingExperiment.objects.OA().filter(monkey=self).count()
 
     class Meta:
         db_table = 'mky_monkeys'
@@ -919,7 +919,7 @@ class MonkeyToDrinkingExperiment(models.Model):
                                         help_text='Please enter the amount in mL of 4% EtOH consumed by the monkey.')
     mtd_veh_intake = models.FloatField('H2O Intake', null=True, blank=True,
                                        help_text='Please enter the amount in mL of H2O consumed by the monkey.')
-    mtd_total_pellets = models.IntegerField('Pellets Consumed', null=False, blank=True,
+    mtd_total_pellets = models.IntegerField('Pellets Consumed', null=True, blank=True,
                                             help_text='Please enter the total number of pellets consumed by the monkey.')
     mtd_weight = models.FloatField('Weight', null=True, blank=True,
                                    help_text='Please enter the weight of the monkey.')
@@ -1047,7 +1047,7 @@ class MonkeyToDrinkingExperiment(models.Model):
     mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
 
     def __unicode__(self):
-        return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey)
+        return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey) + " etoh_g_kg: " + str(self.mtd_etoh_g_kg) + " Pellets: " + str(self.mtd_total_pellets)
 
     def get_etoh_ratio(self):
         return self.mtd_etoh_intake * 0.4 / self.mtd_weight

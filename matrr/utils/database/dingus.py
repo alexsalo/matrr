@@ -50,6 +50,11 @@ def get_datetime_from_steve(steve_date):
     except Exception as e:
         pass
     try:
+        real_date = dt.strptime(steve_date, "%m/%d/%Y")
+        return real_date
+    except Exception as e:
+        pass
+    try:
         real_date = dt.strptime(steve_date, "%Y-%m-%d")
         return real_date
     except Exception as e:
