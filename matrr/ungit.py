@@ -7,6 +7,13 @@ from matrr.plotting import monkey_plots as mkplot
 import matplotlib
 matplotlib.use('TkAgg')
 import pylab
+from datetime import datetime as dt
+import string
+import csv
+import re
+from django.db.transaction import commit_on_success
+from django.db import transaction
+from matrr.utils.database import dingus, create
 
 import django
 django.setup()
@@ -60,74 +67,96 @@ django.setup()
 #print m.DrinkingDaysTotal()
 
 
-###LOAD MDE DATA sHEET 1
-from matrr.utils.database import dingus
-cohort_vervet_1 = Cohort.objects.get(coh_cohort_name="INIA Vervet 1")
-print cohort_vervet_1
-file_name = '/home/alex/Dropbox/Baylor/Matrr/vervet_data/vervet1_daily_22h_etoh.csv'
-with open(file_name, 'r') as f:
-    #1. Parse header to get monkeys
-    monkeys = []
-    header = f.readline()
-    header_split = header.split(',')
-    for s in header_split:
-        s_split = s.split(' ')
-        for s2 in s_split:
-            if s2.isdigit():
-                m = Monkey.objects.get(mky_real_id = s2)
-                monkeys.append(m)
-    #2. Parse Data
-    read_data = f.readlines()
-    cnt = 0
-    for line_number, line in enumerate(read_data):
-        #print line_number
-        #print line
-        cnt += 1
-        print cnt
-        # if cnt > 40:
-        #       break
-        data = line.split(',')
+###LOAD daily_22h_etoh###
+# from matrr.utils.database import dingus
+#
+# def read_daily_22hr_etoh(file, cohort, parsenames=False):
+#     with open(file, 'r') as f:
+#         #1. Parse header to get monkeys
+#         monkeys = []
+#         names = []
+#         header = f.readline()
+#         header_split = header.split(',')
+#         for s in header_split:
+#             s_split = s.split(' ')
+#             for s2 in s_split:
+#                 if s2.isdigit():
+#                     m = Monkey.objects.get(mky_real_id = s2)
+#                     monkeys.append(m)
+#                 else:
+#                     names.append(s2)
+#         if parsenames:
+#             for i in xrange(len(monkeys)):
+#                 m = monkeys[i]
+#                 m.mky_name = names[i+2]
+#                 m.save()
+#         #2. Parse Data
+#         read_data = f.readlines()
+#         cnt = 0
+#         for line_number, line in enumerate(read_data):
+#             #print line_number
+#             #print line
+#             cnt += 1
+#             print cnt
+#             # if cnt > 2:
+#             #        break
+#             data = line.split(',')
+#
+#             #2.1 Create Drinking Experiments
+#             dex_date = dingus.get_datetime_from_steve(data[1])
+#             des = DrinkingExperiment.objects.filter(dex_type="Open Access", dex_date = dex_date,
+#                                                     cohort = cohort)
+#             if des.count() == 0:
+#                 de = DrinkingExperiment(dex_type="Open Access", dex_date = dex_date,
+#                                                     cohort = cohort)
+#             elif des.count() == 1:
+#                 de = des[0]
+#             elif des.count() > 1:
+#                 print "too many drinking experiments!"
+#             #save notes if any
+#             notepos = len(monkeys)+2
+#             if len(data[notepos]) > 2:
+#                 de.dex_notes = data[notepos]
+#             de.save()
+#
+#             #2.2 Create MonkeyToDrinkingExperiment
+#             pos = 2
+#             for monkey in monkeys:
+#                 mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment = de, monkey = monkey)
+#                 if mtds.count() != 0:
+#                     mtd = mtds[0]
+#                 else:
+#                     mtd = MonkeyToDrinkingExperiment()
+#                     mtd.monkey = monkey
+#                     mtd.drinking_experiment = de
+#                     mtd.mtd_total_pellets = 0
+#
+#                 #print mtd
+#                 if data[pos]:
+#                     mtd.mtd_etoh_g_kg = data[pos]
+#                 else:
+#                     mtd.mtd_etoh_g_kg = None
+#                     mtd.mtd_total_pellets = 0
+#                 #print mtd
+#
+#                 mtd.save()
+#                 pos +=1
+#
+# #file_name = '/home/alex/Dropbox/Baylor/Matrr/vervet_data/vervet1_daily_22h_etoh.csv'
+# file_name = '/home/alex/Dropbox/Baylor/Matrr/vervet_data/vervet2_daily_22h_etoh.csv'
+# #cohort_vervet_1 = Cohort.objects.get(coh_cohort_name="INIA Vervet 1")
+# cohort_vervet_2 = Cohort.objects.get(coh_cohort_name="INIA Vervet 2")
+#
+# read_daily_22hr_etoh(file_name, cohort_vervet_2, True)
 
-        #2.1 Create Drinking Experiments
-        dex_date = dingus.get_datetime_from_steve(data[1])
-        des = DrinkingExperiment.objects.filter(dex_type="Open Access", dex_date = dex_date,
-                                                cohort = cohort_vervet_1)
-        if des.count() == 0:
-            de = DrinkingExperiment(dex_type="Open Access", dex_date = dex_date,
-                                                cohort = cohort_vervet_1)
-        elif des.count() == 1:
-            de = des[0]
-        elif des.count() > 1:
-            print "too many drinking experiments!"
-        #save notes if any
-        if len(data[7]) > 2:
-            de.dex_notes = data[7]
-        de.save()
-
-        #2.2 Create MonkeyToDrinkingExperiment
-        pos = 2
-        for monkey in monkeys:
-            mtds = MonkeyToDrinkingExperiment.objects.filter(drinking_experiment = de, monkey = monkey)
-            if mtds.count() != 0:
-                mtd = mtds[0]
-            else:
-                mtd = MonkeyToDrinkingExperiment()
-                mtd.monkey = monkey
-                mtd.drinking_experiment = de
-                mtd.mtd_total_pellets = 0
-
-            #print mtd
-            if data[pos]:
-                mtd.mtd_etoh_g_kg = data[pos]
-            else:
-                mtd.mtd_etoh_g_kg = None
-                mtd.mtd_total_pellets = 0
-            #print mtd
-
-            mtd.save()
-            pos +=1
-
-
-
-#print DrinkingExperiment.objects.all()[1]
-    #print read_data
+###LOAD BEC###
+# m = Monkey.objects.get(mky_real_id = 1190)
+# # print m
+# bec = MonkeyBEC.objects.filter(monkey=m)
+# print bec.count()
+#
+# from matrr.utils.database import load_unusual_formats
+# # #bec_vervet1_file = '/home/alex/Dropbox/Baylor/Matrr/vervet_data/vervet1_BEC.csv'
+# # bec_vervet2_file = '/home/alex/Dropbox/Baylor/Matrr/vervet_data/vervet2_BEC.csv'
+# bec_vervet2_induction_file = '/home/alex/Dropbox/Baylor/Matrr/vervet_data/vervet1_BEC_induction.csv'
+# load_unusual_formats.load_bec_data_vervet(bec_vervet2_induction_file, True, True)
