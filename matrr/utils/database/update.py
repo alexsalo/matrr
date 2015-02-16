@@ -2,6 +2,15 @@ from datetime import datetime as dt
 from datetime import time
 from matrr import models
 
+def update_monkeys_derived_attribute():
+    cnt = 0;
+    for m in models.Monkey.objects.all():
+        cnt += 1
+        print cnt
+        m.populate_age_at_intox()
+        m.populate_drinking_category()
+        m.save()
+
 def convert_MonkeyProtein_dates_to_correct_datetimes():
     dates = (
     (2002, 4, 15),

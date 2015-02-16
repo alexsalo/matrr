@@ -10,7 +10,7 @@ from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.core import paginator
 from matrr import models, forms
-
+from matrr.models import MonkeyBEC, MonkeyToDrinkingExperiment, MonkeyHormone, MonkeyProtein, MonkeyException
 
 @user_passes_test(lambda u: u.has_perm('matrr.can_download_data'), login_url='/denied/')
 def data_landing(request):
