@@ -184,6 +184,10 @@ m = Monkey.objects.get(mky_id = 10022)
 # mbecs = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
 # print mbecs.aggregate(Avg('bec_vol_etoh')).values()[0]
 
-mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = m)
-print round(mbecs.aggregate(Avg('bec_vol_etoh')).values()[0], 2)
-
+#mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = m)
+#print round(mbecs.aggregate(Avg('bec_vol_etoh')).values()[0], 2)
+print m.cohort.coh_cohort_id
+cohort = Cohort.objects.get(coh_cohort_id = m.cohort.coh_cohort_id)
+print cohort.monkey_set.all().count()
+m
+print [m.avg_BEC_1st_6mo(), m.avg_BEC_all()]

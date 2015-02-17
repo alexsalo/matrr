@@ -2,7 +2,7 @@ from django.conf.urls import patterns, include, url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from django.contrib import admin
-from views import cart, account, orders, review, rna, rud_reports, shipping
+from views import cart, account, orders, review, rna, rud_reports, shipping, export
 from views import uploads, verification, inventory, ajax, basic, tools, display, data, symposium
 from settings import MEDIA_URL, MEDIA_ROOT, PRODUCTION
 admin.autodiscover()
@@ -61,6 +61,11 @@ urlpatterns += patterns('',
     url(r'^cart/checkout/$', cart.cart_checkout, name='cart-checkout'),
     url(r'^cart/(?P<tissue_request_id>\d+)/$', cart.cart_item_view, name='cart-item'),
     url(r'^cart/(?P<tissue_request_id>\d+)/delete/$', cart.cart_item_delete, name='cart-item-delete'),
+)
+
+urlpatterns += patterns('',
+    ##  Export Views
+    url(r'^cohort/(?P<coh_id>\d+)/export/$', export.export_cohort_data, name='export-cohort-data'),
 )
 
 urlpatterns += patterns('',
