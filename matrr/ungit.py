@@ -6,6 +6,7 @@ from matrr.models import Monkey
 from matrr.plotting import monkey_plots as mkplot
 import matplotlib
 matplotlib.use('TkAgg')
+import numpy as np
 import pylab
 from datetime import datetime as dt
 import string
@@ -160,3 +161,29 @@ django.setup()
 # # bec_vervet2_file = '/home/alex/Dropbox/Baylor/Matrr/vervet_data/vervet2_BEC.csv'
 # bec_vervet2_induction_file = '/home/alex/Dropbox/Baylor/Matrr/vervet_data/vervet1_BEC_induction.csv'
 # load_unusual_formats.load_bec_data_vervet(bec_vervet2_induction_file, True, True)
+
+from django.db.models import Sum, Avg
+from dateutil.relativedelta import relativedelta
+
+m = Monkey.objects.get(mky_id = 10022)
+# # mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey = m).order_by('drinking_experiment__dex_date')
+# # start_date = mtds[1].drinking_experiment.dex_date + relativedelta( months = +6 )
+# # end_date = start_date + relativedelta( months = +6 )
+# # mtds = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
+# # print mtds.aggregate(Sum('mtd_etoh_intake')).values()[0]
+# print m.Total_etoh_during_first_6mo()
+# print m.Total_etoh_during_second_6mo()
+# print m.Total_etoh()
+# print m.Total_veh_during_first_6mo()
+# print m.Total_veh_during_second_6mo()
+# print m.Total_veh()
+
+# mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = m).order_by('bec_collect_date')
+# start_date = mbecs[1].bec_collect_date
+# end_date = start_date + relativedelta( months = +6 )
+# mbecs = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
+# print mbecs.aggregate(Avg('bec_vol_etoh')).values()[0]
+
+mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = m)
+print round(mbecs.aggregate(Avg('bec_vol_etoh')).values()[0], 2)
+

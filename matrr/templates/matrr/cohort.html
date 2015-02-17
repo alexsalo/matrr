@@ -206,6 +206,56 @@
 	</div>
 
 
+
+
+    <div>
+		<table class='table-drink-cats menu-links common_center'>
+            <thead>
+                <tr>
+                    {% if perms.matrr.monkey_view_confidential %}
+                        <th>Real Name</th>{% endif %}
+                    <th class='dont-wrap-header'><a href="?order_by=pk">Monkey ID <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                    <th>1st 6mo etoh intake</th>
+                    <th>2nd 6mo etoh intake</th>
+                    <th>Total etoh intake</th>
+                    <th>1st 6mo avg BEC</th>
+                    <th>Total avg BEC</th>
+                    <th>1st 6mo H2O intake</th>
+                    <th>2dn 6mo H2O intake</th>
+                    <th>Total H2O intake</th>
+                </tr>
+            </thead>
+            <tbody class='drink-cat-rows'>
+                {% for monkey in monkeys %}
+                    <tr>
+                        {% if perms.matrr.monkey_view_confidential %}
+                            <td>{{ monkey.mky_name }}</td>
+                        {% endif %}
+                        <td><a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
+                            {{ monkey.mky_id }}
+                            <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
+                        </a>
+                        <td>{{ monkey.Total_etoh_during_first_6mo}}</td>
+                        <td>{{ monkey.Total_etoh_during_second_6mo}}</td>
+                        <td>{{ monkey.Total_etoh}}</td>
+                        <td>{{ monkey.avg_BEC_1st_6mo}}</td>
+                        <td>{{ monkey.avg_BEC_all}}</td>
+                        <td>{{ monkey.Total_veh_during_first_6mo}}</td>
+                        <td>{{ monkey.Total_veh_during_second_6mo}}</td>
+                        <td>{{ monkey.Total_veh}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+		</table>
+	</div>
+
+
+
+
+
+
+
+
 	<div class="clearfix">
 
 		{% if images %}

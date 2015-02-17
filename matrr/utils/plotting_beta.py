@@ -411,6 +411,7 @@ def cohort_etoh_gkg_histogram(cohort):
     main_plot.set_ylabel("Ethanol Intake, g/kg")
     y_axes = list()
     labels = list()
+    labels = list()
     for monkey in cohort.monkey_set.exclude(mky_drinking=False):
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)
         gkg_values = mtds.values_list('mtd_etoh_g_kg', flat=True)

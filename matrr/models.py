@@ -10,6 +10,8 @@ import sys
 import settings
 from datetime import datetime, date, timedelta
 from string import lower, replace
+from dateutil.relativedelta import relativedelta
+from django.db.models import Sum, Avg
 
 from django.core.files.base import File
 from django.db import models
@@ -673,6 +675,77 @@ class Monkey(models.Model):
 
     def DrinkingDaysTotal(self):
         return MonkeyToDrinkingExperiment.objects.OA().filter(monkey=self).count()
+
+    def Total_etoh_during_first_6mo(self):
+        try:
+            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self).order_by('drinking_experiment__dex_date')
+            start_date = mtds[1].drinking_experiment.dex_date
+            end_date = start_date + relativedelta( months = +6 )
+            mtds = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
+            return mtds.aggregate(Sum('mtd_etoh_intake')).values()[0]
+        except:
+            return 0
+
+    def Total_etoh_during_second_6mo(self):
+        try:
+            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self).order_by('drinking_experiment__dex_date')
+            start_date = mtds[1].drinking_experiment.dex_date + relativedelta( months = +6 )
+            end_date = start_date + relativedelta( months = +6 )
+            mtds = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
+            return mtds.aggregate(Sum('mtd_etoh_intake')).values()[0]
+        except:
+            return 0
+
+    def Total_etoh(self):
+        try:
+            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
+            return mtds.aggregate(Sum('mtd_etoh_intake')).values()[0]
+        except:
+            return 0
+
+    def Total_veh_during_first_6mo(self):
+        try:
+            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self).order_by('drinking_experiment__dex_date')
+            start_date = mtds[1].drinking_experiment.dex_date
+            end_date = start_date + relativedelta( months = +6 )
+            mtds = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
+            return mtds.aggregate(Sum('mtd_veh_intake')).values()[0]
+        except:
+            return 0
+
+    def Total_veh_during_second_6mo(self):
+        try:
+            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self).order_by('drinking_experiment__dex_date')
+            start_date = mtds[1].drinking_experiment.dex_date + relativedelta( months = +6 )
+            end_date = start_date + relativedelta( months = +6 )
+            mtds = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
+            return mtds.aggregate(Sum('mtd_veh_intake')).values()[0]
+        except:
+            return 0
+
+    def Total_veh(self):
+        try:
+            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
+            return mtds.aggregate(Sum('mtd_veh_intake')).values()[0]
+        except:
+            return 0
+
+    def avg_BEC_1st_6mo(self):
+        try:
+            mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = self).order_by('bec_collect_date')
+            start_date = mbecs[1].bec_collect_date
+            end_date = start_date + relativedelta( months = +6 )
+            mbecs = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
+            return round(mbecs.aggregate(Avg('bec_vol_etoh')).values()[0], 2)
+        except:
+            return 0
+
+    def avg_BEC_all(self):
+        try:
+            mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = self)
+            return round(mbecs.aggregate(Avg('bec_vol_etoh')).values()[0], 2)
+        except:
+            return 0
 
     class Meta:
         db_table = 'mky_monkeys'
