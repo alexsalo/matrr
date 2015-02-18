@@ -5,10 +5,12 @@ from matrr.models import *
 
 def export_cohort_data(request, **kwargs):
     coh_cohort_id = kwargs['coh_id']
-
+    cohort = Cohort.objects.get(coh_cohort_id = coh_cohort_id)
+    monkeys = cohort.monkey_set.all()
+    filename = lower(str(cohort.coh_cohort_name)) + "_data.csv"
     # Create the HttpResponse object with the appropriate CSV header.
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="cohort_data.csv"'
+    response['Content-Disposition'] = 'attachment; filename='+filename
     #coh_cohort_id = 3
     writer = csv.writer(response)
     writer.writerow([
@@ -21,8 +23,7 @@ def export_cohort_data(request, **kwargs):
         'Total_veh_during_second_6mo',
         'Total_veh'
     ])
-    cohort = Cohort.objects.get(coh_cohort_id = coh_cohort_id)
-    monkeys = cohort.monkey_set.all()
+
     for monkey in monkeys:
         writer.writerow([
             monkey.Total_etoh_during_first_6mo(),
