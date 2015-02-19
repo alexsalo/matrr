@@ -166,11 +166,12 @@ from django.db.models import Sum, Avg
 from dateutil.relativedelta import relativedelta
 
 m = Monkey.objects.get(mky_id = 10022)
-# # mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey = m).order_by('drinking_experiment__dex_date')
-# # start_date = mtds[1].drinking_experiment.dex_date + relativedelta( months = +6 )
-# # end_date = start_date + relativedelta( months = +6 )
-# # mtds = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
-# # print mtds.aggregate(Sum('mtd_etoh_intake')).values()[0]
+# mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey = m).order_by('drinking_experiment__dex_date')
+# start_date = mtds[1].drinking_experiment.dex_date # + relativedelta( months = +6 )
+# end_date = start_date + relativedelta( months = +6 )
+# mtds = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
+# print mtds.values('drinking_experiment__dex_date').distinct().count()
+# print mtds.aggregate(Sum('mtd_etoh_intake')).values()[0]
 # print m.Total_etoh_during_first_6mo()
 # print m.Total_etoh_during_second_6mo()
 # print m.Total_etoh()
@@ -182,12 +183,22 @@ m = Monkey.objects.get(mky_id = 10022)
 # start_date = mbecs[1].bec_collect_date
 # end_date = start_date + relativedelta( months = +6 )
 # mbecs = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
+# #days = (mbecs.reverse()[1] - mbecs[1].bec_collect_date)
+# print mbecs.values('bec_collect_date').distinct().count()
 # print mbecs.aggregate(Avg('bec_vol_etoh')).values()[0]
 
 #mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = m)
 #print round(mbecs.aggregate(Avg('bec_vol_etoh')).values()[0], 2)
-print m.cohort.coh_cohort_id
-cohort = Cohort.objects.get(coh_cohort_id = m.cohort.coh_cohort_id)
-print cohort.monkey_set.all().count()
-m
-print [m.avg_BEC_1st_6mo(), m.avg_BEC_all()]
+# print m.cohort.coh_cohort_id
+# cohort = Cohort.objects.get(coh_cohort_id = m.cohort.coh_cohort_id)
+# print cohort.monkey_set.all().count()
+# m
+# print [m.avg_BEC_1st_6mo(), m.avg_BEC_all()]
+
+# from matrr.utils.database import load
+# filename = '/home/alex/Dropbox/Baylor/Matrr/6a/31.6a_bec_20150218_re_check.csv'
+# load.load_bec_data(filename, True, True)
+
+a, b = m.sum_etoh_1st_6mo_gkg()
+print a
+print b
