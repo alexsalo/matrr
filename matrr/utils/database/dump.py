@@ -558,15 +558,16 @@ class StandardCohortDataSet(object):
         if day_before.count() > 0:
             day_before = "%.1f" % float(day_before[0])
         else:
-            day_before = 'Not Available'
+            day_before = 'NA'
         output_list.append(day_before)
         # MTD - Ethanol consumption for the 7 days before necropsy *** NOT PROVIDED FOR ALL COHORTS ***,
         seven_days_before = mky_necropsy_mtds.days_before_necropsy(7).values('mtd_etoh_intake')
         if seven_days_before.count() > 0:
             seven_days_before = seven_days_before.aggregate(models.Sum('mtd_etoh_intake'))['mtd_etoh_intake__sum']
+            output_list.append("%.1f" % float(seven_days_before))
         else:
-            seven_days_before = 'Not Available'
-        output_list.append("%.1f" % float(seven_days_before))
+            seven_days_before = 'NA'
+            output_list.append(seven_days_before)
 
     def _populate_bec_columns(self, mky_pk, output_list):
         """

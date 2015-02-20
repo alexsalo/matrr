@@ -199,6 +199,8 @@ m = Monkey.objects.get(mky_id = 10022)
 # filename = '/home/alex/Dropbox/Baylor/Matrr/6a/31.6a_bec_20150218_re_check.csv'
 # load.load_bec_data(filename, True, True)
 
-a, b = m.sum_etoh_1st_6mo_gkg()
-print a
-print b
+# a, b = m.sum_etoh_1st_6mo_gkg()
+# print a
+# print b
+from matrr.utils.database import dump
+dump.dump_standard_cohort_data(m.cohort.coh_cohort_id)

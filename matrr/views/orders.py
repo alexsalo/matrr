@@ -44,7 +44,7 @@ def order_detail(request, req_request_id, edit=False):
                                "Purchase Order form invalid, please try again.  Please notify a MATRR admin if this message is erroneous.")
     if request.GET.get('export', False):
         #Create the HttpResponse object with the appropriate PDF headers.
-        response = HttpResponse(mimetype='application/pdf')
+        response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename=Invoice-%d.pdf' % req_request.pk
         context = {'req_request': req_request, 'account': req_request.user.account, 'time': datetime.today()}
         gizmo.export_template_to_pdf('pdf_templates/invoice.html', context, outfile=response)

@@ -191,7 +191,7 @@ def shipment_detail(request, shipment_id):
 def shipment_manifest_export(request, shipment_id):
     shipment = get_object_or_404(Shipment, pk=shipment_id)
     req_request = shipment.req_request
-    response = HttpResponse(mimetype='application/pdf')
+    response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=shipment_manifest-' + \
                                       str(req_request.user) + '-' + \
                                       str(req_request.pk) + '.pdf'

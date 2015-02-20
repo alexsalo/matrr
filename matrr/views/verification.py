@@ -27,7 +27,7 @@ def tissue_verification_export(request, req_request_id=0, cohort_pk=0):
     else:
         raise Http404("Neither req_request_id nor cohort_pk provided.")
     # Create the HttpResponse object with the appropriate PDF headers.
-    response = HttpResponse(mimetype='application/pdf')
+    response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=TissueVerificationForm.pdf'
     context = {'tiv_list': tiv_list, 'user': request.user, 'date': datetime.today()}
     return gizmo.export_template_to_pdf('pdf_templates/tissue_verification.html', context, outfile=response)
