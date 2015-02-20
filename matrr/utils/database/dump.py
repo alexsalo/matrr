@@ -563,7 +563,7 @@ class StandardCohortDataSet(object):
         # MTD - Ethanol consumption for the 7 days before necropsy *** NOT PROVIDED FOR ALL COHORTS ***,
         seven_days_before = mky_necropsy_mtds.days_before_necropsy(7).values('mtd_etoh_intake')
         if seven_days_before.count() > 0:
-            seven_days_before = "$.1f" % float(seven_days_before.aggregate(models.Sum('mtd_etoh_intake'))['mtd_etoh_intake__sum'])
+            seven_days_before = "%.1f" % float(seven_days_before.aggregate(models.Sum('mtd_etoh_intake'))['mtd_etoh_intake__sum'])
         else:
             seven_days_before = 'Not Available'
         output_list.append(seven_days_before)
