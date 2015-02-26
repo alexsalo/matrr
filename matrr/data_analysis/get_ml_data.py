@@ -96,11 +96,11 @@ def median_value_per_stage_for_monkeys(monkeys, mtds_all, index, value_name='mtd
 def reject_outliers(data, m=1.5):
     return data[abs(data - np.mean(data)) < m * np.std(data)]
 
-def avg_drinking_latency_for_monkeys(monkeys, mtds_all, index):
-    avgs = pd.DataFrame(columns=["avg"], index=index)
+def avg_drinking_feature_for_monkeys(monkeys, mtds_all, index, feature):
+    avgs = pd.DataFrame(columns=["avg_"+feature], index=index)
     for m in monkeys:
         mtds = mtds_all.filter(monkey = m)
-        avg = reject_outliers(np.array(mtds.values_list('mtd_latency_1st_drink', flat=True))).mean()
+        avg = reject_outliers(np.array(mtds.values_list(feature, flat=True))).mean()
         avgs.ix[m.mky_id] = avg
     return avgs
 
@@ -135,8 +135,8 @@ def prepare_features(ml_monkeys):
     df['latency_increased'] = (df.latency_3 > df.latency_1).astype(int)
 
     #avg latency to drink - still outliers?
-    avg_mtds = avg_drinking_latency_for_monkeys(ml_monkeys, mtds_all, df.index)
-    df['avg_latency'] = avg_mtds["avg"]
+    avg_mtds = avg_drinking_feature_for_monkeys(ml_monkeys, mtds_all, df.index, 'mtd_latency_1st_drink')
+    df['avg_latency'] = avg_mtds["avg_mtd_latency_1st_drink"]
     def plot_latency_outliers():
         m = Monkey.objects.get(mky_id = 10070)
         data = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date').\
@@ -152,10 +152,21 @@ def prepare_features(ml_monkeys):
         fig.subplots_adjust(hspace=0.2)
         print np.mean(data)
 
+    #median bouts
     median_etoh_bouts_by_stage = median_value_per_stage_for_monkeys(ml_monkeys, mtds_all, df.index, 'mtd_etoh_bout')
-    print median_etoh_bouts_by_stage
+    df['bouts_1'] = median_etoh_bouts_by_stage.mtd_etoh_bout_1
+    df['bouts_2'] = median_etoh_bouts_by_stage.mtd_etoh_bout_2
+    df['bouts_3'] = median_etoh_bouts_by_stage.mtd_etoh_bout_3
+    df['bouts_total'] = median_etoh_bouts_by_stage.mtd_etoh_bout_total
+    df['bouts_increased'] = (df.bouts_3 > df.bouts_1).astype(int)
 
+    #avg bouts
+    df['avg_bouts'] = avg_drinking_feature_for_monkeys(ml_monkeys, mtds_all, df.index, 'mtd_etoh_bout')['avg_mtd_etoh_bout']
     return df
+
+def fold_feature_dc():
+    features.ix[(features.DC == 'HD'), 'DC'] = 'VHD'
+    features.ix[(features.DC == 'BD'), 'DC'] = 'LD'
 
 #####LOOK here def
 from matrr.utils import plotting_beta
@@ -199,7 +210,7 @@ def plot_monkeys_latency(monkeys):
 #plot_monkeys_latency(ml_monkeys.filter(mky_drinking_category='LD')[0:5])
 
 def logistic(features, foldTwo=True, Randomized=False):
-    X = features[["sex", "age_intox", 'speed_1', 'speed_2', 'speed_3', 'speed_changed']]
+    X = features.drop('DC', axis = 1)
     #X = features[["sex"]]
     #X_norm = (X - X.min()) / (X.max() - X.min())
     y = features['DC']
@@ -240,23 +251,95 @@ def get_features(generate=True):
     else:
         features = pd.read_pickle('features.pkl')
     return features
+def svm_do():
+    from sklearn import cross_validation
+    from sklearn import datasets
+    from sklearn import svm
+    #fold_feature_dc()
+    x = features.drop('DC', axis = 1)
+    y = features['DC']
 
-features = get_features(True)
-print features
+    # X_train, X_test, y_train, y_test = cross_validation.train_test_split(x, y, test_size=0.3, random_state=0)
+    # clf = svm.SVC(kernel='linear', C=1).fit(X_train, y_train)
+    # print clf
+    # print clf.score(X_test, y_test)
+
+    clf = svm.SVC(kernel='linear', C=1)
+    scores = cross_validation.cross_val_score(clf, x, y, cv=5)
+    print scores
+    print "Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2)
+def svm_do2():
+    import matplotlib.pyplot as plt
+    from sklearn import svm, datasets
+    from sklearn.metrics import roc_curve, auc
+    from sklearn.cross_validation import train_test_split
+    from sklearn.preprocessing import label_binarize
+    from sklearn.multiclass import OneVsRestClassifier
+
+    X = features[['speed_total', 'latency_total', 'bouts_total']]
+    y = features[['DC']]
+
+    # Binarize the output
+    y = label_binarize(y, classes=["LD", "BD", "HD", "VHD"])
+    n_classes = y.shape[1]
+    print y
+    print n_classes
+
+    # shuffle and split training and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3,
+                                                    random_state=0)
+
+    # Learn to predict each class against the other
+    classifier = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
+                                     random_state=0))
+    y_score = classifier.fit(X_train, y_train).decision_function(X_test)
+    print y_score
+
+    # Compute ROC curve and ROC area for each class
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(n_classes):
+        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    # Compute micro-average ROC curve and ROC area
+    fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+
+    # Plot ROC curve
+    plt.figure()
+    plt.plot(fpr["micro"], tpr["micro"],
+             label='micro-average ROC curve (area = {0:0.2f})'
+                   ''.format(roc_auc["micro"]))
+    for i in range(n_classes):
+        plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
+                                       ''.format(i, roc_auc[i]))
+
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Some extension of Receiver operating characteristic to multi-class')
+    plt.legend(loc="lower right")
+    plt.show()
+
+#features = get_features(False)
+#print features
 #logistic(features, False, False)
+#svm_do()
 
 def test_latency_change():
     print features[['latency_increased', 'DC']]
-    features.ix[(features.DC == 'HD'), 'DC'] = 'VHD'
-    features.ix[(features.DC == 'BD'), 'DC'] = 'LD'
+    fold_feature_dc()
     erorr_rate = round(len(features.ix[features.DC=='VHD'].ix[features.latency_increased==1, 'sex']) / float(len(features.ix[features.DC=='VHD', 'sex'])), 2)
     accuracy = round(len(features.ix[features.DC=='LD'].ix[features.latency_increased==1, 'sex']) / float(len(features.ix[features.DC=='LD', 'sex'])), 2)
     err_acc = accuracy - erorr_rate
     print erorr_rate, '    ', accuracy, '    ', err_acc
 
 def test_speed_change():
-    features.ix[(features.DC == 'HD'), 'DC'] = 'VHD'
-    features.ix[(features.DC == 'BD'), 'DC'] = 'LD'
+    fold_feature_dc()
     print 'balance', 'treshold', 'erorr_rate', 'accuracy', 'err_acc'
     best_err_acc = 0
     best_balance = 0
@@ -275,6 +358,14 @@ def test_speed_change():
     print best_err_acc, best_treshold, best_balance
 #test_speed_change()
 
+def test_bouts_change():
+    print features[['bouts_increased', 'DC']]
+    fold_feature_dc()
+    erorr_rate = round(len(features.ix[features.DC=='VHD'].ix[features.bouts_increased==1, 'sex']) / float(len(features.ix[features.DC=='VHD', 'sex'])), 2)
+    accuracy = round(len(features.ix[features.DC=='LD'].ix[features.bouts_increased==1, 'sex']) / float(len(features.ix[features.DC=='LD', 'sex'])), 2)
+    err_acc = accuracy - erorr_rate
+    print erorr_rate, '    ', accuracy, '    ', err_acc
+#test_bouts_change()
 
 def plot_mtds_anomalies():
     for id in anomalies_mtds_ids:
@@ -293,6 +384,17 @@ def plot_med_alcohol_speed():
         plt.plot(t.ix[id].values, mycolors2[dc.ix[id]])
 #plot_med_alcohol_speed()
 
+def plot_medians_by_stage(feature):
+    ml_monkeys = define_monkeys()
+    mtds_all = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=ml_monkeys)
+    t = median_value_per_stage_for_monkeys(ml_monkeys,mtds_all,)
+    dc = features.iloc[:, 2]
+    print t
+    plt.figure(1)
+    plt.xlim(-0.2, 2.2)
+    for id in features.index:
+        plt.plot(t.ix[id].values, mycolors2[dc.ix[id]])
+
 def plot_med_alcohol_latency():
     t = features.iloc[:, 8:11]
     dc = features.iloc[:, 2]
@@ -304,31 +406,43 @@ def plot_med_alcohol_latency():
     plt.title('Latency to drink by stage')
 #plot_med_alcohol_latency()
 
-def explore_feature():
+def plot_med_med_bouts():
+    t = features.iloc[:, 14:17]
+    dc = features.iloc[:, 2]
+    print t
+    plt.figure(1)
+    plt.xlim(-0.2, 2.2)
+    for id in features.index:
+        plt.plot(t.ix[id].values, mycolors2[dc.ix[id]])
+    plt.title('Bouts number by stage')
+#plot_med_med_bouts()
+
+def explore_feature(feature):
     fig, axs = plt.subplots(2,1,facecolor='w', edgecolor='k')
 
-    m = Monkey.objects.get(mky_id = 10067)
+    m = Monkey.objects.get(mky_id = 10077)
     data = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date').\
-                    values_list('mtd_etoh_bout', flat=True)
+                    values_list(feature, flat=True)
     data = np.array(data)
     axs[0].plot(data, 'go')
-    axs[0].set_title(str(m.mky_id) + ' mtd_etoh_bout')
+    axs[0].set_title(str(m.mky_id) + feature)
     print np.mean(data)
 
-    m = Monkey.objects.get(mky_id = 10090)
+    m = Monkey.objects.get(mky_id = 10078)
     data = reject_outliers(data)
     axs[1].plot(data, 'ro')
-    axs[1].set_title(str(m.mky_id) + ' mtd_etoh_bout')
+    axs[1].set_title(str(m.mky_id) + feature)
     fig.subplots_adjust(hspace=0.2)
     print np.mean(data)
-explore_feature()
+#explore_feature('mtd_etoh_bout')
+explore_feature('mtd_etoh_drink_bout')
 
 def feature_mean(feature):
     for m in define_monkeys():
         data = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date').\
                     values_list(feature, flat=True)
         print m.mky_id, m.mky_drinking_category, np.mean(np.array(data))
-feature_mean('mtd_etoh_bout')
+#feature_mean('mtd_etoh_bout')
 
 
 pylab.show()
