@@ -383,17 +383,26 @@ def plot_med_alcohol_speed():
     for id in features.index:
         plt.plot(t.ix[id].values, mycolors2[dc.ix[id]])
 #plot_med_alcohol_speed()
-
-def plot_medians_by_stage(feature):
-    ml_monkeys = define_monkeys()
-    mtds_all = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=ml_monkeys)
-    t = median_value_per_stage_for_monkeys(ml_monkeys,mtds_all,)
-    dc = features.iloc[:, 2]
-    print t
-    plt.figure(1)
-    plt.xlim(-0.2, 2.2)
-    for id in features.index:
-        plt.plot(t.ix[id].values, mycolors2[dc.ix[id]])
+features_names_perstage = [
+    'mtd_seconds_to_stageone', #Seconds it took for monkey to reach day's ethanol allotment
+    'mtd_latency_1st_drink', #Time from session start to first etOH consumption
+    'mtd_etoh_bout', #Total etOH bouts (less than 300 seconds between consumption of etOH)
+    'mtd_etoh_drink_bout', #Average number of drinks (less than 5 seconds between consumption of etOH) per etOH bout
+    'mtd_veh_bout', #Total H20 bouts (less than 300 seconds between consumption of H20)
+    'mtd_veh_drink_bout', #Average number of drinks (less than 5 seconds between consumption of H20) per H20 bout
+    'mtd_etoh_mean_drink_length', #Mean length for ethanol drinks (less than 5 seconds between consumption of etOH is a continuous drink
+    'mtd_etoh_median_idi', #Median time between drinks (always at least 5 seconds because 5 seconds between consumption defines a new drink
+    'mtd_etoh_mean_drink_vol', #Mean volume of etOH drinks
+    'mtd_etoh_mean_bout_length'
+    'mtd_etoh_media_ibi', #Median inter-bout interval (always at least 300 seconds, because 300 seconds between consumption defines a new bout)
+    'mtd_pct_etoh_in_1st_bout', #Percentage of the days total etOH consumed in the first bout
+    'mtd_drinks_1st_bout', #Number of drinks in the first bout
+    'mtd_max_bout', #Number of the bout with maximum ethanol consumption
+    'mtd_max_bout_length', #Length of maximum bout (bout with largest ethanol consumption)
+    'mtd_pct_max_bout_vol_total_etoh', #Maximum bout volume as a percentage of total ethanol consumed that day
+    #derive somethin by perhour drinks - mornin drinking?
+    #maybe get medians and register related change? so instead of 3 features we have 2: delta_1, delta_2?
+    ]
 
 def plot_med_alcohol_latency():
     t = features.iloc[:, 8:11]
@@ -417,25 +426,52 @@ def plot_med_med_bouts():
     plt.title('Bouts number by stage')
 #plot_med_med_bouts()
 
-def explore_feature(feature):
-    fig, axs = plt.subplots(2,1,facecolor='w', edgecolor='k')
+def explore_feature(feature, mids):
+    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    fig, axs = plt.subplots(len(mids),1,facecolor='w', edgecolor='k', figsize=(13,14))
+    for i, id in enumerate(mids):
+        m = Monkey.objects.get(mky_id=id)
+        data = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date').\
+                        values_list(feature, flat=True)
+        data = np.array(data)
+        data = [x for x in data if x != None]
+        #axs[i].plot(data, mycolors[m.mky_drinking_category])
+        xpred, ypred = lwr.wls(xrange(len(data)), data, False)
+        axs[i].plot(xrange(len(data)), data, mycolors[m.mky_drinking_category], xpred, ypred, 'b-')
+        axs[i].set_title(str(m.mky_id) + feature)
 
-    m = Monkey.objects.get(mky_id = 10077)
-    data = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date').\
-                    values_list(feature, flat=True)
-    data = np.array(data)
-    axs[0].plot(data, 'go')
-    axs[0].set_title(str(m.mky_id) + feature)
-    print np.mean(data)
-
-    m = Monkey.objects.get(mky_id = 10078)
-    data = reject_outliers(data)
-    axs[1].plot(data, 'ro')
-    axs[1].set_title(str(m.mky_id) + feature)
+        mu = np.mean(data)
+        median = np.median(data)
+        textstr = '$\mu=%.2f$\n$\mathrm{median}=%.2f$'%(mu, median)
+        axs[i].text(0.2, 0.95, textstr, transform=axs[i].transAxes, fontsize=14, verticalalignment='top', bbox=props)
     fig.subplots_adjust(hspace=0.2)
-    print np.mean(data)
+    path = '/home/alex/MATRR/dc_feature_example/'
+    plotname = 'dc_feature_example_' + feature + '.png'
+    fig.savefig(os.path.join(path, plotname), dpi=100)
+
 #explore_feature('mtd_etoh_bout')
-explore_feature('mtd_etoh_drink_bout')
+explore_feature('mtd_etoh_median_idi', [10048, 10051, 10049, 10061])
+for feature in features_names_perstage:
+    explore_feature(feature, [10048, 10051, 10049, 10061])
+
+# m = Monkey.objects.get(mky_id = 10081)
+# data = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date').\
+#                 values_list('mtd_veh_drink_bout', flat=True)
+# data = np.array(data)
+# data = [x for x in data if x != None]
+# xpred, ypred = lwr.wls(xrange(len(data)), data, False)
+# plt.plot(xrange(len(data)), data, mycolors[m.mky_drinking_category], xpred, ypred, 'b-')
+# print data
+#
+# print data
+# import scipy.stats.stats as st
+# print st.nanmean(data)
+# data = np.array(data, dtype=object)
+# print data
+#print np.ma.masked_values(data, None)
+
+
+
 
 def feature_mean(feature):
     for m in define_monkeys():
@@ -445,4 +481,4 @@ def feature_mean(feature):
 #feature_mean('mtd_etoh_bout')
 
 
-pylab.show()
+#pylab.show()
