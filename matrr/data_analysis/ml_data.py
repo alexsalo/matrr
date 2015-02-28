@@ -1,38 +1,5 @@
 __author__ = 'alex'
-import sys, os
-sys.path.append('/home/alex/pycharm/ve1/matrr/matrr')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-from matrr.models import *
-
-import matplotlib
-import matplotlib.pyplot as plt
-import pylab
-matplotlib.use('TkAgg')
-
-import numpy as np
-import pandas as pd
-import lwr
-
-import django
-django.setup()
-
-anomalies_mtds_ids = [10069,10070,10078,10079,10080,10081]
-dc_colors_o = {
-    'LD' : 'go',
-    'BD' : 'bo',
-    'HD' : 'yo',
-    'VHD' : 'ro'
-}
-dc_colors_ol = {
-    'LD' : 'g-o',
-    'BD' : 'b-o',
-    'HD' : 'y-o',
-    'VHD' : 'r-o'
-}
-def remove_none(nparray):
-    return [x for x in nparray if x != None]
-def remove_outliers(nparray, m=1.5):
-    return nparray[abs(nparray - np.mean(nparray)) < m * np.std(nparray)]
+from header import *
 
 features_monkey = ["mky_id", "mky_gender", "mky_age_at_intox", "mky_drinking_category"]
 
@@ -139,7 +106,6 @@ def save_plot_feature_meds_by_stage():
         plotname = 'medians_by_stage' + feature + '.png'
         fig.savefig(os.path.join(path, plotname), dpi=100)
 #save_plot_feature_meds_by_stage()
-
 
 features = get_features(False)
 print features

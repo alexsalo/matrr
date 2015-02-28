@@ -211,35 +211,28 @@ from dateutil.relativedelta import relativedelta
 # load.load_bec_data(filename, True, True)
 
 ###2-28-15
-def load_mense_data(file_name):
-    with open(file_name, 'rU') as f:
-        #1. Parse header to get monkeys
-        monkeys = []
-        header = f.readline()
-        for s in header.split(',')[2:]: #get mky_ids
-            m = Monkey.objects.get(mky_id = s)
-            monkeys.append(m)
-        #print monkeys
+# def load_mense_data(file_name):
+#     with open(file_name, 'rU') as f:
+#         #1. Parse header to get monkeys
+#         monkeys = []
+#         header = f.readline()
+#         for s in header.split(',')[2:]: #get mky_ids
+#             m = Monkey.objects.get(mky_id = s)
+#             monkeys.append(m)
+#         #print monkeys
+#
+#         read_data = f.readlines()
+#         for line_number, line in enumerate(read_data):
+#             line_split = line.split(',')
+#             dex_date = dingus.get_datetime_from_steve(line_split[0])
+#             data = line_split[2:]
+#             for i, value in enumerate(data):
+#                 if value == 'TRUE':
+#                     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkeys[i]).filter(drinking_experiment__dex_date=dex_date)
+#                     if mtds.count() > 0:
+#                         mtd = mtds[0]
+#                         mtd.mtd_mense_started = True
+#                         mtd.save()
 
-        read_data = f.readlines()
-        for line_number, line in enumerate(read_data):
-            line_split = line.split(',')
-            dex_date = dingus.get_datetime_from_steve(line_split[0])
-            data = line_split[2:]
-            for i, value in enumerate(data):
-                if value == 'TRUE':
-                    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkeys[i]).filter(drinking_experiment__dex_date=dex_date)
-                    if mtds.count() > 0:
-                        mtd = mtds[0]
-                        mtd.mtd_mense_started = True
-                        mtd.save()
-
-
-#mense_data_file_6a6b = '/home/alex/Dropbox/Baylor/Matrr/mense_data/33.coh6a6bmensestartdata20150226.csv'
-#load_mense_data(mense_data_file_6a6b)
-mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=Monkey.objects.get(mky_id=10073)).order_by('drinking_experiment__dex_date')
-import pandas as pd
-df = pd.DataFrame(list(mtds.values_list('mtd_mense_started', 'drinking_experiment__dex_date')), columns=['mense','date'])
-plt.plot(df.date, df.mense)
-
-pylab.show()
+# mense_data_file_6a6b = '/home/alex/Dropbox/Baylor/Matrr/mense_data/33.coh6a6bmensestartdata20150226.csv'
+# load_mense_data(mense_data_file_6a6b)
