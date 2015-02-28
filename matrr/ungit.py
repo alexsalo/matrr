@@ -165,7 +165,7 @@ django.setup()
 from django.db.models import Sum, Avg
 from dateutil.relativedelta import relativedelta
 
-m = Monkey.objects.get(mky_id = 10022)
+#m = Monkey.objects.get(mky_id = 10022)
 # mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey = m).order_by('drinking_experiment__dex_date')
 # start_date = mtds[1].drinking_experiment.dex_date # + relativedelta( months = +6 )
 # end_date = start_date + relativedelta( months = +6 )
@@ -202,5 +202,9 @@ m = Monkey.objects.get(mky_id = 10022)
 # a, b = m.sum_etoh_1st_6mo_gkg()
 # print a
 # print b
-from matrr.utils.database import dump
-dump.dump_standard_cohort_data(m.cohort.coh_cohort_id)
+# from matrr.utils.database import dump
+# dump.dump_standard_cohort_data(m.cohort.coh_cohort_id)
+
+filename = '/home/alex/Dropbox/Baylor/Matrr/9/34.bec_data_explanation_20150227.csv'
+from matrr.utils.database import load
+load.load_bec_data(filename, True, True)
