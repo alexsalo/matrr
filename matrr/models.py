@@ -625,7 +625,12 @@ class Monkey(models.Model):
     mky_drinking_category = models.CharField('Drinking Category', max_length=3, choices=DrinkingCategory, blank=False, null=True, help_text='The Drinking Category of the Monkey')
 
     def __unicode__(self):
-        return str(self.mky_id) + ' ' + str(self.mky_name) + ' ' + str(self.mky_species) + ' ' + str(self.mky_drinking_category)
+        name = str(self.mky_id) + ' ' + str(self.mky_name) + ' ' + str(self.mky_species) + ' '
+        if self.mky_drinking:
+            name += str(self.mky_drinking_category)
+        else:
+            name += 'control'
+        return name
 
     def sex(self):
         if self.mky_gender == 'M':
@@ -1004,6 +1009,7 @@ class MonkeyToDrinkingExperiment(models.Model):
     monkey = models.ForeignKey(Monkey, null=False, related_name='mtd_set', db_column='mky_id', editable=False)
     drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
                                             editable=False)
+    mtd_mense_started = models.BooleanField("Menstruation started", default=False)
     mtd_etoh_intake = models.FloatField('EtOH Intake', null=True, blank=True,
                                         help_text='Please enter the amount in mL of 4% EtOH consumed by the monkey.')
     mtd_veh_intake = models.FloatField('H2O Intake', null=True, blank=True,

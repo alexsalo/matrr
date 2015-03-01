@@ -6,6 +6,7 @@ from matrr.models import Monkey
 from matrr.plotting import monkey_plots as mkplot
 import matplotlib
 matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 import numpy as np
 import pylab
 from datetime import datetime as dt
@@ -165,7 +166,7 @@ django.setup()
 from django.db.models import Sum, Avg
 from dateutil.relativedelta import relativedelta
 
-m = Monkey.objects.get(mky_id = 10022)
+#m = Monkey.objects.get(mky_id = 10022)
 # mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey = m).order_by('drinking_experiment__dex_date')
 # start_date = mtds[1].drinking_experiment.dex_date # + relativedelta( months = +6 )
 # end_date = start_date + relativedelta( months = +6 )
@@ -202,5 +203,36 @@ m = Monkey.objects.get(mky_id = 10022)
 # a, b = m.sum_etoh_1st_6mo_gkg()
 # print a
 # print b
-from matrr.utils.database import dump
-dump.dump_standard_cohort_data(m.cohort.coh_cohort_id)
+# from matrr.utils.database import dump
+# dump.dump_standard_cohort_data(m.cohort.coh_cohort_id)
+
+# filename = '/home/alex/Dropbox/Baylor/Matrr/9/34.bec_data_explanation_20150227.csv'
+# from matrr.utils.database import load
+# load.load_bec_data(filename, True, True)
+
+###2-28-15
+# def load_mense_data(file_name):
+#     with open(file_name, 'rU') as f:
+#         #1. Parse header to get monkeys
+#         monkeys = []
+#         header = f.readline()
+#         for s in header.split(',')[2:]: #get mky_ids
+#             m = Monkey.objects.get(mky_id = s)
+#             monkeys.append(m)
+#         #print monkeys
+#
+#         read_data = f.readlines()
+#         for line_number, line in enumerate(read_data):
+#             line_split = line.split(',')
+#             dex_date = dingus.get_datetime_from_steve(line_split[0])
+#             data = line_split[2:]
+#             for i, value in enumerate(data):
+#                 if value == 'TRUE' or value == 'TRUE\n':
+#                     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkeys[i]).filter(drinking_experiment__dex_date=dex_date)
+#                     if mtds.count() > 0:
+#                         mtd = mtds[0]
+#                         mtd.mtd_mense_started = True
+#                         mtd.save()
+
+# mense_data_file_6a6b = '/home/alex/Dropbox/Baylor/Matrr/mense_data/33.coh6a6bmensestartdata20150226.csv'
+# load_mense_data(mense_data_file_6a6b)
