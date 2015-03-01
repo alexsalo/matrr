@@ -227,7 +227,7 @@ from dateutil.relativedelta import relativedelta
 #             dex_date = dingus.get_datetime_from_steve(line_split[0])
 #             data = line_split[2:]
 #             for i, value in enumerate(data):
-#                 if value == 'TRUE':
+#                 if value == 'TRUE' or value == 'TRUE\n':
 #                     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkeys[i]).filter(drinking_experiment__dex_date=dex_date)
 #                     if mtds.count() > 0:
 #                         mtd = mtds[0]

@@ -3,6 +3,7 @@ import sys, os
 sys.path.append('/home/alex/pycharm/ve1/matrr/matrr')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from matrr.models import *
+from matrr.utils.database import dingus, create
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -22,13 +23,15 @@ dc_colors_o = {
     'LD' : 'go',
     'BD' : 'bo',
     'HD' : 'yo',
-    'VHD' : 'ro'
+    'VHD' : 'ro',
+    None : 'ko'
 }
 dc_colors_ol = {
     'LD' : 'g-o',
     'BD' : 'b-o',
     'HD' : 'y-o',
-    'VHD' : 'r-o'
+    'VHD' : 'r-o',
+    None : 'k-o'
 }
 def remove_none(nparray):
     return [x for x in nparray if x != None]
