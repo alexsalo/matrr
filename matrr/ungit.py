@@ -281,10 +281,15 @@ from dateutil.relativedelta import relativedelta
 # print user, g
 # g.user_set.remove(user)
 
-c = Cohort.objects.get(coh_cohort_name="INIA Rhesus 4")
-print CohortEvent.objects.filter(cohort=c)
-df = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c).values_list('cev_date', 'event')), columns = ['cev_date', 'event'])
-print df
-print CohortEvent.objects.filter(cohort=c).filter(event=37)[0].cev_date
+# c = Cohort.objects.get(coh_cohort_name="INIA Rhesus 4")
+# print CohortEvent.objects.filter(cohort=c)
+# df = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c).values_list('cev_date', 'event')), columns = ['cev_date', 'event'])
+# print df
+# print CohortEvent.objects.filter(cohort=c).filter(event=37)[0].cev_date
+
+m = Monkey.objects.get(mky_id = 10005)
+print m.avg_BEC_pct_by_period()
+
+
 pylab.show()
 

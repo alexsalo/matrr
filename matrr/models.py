@@ -710,62 +710,84 @@ class Monkey(models.Model):
         except:
             return 0, 0, 0, 0, 0, 0
 
-    def sum_veh_1st_6mo_ml(self):
-        try:
-            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self).order_by('drinking_experiment__dex_date')
-            start_date = mtds[1].drinking_experiment.dex_date
-            end_date = start_date + relativedelta( months = +6 )
-            mtds = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
-            return mtds.aggregate(Sum('mtd_veh_intake')).values()[0]
-        except:
-            return 0
-
-    def sum_veh_2nd_6mo_ml(self):
-        try:
-            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self).order_by('drinking_experiment__dex_date')
-            start_date = mtds[1].drinking_experiment.dex_date + relativedelta( months = +6 )
-            end_date = start_date + relativedelta( months = +6 )
-            mtds = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
-            return mtds.aggregate(Sum('mtd_veh_intake')).values()[0]
-        except:
-            return 0
-
-    def sum_veh_total_ml(self):
+    def sum_veh_ml_by_period(self):
         try:
             mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
-            return mtds.aggregate(Sum('mtd_veh_intake')).values()[0]
-        except:
-            return 0
 
-    def avg_BEC_1st_6mo_ml(self):
+            #first
+            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
+            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=38)[0].cev_date
+            mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
+            first = round(mtds_period.aggregate(Sum('mtd_veh_intake')).values()[0], 2)
+            first_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
+
+            #second
+            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=41)[0].cev_date
+            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
+            mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
+            second = round(mtds_period.aggregate(Sum('mtd_veh_intake')).values()[0], 2)
+            second_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
+
+            #total
+            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
+            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
+            mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
+            total = round(mtds_period.aggregate(Sum('mtd_veh_intake')).values()[0], 2)
+            total_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
+
+            return first, second, total
+        except:
+            return 0, 0, 0
+
+
+    def avg_BEC_pct_by_period(self):
+        first, first_days, second, second_days, total, total_days = 0, 0, 0, 0, 0, 0
         try:
             mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = self).order_by('bec_collect_date')
-            start_date = mbecs[1].bec_collect_date
-            end_date = start_date + relativedelta( months = +6 )
-            mbecs = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
-            days = mbecs.values('bec_collect_date').distinct().count()
-            return round(mbecs.aggregate(Avg('bec_mg_pct')).values()[0], 2), days
         except:
-            return 0, 0
-
-    def avg_BEC_2nd_6mo_ml(self):
+            pass
         try:
-            mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = self).order_by('bec_collect_date')
-            start_date = mbecs[1].bec_collect_date + relativedelta( months = +6 )
-            end_date = start_date + relativedelta( months = +6 )
-            mbecs = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
-            days = mbecs.values('bec_collect_date').distinct().count()
-            return round(mbecs.aggregate(Avg('bec_mg_pct')).values()[0], 2), days
+            #first
+            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
+            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=38)[0].cev_date
+            mbecs_period = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
+            first = round(mbecs_period.aggregate(Avg('bec_mg_pct')).values()[0], 2)
+            first_days = mbecs_period.values('bec_collect_date').distinct().count()
         except:
-            return 0, 0
+            pass
 
-    def avg_BEC_total_ml(self):
         try:
-            mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = self)
-            days = mbecs.values('bec_collect_date').distinct().count()
-            return round(mbecs.aggregate(Avg('bec_mg_pct')).values()[0], 2), days
+            #second
+            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=41)[0].cev_date
+            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
+            mbecs_period = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
+            second = round(mbecs_period.aggregate(Avg('bec_mg_pct')).values()[0], 2)
+            second_days = mbecs_period.values('bec_collect_date').distinct().count()
         except:
-            return 0, 0
+            pass
+
+        try:
+            #total
+            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
+            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
+            mbecs_period = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
+            total = round(mbecs_period.aggregate(Avg('bec_mg_pct')).values()[0], 2)
+            total_days = mbecs_period.values('bec_collect_date').distinct().count()
+        except:
+            pass
+
+        return first, first_days, second, second_days, total, total_days
+
+    # def avg_BEC_2nd_6mo_ml(self):
+    #     try:
+    #         mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = self).order_by('bec_collect_date')
+    #         start_date = mbecs[1].bec_collect_date + relativedelta( months = +6 )
+    #         end_date = start_date + relativedelta( months = +6 )
+    #         mbecs = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
+    #         days = mbecs.values('bec_collect_date').distinct().count()
+    #         return round(mbecs.aggregate(Avg('bec_mg_pct')).values()[0], 2), days
+    #     except:
+    #         return 0, 0
 
     class Meta:
         db_table = 'mky_monkeys'

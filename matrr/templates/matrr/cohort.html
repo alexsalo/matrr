@@ -252,17 +252,12 @@
                         {% for value in  monkey.sum_etoh_gkg_by_period%}
                             <td>{{value }}</td>
                         {% endfor %}
-                        <td>{{ monkey.sum_veh_1st_6mo_ml}}</td>
-                        <td>{{ monkey.sum_veh_2nd_6mo_ml}}</td>
-                        <td>{{ monkey.sum_veh_total_ml}}</td>
 
-                        {% for value in  monkey.avg_BEC_1st_6mo_ml%}
+                        {% for value in  monkey.sum_veh_ml_by_period%}
                             <td>{{value }}</td>
                         {% endfor %}
-                        {% for value in  monkey.avg_BEC_2nd_6mo_ml%}
-                            <td>{{value }}</td>
-                        {% endfor %}
-                        {% for value in  monkey.avg_BEC_total_ml%}
+
+                        {% for value in  monkey.avg_BEC_pct_by_period%}
                             <td>{{value }}</td>
                         {% endfor %}
                     </tr>

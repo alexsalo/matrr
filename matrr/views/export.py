@@ -32,30 +32,10 @@ def export_cohort_data(request, **kwargs):
     ])
 
     for monkey in monkeys:
-        etoh1_a, etoh1_b = monkey.sum_etoh_1st_6mo_gkg() #value, days
-        etoh2_a, etoh2_b = monkey.sum_etoh_2nd_6mo_gkg()
-        etoht_a, etoht_b = monkey.sum_etoh_total_gkg()
-
-        bec1_a, bec1_b = monkey.avg_BEC_1st_6mo_ml()
-        bec2_a, bec2_b = monkey.avg_BEC_2nd_6mo_ml()
-        bect_a, bect_b = monkey.avg_BEC_total_ml()
-        writer.writerow([
-            etoh1_a,
-            etoh1_b,
-            etoh2_a,
-            etoh2_b,
-            etoht_a,
-            etoht_b,
-            monkey.sum_veh_1st_6mo_ml(),
-            monkey.sum_veh_2nd_6mo_ml(),
-            monkey.sum_veh_total_ml(),
-            bec1_a,
-            bec1_b,
-            bec2_a,
-            bec2_b,
-            bect_a,
-            bect_b
-        ])
+        row = list(monkey.sum_etoh_gkg_by_period())
+        row += list(monkey.sum_veh_ml_by_period())
+        row += list(monkey.avg_BEC_pct_by_period())
+        writer.writerow(row)
     # writer.writerow(['First row', 'Foo', 'Bar', 'Baz'])
     # writer.writerow(['Second row', 'A', 'B', 'C', '"Testing"', "Here's a quote"])
 
