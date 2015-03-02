@@ -249,13 +249,7 @@
                             {{ monkey.mky_id }}
                             <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
                         </a>
-                        {% for value in  monkey.sum_etoh_1st_6mo_gkg%}
-                            <td>{{value }}</td>
-                        {% endfor %}
-                        {% for value in  monkey.sum_etoh_2nd_6mo_gkg%}
-                            <td>{{value }}</td>
-                        {% endfor %}
-                        {% for value in  monkey.sum_etoh_total_gkg%}
+                        {% for value in  monkey.sum_etoh_gkg_by_period%}
                             <td>{{value }}</td>
                         {% endfor %}
                         <td>{{ monkey.sum_veh_1st_6mo_ml}}</td>

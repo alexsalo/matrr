@@ -274,7 +274,17 @@ from dateutil.relativedelta import relativedelta
 # plt.plot(df_prog.date, df_prog.progesterone, 'go-')
 # [plt.axvline(date, linewidth=1, color='r', linestyle='solid') for date in list(df.date[df.mense])]
 
+###3-2-15
+# from django.contrib.auth.models import User, Permission, Group
+# g = Group.objects.get(name='Committee')
+# user = User.objects.get(username='garyjmurray')
+# print user, g
+# g.user_set.remove(user)
 
-
+c = Cohort.objects.get(coh_cohort_name="INIA Rhesus 4")
+print CohortEvent.objects.filter(cohort=c)
+df = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c).values_list('cev_date', 'event')), columns = ['cev_date', 'event'])
+print df
+print CohortEvent.objects.filter(cohort=c).filter(event=37)[0].cev_date
 pylab.show()
 
