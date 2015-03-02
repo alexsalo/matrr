@@ -37,3 +37,5 @@ def remove_none(nparray):
     return [x for x in nparray if x != None]
 def remove_outliers(nparray, m=1.5):
     return nparray[abs(nparray - np.mean(nparray)) < m * np.std(nparray)]
+def plotMense(df, ax=plt):
+    [ax.axvspan(date, date + timedelta(days=4), color='r', alpha=0.3) for date in list(df.date[df.mense])]

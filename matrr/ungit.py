@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pylab
 from datetime import datetime as dt
 import string
@@ -236,3 +237,44 @@ from dateutil.relativedelta import relativedelta
 
 # mense_data_file_6a6b = '/home/alex/Dropbox/Baylor/Matrr/mense_data/33.coh6a6bmensestartdata20150226.csv'
 # load_mense_data(mense_data_file_6a6b)
+
+###3-1-15
+# def load_progesterone_data(file_name):
+#     with open(file_name, 'rU') as f:
+#         #1. Parse header to get monkeys
+#         monkeys = []
+#         header = f.readline()
+#         for s in header.split(',')[2:]: #get mky_ids
+#             m = Monkey.objects.get(mky_id = s)
+#             monkeys.append(m)
+#         #print monkeys
+#
+#         read_data = f.readlines()
+#         for line_number, line in enumerate(read_data):
+#             line_split = line.split(',')
+#             dex_date = dingus.get_datetime_from_steve(line_split[0])
+#             data = line_split[2:]
+#             for i, value in enumerate(data):
+#                 try:
+#                     float_value = float(value)
+#                     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkeys[i]).filter(drinking_experiment__dex_date=dex_date)
+#                     if mtds.count() > 0:
+#                         mtd = mtds[0]
+#                         mtd.mtd_progesterone = float_value
+#                         mtd.save()
+#                 except ValueError:
+#                     pass
+#
+# progesterone_data_file_6a6b = '/home/alex/Dropbox/Baylor/Matrr/progesterone/32.coh6a6bprogesteronedata20150226.csv'
+# load_progesterone_data(progesterone_data_file_6a6b)
+
+# df = pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.filter(monkey=Monkey.objects.get(mky_id=10077)).order_by('drinking_experiment__dex_date').values_list('mtd_mense_started', 'mtd_progesterone', 'drinking_experiment__dex_date')), columns=['mense', 'progesterone', 'date'])
+# df_prog = df[np.isfinite(df['progesterone'])] #to remove nans
+# print df_prog
+# plt.plot(df_prog.date, df_prog.progesterone, 'go-')
+# [plt.axvline(date, linewidth=1, color='r', linestyle='solid') for date in list(df.date[df.mense])]
+
+
+
+pylab.show()
+

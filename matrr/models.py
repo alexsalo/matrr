@@ -1010,6 +1010,8 @@ class MonkeyToDrinkingExperiment(models.Model):
     drinking_experiment = models.ForeignKey(DrinkingExperiment, null=False, related_name='+', db_column='dex_id',
                                             editable=False)
     mtd_mense_started = models.BooleanField("Menstruation started", default=False)
+    mtd_progesterone = models.FloatField('Progesterone level', null=True, blank=True,
+                                        help_text='Enter help text please')
     mtd_etoh_intake = models.FloatField('EtOH Intake', null=True, blank=True,
                                         help_text='Please enter the amount in mL of 4% EtOH consumed by the monkey.')
     mtd_veh_intake = models.FloatField('H2O Intake', null=True, blank=True,

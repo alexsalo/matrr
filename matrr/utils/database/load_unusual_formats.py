@@ -9,6 +9,34 @@ from django.db import transaction
 from matrr.models import *
 from matrr.utils.database import dingus, create
 
+def load_progesterone_data(file_name):
+    with open(file_name, 'rU') as f:
+        #1. Parse header to get monkeys
+        monkeys = []
+        header = f.readline()
+        for s in header.split(',')[2:]: #get mky_ids
+            m = Monkey.objects.get(mky_id = s)
+            monkeys.append(m)
+        #print monkeys
+
+        read_data = f.readlines()
+        for line_number, line in enumerate(read_data):
+            line_split = line.split(',')
+            dex_date = dingus.get_datetime_from_steve(line_split[0])
+            data = line_split[2:]
+            for i, value in enumerate(data):
+                try:
+                    float_value = float(value)
+                    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkeys[i]).filter(drinking_experiment__dex_date=dex_date)
+                    if mtds.count() > 0:
+                        mtd = mtds[0]
+                        mtd.mtd_progesterone = float_value
+                        mtd.save()
+                except ValueError:
+                    pass
+#progesterone_data_file_6a6b = '/home/alex/Dropbox/Baylor/Matrr/progesterone/32.coh6a6bprogesteronedata20150226.csv'
+#load_progesterone_data(progesterone_data_file_6a6b)
+
 def load_mense_data(file_name):
     with open(file_name, 'rU') as f:
         #1. Parse header to get monkeys
