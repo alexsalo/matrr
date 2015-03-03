@@ -277,9 +277,11 @@ from dateutil.relativedelta import relativedelta
 ###3-2-15
 # from django.contrib.auth.models import User, Permission, Group
 # g = Group.objects.get(name='Committee')
-# user = User.objects.get(username='garyjmurray')
+# user = User.objects.get(username='alex')
 # print user, g
-# g.user_set.remove(user)
+# #g.user_set.remove(user)
+# user.groups.clear()
+# user.save()
 
 # c = Cohort.objects.get(coh_cohort_name="INIA Rhesus 4")
 # print CohortEvent.objects.filter(cohort=c)
@@ -287,8 +289,8 @@ from dateutil.relativedelta import relativedelta
 # print df
 # print CohortEvent.objects.filter(cohort=c).filter(event=37)[0].cev_date
 
-m = Monkey.objects.get(mky_id = 10005)
-print m.avg_BEC_pct_by_period()
+# m = Monkey.objects.get(mky_id = 10005)
+# print m.avg_BEC_pct_by_period()
 
 
 pylab.show()

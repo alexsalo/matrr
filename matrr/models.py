@@ -699,14 +699,18 @@ class Monkey(models.Model):
             second = round(mtds_period.aggregate(Sum('mtd_etoh_g_kg')).values()[0], 2)
             second_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
 
-            #total
-            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
-            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
-            mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
-            total = round(mtds_period.aggregate(Sum('mtd_etoh_g_kg')).values()[0], 2)
-            total_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
+            #total --useless tu compute twice
+            # start_date1 = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
+            # end_date1 = CohortEvent.objects.filter(cohort=self.cohort).filter(event=38)[0].cev_date
+            # start_date2 = CohortEvent.objects.filter(cohort=self.cohort).filter(event=41)[0].cev_date
+            # end_date2 = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
+            # mtds_period1 = mtds.filter(drinking_experiment__dex_date__gte=start_date1).filter(drinking_experiment__dex_date__lte=end_date1)
+            # mtds_period2 = mtds.filter(drinking_experiment__dex_date__gte=start_date2).filter(drinking_experiment__dex_date__lte=end_date2)
+            # total1 = round(mtds_period1.aggregate(Sum('mtd_etoh_g_kg')).values()[0], 2)
+            # total2 = round(mtds_period2.aggregate(Sum('mtd_etoh_g_kg')).values()[0], 2)
+            # total_days = mtds_period1.values('drinking_experiment__dex_date').distinct().count() + mtds_period2.values('drinking_experiment__dex_date').distinct().count()
 
-            return first, first_days, second, second_days, total, total_days
+            return first, first_days, second, second_days, first + second, first_days + second_days #total1+total2, total_days
         except:
             return 0, 0, 0, 0, 0, 0
 
@@ -728,14 +732,7 @@ class Monkey(models.Model):
             second = round(mtds_period.aggregate(Sum('mtd_veh_intake')).values()[0], 2)
             second_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
 
-            #total
-            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
-            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
-            mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
-            total = round(mtds_period.aggregate(Sum('mtd_veh_intake')).values()[0], 2)
-            total_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
-
-            return first, second, total
+            return first, second, first + second
         except:
             return 0, 0, 0
 
@@ -766,17 +763,7 @@ class Monkey(models.Model):
         except:
             pass
 
-        try:
-            #total
-            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
-            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
-            mbecs_period = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
-            total = round(mbecs_period.aggregate(Avg('bec_mg_pct')).values()[0], 2)
-            total_days = mbecs_period.values('bec_collect_date').distinct().count()
-        except:
-            pass
-
-        return first, first_days, second, second_days, total, total_days
+        return first, first_days, second, second_days, first + second, first_days + second_days
 
     # def avg_BEC_2nd_6mo_ml(self):
     #     try:
