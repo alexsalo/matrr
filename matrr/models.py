@@ -681,7 +681,8 @@ class Monkey(models.Model):
     def DrinkingDaysTotal(self):
         return MonkeyToDrinkingExperiment.objects.OA().filter(monkey=self).count()
 
-    def sum_etoh_gkg_by_period(self):
+    def feature_by_period(self, feature_name, aggregation_method, days=False):
+        first, first_days, second, second_days = 0,0,0,0
         try:
             mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
 
@@ -689,52 +690,33 @@ class Monkey(models.Model):
             start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
             end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=38)[0].cev_date
             mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
-            first = round(mtds_period.aggregate(Sum('mtd_etoh_g_kg')).values()[0], 2)
+            first = round(mtds_period.aggregate(aggregation_method(feature_name)).values()[0], 2)
             first_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
 
             #second
             start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=41)[0].cev_date
             end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
             mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
-            second = round(mtds_period.aggregate(Sum('mtd_etoh_g_kg')).values()[0], 2)
+            second = round(mtds_period.aggregate(aggregation_method(feature_name)).values()[0], 2)
             second_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
-
-            #total --useless tu compute twice
-            # start_date1 = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
-            # end_date1 = CohortEvent.objects.filter(cohort=self.cohort).filter(event=38)[0].cev_date
-            # start_date2 = CohortEvent.objects.filter(cohort=self.cohort).filter(event=41)[0].cev_date
-            # end_date2 = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
-            # mtds_period1 = mtds.filter(drinking_experiment__dex_date__gte=start_date1).filter(drinking_experiment__dex_date__lte=end_date1)
-            # mtds_period2 = mtds.filter(drinking_experiment__dex_date__gte=start_date2).filter(drinking_experiment__dex_date__lte=end_date2)
-            # total1 = round(mtds_period1.aggregate(Sum('mtd_etoh_g_kg')).values()[0], 2)
-            # total2 = round(mtds_period2.aggregate(Sum('mtd_etoh_g_kg')).values()[0], 2)
-            # total_days = mtds_period1.values('drinking_experiment__dex_date').distinct().count() + mtds_period2.values('drinking_experiment__dex_date').distinct().count()
-
-            return first, first_days, second, second_days, first + second, first_days + second_days #total1+total2, total_days
         except:
-            return 0, 0, 0, 0, 0, 0
+            pass
+        if days:
+            return first, second, first + second, first_days, second_days, first_days + second_days
+        else:
+            return first, second, first + second
+
+    def sum_etoh_gkg_by_period(self):
+        return self.feature_by_period('mtd_etoh_g_kg', Sum, days=False)
 
     def sum_veh_ml_by_period(self):
-        try:
-            mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)
+        return self.feature_by_period('mtd_veh_intake', Sum, days=False)
 
-            #first
-            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=37)[0].cev_date
-            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=38)[0].cev_date
-            mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
-            first = round(mtds_period.aggregate(Sum('mtd_veh_intake')).values()[0], 2)
-            first_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
+    def avg_etoh_gkg_by_period(self):
+        return self.feature_by_period('mtd_etoh_g_kg', Avg, days=False)
 
-            #second
-            start_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=41)[0].cev_date
-            end_date = CohortEvent.objects.filter(cohort=self.cohort).filter(event=42)[0].cev_date
-            mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
-            second = round(mtds_period.aggregate(Sum('mtd_veh_intake')).values()[0], 2)
-            second_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
-
-            return first, second, first + second
-        except:
-            return 0, 0, 0
+    def avg_veh_ml_by_period(self):
+        return self.feature_by_period('mtd_veh_intake', Avg, days=True)
 
 
     def avg_BEC_pct_by_period(self):
@@ -764,17 +746,6 @@ class Monkey(models.Model):
             pass
 
         return first, first_days, second, second_days, first + second, first_days + second_days
-
-    # def avg_BEC_2nd_6mo_ml(self):
-    #     try:
-    #         mbecs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey = self).order_by('bec_collect_date')
-    #         start_date = mbecs[1].bec_collect_date + relativedelta( months = +6 )
-    #         end_date = start_date + relativedelta( months = +6 )
-    #         mbecs = mbecs.filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date)
-    #         days = mbecs.values('bec_collect_date').distinct().count()
-    #         return round(mbecs.aggregate(Avg('bec_mg_pct')).values()[0], 2), days
-    #     except:
-    #         return 0, 0
 
     class Meta:
         db_table = 'mky_monkeys'

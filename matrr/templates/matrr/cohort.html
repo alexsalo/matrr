@@ -209,26 +209,33 @@
 
     <div>
         Please read the following about the table below: <br>
-        MID = Monkey ID. Ds = Number of days available for the statistic to the left (Note that H20 intake has the same
-        number of days as EtOH intake and by that reason its days columns omitted)
+        MID = Monkey ID. <br>
+        Days = Number of days available for the statistic to the left (stays same for: {Avg, Sum} x {1st, 2nd, total} x {EtOH, H2O})
     </div>
     <div>
 		<table class='table-drink-cats menu-links common_center'>
             <thead>
                 <tr>
-                    {% if perms.matrr.monkey_view_confidential %}
-                        <th>Real Name</th>{% endif %}
-                    <th class='dont-wrap-header'><a href="?order_by=pk">MID <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
-                    <th>1st 6mo etoh intake, gkg</th>
-                    <th>Ds</th>
-                    <th>2nd 6mo etoh intake, gkg</th>
-                    <th>Ds</th>
-                    <th>total etoh intake, gkg</th>
-                    <th>Ds</th>
+                    <th> MID </th>
+                    <th>1st 6mo sum etoh, gkg</th>
+                    <th>2nd 6mo sum etoh, gkg</th>
+                    <th>total sum etoh, gkg</th>
 
-                    <th>1st 6mo H2O intake, ml</th>
-                    <th>2dn 6mo H2O intake, ml</th>
-                    <th>total H2O intake, ml</th>
+                    <th>1st 6mo avg etoh, gkg</th>
+                    <th>2nd 6mo avg etoh, gkg</th>
+                    <th>total avg etoh, gkg</th>
+
+                    <th>1st 6mo sum H2O, ml</th>
+                    <th>2dn 6mo sum H2O, ml</th>
+                    <th>total sum H2O, ml</th>
+
+                    <th>1st 6mo avg H2O, ml</th>
+                    <th>2dn 6mo avg H2O, ml</th>
+                    <th>total avg H2O, ml</th>
+
+                    <th>1st 6mo, days</th>
+                    <th>2dn 6mo, days</th>
+                    <th>total, days</th>
 
                     <th>1st 6mo avg BEC, ml</th>
                     <th>Ds</th>
@@ -242,20 +249,24 @@
             <tbody class='drink-cat-rows'>
                 {% for monkey in monkeys %}
                     <tr>
-                        {% if perms.matrr.monkey_view_confidential %}
-                            <td>{{ monkey.mky_name }}</td>
-                        {% endif %}
-                        <td><a href="{% url 'monkey-detail' monkey.cohort.coh_cohort_id monkey.mky_id %}" target="_blank">
-                            {{ monkey.mky_id }}
-                            <img src="{{ STATIC_URL }}/images/arrow_popup.png" width='8' height='8' style="vertical-align: text-top">
-                        </a>
+                        <td>{{ monkey.mky_id }}</td>
+
                         {% for value in  monkey.sum_etoh_gkg_by_period%}
+                            <td>{{value }}</td>
+                        {% endfor %}
+
+                        {% for value in  monkey.avg_etoh_gkg_by_period%}
                             <td>{{value }}</td>
                         {% endfor %}
 
                         {% for value in  monkey.sum_veh_ml_by_period%}
                             <td>{{value }}</td>
                         {% endfor %}
+
+                        {% for value in  monkey.avg_veh_ml_by_period%}
+                            <td>{{value }}</td>
+                        {% endfor %}
+
 
                         {% for value in  monkey.avg_BEC_pct_by_period%}
                             <td>{{value }}</td>

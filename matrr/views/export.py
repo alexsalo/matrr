@@ -14,27 +14,44 @@ def export_cohort_data(request, **kwargs):
     #coh_cohort_id = 3
     writer = csv.writer(response)
     writer.writerow([
-        'sum_etoh_1st_6mo_gkg',
-        'days',
-        'sum_etoh_2nd_6mo_gkg',
-        'days',
-        'sum_etoh_total_gkg',
-        'days',
-        'sum_veh_1st_6mo_ml',
-        'sum_veh_2nd_6mo_ml',
-        'sum_veh_total_ml',
-        'avg_BEC_1st_6mo_ml',
-        'days',
-        'avg_BEC_2nd_6mo_ml',
-        'days',
-        'avg_BEC_total_ml',
-        'days'
+        'MID',
+        '1st_6mo_sum_etoh_gkg',
+        '2nd_6mo_sum_etoh_gkg',
+        'total_sum_etoh_gkg',
+
+        '1st_6mo_avg_etoh_gkg',
+        '2nd_6mo_avg_etoh_gkg',
+        'total_avg_etoh_gkg',
+
+        '1st_6mo_sum_H2O_ml',
+        '2dn_6mo_sum_H2O_ml',
+        'total_sum_H2O_ml',
+
+        '1st_6mo_avg_H2O_ml',
+        '2dn_6mo_avg_H2O_ml',
+        'total_avg_H2O_ml',
+
+        '1st_6mo_days',
+        '2dn_6mo_days',
+        'total_days',
+
+        '1st_6mo_avg_BEC_ml',
+        'Ds',
+        '2nd_6mo_avg_BEC_ml',
+        'Ds',
+        'total_avg_BEC_ml',
+        'Ds'
     ])
 
     for monkey in monkeys:
-        row = list(monkey.sum_etoh_gkg_by_period())
+        row = [monkey.mky_id]
+        row += list(monkey.sum_etoh_gkg_by_period())
+        row += list(monkey.avg_etoh_gkg_by_period())
         row += list(monkey.sum_veh_ml_by_period())
+        row += list(monkey.avg_veh_ml_by_period())
+
         row += list(monkey.avg_BEC_pct_by_period())
+
         writer.writerow(row)
     # writer.writerow(['First row', 'Foo', 'Bar', 'Baz'])
     # writer.writerow(['Second row', 'A', 'B', 'C', '"Testing"', "Here's a quote"])
