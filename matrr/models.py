@@ -6,6 +6,7 @@ import ast
 from PIL import Image
 import traceback
 import numpy
+import pandas as pd
 import sys
 import settings
 from datetime import datetime, date, timedelta
@@ -653,6 +654,17 @@ class Monkey(models.Model):
             if choice[0] in self.cohort.coh_cohort_name:
                 self.mky_species = choice[0]
                 self.save()
+
+    def etoh_during_ind(self, mins):
+        duration = mins * 60
+        mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=self).exclude_exceptions().order_by('drinking_experiment__dex_date')
+        volumes = []
+        for mtd in mtds:
+            bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
+            drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
+            vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
+            volumes.append(vols.sum())
+        return pd.DataFrame(list(volumes))
 
     def populate_age_at_intox(self):
         becs = MonkeyBEC.objects.filter(monkey=self)
@@ -1332,6 +1344,8 @@ class ExperimentBout(models.Model):
             raise ValidationError(
                 'Bout length does not correspond the Start and End time. An isolated drink is given the length of 1 second, despite start time and end time being equal.')
 
+    def __unicode__(self):
+        return str(self.ebt_start_time) + '->' + str(self.ebt_end_time)
 
     class Meta:
         db_table = 'ebt_experiment_bouts'
@@ -1371,6 +1385,8 @@ class ExperimentDrink(models.Model):
         if self.edr_idi and self.edr_idi < 0:
             raise ValidationError("edr_idi is less than 0.  This does not make sense.")
 
+    def __unicode__(self):
+        return str(self.edr_start_time) + '->' + str(self.edr_end_time) + ': ' + str(self.edr_volume) + ' ml'
 
     class Meta:
         db_table = 'edr_experiment_drinks'

@@ -450,9 +450,9 @@ def explore_feature(feature, mids):
     fig.savefig(os.path.join(path, plotname), dpi=100)
 
 #explore_feature('mtd_etoh_bout')
-explore_feature('mtd_etoh_median_idi', [10048, 10051, 10049, 10061])
-for feature in features_names_perstage:
-    explore_feature(feature, [10048, 10051, 10049, 10061])
+# explore_feature('mtd_etoh_median_idi', [10048, 10051, 10049, 10061])
+# for feature in features_names_perstage:
+#     explore_feature(feature, [10048, 10051, 10049, 10061])
 
 # m = Monkey.objects.get(mky_id = 10081)
 # data = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date').\
@@ -469,7 +469,6 @@ for feature in features_names_perstage:
 # data = np.array(data, dtype=object)
 # print data
 #print np.ma.masked_values(data, None)
-
 
 
 

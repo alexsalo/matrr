@@ -292,6 +292,40 @@ from dateutil.relativedelta import relativedelta
 # m = Monkey.objects.get(mky_id = 10005)
 # print m.avg_BEC_pct_by_period()
 
+###3-4-15
+# from django.contrib.contenttypes.models import ContentType
+#
+# for ct in ContentType.objects.all():
+#     m = ct.model_class()
+#     print "%s.%s\t%d" % (m.__module__, m.__name__, m._default_manager.count())
+#
+
+###3-5-15
+# m = Monkey.objects.get(mky_id = 10074)
+# duration = 10 * 60 #15 mins
+#
+# mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=m).exclude_exceptions().order_by('drinking_experiment__dex_date')
+# volumes = []
+# for mtd in mtds:
+#     bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
+#     drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
+#     volumes.append(drinks_in_bout.aggregate(Sum('edr_volume')))
+# vols_df = pd.DataFrame(list(volumes))
+# print vols_df
+# plt.plot(vols_df)
+
+# volumes = bouts_in_fraction.order_by('ebt_start_time').values_list('ebt_volume', flat=True)
+# print volumes
+
+
+
+# df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_pct_max_bout_vol_total_etoh_hour_0', 'mtd_pct_max_bout_vol_total_etoh_hour_1')), columns=['date', 'hr1', 'hr2'])
+# plt.plot(df.date, df.hr1, 'b-o', df.date, df.hr2, 'r-o')
+
+
+###3-16-15
+m = Monkey.objects.get(mky_id = 10074)
+print m.etoh_during_ind(5)
 
 pylab.show()
 
