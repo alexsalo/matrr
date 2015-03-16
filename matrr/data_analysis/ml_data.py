@@ -1,7 +1,7 @@
 __author__ = 'alex'
 from header import *
 
-features_monkey = ["mky_id", "mky_gender", "mky_age_at_intox", "mky_drinking_category"]
+features_monkey = ["mky_id", 'cohort__coh_cohort_id', "mky_gender", "mky_age_at_intox", "mky_drinking_category"]
 
 features_names_perstage = [
     'mtd_seconds_to_stageone', #Seconds it took for monkey to reach day's ethanol allotment
@@ -23,6 +23,10 @@ features_names_perstage = [
     #derive somethin by perhour drinks - mornin drinking?
     #maybe get medians and register related change? so instead of 3 features we have 2: delta_1, delta_2?
     ]
+
+chosen_features = ['mtd_latency_1st_drink_d2','mtd_etoh_drink_bout_d2', 'mtd_veh_bout_d','mtd_veh_drink_bout_d','mtd_etoh_mean_drink_length_d2',
+                   'mtd_etoh_median_idi_d', 'mtd_etoh_mean_drink_vol_d2','mtd_etoh_mean_bout_length_d','mtd_drinks_1st_bout_d2',
+                   'mtd_max_bout_length_d1','mtd_pct_max_bout_vol_total_etoh_d1' ]
 
 ##Define Cohorts and Monkeys##
 def get_monkeys():
@@ -69,7 +73,7 @@ def prepare_features(ml_monkeys):
     data = ml_monkeys.values_list(*features_monkey)
     df = pd.DataFrame(list(data), columns=features_monkey)
     df = df.set_index("mky_id")
-    df.mky_gender = (df.mky_gender == 'M').astype(int)
+    #df.mky_gender = (df.mky_gender == 'M').astype(int)
     df = df.sort_index()
 
     mtds_all = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=ml_monkeys)
@@ -107,11 +111,53 @@ def save_plot_feature_meds_by_stage():
         fig.savefig(os.path.join(path, plotname), dpi=100)
 #save_plot_feature_meds_by_stage()
 
-features = get_features(False)
-print features
+def get_feature_deltas(df):
+    new_df = df[features_monkey[1:]]
+    for feature in features_names_perstage:
+        if feature != 'mtd_etoh_media_ibi':
+            new_df[feature+"_d1"] = df[feature+"_2"] / df[feature+"_1"]
+            new_df[feature+"_d2"] = df[feature+"_3"] / df[feature+"_2"]
+            new_df[feature+"_d"] = df[feature+"_3"] / df[feature+"_1"]
+    float_columns = [column for column in new_df.columns if new_df[column].dtype == 'float64']
+    new_df[float_columns] = normalize(new_df[float_columns])
+    return new_df
+
+def check_anovas():
+    for feature in features_names_perstage:
+        if feature != 'mtd_etoh_media_ibi':
+            print '------------------'
+            print feature
+            lm = ols(feature + '_d1 ~ mky_drinking_category * mky_gender', data=feat_deltas).fit()
+            print sm.stats.anova_lm(lm, typ=2)
+            lm = ols(feature + '_d2 ~ mky_drinking_category * mky_gender', data=feat_deltas).fit()
+            print sm.stats.anova_lm(lm, typ=2)
+            lm = ols(feature + '_d ~ mky_drinking_category * mky_gender', data=feat_deltas).fit()
+            print sm.stats.anova_lm(lm, typ=2)
+
+# features = get_features(False)
+# # print features
+# feat_deltas = get_feature_deltas(features)
+# # # feat_deltas.to_csv('features_deltas_r.csv')
+# feat_deltas.save('features_deltas.plk')
+feat_deltas = pd.read_pickle('features_deltas.plk')
+# colors = [dc_colors[dc] for dc in feat_deltas.mky_drinking_category]
+# plt.scatter(feat_deltas.mky_age_at_intox, feat_deltas.mtd_etoh_mean_drink_vol_d, c=colors)
+
+#check_anovas()
+# print feat_deltas.columns
+#print feat_deltas[['mky_drinking_category','cohort__coh_cohort_name','mtd_seconds_to_stageone_d2','mtd_veh_bout_d','mtd_etoh_mean_drink_length_d2','mtd_etoh_mean_drink_vol_d2']].sort(['mtd_seconds_to_stageone_d2'])
+
+# feat_deltas.cohort__coh_cohort_id = feat_deltas.cohort__coh_cohort_id.astype(str)
+# lm = ols('mtd_seconds_to_stageone_d2 ~ mky_age_at_intox * C(cohort__coh_cohort_id)', data=feat_deltas).fit()
+# print sm.stats.anova_lm(lm, typ=2)
+
+# lm = ols('mtd_seconds_to_stageone_d1 ~ mky_drinking_category', data=feat_deltas).fit()
+# print lm.summary()
+# print sm.stats.anova_lm(lm, typ=2)
+
+feat_chosen = feat_deltas[features_monkey[1:] + chosen_features]
+feat_chosen.save('feat_chosen.plk')
+print feat_chosen.columns
 
 
-
-
-
-#pylab.show()
+pylab.show()
