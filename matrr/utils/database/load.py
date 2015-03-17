@@ -385,6 +385,27 @@ def load_cyno_9_monkeys(input_file):
             monkey.save()
     print 'Success'
 
+def load_cyno_13_monkeys(input_file):
+    with open(input_file, 'rU') as f:
+        header = f.readline() #skip header
+        input_data = f.readlines()
+        ins = Institution.objects.get(ins_institution_name='Oregon Health Sciences University')
+        cohort, is_new = Cohort.objects.get_or_create(coh_cohort_name='INIA Cyno 13', institution=ins, coh_species='Cyno')
+        for line_number, line in enumerate(input_data):
+            row = line.split(',')
+            mky = dict()
+            mky['cohort'] = cohort
+            mky['mky_species'] = 'Cyno'
+            mky['mky_real_id'] = row[3]
+            mky['mky_name'] = row[5]
+            mky['mky_gender'] = row[6]
+            mky['mky_birthdate'] = dingus.get_datetime_from_steve(row[7])
+            mky['mky_drinking'] = row[8] != 'control'
+            mky['mky_housing_control'] = False
+            monkey, is_new = Monkey.objects.get_or_create(**mky)
+            monkey.save()
+        print 'Success'
+
 def load_rhesus_10_monkeys(input_file):
     """
     I think m-d panel would be mky_drinking = false, and mky_housing_control = false.

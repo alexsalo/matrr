@@ -158,7 +158,7 @@ def etoh_during_ind_for_monkeys(mins):
         path = '/home/alex/MATRR/'+str(mins)+'min_etoh/'
         plotname = str(m.mky_drinking_category) + '_'+str(mins)+'min_etoh_' + m.__unicode__()+ '.png'
         plt.savefig(os.path.join(path, plotname), dpi=100)
-etoh_during_ind_for_monkeys(5)
+#etoh_during_ind_for_monkeys(10)
 
 # # features = get_features(False)
 # # # print features

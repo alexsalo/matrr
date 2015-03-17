@@ -202,6 +202,7 @@ VIP_IMAGES_LIST = (
     '__brain_image',
 )
 
+anomalies_mtds_ids = [10069,10070,10078,10079,10080,10081]
 
 class Availability:
     """
@@ -658,6 +659,9 @@ class Monkey(models.Model):
     def etoh_during_ind(self, mins):
         duration = mins * 60
         mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=self).exclude_exceptions().order_by('drinking_experiment__dex_date')
+        #some monkeys have weird beginning, just trust this 55 number
+        if self.mky_id in anomalies_mtds_ids:
+            mtds = mtds[55:]
         volumes = []
         for mtd in mtds:
             bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)

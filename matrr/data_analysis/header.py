@@ -50,6 +50,11 @@ dc_colors_ol = {
     None : 'k-o'
 }
 
+pre_post_luni_phase = {
+    0 : 'c',
+    1 : 'm'
+}
+
 dc_weights = {
     'LD' : 0.33,
     'BD' : 0.16,

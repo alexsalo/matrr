@@ -324,8 +324,53 @@ from dateutil.relativedelta import relativedelta
 
 
 ###3-16-15
-m = Monkey.objects.get(mky_id = 10074)
-print m.etoh_during_ind(5)
+# m = Monkey.objects.get(mky_id = 10074)
+# print m.etoh_during_ind(5)
+
+# from matrr.utils.database import load
+# coh13 = '/home/alex/Dropbox/Baylor/Matrr/coh13/coh13.csv'
+# load.load_cyno_13_monkeys(coh13)
+
+#delete
+# mids = [32325,32326,32327,32328,32329,32330,32331,32332,32333,32334,32335,32336]
+# mm = Monkey.objects.filter(mky_real_id__in=mids)
+# for m in mm:
+#     print m
+#    m.delete()
+
+
+###3-17-2015
+m = Monkey.objects.get(mky_id = 10072)
+mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date').order_by('drinking_experiment__dex_date')
+df = pd.DataFrame(list(mtds.values_list('mtd_mense_started', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg', 'mtd_progesterone')), columns=['mense','date', 'etoh', 'progesterone'])
+df = df.set_index('date')
+print df.head()
+
+dates = list(df.index[df.mense].values)
+print len(dates)
+peaks_progesterone = []
+for i in range(1,len(dates),1):
+    df_period = df[dates[i-1]:dates[i]]
+    peak_pos = df_period.progesterone.argmax()
+    if not pd.isnull(peak_pos):
+        peaks_progesterone.append(peak_pos)
+
+periods_for_avg = sorted(dates + peaks_progesterone)
+print periods_for_avg
+
+etohs = [df[periods_for_avg[i-1]:periods_for_avg[i]].etoh.mean() for i, date in enumerate(periods_for_avg)][1:]
+print etohs
+print len(periods_for_avg)
+print len(etohs)
+
+#plot afv etohs
+
+pre_post_luni_phase = {
+    0 : 'c',
+    1 : 'm'
+}
+plt.plot(df.index, df.etoh, label = 'EtOH intake')
+[plt.plot((periods_for_avg[i], periods_for_avg[i+1]), (etoh, etoh), color=pre_post_luni_phase[i%2],marker = '|', alpha=0.9, linewidth=2,) for i, etoh in enumerate(etohs)]
 
 pylab.show()
 

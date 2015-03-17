@@ -54,7 +54,7 @@ def plot_mense_etoh_progesterone(monkey, Y1MAX=16.5):
 
     return fig
 
-def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5):
+def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, FONT_SIZE=20, TICK_LABEL_SIZE=16):
     #get data for monkey
     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).order_by('drinking_experiment__dex_date').order_by('drinking_experiment__dex_date')
     df = pd.DataFrame(list(mtds.values_list('mtd_mense_started', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg', 'mtd_progesterone')), columns=['mense','date', 'etoh', 'progesterone'])
@@ -78,14 +78,35 @@ def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5):
     df_prog = df[np.isfinite(df['progesterone'])] #to remove nans
     ax2.plot(df_prog.date, df_prog.progesterone, 'k-o', color = '0.75', label = 'Progesterone')
 
-    #titles and legends
-    ax2.set_ylabel('Progesterone')
-    ax2.legend(loc=1, framealpha=1.0)
+    ###plot avg pre-post lunal phases
+    df = df.set_index('date')
 
-    ax1.set_title('EtOH Intake, progesterone and mense data, animal id: ' + str(monkey.mky_id))
-    ax1.set_xlabel('Date')
-    ax1.set_ylabel('EtOH Intake, g\kg')
-    ax1.legend(loc=2, framealpha=1.0)
+    #get peaks
+    dates = list(df.index[df.mense].values)
+    peaks_progesterone = []
+    for i in range(1,len(dates),1):
+        df_period = df[dates[i-1]:dates[i]]
+        peak_pos = df_period.progesterone.argmax()
+        if not pd.isnull(peak_pos):
+            peaks_progesterone.append(peak_pos)
+
+    #get all periods and corresponding etohs
+    periods_for_avg = sorted(dates + peaks_progesterone)
+    etohs = [df[periods_for_avg[i-1]:periods_for_avg[i]].etoh.mean() for i, date in enumerate(periods_for_avg)][1:]
+
+    #plot horizontal lines
+    [ax1.plot((periods_for_avg[i], periods_for_avg[i+1]), (etoh, etoh), color=pre_post_luni_phase[i%2],marker = '|', alpha=0.8, linewidth=2) for i, etoh in enumerate(etohs)]
+
+    #titles and legends
+    ax2.set_ylabel('Progesterone', fontsize=FONT_SIZE)
+    ax2.legend(loc=1, framealpha=1.0, prop={'size':FONT_SIZE})
+    ax2.tick_params(axis='both', which='major', labelsize=TICK_LABEL_SIZE)
+
+    ax1.set_title('EtOH Intake, progesterone and mense data, animal id: ' + str(monkey.mky_id), fontsize=FONT_SIZE)
+    ax1.set_xlabel('Date', fontsize=FONT_SIZE)
+    ax1.set_ylabel('EtOH Intake, g\kg', fontsize=FONT_SIZE)
+    ax1.legend(loc=2, framealpha=1.0, prop={'size':FONT_SIZE})
+    ax1.tick_params(axis='both', which='major', labelsize=TICK_LABEL_SIZE)
     ax1.grid()
 
     plt.tight_layout()
@@ -102,7 +123,7 @@ def save_plots_by_monkey(monkeys, plot_method, plotfolder_name):
 #save_plots_by_monkey(mense_monkeys, plot_mense_etoh, 'mense_f_monkeys')
 #save_plots_by_monkey(mense_monkeys, plot_progesterone_mense, 'progesterone_mense_f_monkeys')
 #save_plots_by_monkey(mense_monkeys, plot_mense_etoh_progesterone, 'mense_etoh_progesterone_f_monkeys')
-save_plots_by_monkey(mense_monkeys, plot_mense_etoh_progesterone_scaled_two_axis, 'mense_etoh_progesterone_scaled_two_axis_f_monkeys')
+save_plots_by_monkey(mense_monkeys, plot_mense_etoh_progesterone_scaled_two_axis, 'mense_etoh_progesterone_scaled_two_axis_f_monkeys_conf')
 
 #m = Monkey.objects.get(mky_id=10077)
 #plot_mense_etoh_progesterone_scaled_two_axis(m)
