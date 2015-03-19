@@ -667,7 +667,7 @@ class Monkey(models.Model):
             bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
             drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
             vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
-            volumes.append(vols.sum())
+            volumes.append(vols.sum() / mtd.mtd_etoh_intake)
         return pd.DataFrame(list(volumes))
 
     def populate_age_at_intox(self):
@@ -1449,6 +1449,9 @@ class ExperimentEvent(models.Model):
     eev_pct_etoh = models.FloatField('EtOH %', help_text="EtOH intake at event as a percentage of total drinking.",
                                      default=None, blank=True, null=True)
     mex_excluded = models.BooleanField("Exception Exists", default=False, db_index=True)
+
+    def __unicode__(self):
+        return str(self.eev_session_time) + ': ' + str(self.eev_pct_etoh)
 
     def _populate_eev_pct_etoh(self, recalculate=False, save=True):
         """

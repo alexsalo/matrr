@@ -69,12 +69,22 @@ def median_value_per_stage_for_monkeys(monkeys, mtds_all, value_name, GKG_DELTA_
     medians.set_index("mky_id", inplace=True)
     return medians
 
-def prepare_features(ml_monkeys):
+def prepare_features(ml_monkeys, first_N_minutes=5, medians_period=12):
     data = ml_monkeys.values_list(*features_monkey)
     df = pd.DataFrame(list(data), columns=features_monkey)
     df = df.set_index("mky_id")
     #df.mky_gender = (df.mky_gender == 'M').astype(int)
     df = df.sort_index()
+
+    #get delta median time by first N minutes
+    delta_etoh_nmins = pd.DataFrame(columns=["mky_id", 'd_med_etoh'])
+    for index, m in enumerate(ml_monkeys):
+        df_med = m.etoh_during_ind(first_N_minutes)
+        med_start = df_med[:medians_period].median().values[0]
+        med_end = df_med[-medians_period:].median().values[0]
+        delta_etoh_nmins.loc[index] = [m.mky_id, (med_end - med_start)]
+    delta_etoh_nmins.set_index("mky_id", inplace=True)
+    df = pd.concat([df, delta_etoh_nmins], axis=1)
 
     mtds_all = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=ml_monkeys)
 
@@ -152,16 +162,24 @@ def etoh_during_ind_for_monkeys(mins):
 
         #plot data and trend
         plt.plot(df.index, df.vol, 'bo', df.index, p(df.index),'r-')
+        plt.ylim(-0.05,1.05)
 
         #title and save
-        plt.title(str(mins)+'min etoh for: ' + m.__unicode__())
-        path = '/home/alex/MATRR/'+str(mins)+'min_etoh/'
-        plotname = str(m.mky_drinking_category) + '_'+str(mins)+'min_etoh_' + m.__unicode__()+ '.png'
+        plt.title(str(mins)+'min etoh pct for: ' + m.__unicode__())
+        path = '/home/alex/MATRR/'+str(mins)+'min_etoh_pct/'
+        plotname = 'min_etoh_pct_'+str(mins)+'_'+ str(m.mky_drinking_category) + '_'+ m.__unicode__()+ '.png'
         plt.savefig(os.path.join(path, plotname), dpi=100)
-#etoh_during_ind_for_monkeys(10)
+etoh_during_ind_for_monkeys(5)
 
-# # features = get_features(False)
-# # # print features
+features = get_features(False)
+#print features
+features.d_med_etoh
+print features[['mky_drinking_category','d_med_etoh']].sort(['d_med_etoh'])
+lm = ols('d_med_etoh ~ mky_drinking_category ', data=features).fit()
+print sm.stats.anova_lm(lm, typ=2)
+lm = ols('d_med_etoh ~ mky_drinking_category * mky_gender', data=features).fit()
+print sm.stats.anova_lm(lm, typ=2)
+
 # # feat_deltas = get_feature_deltas(features)
 # # # # feat_deltas.to_csv('features_deltas_r.csv')
 # # feat_deltas.save('features_deltas.plk')

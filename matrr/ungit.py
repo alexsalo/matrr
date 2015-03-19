@@ -283,7 +283,7 @@ from dateutil.relativedelta import relativedelta
 # user.groups.clear()
 # user.save()
 
-# c = Cohort.objects.get(coh_cohort_name="INIA Rhesus 4")
+# c = Cohort.objects.get(coh_cohort_name="INIA Rhesus 6b")
 # print CohortEvent.objects.filter(cohort=c)
 # df = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c).values_list('cev_date', 'event')), columns = ['cev_date', 'event'])
 # print df
@@ -340,37 +340,71 @@ from dateutil.relativedelta import relativedelta
 
 
 ###3-17-2015
-m = Monkey.objects.get(mky_id = 10072)
-mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date').order_by('drinking_experiment__dex_date')
-df = pd.DataFrame(list(mtds.values_list('mtd_mense_started', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg', 'mtd_progesterone')), columns=['mense','date', 'etoh', 'progesterone'])
-df = df.set_index('date')
-print df.head()
+# m = Monkey.objects.get(mky_id = 10072)
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date').order_by('drinking_experiment__dex_date')
+# df = pd.DataFrame(list(mtds.values_list('mtd_mense_started', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg', 'mtd_progesterone')), columns=['mense','date', 'etoh', 'progesterone'])
+# df = df.set_index('date')
+# print df.head()
+#
+# dates = list(df.index[df.mense].values)
+# print len(dates)
+# peaks_progesterone = []
+# for i in range(1,len(dates),1):
+#     df_period = df[dates[i-1]:dates[i]]
+#     peak_pos = df_period.progesterone.argmax()
+#     if not pd.isnull(peak_pos):
+#         peaks_progesterone.append(peak_pos)
+#
+# periods_for_avg = sorted(dates + peaks_progesterone)
+# print periods_for_avg
+#
+# etohs = [df[periods_for_avg[i-1]:periods_for_avg[i]].etoh.mean() for i, date in enumerate(periods_for_avg)][1:]
+# print etohs
+# print len(periods_for_avg)
+# print len(etohs)
+#
+# #plot afv etohs
+#
+# pre_post_luni_phase = {
+#     0 : 'c',
+#     1 : 'm'
+# }
+# plt.plot(df.index, df.etoh, label = 'EtOH intake')
+# [plt.plot((periods_for_avg[i], periods_for_avg[i+1]), (etoh, etoh), color=pre_post_luni_phase[i%2],marker = '|', alpha=0.9, linewidth=2,) for i, etoh in enumerate(etohs)]
 
-dates = list(df.index[df.mense].values)
-print len(dates)
-peaks_progesterone = []
-for i in range(1,len(dates),1):
-    df_period = df[dates[i-1]:dates[i]]
-    peak_pos = df_period.progesterone.argmax()
-    if not pd.isnull(peak_pos):
-        peaks_progesterone.append(peak_pos)
 
-periods_for_avg = sorted(dates + peaks_progesterone)
-print periods_for_avg
+###3-18-2015
+m = Monkey.objects.get(mky_id = 10089)
+df = m.etoh_during_ind(5)
+print df
+med_start = df[:14].median().values[0]
+med_end = df[-14:].median().values[0]
+print med_start, med_end
+delta_etoh_nmin = med_end - med_start
+print delta_etoh_nmin
 
-etohs = [df[periods_for_avg[i-1]:periods_for_avg[i]].etoh.mean() for i, date in enumerate(periods_for_avg)][1:]
-print etohs
-print len(periods_for_avg)
-print len(etohs)
+# print m.cohort
+# mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=m).exclude_exceptions()
+# df = pd.DataFrame(list(mtds.values('drinking_experiment__dex_date', 'mtd_etoh_intake')))
+# print df
+# plt.plot(df.drinking_experiment__dex_date, df.mtd_etoh_intake, 'bo')
 
-#plot afv etohs
 
-pre_post_luni_phase = {
-    0 : 'c',
-    1 : 'm'
-}
-plt.plot(df.index, df.etoh, label = 'EtOH intake')
-[plt.plot((periods_for_avg[i], periods_for_avg[i+1]), (etoh, etoh), color=pre_post_luni_phase[i%2],marker = '|', alpha=0.9, linewidth=2,) for i, etoh in enumerate(etohs)]
+
+###3-19-2015
+# req = Request.objects.get(req_request_id=342)
+# print req
+# u_jones = User.objects.get(username='srjones')
+# print u_jones
+# u_ann = User.objects.get(username='jkonstan')
+# print u_ann
+# req.user = u_jones
+# req.save()
+# print req
+
+
+
+
+
 
 pylab.show()
-
