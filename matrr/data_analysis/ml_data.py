@@ -2,6 +2,7 @@ __author__ = 'alex'
 from header import *
 
 features_monkey = ["mky_id", 'cohort__coh_cohort_id', "mky_gender", "mky_age_at_intox", "mky_drinking_category"]
+FIRST_N_MINUTES = 10
 
 features_names_perstage = [
     'mtd_seconds_to_stageone', #Seconds it took for monkey to reach day's ethanol allotment
@@ -69,7 +70,7 @@ def median_value_per_stage_for_monkeys(monkeys, mtds_all, value_name, GKG_DELTA_
     medians.set_index("mky_id", inplace=True)
     return medians
 
-def prepare_features(ml_monkeys, first_N_minutes=5, medians_period=12):
+def prepare_features(ml_monkeys, first_N_minutes=FIRST_N_MINUTES, medians_period=12):
     data = ml_monkeys.values_list(*features_monkey)
     df = pd.DataFrame(list(data), columns=features_monkey)
     df = df.set_index("mky_id")
@@ -144,6 +145,78 @@ def check_anovas():
             lm = ols(feature + '_d ~ mky_drinking_category * mky_gender', data=feat_deltas).fit()
             print sm.stats.anova_lm(lm, typ=2)
 
+def plot_min_etoh_showcases():
+    def plot_min_etoh_pct_for_monkey(mid, ax):
+        #get monkey
+        m = Monkey.objects.get(mky_id=mid)
+
+        #get the data
+        df = m.etoh_during_ind(10)
+        df.columns=['vol']
+
+        #fit the trend line
+        z = numpy.polyfit(df.index, df.vol, 2)
+        p = numpy.poly1d(z)
+
+        #plot data and trend
+        ax.plot(df.index, df.vol, 'bo', df.index, p(df.index),'r-')
+        ax.set_ylim(-0.05,1.05)
+        ax.set_xlim(0,100)
+        ax.patch.set_facecolor(dc_colors[m.mky_drinking_category])
+        ax.patch.set_alpha(0.1)
+
+        #title and save
+        #ax.set_title(str(10)+'min etoh pct for: ' + m.__unicode__(), loc='left')
+        ax.text(0.97, 0.95, str(m.mky_drinking_category) + ' ' +str(m.mky_id),
+            horizontalalignment='right',
+            verticalalignment='top',
+            transform=ax.transAxes, fontsize=12)
+
+        return ax
+
+    fig, axs = plt.subplots(4, 3, figsize=(30, 20), facecolor='w', edgecolor='k')
+    axs = axs.ravel()
+
+    #coh5
+    plot_min_etoh_pct_for_monkey(10061, axs[0])
+    plot_min_etoh_pct_for_monkey(10064, axs[3])
+    plot_min_etoh_pct_for_monkey(10060, axs[6])
+    axs[9].set_ylim(-0.05,1.05)
+    axs[0].set_title('Cohort 5')
+
+    #coh7b
+    axs[1].set_ylim(-0.05,1.05)
+    plot_min_etoh_pct_for_monkey(10082, axs[4])
+    plot_min_etoh_pct_for_monkey(10086, axs[7])
+    plot_min_etoh_pct_for_monkey(10085, axs[10])
+    axs[1].set_title('Cohort 7b')
+
+    #coh6b
+    plot_min_etoh_pct_for_monkey(10073, axs[2])
+    plot_min_etoh_pct_for_monkey(10075, axs[5])
+    plot_min_etoh_pct_for_monkey(10072, axs[11])
+    axs[8].set_ylim(-0.05,1.05)
+    axs[9].set_xlim(0,100)
+    axs[2].set_title('Cohort 6b')
+
+    # Fine-tune figure; make subplots close to each other and hide x ticks for all but bottom plot.
+    fig.subplots_adjust(hspace=0)
+    fig.subplots_adjust(wspace=0)
+    plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
+    plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
+
+    plt.setp(axs[9].get_xticklabels(), visible = True)
+    plt.setp([axs[i].get_yticklabels() for i in [0,3,6,9]], visible = True)
+
+    axs[0].set_ylabel('VHD', size=14)
+    axs[3].set_ylabel('HD', size=14)
+    axs[6].set_ylabel('BD', size=14)
+    axs[9].set_ylabel('LD', size=14)
+
+    fig.suptitle('EtOH consumption during first 10 minutes as percent (%) of daily allotment', fontsize=14)
+    fig.subplots_adjust(top=0.93)
+#plot_min_etoh_showcases()
+
 def etoh_during_ind_for_monkeys(mins):
     for m in get_monkeys():
         print m
@@ -169,7 +242,7 @@ def etoh_during_ind_for_monkeys(mins):
         path = '/home/alex/MATRR/'+str(mins)+'min_etoh_pct/'
         plotname = 'min_etoh_pct_'+str(mins)+'_'+ str(m.mky_drinking_category) + '_'+ m.__unicode__()+ '.png'
         plt.savefig(os.path.join(path, plotname), dpi=100)
-etoh_during_ind_for_monkeys(5)
+#etoh_during_ind_for_monkeys(FIRST_N_MINUTES)
 
 features = get_features(False)
 #print features

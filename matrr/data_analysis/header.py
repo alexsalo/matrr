@@ -6,6 +6,7 @@ from matrr.models import *
 from matrr.utils.database import dingus, create
 
 import matplotlib
+matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr'
 import matplotlib.pyplot as plt
 import pylab
 matplotlib.use('TkAgg')
