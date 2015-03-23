@@ -20,7 +20,7 @@ from statsmodels.formula.api import ols
 from sklearn import cross_validation
 from sklearn.cross_validation import KFold
 from sklearn import svm
-from sklearn.ensemble  import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble  import RandomForestClassifier, GradientBoostingClassifier, BaggingClassifier
 from sklearn.ensemble.partial_dependence import plot_partial_dependence
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import confusion_matrix

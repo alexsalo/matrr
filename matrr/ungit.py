@@ -484,5 +484,39 @@ from dateutil.relativedelta import relativedelta
 # plot_min_etoh_showcases()
 
 
+###3-23-2015
+def pct_days_over(mtds, gkg_treshold = 3):
+    over_days = len([mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > gkg_treshold])
+    total_days = mtds.count()
+    return 1.0 * over_days / total_days
+
+MIDS = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060, 10082,
+        10064, 10065, 10088, 10097, 10067, 10091, 10098, 10066, 10063,10061,10062]
+
+LMD = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060]
+HD =  [10082,10064, 10065, 10088, 10097, 10067, 10091, 10098, 10066, 10063,10061,10062]
+
+colors = ['blue' for id in LMD] + ['red' for id in HD]
+
+monkeys = Monkey.objects.filter(mky_id__in=MIDS)
+mtds_all = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys)
+
+df = pd.DataFrame(index=MIDS, columns=['pct_days_over'])
+for m in monkeys:
+    mtds = mtds_all.filter(monkey=m)
+    if mtds.count() == 0:
+        print m
+    else:
+        df.pct_days_over[m.mky_id] = pct_days_over(mtds)
+
+print df
+df = df.sort('pct_days_over')
+print df
+df.plot(kind='bar', colors = colors)
+plt.xticks(rotation=70)
+
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey = Monkey.objects.filter(mky_id=10083))
+# print [mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > 3]
+
 
 pylab.show()

@@ -124,6 +124,7 @@ def save_plot_feature_meds_by_stage():
 
 def get_feature_deltas(df):
     new_df = df[features_monkey[1:]]
+    new_df['d_med_etoh'] = df['d_med_etoh']
     for feature in features_names_perstage:
         if feature != 'mtd_etoh_media_ibi':
             new_df[feature+"_d1"] = df[feature+"_2"] / df[feature+"_1"]
@@ -245,20 +246,22 @@ def etoh_during_ind_for_monkeys(mins):
 #etoh_during_ind_for_monkeys(FIRST_N_MINUTES)
 
 features = get_features(False)
-#print features
-features.d_med_etoh
-print features[['mky_drinking_category','d_med_etoh']].sort(['d_med_etoh'])
-lm = ols('d_med_etoh ~ mky_drinking_category ', data=features).fit()
-print sm.stats.anova_lm(lm, typ=2)
-lm = ols('d_med_etoh ~ mky_drinking_category * mky_gender', data=features).fit()
-print sm.stats.anova_lm(lm, typ=2)
+# print features.columns
+# #print features
+# features.d_med_etoh
+# print features[['mky_drinking_category','d_med_etoh']].sort(['d_med_etoh'])
+# lm = ols('d_med_etoh ~ mky_drinking_category ', data=features).fit()
+# print sm.stats.anova_lm(lm, typ=2)
+# lm = ols('d_med_etoh ~ mky_drinking_category * mky_gender', data=features).fit()
+# print sm.stats.anova_lm(lm, typ=2)
 
-# # feat_deltas = get_feature_deltas(features)
-# # # # feat_deltas.to_csv('features_deltas_r.csv')
-# # feat_deltas.save('features_deltas.plk')
-# feat_deltas = pd.read_pickle('features_deltas.plk')
-# # colors = [dc_colors[dc] for dc in feat_deltas.mky_drinking_category]
-# # plt.scatter(feat_deltas.mky_age_at_intox, feat_deltas.mtd_etoh_mean_drink_vol_d, c=colors)
+# feat_deltas = get_feature_deltas(features)
+# # # feat_deltas.to_csv('features_deltas_r.csv')
+# feat_deltas.save('features_deltas_2.plk')
+feat_deltas = pd.read_pickle('features_deltas_2.plk')
+# print feat_deltas.columns
+# colors = [dc_colors[dc] for dc in feat_deltas.mky_drinking_category]
+# plt.scatter(feat_deltas.mky_age_at_intox, feat_deltas.mtd_etoh_mean_drink_vol_d, c=colors)
 #
 # #check_anovas()
 # # print feat_deltas.columns
@@ -272,7 +275,9 @@ print sm.stats.anova_lm(lm, typ=2)
 # # print lm.summary()
 # # print sm.stats.anova_lm(lm, typ=2)
 #
-# feat_chosen = feat_deltas[features_monkey[1:] + chosen_features]
+
+###CHOSEN FEATURES
+# feat_chosen = feat_deltas[features_monkey[1:] + ['d_med_etoh'] + chosen_features]
 # feat_chosen.save('feat_chosen.plk')
 # print feat_chosen.columns
 

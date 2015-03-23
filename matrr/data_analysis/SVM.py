@@ -41,9 +41,9 @@ fit = clf.fit(x,y)
 #     a_scores += a_score
 # print a_scores
 
-scores = cross_validation.cross_val_score(clf, x, y, cv=5)
+scores = cross_validation.cross_val_score(clf, x, y, cv=10)
 print scores
-print "Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2)
+print "Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std())
 
 # print fit
 # print clf.support_
