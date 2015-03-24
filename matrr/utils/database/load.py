@@ -628,6 +628,7 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
 
             # create or get experiment - date, cohort, dex_type
             dex_date = dingus.get_datetime_from_steve(data[0])
+            print dex_date
             if not dex_date:
                 err = dingus.ERROR_OUTPUT % (line_number, "Wrong date format", line)
                 if dump_file:

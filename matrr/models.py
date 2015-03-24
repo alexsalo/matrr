@@ -510,6 +510,9 @@ class Cohort(models.Model):
     def __unicode__(self):
         return self.coh_cohort_name
 
+    def shortName(self):
+        return self.coh_cohort_name[5:]
+
     def get_url(self):
         url = '/'
         if self.coh_upcoming:

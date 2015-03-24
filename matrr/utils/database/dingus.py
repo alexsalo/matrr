@@ -80,6 +80,11 @@ def get_datetime_from_steve(steve_date):
     except Exception as e:
         pass
     try:
+        real_date = dt.strptime(steve_date, "%Y-%m-%d")
+        return real_date
+    except Exception as e:
+        pass
+    try:
         real_date = minimalist_xldate_as_datetime(steve_date, 1)
         return real_date
     except Exception as e:

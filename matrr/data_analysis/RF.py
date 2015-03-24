@@ -10,7 +10,7 @@ y = feat_chosen['mky_drinking_category']
 x = x.drop('mky_gender', axis=1)
 print x.columns
 
-def showCM(cm):
+def showCM(cm, plot=True):
     print(cm)
 
     #Accuracy
@@ -30,17 +30,18 @@ def showCM(cm):
     print ('Balanced Error Rate: %s' % balanced_error_rate)
     print '--> where BER = 1 - 1/k * sum_i (m[i][i] / sum_j (m[i][j]))'
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ms = ax.matshow(cm)
-    ax.set_title('Confusion matrix')
-    plt.colorbar(ms)
-    ax.set_ylabel('True label')
-    ax.set_xlabel('Predicted label')
-    ax.set_xticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
-    ax.set_yticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
-    plt.tight_layout()
-    pylab.show()
+    if plot:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ms = ax.matshow(cm)
+        ax.set_title('Confusion matrix')
+        plt.colorbar(ms)
+        ax.set_ylabel('True label')
+        ax.set_xlabel('Predicted label')
+        ax.set_xticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+        ax.set_yticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+        plt.tight_layout()
+        pylab.show()
 
 def showScores(scores):
     print 'Accuracy scores for each split: ', scores
@@ -85,12 +86,12 @@ def executeCrossVal(x, y, clf):
     return scores, cm
 
 clf = RandomForestClassifier()
-#clf = GradientBoostingClassifier()
-bagging =  BaggingClassifier(clf, n_estimators=20, max_samples=0.8, max_features=0.4, bootstrap=True) #
+#clf = GradientBoostingClassifier(n_estimators=200, max_features='sqrt',max_depth=5)
+bagging =  BaggingClassifier(clf, n_estimators=20, max_samples=0.8, max_features=0.4, bootstrap=True, n_jobs=2) #
 
 scores, cm = executeCrossVal(x, y, bagging)
 showScores(scores)
-showCM(cm)
+showCM(cm, False)
 
 #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
 

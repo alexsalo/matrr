@@ -62,11 +62,14 @@ def __set_images(cohort, user):
 
 
 def __cohorts_view(request, cohorts, template_name):
+    cohorts_all = Cohort.objects.nicotine_filter(request.user).order_by('coh_cohort_name')
     cohorts = [__set_images(cohort, request.user) for cohort in cohorts]
+    # coh_ids = [c.coh_cohort_id for c in cohorts]
+    # coh_names = [c.coh_cohort_name for c in cohorts]
 
     ## Paginator stuff
     if len(cohorts) > 0:
-        paginator = Paginator(cohorts, 5)
+        paginator = Paginator(cohorts, 10)
         # Make sure page request is an int. If not, deliver first page.
         try:
             page = int(request.GET.get('page', '1'))
@@ -79,7 +82,7 @@ def __cohorts_view(request, cohorts, template_name):
             cohort_list = paginator.page(paginator.num_pages)
     else:
         cohort_list = cohorts
-    return render_to_response(template_name, {'cohort_list': cohort_list}, context_instance=RequestContext(request))
+    return render_to_response(template_name, {'cohort_list': cohort_list, 'cohorts_all' : cohorts_all}, context_instance=RequestContext(request))
 
 
 def cohort_details(request, **kwargs):

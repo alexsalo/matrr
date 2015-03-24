@@ -485,38 +485,80 @@ from dateutil.relativedelta import relativedelta
 
 
 ###3-23-2015
-def pct_days_over(mtds, gkg_treshold = 3):
-    over_days = len([mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > gkg_treshold])
-    total_days = mtds.count()
-    return 1.0 * over_days / total_days
+# def pct_days_over(mtds, gkg_treshold = 3):
+#     over_days = len([mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > gkg_treshold])
+#     total_days = mtds.count()
+#     return 1.0 * over_days / total_days
+#
+# MIDS = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060, 10082, 10064, 10065, 10088, 10097,
+#         10067, 10091, 10098, 10066, 10063, 10061, 10062, 10208, 10209, 10210, 10211, 10212, 10213, 10214, 10215]
+# LMD = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060, 10208, 10209, 10210, 10211, 10212, 10213]
+# HD = [10082, 10064, 10065, 10088, 10097, 10067, 10091, 10215, 10098, 10066, 10063, 10061, 10214, 10062]
+#
+# monkeys = Monkey.objects.filter(mky_id__in=MIDS)
+# mtds_all = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys)
+#
+# df = pd.DataFrame(index=MIDS, columns=['pct_days_over'])
+# for m in monkeys:
+#     mtds = mtds_all.filter(monkey=m)
+#     if mtds.count() == 0:
+#         print m
+#     else:
+#         df.pct_days_over[m.mky_id] = pct_days_over(mtds)
+#
+# print df
+# df = df.sort('pct_days_over')
+# print df
+# colors = ['red' if HD.__contains__(x) else 'blue' for x in df.index]
+# df.plot(kind='bar', colors = colors)
+# plt.xticks(rotation=70)
+#
+# # mtds = MonkeyToDrinkingExperiment.objects.filter(monkey = Monkey.objects.filter(mky_id=10083))
+# # print [mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > 3]
 
-MIDS = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060, 10082,
-        10064, 10065, 10088, 10097, 10067, 10091, 10098, 10066, 10063,10061,10062]
+###3-24-2015
+# dc_colors_ol = {
+#     'LD' : 'g-o',
+#     'BD' : 'b-o',
+#     'HD' : 'y-o',
+#     'VHD' : 'r-o',
+#     None : 'k-o'
+# }
+# mm = Monkey.objects.filter(mky_id__in=[10088, 10032, 10064])
+# # print mm
+# # fig, axs = plt.subplots(3, 1, figsize=(10,10))
+# # for index, m in enumerate(mm):
+# #     mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date')
+# #     axs[index].plot(mtds.values_list('drinking_experiment__dex_date'), mtds.values_list('mtd_etoh_g_kg'), dc_colors_ol[m.mky_drinking_category])
+# # plt.tight_layout()
+#
+# mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=mm[1]).order_by('drinking_experiment__dex_date')
+# df = pd.DataFrame(list(mtds.values_list('mtd_etoh_g_kg', 'mtd_veh_intake')), columns=['etoh', 'veh'])
+# df.plot(kind='hist', stacked=True)
 
-LMD = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060]
-HD =  [10082,10064, 10065, 10088, 10097, 10067, 10091, 10098, 10066, 10063,10061,10062]
+###3-25-2015
+# import wikipedia as wk
+# page = wk.page('cv joint')
+# print page.title
+# wk.set_lang('ru')
+# page = wk.page('Constant-velocity_joint').url
+# print page
 
-colors = ['blue' for id in LMD] + ['red' for id in HD]
+##upload coh10
+# m = Monkey.objects.filter(mky_id=10208)
+# mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date')
+# print mtds.values_list('drinking_experiment__dex_type')
+# print Cohort.objects.get(coh_cohort_name='INIA Rhesus 10')
+coh10_file = '/home/alex/Dropbox/Baylor/Matrr/coh10/38.coh10_22hr_tentative_to_20140925_matrr.csv'
+from matrr.utils.database import load
+load.load_mtd(coh10_file, 'Open Access', 'INIA Rhesus 10')
 
-monkeys = Monkey.objects.filter(mky_id__in=MIDS)
-mtds_all = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys)
-
-df = pd.DataFrame(index=MIDS, columns=['pct_days_over'])
-for m in monkeys:
-    mtds = mtds_all.filter(monkey=m)
-    if mtds.count() == 0:
-        print m
-    else:
-        df.pct_days_over[m.mky_id] = pct_days_over(mtds)
-
-print df
-df = df.sort('pct_days_over')
-print df
-df.plot(kind='bar', colors = colors)
-plt.xticks(rotation=70)
-
-# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey = Monkey.objects.filter(mky_id=10083))
-# print [mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > 3]
-
+# cohorts = Cohort.objects.all()
+# for c in cohorts:
+#     if c.coh_cohort_name == 'Assay Development':
+#             print 'Assay Dev'
+#     else:
+#         print c.coh_cohort_name[5:]
+# print cohorts[1].coh_cohort_name[5:]
 
 pylab.show()
