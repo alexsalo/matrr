@@ -1511,11 +1511,12 @@ def load_cohort_timelines(filename, delete_replaced_cvts=False):
             continue
         evt, is_new = EventType.objects.get_or_create(evt_name=column)
         if is_new:
+            print idx, column
             evt.save()
             print "New Event Type: %s" % evt.evt_name
 
     for row in csv_infile:
-        cohort_name_ish = "inia %s %s" % (row[3], row[2])
+        cohort_name_ish = "INIA %s %s" % (row[3], row[2])
         cohort = Cohort.objects.filter(coh_cohort_name__iexact=cohort_name_ish)
         if cohort.count() == 1:
             cohort = cohort[0]
@@ -1532,7 +1533,7 @@ def load_cohort_timelines(filename, delete_replaced_cvts=False):
             if idx <= 4:
                 continue
             elif row[idx]:
-                event_type = EventType.objects.get(evt_name__contains=event)
+                event_type= EventType.objects.get(evt_name=event)
                 date_string = str(row[idx]).replace('"', '').replace("'", "") # remove " and ' from the string
                 cev_date = dingus.get_datetime_from_steve(date_string)
                 cev, is_new = CohortEvent.objects.get_or_create(cohort=cohort, event=event_type, cev_date=cev_date)

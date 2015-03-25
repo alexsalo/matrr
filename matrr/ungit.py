@@ -545,13 +545,13 @@ from dateutil.relativedelta import relativedelta
 # print page
 
 ##upload coh10
-# m = Monkey.objects.filter(mky_id=10208)
-# mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date')
-# print mtds.values_list('drinking_experiment__dex_type')
-# print Cohort.objects.get(coh_cohort_name='INIA Rhesus 10')
-coh10_file = '/home/alex/Dropbox/Baylor/Matrr/coh10/38.coh10_22hr_tentative_to_20140925_matrr.csv'
-from matrr.utils.database import load
-load.load_mtd(coh10_file, 'Open Access', 'INIA Rhesus 10')
+# # m = Monkey.objects.filter(mky_id=10208)
+# # mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=m).order_by('drinking_experiment__dex_date')
+# # print mtds.values_list('drinking_experiment__dex_type')
+# # print Cohort.objects.get(coh_cohort_name='INIA Rhesus 10')
+# coh10_file = '/home/alex/Dropbox/Baylor/Matrr/coh10/38.coh10_22hr_tentative_to_20140925_matrr.csv'
+# from matrr.utils.database import load
+# load.load_mtd(coh10_file, 'Open Access', 'INIA Rhesus 10')
 
 # cohorts = Cohort.objects.all()
 # for c in cohorts:
@@ -560,5 +560,46 @@ load.load_mtd(coh10_file, 'Open Access', 'INIA Rhesus 10')
 #     else:
 #         print c.coh_cohort_name[5:]
 # print cohorts[1].coh_cohort_name[5:]
+
+###3-26-2015
+# c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
+# m = Monkey.objects.filter(cohort=c)[1]
+# # print m
+# #
+# # df = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c).values_list('event__evt_id', 'event__evt_name', 'cev_date')))
+# # print df
+#
+# # print MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date').filter(drinking_experiment__dex_date__lte=dingus.get_datetime_from_steve('08/05/2013')).\
+# # filter(drinking_experiment__dex_date__gte=dingus.get_datetime_from_steve('08/04/2013'))
+#
+# # print CohortEvent.objects.filter(cohort=c)
+# # for eve in CohortEvent.objects.filter(cohort=c):
+# #     eve.delete()
+# # EventType.objects.filter(evt_id=79).delete()
+# # print pd.DataFrame(list(EventType.objects.all().values_list('evt_id', 'evt_name')), columns=['id','name']).sort('id')
+#
+# # cohort_name_ish = "inia %s %s" % ('rhesus', '10')
+# # print cohort_name_ish
+# # cohort = Cohort.objects.filter(coh_cohort_name__iexact=cohort_name_ish)
+# # print cohort
+#
+# #print EventType.objects.get(evt_name='Individual Housing End')
+#
+# # timelines_all = '/home/alex/Dropbox/Baylor/Matrr/coh10/timelines_all.csv'
+# # from matrr.utils.database import load
+# # load.load_cohort_timelines(timelines_all, True)
+#
+# # print CohortEvent.objects.filter(cohort=c)
+# # badev = EventType.objects.filter(evt_name__contains='201')
+# # print badev
+# # for ev in badev:
+# #     ev.delete()
+# # badev = EventType.objects.filter(evt_name__contains='201')
+# # print badev
+# # print EventType.objects.all()
+#
+# print CohortEvent.objects.filter(cohort=c)
+
+
 
 pylab.show()

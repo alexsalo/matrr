@@ -15,8 +15,6 @@ All Cohorts
 		 alt='order timeline'/>
 	<div id="headline">{% block content_title %}All Cohorts{% endblock %}</div>
 
-    <br>
-    Quick access: <br>
     <div class='center-content'>
             {% for cohort in cohorts_all %}
                 <a href="{% url 'cohort-details' cohort.coh_cohort_id %}">{{ cohort.shortName }} | </a>
