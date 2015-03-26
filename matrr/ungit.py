@@ -28,6 +28,11 @@ dc_colors = {
 import django
 django.setup()
 
+def print_full(x):
+    pd.set_option('display.max_rows', len(x))
+    print(x)
+    pd.reset_option('display.max_rows')
+
 #print Monkey.objects.all().count()
 #print Monkey.objects.filter(mky_study_complete = True).count()
 #print Monkey.objects.all().filter(mky_drinking_category = "HD").count()
@@ -601,11 +606,9 @@ from dateutil.relativedelta import relativedelta
 # print CohortEvent.objects.filter(cohort=c)
 
 ###3-27-2015
-import wikipedia as wk
-page = wk.page('cv joint')
-print page.title
-wk.set_lang('ru')
-page = wk.page('Constant-velocity_joint').url
-print page
+m = Monkey.objects.get(mky_id=10068)
+print_full(pd.DataFrame(list(Monkey.objects.all().values_list('cohort__coh_cohort_name','mky_id','mky_weight')), columns=['cohort','mky_id','weight']))
+print m.mky_weight
+
 
 pylab.show()

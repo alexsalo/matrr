@@ -720,10 +720,15 @@ class Monkey(models.Model):
             second_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
         except:
             pass
+        if aggregation_method == Sum:
+            total = first + second
+        if aggregation_method == Avg:
+            total = (first + second) / 2
+
         if days:
-            return first, second, first + second, first_days, second_days, first_days + second_days
+            return first, second, total, first_days, second_days, first_days + second_days
         else:
-            return first, second, first + second
+            return first, second, total
 
     def sum_etoh_gkg_by_period(self):
         return self.feature_by_period('mtd_etoh_g_kg', Sum, days=False)
