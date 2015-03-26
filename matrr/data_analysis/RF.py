@@ -73,6 +73,12 @@ def executeCrossVal(x, y, clf):
         #print clf.feature_importances_
         y_pred = clf.predict(test_x)
 
+        #LD-VHD MIX
+        tmp = test_y[y_pred == 'VHD']
+        print tmp[tmp=='LD']
+        tmp = test_y[y_pred == 'LD']
+        print tmp[tmp=='VHD']
+
         #accuracy score and confusion matrix
         scores.append(accuracy_score(y_pred, test_y))
         cm_cur = confusion_matrix(y_pred, test_y, labels = ['LD', 'BD', 'HD', 'VHD'])

@@ -600,6 +600,12 @@ from dateutil.relativedelta import relativedelta
 #
 # print CohortEvent.objects.filter(cohort=c)
 
-
+###3-27-2015
+import wikipedia as wk
+page = wk.page('cv joint')
+print page.title
+wk.set_lang('ru')
+page = wk.page('Constant-velocity_joint').url
+print page
 
 pylab.show()
