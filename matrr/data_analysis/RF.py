@@ -8,6 +8,7 @@ feat_chosen.mky_gender = (feat_chosen.mky_gender == 'M').astype(int)
 x = feat_chosen.drop('mky_drinking_category', axis = 1)
 y = feat_chosen['mky_drinking_category']
 x = x.drop('mky_gender', axis=1)
+x = x[['mtd_veh_bout_d', 'mky_age_at_intox', 'mtd_max_bout_length_d1','mtd_etoh_mean_drink_vol_d2']]
 print x.columns
 
 def showCM(cm, plot=True):
@@ -58,7 +59,8 @@ def executeCrossVal(x, y, clf):
 
     cm = np.zeros(shape=(4,4), dtype=int)
     scores = []
-    ss = cross_validation.ShuffleSplit(N, n_iter=8, test_size=0.2,random_state=0)
+    ss = cross_validation.ShuffleSplit(N, n_iter=8, test_size=3,random_state=0)
+    misclassified = []
     for train_index, test_index in ss:
         #train set
         train_x = x.loc[list(x.index[train_index])]
@@ -95,9 +97,9 @@ clf = RandomForestClassifier()
 #clf = GradientBoostingClassifier(n_estimators=200, max_features='sqrt',max_depth=5)
 bagging =  BaggingClassifier(clf, n_estimators=20, max_samples=0.8, max_features=0.4, bootstrap=True, n_jobs=2) #
 
-scores, cm = executeCrossVal(x, y, bagging)
+scores, cm = executeCrossVal(x, y, clf)
 showScores(scores)
-showCM(cm, False)
+showCM(cm, True)
 
 #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
 
@@ -109,9 +111,9 @@ scores = cross_validation.cross_val_score(clf, x, y, cv=14)
 print scores
 print "Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std())
 
-scores = cross_validation.cross_val_score(bagging, x, y, cv=14)
-print scores
-print "Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std())
+# scores = cross_validation.cross_val_score(bagging, x, y, cv=14)
+# print scores
+# print "Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std())
 
 # y_pred = clf.predict(x_test)
 # cm = confusion_matrix(y_pred, y_test)

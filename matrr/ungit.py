@@ -606,9 +606,82 @@ from dateutil.relativedelta import relativedelta
 # print CohortEvent.objects.filter(cohort=c)
 
 ###3-27-2015
-m = Monkey.objects.get(mky_id=10068)
-print_full(pd.DataFrame(list(Monkey.objects.all().values_list('cohort__coh_cohort_name','mky_id','mky_weight')), columns=['cohort','mky_id','weight']))
-print m.mky_weight
+# m = Monkey.objects.get(mky_id=10187)
+# df_m_weight = pd.DataFrame(list(Monkey.objects.all().values_list('cohort__coh_cohort_name','mky_id','mky_weight')), columns=['cohort','mky_id','weight'])
+# mid_no_weight = df_m_weight[np.isnan(df_m_weight.weight)].mky_id
+# for mid in mid_no_weight:
+#     weight = np.mean(MonkeyToDrinkingExperiment.objects.filter(monkey=Monkey.objects.get(mky_id=mid)).values_list('mtd_weight', flat=True))
+#     print mid, weight
+# # print m.mky_weight
+# # mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date')
+# # print mtds.values_list('mtd_weight', flat=True)
+# # df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date','mtd_weight')), columns=['date', 'weights'])
+# # print df.weights
+# # plt.plot(df.date, df.weights)
+
+###3-28-2015
+# import numpy as np
+# vector1 = np.array([1, 2, 3])
+# vector2 = np.array([4, 5, 6])
+# print vector1 + vector2
+# print (vector1 + vector2)/2.0
+
+# a = [1,1,1,1,2,2,2,2,3,3,4,5,5]
+# from itertools import groupby
+# print [(key, len(list(group))) for key, group in groupby(a)]
+
+# cm = np.zeros(shape=(4,4), dtype=int)
+# # cm[0][0] = 6
+# # cm[0][1]=1
+# # cm[0][2]=0
+# # cm[0][3]=1
+# #
+# # cm[1][0]=1
+# # cm[1][1]=1
+# # cm[1][2]=3
+# # cm[1][3]=0
+# #
+# # cm[2][0]=0
+# # cm[2][1]=0
+# # cm[2][2]=3
+# # cm[2][3]=0
+# #
+# # cm[3][0]=1
+# # cm[3][1]=0
+# # cm[3][2]=1
+# # cm[3][3]=6
+#
+# # print cm
+# # fig = plt.figure()
+# # ax = fig.add_subplot(111)
+# # ms = ax.matshow(cm)
+# # ax.set_title('Confusion matrix')
+# # plt.colorbar(ms)
+# # ax.set_ylabel('True label')
+# # ax.set_xlabel('Predicted label')
+# # ax.set_xticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+# # ax.set_yticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+# # plt.tight_layout()
+# # pylab.show()
+#
+#
+# cm[0][0] = 33
+# cm[1][0] = 17
+# cm[2][0] = 19
+# cm[3][0] = 31
+#
+# print cm
+# #Balanced Error Rate
+# k = len(cm)
+# error_rate = 0
+# for i in xrange(0, k):
+#     sumrow = 0
+#     for j in xrange(0, k):
+#         sumrow += cm[i][j]
+#     error_rate += 1.0 * cm[i][i] / sumrow
+# balanced_error_rate = 1 - error_rate / k
+# print ('Balanced Error Rate: %s' % balanced_error_rate)
+# print '--> where BER = 1 - 1/k * sum_i (m[i][i] / sum_j (m[i][j]))'
 
 
 pylab.show()
