@@ -490,36 +490,40 @@ from dateutil.relativedelta import relativedelta
 
 
 ###3-23-2015
-# def pct_days_over(mtds, gkg_treshold = 3):
-#     over_days = len([mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > gkg_treshold])
-#     total_days = mtds.count()
-#     return 1.0 * over_days / total_days
-#
-# MIDS = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060, 10082, 10064, 10065, 10088, 10097,
-#         10067, 10091, 10098, 10066, 10063, 10061, 10062, 10208, 10209, 10210, 10211, 10212, 10213, 10214, 10215]
-# LMD = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060, 10208, 10209, 10210, 10211, 10212, 10213]
-# HD = [10082, 10064, 10065, 10088, 10097, 10067, 10091, 10215, 10098, 10066, 10063, 10061, 10214, 10062]
-#
-# monkeys = Monkey.objects.filter(mky_id__in=MIDS)
-# mtds_all = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys)
-#
-# df = pd.DataFrame(index=MIDS, columns=['pct_days_over'])
-# for m in monkeys:
-#     mtds = mtds_all.filter(monkey=m)
-#     if mtds.count() == 0:
-#         print m
-#     else:
-#         df.pct_days_over[m.mky_id] = pct_days_over(mtds)
-#
-# print df
-# df = df.sort('pct_days_over')
-# print df
-# colors = ['red' if HD.__contains__(x) else 'blue' for x in df.index]
-# df.plot(kind='bar', colors = colors)
-# plt.xticks(rotation=70)
-#
-# # mtds = MonkeyToDrinkingExperiment.objects.filter(monkey = Monkey.objects.filter(mky_id=10083))
-# # print [mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > 3]
+print Monkey.objects.get(mky_id=10092)
+print Monkey.objects.get(mky_id=10054)
+def pct_days_over(mtds, gkg_treshold = 3):
+    over_days = len([mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > gkg_treshold])
+    total_days = mtds.count()
+    return 1.0 * over_days / total_days
+
+MIDS = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060, 10082, 10064, 10065, 10088, 10097,
+        10067, 10091, 10098, 10066, 10063, 10061, 10062, 10208, 10209, 10210, 10211, 10212, 10213, 10214, 10215,
+        10092, 10054]
+LMD = [10083, 10084, 10090, 10089, 10085, 10087, 10086, 10060, 10208, 10209, 10210, 10211, 10212, 10213,
+       10092, 10054]
+HD = [10082, 10064, 10065, 10088, 10097, 10067, 10091, 10215, 10098, 10066, 10063, 10061, 10214, 10062]
+
+monkeys = Monkey.objects.filter(mky_id__in=MIDS)
+mtds_all = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=monkeys)
+
+df = pd.DataFrame(index=MIDS, columns=['pct_days_over'])
+for m in monkeys:
+    mtds = mtds_all.filter(monkey=m)
+    if mtds.count() == 0:
+        print m
+    else:
+        df.pct_days_over[m.mky_id] = pct_days_over(mtds)
+
+print df
+df = df.sort('pct_days_over')
+print df
+colors = ['red' if HD.__contains__(x) else 'blue' for x in df.index]
+df.plot(kind='bar', colors = colors)
+plt.xticks(rotation=70)
+
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey = Monkey.objects.filter(mky_id=10083))
+# print [mtd.mtd_etoh_g_kg for mtd in mtds if mtd.mtd_etoh_g_kg > 3]
 
 ###3-24-2015
 # dc_colors_ol = {
@@ -630,39 +634,45 @@ from dateutil.relativedelta import relativedelta
 # from itertools import groupby
 # print [(key, len(list(group))) for key, group in groupby(a)]
 
-# cm = np.zeros(shape=(4,4), dtype=int)
-# # cm[0][0] = 6
-# # cm[0][1]=1
-# # cm[0][2]=0
-# # cm[0][3]=1
-# #
-# # cm[1][0]=1
-# # cm[1][1]=1
-# # cm[1][2]=3
-# # cm[1][3]=0
-# #
-# # cm[2][0]=0
-# # cm[2][1]=0
-# # cm[2][2]=3
-# # cm[2][3]=0
-# #
-# # cm[3][0]=1
-# # cm[3][1]=0
-# # cm[3][2]=1
-# # cm[3][3]=6
+# cm = np.zeros(shape=(4,4))#, dtype=int)
+# cm[0][0] = 6
+# cm[0][1]=1
+# cm[0][2]=0
+# cm[0][3]=1
 #
-# # print cm
-# # fig = plt.figure()
-# # ax = fig.add_subplot(111)
-# # ms = ax.matshow(cm)
-# # ax.set_title('Confusion matrix')
-# # plt.colorbar(ms)
-# # ax.set_ylabel('True label')
-# # ax.set_xlabel('Predicted label')
-# # ax.set_xticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
-# # ax.set_yticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
-# # plt.tight_layout()
-# # pylab.show()
+# cm[1][0]=1
+# cm[1][1]=1
+# cm[1][2]=3
+# cm[1][3]=0
+#
+# cm[2][0]=0
+# cm[2][1]=0
+# cm[2][2]=3
+# cm[2][3]=0
+#
+# cm[3][0]=1
+# cm[3][1]=0
+# cm[3][2]=1
+# cm[3][3]=6
+#
+# k = 4
+# sums = np.sum(cm)
+# for i in xrange(0, k):
+#     for j in xrange(0, k):
+#         cm[i][j] = 1.0 * cm[i][j] /  sums
+#
+# print cm
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# ms = ax.matshow(cm)
+# ax.set_title('Confusion matrix')
+# plt.colorbar(ms)
+# ax.set_ylabel('True label')
+# ax.set_xlabel('Predicted label')
+# ax.set_xticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+# ax.set_yticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+# plt.tight_layout()
+# pylab.show()
 #
 #
 # cm[0][0] = 33

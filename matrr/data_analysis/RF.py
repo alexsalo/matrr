@@ -59,7 +59,7 @@ def executeCrossVal(x, y, clf):
 
     cm = np.zeros(shape=(4,4), dtype=int)
     scores = []
-    ss = cross_validation.ShuffleSplit(N, n_iter=8, test_size=3,random_state=0)
+    ss = cross_validation.ShuffleSplit(N, n_iter=33, test_size=3,random_state=0)
     misclassified = []
     for train_index, test_index in ss:
         #train set

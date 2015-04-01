@@ -245,7 +245,13 @@ def etoh_during_ind_for_monkeys(mins):
         plt.savefig(os.path.join(path, plotname), dpi=100)
 #etoh_during_ind_for_monkeys(FIRST_N_MINUTES)
 
-features = get_features(False)
+ml_monkeys = get_monkeys()
+ages = ml_monkeys.values_list('mky_weight', flat=True)
+ages
+print np.mean(remove_none(ages))
+print np.std(remove_none(ages))
+
+#features = get_features(False)
 # print features.columns
 # #print features
 # features.d_med_etoh

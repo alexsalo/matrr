@@ -10,7 +10,7 @@ print feat_chosen.columns
 x = feat_chosen.drop('mky_drinking_category', axis = 1)
 y = feat_chosen['mky_drinking_category']
 x = x.drop('mky_gender', axis=1)
-
+x = x[['mtd_veh_bout_d', 'mky_age_at_intox', 'mtd_max_bout_length_d1','mtd_etoh_mean_drink_vol_d2']]
 ###play
 # clf = svm.SVC(kernel='rbf', gamma=1, C=5, class_weight=dc_weights)
 # fit = clf.fit(x,y)
@@ -41,7 +41,7 @@ fit = clf.fit(x,y)
 #     a_scores += a_score
 # print a_scores
 
-scores = cross_validation.cross_val_score(clf, x, y, cv=10)
+scores = cross_validation.cross_val_score(clf, x, y, cv=14)
 print scores
 print "Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std())
 
