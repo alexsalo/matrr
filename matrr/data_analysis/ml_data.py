@@ -155,20 +155,32 @@ def plot_min_etoh_showcases():
         df = m.etoh_during_ind(10)
         df.columns=['vol']
 
-        #fit the trend line
-        z = numpy.polyfit(df.index, df.vol, 2)
-        p = numpy.poly1d(z)
+        # #fit the trend line
+        # z = numpy.polyfit(df.index, df.vol, 2)
+        # p = numpy.poly1d(z)
+
+        #fit median slopes
+        m1 = np.median(df.vol.head(10))
+        m2 = np.median(df.vol.tail(10))
+        slope = 100*(m2-m1)/len(df.index)
+
 
         #plot data and trend
-        ax.plot(df.index, df.vol, 'bo', df.index, p(df.index),'r-')
+        #ax.plot(df.index, df.vol, 'bo', df.index, p(df.index),'b-')
+        ax.plot(df.index, df.vol, 'bo')
         ax.set_ylim(-0.05,1.05)
         ax.set_xlim(0,100)
         ax.patch.set_facecolor(dc_colors[m.mky_drinking_category])
         ax.patch.set_alpha(0.1)
 
+        #plot med slopes
+        ax.plot([df.index[0],df.index[10]], [m1, m1], 'r-', linewidth=2)
+        ax.plot([df.index[-10],df.index[-1]], [m2, m2], 'r-', linewidth=2)
+        ax.plot([df.index[5],df.index[-5]], [m1, m2], 'r-', linewidth=1)
+
         #title and save
         #ax.set_title(str(10)+'min etoh pct for: ' + m.__unicode__(), loc='left')
-        ax.text(0.97, 0.95, str(m.mky_drinking_category) + ' ' +str(m.mky_id),
+        ax.text(0.97, 0.95, str(m.mky_drinking_category) + ' ' +str(m.mky_id) + '\n Slope: %0.2f' % slope,
             horizontalalignment='right',
             verticalalignment='top',
             transform=ax.transAxes, fontsize=12)
@@ -216,7 +228,7 @@ def plot_min_etoh_showcases():
 
     fig.suptitle('EtOH consumption during first 10 minutes as percent (%) of daily allotment', fontsize=14)
     fig.subplots_adjust(top=0.93)
-#plot_min_etoh_showcases()
+plot_min_etoh_showcases()
 
 def etoh_during_ind_for_monkeys(mins):
     for m in get_monkeys():
@@ -245,11 +257,11 @@ def etoh_during_ind_for_monkeys(mins):
         plt.savefig(os.path.join(path, plotname), dpi=100)
 #etoh_during_ind_for_monkeys(FIRST_N_MINUTES)
 
-ml_monkeys = get_monkeys()
-ages = ml_monkeys.values_list('mky_weight', flat=True)
-ages
-print np.mean(remove_none(ages))
-print np.std(remove_none(ages))
+#ml_monkeys = get_monkeys()
+# ages = ml_monkeys.values_list('mky_weight', flat=True)
+# ages
+# print np.mean(remove_none(ages))
+# print np.std(remove_none(ages))
 
 #features = get_features(False)
 # print features.columns
@@ -288,4 +300,4 @@ feat_deltas = pd.read_pickle('features_deltas_2.plk')
 # print feat_chosen.columns
 
 
-#pylab.show()
+pylab.show()

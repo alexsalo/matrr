@@ -8,7 +8,11 @@ feat_chosen.mky_gender = (feat_chosen.mky_gender == 'M').astype(int)
 x = feat_chosen.drop('mky_drinking_category', axis = 1)
 y = feat_chosen['mky_drinking_category']
 x = x.drop('mky_gender', axis=1)
-x = x[['mtd_veh_bout_d', 'mky_age_at_intox', 'mtd_max_bout_length_d1','mtd_etoh_mean_drink_vol_d2']]
+##for 4 classes
+#x = x[['mtd_veh_bout_d', 'mky_age_at_intox', 'mtd_max_bout_length_d1','mtd_etoh_mean_drink_vol_d2']]
+##for 2 classes
+#x = x[['mky_age_at_intox', 'd_med_etoh', 'mtd_etoh_mean_drink_length_d2']]
+x.mky_age_at_intox = (x.mky_age_at_intox - np.mean(x.mky_age_at_intox)) / np.std(x.mky_age_at_intox)
 print x.columns
 
 def showCM(cm, plot=True):
@@ -94,12 +98,16 @@ def executeCrossVal(x, y, clf):
     return scores, cm
 
 clf = RandomForestClassifier()
+# from sklearn.linear_model import LogisticRegression
+#clf = svm.SVC(kernel='linear', C=3)
+# y[y=='BD']='LD'
+# y[y=='HD']='VHD'
 #clf = GradientBoostingClassifier(n_estimators=200, max_features='sqrt',max_depth=5)
-bagging =  BaggingClassifier(clf, n_estimators=20, max_samples=0.8, max_features=0.4, bootstrap=True, n_jobs=2) #
+bagging =  BaggingClassifier(clf, n_estimators=20, max_samples=0.8, max_features=1, bootstrap=True, n_jobs=2) #
 
-scores, cm = executeCrossVal(x, y, clf)
-showScores(scores)
-showCM(cm, True)
+# scores, cm = executeCrossVal(x, y, clf)
+# showScores(scores)
+# showCM(cm, True)
 
 #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
 

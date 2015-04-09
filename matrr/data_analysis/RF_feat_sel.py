@@ -10,10 +10,15 @@ y = feat_chosen['mky_drinking_category']
 x = x.drop('mky_gender', axis=1)
 print x.columns
 
+# y[y=='BD']='LD'
+# y[y=='HD']='VHD'
+
 clf = RandomForestClassifier()
 ###FEATURE SELECTION
 top5_features = []
-for i in xrange(20):
+RUNS=10
+test_best_scores = np.empty([RUNS, 13])
+for i in xrange(RUNS):
     all_features = list(x.columns)
     N = len(all_features)
     F = []
@@ -36,10 +41,8 @@ for i in xrange(20):
         F.append(best_feature)
         all_features.remove(best_feature)
     print F
-    if i == 0:
-        test_best_scores = np.array(best_scores)
-    else:
-        test_best_scores = (test_best_scores + np.array(best_scores)) / 2.0
+    #test_best_scores = (test_best_scores + np.array(best_scores)) / 2.0
+    test_best_scores[i] = best_scores
     top5_features += F[:4]
 
 #best features stat
@@ -48,12 +51,22 @@ import collections
 print top5_features
 print collections.Counter(top5_features)
 
-print test_best_scores
-plt.plot(xrange(1,14), test_best_scores)
+tbs_means = np.mean(test_best_scores, axis=0)
+tbs_sds = np.std(test_best_scores, axis=0)
+print tbs_means
+plt.plot(xrange(1,14), tbs_means)
 plt.xlabel('Number of features')
 plt.ylabel('Accuracy')
 plt.grid()
 plt.xlim(1,13)
+
+lower_bound = substract_lists(tbs_means, tbs_sds, 'sum')
+upper_bound = substract_lists(tbs_means, tbs_sds, 'diff')
+plt.fill_between(xrange(1,14), lower_bound, upper_bound, facecolor='yellow', alpha=0.5,
+                label='+- sigma range')
+#dummy plot to creaate legend since fill_between is not supported
+plt.plot([], [], color='yellow', linewidth=10, label='+- sigma range')
+plt.legend(loc='upper left')
 
 pylab.show()
 

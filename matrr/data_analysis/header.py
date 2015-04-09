@@ -77,3 +77,9 @@ def print_full(x):
     pd.set_option('display.max_rows', len(x))
     print(x)
     pd.reset_option('display.max_rows')
+
+def substract_lists(a, b, operator='diff'):
+    if operator=='diff':
+        return [a_i - b_i for a_i, b_i in zip(a, b)]
+    if operator=='sum':
+        return [a_i + b_i for a_i, b_i in zip(a, b)]
