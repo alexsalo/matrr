@@ -31,8 +31,8 @@ chosen_features = ['mtd_latency_1st_drink_d2','mtd_etoh_drink_bout_d2', 'mtd_veh
 
 ##Define Cohorts and Monkeys##
 def get_monkeys():
-    cohort_names = ["INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
-        "INIA Rhesus 6b", "INIA Rhesus 7a"]
+    cohort_names = ["INIA Rhesus 10"] #["INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
+        #"INIA Rhesus 6b", "INIA Rhesus 7a"]
     ml_cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
     ml_monkeys = Monkey.objects.filter(cohort__in = ml_cohorts).exclude(mky_drinking_category = None)
     return ml_monkeys
@@ -228,7 +228,7 @@ def plot_min_etoh_showcases():
 
     fig.suptitle('EtOH consumption during first 10 minutes as percent (%) of daily allotment', fontsize=14)
     fig.subplots_adjust(top=0.93)
-plot_min_etoh_showcases()
+# plot_min_etoh_showcases()
 
 def etoh_during_ind_for_monkeys(mins):
     for m in get_monkeys():
@@ -263,7 +263,7 @@ def etoh_during_ind_for_monkeys(mins):
 # print np.mean(remove_none(ages))
 # print np.std(remove_none(ages))
 
-#features = get_features(False)
+features = get_features(True)
 # print features.columns
 # #print features
 # features.d_med_etoh
@@ -273,10 +273,10 @@ def etoh_during_ind_for_monkeys(mins):
 # lm = ols('d_med_etoh ~ mky_drinking_category * mky_gender', data=features).fit()
 # print sm.stats.anova_lm(lm, typ=2)
 
-# feat_deltas = get_feature_deltas(features)
+feat_deltas = get_feature_deltas(features)
 # # # feat_deltas.to_csv('features_deltas_r.csv')
 # feat_deltas.save('features_deltas_2.plk')
-feat_deltas = pd.read_pickle('features_deltas_2.plk')
+#feat_deltas = pd.read_pickle('features_deltas_2.plk')
 # print feat_deltas.columns
 # colors = [dc_colors[dc] for dc in feat_deltas.mky_drinking_category]
 # plt.scatter(feat_deltas.mky_age_at_intox, feat_deltas.mtd_etoh_mean_drink_vol_d, c=colors)
@@ -295,9 +295,22 @@ feat_deltas = pd.read_pickle('features_deltas_2.plk')
 #
 
 ###CHOSEN FEATURES
-# feat_chosen = feat_deltas[features_monkey[1:] + ['d_med_etoh'] + chosen_features]
-# feat_chosen.save('feat_chosen.plk')
+feat_chosen = feat_deltas[features_monkey[1:] + ['d_med_etoh'] + chosen_features]
+feat_chosen.save('feat_chosen_coh10.plk')
 # print feat_chosen.columns
 
+# df = pd.DataFrame(list(get_monkeys().values_list('cohort__coh_cohort_name',
+#         'mky_age_at_intox', 'mky_age_at_necropsy', 'mky_gender', 'mky_weight', 'mky_birthdate')),
+#         columns=['coh_id','intox','age','sex', 'weight', 'bd'])
+# print df.groupby('coh_id').count()
+# print df.groupby('coh_id').intox.mean() / 365
+# print df.groupby('coh_id').weight.mean()
+# print df.groupby('coh_id').sex.sum()
+
+# a = [dingus.get_datetime_from_steve(age) for age in df.age]
+# b = [dingus.get_datetime_from_steve(bd) for bd in df.bd]
+# from dateutil.relativedelta import relativedelta
+# difference_in_years = [relativedelta([i], b[i]).years for i in xrange(a)]
+# print difference_in_years
 
 pylab.show()

@@ -25,6 +25,17 @@ dc_colors = {
     'VHD' : 'r'
 }
 
+from matrr.plotting import plot_tools
+from matplotlib import pyplot, cm, gridspec, colors
+from numpy import polyfit, polyval
+from matplotlib.ticker import NullLocator, MaxNLocator
+DEFAULT_CIRCLE_MAX = 200
+DEFAULT_CIRCLE_MIN = 60
+DEFAULT_FIG_SIZE = (10,10)
+HISTOGRAM_FIG_SIZE = (15,10)
+THIRDS_FIG_SIZE = (20,8)
+DEFAULT_DPI = 80
+
 import django
 django.setup()
 
@@ -634,61 +645,61 @@ from dateutil.relativedelta import relativedelta
 # from itertools import groupby
 # print [(key, len(list(group))) for key, group in groupby(a)]
 
-def showCM(cm, plot=True):
-    print(cm)
-
-    #Accuracy
-    trues = sum(cm[i][i] for i in xrange(0, len(cm)))
-    accuracy = trues / (cm.sum() * 1.0)
-    print ('Accuracy: %s' % accuracy)
-
-    #Balanced Error Rate
-    k = len(cm)
-    error_rate = 0
-    for i in xrange(0, k):
-        sumrow = 0
-        for j in xrange(0, k):
-            sumrow += cm[i][j]
-        error_rate += 1.0 * cm[i][i] / sumrow
-    balanced_error_rate = 1 - error_rate / k
-    print ('Balanced Error Rate: %s' % balanced_error_rate)
-    print '--> where BER = 1 - 1/k * sum_i (m[i][i] / sum_j (m[i][j]))'
-
-    if plot:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ms = ax.matshow(cm)
-        ax.set_title('Confusion matrix')
-        plt.colorbar(ms)
-        ax.set_ylabel('True label')
-        ax.set_xlabel('Predicted label')
-        ax.set_xticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
-        ax.set_yticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
-        plt.tight_layout()
-        pylab.show()
-
-cm = np.zeros(shape=(4,4))#, dtype=int)
-cm[0][0] = 6
-cm[0][1]=1
-cm[0][2]=0
-cm[0][3]=1
-
-cm[1][0]=1
-cm[1][1]=1
-cm[1][2]=3
-cm[1][3]=0
-
-cm[2][0]=0
-cm[2][1]=0
-cm[2][2]=3
-cm[2][3]=0
-
-cm[3][0]=1
-cm[3][1]=0
-cm[3][2]=1
-cm[3][3]=6
-
-showCM(cm, True)
+# def showCM(cm, plot=True):
+#     print(cm)
+#
+#     #Accuracy
+#     trues = sum(cm[i][i] for i in xrange(0, len(cm)))
+#     accuracy = trues / (cm.sum() * 1.0)
+#     print ('Accuracy: %s' % accuracy)
+#
+#     #Balanced Error Rate
+#     k = len(cm)
+#     error_rate = 0
+#     for i in xrange(0, k):
+#         sumrow = 0
+#         for j in xrange(0, k):
+#             sumrow += cm[i][j]
+#         error_rate += 1.0 * cm[i][i] / sumrow
+#     balanced_error_rate = 1 - error_rate / k
+#     print ('Balanced Error Rate: %s' % balanced_error_rate)
+#     print '--> where BER = 1 - 1/k * sum_i (m[i][i] / sum_j (m[i][j]))'
+#
+#     if plot:
+#         fig = plt.figure()
+#         ax = fig.add_subplot(111)
+#         ms = ax.matshow(cm)
+#         ax.set_title('Confusion matrix')
+#         plt.colorbar(ms)
+#         ax.set_ylabel('True label')
+#         ax.set_xlabel('Predicted label')
+#         ax.set_xticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+#         ax.set_yticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+#         plt.tight_layout()
+#         pylab.show()
+#
+# cm = np.zeros(shape=(4,4))#, dtype=int)
+# cm[0][0] = 6
+# cm[0][1]=1
+# cm[0][2]=0
+# cm[0][3]=1
+#
+# cm[1][0]=1
+# cm[1][1]=1
+# cm[1][2]=3
+# cm[1][3]=0
+#
+# cm[2][0]=0
+# cm[2][1]=0
+# cm[2][2]=3
+# cm[2][3]=0
+#
+# cm[3][0]=1
+# cm[3][1]=0
+# cm[3][2]=1
+# cm[3][3]=6
+#
+# showCM(cm, True)
 #
 # k = 4
 # sums = np.sum(cm)
@@ -727,6 +738,186 @@ showCM(cm, True)
 # balanced_error_rate = 1 - error_rate / k
 # print ('Balanced Error Rate: %s' % balanced_error_rate)
 # print '--> where BER = 1 - 1/k * sum_i (m[i][i] / sum_j (m[i][j]))'
+
+
+###9 Apr 2015
+# cohort_names = ["INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 7b", "INIA Rhesus 7a"]
+# cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
+# print cohorts
+# monkeys  = Monkey.objects.filter(cohort__in=cohorts)
+# mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey__in=monkeys)
+# becs = MonkeyBEC.objects.OA().filter(monkey__in=monkeys)
+#
+# table = []
+# for i, m in enumerate(monkeys):
+#     #End Date
+#     end_date = CohortEvent.objects.filter(cohort=m.cohort).filter(event=42)[0].cev_date
+#
+#     #EtOH
+#     mtds_m = mtds.filter(monkey = m).filter(drinking_experiment__dex_date__lte=end_date).order_by('-drinking_experiment__dex_date')[:30]
+#     mean_etoh = mtds_m.aggregate(models.Avg('mtd_etoh_g_kg')).values()[0]
+#
+#     #BEC
+#     becs_m = becs.filter(monkey = m).filter(bec_collect_date__lte=end_date).order_by('-bec_collect_date')[:3]
+#     mean_bec = becs_m.aggregate(models.Avg('bec_mg_pct')).values()[0]
+#
+#     if mean_etoh != None and mean_bec != None:
+#         table.append([m.mky_id, mean_etoh, mean_bec])
+#
+# print table
+# df = pd.DataFrame(table, columns=['mky_id', 'mean_etoh_gkg', 'mean_bec'])
+# print df
+#
+# print pd.DataFrame(list(CohortEvent.objects.filter(cohort=cohorts[0]).values_list('cev_date', 'event__evt_id', 'event__evt_name')), columns=['date','id','name'])
+#
+# # becs_m = MonkeyBEC.objects.filter(monkey = Monkey.objects.get(mky_id=10054)).order_by('bec_collect_date').values_list('bec_mg_pct', flat=True)
+# # plt.plot(becs_m)
+
+###16 Apr 2015
+# import datetime
+# cohort_names = ["INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 7b", "INIA Rhesus 7a"]
+# cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
+# for cohort in cohorts:
+#     monkeys  = Monkey.objects.filter(cohort=cohort)
+#     mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey__in=monkeys)
+#     becs = MonkeyBEC.objects.OA().filter(monkey=monkeys)
+#
+#     #Start - End Date
+#     end_date = CohortEvent.objects.filter(cohort=cohort).filter(event=42)[0].cev_date
+#     start_date = end_date - datetime.timedelta(days=29)
+#
+#     table = []
+#     for i, m in enumerate(monkeys):
+#         #EtOH
+#         mtds_m = mtds.filter(monkey = m).filter(drinking_experiment__dex_date__gte=start_date).\
+#             filter(drinking_experiment__dex_date__lte=end_date).order_by('drinking_experiment__dex_date')
+#         if i == 0:
+#             table.append(['Date: '] + [d.strftime("%Y-%m-%d") for d in mtds_m.values_list('drinking_experiment__dex_date', flat=True)])
+#             table.append(['Etohs: '] + ['-' for i in xrange(len(table[0])-1)])
+#         etohs = mtds_m.values_list('mtd_etoh_g_kg', flat=True)
+#         if len(etohs) > 5 :
+#             table.append([m.mky_id] + list(etohs))
+#
+#     table.append(['BECs: '] + ['-' for i in xrange(len(table[0])-1)])
+#     for i, m in enumerate(monkeys):
+#         #BEC
+#         bec_values = becs.filter(monkey = m).filter(bec_collect_date__gte=start_date).\
+#             filter(bec_collect_date__lte=end_date).order_by('bec_collect_date').values_list('bec_collect_date','bec_mg_pct')
+#         if len(bec_values) > 0:
+#             becs_row = [0 for i in xrange(len(table[0])-1)]
+#             for bec in bec_values:
+#                 becs_row[table[0].index(bec[0].strftime("%Y-%m-%d"))] = bec[1]
+#             table.append([m.mky_id] + becs_row)
+#
+#     #print table
+#     df = pd.DataFrame(table)
+#     df = df.set_index([0])
+#     df.to_csv('/home/alex/Dropbox/Baylor/Matrr/_etoh_per_cohort/' + cohort.coh_cohort_name + '.csv')
+#     #print df
+#
+
+
+### 27 April 2015
+# # Load Cohort 10
+# # coh10_file = '/home/alex/Dropbox/Baylor/Matrr/coh10/41.coh10_ind_sum_corrected_20150427.csv'
+# from matrr.utils.database import load
+# # load.load_mtd(coh10_file, 'Induction', 'INIA Rhesus 10')
+#
+# coh10_file_22hr = '/home/alex/Dropbox/Baylor/Matrr/coh10/Coh10_22hr_Sum_20150423matrr.csv'
+# from matrr.utils.database import load
+# load.load_mtd(coh10_file_22hr, 'Open Access', 'INIA Rhesus 10', update_duplicates=True)
+#
+# # coh10_exception_file = '/home/alex/Dropbox/Baylor/Matrr/coh10/Coh10_exception_days.csv'
+# # load.load_monkey_exceptions(coh10_exception_file, overwrite=False, header=True)
+# #
+# m = Monkey.objects.get(mky_id=10208)
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date')
+# df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_etoh_g_kg')), columns=['date', 'etoh'])
+# pylab.plot(df.date, df.etoh, 'bo')
+# # #print m.mky_age_at_intox
+#
+# # print m.mky_real_id
+# # print MonkeyException.objects.filter(monkey=m)
+
+
+###4-29-2015
+## Upload timeline for cohort 13
+# c = Cohort.objects.get(coh_cohort_name = 'INIA Cyno 13')
+# df = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c).values_list('event__evt_id', 'event__evt_name', 'cev_date')))
+# print df
+#
+# timelines_all = '/home/alex/Dropbox/Baylor/Matrr/coh13/coh13_timeline.csv'
+# from matrr.utils.database import load
+# load.load_cohort_timelines(timelines_all, True)
+
+
+###4-30-2015
+## Upload BECs for Cohort 10
+# c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
+# monkeys = Monkey.objects.filter(cohort=c)
+# print MonkeyBEC.objects.filter(monkey__in=monkeys)
+#
+# filename = '/home/alex/Dropbox/Baylor/Matrr/coh10/42.coh10_bec_1year_20150429.csv'
+# from matrr.utils.database import load
+# load.load_bec_data(filename, True, True)
+#
+# print MonkeyBEC.objects.filter(monkey__in=monkeys)
+
+# c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
+# monkeys = Monkey.objects.filter(cohort=c)
+# print MonkeyBEC.objects.OA().filter(monkey__in=monkeys)
+# for bec in MonkeyBEC.objects.filter(monkey__in=monkeys):
+#     bec.populate_fields(True)
+#     bec.save()
+# print MonkeyBEC.objects.OA().filter(monkey__in=monkeys)
+#
+# ###5-1-2015
+# ## Populate Drinking Category
+# c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
+# monkeys = Monkey.objects.filter(cohort=c)
+# for m in monkeys:
+#     m.mky_study_complete = True
+#     m.populate_age_at_intox()
+#     m.populate_drinking_category()
+#     m.save()
+#     print m.mky_drinking_category, m.mky_age_at_intox
+
+
+### 5-2-2015
+# # m = Monkey.objects.get(mky_id=10208)
+# # mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date')
+# # plt.plot(mtds.values_list('mtd_etoh_g_kg', flat=True))
+#
+#
+# ind_boutDrinks_coh10 = '/home/alex/MATRR/Coh10_data/Coh10_IndBoutsDrinks/'
+# ind_data_coh10 = '/home/alex/MATRR/Coh10_data/Coh10_Ind_data_20150424/'
+#
+# OA_boutDrinks_coh10 = '/home/alex/MATRR/Coh10_data/Coh10_22hrBoutsDrinks1yr/'
+# OA_data_coh10 = '/home/alex/MATRR/Coh10_data/Coh10_22hr_data_1yr_20150424/'
+#
+# from matrr.utils.database import load
+# #load.load_eevs(ind_data_coh10, 'Induction')
+# #load.load_eevs(OA_data_coh10, 'Open Access')
+#
+# load.load_edrs_and_ebts('INIA Rhesus 10', 'Induction', ind_boutDrinks_coh10)
+# #load.load_edrs_and_ebts('INIA Rhesus 10', 'Open Access', OA_boutDrinks_coh10)
+
+
+# duration = 10 * 60
+# mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=Monkey.objects.get(mky_id=10208)).exclude_exceptions().order_by('drinking_experiment__dex_date')
+# volumes = []
+# for mtd in mtds:
+#     bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
+#     drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
+#     vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
+#     volumes.append(vols.sum() / mtd.mtd_etoh_intake)
+# print pd.DataFrame(list(volumes))
+
+### 5-3-2015
+# from matrr.plotting import monkey_plots
+# m = Monkey.objects.get(mky_id=10062)
+# fig = monkey_plots.monkey_etoh_bouts_vol(m,circle_min=150, circle_max=200)
+# matplotlib.rcParams.update({'font.size': 18})
 
 
 pylab.show()

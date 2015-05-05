@@ -31,6 +31,7 @@ def monkey_necropsy_etoh_4pct(monkey):
         monkey.necropsy_summary
     except NecropsySummary.DoesNotExist:
         return False, False
+        return False, False
     else:
         graph_title = 'Total Ethanol Intake for Monkey %s' % str(monkey.pk)
         x_label = "Ethanol Intake (in 4% ml)"

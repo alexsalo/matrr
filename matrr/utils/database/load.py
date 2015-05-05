@@ -619,6 +619,8 @@ def load_mtd(file_name, dex_type, cohort_name, update_duplicates=False, dump_dup
             if line_number == 0 and has_headers: # cyno 2 had column headers
                 continue
             data = line.split(',')
+            if len(data) == 1:
+                data = line.split('\t')
             if data[0] == '0.5' or data[0] == '1' or data[0] == '1.5' or data[0] == '1.0': # for some damn reason they added a column in cyno 2's induction file.
                 ind_portion = data.pop(0)
             _truncate_columns = min(38, truncate_data_columns)
@@ -1865,7 +1867,7 @@ def load_mbb_images(image_dir):
     for filename in files:
         create_mbb(os.path.join(image_dir, filename))
 
-def load_monkey_exceptions(file_name, overwrite=False, header=True):
+def load_monkey_exceptions(file_name, overwrite=False, header=True, delimiter="\t"):
     """
     Pre-7b format:
     "Cohort","Experiment","File Errors Corrected","Day not used at all","BEC for Lifetime Intake only, no behav","Date","animal","etoh intake (.04 conc)"
@@ -1885,7 +1887,8 @@ def load_monkey_exceptions(file_name, overwrite=False, header=True):
     I don't know exactly what "etoh intake" means.  I'm pretty sure it's the (corrected) volume of alcohol consumed.  This should allow me to delete bad records and keep accurate lifetime intake volumes
     "2% etoh" is a flag (""/"x") indicating this day the monkey received .02 conc alcohol instead of the normal .04 conc.
     """
-    csv_infile = csv.reader(open(file_name, 'rU'), delimiter=",")
+    csv_infile = csv.reader(open(file_name, 'rU'), delimiter=delimiter)
+
     if header:
         columns = csv_infile.next()
     column_format = [

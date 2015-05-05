@@ -660,18 +660,21 @@ class Monkey(models.Model):
                 self.save()
 
     def etoh_during_ind(self, mins):
-        duration = mins * 60
-        mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=self).exclude_exceptions().order_by('drinking_experiment__dex_date')
-        #some monkeys have weird beginning, just trust this 55 number
-        if self.mky_id in anomalies_mtds_ids:
-            mtds = mtds[55:]
-        volumes = []
-        for mtd in mtds:
-            bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
-            drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
-            vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
-            volumes.append(vols.sum() / mtd.mtd_etoh_intake)
-        return pd.DataFrame(list(volumes))
+        try:
+            duration = mins * 60
+            mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=self).exclude_exceptions().order_by('drinking_experiment__dex_date')
+            #some monkeys have weird beginning, just trust this 55 number
+            if self.mky_id in anomalies_mtds_ids:
+                mtds = mtds[55:]
+            volumes = []
+            for mtd in mtds:
+                bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
+                drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
+                vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
+                volumes.append(vols.sum() / mtd.mtd_etoh_intake)
+            return pd.DataFrame(list(volumes))
+        except Exception as e:
+            return None
 
     def populate_age_at_intox(self):
         becs = MonkeyBEC.objects.filter(monkey=self)
