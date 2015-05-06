@@ -31,8 +31,8 @@ chosen_features = ['mtd_latency_1st_drink_d2','mtd_etoh_drink_bout_d2', 'mtd_veh
 
 ##Define Cohorts and Monkeys##
 def get_monkeys():
-    cohort_names = ["INIA Rhesus 10"] #["INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
-        #"INIA Rhesus 6b", "INIA Rhesus 7a"]
+    cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
+        "INIA Rhesus 6b", "INIA Rhesus 7a"]
     ml_cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
     ml_monkeys = Monkey.objects.filter(cohort__in = ml_cohorts).exclude(mky_drinking_category = None)
     return ml_monkeys
@@ -56,17 +56,17 @@ def median_value_per_stage_for_monkeys(monkeys, mtds_all, value_name, GKG_DELTA_
                         tp1 = i-1
                     else:
                         tp2 = i-1
-        #if some problems - use total median
-        if values_df.value[tp0:tp1].median() < 0:
-            total_medain = values_df.value.median()
-            medians.ix[m.mky_id] = [total_medain, total_medain, total_medain, total_medain]
-        #if all good - assign valid medians by stage
-        else:
-            medians.loc[index] = [m.mky_id,
-                                values_df.value[tp0:tp1].median(),
-                                values_df.value[tp1:tp2].median(),
-                                values_df.value[tp2:].median(),
-                                values_df.value[tp0:].median()]
+        # #if some problems - use total median
+        # if values_df.value[tp0:tp1].median() < 0:
+        #     total_medain = values_df.value.median()
+        #     medians.ix[m.mky_id] = [total_medain, total_medain, total_medain, total_medain]
+        # #if all good - assign valid medians by stage
+        # else:
+        medians.loc[index] = [m.mky_id,
+                            values_df.value[tp0:tp1].median(),
+                            values_df.value[tp1:tp2].median(),
+                            values_df.value[tp2:].median(),
+                            values_df.value[tp0:].median()]
     medians.set_index("mky_id", inplace=True)
     return medians
 
@@ -296,7 +296,7 @@ feat_deltas = get_feature_deltas(features)
 
 ###CHOSEN FEATURES
 feat_chosen = feat_deltas[features_monkey[1:] + ['d_med_etoh'] + chosen_features]
-feat_chosen.save('feat_chosen_coh10.plk')
+feat_chosen.save('feat_chosen_all.plk')
 # print feat_chosen.columns
 
 # df = pd.DataFrame(list(get_monkeys().values_list('cohort__coh_cohort_name',

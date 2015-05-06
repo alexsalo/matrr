@@ -1,7 +1,8 @@
 __author__ = 'alex'
 from header import *
 
-feat_chosen = pd.read_pickle('feat_chosen.plk')
+#feat_chosen = pd.read_pickle('feat_chosen.plk')
+feat_chosen = pd.read_pickle('feat_chosen_all.plk')
 feat_chosen = feat_chosen.drop('cohort__coh_cohort_id', axis = 1)
 feat_chosen.mky_gender = (feat_chosen.mky_gender == 'M').astype(int)
 print feat_chosen.columns
@@ -99,7 +100,7 @@ def executeCrossVal(x, y, clf):
 
 clf = RandomForestClassifier()
 from sklearn.linear_model import LogisticRegression
-clf = svm.SVC(kernel='linear', C=3)
+#clf = svm.SVC(kernel='linear', C=3)
 # y[y=='BD']='LD'
 # y[y=='HD']='VHD'
 #clf = GradientBoostingClassifier(n_estimators=200, max_features='sqrt',max_depth=5)

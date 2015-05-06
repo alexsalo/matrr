@@ -871,8 +871,8 @@ from dateutil.relativedelta import relativedelta
 #     bec.save()
 # print MonkeyBEC.objects.OA().filter(monkey__in=monkeys)
 #
-# ###5-1-2015
-# ## Populate Drinking Category
+###5-1-2015
+## Populate Drinking Category
 # c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 # monkeys = Monkey.objects.filter(cohort=c)
 # for m in monkeys:
@@ -919,5 +919,80 @@ from dateutil.relativedelta import relativedelta
 # fig = monkey_plots.monkey_etoh_bouts_vol(m,circle_min=150, circle_max=200)
 # matplotlib.rcParams.update({'font.size': 18})
 
+# matplotlib.rcParams.update({'font.size': 12})
+# m = Monkey.objects.get(mky_id=10062)
+# c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
+# monkeys = Monkey.objects.filter(cohort=c).filter(mky_drinking=True)
+# print monkeys
+# print [m.mky_real_id for m in monkeys]
+# #
+# # # Populate fields
+# # # for m in monkeys:
+# # #     print m
+# # #     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m)
+# # #     for mtd in mtds:
+# # #         mtd.populate_fields()
+# #
+# # duration = 20 * 60
+# # mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=Monkey.objects.get(mky_real_id=27682)).exclude_exceptions().order_by('drinking_experiment__dex_date')
+# # mtd_bad = mtds[15]
+# # mtd_bad.mex_excluded = True
+# # mtd_bad.save()
+# # mtds = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=Monkey.objects.get(mky_real_id=27682)).exclude_exceptions().order_by('drinking_experiment__dex_date')
+# # print mtds.values_list('mtd_etoh_g_kg', flat=True)
+# # volumes = mtds.values_list('mtd_etoh_intake', flat=True)
+# # print volumes
+# # print volumes[15]
+# # # mtd = mtds[45]
+# # # print mtd
+# # # print mtd.mtd_etoh_intake
+# # # bouts = ExperimentBout.objects.filter(mtd=mtd).filter(ebt_start_time__lt=duration)
+# # # print bouts
+# # # drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
+# # # print drinks_in_bout
+# # # vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
+# # # print vols
+# #
+# # volumes = []
+# # for i, mtd in enumerate(mtds):
+# #     bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
+# #     drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
+# #     vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
+# #     if i == 15:
+# #         print 15
+# #     print i, vols.sum() / mtd.mtd_etoh_intake
+# #     volumes.append(vols.sum() / mtd.mtd_etoh_intake)
+# # plt.plot(pd.DataFrame(list(volumes)))
+#
+# fig, axs = plt.subplots(monkeys.count(),1, figsize=(10,16))
+# for i, m in enumerate(monkeys):
+#     axs[i].plot(m.etoh_during_ind(10), 'r-o')
+#     title = str(m.mky_id) + ', ' + str(m.mky_drinking_category) + ', ' + str(m.mky_age_at_intox)
+#     #axs[i].set_title(title)
+#     axs[i].text(.5,.9,title,
+#         horizontalalignment='center',
+#         transform=axs[i].transAxes)
+# fig.subplots_adjust(hspace=0)
+# fig.subplots_adjust(wspace=0)
+# plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
+# plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
+# plt.tight_layout()
+
+### May 7 2015
+# c = Cohort.objects.get(coh_cohort_name = "INIA Cyno 2")
+# df = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c).values_list('event__evt_id', 'event__evt_name', 'cev_date')))
+# print df
+
+for event in EventType.objects.all():
+    if (event.evt_name in ['Ethanol Induction Begin', 'Ethanol Induction End']):
+        event.evt_dex_type = 'Induction'
+    if "Open Access" in event.evt_name:
+        if "Endocrine" not in event.evt_name:
+            event.evt_dex_type = 'Open (Alcohol) Access'
+    event.save()
+
+
+df = pd.DataFrame(list(EventType.objects.values_list('evt_id', 'evt_name', 'evt_dex_type')), columns=['id', 'name', 'dex_type'])
+print df
 
 pylab.show()

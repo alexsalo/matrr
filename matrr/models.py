@@ -466,6 +466,8 @@ class EventType(models.Model):
                                 help_text='The name of the event.')
     evt_description = models.TextField('Description', null=True, blank=True,
                                        help_text='A description of the event.')
+    evt_dex_type = models.TextField('Dex Type', null=True, blank=True,
+                                       help_text='Dex Type of the event')
 
     def __unicode__(self):
         return self.evt_name
@@ -668,7 +670,7 @@ class Monkey(models.Model):
                 mtds = mtds[55:]
             volumes = []
             for mtd in mtds:
-                bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
+                bouts = ExperimentBout.objects.filter(mtd=mtd).filter(ebt_start_time__lt=duration)
                 drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
                 vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
                 volumes.append(vols.sum() / mtd.mtd_etoh_intake)
