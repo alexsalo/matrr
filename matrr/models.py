@@ -624,6 +624,7 @@ class Monkey(models.Model):
     mky_stress_model = models.CharField('Stress Model', null=True, blank=True, max_length=30,
                                         help_text='This should indicate the grouping of the monkey if it was in a cohort that also tested stress models. (ex. MR, NR, HC, LC) ')
     mky_age_at_necropsy = models.CharField('Age at Necropsy', max_length=100, null=True, blank=True)
+    mky_days_at_necropsy = models.PositiveIntegerField("Age at necropsy (days)", null=True, blank=True, default=None)
     mky_notes = models.CharField('Monkey Notes', null=True, blank=True, max_length=1000, )
     mky_species = models.CharField('Species', max_length=30, choices=Species, help_text='Please select the species of the monkey.')
     mky_high_drinker = models.BooleanField("High-drinking monkey", null=False, blank=False, default=False)
@@ -634,9 +635,10 @@ class Monkey(models.Model):
     def __unicode__(self):
         name = str(self.mky_id) + ' ' + str(self.mky_name) + ' ' + str(self.mky_species) + ' '
         if self.mky_drinking:
-            name += str(self.mky_drinking_category)
+            name += str(self.mky_drinking_category) + ' '
         else:
-            name += 'control'
+            name += 'control '
+        name += self.cohort.coh_cohort_name
         return name
 
     def sex(self):

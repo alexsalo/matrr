@@ -24,6 +24,23 @@ dc_colors = {
     'HD' : 'y',
     'VHD' : 'r'
 }
+dc_colors_o = {
+    'LD' : 'go',
+    'BD' : 'bo',
+    'HD' : 'yo',
+    'VHD' : 'ro',
+    None : 'ko'
+}
+
+coh_colors = {
+    5 : 'g',
+    6 : 'b',
+    7 : 'r',
+    8 : 'k',
+    9 : 'y',
+    10 : 'm',
+    19 : 'c'
+}
 
 from matrr.plotting import plot_tools
 from matplotlib import pyplot, cm, gridspec, colors
@@ -925,45 +942,45 @@ from dateutil.relativedelta import relativedelta
 # monkeys = Monkey.objects.filter(cohort=c).filter(mky_drinking=True)
 # print monkeys
 # print [m.mky_real_id for m in monkeys]
-# #
-# # # Populate fields
-# # # for m in monkeys:
-# # #     print m
-# # #     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m)
-# # #     for mtd in mtds:
-# # #         mtd.populate_fields()
-# #
-# # duration = 20 * 60
-# # mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=Monkey.objects.get(mky_real_id=27682)).exclude_exceptions().order_by('drinking_experiment__dex_date')
-# # mtd_bad = mtds[15]
-# # mtd_bad.mex_excluded = True
-# # mtd_bad.save()
-# # mtds = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=Monkey.objects.get(mky_real_id=27682)).exclude_exceptions().order_by('drinking_experiment__dex_date')
-# # print mtds.values_list('mtd_etoh_g_kg', flat=True)
-# # volumes = mtds.values_list('mtd_etoh_intake', flat=True)
-# # print volumes
-# # print volumes[15]
-# # # mtd = mtds[45]
-# # # print mtd
-# # # print mtd.mtd_etoh_intake
-# # # bouts = ExperimentBout.objects.filter(mtd=mtd).filter(ebt_start_time__lt=duration)
-# # # print bouts
-# # # drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
-# # # print drinks_in_bout
-# # # vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
-# # # print vols
-# #
-# # volumes = []
-# # for i, mtd in enumerate(mtds):
-# #     bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
-# #     drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
-# #     vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
-# #     if i == 15:
-# #         print 15
-# #     print i, vols.sum() / mtd.mtd_etoh_intake
-# #     volumes.append(vols.sum() / mtd.mtd_etoh_intake)
-# # plt.plot(pd.DataFrame(list(volumes)))
 #
+# # Populate fields
+# # for m in monkeys:
+# #     print m
+# #     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m)
+# #     for mtd in mtds:
+# #         mtd.populate_fields()
+#
+# duration = 20 * 60
+# mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=Monkey.objects.get(mky_real_id=27682)).exclude_exceptions().order_by('drinking_experiment__dex_date')
+# mtd_bad = mtds[15]
+# mtd_bad.mex_excluded = True
+# mtd_bad.save()
+# mtds = MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().filter(monkey=Monkey.objects.get(mky_real_id=27682)).exclude_exceptions().order_by('drinking_experiment__dex_date')
+# print mtds.values_list('mtd_etoh_g_kg', flat=True)
+# volumes = mtds.values_list('mtd_etoh_intake', flat=True)
+# print volumes
+# print volumes[15]
+# # mtd = mtds[45]
+# # print mtd
+# # print mtd.mtd_etoh_intake
+# # bouts = ExperimentBout.objects.filter(mtd=mtd).filter(ebt_start_time__lt=duration)
+# # print bouts
+# # drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
+# # print drinks_in_bout
+# # vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
+# # print vols
+#
+# volumes = []
+# for i, mtd in enumerate(mtds):
+#     bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
+#     drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
+#     vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
+#     if i == 15:
+#         print 15
+#     print i, vols.sum() / mtd.mtd_etoh_intake
+#     volumes.append(vols.sum() / mtd.mtd_etoh_intake)
+# plt.plot(pd.DataFrame(list(volumes)))
+
 # fig, axs = plt.subplots(monkeys.count(),1, figsize=(10,16))
 # for i, m in enumerate(monkeys):
 #     axs[i].plot(m.etoh_during_ind(10), 'r-o')
@@ -983,16 +1000,159 @@ from dateutil.relativedelta import relativedelta
 # df = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c).values_list('event__evt_id', 'event__evt_name', 'cev_date')))
 # print df
 
-for event in EventType.objects.all():
-    if (event.evt_name in ['Ethanol Induction Begin', 'Ethanol Induction End']):
-        event.evt_dex_type = 'Induction'
-    if "Open Access" in event.evt_name:
-        if "Endocrine" not in event.evt_name:
-            event.evt_dex_type = 'Open (Alcohol) Access'
-    event.save()
+# for event in EventType.objects.all():
+#     if (event.evt_name in ['Ethanol Induction Begin', 'Ethanol Induction End']):
+#         event.evt_dex_type = 'Induction'
+#     if "Open Access" in event.evt_name:
+#         if "Endocrine" not in event.evt_name:
+#             event.evt_dex_type = 'Open (Alcohol) Access'
+#     event.save()
+#
+#
+# df = pd.DataFrame(list(EventType.objects.values_list('evt_id', 'evt_name', 'evt_dex_type')), columns=['id', 'name', 'dex_type'])
+# print df
+
+### 8 may 2015
+# from django.db.models import Q
+# jon_user = User.objects.get(username='jon')
+# jon_user2 = User.objects.get(username='jarquet')
+# requests = Request.objects.shipped().filter(~Q(user=jon_user)).filter(~Q(user=jon_user2))
+# print len(requests)
+# shipments = Shipment.objects.filter(req_request__in=requests)
+# print len(shipments)
+#
+# df = pd.DataFrame(list(shipments.values_list('shp_shipment_id', 'req_request_id', 'req_request__user__first_name',
+#                                              'req_request__user__last_name', 'req_request__user__username')),
+#                        columns=['ship_id', 'request_id', 'first name', 'last name', 'username'])
+# df.to_csv('/home/alex/Dropbox/Baylor/Matrr/shipments_without_all_jons.csv')
+# print df
+
+### 12 May 2015
+import lwr
+c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
+# monkeys = Monkey.objects.filter(cohort=c).filter(mky_drinking=True)
+# mtds_all = MonkeyToDrinkingExperiment.objects.filter(monkey__in=monkeys)
+# fig, axs = plt.subplots(monkeys.count(),1, figsize=(10,16))
+# for i, m in enumerate(monkeys):
+#     print str(i+1) + " out of: " + str(len(monkeys))
+#     mtds = mtds_all.filter(monkey=m).order_by('drinking_experiment__dex_date')
+#     df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_etoh_g_kg')), columns=['date', 'etoh'])
+#     xpred, ypred = lwr.wls(xrange(len(df.index)), df.etoh, False, tau=0.45)
+#     axs[i].plot(df.date, df.etoh, dc_colors_o[m.mky_drinking_category], df.date, ypred, 'b-')
+#     title = str(m.mky_id) + ', ' + str(m.mky_drinking_category) + ', ' + str(m.mky_age_at_intox)
+#     #axs[i].set_title(title)
+#     axs[i].text(.5,.9,title,
+#         horizontalalignment='center',
+#         transform=axs[i].transAxes)
+# fig.subplots_adjust(hspace=0)
+# fig.subplots_adjust(wspace=0)
+# plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
+# plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
+# plt.tight_layout()
+
+### 13 May 2015
+# from matrr.plotting import plot_tools as pl
+# pl.create_max_bout_cumsum_horibar_canonicals(c)
+# pl.create_mtd_tools_canonicals(c, True)
 
 
-df = pd.DataFrame(list(EventType.objects.values_list('evt_id', 'evt_name', 'evt_dex_type')), columns=['id', 'name', 'dex_type'])
-print df
+### 14 May 2015
+# print_full(pd.DataFrame(list(TissueType.objects.all().values_list('tst_tissue_name', flat=True))))
+# tst = TissueType.objects.get(tst_tissue_name = 'Nucleus accumbens (Core)')
+# print tst
+# tissue_requests = TissueRequest.objects.filter(tissue_type=tst)
+# requests = [ts.req_request for ts in tissue_requests]
+# print len(requests)
+# shipments = Shipment.objects.filter(req_request__in=requests)
+# print len(shipments)
+# df = pd.DataFrame(list(shipments.values_list('shp_shipment_id', 'req_request_id', 'req_request__user__first_name',
+#                                              'req_request__user__last_name', 'req_request__user__username')),
+#                        columns=['ship_id', 'request_id', 'first name', 'last name', 'username'])
+# df.to_csv('/home/alex/Dropbox/Baylor/Matrr/shipments_with_nucleus_accumbes_core.csv')
+# print df
 
-pylab.show()
+### 18 May 2015
+# cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
+#             "INIA Rhesus 6b", "INIA Rhesus 7a"]
+# ml_cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
+# monkeys = Monkey.objects.filter(cohort__in=ml_cohorts).exclude(mky_drinking_category = None)
+# # for m in monkeys:
+# #     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date')
+# #     m.mky_days_at_necropsy = (mtds.last().drinking_experiment.dex_date - m.mky_birthdate).days
+# #     m.save()
+# df = pd.DataFrame(list(monkeys.values_list('mky_id', 'cohort', 'mky_days_at_necropsy')), columns = ['mky_id', 'cohort_id', 'days_at_necropsy'])
+# # print df
+# # df = df.sort('cohort_id')
+# # colors = [coh_colors[id] for id in df.cohort_id]
+# # y = df.days_at_necropsy
+# # x = np.arange(len(y))
+# # plt.scatter(x, y, c=colors, s = 150)
+#
+# matplotlib.rcParams.update({'font.size': 18})
+# coh_ids = np.unique(df.cohort_id)
+# gb = df.groupby('cohort_id')
+# for i, coh_id in enumerate(coh_ids):
+#     cohort = Cohort.objects.get(coh_cohort_id = coh_id)
+#     index = gb.get_group(coh_id).index
+#     x = df[df.index.isin(index)]
+#     t = [i for num in xrange(len(x))]
+#     print t
+#     print x
+#     plt.scatter(t,x.days_at_necropsy, c=coh_colors[coh_id], s = 500, label=cohort.coh_cohort_name, marker='o', alpha=.5)
+# plt.legend(loc=1)
+
+
+### 20 May 2015
+# cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
+#             "INIA Rhesus 6b", "INIA Rhesus 7a"]
+# ml_cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
+# ml_monkeys = Monkey.objects.filter(cohort__in=ml_cohorts).exclude(mky_drinking_category = None)
+# m = ml_monkeys[15]
+#
+# for m in ml_monkeys:
+#     print m
+#     endocrine_profiles = CRHChallenge.objects.filter(monkey=m)
+#     print endocrine_profiles
+
+# c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
+# monkeys = Monkey.objects.filter(cohort=c).filter(mky_drinking=True)
+# fig, axs = plt.subplots(monkeys.count(),1, figsize=(10,16))
+# for i, m in enumerate(monkeys):
+#     mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=m).order_by('drinking_experiment__dex_date')
+#     df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_etoh_g_kg')), columns=['date', 'etoh'])
+#     axs[i].plot(xrange(len(df.date)), df.etoh, 'b-o', alpha=0.2)
+#     title = str(m.mky_id) + ', ' + str(m.mky_drinking_category) + ', ' + str(m.mky_age_at_intox)
+#     axs[i].text(.5,.9,title,
+#         horizontalalignment='center',
+#         transform=axs[i].transAxes)
+# fig.subplots_adjust(hspace=0)
+# fig.subplots_adjust(wspace=0)
+# plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
+# plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
+# plt.tight_layout()
+#
+# def plotMTDSforMonkey(m):
+#     mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=m).order_by('drinking_experiment__dex_date')
+#     df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_etoh_g_kg')), columns=['date', 'etoh'])
+#     plt.plot(xrange(len(df.date)), df.etoh, 'b-o', alpha=0.2)
+
+
+### 22 MAY 2015
+data = pd.read_pickle('data_analysis/may_data_all.plk')
+base_rate_accuracy = data.DC.value_counts()/len(data.index)
+print  "\n-----------------------\nAll:\n" + str(base_rate_accuracy)
+
+data_LDBD = data.loc[data['DC'].isin(['LD','BD'])]
+base_rate_accuracy = data_LDBD.DC.value_counts()/len(data_LDBD.index)
+print  "\n-----------------------\nLD vs BD:\n" + str(base_rate_accuracy)
+
+data_HDVHD= data.loc[data['DC'].isin(['HD','VHD'])]
+base_rate_accuracy = data_HDVHD.DC.value_counts()/len(data_HDVHD.index)
+print  "\n-----------------------\nHD vs VHD:\n" + str(base_rate_accuracy)
+
+print "\n-----------------------\n Grand Average Accuracy:"
+grand_average_accuracy = 0.52*0.87*0.81 + 0.48*0.87*0.94
+print grand_average_accuracy
+
+
+plt.show()

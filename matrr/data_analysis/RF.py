@@ -1,8 +1,8 @@
 __author__ = 'alex'
 from header import *
 
-#feat_chosen = pd.read_pickle('feat_chosen.plk')
-feat_chosen = pd.read_pickle('feat_chosen_all.plk')
+feat_chosen = pd.read_pickle('feat_chosen.plk')
+#feat_chosen = pd.read_pickle('feat_chosen_all.plk')
 feat_chosen = feat_chosen.drop('cohort__coh_cohort_id', axis = 1)
 feat_chosen.mky_gender = (feat_chosen.mky_gender == 'M').astype(int)
 print feat_chosen.columns
@@ -10,7 +10,7 @@ x = feat_chosen.drop('mky_drinking_category', axis = 1)
 y = feat_chosen['mky_drinking_category']
 x = x.drop('mky_gender', axis=1)
 ##for 4 classes
-#x = x[['mtd_veh_bout_d', 'mky_age_at_intox', 'mtd_max_bout_length_d1','mtd_etoh_mean_drink_vol_d2']]
+x = x[['mtd_veh_bout_d', 'mky_age_at_intox', 'mtd_max_bout_length_d1','mtd_etoh_mean_drink_vol_d2']]
 ##for 2 classes
 #x = x[['mky_age_at_intox', 'd_med_etoh', 'mtd_etoh_mean_drink_length_d2']]
 x.mky_age_at_intox = (x.mky_age_at_intox - np.mean(x.mky_age_at_intox)) / np.std(x.mky_age_at_intox)

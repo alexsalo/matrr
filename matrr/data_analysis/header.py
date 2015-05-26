@@ -11,20 +11,22 @@ import matplotlib.pyplot as plt
 import pylab
 matplotlib.use('TkAgg')
 
+import datetime
 import scipy.stats as stats
 from patsy import dmatrices
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
-from sklearn import cross_validation
+from sklearn import cross_validation, svm, metrics
 from sklearn.cross_validation import KFold
-from sklearn import svm
 from sklearn.ensemble  import RandomForestClassifier, GradientBoostingClassifier, BaggingClassifier
 from sklearn.ensemble.partial_dependence import plot_partial_dependence
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
 import lwr
 
 import django
@@ -59,10 +61,10 @@ pre_post_luni_phase = {
 }
 
 dc_weights = {
-    'LD' : 0.33,
-    'BD' : 0.16,
-    'HD' : 0.19,
-    'VHD' : 0.31
+    'LD' : 0.32,
+    'BD' : 0.2,
+    'HD' : 0.18,
+    'VHD' : 0.30
 }
 
 def remove_none(nparray):
@@ -83,3 +85,45 @@ def substract_lists(a, b, operator='diff'):
         return [a_i - b_i for a_i, b_i in zip(a, b)]
     if operator=='sum':
         return [a_i + b_i for a_i, b_i in zip(a, b)]
+
+def cv_classfier(X, y, clf, fold_size, start_text):
+    scores = cross_validation.cross_val_score(clf, X, y, cv=fold_size)
+    print scores
+    print start_text + ", Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std())
+    print str(clf)
+    print '---------------------------------------------\n'
+    return scores.mean()
+
+def showCM(cm, plot=True, BER=False):
+    print(cm)
+
+    #Accuracy
+    trues = sum(cm[i][i] for i in xrange(0, len(cm)))
+    accuracy = trues / (cm.sum() * 1.0)
+    print ('Accuracy: %s' % accuracy)
+
+    #Balanced Error Rate
+    if BER:
+        k = len(cm)
+        error_rate = 0
+        for i in xrange(0, k):
+            sumrow = 0
+            for j in xrange(0, k):
+                sumrow += cm[i][j]
+            error_rate += 1.0 * cm[i][i] / sumrow
+        balanced_error_rate = 1 - error_rate / k
+        print ('Balanced Error Rate: %s' % balanced_error_rate)
+        print '--> where BER = 1 - 1/k * sum_i (m[i][i] / sum_j (m[i][j]))'
+
+    if plot:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ms = ax.matshow(cm)
+        ax.set_title('Confusion matrix')
+        plt.colorbar(ms)
+        ax.set_ylabel('True label')
+        ax.set_xlabel('Predicted label')
+        ax.set_xticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+        ax.set_yticklabels(['', 'LD', 'BD', 'HD', 'VHD'])
+        plt.tight_layout()
+        pylab.show()

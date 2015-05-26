@@ -54,9 +54,11 @@ def plot_mense_etoh_progesterone(monkey, Y1MAX=16.5):
 
     return fig
 
-def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, FONT_SIZE=20, TICK_LABEL_SIZE=16, PROGESTERON_LW=1.2, TITLE=''):
+def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, FONT_SIZE=20, TICK_LABEL_SIZE=16, PROGESTERON_LW=1.2, TITLE='', TRUNCATE=False):
     #get data for monkey
-    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).order_by('drinking_experiment__dex_date').order_by('drinking_experiment__dex_date')
+    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).order_by('drinking_experiment__dex_date')
+    if TRUNCATE:
+        mtds = mtds.filter(drinking_experiment__dex_date__gte='2012-05-20')
     df = pd.DataFrame(list(mtds.values_list('mtd_mense_started', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg', 'mtd_progesterone')), columns=['mense','date', 'etoh', 'progesterone'])
 
     #make figure
@@ -76,6 +78,7 @@ def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, 
     ax2 = ax1.twinx()
     ax2.set_ylim([-0.1, Y2MAX])
     df_prog = df[np.isfinite(df['progesterone'])] #to remove nans
+    print_full(df)
     ax2.plot(df_prog.date, df_prog.progesterone, 'b-o', lw=PROGESTERON_LW, label = 'Progesterone')
     #ax2.plot(df_prog.date, df_prog.progesterone, 'k-o', color = 0.7, label = 'Progesterone')
 
@@ -99,7 +102,7 @@ def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, 
     # [ax1.plot((periods_for_avg[i], periods_for_avg[i+1]), (etoh, etoh), color=pre_post_luni_phase[i%2],marker = '|', alpha=0.8, linewidth=2) for i, etoh in enumerate(etohs)]
 
     #titles and legends
-    ax2.set_ylabel('Progesterone', fontsize=FONT_SIZE)
+    ax2.set_ylabel('Progesterone, ng/mL', fontsize=FONT_SIZE)
     ax2.legend(loc=1, framealpha=1.0, prop={'size':FONT_SIZE})
     ax2.tick_params(axis='both', which='major', labelsize=TICK_LABEL_SIZE)
 
@@ -130,7 +133,8 @@ def save_plots_by_monkey(monkeys, plot_method, plotfolder_name):
 
 m = Monkey.objects.get(mky_id=10077)
 plot_mense_etoh_progesterone_scaled_two_axis(m, Y1MAX = 6, Y2MAX=12, FONT_SIZE=26, TICK_LABEL_SIZE = 22, PROGESTERON_LW=2.2,
-                TITLE='Longitudial ethanol intakes and menstrual cycle progesterone and menses: monkey 10072')
+                TITLE='Longitudial ethanol intakes and menstrual cycle progesterone and menses, animal id: 10072',
+                TRUNCATE=True)
 
 
 pylab.show()

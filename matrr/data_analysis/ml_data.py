@@ -263,7 +263,7 @@ def etoh_during_ind_for_monkeys(mins):
 # print np.mean(remove_none(ages))
 # print np.std(remove_none(ages))
 
-features = get_features(True)
+#features = get_features(True)
 # print features.columns
 # #print features
 # features.d_med_etoh
@@ -273,7 +273,7 @@ features = get_features(True)
 # lm = ols('d_med_etoh ~ mky_drinking_category * mky_gender', data=features).fit()
 # print sm.stats.anova_lm(lm, typ=2)
 
-feat_deltas = get_feature_deltas(features)
+#feat_deltas = get_feature_deltas(features)
 # # # feat_deltas.to_csv('features_deltas_r.csv')
 # feat_deltas.save('features_deltas_2.plk')
 #feat_deltas = pd.read_pickle('features_deltas_2.plk')
@@ -295,17 +295,18 @@ feat_deltas = get_feature_deltas(features)
 #
 
 ###CHOSEN FEATURES
-feat_chosen = feat_deltas[features_monkey[1:] + ['d_med_etoh'] + chosen_features]
-feat_chosen.save('feat_chosen_all.plk')
+# feat_chosen = feat_deltas[features_monkey[1:] + ['d_med_etoh'] + chosen_features]
+# feat_chosen.save('feat_chosen_all.plk')
 # print feat_chosen.columns
 
-# df = pd.DataFrame(list(get_monkeys().values_list('cohort__coh_cohort_name',
-#         'mky_age_at_intox', 'mky_age_at_necropsy', 'mky_gender', 'mky_weight', 'mky_birthdate')),
-#         columns=['coh_id','intox','age','sex', 'weight', 'bd'])
-# print df.groupby('coh_id').count()
-# print df.groupby('coh_id').intox.mean() / 365
-# print df.groupby('coh_id').weight.mean()
-# print df.groupby('coh_id').sex.sum()
+df = pd.DataFrame(list(get_monkeys().values_list('cohort__coh_cohort_name',
+        'mky_age_at_intox', 'mky_age_at_necropsy', 'mky_gender', 'mky_weight', 'mky_birthdate', 'mky_days_at_necropsy')),
+        columns=['coh_id','intox','age','sex', 'weight', 'bd', 'necropsy'])
+print df.groupby('coh_id').count()
+print df.groupby('coh_id').intox.mean() / 365
+print df.groupby('coh_id').weight.mean()
+print df.groupby('coh_id').necropsy.mean() / 365
+print df.groupby('coh_id').sex.sum()
 
 # a = [dingus.get_datetime_from_steve(age) for age in df.age]
 # b = [dingus.get_datetime_from_steve(bd) for bd in df.bd]
