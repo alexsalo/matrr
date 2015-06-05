@@ -1072,34 +1072,36 @@ c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 # print df
 
 ### 18 May 2015
-# cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
-#             "INIA Rhesus 6b", "INIA Rhesus 7a"]
-# ml_cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
-# monkeys = Monkey.objects.filter(cohort__in=ml_cohorts).exclude(mky_drinking_category = None)
-# # for m in monkeys:
-# #     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date')
-# #     m.mky_days_at_necropsy = (mtds.last().drinking_experiment.dex_date - m.mky_birthdate).days
-# #     m.save()
-# df = pd.DataFrame(list(monkeys.values_list('mky_id', 'cohort', 'mky_days_at_necropsy')), columns = ['mky_id', 'cohort_id', 'days_at_necropsy'])
-# # print df
-# # df = df.sort('cohort_id')
-# # colors = [coh_colors[id] for id in df.cohort_id]
-# # y = df.days_at_necropsy
-# # x = np.arange(len(y))
-# # plt.scatter(x, y, c=colors, s = 150)
-#
-# matplotlib.rcParams.update({'font.size': 18})
-# coh_ids = np.unique(df.cohort_id)
-# gb = df.groupby('cohort_id')
-# for i, coh_id in enumerate(coh_ids):
-#     cohort = Cohort.objects.get(coh_cohort_id = coh_id)
-#     index = gb.get_group(coh_id).index
-#     x = df[df.index.isin(index)]
-#     t = [i for num in xrange(len(x))]
-#     print t
-#     print x
-#     plt.scatter(t,x.days_at_necropsy, c=coh_colors[coh_id], s = 500, label=cohort.coh_cohort_name, marker='o', alpha=.5)
-# plt.legend(loc=1)
+cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
+            "INIA Rhesus 6b", "INIA Rhesus 7a"]
+ml_cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
+monkeys = Monkey.objects.filter(cohort__in=ml_cohorts).exclude(mky_drinking_category = None)
+# for m in monkeys:
+#     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date')
+#     m.mky_days_at_necropsy = (mtds.last().drinking_experiment.dex_date - m.mky_birthdate).days
+#     m.save()
+df = pd.DataFrame(list(monkeys.values_list('mky_id', 'cohort', 'mky_days_at_necropsy')), columns = ['mky_id', 'cohort_id', 'days_at_necropsy'])
+# print df
+# df = df.sort('cohort_id')
+# colors = [coh_colors[id] for id in df.cohort_id]
+# y = df.days_at_necropsy
+# x = np.arange(len(y))
+# plt.scatter(x, y, c=colors, s = 150)
+fig = plt.figure()
+matplotlib.rcParams.update({'font.size': 18})
+coh_ids = np.unique(df.cohort_id)
+gb = df.groupby('cohort_id')
+for i, coh_id in enumerate(coh_ids):
+    cohort = Cohort.objects.get(coh_cohort_id = coh_id)
+    index = gb.get_group(coh_id).index
+    x = df[df.index.isin(index)]
+    t = [i for num in xrange(len(x))]
+    print t
+    print x
+    plt.scatter(t,x.days_at_necropsy, c=coh_colors[coh_id], s = 500, label=cohort.coh_cohort_name, marker='o', alpha=.5)
+plt.legend(loc=1)
+plt.ylabel('Age at Necropsy (Days)')
+plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
 
 
 ### 20 May 2015
@@ -1138,21 +1140,31 @@ c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 
 
 ### 22 MAY 2015
-data = pd.read_pickle('data_analysis/may_data_all.plk')
-base_rate_accuracy = data.DC.value_counts()/len(data.index)
-print  "\n-----------------------\nAll:\n" + str(base_rate_accuracy)
+# data = pd.read_pickle('data_analysis/may_data_all.plk')
+# base_rate_accuracy = data.DC.value_counts()/len(data.index)
+# print  "\n-----------------------\nAll:\n" + str(base_rate_accuracy)
+#
+# data_LDBD = data.loc[data['DC'].isin(['LD','BD'])]
+# base_rate_accuracy = data_LDBD.DC.value_counts()/len(data_LDBD.index)
+# print  "\n-----------------------\nLD vs BD:\n" + str(base_rate_accuracy)
+#
+# data_HDVHD= data.loc[data['DC'].isin(['HD','VHD'])]
+# base_rate_accuracy = data_HDVHD.DC.value_counts()/len(data_HDVHD.index)
+# print  "\n-----------------------\nHD vs VHD:\n" + str(base_rate_accuracy)
+#
+# print "\n-----------------------\n Grand Average Accuracy:"
+# grand_average_accuracy = 0.52*0.87*0.81 + 0.48*0.87*0.94
+# print grand_average_accuracy
 
-data_LDBD = data.loc[data['DC'].isin(['LD','BD'])]
-base_rate_accuracy = data_LDBD.DC.value_counts()/len(data_LDBD.index)
-print  "\n-----------------------\nLD vs BD:\n" + str(base_rate_accuracy)
+# data = pd.read_pickle('data_analysis/may_data_all.plk')
+# base_rate_accuracy = data.DC.value_counts()
+# print  "\n-----------------------\nAll:\n" + str(base_rate_accuracy)
 
-data_HDVHD= data.loc[data['DC'].isin(['HD','VHD'])]
-base_rate_accuracy = data_HDVHD.DC.value_counts()/len(data_HDVHD.index)
-print  "\n-----------------------\nHD vs VHD:\n" + str(base_rate_accuracy)
-
-print "\n-----------------------\n Grand Average Accuracy:"
-grand_average_accuracy = 0.52*0.87*0.81 + 0.48*0.87*0.94
-print grand_average_accuracy
+# print 0.52 * 0.87, 0.48 * 0.87
+# print 0.52*0.87*0.81, 0.48*0.87*0.94
+# print (0.52 *0.81 + 0.48 * 0.94) * 0.87
+# print 0.62 * 0.52
+# print 0.76 / 0.32
 
 
 plt.show()

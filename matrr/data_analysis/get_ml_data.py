@@ -328,7 +328,7 @@ def svm_do2():
 #features = get_features(False)
 #print features
 #logistic(features, False, False)
-#svm_do()
+#svm_do2()
 
 def test_latency_change():
     print features[['latency_increased', 'DC']]
@@ -415,16 +415,18 @@ def plot_med_alcohol_latency():
     plt.title('Latency to drink by stage')
 #plot_med_alcohol_latency()
 
-def plot_med_med_bouts():
+def plot_med_med_bouts(features):
     t = features.iloc[:, 14:17]
     dc = features.iloc[:, 2]
     print t
     plt.figure(1)
-    plt.xlim(-0.2, 2.2)
+    plt.xlim(0, 102)
     for id in features.index:
-        plt.plot(t.ix[id].values, mycolors2[dc.ix[id]])
-    plt.title('Bouts number by stage')
-#plot_med_med_bouts()
+        plt.plot([1, 50, 100],t.ix[id].values, mycolors2[dc.ix[id]])
+    plt.title('Medain number of bouts by stage')
+    #plt.ylabel()
+plot_med_med_bouts(get_features(False))
+
 
 def explore_feature(feature, mids):
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
@@ -480,4 +482,4 @@ def feature_mean(feature):
 #feature_mean('mtd_etoh_bout')
 
 
-#pylab.show()
+pylab.show()

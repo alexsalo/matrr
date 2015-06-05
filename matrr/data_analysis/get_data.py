@@ -2,8 +2,8 @@ __author__ = 'alex'
 from header import *
 
 GENERATE_DATA = False
-FOLD_INTO_TWO_DC = True
-SUBDIVIDE = True
+FOLD_INTO_TWO_DC = False
+SUBDIVIDE = False
 
 RF = RandomForestClassifier(n_estimators=100)
 BAGGING = BaggingClassifier(RF, n_estimators=10, bootstrap=True, n_jobs=2)
@@ -112,7 +112,8 @@ def selectFeatures(X):
     Xnew = X[['mtd_max_bout_length', 'intox', 'mtd_etoh_drink_bout', 'mtd_etoh_bout', 'mtd_pct_etoh_in_1st_bout_1',
               'mtd_etoh_bout_2', 'mtd_pct_max_bout_vol_total_etoh_1']]
     Xnew = X[['mtd_etoh_bout_2', 'necropsy', 'mtd_latency_1st_drink_1']]
-    Xnew = X[['mtd_etoh_bout_2', 'necropsy', 'etoh_during_ind_1']]
+    #Xnew = X[['mtd_etoh_bout_2', 'necropsy', 'etoh_during_ind_1']]
+    Xnew = X[['mtd_max_bout_length','mtd_veh_bout_1','mtd_max_bout_1','mtd_pct_max_bout_vol_total_etoh_2','intox','mtd_etoh_mean_bout_length']]
 
     return Xnew
 
@@ -241,6 +242,39 @@ def runTwoThenTwo():
     # X_feat_sel = data_HDVHD.drop(['DC', 'coh'], axis = 1)
     # featureSelectionPlot(X_feat_sel, y)
 
+def gradients():
+    X = selectFeaturesLDBD(data_LDBD)
+    print X
+    y = data_LDBD.DC
+    clf = GradientBoostingClassifier(n_estimators=100, max_depth=4,
+                                learning_rate=0.1,
+                                random_state=1)
+    fit = clf.fit(X,y)
+
+    n_features = len(X.columns)
+    for i in xrange(n_features):
+        for j in xrange(i-1):
+            for lbl in ['HD', 'VHD']:
+                #get the figure
+                fig = plt.figure(figsize=(14,8))
+                ax = fig.add_subplot(111)
+                plt.clf()
+
+                features = [i, j, (i, j)]
+                plot_partial_dependence(clf, X, features, label=lbl, feature_names=X.columns, ax=ax)
+                #title and save
+                plotname = lbl + ' ' + str(X.columns[i])+' ' + str(X.columns[j]) + ' ' + 'partial dependency'
+                plt.title(plotname)
+                path = '/home/alex/Dropbox/Baylor/Matrr/figures/part-deps/ld-bd'
+                plt.savefig(os.path.join(path, plotname), dpi=100, format='png')
+
+def massiveRFTest(X, y):
+    X = selectFeatures(X)
+    scores = []
+    for i in xrange(20):
+        scores.extend(cross_validation.cross_val_score(RF, X, y, cv=10))
+    print 'Avg score for 20 runs is: %s, sd = %s ' % (np.mean(scores), np.std(scores))
+
 ### RUN SCRIPTS
 base_rate_accuracy = data_targets.value_counts()/len(data_targets.index)
 print base_rate_accuracy
@@ -249,7 +283,7 @@ print base_rate_accuracy
 
 # best_accuracy = testSVMparams(data_features, data_targets, selectFeatures = False)
 
-# testClassifiers(data_features, data_targets)
+#testClassifiers(data_features, data_targets)
 #
 # testByCoghort(data_features, data_targets, RF, False)
 # testByCoghort(data_features, data_targets, SVM_CLF, True)
@@ -260,4 +294,16 @@ print base_rate_accuracy
 # KFoldMonkeys(data_features, data_targets, SVM_CLF, cross_validation.LeaveOneOut(M_EXAMPLES), NORMALIZE=True)
 # KFoldMonkeys(data_features, data_targets, SVM_CLF, cross_validation.KFold(M_EXAMPLES, n_folds=10), NORMALIZE=True)
 
-runTwoThenTwo()
+# runTwoThenTwo()
+# gradients()
+#massiveRFTest(data_features, data_targets)
+print data
+pct_data = data[['mtd_pct_etoh_in_1st_bout_1', 'mtd_pct_etoh_in_1st_bout_2']]
+print pct_data
+print pct_data.loc[10086].values
+
+for index in pct_data.index:
+    if data.loc[index].DC == 'VHD':
+        plt.plot(xrange(2), pct_data.loc[index].values, dc_colors_ol[data.DC.loc[index]])
+plt.ylim([0.2, 1.5])
+pylab.show()
