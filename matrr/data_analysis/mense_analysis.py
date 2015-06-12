@@ -109,13 +109,19 @@ def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, 
     if TITLE == '':
         TITLE = 'EtOH Intake, progesterone and mense data, animal id: ' + str(monkey.mky_id)
     ax1.set_title(TITLE, fontsize=FONT_SIZE, y=1.03)
-    ax1.set_xlabel('Date', fontsize=FONT_SIZE)
+    ax1.set_xlabel('Menstrual Cycle', fontsize=FONT_SIZE)
     ax1.set_ylabel('EtOH Intake, g\kg', fontsize=FONT_SIZE)
     ax1.legend(loc=2, framealpha=1.0, prop={'size':FONT_SIZE})
     ax1.tick_params(axis='both', which='major', labelsize=TICK_LABEL_SIZE)
     ax1.grid()
 
     plt.tight_layout()
+
+    # Change X labels
+    # labels = [item.get_text() for item in ax1.get_xticklabels()]
+    # labels_int = [i + 1 for i, month in enumerate(labels)]
+    # ax1.set_xticklabels(labels_int)
+    plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
 
     return fig
 
