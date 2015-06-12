@@ -54,6 +54,13 @@ dc_colors_ol = {
     'VHD' : 'r-o',
     None : 'k-o'
 }
+dc_colors_dash = {
+    'LD' : 'g-',
+    'BD' : 'b-',
+    'HD' : 'y-',
+    'VHD' : 'r-',
+    None : 'k-o'
+}
 
 pre_post_luni_phase = {
     0 : 'c',

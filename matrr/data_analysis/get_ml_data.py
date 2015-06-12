@@ -36,6 +36,12 @@ mycolors2 = {
     'HD' : 'y-o',
     'VHD' : 'r-o'
 }
+mycolors_dash = {
+    'LD' : 'g-',
+    'BD' : 'b-',
+    'HD' : 'y-',
+    'VHD' : 'r-'
+}
 
 ###Machine Learning###
 
@@ -416,15 +422,51 @@ def plot_med_alcohol_latency():
 #plot_med_alcohol_latency()
 
 def plot_med_med_bouts(features):
+    matplotlib.rcParams.update({'font.size': 18})
+    fig, axs = plt.subplots(2,2,facecolor='w', edgecolor='k', figsize=(14,14))
+    axs = axs.ravel()
     t = features.iloc[:, 14:17]
     dc = features.iloc[:, 2]
     print t
     plt.figure(1)
     plt.xlim(0, 102)
+    for ax in axs:
+        ax.set_xlim(0, 101)
+        ax.set_ylim(0,  23)
     for id in features.index:
-        plt.plot([1, 50, 100],t.ix[id].values, mycolors2[dc.ix[id]])
-    plt.title('Medain number of bouts by stage')
-    #plt.ylabel()
+        if id not in [10066]:
+            ax_index = 0
+            if dc.ix[id] == "BD":
+                ax_index = 1
+            if dc.ix[id] == "HD":
+                ax_index = 2
+            if dc.ix[id] == "VHD":
+                ax_index = 3
+            axs[ax_index].plot([5, 50, 95],t.ix[id].values, mycolors2[dc.ix[id]], linewidth=1.5)
+            yval0 = t.ix[id].values[0]
+            axs[ax_index].plot([1,10], [yval0, yval0], mycolors_dash[dc.ix[id]], linewidth=2.5)
+            yval1 = t.ix[id].values[1]
+            axs[ax_index].plot([45,55], [yval1, yval1], mycolors_dash[dc.ix[id]], linewidth=2.5)
+            yval2 = t.ix[id].values[2]
+            axs[ax_index].plot([90,100], [yval2, yval2], mycolors_dash[dc.ix[id]], linewidth=2.5)
+
+    axs[0].text(48, 22.3, 'LD')
+    axs[1].text(48, 22.3, 'BD')
+    axs[2].text(48, 22.3, 'HD')
+    axs[3].text(48, 22.3, 'VHD')
+
+
+    # plt.title('Medain number of bouts by stage')
+    axs[2].set_ylabel("Number of bouts")
+    axs[2].set_xlabel("Day of induction phase")
+
+    # Fine-tune figure; make subplots close to each other and hide x ticks for all but bottom plot.
+    plt.tight_layout()
+    fig.subplots_adjust(hspace=0)
+    fig.subplots_adjust(wspace=0)
+    plt.setp([axs[i].get_xticklabels() for i in [0,1,3]], visible = False)
+    plt.setp([axs[i].get_yticklabels() for i in [1,3]], visible = False)
+
 plot_med_med_bouts(get_features(False))
 
 

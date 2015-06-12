@@ -297,13 +297,60 @@ print base_rate_accuracy
 # runTwoThenTwo()
 # gradients()
 #massiveRFTest(data_features, data_targets)
-print data
-pct_data = data[['mtd_pct_etoh_in_1st_bout_1', 'mtd_pct_etoh_in_1st_bout_2']]
-print pct_data
-print pct_data.loc[10086].values
+# print data
+# pct_data = data[['mtd_pct_etoh_in_1st_bout_1', 'mtd_pct_etoh_in_1st_bout_2']]
+# print pct_data
+# print pct_data.loc[10086].values
+#
+# for index in pct_data.index:
+#     if data.loc[index].DC == 'VHD':
+#         plt.plot(xrange(2), pct_data.loc[index].values, dc_colors_ol[data.DC.loc[index]])
+# plt.ylim([0.2, 1.5])
 
-for index in pct_data.index:
-    if data.loc[index].DC == 'VHD':
-        plt.plot(xrange(2), pct_data.loc[index].values, dc_colors_ol[data.DC.loc[index]])
-plt.ylim([0.2, 1.5])
+def plot_meds(features):
+    matplotlib.rcParams.update({'font.size': 18})
+    fig, axs = plt.subplots(2,2,facecolor='w', edgecolor='k', figsize=(14,14))
+    axs = axs.ravel()
+    dc = data.DC
+    print features
+    plt.xlim(0, 102)
+    for ax in axs:
+        ax.set_xlim(44, 101)
+        ax.set_ylim(0,  9.3)
+    for id in features.index:
+        if id not in [10091]:
+            ax_index = 0
+            if dc.ix[id] == "BD":
+                ax_index = 1
+            if dc.ix[id] == "HD":
+                ax_index = 2
+            if dc.ix[id] == "VHD":
+                ax_index = 3
+            axs[ax_index].plot([50, 95],features.ix[id].values, dc_colors_ol[dc.ix[id]], linewidth=1.5)
+            yval0 = features.ix[id].values[0]
+            axs[ax_index].plot([45,55], [yval0, yval0], dc_colors_dash[dc.ix[id]], linewidth=2.5)
+            yval1 = features.ix[id].values[1]
+            axs[ax_index].plot([90,100], [yval1, yval1], dc_colors_dash[dc.ix[id]], linewidth=2.5)
+
+    axs[0].text(48, 8, 'LD')
+    axs[1].text(48, 8, 'BD')
+    axs[2].text(48, 8, 'HD')
+    axs[3].text(48, 8, 'VHD')
+
+
+    # plt.title('Medain number of bouts by stage')
+    axs[2].set_ylabel("Number of bouts")
+    axs[2].set_xlabel("Day of induction phase")
+
+    # Fine-tune figure; make subplots close to each other and hide x ticks for all but bottom plot.
+    plt.tight_layout()
+    fig.subplots_adjust(hspace=0)
+    fig.subplots_adjust(wspace=0)
+    plt.setp([axs[i].get_xticklabels() for i in [0,1,3]], visible = False)
+    plt.setp([axs[i].get_yticklabels() for i in [1,3]], visible = False)
+
+pct_data = data[['mtd_etoh_bout_1', 'mtd_etoh_bout_2']]
+plot_meds(pct_data)
+
+
 pylab.show()
