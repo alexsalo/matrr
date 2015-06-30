@@ -47,7 +47,6 @@ def _cohort_bone_densities(cohort):
 
     tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     ax1 = tool_figure.add_subplot(111)
-    c = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
     bds = BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=c))
     df = pd.DataFrame(list(bds.values_list('monkey__mky_id', 'monkey__mky_drinking_category', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd')), columns=['mky_id', 'dc', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd'])
     df.color = df.dc.apply(lambda x: dc_colors[x])
@@ -981,5 +980,5 @@ COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_2
                      'cohort_etoh_max_bout_cumsum_horibar_3gkg': (cohort_etoh_max_bout_cumsum_horibar_3gkg, "Cohort Cumulative Daily Max Bout, Day count over 3 g per kg"),
                      'cohort_etoh_max_bout_cumsum_horibar_4gkg': (cohort_etoh_max_bout_cumsum_horibar_4gkg, "Cohort Cumulative Daily Max Bout, Day count over 4 g per kg"),
                      'cohort_etoh_gkg_quadbar': (cohort_etoh_gkg_quadbar, "Cohort Daily Ethanol Intake Counts"),
-                     "cohort_bone_densities": (cohort_bone_densities, 'cohort_bone_densities'),
+                     "cohort_bone_densities": (cohort_bone_densities, 'Bone Area and Content Trends by DC '),
 })
