@@ -414,7 +414,6 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
 
 def create_bone_densities_plots(cohorts=True, monkeys=True):
     if cohorts:
-        CohortImage.objects.all().delete()
         plots = ['cohort_bone_densities',]
         from matrr.models import CohortImage, Cohort, BoneDensity
         from matrr.plotting import cohort_plots
