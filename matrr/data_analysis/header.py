@@ -74,6 +74,28 @@ dc_weights = {
     'VHD' : 0.30
 }
 
+feature_names = {
+        'mtd_seconds_to_stageone': "Seconds to reach day's EtOH allotment",
+        'mtd_latency_1st_drink': 'Latency to first EtOH drink (seconds)',
+        'mtd_etoh_bout': 'Number of EtOH bouts',
+        'mtd_etoh_drink_bout': 'Average number of EtOH drinks per bout',
+        'mtd_veh_bout': 'Number of H2O bouts',
+        'mtd_veh_drink_bout': 'Average number of H2O drinks per bout',
+        'mtd_etoh_mean_drink_length': 'Average EtOH drink length (seconds)',
+        'mtd_etoh_median_idi': 'Median EtOH inter-drink interval (seconds)',
+        'mtd_etoh_mean_drink_vol' : 'Average EtOH drink volume (ml)',
+        'mtd_etoh_mean_bout_length': 'Average EtOH bout length (seconds)',
+        'mtd_pct_etoh_in_1st_bout': '% of days EtOH consumed in first bout',
+        'mtd_drinks_1st_bout': 'Number of EtOH drinks in first bout',
+        'mtd_max_bout': 'Sequence number of max bout',
+        'mtd_max_bout_length': 'Max bout length (seconds)',
+        'mtd_pct_max_bout_vol_total_etoh': 'Max bout volume as % of total EtOH that day',
+        'etoh_during_ind': 'EtOH during first 10 minutes as a % of the daily allotment',
+        'sex': 'Gender',
+        'intox' : 'Age of first EtOH intoxication',
+        'necropsy': 'Age (Necropsy)',
+        }
+
 def remove_none(nparray):
     return [x for x in nparray if x != None]
 def remove_outliers(nparray, m=1.5):

@@ -22,7 +22,9 @@ dc_colors = {
     'LD' : 'g',
     'BD' : 'b',
     'HD' : 'y',
-    'VHD' : 'r'
+    'VHD' : 'r',
+    'None' : 'k',
+    None : 'k'
 }
 dc_colors_o = {
     'LD' : 'go',
@@ -1166,6 +1168,81 @@ c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 # print 0.62 * 0.52
 # print 0.76 / 0.32
 
-print [i / 28.0 + 1for i in xrange(341)]
+# print [i / 28.0 + 1for i in xrange(341)]
 
-plt.show()
+### 29 June 2015
+# bds = BoneDensity.objects.all()
+# df = pd.DataFrame(list(bds.values_list('monkey__mky_id', 'monkey__mky_drinking_category', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd')), columns=['mky_id', 'dc', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd'])
+# print len(df)
+# print df
+# print df.mky_id.unique()
+# print df[df.mky_id == 10069]
+# df.color = df.dc.apply(lambda x: dc_colors[x])
+# plt.scatter(df.bdy_bmc, df.bdy_area, c=df.color, s=80)
+# plt.show()
+
+# c = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
+# m10070 = Monkey.objects.get(mky_id=10070)
+# m10052 = Monkey.objects.get(mky_id=10052)
+# print MonkeyImage.objects.filter(monkey=m10070)
+# print MonkeyImage.objects.filter(monkey=m10052)
+#
+# from plotting.plot_tools import *
+# create_max_bout_cumsum_horibar_canonicals(c)#, create_monkey_plots=True)
+
+### 30 June 2015
+
+# #Cohort Bone Density
+# import matplotlib.patches as mpatches
+# ld_patch = mpatches.Patch(color='g', label='LD')
+# bd_patch = mpatches.Patch(color='b', label='BD')
+# hd_patch = mpatches.Patch(color='y', label='HD')
+# vhd_patch = mpatches.Patch(color='r', label='VHD')
+# control_patch = mpatches.Patch(color='k', label='Control')
+#
+# tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+# ax1 = tool_figure.add_subplot(111)
+# c = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
+# bds = BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=c))
+# df = pd.DataFrame(list(bds.values_list('monkey__mky_id', 'monkey__mky_drinking_category', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd')), columns=['mky_id', 'dc', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd'])
+# df.color = df.dc.apply(lambda x: dc_colors[x])
+# ax1.scatter(df.bdy_area, df.bdy_bmc, c=df.color, s=80, alpha=0)
+# for label, x, y, col in zip(df.mky_id, df.bdy_area, df.bdy_bmc, df.color):
+#     ax1.annotate(
+#         label,
+#         xy = (x, y), xytext = (20, -7),
+#         textcoords = 'offset points', ha = 'right', va = 'bottom',
+#         bbox = dict(boxstyle = 'round,pad=0.5', fc = col, alpha = 0.5))
+# ax1.grid()
+# ax1.set_xlabel(r'Bone Area $(cm^2)$')
+# ax1.set_ylabel('Bone Mineral Content $(g)$')
+# ax1.set_title('BMA and BMC for NHP cohort ' + c.coh_cohort_name)
+# matplotlib.rcParams.update({'font.size': 16})
+# for dc in ['LD', 'BD','HD','VHD', 'None']:
+#     if dc == 'None':
+#         df2 = df[~df.dc.isin(['LD', 'BD','HD','VHD'])]
+#     else:
+#         df2 = df[df.dc == dc]
+#     if len(df2) > 1:
+#         fit = np.polyfit(df2.bdy_area, df2.bdy_bmc, 1)
+#         fit_fn = np.poly1d(fit)
+#         ax1.plot(df2.bdy_area, fit_fn(df2.bdy_area), dc_colors[dc], lw=2)
+# ax1.legend(handles=[ld_patch, bd_patch, hd_patch, vhd_patch, control_patch], loc=4)
+#
+# plt.show()
+
+# CohortImage.objects.all().delete()
+# plots = ['cohort_bone_densities',            ]
+# from matrr.models import CohortImage, Cohort
+# from matrr.plotting import cohort_plots
+# import gc
+# for cohort in BoneDensity.objects.all().values_list('monkey__cohort', flat=True).distinct():
+#     cohort = Cohort.objects.get(pk=cohort)
+#     print cohort
+#     for graph in plots:
+#         gc.collect()
+#         CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
+#
+#
+
+#plt.show()

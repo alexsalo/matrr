@@ -1,5 +1,8 @@
 __author__ = 'farro'
+import matplotlib
+import numpy as np
 from matplotlib import pyplot, cm, gridspec
+from matplotlib import pyplot as plt
 from django.db.models import Sum, Min, Max, Q
 from matplotlib.cm import get_cmap
 from matplotlib.ticker import MaxNLocator
@@ -9,7 +12,68 @@ from scipy.cluster import vq
 from matrr.models import *
 from matrr.utils.gadgets import Treemap
 from matrr.plotting import specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE, RHESUS_COLORS
+import matplotlib.patches as mpatches
 
+import matplotlib.patches as mpatches
+
+def cohort_bone_densities(cohort):
+    """
+    This method will create a cohort graph for bone densities
+    """
+    if BoneDensity.objects.filter(monkey__cohort=cohort).count():
+        return _cohort_bone_densities(cohort)
+    else:
+        return False, False
+
+def _cohort_bone_densities(cohort):
+    """
+    Makes a plot of bone densities for cohort
+    :param cohort:
+    :return: figure
+    """
+    ld_patch = mpatches.Patch(color='g', label='LD')
+    bd_patch = mpatches.Patch(color='b', label='BD')
+    hd_patch = mpatches.Patch(color='y', label='HD')
+    vhd_patch = mpatches.Patch(color='r', label='VHD')
+    control_patch = mpatches.Patch(color='k', label='Control')
+    dc_colors = {
+        'LD' : 'g',
+        'BD' : 'b',
+        'HD' : 'y',
+        'VHD' : 'r',
+        'None' : 'k',
+        None : 'k'
+    }
+
+    tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+    ax1 = tool_figure.add_subplot(111)
+    c = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
+    bds = BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=c))
+    df = pd.DataFrame(list(bds.values_list('monkey__mky_id', 'monkey__mky_drinking_category', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd')), columns=['mky_id', 'dc', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd'])
+    df.color = df.dc.apply(lambda x: dc_colors[x])
+    ax1.scatter(df.bdy_area, df.bdy_bmc, c=df.color, s=80, alpha=0)
+    for label, x, y, col in zip(df.mky_id, df.bdy_area, df.bdy_bmc, df.color):
+        ax1.annotate(
+            label,
+            xy = (x, y), xytext = (20, -7),
+            textcoords = 'offset points', ha = 'right', va = 'bottom',
+            bbox = dict(boxstyle = 'round,pad=0.5', fc = col, alpha = 0.5))
+    ax1.grid()
+    ax1.set_xlabel(r'Bone Area $(cm^2)$')
+    ax1.set_ylabel('Bone Mineral Content $(g)$')
+    ax1.set_title('BMA and BMC for NHP cohort ' + c.coh_cohort_name)
+    matplotlib.rcParams.update({'font.size': 16})
+    for dc in ['LD', 'BD','HD','VHD', 'None']:
+        if dc == 'None':
+            df2 = df[~df.dc.isin(['LD', 'BD','HD','VHD'])]
+        else:
+            df2 = df[df.dc == dc]
+        if len(df2) > 1:
+            fit = np.polyfit(df2.bdy_area, df2.bdy_bmc, 1)
+            fit_fn = np.poly1d(fit)
+            ax1.plot(df2.bdy_area, fit_fn(df2.bdy_area), dc_colors[dc], lw=2)
+    ax1.legend(handles=[ld_patch, bd_patch, hd_patch, vhd_patch, control_patch], loc=4)
+    return tool_figure, 'build HTML fragment'
 
 def _cohort_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
     """
@@ -917,4 +981,5 @@ COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_2
                      'cohort_etoh_max_bout_cumsum_horibar_3gkg': (cohort_etoh_max_bout_cumsum_horibar_3gkg, "Cohort Cumulative Daily Max Bout, Day count over 3 g per kg"),
                      'cohort_etoh_max_bout_cumsum_horibar_4gkg': (cohort_etoh_max_bout_cumsum_horibar_4gkg, "Cohort Cumulative Daily Max Bout, Day count over 4 g per kg"),
                      'cohort_etoh_gkg_quadbar': (cohort_etoh_gkg_quadbar, "Cohort Daily Ethanol Intake Counts"),
+                     "cohort_bone_densities": (cohort_bone_densities, 'cohort_bone_densities'),
 })

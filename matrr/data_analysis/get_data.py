@@ -1,25 +1,7 @@
 __author__ = 'alex'
 from header import *
 
-GENERATE_DATA = False
-FOLD_INTO_TWO_DC = False
-SUBDIVIDE = False
-
-RF = RandomForestClassifier(n_estimators=100)
-BAGGING = BaggingClassifier(RF, n_estimators=10, bootstrap=True, n_jobs=2)
-SVM_CLF = svm.SVC(kernel='linear', C=1, class_weight=dc_weights)
-
-if not GENERATE_DATA:
-    data = pd.read_pickle('may_data_all.plk')
-    data.sex = (data.sex == 'M').astype(int)
-
-else:
-    features_monkey = ["mky_id", 'cohort__coh_cohort_id', "mky_gender", "mky_age_at_intox", "mky_drinking_category", 'mky_days_at_necropsy']
-    features_monkey_names = ["mky_id", 'coh', "sex", "intox", "DC", 'necropsy']
-    FIRST_N_MINUTES = 10
-    DELTA_DAYS = 10
-
-    features_names_perstage = [
+features_names_perstage = [
         'mtd_seconds_to_stageone', #Seconds it took for monkey to reach day's ethanol allotment
         'mtd_latency_1st_drink', #Time from session start to first etOH consumption
         'mtd_etoh_bout', #Total etOH bouts (less than 300 seconds between consumption of etOH)
@@ -37,8 +19,26 @@ else:
         'mtd_pct_max_bout_vol_total_etoh', #Maximum bout volume as a percentage of total ethanol consumed that day
         'etoh_during_ind'
         ]
-    cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
+cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus 6a", "INIA Rhesus 7b",
             "INIA Rhesus 6b", "INIA Rhesus 7a"]
+
+GENERATE_DATA = False
+FOLD_INTO_TWO_DC = True
+SUBDIVIDE = False
+
+RF = RandomForestClassifier(n_estimators=100)
+BAGGING = BaggingClassifier(RF, n_estimators=10, bootstrap=True, n_jobs=2)
+SVM_CLF = svm.SVC(kernel='linear', C=1, class_weight=dc_weights)
+
+if not GENERATE_DATA:
+    data = pd.read_pickle('may_data_all.plk')
+    data.sex = (data.sex == 'M').astype(int)
+
+else:
+    features_monkey = ["mky_id", 'cohort__coh_cohort_id', "mky_gender", "mky_age_at_intox", "mky_drinking_category", 'mky_days_at_necropsy']
+    features_monkey_names = ["mky_id", 'coh', "sex", "intox", "DC", 'necropsy']
+    FIRST_N_MINUTES = 10
+    DELTA_DAYS = 10
 
     ml_cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
     ml_monkeys = Monkey.objects.filter(cohort__in = ml_cohorts).exclude(mky_drinking_category = None)
@@ -161,39 +161,41 @@ def testSVMparams(X, y, selectFeatures=True):
     return best_accuracy
 
 ## Test By Cohort (Holdouts)
-def testByCoghort(X, y, clf, NORMALIZE=False):
+def testByCoghort(X, y, clf, selectFeaturesFunc, NORMALIZE=False, exclude_cohs_ids=[]):
     print '\n--------------By Cohort-------------'
     coh_ids = np.unique(data.coh)
     gb = data.groupby('coh')
-    X = selectFeatures(X)
+    X = selectFeaturesFunc(X)
     if NORMALIZE:
         X = normalize(X)
 
     global_expected = []
     global_predicted = []
     for coh_id in coh_ids:
-        expected = []
-        predicted = []
+        print coh_id
+        if coh_id not in exclude_cohs_ids:
+            expected = []
+            predicted = []
 
-        print Cohort.objects.get(coh_cohort_id = coh_id)
-        index = gb.get_group(coh_id).index
+            print Cohort.objects.get(coh_cohort_id = coh_id)
+            index = gb.get_group(coh_id).index
 
-        # Train on all but one cohort
-        clf.fit(X[~X.index.isin(index)], y[~X.index.isin(index)])
+            # Train on all but one cohort
+            clf.fit(X[~X.index.isin(index)], y[~X.index.isin(index)])
 
-        # Predict on holdout cohort
-        y_pred = clf.predict(X[X.index.isin(index)])
+            # Predict on holdout cohort
+            y_pred = clf.predict(X[X.index.isin(index)])
 
-        # Print what you got
-        y_test = y[X.index.isin(index)]
+            # Print what you got
+            y_test = y[X.index.isin(index)]
 
-        expected += list(y_test); global_expected += list(y_test);
-        predicted += list(y_pred); global_predicted += list(y_pred);
+            expected += list(y_test); global_expected += list(y_test);
+            predicted += list(y_pred); global_predicted += list(y_pred);
 
-        y_pred = pd.DataFrame(list(y_pred), columns=['predicted'], index = y_test.index)
-        print pd.concat([y_test, y_pred], axis=1, join='inner')
-        reportResults(clf, expected, predicted)
-        print '-----------------------------------\n'
+            y_pred = pd.DataFrame(list(y_pred), columns=['predicted'], index = y_test.index)
+            print pd.concat([y_test, y_pred], axis=1, join='inner')
+            reportResults(clf, expected, predicted)
+            print '-----------------------------------\n'
     reportResults(clf, global_expected, global_predicted, REPORT=True)
 
 def reportResults(clf, expected, predicted, REPORT=False):
@@ -242,10 +244,10 @@ def runTwoThenTwo():
     # X_feat_sel = data_HDVHD.drop(['DC', 'coh'], axis = 1)
     # featureSelectionPlot(X_feat_sel, y)
 
-def gradients():
-    X = selectFeaturesLDBD(data_LDBD)
-    print X
-    y = data_LDBD.DC
+def gradients(func_data, selectFeaturesFunc, foldername):
+    X = selectFeaturesFunc(func_data)
+    print X.columns
+    y = func_data.DC
     clf = GradientBoostingClassifier(n_estimators=100, max_depth=4,
                                 learning_rate=0.1,
                                 random_state=1)
@@ -254,19 +256,19 @@ def gradients():
     n_features = len(X.columns)
     for i in xrange(n_features):
         for j in xrange(i-1):
-            for lbl in ['HD', 'VHD']:
-                #get the figure
-                fig = plt.figure(figsize=(14,8))
-                ax = fig.add_subplot(111)
-                plt.clf()
+            lbl = 'VHD'
+            #get the figure
+            fig = plt.figure(figsize=(14,8))
+            ax = fig.add_subplot(111)
+            plt.clf()
 
-                features = [i, j, (i, j)]
-                plot_partial_dependence(clf, X, features, label=lbl, feature_names=X.columns, ax=ax)
-                #title and save
-                plotname = lbl + ' ' + str(X.columns[i])+' ' + str(X.columns[j]) + ' ' + 'partial dependency'
-                plt.title(plotname)
-                path = '/home/alex/Dropbox/Baylor/Matrr/figures/part-deps/ld-bd'
-                plt.savefig(os.path.join(path, plotname), dpi=100, format='png')
+            features = [i, j, (i, j)]
+            plot_partial_dependence(clf, X, features, label=lbl, feature_names=X.columns, ax=ax)
+            #title and save
+            plotname = lbl + ' ' + str(X.columns[i])+' ' + str(X.columns[j]) + ' ' + 'partial dependency.png'
+            plt.title(plotname)
+            path = '/home/alex/Dropbox/Baylor/Matrr/figures/part-deps/' + foldername
+            plt.savefig(os.path.join(path, plotname), dpi=100, format='png')
 
 def massiveRFTest(X, y):
     X = selectFeatures(X)
@@ -275,9 +277,35 @@ def massiveRFTest(X, y):
         scores.extend(cross_validation.cross_val_score(RF, X, y, cv=10))
     print 'Avg score for 20 runs is: %s, sd = %s ' % (np.mean(scores), np.std(scores))
 
+def printByCohortDCdistr():
+    ml_cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
+    for c in ml_cohorts:
+        monkeys = Monkey.objects.filter(cohort = c).exclude(mky_drinking_category = None)
+        print '/n--------------------'
+        print c
+        df = pd.DataFrame(list(monkeys.values_list('mky_drinking_category', flat=True)), columns = ['dc'])
+        print df.dc.value_counts()
+
+def findSignif():
+    signif_cnt = 0
+    for feature in data_features.columns:
+        ld = data[data['DC']=='LD'][feature]
+        #bd = data[data['DC']=='BD'][feature]
+        #hd = data[data['DC']=='HD'][feature]
+        vhd = data[data['DC']=='VHD'][feature]
+        #f_val, p_val = stats.f_oneway(ld, bd, hd, vhd)
+        f_val, p_val = stats.f_oneway(ld, vhd)
+        if p_val < 0.05:
+            importance = 'SIGNIF!:  '
+            signif_cnt += 1
+        else: importance = ''
+        print importance + feature + " One-way ANOVA P =", p_val
+    print '\n Significant vars: ' + str(signif_cnt)
+
 ### RUN SCRIPTS
-base_rate_accuracy = data_targets.value_counts()/len(data_targets.index)
-print base_rate_accuracy
+#base_rate_accuracy = data_targets.value_counts()/len(data_targets.index)
+#print base_rate_accuracy
+#printByCohortDCdistr()
 
 # featureSelectionPlot(data_features, data_targets)
 
@@ -285,7 +313,9 @@ print base_rate_accuracy
 
 #testClassifiers(data_features, data_targets)
 #
-# testByCoghort(data_features, data_targets, RF, False)
+#testByCoghort(data_features, data_targets, RF, False)
+#testByCoghort(data_LDBD.drop(['DC'], axis = 1), data_LDBD.DC, RF, selectFeaturesLDBD, False, exclude_cohs_ids=[7])
+#testByCoghort(data_HDVHD.drop(['DC'], axis = 1), data_HDVHD.DC, RF, selectFeaturesHDVHD, False, exclude_cohs_ids=[9, 5])
 # testByCoghort(data_features, data_targets, SVM_CLF, True)
 #
 # KFoldMonkeys(data_features, data_targets, RF, cross_validation.LeaveOneOut(M_EXAMPLES))
@@ -294,9 +324,17 @@ print base_rate_accuracy
 # KFoldMonkeys(data_features, data_targets, SVM_CLF, cross_validation.LeaveOneOut(M_EXAMPLES), NORMALIZE=True)
 # KFoldMonkeys(data_features, data_targets, SVM_CLF, cross_validation.KFold(M_EXAMPLES, n_folds=10), NORMALIZE=True)
 
-# runTwoThenTwo()
-# gradients()
-#massiveRFTest(data_features, data_targets)
+#runTwoThenTwo()
+
+#print data.mtd_max_bout_length
+plt.plot(data.mtd_pct_max_bout_vol_total_etoh_2, 'ro')
+#data.mtd_max_bout_length[np.abs(data.mtd_max_bout_length-data.mtd_max_bout_length.mean()) < 2 * data.mtd_max_bout_length.std()].hist()
+#data.mtd_max_bout_length.hist()
+pylab.show()
+
+gradients(data, selectFeatures, 'heavy')
+#gradients(data_HDVHD, selectFeaturesHDVHD, 'hd_vhd')
+# massiveRFTest(data_features, data_targets)
 # print data
 # pct_data = data[['mtd_pct_etoh_in_1st_bout_1', 'mtd_pct_etoh_in_1st_bout_2']]
 # print pct_data
@@ -313,10 +351,16 @@ def plot_meds(features):
     axs = axs.ravel()
     dc = data.DC
     print features
-    plt.xlim(0, 102)
+    plt.xlim(0, 97)
     for ax in axs:
-        ax.set_xlim(44, 101)
+        ax.set_xlim(44, 97)
         ax.set_ylim(0,  9.3)
+        ax.tick_params(
+            axis='x',          # changes apply to the x-axis
+            which='both',      # both major and minor ticks are affected
+            bottom='off',      # ticks along the bottom edge are off
+            top='off',         # ticks along the top edge are off
+            labelbottom='on') # labels along the bottom edge are off
     for id in features.index:
         if id not in [10091]:
             ax_index = 0
@@ -326,21 +370,21 @@ def plot_meds(features):
                 ax_index = 2
             if dc.ix[id] == "VHD":
                 ax_index = 3
-            axs[ax_index].plot([50, 95],features.ix[id].values, dc_colors_ol[dc.ix[id]], linewidth=1.5)
+            axs[ax_index].plot([50, 90],features.ix[id].values, dc_colors_ol[dc.ix[id]], linewidth=1.5)
             yval0 = features.ix[id].values[0]
             axs[ax_index].plot([45,55], [yval0, yval0], dc_colors_dash[dc.ix[id]], linewidth=2.5)
             yval1 = features.ix[id].values[1]
-            axs[ax_index].plot([90,100], [yval1, yval1], dc_colors_dash[dc.ix[id]], linewidth=2.5)
+            axs[ax_index].plot([85,95], [yval1, yval1], dc_colors_dash[dc.ix[id]], linewidth=2.5)
 
-    axs[0].text(48, 8, 'LD')
-    axs[1].text(48, 8, 'BD')
-    axs[2].text(48, 8, 'HD')
-    axs[3].text(48, 8, 'VHD')
+    axs[0].text(70, 8.5, 'LD')
+    axs[1].text(70, 8.5, 'BD')
+    axs[2].text(70, 8.5, 'HD')
+    axs[3].text(70, 8.5, 'VHD')
 
 
     # plt.title('Medain number of bouts by stage')
-    axs[2].set_ylabel("Number of bouts")
-    axs[2].set_xlabel("Day of induction phase")
+    axs[2].set_ylabel('Relative change of the attribute "Number of bouts"')
+    axs[2].set_xlabel("Induction phase")
 
     # Fine-tune figure; make subplots close to each other and hide x ticks for all but bottom plot.
     plt.tight_layout()
@@ -349,8 +393,13 @@ def plot_meds(features):
     plt.setp([axs[i].get_xticklabels() for i in [0,1,3]], visible = False)
     plt.setp([axs[i].get_yticklabels() for i in [1,3]], visible = False)
 
-pct_data = data[['mtd_etoh_bout_1', 'mtd_etoh_bout_2']]
-plot_meds(pct_data)
+    labels = [item.get_text() for item in axs[2].get_xticklabels()]
+    labels = ['', '1st Half','','','','2nd Half']
+    axs[2].set_xticklabels(labels)
 
 
-pylab.show()
+#pct_data = data[['mtd_etoh_bout_1', 'mtd_etoh_bout_2', 'DC']]
+#plot_meds(pct_data)
+
+
+#pylab.show()

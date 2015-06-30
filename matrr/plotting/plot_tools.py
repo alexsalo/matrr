@@ -412,6 +412,20 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
                 gc.collect()
                 CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
 
+def create_bone_densities_plots(cohorts=True, monkeys=True):
+    if cohorts:
+        CohortImage.objects.all().delete()
+        plots = ['cohort_bone_densities',]
+        from matrr.models import CohortImage, Cohort, BoneDensity
+        from matrr.plotting import cohort_plots
+        for cohort in BoneDensity.objects.all().values_list('monkey__cohort', flat=True).distinct():
+            cohort = Cohort.objects.get(pk=cohort)
+            print cohort
+            for graph in plots:
+                gc.collect()
+                CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
+
+
 def create_bec_summary_plots(cohorts=True, monkeys=True):
     from matrr.models import MonkeyImage, CohortImage, Cohort, MonkeyBEC
     from matrr.plotting import monkey_plots, cohort_plots
