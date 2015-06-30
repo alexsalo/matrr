@@ -47,7 +47,7 @@ def _cohort_bone_densities(cohort):
 
     tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
     ax1 = tool_figure.add_subplot(111)
-    bds = BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=c))
+    bds = BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort))
     df = pd.DataFrame(list(bds.values_list('monkey__mky_id', 'monkey__mky_drinking_category', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd')), columns=['mky_id', 'dc', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd'])
     df.color = df.dc.apply(lambda x: dc_colors[x])
     ax1.scatter(df.bdy_area, df.bdy_bmc, c=df.color, s=80, alpha=0)
@@ -60,7 +60,7 @@ def _cohort_bone_densities(cohort):
     ax1.grid()
     ax1.set_xlabel(r'Bone Area $(cm^2)$')
     ax1.set_ylabel('Bone Mineral Content $(g)$')
-    ax1.set_title('BMA and BMC for NHP cohort ' + c.coh_cohort_name)
+    ax1.set_title('BMA and BMC for NHP cohort ' + cohort.coh_cohort_name)
     matplotlib.rcParams.update({'font.size': 16})
     for dc in ['LD', 'BD','HD','VHD', 'None']:
         if dc == 'None':
