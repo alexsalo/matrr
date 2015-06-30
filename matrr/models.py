@@ -680,6 +680,49 @@ class Monkey(models.Model):
         except Exception as e:
             return None
 
+    def bd_etoh_during_ind(self, mins):     # function helps returining bone data and etoh during induction
+                                            # based on alex's function above.  -- rivas_perea
+        mcount = BoneDensity.objects.all().count()
+        for cnt in xrange(0, mcount):
+            mm = BoneDensity.objects.all()[cnt]
+            if mm.monkey == self:
+                mbd = BoneDensity.get_all_fields(mm)
+                mbd = pd.DataFrame(list(mbd))
+                isfound = 1
+                break
+            else:
+                mbd = pd.DataFrame()
+                mdt = pd.DataFrame()
+                isfound = 0
+
+        if isfound == 1:
+            duration = mins * 60
+            mtds = MonkeyToDrinkingExperiment.objects.Ind().filter(monkey=self).exclude_exceptions().order_by('drinking_experiment__dex_date')
+            #some monkeys have weird beginning, just trust this 55 number
+            if self.mky_id in anomalies_mtds_ids:
+                mtds = mtds[55:]
+            volumes = []
+            for mtd in mtds:
+                bouts = mtd.bouts_set.filter(ebt_start_time__lt=duration)
+                drinks_in_bout = ExperimentDrink.objects.Ind().filter(ebt__in=bouts).filter(edr_start_time__lt=duration)
+                vols = numpy.array(drinks_in_bout.values_list('edr_volume'))
+
+                if (not mtd.mtd_etoh_intake) or (mtd.mtd_etoh_intake < 0):
+                    print "No mtd.mtd_etoh_intake for Monkey: %s. Will produce a NaN." % self.mky_id
+                    mtd.mtd_etoh_intake = float('NaN')  # if the value is missing or is -1, we consider it a NaN so that
+                                                        # we produce NaNs that we can skip when calculating descriptive
+                                                        # statistics
+
+                volumes.append(vols.sum() / mtd.mtd_etoh_intake)
+
+            mdt = pd.DataFrame(list(volumes))
+
+            # mdt contains the drinking data for the specific time
+            # mbd contains the fields associated with BoneDensity: Area, BMC, BMD
+
+        return mdt, mbd
+
+
     def populate_age_at_intox(self):
         becs = MonkeyBEC.objects.filter(monkey=self)
         if becs.count():
@@ -4253,6 +4296,11 @@ class BoneDensity(models.Model):
 
     def __unicode__(self):
         return "%s - CRH Challenge" % str(self.monkey)
+
+    def get_all_fields(self):       # this function will return bone density data for a given monkey...
+                                    # bdy_area is 'Bone Area', bdy_bmc is 'Bone Mineral Content' and bdy_bmd
+                                    # is 'Bone Mineral Density'         -- rivas_perea
+        return self.bdy_area, self.bdy_bmc, self.bdy_bmd
 
     class Meta:
         db_table = 'bdy_bone_density'
