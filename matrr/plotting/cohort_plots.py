@@ -67,6 +67,8 @@ def _cohort_bone_densities(cohort):
             df2 = df[~df.dc.isin(['LD', 'BD','HD','VHD'])]
         else:
             df2 = df[df.dc == dc]
+        # drop NaN values for densities, kkep None DCs
+        df2.dropna(subset = ['bdy_area', 'bdy_bmc', 'bdy_bmd'], inplace=True)
         if len(df2) > 1:
             fit = np.polyfit(df2.bdy_area, df2.bdy_bmc, 1)
             fit_fn = np.poly1d(fit)

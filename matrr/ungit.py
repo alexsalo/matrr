@@ -1172,7 +1172,7 @@ c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 
 ### 29 June 2015
 # bds = BoneDensity.objects.all()
-# df = pd.DataFrame(list(bds.values_list('monkey__mky_id', 'monkey__mky_drinking_category', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd')), columns=['mky_id', 'dc', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd'])
+# df = pd.DataFrame(list(bds.values_list('monkey__mky_id', 'monkey__cohort', 'monkey__mky_drinking_category', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd')), columns=['mky_id', 'coh', 'dc', 'tissue_type', 'bdy_area', 'bdy_bmc', 'bdy_bmd'])
 # print len(df)
 # print df
 # print df.mky_id.unique()
@@ -1243,6 +1243,11 @@ c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 #         gc.collect()
 #         CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
 #
-#
+
+#print BoneDensity.objects.all().values_list('monkey__cohort__coh_cohort_id', flat=True).distinct()
+CohortImage.objects.filter(method__contains='densities').delete()
+from plotting import plot_tools
+plot_tools.create_bone_densities_plots()
+
 
 #plt.show()
