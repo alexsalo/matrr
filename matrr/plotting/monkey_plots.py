@@ -1364,8 +1364,9 @@ def monkey_bec_bubble(monkey=None, from_date=None, to_date=None, dex_type='', sa
     scatter_color = list()
     for index, date in enumerate(dates, 1):
         bec_rec = bec_records.get(bec_collect_date=date)
-        if bec_rec.mtd.drinking_experiment.dex_type == 'Induction':
-            induction_days.append(index)
+        if bec_rec.mtd is not None:
+            if bec_rec.mtd.drinking_experiment.dex_type == 'Induction':
+                induction_days.append(index)
         scatter_y.append(bec_rec.bec_mg_pct)
         scatter_size.append(bec_rec.bec_pct_intake)
         scatter_color.append(bec_rec.bec_gkg_etoh)

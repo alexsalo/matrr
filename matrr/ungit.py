@@ -1245,9 +1245,54 @@ c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 #
 
 #print BoneDensity.objects.all().values_list('monkey__cohort__coh_cohort_id', flat=True).distinct()
-CohortImage.objects.filter(method__contains='densities').delete()
-from plotting import plot_tools
-plot_tools.create_bone_densities_plots()
+# CohortImage.objects.filter(method__contains='densities').delete()
+# from plotting import plot_tools
+# plot_tools.create_bone_densities_plots()
 
+# def prefix_f(W):
+#     fail =  len(W)*[0]
+#     fail[0] = -1
+#
+#     pos = 2
+#     cnd = 0
+#     while pos < len(W):
+#         if W[pos - 1] == W[cnd]:
+#             cnd += 1
+#             fail[pos] = cnd
+#             pos += 1
+#         else:
+#             if cnd > 0:
+#                 cnd = fail[cnd]
+#             else:
+#                 fail[pos] = 0
+#                 pos +=1
+#     return fail
+#
+#
+# print prefix_f('bbcbbcbbce')
+# print prefix_f('ababcb')
+
+### 2 July 2015
+c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
+r6a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
+r6b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
+from plotting import plot_tools
+from plotting import monkey_plots
+# plot_tools.create_bec_tools_canonicals(c2, True)
+
+# for monkey in Monkey.objects.filter(cohort=r6a):
+#     bec_records = monkey.bec_records.all()
+#     for bec_rec in bec_records:
+#         #f bec_rec.mtd.drinking_experiment.dex_type is None:
+#         if bec_rec.mtd is None:
+#             print monkey, bec_rec
+
+alice = Monkey.objects.get(mky_id=10078)
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=alice).order_by('drinking_experiment__dex_date')
+# for date in mtds.values_list('drinking_experiment__dex_date', flat=True):
+#     print date
+r6b.cbc.populate_fields()
+#monkey_plots.monkey_etoh_bouts_vol(alice)
+plot_tools.create_mtd_tools_canonicals(r6b, True)
 
 #plt.show()
