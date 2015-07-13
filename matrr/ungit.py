@@ -1276,8 +1276,11 @@ c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
 r6a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
 r6b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
+r10 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 10')
+c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
 from plotting import plot_tools
 from plotting import monkey_plots
+from plotting import cohort_plots
 # plot_tools.create_bec_tools_canonicals(c2, True)
 
 # for monkey in Monkey.objects.filter(cohort=r6a):
@@ -1287,12 +1290,78 @@ from plotting import monkey_plots
 #         if bec_rec.mtd is None:
 #             print monkey, bec_rec
 
-alice = Monkey.objects.get(mky_id=10078)
+#alice = Monkey.objects.get(mky_id=10078)
 # mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=alice).order_by('drinking_experiment__dex_date')
 # for date in mtds.values_list('drinking_experiment__dex_date', flat=True):
 #     print date
-r6b.cbc.populate_fields()
+#r10.cbc.populate_fields()
 #monkey_plots.monkey_etoh_bouts_vol(alice)
-plot_tools.create_mtd_tools_canonicals(r6b, True)
+#plot_tools.create_mtd_tools_canonicals(r10, True)
+
+# print NecropsySummary.objects.filter(monkey=Monkey.objects.filter(cohort=r10)[1])
+#
+# cohort_plots.cohort_etoh_induction_cumsum(r6a, 0)
+# cohort_plots.cohort_etoh_induction_cumsum(r6a, 1)
+# cohort_plots.cohort_etoh_induction_cumsum(r6a, 2)
+# cohort_plots.cohort_etoh_induction_cumsum(r6a, 3)
+#cohort_plots.cohort_etoh_max_bout_cumsum_horibar_ltgkg(r6a)
+#plot_tools.create_necropsy_plots(r10, True)
+#plot_tools.create_daily_cumsum_graphs()
+
+### 3 July 2015
+
+# timeline = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c2).values_list('event__evt_id', 'event__evt_name', 'cev_date')), columns=['id', 'name', 'date'])
+# print timeline
+
+def dump_MATRR_current_data_grid():
+    cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
+    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC",
+                  "Hormone", "Metabolite", "Protein", 'ElectroPhys', 'CRH Challenge', 'Bone Density',
+                  'Cohort Plots', 'Monkey Plots', 'Cohort Protein Plots', 'Tissue Requests', 'Tissue Samples']
+    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent,
+                    MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys,
+                    CRHChallenge, BoneDensity,
+                    CohortImage, MonkeyImage, CohortProteinImage, TissueRequest, TissueSample, ]
+    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
+                     'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort',
+                     'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort',
+                     'cohort', 'monkey__cohort', 'cohort', 'req_request__cohort','monkey__cohort',]
+    assert len(data_types) == len(data_classes) == len(cohort_fields), "data_types, data_classes, and cohort_fields " \
+                                                                       "aren't all the same length.  You probably " \
+                                                                       "forgot to add a value to one of them."
+    headers = ['Data Type']
+    headers.extend(cohorts.values_list('coh_cohort_name', flat=True))
+    data_rows = list()
+    for _type, _field, _class in zip(data_types, cohort_fields, data_classes):
+        print _type, _field, _class
+        _row = [_type, ]
+        for _cohort in cohorts:
+            row_count = _class.objects.filter(**{_field: _cohort}).count()
+            _row.append(row_count)
+        data_rows.append(_row)
+
+    outcsv = open('data_grid.csv', 'w')
+    writer = csv.writer(outcsv)
+    writer.writerow(headers)
+    writer.writerows(data_rows)
+    outcsv.close()
+
+#dump_MATRR_current_data_grid()
+
+# for cohort in Cohort.objects.all():
+#     for protein in Protein.objects.all():
+#         cnt = MonkeyProtein.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).count()
+#         if cnt > 0:
+#             print cohort, protein, cnt
+#
+# for cohort in Cohort.objects.all():
+#     cohortHormones = MonkeyHormone.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort))
+#     if cohortHormones.count() > 0:
+#         df = pd.DataFrame(list(cohortHormones.values_list('mhm_date', 'mhm_cort',
+#                                                       'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas')),
+#                       columns = ['mhm_date', 'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas'])
+#
+#         print cohort
+#         print df
 
 #plt.show()

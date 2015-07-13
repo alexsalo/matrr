@@ -633,12 +633,14 @@ class Monkey(models.Model):
     mky_drinking_category = models.CharField('Drinking Category', max_length=3, choices=DrinkingCategory, blank=False, null=True, help_text='The Drinking Category of the Monkey')
 
     def __unicode__(self):
-        name = str(self.mky_id) + ' ' + str(self.mky_name) + ' ' + str(self.mky_species) + ' '
-        if self.mky_drinking:
-            name += str(self.mky_drinking_category) + ' '
-        else:
-            name += 'control '
-        name += self.cohort.coh_cohort_name
+        name = str(self.mky_id)
+        if settings.DEBUG:
+            name += ' ' + str(self.mky_name) + ' ' + str(self.mky_species) + ' '
+            if self.mky_drinking:
+                name += str(self.mky_drinking_category) + ' '
+            else:
+                name += 'control '
+            name += self.cohort.coh_cohort_name
         return name
 
     def sex(self):

@@ -382,6 +382,7 @@ def fetch_plot_choices(subject, user, cohort, tool):
 
 def create_necropsy_plots(cohorts=True, monkeys=True):
     if monkeys:
+        print "Creating mtd monkey plots."
         plots = [
             'monkey_necropsy_etoh_4pct',
             'monkey_necropsy_sum_g_per_kg',
@@ -397,6 +398,7 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
                 gc.collect()
 
     if cohorts:
+        print "Creating cohort mtd plots for %s." % str(cohort)
         plots = [
             'cohort_necropsy_etoh_4pct',
             'cohort_necropsy_sum_g_per_kg',
