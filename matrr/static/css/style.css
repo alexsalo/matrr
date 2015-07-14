@@ -509,6 +509,12 @@ table.clear tr {
 	color: #CF27FF;
 }
 
+.advancedSearch {
+    width: auto;
+    display: block;
+    text-align: center;
+}
+
 .messages div{
     border: 1px solid;
     margin: 10px 0px;
