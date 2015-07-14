@@ -3648,6 +3648,9 @@ class MHMManager(models.Manager):
     def OA(self):
         return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Open Access')
 
+    # def cortisol(self):
+    #     return self.get_queryset().
+
 
 class MonkeyHormone(models.Model):
     objects = MHMManager()

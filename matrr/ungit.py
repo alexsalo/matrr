@@ -1315,28 +1315,64 @@ from plotting import cohort_plots
 
 def dump_MATRR_current_data_grid():
     cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
-    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks", "Raw Drinking data", "Exceptions", "BEC",
-                  "Hormone", "Metabolite", "Protein", 'ElectroPhys', 'CRH Challenge', 'Bone Density',
-                  'Cohort Plots', 'Monkey Plots', 'Cohort Protein Plots', 'Tissue Requests', 'Tissue Samples']
-    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink, ExperimentEvent,
-                    MonkeyException, MonkeyBEC, MonkeyHormone, MonkeyMetabolite, MonkeyProtein, MonkeyEphys,
-                    CRHChallenge, BoneDensity,
-                    CohortImage, MonkeyImage, CohortProteinImage, TissueRequest, TissueSample, ]
+    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks",
+                  #"Raw Drinking data",
+                  "Exceptions", "BEC",
+                  "Metabolite", "Protein", 'ElectroPhys', 'CRH Challenge',
+                  'Cohort Plots', 'Monkey Plots', 'Cohort Protein Plots', 'Tissue Requests', 'Tissue Samples',
+                  "Hormone",
+                  '    Cortisol', '    ACTH', '    Testosterone', '    Deoxycorticosterone', '    Aldosterone', '    DHEAS', # 6 types of hormones
+                   'Bone Density',
+                  '    Area', '    Bone Mineral Content', '    Bone Mineral Density',
+                  ]
+    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink,
+                    #ExperimentEvent,
+                    MonkeyException, MonkeyBEC,
+                    MonkeyMetabolite, MonkeyProtein, MonkeyEphys, CRHChallenge,
+                    CohortImage, MonkeyImage, CohortProteinImage, TissueRequest, TissueSample,
+                    MonkeyHormone,
+                    MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone, # 6 types of hormones
+                    BoneDensity,
+                    BoneDensity,BoneDensity,BoneDensity,
+                    ]
     cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
-                     'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort',
+                     #'monkey__cohort',
+                     'monkey__cohort', 'monkey__cohort',
                      'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort',
-                     'cohort', 'monkey__cohort', 'cohort', 'req_request__cohort','monkey__cohort',]
-    assert len(data_types) == len(data_classes) == len(cohort_fields), "data_types, data_classes, and cohort_fields " \
+                     'cohort', 'monkey__cohort', 'cohort', 'req_request__cohort','monkey__cohort',
+                     'monkey__cohort',
+                     'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort', # 6 types of hormones
+                     'monkey__cohort',
+                     'monkey__cohort','monkey__cohort','monkey__cohort',
+                     ]
+    exclude_none_fields = [
+                    '','','','',
+                    #'',
+                    '','',
+                    '','','','',
+                    '','','','','',
+                    '',
+                    'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas',
+                    '',
+                    'bdy_area','bdy_bmc','bdy_bmd',
+                    ]
+    assert len(data_types) == len(data_classes) == len(cohort_fields) == len(exclude_none_fields), \
+                                                                    "data_types, data_classes, and cohort_fields " \
                                                                        "aren't all the same length.  You probably " \
                                                                        "forgot to add a value to one of them."
     headers = ['Data Type']
     headers.extend(cohorts.values_list('coh_cohort_name', flat=True))
     data_rows = list()
-    for _type, _field, _class in zip(data_types, cohort_fields, data_classes):
-        print _type, _field, _class
+    for _type, _field, _class, _exclude in zip(data_types, cohort_fields, data_classes, exclude_none_fields):
+        print _type, _field, _class, _exclude
         _row = [_type, ]
         for _cohort in cohorts:
-            row_count = _class.objects.filter(**{_field: _cohort}).count()
+            ### 14 Jul 2015:
+            ### Count for cohort excluding Nones for specific attributes
+            if _exclude == '':
+                row_count = _class.objects.filter(**{_field: _cohort}).count()
+            else:
+                row_count = _class.objects.filter(**{_field: _cohort}).exclude(**{_exclude: None}).count()
             _row.append(row_count)
         data_rows.append(_row)
 
@@ -1352,8 +1388,9 @@ def dump_MATRR_current_data_grid():
     outjson.write(json_string)
     outjson.close()
 
-#dump_MATRR_current_data_grid()
+dump_MATRR_current_data_grid()
 
+### Don't bother, depreciated method for proteins
 # for cohort in Cohort.objects.all():
 #     for protein in Protein.objects.all():
 #         cnt = MonkeyProtein.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).count()
@@ -1374,22 +1411,29 @@ def dump_MATRR_current_data_grid():
 ### 13 July 2015
 #print NecropsySummary.objects.all().values_list('monkey__cohort__coh_cohort_name', flat=True).distinct()
 
-def human_format(num):
-    magnitude = 0
-    while abs(num) >= 1000:
-        magnitude += 1
-        num /= 1000.0
-    # add more suffixes if you need them
-    return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+# def human_format(num):
+#     magnitude = 0
+#     while abs(num) >= 1000:
+#         magnitude += 1
+#         num /= 1000.0
+#     # add more suffixes if you need them
+#     return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+#
+# print('the answer is %s' % human_format(7436313))
+#
+# json_file = open('current_data_grid.json', 'r')
+# context = json.loads(json_file.read())
+# for item in context['data_rows']:
+#     for i, num in enumerate(item):
+#         if i > 0:
+#             item[i] = human_format(num)
+#     print item
 
-print('the answer is %s' % human_format(7436313))
+# cohortHormones = MonkeyHormone.objects.filter(monkey__in=Monkey.objects.filter(cohort=Cohort.objects.get(coh_cohort_name='INIA Cyno 2')))
+# print 'all: ', cohortHormones.count()
+# print cohortHormones.values_list('mhm_t', flat=True)
+# cort = cohortHormones.exclude(mhm_t=None)
+# print 'mhm_t: ', cort.count()
 
-json_file = open('current_data_grid.json', 'r')
-context = json.loads(json_file.read())
-for item in context['data_rows']:
-    for i, num in enumerate(item):
-        if i > 0:
-            item[i] = human_format(num)
-    print item
 
 #plt.show()
