@@ -11,6 +11,7 @@ from django.views.generic import DetailView, ListView
 from matrr import gizmo
 from matrr.models import Cohort, CohortImage, Monkey, MonkeyImage, TissueType, TissueRequest, TissueCategory, Event
 from matrr.forms import TissueRequestForm, DataRequestForm
+from matrr import useful_funcs
 
 cohort_timeline = DetailView.as_view(queryset=Cohort.objects.filter(),
                                      context_object_name='cohort',
@@ -329,6 +330,11 @@ def data_repository_grid(request):
         context = {}
     else:
         context = json.loads(json_file.read())
+        # Transform numbers for good readability
+        for item in context['data_rows']:
+            for i, num in enumerate(item):
+                if i > 0:
+                    item[i] = useful_funcs.human_format(num)
     return render_to_response('matrr/data_repository_grid.html', context, context_instance=RequestContext(request))
 
 @login_required

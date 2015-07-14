@@ -1346,6 +1346,12 @@ def dump_MATRR_current_data_grid():
     writer.writerows(data_rows)
     outcsv.close()
 
+    context = {'headers': headers, 'data_rows': data_rows, 'last_updated': datetime.now().strftime('%Y-%m-%d') }
+    outjson = open('current_data_grid.json', 'w')
+    json_string = json.dumps(context)
+    outjson.write(json_string)
+    outjson.close()
+
 #dump_MATRR_current_data_grid()
 
 # for cohort in Cohort.objects.all():
@@ -1363,5 +1369,27 @@ def dump_MATRR_current_data_grid():
 #
 #         print cohort
 #         print df
+
+
+### 13 July 2015
+#print NecropsySummary.objects.all().values_list('monkey__cohort__coh_cohort_name', flat=True).distinct()
+
+def human_format(num):
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    # add more suffixes if you need them
+    return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+
+print('the answer is %s' % human_format(7436313))
+
+json_file = open('current_data_grid.json', 'r')
+context = json.loads(json_file.read())
+for item in context['data_rows']:
+    for i, num in enumerate(item):
+        if i > 0:
+            item[i] = human_format(num)
+    print item
 
 #plt.show()
