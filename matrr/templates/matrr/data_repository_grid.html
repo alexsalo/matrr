@@ -30,7 +30,7 @@
                             <td>{{ cell|spacify}}</td>
                         {% else %}
                             <td style="text-align: center; background-color: {% if cell != 0 and cell != '0' %}lightseagreen{% else %}lightcoral{% endif %}">
-                                {{ cell }}
+                                {{ cell|big_num_human_format }}
                             </td>
                         {% endif %}
                     {% endfor %}

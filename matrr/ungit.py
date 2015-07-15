@@ -1327,7 +1327,7 @@ def dump_MATRR_current_data_grid():
                   'CRH Challenge',
                   '    ACTH', '    Cortisol', '    17beta-estradiol', '    Deoxycorticosterone', '    Aldosterone', '    DHEA-S',
                   'ElectroPhys',
-                  "    Frequency (hz)", "    In-Event Interval (ms)","    Amplitude","    Rise (ms)","    Decay (ms)", "    Area","    Baseline","    Noise", "    10-90 Rise (ms)","    10-90 Slope","    Half Width","    50 Rise (ms)","    Rel Time",
+                  "    Frequency (hz)", "    In-Event Interval","    Amplitude","    Rise (ms)","    Decay (ms)", "    Area","    Baseline","    Noise", "    10-90 Rise (ms)","    10-90 Slope","    Half Width","    50 Rise (ms)","    Rel Time",
                   ]
     data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink,
                     #ExperimentEvent,

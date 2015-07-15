@@ -57,7 +57,6 @@ def yesno_truthy(value, arg):
 ### Alex
 # 14 Jul 2015
 @register.filter()
-@stringfilter
 def spacify(value, autoescape=None):
     if autoescape:
 	    esc = conditional_escape
@@ -66,3 +65,12 @@ def spacify(value, autoescape=None):
     return mark_safe(re.sub('\s', '&'+'nbsp;', esc(value)))
 spacify.needs_autoescape = True
 register.filter(spacify)
+
+@register.filter()
+def big_num_human_format(value):
+    magnitude = 0
+    while abs(value) >= 1000:
+        magnitude += 1
+        value /= 1000.0
+    # add more suffixes if you need them
+    return '%.0f%s' % (value, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
