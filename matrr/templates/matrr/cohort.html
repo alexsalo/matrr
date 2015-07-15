@@ -248,6 +248,7 @@
             </thead>
             <tbody class='drink-cat-rows'>
                 {% for monkey in monkeys %}
+                    {%  if monkey.sum_etoh_gkg_by_period|first  > 0 %}
                     <tr>
                         <td>{{ monkey.mky_id }}</td>
 
@@ -272,6 +273,7 @@
                             <td>{{value|big_num_human_format  }}</td>
                         {% endfor %}
                     </tr>
+                    {%  endif %}
                 {% endfor %}
             </tbody>
 		</table>

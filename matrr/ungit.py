@@ -1405,7 +1405,7 @@ def dump_MATRR_current_data_grid():
     outjson.write(json_string)
     outjson.close()
 
-dump_MATRR_current_data_grid()
+#dump_MATRR_current_data_grid()
 
 ### Don't bother, depreciated method for proteins
 # for cohort in Cohort.objects.all():
