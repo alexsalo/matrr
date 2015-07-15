@@ -4133,6 +4133,7 @@ class MonkeyEphys(models.Model):
     mep_bal = models.FloatField("Blood Alcohol Level", editable=False, null=False, blank=False, help_text="Average blood alcohol level of the last 6 months.")
     mep_lifetime_gkg = models.FloatField("Lifetime Intake (g/kg)", editable=False, null=False, blank=False)
     mep_lifetime_vol = models.FloatField("Lifetime Intake (mL)", editable=False, null=False, blank=False)
+
     mep_freq = models.FloatField("Frequency (hz)", editable=False, null=False, blank=False)
     mep_iei = models.FloatField("Inter-Event Interval (ms)", editable=False, null=False, blank=False)
     mep_amp = models.FloatField("Amplitude (pico-amps)", editable=False, null=False, blank=False)

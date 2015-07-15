@@ -1318,43 +1318,60 @@ def dump_MATRR_current_data_grid():
     data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks",
                   #"Raw Drinking data",
                   "Exceptions", "BEC",
-                  "Metabolite", "Protein", 'ElectroPhys', 'CRH Challenge',
+                  "Metabolite", "Protein",
                   'Cohort Plots', 'Monkey Plots', 'Cohort Protein Plots', 'Tissue Requests', 'Tissue Samples',
                   "Hormone",
                   '    Cortisol', '    ACTH', '    Testosterone', '    Deoxycorticosterone', '    Aldosterone', '    DHEAS', # 6 types of hormones
                    'Bone Density',
                   '    Area', '    Bone Mineral Content', '    Bone Mineral Density',
+                  'CRH Challenge',
+                  '    ACTH', '    Cortisol', '    17beta-estradiol', '    Deoxycorticosterone', '    Aldosterone', '    DHEA-S',
+                  'ElectroPhys',
+                  "    Frequency (hz)", "    Inter-Event Interval (ms)","    Amplitude (pico-amps)","    Rise (ms)","    Decay (ms)", "    Area","    Baseline","    Noise", "    10-90 Rise (ms)","    10-90 Slope","    Half Width","    50 Rise (ms)","    Rel Time",
                   ]
     data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink,
                     #ExperimentEvent,
                     MonkeyException, MonkeyBEC,
-                    MonkeyMetabolite, MonkeyProtein, MonkeyEphys, CRHChallenge,
+                    MonkeyMetabolite, MonkeyProtein,
                     CohortImage, MonkeyImage, CohortProteinImage, TissueRequest, TissueSample,
                     MonkeyHormone,
                     MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone, # 6 types of hormones
                     BoneDensity,
                     BoneDensity,BoneDensity,BoneDensity,
+                    CRHChallenge,
+                    CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,
+                    MonkeyEphys,
+                    MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,
                     ]
     cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
                      #'monkey__cohort',
                      'monkey__cohort', 'monkey__cohort',
-                     'monkey__cohort', 'monkey__cohort', 'monkey__cohort', 'monkey__cohort',
+                     'monkey__cohort', 'monkey__cohort',
                      'cohort', 'monkey__cohort', 'cohort', 'req_request__cohort','monkey__cohort',
                      'monkey__cohort',
                      'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort', # 6 types of hormones
                      'monkey__cohort',
                      'monkey__cohort','monkey__cohort','monkey__cohort',
+                     'monkey__cohort',
+                     'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
+                     'monkey__cohort',
+                     'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
                      ]
     exclude_none_fields = [
                     '','','','',
                     #'',
                     '','',
-                    '','','','',
+                    '','',
                     '','','','','',
                     '',
                     'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas',
                     '',
                     'bdy_area','bdy_bmc','bdy_bmd',
+                    '',
+                    'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas',
+                    '',
+                    'mep_freq','mep_iei','mep_amp','mep_rise','mep_decay','mep_area','mep_baseline','mep_noise','mep_10_90_rise','mep_10_90_slope','mep_half_width','mep_50_rise','mep_rel_time',
+
                     ]
     assert len(data_types) == len(data_classes) == len(cohort_fields) == len(exclude_none_fields), \
                                                                     "data_types, data_classes, and cohort_fields " \
@@ -1372,7 +1389,7 @@ def dump_MATRR_current_data_grid():
             if _exclude == '':
                 row_count = _class.objects.filter(**{_field: _cohort}).count()
             else:
-                row_count = _class.objects.filter(**{_field: _cohort}).exclude(**{_exclude: None}).count()
+                row_count = _class.objects.filter(**{_field: _cohort}).exclude(**{_exclude: None}).exclude(**{_exclude: 0.0}).count()
             _row.append(row_count)
         data_rows.append(_row)
 
@@ -1435,5 +1452,18 @@ dump_MATRR_current_data_grid()
 # cort = cohortHormones.exclude(mhm_t=None)
 # print 'mhm_t: ', cort.count()
 
+
+### 15 July 2015
+# for cohort in Cohort.objects.all():
+#     monkeys = Monkey.objects.filter(cohort=cohort)
+#     cohortEphys = MonkeyEphys.objects.filter(monkey__in=monkeys)
+#     if cohortEphys.count() > 0:
+#         for m in monkeys:
+#             mEphys = cohortEphys.filter(monkey=m)
+#             if mEphys.count() > 0:
+#                 print m
+#                 df = pd.DataFrame(list(mEphys.values()))
+#                 print cohort
+#                 print df
 
 #plt.show()
