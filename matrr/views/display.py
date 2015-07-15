@@ -11,6 +11,7 @@ from django.views.generic import DetailView, ListView
 from matrr import gizmo
 from matrr.models import Cohort, CohortImage, Monkey, MonkeyImage, TissueType, TissueRequest, TissueCategory, Event
 from matrr.forms import TissueRequestForm, DataRequestForm
+from django.views.decorators.cache import cache_page
 
 cohort_timeline = DetailView.as_view(queryset=Cohort.objects.filter(),
                                      context_object_name='cohort',
@@ -84,7 +85,7 @@ def __cohorts_view(request, cohorts, template_name):
         cohort_list = cohorts
     return render_to_response(template_name, {'cohort_list': cohort_list, 'cohorts_all' : cohorts_all}, context_instance=RequestContext(request))
 
-
+@cache_page(60 * 60 * 24)
 def cohort_details(request, **kwargs):
     # Handle the displaying of cohort details
     if kwargs.has_key('pk'):
