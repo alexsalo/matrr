@@ -41,6 +41,7 @@ function collectTRToShowOrHide(show_or_hide) {
 	var species = [];
 	var proteins = [];
 	var hormones = [];
+    var bone_density = [];
 	for (var cb = 0; cb < boxes.length; cb++) {
 		if (boxes[cb].name == 'control')
 			control.push("_".concat(boxes[cb].value));
@@ -54,6 +55,8 @@ function collectTRToShowOrHide(show_or_hide) {
 			proteins.push("_".concat(boxes[cb].value));
 		if (boxes[cb].name == 'hormones')
 			hormones.push("_".concat(boxes[cb].value));
+        if (boxes[cb].name == 'bone_density')
+			bone_density.push("_".concat(boxes[cb].value));
 	}
 
 	var toShow = [];
@@ -62,6 +65,7 @@ function collectTRToShowOrHide(show_or_hide) {
 	var hormones_selected = proteins.length != 0;
 	var control_selected = control.length != 0;
 	var cohort_selected = cohort.length != 0;
+    var bone_density_selected = bone_density.length != 0;
 	for (var tr = 0; tr < monkey_trs.length; tr++) {
 		var mky = monkey_trs[tr];
 		var display_sex = false;
@@ -70,6 +74,7 @@ function collectTRToShowOrHide(show_or_hide) {
 		var display_hormone = false;
 		var display_control = false;
 		var display_cohort = false;
+        var display_bone_density = false;
 		if (sexes.length > 0)
 			for (var s = 0; s < sexes.length; s++) {
 				if (mky.className.indexOf(sexes[s]) != -1)
@@ -102,6 +107,11 @@ function collectTRToShowOrHide(show_or_hide) {
 				if (mky.className.indexOf(control[p]) != -1)
 					display_control = true;
 			}
+        if (bone_density.length > 0)
+			for (var p = 0; p < bone_density.length; p++) {
+				if (mky.className.indexOf(bone_density[p]) != -1)
+					display_bone_density = true;
+			}
 
 		var _show = false;
 		if (display_sex && display_species) {
@@ -114,6 +124,8 @@ function collectTRToShowOrHide(show_or_hide) {
 		}
 		if (proteins_selected)
 			_show = display_protein && _show;
+        if (bone_density_selected)
+			_show = display_bone_density && _show;
 		if (hormones_selected)
 			_show = display_hormone && _show;
 		if (control_selected)

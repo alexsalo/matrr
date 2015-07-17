@@ -24,7 +24,7 @@
 {% block content %}
 
 	<div class='large-headline'>Advanced Search</div>
-	<div class=small>Checkboxes within a category are OR'd together.  Categories are AND'd together.</div>
+{#	<div class=small>Checkboxes within a category are OR'd together.  Categories are AND'd together.</div>#}
 
 	<div style='margin: auto'>
 		<form class=left action='' method='post' style='max-width: 25%' id=adv_form>
@@ -32,6 +32,7 @@
 			{{ select_form.as_ul }}
 			<hr style='height: 5px; background-color: black;'>
 			<b>Filter Monkeys by:</b>
+            <div class=small> (Filters AND criterias. Except within proteins and drinking category it is OR'd)</div>
 			<div class=headline><a onclick="javascript:toggle_visibility('control');"><img src='{{ STATIC_URL }}images/expand.gif'>  Control</a></div>
 			<div id='control' class='hidden'>
 				{{ filter_form.control }}<table><tr>Control</tr></table>
@@ -42,7 +43,8 @@
 			</div>
 			<div class=headline><a onclick="javascript:toggle_visibility('proteins');"><img src='{{ STATIC_URL }}images/expand.gif'> Proteins</a></div>
 			<div id='proteins' class="hidden">
-				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in any of the selected proteins.</div>
+				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in any of the selected proteins.
+                <br>Checkboxes within a category are OR'd together (for proteins only).</div>
 				{{ filter_form.proteins }}
 			</div>
 			<div class=headline><a onclick="javascript:toggle_visibility('hormones');"><img src='{{ STATIC_URL }}images/expand.gif'> Hormones</a></div>
@@ -50,11 +52,17 @@
 				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in all of the selected hormones.</div>
 				{{ filter_form.hormones }}
 			</div>
-                        <!--add filter drinking_category -->
-                        <div class=headline><a onclick="javascript:toggle_visibility('drinking_category');"><img src='{{ STATIC_URL }}images/expand.gif'> Drinking Category</a></div>
-		        <div id='drinking_category' class="hidden">
-				<div class=small>Will display monkeys whose drinking categories are the following selected ones.</div>
-				{{ filter_form.drinking_category}}
+            <!--add filter drinking_category -->
+            <div class=headline><a onclick="javascript:toggle_visibility('drinking_category');"><img src='{{ STATIC_URL }}images/expand.gif'> Drinking Category</a></div>
+            <div id='drinking_category' class="hidden">
+                <div class=small>Will display monkeys whose drinking categories are the following selected ones.</div>
+                {{ filter_form.drinking_category}}
+			</div>
+
+            <div class=headline><a onclick="javascript:toggle_visibility('bone_density');"><img src='{{ STATIC_URL }}images/expand.gif'> Bone Density</a></div>
+			<div id='bone_density' class="hidden">
+				<div class=small>Will display monkeys which exhibited at least one standard deviation from the cohort mean in every selected bone values.</div>
+				{{ filter_form.bone_density }}
 			</div>
 		</form>
 

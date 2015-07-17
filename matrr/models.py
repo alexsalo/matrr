@@ -3666,6 +3666,7 @@ class MonkeyHormone(models.Model):
     mhm_time = models.CharField("Time", help_text="No one has told me what -840 means....", max_length=5, blank=True, null=True, default="")
 
     mhm_date = models.DateTimeField("Date Collected", editable=False, null=True, blank=False)
+
     mhm_cort = models.FloatField("Cortisol", null=True, blank=True)
     mhm_acth = models.FloatField("ACTH", null=True, blank=True)
     mhm_t = models.FloatField("Testosterone", null=True, blank=True)
@@ -4288,6 +4289,7 @@ class BoneDensity(models.Model):
     """
 
     """
+    UNITS = {'bdy_area': '$cm^2$', 'bdy_bmc': 'g', 'bdy_bmd': '$g/cm^2$',}
     bdy_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='bdy_records', db_column='mky_id', editable=False)
     dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='bdy_records', db_column='dto_id', editable=False)
@@ -4299,6 +4301,11 @@ class BoneDensity(models.Model):
     bdy_area = models.FloatField("Area", editable=False, null=True, blank=True)
     bdy_bmc = models.FloatField("BMC", editable=False, null=True, blank=True)
     bdy_bmd = models.FloatField("BMD", editable=False, null=True, blank=True)
+
+    bdy_area_stdev = models.FloatField("Area", null=True, blank=False)
+    bdy_bmc_stdev = models.FloatField("BMC", null=True, blank=False)
+    bdy_bmd_stdev = models.FloatField("BMD", null=True, blank=False)
+
 
     def __unicode__(self):
         return "%s - CRH Challenge" % str(self.monkey)
@@ -4313,6 +4320,28 @@ class BoneDensity(models.Model):
         permissions = (
             ('view_bdy_data', 'Can view Bone Density data'),
         )
+
+    def populate_fields(self, repopulate=False):
+        self._populate_stdevs(repopulate=repopulate)
+
+
+    def _populate_stdevs(self, repopulate=False):
+        save = False
+        bds = BoneDensity.objects.filter(monkey__cohort=self.monkey.cohort).exclude(monkey=self.monkey)
+        for field in self.UNITS.iterkeys():
+            field_std = field + "_stdev"
+            current_value = getattr(self, field)
+            current_std = getattr(self, field_std)
+            if current_value and (not current_std or repopulate):
+                _bds = bds.exclude(models.Q(**{field:None}))
+                cohort_values = numpy.array(_bds.values_list(field, flat=True))
+                cohort_stdev = cohort_values.std()
+                cohort_mean = cohort_values.mean()
+                diff = getattr(self, field) - cohort_mean
+                setattr(self, field_std, (diff / cohort_stdev))
+                save = True
+        if save:
+            self.save()
 
 
 

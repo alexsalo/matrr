@@ -919,6 +919,11 @@ class AdvancedSearchFilterForm(forms.Form):
                                               widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={
                                               'onchange': 'post_adv_form()'}))
 
+    BONE_DENSITIES_CHOICES = [ (field, models.BoneDensity._meta.get_field(field).verbose_name) for field in models.BoneDensity.UNITS.keys() ]
+    bone_density = forms.MultipleChoiceField(label="Bone Density", required=False, choices=BONE_DENSITIES_CHOICES,
+                                              widget=widgets.CheckboxSelectMultiple_columns(columns=1, attrs={
+                                              'onchange': 'post_adv_form()'}))
+
 
 class InventoryBrainForm(forms.Form):
     block_names = models.MonkeyBrainBlock.objects.all().order_by().values_list('mbb_block_name',

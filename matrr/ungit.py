@@ -1466,4 +1466,17 @@ def dump_MATRR_current_data_grid():
 #                 print cohort
 #                 print df
 
+### 16 Jul 2015
+cohort = Cohort.objects.get(coh_cohort_name = "INIA Rhesus 6a")
+bmcs = BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).values_list('bdy_bmc', flat=True)
+print bmcs
+sigma = np.std(bmcs)
+mean = np.mean(bmcs)
+print mean, sigma
+print [bmc for bmc in bmcs if abs(bmc-mean)>sigma]
+
+print BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).values()
+# for bd in BoneDensity.objects.all():
+#     bd.populate_fields()
+print BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).values_list('monkey__mky_id', "bdy_area_stdev")
 #plt.show()
