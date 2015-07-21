@@ -1273,11 +1273,14 @@ c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 # print prefix_f('ababcb')
 
 ### 2 July 2015
-c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
-r6a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
-r6b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
-r10 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 10')
-c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
+# c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
+# r5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
+# r6a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
+# r6b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
+# r10 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 10')
+# c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
+# r7b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
+
 from plotting import plot_tools
 from plotting import monkey_plots
 from plotting import cohort_plots
@@ -1467,16 +1470,57 @@ def dump_MATRR_current_data_grid():
 #                 print df
 
 ### 16 Jul 2015
-cohort = Cohort.objects.get(coh_cohort_name = "INIA Rhesus 6a")
-bmcs = BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).values_list('bdy_bmc', flat=True)
-print bmcs
-sigma = np.std(bmcs)
-mean = np.mean(bmcs)
-print mean, sigma
-print [bmc for bmc in bmcs if abs(bmc-mean)>sigma]
+# cohort = Cohort.objects.get(coh_cohort_name = "INIA Rhesus 6a")
+# bmcs = BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).values_list('bdy_bmc', flat=True)
+# print bmcs
+# sigma = np.std(bmcs)
+# mean = np.mean(bmcs)
+# print mean, sigma
+# print [bmc for bmc in bmcs if abs(bmc-mean)>sigma]
+#
+# print BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).values()
+# # for bd in BoneDensity.objects.all():
+# #     bd.populate_fields()
+# print BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).values_list('monkey__mky_id', "bdy_area_stdev")
 
-print BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).values()
-# for bd in BoneDensity.objects.all():
-#     bd.populate_fields()
-print BoneDensity.objects.filter(monkey__in=Monkey.objects.filter(cohort=cohort)).values_list('monkey__mky_id', "bdy_area_stdev")
-#plt.show()
+
+# for cohort in Cohort.objects.all():
+#     monkeys = Monkey.objects.filter(cohort=cohort)
+#     cohortEphys = MonkeyEphys.objects.filter(monkey__in=monkeys)
+#     if cohortEphys.count() > 0:
+#         print cohort
+#         df = pd.DataFrame(list(cohortEphys.values()))
+#         print df
+
+### 20 July 2015
+# becs = MonkeyBEC.objects.OA().filter(monkey__in=Monkey.objects.filter(cohort=r7b))
+# print pd.DataFrame(list(becs.values('monkey__mky_id').annotate(avg_bec=Avg('bec_mg_pct'))))
+
+#plot_tools.create_bec_tools_canonicals(r7b, False)
+#cohort_plots.cohort_summary_avg_bec_mgpct(r7b)
+from matrr.plotting.cohort_plots import COHORT_PLOTS
+
+# for cohort in Cohort.objects.all():
+#     try:
+#         CohortImage.objects.get_or_create(cohort=cohort, method='cohort_summary_avg_bec_mgpct',  title=COHORT_PLOTS['cohort_summary_avg_bec_mgpct'][1], canonical=True)
+#         print 'done: ', cohort
+#     except:
+#         print 'fail: ', cohort
+#         pass
+
+c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
+r5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
+r6a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
+r6b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
+r10 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 10')
+c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
+r7b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
+r7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')
+
+CohortImage.objects.filter(cohort=r7b).filter(method__contains='bihourly').delete()
+#plot_tools.create_bec_summary_plots()
+#plot_tools.create_bec_histograms()
+plot_tools.create_mtd_tools_canonicals(r7b, True)
+
+
+plt.show()

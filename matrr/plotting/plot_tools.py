@@ -526,7 +526,7 @@ def create_bec_tools_canonicals(cohort, create_monkey_plots=True):
             print "That's not a valid cohort."
             return
 
-    cohort_plot_methods = ['cohort_bec_firstbout_monkeycluster',]
+    cohort_plot_methods = [ 'cohort_bec_firstbout_monkeycluster',]
     dex_types = ["", "Induction", "Open Access"]
 
     print "Creating bec cohort plots for %s." % str(cohort)

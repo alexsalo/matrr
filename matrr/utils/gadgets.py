@@ -93,16 +93,20 @@ def convex_hull(points, graphic=False, smidgen=0.0075):
 
 
 def Treemap(ax, node_tree, color_tree, size_method, color_method, x_labels=None):
-    def addnode(ax, node, color, lower=(0, 0), upper=(1, 1), axis=0):
+    def addnode(ax, node, color, lower=[0, 0], upper=[1, 1], axis=0):
         axis %= 2
         draw_rectangle(ax, lower, upper, node, color)
         width = upper[axis] - lower[axis]
         try:
             for child, color in zip(node, color):
-                upper[axis] = lower[axis] + (width * float(size_method(child))) / size_method(node)
+                size_child = size_method(child)
+                size_node = size_method(node)
+                upp = (width * float(size_child)) / size_node
+                upper[axis] = lower[axis] + upp
                 addnode(ax, child, color, list(lower), list(upper), axis + 1)
                 lower[axis] = upper[axis]
-        except TypeError:
+        except Exception, e:
+            print "Couldn't do it: %s" % e
             pass
 
     def draw_rectangle(ax, lower, upper, node, color):

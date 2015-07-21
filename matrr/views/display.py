@@ -112,6 +112,8 @@ def MTDS_changed(sender, **kwargs):
     cache.clear()
 post_save.connect(MTDS_changed, sender=MonkeyToDrinkingExperiment)
 post_save.connect(MTDS_changed, sender=MonkeyBEC)
+post_save.connect(MTDS_changed, sender=MonkeyImage)
+post_save.connect(MTDS_changed, sender=CohortImage)
 
 def __monkey_detail(request, mky_id, coh_id=0):
     try:
