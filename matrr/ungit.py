@@ -1517,10 +1517,10 @@ c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
 r7b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
 r7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')
 
-CohortImage.objects.filter(cohort=r7b).filter(method__contains='bihourly').delete()
-#plot_tools.create_bec_summary_plots()
+#CohortImage.objects.filter(cohort=r10).filter(method__contains='bihourly').delete()
+plot_tools.create_bec_summary_plots(True, False)
 #plot_tools.create_bec_histograms()
-plot_tools.create_mtd_tools_canonicals(r7b, True)
+#plot_tools.create_mtd_tools_canonicals(r10, False)
 
 
 plt.show()

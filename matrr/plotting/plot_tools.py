@@ -432,7 +432,7 @@ def create_bec_summary_plots(cohorts=True, monkeys=True):
     from matrr.plotting import monkey_plots, cohort_plots
 
     bec_cohorts = set(MonkeyBEC.objects.OA().values_list('monkey__cohort', flat=True))
-    approved_cohorts = set([2, 3, 5, 6, 9, 10])  # Cyno 1 & 2, Rhesus 4, 5, 7a, 7b
+    approved_cohorts = set([2, 3, 5, 6, 7, 8, 9, 10, 19])  # Cyno 1 & 2, Rhesus 4, 5, 6a, 6b, 7a, 7b, 19
     actionable_cohorts = bec_cohorts & approved_cohorts
 
     coh_plots = ['cohort_summary_avg_bec_mgpct', ]
@@ -563,6 +563,7 @@ def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
     print "Creating cohort mtd plots for %s." % str(cohort)
     for dex_type in dex_types:
         params = str({'dex_type': dex_type})
+        print params
         for method in plots:
             CohortImage.objects.get_or_create(cohort=cohort, method=method, parameters=params, title=COHORT_PLOTS[method][1], canonical=True)
 
