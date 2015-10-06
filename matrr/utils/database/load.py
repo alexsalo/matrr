@@ -311,6 +311,45 @@ def load_cohort_7b_inventory(input_file):
             unmatched_output.writerow(row)
             print error
 
+# Create by Alex Salo 29 Sept 2015
+# Input file need to be formatted:
+# Known problems:
+# - Ileum instead of Illium
+# - Area 9 instead of Area 09 (same for other single digit areas)
+# - check delimeters (comma or semicolumn) - this script uses semicolumns
+# - check endings of files -wroks for X/n here
+# - check for rubbish in the file, ex "online tissue type"
+def load_cohort_10_13_inventory(input_file):
+    with open(input_file, 'rU') as f:
+        #1. Parse header to get monkeys
+        header = f.readline()
+        monkeys = Monkey.objects.filter(mky_real_id__in=header.split(';')[1:])
+        print monkeys
+
+        # Load Tissues
+        print "Loading Tissue Samples..."
+        read_data = f.readlines()
+        for line_number, line in enumerate(read_data):
+            split = line.split(';')
+            tissue_name = split[0]
+            data = split[1:]
+            tissue_type = TissueType.objects.filter(tst_tissue_name__iexact=tissue_name)
+            if not tissue_type:
+                print "Error: Unknown tissue type " + tissue_name
+                continue
+            elif tissue_type.count() == 1:
+                tissue_type = tissue_type[0]
+                for im, mky in enumerate(monkeys):
+                    if data[im] == 'X' or 'X\n':
+                        tss, created = TissueSample.objects.get_or_create(monkey=mky, tissue_type=tissue_type)
+                        tss.tss_freezer = "Ask OHSU"
+                        tss.tss_location = "Ask OHSU"
+                        tss.tss_sample_quantity = 1
+                        tss.save()
+                        #print mky.mky_name, tissue_name, " was loaded successfully; TSS created: ", created
+            else:
+                print "Error:  Too many TissueType matches." + tissue_name
+
 def load_monkey_data(input_file):
     input_data = csv.reader(open(input_file, 'rU'), delimiter=',')
     columns = input_data.next()
@@ -2051,6 +2090,27 @@ def load_cohort2_electrophys(file_path):
             ephy['mep_50_rise'] = row[14]
             ephy['mep_10_90_slope'] = row[15]
             ephy['mep_rel_time'] = row[16]
+            mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
+    print 'Success'
+
+### 22JUL15 by alexsalo
+def load_cohort4_electrophys(file_path, ephys_type):
+    input_data = csv.reader(open(file_path, 'rU'), delimiter=',')
+    columns = input_data.next()
+
+    for row in input_data:
+        if row[0]:
+            monkey = dingus.get_monkey_by_number(row[0])
+            ephy = dict()
+            ephy['monkey'] = monkey
+            ephy['mep_lifetime_gkg'] = row[1]
+
+            ephy['mep_res'] = row[2]
+            ephy['mep_cap'] = row[3]
+
+            ephy['mep_freq'] = row[4]
+            ephy['mep_amp'] = row[5]
+            ephy['mep_ephys_type'] = ephys_type
             mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
     print 'Success'
 

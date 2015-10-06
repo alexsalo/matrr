@@ -146,7 +146,7 @@ def check_anovas():
             lm = ols(feature + '_d ~ mky_drinking_category * mky_gender', data=feat_deltas).fit()
             print sm.stats.anova_lm(lm, typ=2)
 
-def plot_min_etoh_showcases():
+def plot_min_etoh_showcases(FONT_SIZE=20):
     def plot_min_etoh_pct_for_monkey(mid, ax):
         #get monkey
         m = Monkey.objects.get(mky_id=mid)
@@ -170,20 +170,22 @@ def plot_min_etoh_showcases():
         ax.plot(df.index, df.vol, 'bo')
         ax.set_ylim(-0.05,1.05)
         ax.set_xlim(0,100)
-        ax.patch.set_facecolor(dc_colors[m.mky_drinking_category])
-        ax.patch.set_alpha(0.1)
+        ax.set_axis_bgcolor(mimic_alpha.colorAlpha_to_rgb(dc_colors[m.mky_drinking_category], 0.1))
+        #ax.patch.set_facecolor( dc_colors[m.mky_drinking_category])
+        #ax.patch.set_alpha(0.1)
+        ax.tick_params(axis='both', which='major', labelsize=FONT_SIZE-2)
 
         #plot med slopes
-        ax.plot([df.index[0],df.index[10]], [m1, m1], 'r-', linewidth=2)
-        ax.plot([df.index[-10],df.index[-1]], [m2, m2], 'r-', linewidth=2)
-        ax.plot([df.index[5],df.index[-5]], [m1, m2], 'r-', linewidth=1)
+        ax.plot([df.index[0],df.index[10]], [m1, m1], 'r-', linewidth=2.5)
+        ax.plot([df.index[-10],df.index[-1]], [m2, m2], 'r-', linewidth=2.5)
+        ax.plot([df.index[5],df.index[-5]], [m1, m2], 'r-', linewidth=2.5)
 
         #title and save
         #ax.set_title(str(10)+'min etoh pct for: ' + m.__unicode__(), loc='left')
         ax.text(0.97, 0.95, str(m.mky_drinking_category) + ' ' +str(m.mky_id) + '\n Slope: %0.2f' % slope,
             horizontalalignment='right',
             verticalalignment='top',
-            transform=ax.transAxes, fontsize=12)
+            transform=ax.transAxes, fontsize=FONT_SIZE)
 
         return ax
 
@@ -195,14 +197,15 @@ def plot_min_etoh_showcases():
     plot_min_etoh_pct_for_monkey(10064, axs[3])
     plot_min_etoh_pct_for_monkey(10060, axs[6])
     axs[9].set_ylim(-0.05,1.05)
-    axs[0].set_title('Cohort 5')
+    axs[9].tick_params(axis='both', which='major', labelsize=FONT_SIZE-2)
+    axs[0].set_title('Cohort 5', fontsize=FONT_SIZE)
 
     #coh7b
     axs[1].set_ylim(-0.05,1.05)
     plot_min_etoh_pct_for_monkey(10082, axs[4])
     plot_min_etoh_pct_for_monkey(10086, axs[7])
     plot_min_etoh_pct_for_monkey(10085, axs[10])
-    axs[1].set_title('Cohort 7b')
+    axs[1].set_title('Cohort 7b', fontsize=FONT_SIZE)
 
     #coh6b
     plot_min_etoh_pct_for_monkey(10073, axs[2])
@@ -210,7 +213,7 @@ def plot_min_etoh_showcases():
     plot_min_etoh_pct_for_monkey(10072, axs[11])
     axs[8].set_ylim(-0.05,1.05)
     axs[9].set_xlim(0,100)
-    axs[2].set_title('Cohort 6b')
+    axs[2].set_title('Cohort 6b', fontsize=FONT_SIZE)
 
     # Fine-tune figure; make subplots close to each other and hide x ticks for all but bottom plot.
     fig.subplots_adjust(hspace=0)
@@ -218,17 +221,17 @@ def plot_min_etoh_showcases():
     plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
     plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
 
-    plt.setp(axs[9].get_xticklabels(), visible = True)
+    plt.setp([axs[i].get_xticklabels() for i in [9,10,11]], visible = True)
     plt.setp([axs[i].get_yticklabels() for i in [0,3,6,9]], visible = True)
 
-    axs[0].set_ylabel('VHD', size=14)
-    axs[3].set_ylabel('HD', size=14)
-    axs[6].set_ylabel('BD', size=14)
-    axs[9].set_ylabel('LD', size=14)
+    axs[0].set_ylabel('VHD', fontsize=FONT_SIZE)
+    axs[3].set_ylabel('HD', fontsize=FONT_SIZE)
+    axs[6].set_ylabel('BD', fontsize=FONT_SIZE)
+    axs[9].set_ylabel('LD', fontsize=FONT_SIZE)
 
-    fig.suptitle('EtOH consumption during first 10 minutes as percent (%) of daily allotment', fontsize=14)
+    fig.suptitle('EtOH consumption during first 10 minutes as percent (%) of daily allotment', fontsize=FONT_SIZE)
     fig.subplots_adjust(top=0.93)
-# plot_min_etoh_showcases()
+#plot_min_etoh_showcases()
 
 def etoh_during_ind_for_monkeys(mins):
     for m in get_monkeys():
@@ -299,19 +302,31 @@ def etoh_during_ind_for_monkeys(mins):
 # feat_chosen.save('feat_chosen_all.plk')
 # print feat_chosen.columns
 
-df = pd.DataFrame(list(get_monkeys().values_list('cohort__coh_cohort_name',
-        'mky_age_at_intox', 'mky_age_at_necropsy', 'mky_gender', 'mky_weight', 'mky_birthdate', 'mky_days_at_necropsy')),
-        columns=['coh_id','intox','age','sex', 'weight', 'bd', 'necropsy'])
-print df.groupby('coh_id').count()
-print df.groupby('coh_id').intox.mean() / 365
-print df.groupby('coh_id').weight.mean()
-print df.groupby('coh_id').necropsy.mean() / 365
-print df.groupby('coh_id').sex.sum()
+# df = pd.DataFrame(list(get_monkeys().values_list('cohort__coh_cohort_name',
+#         'mky_age_at_intox', 'mky_drinking_category', 'mky_age_at_necropsy', 'mky_gender', 'mky_weight', 'mky_birthdate', 'mky_days_at_necropsy')),
+#         columns=['coh_id','intox','dc','age','sex', 'weight', 'bd', 'necropsy'])
+# print df.groupby('coh_id').count()
+
+# print df.groupby('coh_id').intox.mean() / 365
+# print df.groupby('coh_id').weight.mean()
+# print df.groupby('coh_id').necropsy.mean() / 365
+# print df.groupby('coh_id').sex.sum()
 
 # a = [dingus.get_datetime_from_steve(age) for age in df.age]
 # b = [dingus.get_datetime_from_steve(bd) for bd in df.bd]
 # from dateutil.relativedelta import relativedelta
 # difference_in_years = [relativedelta([i], b[i]).years for i in xrange(a)]
 # print difference_in_years
+
+# for c in df.coh_id.unique():
+#     print c, df[df.coh_id == c].dc.value_counts()
+mm = get_monkeys()
+fig, axs = plt.subplots(2, 2, figsize=(30, 20), facecolor='w', edgecolor='k')
+for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
+    m = mm.filter(mky_drinking_category=dc)
+    mtd = MonkeyToDrinkingExperiment.objects.filter(monkey__in=m).filter(mtd_etoh_g_kg__gte=1.4)
+    df = pd.DataFrame(list(mtd.values_list('mtd_max_bout')), columns=['max_bout'])
+    df.max_bout.hist(ax=axs[i % 2, (i >> 1) % 2])
+    axs[i % 2, (i >> 1) % 2].set_title(dc)
 
 pylab.show()

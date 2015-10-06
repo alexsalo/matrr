@@ -171,7 +171,10 @@ ResearchProgress = Enumeration([
     ("IP", 'InProgress', "In Progress"),
     ("CP", 'Complete', "Complete"),
 ])
-
+EphysType = Enumeration([
+    ('Ex', 'Excitatory', 'Excitatory'),
+    ('In', 'Inhibitory', 'Inhibitory'),
+])
 
 # These are the method names which ONLY VIP members can _see_
 VIP_IMAGES_LIST = (
@@ -4131,23 +4134,34 @@ class MonkeyEphys(models.Model):
     mep_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='mep_records', db_column='mky_id', editable=False)
     dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mep_records', db_column='dto_id', editable=False)
-    mep_bal = models.FloatField("Blood Alcohol Level", editable=False, null=False, blank=False, help_text="Average blood alcohol level of the last 6 months.")
-    mep_lifetime_gkg = models.FloatField("Lifetime Intake (g/kg)", editable=False, null=False, blank=False)
-    mep_lifetime_vol = models.FloatField("Lifetime Intake (mL)", editable=False, null=False, blank=False)
+    mep_bal = models.FloatField("Blood Alcohol Level", editable=False, null=True, blank=True, help_text="Average blood alcohol level of the last 6 months.")
+    mep_lifetime_gkg = models.FloatField("Lifetime Intake (g/kg)", editable=False, null=True, blank=True)
+    mep_lifetime_vol = models.FloatField("Lifetime Intake (mL)", editable=False, null=True, blank=True)
 
     mep_freq = models.FloatField("Frequency (hz)", editable=False, null=False, blank=False)
-    mep_iei = models.FloatField("Inter-Event Interval (ms)", editable=False, null=False, blank=False)
     mep_amp = models.FloatField("Amplitude (pico-amps)", editable=False, null=False, blank=False)
-    mep_rise = models.FloatField("Rise (ms)", editable=False, null=False, blank=False)
-    mep_decay = models.FloatField("Decay (ms)", editable=False, null=False, blank=False)
-    mep_area = models.FloatField("Area (??)", editable=False, null=False, blank=False)
-    mep_baseline = models.FloatField("Baseline (??)", editable=False, null=False, blank=False)
-    mep_noise = models.FloatField("Noise (??)", editable=False, null=False, blank=False)
-    mep_10_90_rise = models.FloatField("10-90 Rise (ms)", editable=False, null=False, blank=False, help_text="Time it takes to get from 10% to 90% of the rise.")
-    mep_10_90_slope = models.FloatField("10-90 Slope (??)", editable=False, null=False, blank=False, help_text="Slope fo the 10-90 rise")
-    mep_half_width = models.FloatField("Half Width (??)", editable=False, null=False, blank=False)
-    mep_50_rise = models.FloatField("50 Rise (ms)", editable=False, null=False, blank=False, help_text="Time it takes to get to 50% of the rise (definition unconfirmed).")
-    mep_rel_time = models.FloatField("Rel Time (??)", editable=False, null=False, blank=False, help_text="Definition unknown.")
+
+    # New EPhys gave new variables, for Cyno 3
+    desc = 'These are electrophysiological measurements of the intrinsic membrane properties of the neurons ' \
+           'recorded from, and they often confer meaning about the neuronal phenotype in the BNST, which has ' \
+           'a heterogeneous cell population.'
+    mep_res = models.FloatField("Membrane Resistance", editable=False, null=True, blank=True, help_text=desc)
+    mep_cap = models.FloatField("Membrane Capacitance", editable=False, null=True, blank=True, help_text=desc)
+
+    # So far we habe those for Cyno 2
+    mep_iei = models.FloatField("Inter-Event Interval (ms)", editable=False, null=True, blank=True)
+    mep_rise = models.FloatField("Rise (ms)", editable=False, null=True, blank=True)
+    mep_decay = models.FloatField("Decay (ms)", editable=False, null=True, blank=True)
+    mep_area = models.FloatField("Area (??)", editable=False, null=True, blank=True)
+    mep_baseline = models.FloatField("Baseline (??)", editable=False, null=True, blank=True)
+    mep_noise = models.FloatField("Noise (??)", editable=False, null=True, blank=True)
+    mep_10_90_rise = models.FloatField("10-90 Rise (ms)", editable=False, null=True, blank=True, help_text="Time it takes to get from 10% to 90% of the rise.")
+    mep_10_90_slope = models.FloatField("10-90 Slope (??)", editable=False, null=True, blank=True, help_text="Slope fo the 10-90 rise")
+    mep_half_width = models.FloatField("Half Width (??)", editable=False, null=True, blank=True)
+    mep_50_rise = models.FloatField("50 Rise (ms)", editable=False, null=True, blank=True, help_text="Time it takes to get to 50% of the rise (definition unconfirmed).")
+    mep_rel_time = models.FloatField("Rel Time (??)", editable=False, null=True, blank=True, help_text="Definition unknown.")
+
+    mep_ephys_type = models.CharField('Ephys Type', max_length=2, choices=EphysType, blank=False, null=True, help_text='The Ephys Type of the data')
 
     def __unicode__(self):
         return "%s - Electrophys" % str(self.monkey)

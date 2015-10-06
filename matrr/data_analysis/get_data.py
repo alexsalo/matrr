@@ -23,7 +23,7 @@ cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus
             "INIA Rhesus 6b", "INIA Rhesus 7a"]
 
 GENERATE_DATA = False
-FOLD_INTO_TWO_DC = True
+FOLD_INTO_TWO_DC = False
 SUBDIVIDE = False
 
 RF = RandomForestClassifier(n_estimators=100)
@@ -303,6 +303,8 @@ def findSignif():
     print '\n Significant vars: ' + str(signif_cnt)
 
 ### RUN SCRIPTS
+findSignif()
+
 #base_rate_accuracy = data_targets.value_counts()/len(data_targets.index)
 #print base_rate_accuracy
 #printByCohortDCdistr()
@@ -327,12 +329,12 @@ def findSignif():
 #runTwoThenTwo()
 
 #print data.mtd_max_bout_length
-plt.plot(data.mtd_pct_max_bout_vol_total_etoh_2, 'ro')
+#plt.plot(data.mtd_pct_max_bout_vol_total_etoh_2, 'ro')
 #data.mtd_max_bout_length[np.abs(data.mtd_max_bout_length-data.mtd_max_bout_length.mean()) < 2 * data.mtd_max_bout_length.std()].hist()
 #data.mtd_max_bout_length.hist()
 pylab.show()
 
-gradients(data, selectFeatures, 'heavy')
+#gradients(data, selectFeatures, 'heavy')
 #gradients(data_HDVHD, selectFeaturesHDVHD, 'hd_vhd')
 # massiveRFTest(data_features, data_targets)
 # print data

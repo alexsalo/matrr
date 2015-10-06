@@ -1316,97 +1316,97 @@ from plotting import cohort_plots
 # timeline = pd.DataFrame(list(CohortEvent.objects.filter(cohort=c2).values_list('event__evt_id', 'event__evt_name', 'cev_date')), columns=['id', 'name', 'date'])
 # print timeline
 
-def dump_MATRR_current_data_grid():
-    cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
-    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks",
-                  #"Raw Drinking data",
-                  "Exceptions", "BEC",
-                  "Metabolite", "Protein",
-                  'Cohort Plots', 'Monkey Plots', 'Cohort Protein Plots', 'Tissue Requests', 'Tissue Samples',
-                  "Hormone",
-                  '    Cortisol', '    ACTH', '    Testosterone', '    Deoxycorticosterone', '    Aldosterone', '    DHEAS', # 6 types of hormones
-                   'Bone Density',
-                  '    Area', '    Bone Mineral Content', '    Bone Mineral Density',
-                  'CRH Challenge',
-                  '    ACTH', '    Cortisol', '    17beta-estradiol', '    Deoxycorticosterone', '    Aldosterone', '    DHEA-S',
-                  'ElectroPhys',
-                  "    Frequency (hz)", "    In-Event Interval","    Amplitude","    Rise (ms)","    Decay (ms)", "    Area","    Baseline","    Noise", "    10-90 Rise (ms)","    10-90 Slope","    Half Width","    50 Rise (ms)","    Rel Time",
-                  ]
-    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink,
-                    #ExperimentEvent,
-                    MonkeyException, MonkeyBEC,
-                    MonkeyMetabolite, MonkeyProtein,
-                    CohortImage, MonkeyImage, CohortProteinImage, TissueRequest, TissueSample,
-                    MonkeyHormone,
-                    MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone, # 6 types of hormones
-                    BoneDensity,
-                    BoneDensity,BoneDensity,BoneDensity,
-                    CRHChallenge,
-                    CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,
-                    MonkeyEphys,
-                    MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,
-                    ]
-    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
-                     #'monkey__cohort',
-                     'monkey__cohort', 'monkey__cohort',
-                     'monkey__cohort', 'monkey__cohort',
-                     'cohort', 'monkey__cohort', 'cohort', 'req_request__cohort','monkey__cohort',
-                     'monkey__cohort',
-                     'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort', # 6 types of hormones
-                     'monkey__cohort',
-                     'monkey__cohort','monkey__cohort','monkey__cohort',
-                     'monkey__cohort',
-                     'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
-                     'monkey__cohort',
-                     'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
-                     ]
-    exclude_none_fields = [
-                    '','','','',
-                    #'',
-                    '','',
-                    '','',
-                    '','','','','',
-                    '',
-                    'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas',
-                    '',
-                    'bdy_area','bdy_bmc','bdy_bmd',
-                    '',
-                    'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas',
-                    '',
-                    'mep_freq','mep_iei','mep_amp','mep_rise','mep_decay','mep_area','mep_baseline','mep_noise','mep_10_90_rise','mep_10_90_slope','mep_half_width','mep_50_rise','mep_rel_time',
-
-                    ]
-    assert len(data_types) == len(data_classes) == len(cohort_fields) == len(exclude_none_fields), \
-                                                                    "data_types, data_classes, and cohort_fields " \
-                                                                       "aren't all the same length.  You probably " \
-                                                                       "forgot to add a value to one of them."
-    headers = ['Data Type']
-    headers.extend(cohorts.values_list('coh_cohort_name', flat=True))
-    data_rows = list()
-    for _type, _field, _class, _exclude in zip(data_types, cohort_fields, data_classes, exclude_none_fields):
-        print _type, _field, _class, _exclude
-        _row = [_type, ]
-        for _cohort in cohorts:
-            ### 14 Jul 2015:
-            ### Count for cohort excluding Nones for specific attributes
-            if _exclude == '':
-                row_count = _class.objects.filter(**{_field: _cohort}).count()
-            else:
-                row_count = _class.objects.filter(**{_field: _cohort}).exclude(**{_exclude: None}).exclude(**{_exclude: 0.0}).count()
-            _row.append(row_count)
-        data_rows.append(_row)
-
-    outcsv = open('data_grid.csv', 'w')
-    writer = csv.writer(outcsv)
-    writer.writerow(headers)
-    writer.writerows(data_rows)
-    outcsv.close()
-
-    context = {'headers': headers, 'data_rows': data_rows, 'last_updated': datetime.now().strftime('%Y-%m-%d') }
-    outjson = open('current_data_grid.json', 'w')
-    json_string = json.dumps(context)
-    outjson.write(json_string)
-    outjson.close()
+# def dump_MATRR_current_data_grid():
+#     cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
+#     data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks",
+#                   #"Raw Drinking data",
+#                   "Exceptions", "BEC",
+#                   "Metabolite", "Protein",
+#                   'Cohort Plots', 'Monkey Plots', 'Cohort Protein Plots', 'Tissue Requests', 'Tissue Samples',
+#                   "Hormone",
+#                   '    Cortisol', '    ACTH', '    Testosterone', '    Deoxycorticosterone', '    Aldosterone', '    DHEAS', # 6 types of hormones
+#                    'Bone Density',
+#                   '    Area', '    Bone Mineral Content', '    Bone Mineral Density',
+#                   'CRH Challenge',
+#                   '    ACTH', '    Cortisol', '    17beta-estradiol', '    Deoxycorticosterone', '    Aldosterone', '    DHEA-S',
+#                   'ElectroPhys',
+#                   "    Frequency (hz)", "    In-Event Interval","    Amplitude","    Rise (ms)","    Decay (ms)", "    Area","    Baseline","    Noise", "    10-90 Rise (ms)","    10-90 Slope","    Half Width","    50 Rise (ms)","    Rel Time",
+#                   ]
+#     data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink,
+#                     #ExperimentEvent,
+#                     MonkeyException, MonkeyBEC,
+#                     MonkeyMetabolite, MonkeyProtein,
+#                     CohortImage, MonkeyImage, CohortProteinImage, TissueRequest, TissueSample,
+#                     MonkeyHormone,
+#                     MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone, # 6 types of hormones
+#                     BoneDensity,
+#                     BoneDensity,BoneDensity,BoneDensity,
+#                     CRHChallenge,
+#                     CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,
+#                     MonkeyEphys,
+#                     MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,
+#                     ]
+#     cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
+#                      #'monkey__cohort',
+#                      'monkey__cohort', 'monkey__cohort',
+#                      'monkey__cohort', 'monkey__cohort',
+#                      'cohort', 'monkey__cohort', 'cohort', 'req_request__cohort','monkey__cohort',
+#                      'monkey__cohort',
+#                      'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort', # 6 types of hormones
+#                      'monkey__cohort',
+#                      'monkey__cohort','monkey__cohort','monkey__cohort',
+#                      'monkey__cohort',
+#                      'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
+#                      'monkey__cohort',
+#                      'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
+#                      ]
+#     exclude_none_fields = [
+#                     '','','','',
+#                     #'',
+#                     '','',
+#                     '','',
+#                     '','','','','',
+#                     '',
+#                     'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas',
+#                     '',
+#                     'bdy_area','bdy_bmc','bdy_bmd',
+#                     '',
+#                     'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas',
+#                     '',
+#                     'mep_freq','mep_iei','mep_amp','mep_rise','mep_decay','mep_area','mep_baseline','mep_noise','mep_10_90_rise','mep_10_90_slope','mep_half_width','mep_50_rise','mep_rel_time',
+#
+#                     ]
+#     assert len(data_types) == len(data_classes) == len(cohort_fields) == len(exclude_none_fields), \
+#                                                                     "data_types, data_classes, and cohort_fields " \
+#                                                                        "aren't all the same length.  You probably " \
+#                                                                        "forgot to add a value to one of them."
+#     headers = ['Data Type']
+#     headers.extend(cohorts.values_list('coh_cohort_name', flat=True))
+#     data_rows = list()
+#     for _type, _field, _class, _exclude in zip(data_types, cohort_fields, data_classes, exclude_none_fields):
+#         print _type, _field, _class, _exclude
+#         _row = [_type, ]
+#         for _cohort in cohorts:
+#             ### 14 Jul 2015:
+#             ### Count for cohort excluding Nones for specific attributes
+#             if _exclude == '':
+#                 row_count = _class.objects.filter(**{_field: _cohort}).count()
+#             else:
+#                 row_count = _class.objects.filter(**{_field: _cohort}).exclude(**{_exclude: None}).exclude(**{_exclude: 0.0}).count()
+#             _row.append(row_count)
+#         data_rows.append(_row)
+#
+#     outcsv = open('data_grid.csv', 'w')
+#     writer = csv.writer(outcsv)
+#     writer.writerow(headers)
+#     writer.writerows(data_rows)
+#     outcsv.close()
+#
+#     context = {'headers': headers, 'data_rows': data_rows, 'last_updated': datetime.now().strftime('%Y-%m-%d') }
+#     outjson = open('current_data_grid.json', 'w')
+#     json_string = json.dumps(context)
+#     outjson.write(json_string)
+#     outjson.close()
 
 #dump_MATRR_current_data_grid()
 
@@ -1516,11 +1516,168 @@ r10 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 10')
 c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
 r7b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
 r7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')
+c13 = Cohort.objects.get(coh_cohort_name='INIA Cyno 13')
 
 #CohortImage.objects.filter(cohort=r10).filter(method__contains='bihourly').delete()
-plot_tools.create_bec_summary_plots(True, False)
+#plot_tools.create_bec_summary_plots(True, False)
 #plot_tools.create_bec_histograms()
 #plot_tools.create_mtd_tools_canonicals(r10, False)
 
+### 22 July 2015
+# r10.coh_upcoming = False
+# r10.save()
+
+# for field in r10._meta.fields:
+#     print field.name
+#
+# print dir(r10)
+
+# for cohort in Cohort.objects.all():
+#     monkeys = Monkey.objects.filter(cohort=cohort)
+#     cohortEphys = MonkeyEphys.objects.filter(monkey__in=monkeys)
+#     if cohortEphys.count() > 0:
+#         print cohort
+#         df = pd.DataFrame(list(cohortEphys.values('monkey', 'mep_ephys_type', 'mep_amp')))
+#         print df
+
+# from matrr.utils.database import load
+# load.load_cohort4_electrophys('/home/alex/Dropbox/Baylor/Matrr/christen/inhibitory_working_file_031914.csv', 'In')
+
+
+### 23JUL2015e
+# print pd.DataFrame(list(MonkeyEphys.objects.filter(mep_ephys_type='In').exclude(monkey__mky_drinking_category__isnull=True).
+#                         values_list('monkey__mky_id','monkey__mky_drinking_category', 'mep_res', 'mep_cap', 'mep_freq', 'mep_amp')))
+
+
+# df = pd.DataFrame(list(MonkeyEphys.objects.filter(mep_ephys_type='In').exclude(monkey__mky_drinking_category__isnull=True)\
+#     .values_list('monkey__mky_id')\
+#     .annotate(res=Avg('mep_res'))\
+#     .annotate(cap=Avg('mep_cap'))\
+#     .annotate(freq=Avg('mep_freq'))\
+#     .annotate(amp=Avg('mep_amp'))\
+#     .values_list('monkey__mky_id','monkey__mky_drinking_category','mep_lifetime_gkg','res', 'cap', 'freq', 'amp')),
+#                   columns=['id','dc','lt_gkg', 'res', 'cap', 'freq', 'amp'])
+# print df
+#
+# import scipy.stats as stats
+# from patsy import dmatrices
+# import numpy as np
+# import pandas as pd
+# import statsmodels.api as sm
+# from statsmodels.formula.api import ols
+# lm = ols('lt_gkg ~ res + cap + freq + amp', data=df).fit()
+# print sm.stats.anova_lm(lm, typ=2)
+# print lm.summary()
+
+### 4 AUG 2015
+# cohorts = Cohort.objects.filter(coh_cohort_name__in=['INIA Rhesus 4','INIA Rhesus 5','INIA Rhesus 7a','INIA Rhesus 7b'])
+# monkeys = Monkey.objects.filter(cohort__in=cohorts)
+# hormones = MonkeyHormone.objects.filter(monkey__in=monkeys)
+# df = pd.DataFrame(list(hormones.values_list('monkey__cohort__coh_cohort_name', 'monkey__mky_id','mtd__drinking_experiment__dex_date',
+#                                             'mtd__drinking_experiment__dex_type')), columns=['cohort', 'mky_id', 'mtd_date', 'dextype'])
+# df = df[df.dextype=='Open Access']
+# df.sort(['cohort', 'mky_id', 'mtd_date'], inplace=True)
+# df.to_csv('/home/alex/Dropbox/Baylor/Matrr/csv_dumps/457a7b_hormone_dates.csv', index=False)
+#
+# #print MonkeyHormone.objects.filter(monkey=Monkey.objects.filter(mky_id=10054))
+
+# print 0.48*0.94 + 0.52*0.81
+
+# m = Monkey.objects.get(mky_id = 10032)
+# print(m)
+# mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=m).order_by("drinking_experiment__dex_date")
+# values = list(mtds.values_list('mtd_etoh_g_kg', flat = True))
+# df = pd.DataFrame(list(mtds.values_list('mtd_etoh_g_kg', 'drinking_experiment__dex_date')), columns=['gkg', 'date'])
+# # i = 1
+# # while i < len(df['date']):
+# #     d = df['date'][i-1]
+# #     d += timedelta(days=1)
+# #     d += timedelta(days=1)
+# #     if d < df['date'][i]:
+# #         print df['date'][i-1], df['date'][i]
+# #     i += 1
+#
+# df['gkg'].to_csv('/home/alex/Dropbox/Baylor/TimeSeries/R/ts_hw/ts_hw/gkg_10032.csv', index=False)
+
+#print df
+#plt.plot(values)
+
+
+### 25 Sept 2015
+monkeys = Monkey.objects.filter(cohort=c13)
+#print pd.DataFrame(list(monkeys.values_list('mky_name','mky_id','mky_drinking','mky_housing_control')))
+#
+# print max(Monkey.objects.all().values_list('mky_id', flat=True))
+# mky33 = Monkey.objects.get(mky_id=10233)
+# mky30 = Monkey.objects.get(mky_id=10230)
+#
+# mky33.mky_drinking = False
+# mky33.save()
+#
+# mky30.mky_drinking = True
+# mky30.save()
+#
+# print mky33
+# print mky30
+
+# from django.core.cache import cache
+# cache.clear()
+# cache.close()
+
+# def load_cohort_10_13_inventory(input_file):
+#     with open(input_file, 'rU') as f:
+#         #1. Parse header to get monkeys
+#         header = f.readline()
+#         monkeys = Monkey.objects.filter(mky_real_id__in=header.split(';')[1:])
+#         print monkeys
+#
+#         # Load Tissues
+#         print "Loading Tissue Samples..."
+#         read_data = f.readlines()
+#         for line_number, line in enumerate(read_data):
+#             split = line.split(';')
+#             tissue_name = split[0]
+#             data = split[1:]
+#             tissue_type = TissueType.objects.filter(tst_tissue_name__iexact=tissue_name)
+#             if not tissue_type:
+#                 print "Error: Unknown tissue type " + tissue_name
+#                 continue
+#             elif tissue_type.count() == 1:
+#                 tissue_type = tissue_type[0]
+#                 for im, mky in enumerate(monkeys):
+#                     if data[im] == 'X' or 'X\n':
+#                         tss, created = TissueSample.objects.get_or_create(monkey=mky, tissue_type=tissue_type)
+#                         tss.tss_freezer = "Ask OHSU"
+#                         tss.tss_location = "Ask OHSU"
+#                         tss.tss_sample_quantity = 1
+#                         tss.save()
+#                         #print mky.mky_name, tissue_name, " was loaded successfully; TSS created: ", created
+#             else:
+#                 print "Error:  Too many TissueType matches." + tissue_name
+
+# coh13_invntory_filename = '/home/alex/MATRR/cyno13/47.cohort13_tissue_inventory1.csv'
+# #load_cohort_10_13_inventory(coh13_invntory_filename)
+#
+# coh10_invntory_filename = '/home/alex/MATRR/rhesus10/46.cohort10_tissue_inventory.csv'
+# load_cohort_10_13_inventory(coh10_invntory_filename)
+
+# with open(coh13_invntory_filename, 'rU') as f:
+#         #1. Parse header to get monkeys
+#         header = f.readline()
+#         monkeys = Monkey.objects.filter(mky_real_id__in=header.split(';')[1:])
+#         print monkeys
+
+# print TissueType.objects.filter(tst_tissue_name__iexact='Amygdala (Accessory Basal)')
+# print TissueType.objects.filter(tst_tissue_name__iexact='Adrenal (lt, rt)')
+# print TissueType.objects.filter(tst_tissue_name__iexact='Area 1, 2, 3')
+#print_full(pd.DataFrame(list(TissueType.objects.all().values_list('tst_tissue_name', flat=True))))
+
+# tt = TissueType.objects.filter(tst_tissue_name__iexact='Amygdala (Accessory Basal)')
+# print TissueSample.objects.filter(monkey=Monkey.objects.get(mky_real_id=32325), tissue_type=tt)
+
+# print_full(pd.DataFrame(list(TissueSample.objects.filter(monkey__in=Monkey.objects.filter(cohort=c13)).
+#     values_list('monkey__mky_name', 'tissue_type__tst_tissue_name', 'tss_sample_quantity'))))
+
+print Monkey.objects.get(mky_real_id=23582)
 
 plt.show()

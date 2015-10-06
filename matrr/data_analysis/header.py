@@ -28,6 +28,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 import lwr
+import mimic_alpha
 
 import django
 django.setup()
