@@ -86,7 +86,7 @@ def __cohorts_view(request, cohorts, template_name):
         cohort_list = cohorts
     return render_to_response(template_name, {'cohort_list': cohort_list, 'cohorts_all' : cohorts_all}, context_instance=RequestContext(request))
 
-@cache_page('cohort_tedails', 60 * 60 * 24)
+@cache_page(60 * 60 * 24)
 def cohort_details(request, **kwargs):
     # Handle the displaying of cohort details
     if kwargs.has_key('pk'):

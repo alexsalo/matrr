@@ -1678,6 +1678,9 @@ monkeys = Monkey.objects.filter(cohort=c13)
 # print_full(pd.DataFrame(list(TissueSample.objects.filter(monkey__in=Monkey.objects.filter(cohort=c13)).
 #     values_list('monkey__mky_name', 'tissue_type__tst_tissue_name', 'tss_sample_quantity'))))
 
-print Monkey.objects.get(mky_real_id=23582)
+# print Monkey.objects.get(mky_real_id=23582)
+#print pd.DataFrame(list(MonkeyEphys.objects.filter(monkey__in=Monkey.objects.filter(cohort=r5)).values_list('mep_cap')))
+
+print MonkeyEphys._meta.get_all_field_names()
 
 plt.show()
