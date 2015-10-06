@@ -229,7 +229,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                   'CRH Challenge',
                   '    ACTH', '    Cortisol', '    17beta-estradiol', '    Deoxycorticosterone', '    Aldosterone', '    DHEA-S',
                   'ElectroPhys',
-                  "    Frequency (hz)", "    In-Event Interval","    Amplitude","    Rise (ms)","    Decay (ms)", "    Area","    Baseline","    Noise", "    10-90 Rise (ms)","    10-90 Slope","    Half Width","    50 Rise (ms)","    Rel Time",
+                  "    Frequency (hz)", "    In-Event Interval","    Amplitude","    Capacitance","    Resistance","    Rise (ms)","    Decay (ms)", "    Area","    Baseline","    Noise", "    10-90 Rise (ms)","    10-90 Slope","    Half Width","    50 Rise (ms)","    Rel Time",
                   ]
     data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink,
                     #ExperimentEvent,
@@ -243,7 +243,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                     CRHChallenge,
                     CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,
                     MonkeyEphys,
-                    MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,
+                    MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,
                     ]
     cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
                      #'monkey__cohort',
@@ -257,7 +257,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                      'monkey__cohort',
                      'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
                      'monkey__cohort',
-                     'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
+                     'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
                      ]
     exclude_none_fields = [
                     '','','','',
@@ -272,7 +272,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                     '',
                     'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas',
                     '',
-                    'mep_freq','mep_iei','mep_amp','mep_rise','mep_decay','mep_area','mep_baseline','mep_noise','mep_10_90_rise','mep_10_90_slope','mep_half_width','mep_50_rise','mep_rel_time',
+                    'mep_freq','mep_iei','mep_amp','mep_cap','mep_res','mep_rise','mep_decay','mep_area','mep_baseline','mep_noise','mep_10_90_rise','mep_10_90_slope','mep_half_width','mep_50_rise','mep_rel_time',
 
                     ]
     assert len(data_types) == len(data_classes) == len(cohort_fields) == len(exclude_none_fields), \
