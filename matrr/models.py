@@ -4130,6 +4130,23 @@ class MonkeyEphys(models.Model):
     Monkey ElectroPhys data, from Gin
 
     https://gleek.ecs.baylor.edu/wiki/index.php/MonkeyEphys
+
+    Short list of entities:
+        "Frequency (hz)"
+        "Amplitude (pico-amps)"
+        "Membrane Resistance"
+        "Membrane Capacitance"
+        "Inter-Event Interval (ms)"
+        "Rise (ms)"
+        "Decay (ms)"
+        "Area (??)"
+        "Baseline (??)"
+        "Noise (??)"
+        "10-90 Rise (ms)"
+        "10-90 Slope (??)"
+        "Half Width (??)"
+        "50 Rise (ms)"
+        "Rel Time (??)"
     """
     mep_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, null=False, related_name='mep_records', db_column='mky_id', editable=False)

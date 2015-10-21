@@ -3,6 +3,7 @@ sys.path.append('~/pycharm/ve1/matrr')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from matrr.models import *
 from matrr.models import Monkey
+import dateutil
 from matrr.plotting import monkey_plots as mkplot
 import matplotlib
 matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr'
@@ -1604,7 +1605,7 @@ c13 = Cohort.objects.get(coh_cohort_name='INIA Cyno 13')
 
 
 ### 25 Sept 2015
-monkeys = Monkey.objects.filter(cohort=c13)
+#monkeys = Monkey.objects.filter(cohort=c13)
 #print pd.DataFrame(list(monkeys.values_list('mky_name','mky_id','mky_drinking','mky_housing_control')))
 #
 # print max(Monkey.objects.all().values_list('mky_id', flat=True))
@@ -1681,6 +1682,54 @@ monkeys = Monkey.objects.filter(cohort=c13)
 # print Monkey.objects.get(mky_real_id=23582)
 #print pd.DataFrame(list(MonkeyEphys.objects.filter(monkey__in=Monkey.objects.filter(cohort=r5)).values_list('mep_cap')))
 
-print MonkeyEphys._meta.get_all_field_names()
+#print MonkeyEphys._meta.get_all_field_names()
+
+### 10-OCT-2015
+# monkeys = Monkey.objects.filter(cohort=Cohort.objects.get(coh_cohort_name='INIA Vervet 2'))
+# m42 = monkeys.get(mky_id=10142)
+# m43 = monkeys.get(mky_id=10143)
+# m44 = monkeys.get(mky_id=10144)
+#
+# m42.mky_name = 'Jimmy'
+# m42.save()
+#
+# m43.mky_name = 'Blahnik'
+# m43.save()
+#
+# m44.mky_name = 'Georgio'
+# m44.save()
+#
+# print Monkey.objects.filter(cohort=Cohort.objects.get(coh_cohort_name='INIA Vervet 2'))
+
+## DELETE ALL Coh10 DATA
+# r10monkeys = Monkey.objects.filter(cohort=r10)
+# print r10monkeys
+# r10bouts = ExperimentBout.objects.filter(mtd__monkey__in=r10monkeys)
+# print r10bouts.count()
+
+## LOAD COH13 DATA
+c13monkeys = Monkey.objects.filter(cohort=c13)
+print c13.coh_cohort_name
+
+c13mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=c13monkeys)
+print c13mtds
+
+print DrinkingExperiment.objects.filter(cohort=c13)
+
+import datetime
+d = 40555
+print datetime.date(1904, 1, 1) + datetime.timedelta(int(d))
+
+dingus.get_datetime_from_steve(int(d))
+
+#print dt.datetime(1899, 12, 30) + dt.timedelta(days=d + 1462 * 1)
+
+#print dingus.minimalist_xldate_as_datetime(d, 1)
+
+# print ExperimentEvent.objects.filter(monkey__in=c13monkeys).\
+#     filter(eev_occurred__gte=dateutil.parser.parse('2014-12-20')).\
+#     filter(eev_occurred__lte=dateutil.parser.parse('2014-12-21')).\
+#           filter(eev_source_row_number=1394)
+#           #values_list('eev_source_row_number')[:10]
 
 plt.show()

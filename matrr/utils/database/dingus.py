@@ -17,6 +17,10 @@ def get_monkey_by_number(mystery_number):
             raise Exception("No such monkey:  %s" % str(mystery_number))
     return monkey
 
+def days_since_jan_1_1900_to_datetime(d):
+    return datetime.datetime(1900,1,1) + \
+        datetime.timedelta(days=d)
+
 def queryset_iterator(queryset, chunksize=5000):
     """
     http://djangosnippets.org/snippets/1949/
@@ -40,9 +44,10 @@ def queryset_iterator(queryset, chunksize=5000):
         gc.collect()
 
 def get_datetime_from_steve(steve_date):
+    # fixed to match new API by Alex Salo 10/21/2015
     def minimalist_xldate_as_datetime(xldate, datemode):
         # datemode: 0 for 1900-based, 1 for 1904-based
-        return dt.datetime(1899, 12, 30) + dt.timedelta(days=int(xldate) + 1462 * datemode)
+        return datetime.date(1899, 12, 30) + datetime.timedelta(days=int(xldate) + 1462 * datemode)
 
     try:
         real_date = dt.strptime(steve_date, "%m/%d/%y")
