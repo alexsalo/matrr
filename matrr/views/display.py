@@ -11,7 +11,7 @@ from django.views.generic import DetailView, ListView
 from matrr import gizmo
 from matrr.models import Cohort, CohortImage, Monkey, MonkeyImage, TissueType, TissueRequest, TissueCategory, Event
 from matrr.forms import TissueRequestForm, DataRequestForm
-from django.views.decorators.cache import cache_page
+#from django.views.decorators.cache import cache_page
 
 cohort_timeline = DetailView.as_view(queryset=Cohort.objects.filter(),
                                      context_object_name='cohort',
@@ -35,25 +35,25 @@ cohort_publication_list = DetailView.as_view(queryset=Cohort.objects.all(),
 
 
 ### Handles the display of each cohort and the lists of cohorts
-@cache_page(60 * 60)
+#@cache_page(60 * 60)
 def cohorts_view_available(request):
     cohorts = Cohort.objects.nicotine_filter(request.user).filter(coh_upcoming=False).order_by('coh_cohort_name')
     template_name = 'matrr/available_cohorts.html'
     return __cohorts_view(request, cohorts, template_name)
 
-@cache_page(60 * 60)
+#@cache_page(60 * 60)
 def cohorts_view_upcoming(request):
     cohorts = Cohort.objects.nicotine_filter(request.user).filter(coh_upcoming=True).order_by('coh_cohort_name')
     template_name = 'matrr/upcoming_cohorts.html'
     return __cohorts_view(request, cohorts, template_name)
 
-@cache_page(60 * 60)
+#@cache_page(60 * 60)
 def cohorts_view_all(request):
     cohorts = Cohort.objects.nicotine_filter(request.user).order_by('coh_cohort_name')
     template_name = 'matrr/cohorts.html'
     return __cohorts_view(request, cohorts, template_name)
 
-@cache_page(60 * 60)
+#@cache_page(60 * 60)
 def cohorts_view_assay(request):
     return redirect(reverse('tissue-shop-landing', args=[Cohort.objects.get(coh_cohort_name__iexact="Assay Development").pk, ]))
 
@@ -86,7 +86,7 @@ def __cohorts_view(request, cohorts, template_name):
         cohort_list = cohorts
     return render_to_response(template_name, {'cohort_list': cohort_list, 'cohorts_all' : cohorts_all}, context_instance=RequestContext(request))
 
-@cache_page(60 * 60 * 24)
+#@cache_page(60 * 60 * 24)
 def cohort_details(request, **kwargs):
     # Handle the displaying of cohort details
     if kwargs.has_key('pk'):
@@ -105,15 +105,15 @@ def cohort_details(request, **kwargs):
 
 
 ### Clear cache is MTDS or BECs changed, using signals
-from django.db.models.signals import post_save
-from django.core.cache import cache
-from matrr.models import MonkeyToDrinkingExperiment, MonkeyBEC
-def MTDS_changed(sender, **kwargs):
-    cache.clear()
-post_save.connect(MTDS_changed, sender=MonkeyToDrinkingExperiment)
-post_save.connect(MTDS_changed, sender=MonkeyBEC)
-post_save.connect(MTDS_changed, sender=MonkeyImage)
-post_save.connect(MTDS_changed, sender=CohortImage)
+# from django.db.models.signals import post_save
+# from django.core.cache import cache
+# from matrr.models import MonkeyToDrinkingExperiment, MonkeyBEC
+# def MTDS_changed(sender, **kwargs):
+#     cache.clear()
+# post_save.connect(MTDS_changed, sender=MonkeyToDrinkingExperiment)
+# post_save.connect(MTDS_changed, sender=MonkeyBEC)
+# post_save.connect(MTDS_changed, sender=MonkeyImage)
+# post_save.connect(MTDS_changed, sender=CohortImage)
 
 def __monkey_detail(request, mky_id, coh_id=0):
     try:

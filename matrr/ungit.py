@@ -1701,26 +1701,21 @@ c13 = Cohort.objects.get(coh_cohort_name='INIA Cyno 13')
 #
 # print Monkey.objects.filter(cohort=Cohort.objects.get(coh_cohort_name='INIA Vervet 2'))
 
-## DELETE ALL Coh10 DATA
-# r10monkeys = Monkey.objects.filter(cohort=r10)
-# print r10monkeys
-# r10bouts = ExperimentBout.objects.filter(mtd__monkey__in=r10monkeys)
-# print r10bouts.count()
 
 ## LOAD COH13 DATA
-c13monkeys = Monkey.objects.filter(cohort=c13)
-print c13.coh_cohort_name
+#c13monkeys = Monkey.objects.filter(cohort=c13)
+#print c13.coh_cohort_name
 
-c13mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=c13monkeys)
-print c13mtds
+#c13mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=c13monkeys)
+#print c13mtds.count()
 
-print DrinkingExperiment.objects.filter(cohort=c13)
-
-import datetime
-d = 40555
-print datetime.date(1904, 1, 1) + datetime.timedelta(int(d))
-
-dingus.get_datetime_from_steve(int(d))
+# print DrinkingExperiment.objects.filter(cohort=c13)
+#
+# import datetime
+# d = 40555
+# print datetime.date(1904, 1, 1) + datetime.timedelta(int(d))
+#
+# dingus.get_datetime_from_steve(int(d))
 
 #print dt.datetime(1899, 12, 30) + dt.timedelta(days=d + 1462 * 1)
 
@@ -1731,5 +1726,43 @@ dingus.get_datetime_from_steve(int(d))
 #     filter(eev_occurred__lte=dateutil.parser.parse('2014-12-21')).\
 #           filter(eev_source_row_number=1394)
 #           #values_list('eev_source_row_number')[:10]
+
+#print Cohort.objects.get(coh_cohort_name='INIA Cyno 13')
+
+# print NecropsySummary.objects.all().values_list('monkey__cohort__coh_cohort_name').distinct()
+#
+# # plt.plot(MonkeyToDrinkingExperiment.objects.filter(monkey__in=Monkey.objects.filter(cohort=r6a))
+# #          .order_by('drinking_experiment__dex_date').values_list('mtd_etoh_g_kg', flat=True), 'bo')
+# plt.plot(c13mtds.exclude_exceptions().filter(monkey=c13monkeys[0]).order_by('drinking_experiment__dex_date').\
+#          values_list('mtd_etoh_g_kg', flat=True), 'b-o')
+
+#print_full(pd.DataFrame(list(TissueType.objects.all().values_list('tst_tissue_name', flat=True))))
+
+#tst12 = TissueType.objects.get(tst_tissue_name='Area 12')
+#tst12.tst_tissue_name = '46/12L'
+
+
+## DELETE ALL Coh10 DATA
+r10monkeys = Monkey.objects.filter(cohort=r10)
+# print r10monkeys
+r10ebt = ExperimentBout.objects.filter(mtd__monkey__in=r10monkeys)
+print r10ebt.count()
+print ExperimentDrink.objects.filter(ebt__in=r10ebt).count()
+print DrinkingExperiment.objects.filter(cohort=r10).count()
+print MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys).count()
+print NecropsySummary.objects.filter(monkey__in=r10monkeys).count()
+
+##  DELETION
+# ExperimentDrink.objects.filter(ebt__in=r10ebt).delete()
+# print 'drinks deleted'
+#
+# r10ebt.delete()
+# print 'bouts deleted'
+#
+# DrinkingExperiment.objects.filter(cohort=r10).delete()
+# print 'dex deleted'
+#
+# MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys).delete()
+# print "MTDS deleted"
 
 plt.show()
