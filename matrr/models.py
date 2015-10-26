@@ -161,6 +161,8 @@ ShipmentStatus = Enumeration([
     ('PG', 'Processing', 'Processing'), # shipment has been sent to the in-house DNA/RNA collection facility
     ('PD', 'Processed', 'Processed'), # shipment has returned from the in-house DNA/RNA collection facility
     ('SH', 'Shipped', 'Shipped'), # shipment has been sent to the customer
+    # Added on 26 Oct 2015 by Alex Salo
+    ('RE', 'Rejected', 'Rejected'), # shipment has been rejected or cancelled for some reason (not enough RNA)
 ])
 VerificationStatus = Enumeration([
     ('CP', 'Complete', 'Complete'),

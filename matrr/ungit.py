@@ -1745,12 +1745,12 @@ c13 = Cohort.objects.get(coh_cohort_name='INIA Cyno 13')
 ## DELETE ALL Coh10 DATA
 r10monkeys = Monkey.objects.filter(cohort=r10)
 # print r10monkeys
-r10ebt = ExperimentBout.objects.filter(mtd__monkey__in=r10monkeys)
-print r10ebt.count()
-print ExperimentDrink.objects.filter(ebt__in=r10ebt).count()
-print DrinkingExperiment.objects.filter(cohort=r10).count()
-print MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys).count()
-print NecropsySummary.objects.filter(monkey__in=r10monkeys).count()
+# r10ebt = ExperimentBout.objects.filter(mtd__monkey__in=r10monkeys)
+# print r10ebt.count()
+# print ExperimentDrink.objects.filter(ebt__in=r10ebt).count()
+# print DrinkingExperiment.objects.filter(cohort=r10).count()
+# print MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys).count()
+# print NecropsySummary.objects.filter(monkey__in=r10monkeys).count()
 
 ##  DELETION
 # ExperimentDrink.objects.filter(ebt__in=r10ebt).delete()
@@ -1764,5 +1764,26 @@ print NecropsySummary.objects.filter(monkey__in=r10monkeys).count()
 #
 # MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys).delete()
 # print "MTDS deleted"
+
+## FIX DEX TYPE
+r10mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys)
+# des = r10mtds[0].drinking_experiment
+# des.dex_type = 'Open Access'
+# des.save()
+# print r10mtds[0].drinking_experiment.dex_type
+
+# for mtd in r10mtds:
+#     des = mtd.drinking_experiment
+#     des.dex_type = 'Open Access'
+#     des.save()
+
+# for mtd in r10mtds:
+#     print mtd.drinking_experiment.dex_type
+
+### 22 - Oct - 2015
+## LOAD SUHAS GENE VACCINE
+#mky_ids = pd.DataFrame(list(Monkey.objects.all().order_by('mky_real_id').values_list('mky_id', 'mky_real_id')), columns=['Matrr ID', 'Real ID'])
+#print_full(mky_ids)
+#mky_ids.to_csv('/home/alex/win-share/matrr_monkeys_id.csv', index=False)
 
 plt.show()
