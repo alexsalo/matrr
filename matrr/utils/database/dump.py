@@ -226,6 +226,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                   '    Cortisol', '    ACTH', '    Testosterone', '    Deoxycorticosterone', '    Aldosterone', '    DHEAS', # 6 types of hormones
                    'Bone Density',
                   '    Area', '    Bone Mineral Content', '    Bone Mineral Density',
+                  'Vaccine Study',
                   'CRH Challenge',
                   '    ACTH', '    Cortisol', '    17beta-estradiol', '    Deoxycorticosterone', '    Aldosterone', '    DHEA-S',
                   'ElectroPhys',
@@ -240,6 +241,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                     MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone,MonkeyHormone, # 6 types of hormones
                     BoneDensity,
                     BoneDensity,BoneDensity,BoneDensity,
+                    VaccineStudy,
                     CRHChallenge,
                     CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,
                     MonkeyEphys,
@@ -253,7 +255,8 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                      'monkey__cohort',
                      'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort', # 6 types of hormones
                      'monkey__cohort',
-                     'monkey__cohort','monkey__cohort','monkey__cohort',
+                     'monkey__cohort','monkey__cohort','monkey__cohort', # 3 bone density values
+                     'monkey__cohort', # VaccineStudy
                      'monkey__cohort',
                      'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
                      'monkey__cohort',
@@ -268,7 +271,8 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                     '',
                     'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas',
                     '',
-                    'bdy_area','bdy_bmc','bdy_bmd',
+                    'bdy_area','bdy_bmc','bdy_bmd', # bone density vals
+                    '', # any vaccine study data
                     '',
                     'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas',
                     '',

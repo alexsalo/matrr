@@ -1738,9 +1738,6 @@ c13 = Cohort.objects.get(coh_cohort_name='INIA Cyno 13')
 
 #print_full(pd.DataFrame(list(TissueType.objects.all().values_list('tst_tissue_name', flat=True))))
 
-#tst12 = TissueType.objects.get(tst_tissue_name='Area 12')
-#tst12.tst_tissue_name = '46/12L'
-
 
 ## DELETE ALL Coh10 DATA
 r10monkeys = Monkey.objects.filter(cohort=r10)
@@ -1766,7 +1763,7 @@ r10monkeys = Monkey.objects.filter(cohort=r10)
 # print "MTDS deleted"
 
 ## FIX DEX TYPE
-r10mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys)
+# r10mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys)
 # des = r10mtds[0].drinking_experiment
 # des.dex_type = 'Open Access'
 # des.save()
@@ -1785,5 +1782,79 @@ r10mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys)
 #mky_ids = pd.DataFrame(list(Monkey.objects.all().order_by('mky_real_id').values_list('mky_id', 'mky_real_id')), columns=['Matrr ID', 'Real ID'])
 #print_full(mky_ids)
 #mky_ids.to_csv('/home/alex/win-share/matrr_monkeys_id.csv', index=False)
+#print Monkey.objects.get(mky_real_id=26077)
 
-plt.show()
+# def load_vaccineStudy_data(file_name):
+#     """
+#     Loads data from csv provided by Ilhem's lab people
+#     :param file_name: delimeted by ';'
+#                       script strips mostright \n symbol
+#
+#     Added by Alex Salo on 27 oct 2015
+#     """
+#     with open(file_name, 'rU') as f:
+#         # 1. Parse header to get monkeys
+#         monkeys = []
+#         header = f.readline().rstrip('\n')
+#         for s in header.split(';')[1:]: #get mky_ids
+#             m = Monkey.objects.get(mky_real_id = s)
+#             monkeys.append(m)
+#         print monkeys
+#         print 'Loading...it may take a couple of minutes..'
+#
+#         # 2. Parse and load data
+#         read_data = f.readlines()
+#         for index, line in enumerate(read_data):
+#             if (index % (len(read_data) / 20) == 0):
+#                 print str(1.0*index / len(read_data)) + "%"
+#             try:
+#                 data = line.rstrip('\n').split(';')
+#                 ensembl_id = data[0]
+#                 for mky, readcount in enumerate(data[1:]):
+#                     vac, created = VaccineStudy.objects.get_or_create(monkey=monkeys[mky], ENSEMBLID=ensembl_id, vac_readcount=readcount)
+#                     #print vac, created
+#             except:
+#                 print line
+#     print 'Success'
+#
+# vaccineStudyFileName = '/home/alex/MATRR/suhas/52.alcohol_vaccinestudy_males.csv'
+# load_vaccineStudy_data(vaccineStudyFileName)
+# #VaccineStudy.objects.all().delete()
+# print VaccineStudy.objects.all().count()
+# #print VaccineStudy.objects.filter(monkey=Monkey.objects.get(mky_id=10089))
+
+
+### 26 Oct 2015
+## Change Area 12 to 46/12L and Area 12
+# tst12 = TissueType.objects.get(tst_tissue_name='Area 12')
+# print TissueSample.objects.filter(tissue_type=tst12).count()
+#
+# tst4612L = TissueType.objects.get(tst_tissue_name='46/12L')
+# print TissueSample.objects.filter(tissue_type=tst4612L).count()
+
+## from load inventory:
+        # for mky, cell in zip(monkeys, row):
+        #     tss, is_new = TissueSample.objects.get_or_create(monkey=mky, tissue_type=tst)
+        #     tss.tss_sample_quantity = 1 if bool(cell) else 0
+        #     tss.tss_units = Units[2][0]
+        #     tss.save()
+
+#tissueSamples4612L = TissueSample.objects.filter(tissue_type=tst4612L)
+# print pd.DataFrame(list(tissueSamples4612L.values_list('monkey','tss_freezer',
+#                 'tss_location', 'tss_details', 'tss_sample_quantity', 'tss_units', 'user')))
+
+# for ts in tissueSamples4612L:
+#     newts = TissueSample.objects.create(monkey=ts.monkey, tissue_type=tst12)
+#     newts.tss_sample_quantity = ts.tss_sample_quantity
+#     newts.tss_units           = ts.tss_units
+#     newts.tss_freezer = "Ask OHSU"
+#     newts.tss_location = "Ask OHSU"
+#     newts.save()
+
+# allTissueTypes = pd.DataFrame(list(TissueType.objects.all().values_list('category__cat_name', 'tst_tissue_name')),
+#                         columns=['Category', 'Matrr Tissue Name'])
+# # print_full(allTissueTypes)
+# allTissueTypes.to_csv('/home/alex/win-share/matrr_tissue_types_all.csv', index=False, sep=';')
+
+
+# plt.show()

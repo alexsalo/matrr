@@ -2207,6 +2207,38 @@ def load_bone_density(filename, dto_pk, tst_tissue_name='Bone (Rt tibia)'):
                 print ''
 
 
+def load_vaccineStudy_data(file_name):
+    """
+    Loads data from csv provided by Ilhem's lab people
+    :param file_name: delimeted by ';'
+                      script strips mostright \n symbol
 
+    Added by Alex Salo on 27 oct 2015
+    # Usage:
+    # vaccineStudyFileName = '/home/alex/MATRR/suhas/52.alcohol_vaccinestudy_males.csv'
+    # load_vaccineStudy_data(vaccineStudyFileName)
+    """
+    with open(file_name, 'rU') as f:
+        # 1. Parse header to get monkeys
+        monkeys = []
+        header = f.readline().rstrip('\n')
+        for s in header.split(';')[1:]: #get mky_ids
+            m = Monkey.objects.get(mky_real_id = s)
+            monkeys.append(m)
+        print monkeys
+        print 'Loading...it may take a couple of minutes..'
 
-
+        # 2. Parse and load data
+        read_data = f.readlines()
+        for index, line in enumerate(read_data):
+            if (index % (len(read_data) / 20) == 0):
+                print str(1.0*index / len(read_data)) + "%"
+            try:
+                data = line.rstrip('\n').split(';')
+                ensembl_id = data[0]
+                for mky, readcount in enumerate(data[1:]):
+                    vac, created = VaccineStudy.objects.get_or_create(monkey=monkeys[mky], ENSEMBLID=ensembl_id, vac_readcount=readcount)
+                    #print vac, created
+            except:
+                print line
+    print 'Success'
