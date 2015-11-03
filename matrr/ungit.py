@@ -1518,6 +1518,7 @@ c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
 r7b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
 r7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')
 c13 = Cohort.objects.get(coh_cohort_name='INIA Cyno 13')
+c9 = Cohort.objects.get(coh_cohort_name='INIA Cyno 9')
 
 #CohortImage.objects.filter(cohort=r10).filter(method__contains='bihourly').delete()
 #plot_tools.create_bec_summary_plots(True, False)
@@ -1856,5 +1857,24 @@ r10monkeys = Monkey.objects.filter(cohort=r10)
 # # print_full(allTissueTypes)
 # allTissueTypes.to_csv('/home/alex/win-share/matrr_tissue_types_all.csv', index=False, sep=';')
 
+### 30 Oct 2015
+# c9_becs = MonkeyBEC.objects.filter(monkey__in=Monkey.objects.filter(cohort=c9))
+# c9_becs_values = pd.DataFrame(list(c9_becs.values_list('monkey__mky_id', 'bec_collect_date',
+#             'bec_weight',
+#             'bec_mg_pct',
+#             'bec_vol_etoh', 'bec_gkg_etoh',
+#             'bec_daily_gkg_etoh',
+#             )),
+#             columns=['mky_id', 'date','weight',
+#                      'BEC_mg_pct',
+#                      'etoh_vol_at_sample_time_ml','etoh_gkg_at_sample_time',
+#                      'etoh_gkg_day_total'])
+# c9_becs_values.to_csv('/home/alex/win-share/cyno9_becs.csv', index=False, sep=";")
+
+
+### 3 November 2015
+## order by in RUDs
+print ResearchUpdate.objects.all().order_by('req_request__user_id')
+print ResearchUpdate.objects.all().order_by('req_request__req_request_id')
 
 # plt.show()

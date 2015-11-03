@@ -110,7 +110,11 @@ def rud_detail(request, rud_id):
 
 @user_passes_test(lambda u: u.has_perm('matrr.view_rud_detail'), login_url='/denied/')
 def rud_list(request):
-    pending_ruds = ResearchUpdate.objects.all().order_by('-rud_date')
+    #order_by = request.GET.get('order_by')
+    # if (order_by == None):
+    #     order_by = '-rud_date' #default
+    pending_ruds = ResearchUpdate.objects.all().order_by('-req_request__req_request_id', 'req_request__user_id', '-rud_date')
+    #pending_ruds = ResearchUpdate.objects.all().order_by('-rud_date')
     paginator = Paginator(pending_ruds, 40)
 
     if request.GET and 'page' in request.GET:
