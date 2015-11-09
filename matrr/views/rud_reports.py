@@ -138,6 +138,8 @@ def rud_overdue(request):
     for req in Request.objects.shipped().order_by('req_request_date'):
         if req.is_rud_overdue():
             pending_ruds.append(req)
+        if req.is_rud_suspended():
+            pending_ruds.append(req)
     paginator = Paginator(pending_ruds, 20)
 
     if request.GET and 'page' in request.GET:

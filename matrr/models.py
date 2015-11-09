@@ -2685,12 +2685,19 @@ class Request(models.Model, DiffingMixin):
         weeks_overdue = int(age_overdue / 7)
         return weeks_overdue
 
+    def is_rud_suspended(self):
+        ruds = self.rud_set.order_by('-rud_date')
+        if len(ruds) > 0:
+            return ruds[0].rud_progress == ResearchProgress.Suspended
+        else:
+            return False
+
     def get_overdue_rud_color(self):
         weeks_overdue = self.get_rud_weeks_overdue()
         if weeks_overdue >= 3:
             return 'red'
         elif weeks_overdue <= 0:
-            return ''
+            return 'grey'
         else:
             return 'orange'
 
