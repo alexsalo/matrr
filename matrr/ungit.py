@@ -1874,7 +1874,39 @@ r10monkeys = Monkey.objects.filter(cohort=r10)
 
 ### 3 November 2015
 ## order by in RUDs
-print ResearchUpdate.objects.all().order_by('req_request__user_id')
-print ResearchUpdate.objects.all().order_by('req_request__req_request_id')
+# print ResearchUpdate.objects.all().order_by('req_request__user_id')
+# print ResearchUpdate.objects.all().order_by('req_request__req_request_id')
+
+
+## Prepare req=592 BEC for 9 all
+# print Account.objects.get(user_id=222)
+# from django.core import files
+# data_file = open('/web/www/MATRR/prod/media/data_files/cyno9_becs.csv', 'r') # 'rb' might not be the worst idea, but I'm not specifically sure of the difference)
+# wrapped_data_file = files.File(data_file)
+# data_file_record = DataFile()
+# account = Account.objects.get(user_id=222)
+# data_file_record.account = account# (in a Django view, use request.user.account)
+# data_file_record.dat_title = "Cyno_9_BECs"
+# data_file_record.dat_data_file.save(name="Cyno_9_BECs", content=wrapped_data_file)
+# data_file_record.save()
+
+
+## Absitee req 595
+# # populate coh10 fields
+# r10mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys)
+# # for mtd in r10mtds:
+# #     mtd.populate_fields()
+#
+# r10MTDSdf = pd.DataFrame(list(r10mtds.values_list()))
+# print r10MTDSdf
+
+
+
+### 9 Nov 2015
+## Make new statuses for overdue requests
+# rud = Request.objects.get(req_request_id=175).rud_set.order_by('-rud_date')[0]
+# # rud.rud_progress = ResearchProgress.Suspended
+# # rud.save()
+# print Request.objects.get(req_request_id=175).rud_set.order_by('-rud_date')[0].rud_file
 
 # plt.show()

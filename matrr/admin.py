@@ -112,7 +112,7 @@ class ShipmentAdmin(admin.ModelAdmin):
     req_request_cohort.short_description = 'Cohort'
 
     def req_request_user(self, obj):
-        return obj.req_request.user.username
+        return obj.req_rfequest.user.username
     req_request_user.short_description = 'Requesting User'
 
     def req_request_pk(self, obj):
@@ -124,6 +124,9 @@ class RequestAdmin(admin.ModelAdmin):
     list_display = ['req_request_id', 'cohort', 'user', 'req_request_date', 'req_status']
     list_filter = ('cohort', 'req_status', 'req_request_date', 'user')
 
+class ResearchUpdateAdmin(admin.ModelAdmin):
+    list_display = ['rud_date', 'rud_progress', 'req_request']
+    list_filter = ('req_request__req_request_id', 'req_request__user')
 
 class TissueRequestAdmin(admin.ModelAdmin):
     list_display = ['get_req_request_pk', 'get_cohort', 'get_user', 'tissue_type', 'rtt_fix_type', 'rtt_prep_type', 'rtt_amount', 'rtt_units']
@@ -201,6 +204,7 @@ admin.site.register(Publication, PublicationAdmin)
 admin.site.register(Mta)
 admin.site.register(Account, VerificationAccountAdmin)
 admin.site.register(Request, RequestAdmin)
+admin.site.register(ResearchUpdate, ResearchUpdateAdmin)
 admin.site.register(TissueInventoryVerification)
 admin.site.register(TissueRequest, TissueRequestAdmin)
 admin.site.register(TissueRequestReview)

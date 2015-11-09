@@ -233,6 +233,7 @@ PRIVATE_SEARCH_INDEXES = {'monkey_auth':("monkey_auth", 'Monkey')}
 ResearchUpdateInitialGrace = 90
 ResearchUpdateNoProgressGrace = 45
 ResearchUpdateInProgressGrace = 180
+ResearchUpdateSuspendedGrace = 9999  # not to bother with emails
 
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.

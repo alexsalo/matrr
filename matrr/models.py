@@ -170,6 +170,8 @@ VerificationStatus = Enumeration([
 ])
 ResearchProgress = Enumeration([
     ('NP', 'NoProgress', "No Progress"),
+    ('SP', 'Suspended', "Suspended"),  # Added on Nov 9, 2015 by alex salo:
+                                       # indicates there are some holds, don't bother with emails
     ("IP", 'InProgress', "In Progress"),
     ("CP", 'Complete', "Complete"),
 ])
@@ -2676,7 +2678,8 @@ class Request(models.Model, DiffingMixin):
                 grace_period = settings.ResearchUpdateNoProgressGrace
             if latest_rud.rud_progress == ResearchProgress.InProgress:
                 grace_period = settings.ResearchUpdateInProgressGrace
-
+            if latest_rud.rud_progress == ResearchProgress.Suspended:
+                grace_period = settings.ResearchUpdateSuspendedGrace
 
         age_overdue = age - grace_period
         weeks_overdue = int(age_overdue / 7)
@@ -2847,7 +2850,7 @@ class ResearchUpdate(models.Model):
                                              help_text="Data is available for upload to MATRR.  Please contact me to arrange this integration into the MATRR.",
                                              default=False)
     rud_comments = models.TextField("Comments", blank=True, null=False)
-    rud_file = models.FileField('Research Update', upload_to='rud/', default='', null=False, blank=False,
+    rud_file = models.FileField('Research Update', upload_to='rud/', default='', null=False, blank=True,
                                 help_text='File to Upload')
     rud_grant = models.TextField("Grant Information", blank=True, null=False,
                                  help_text="Description of grant submissions resulting from the MATRR tissues")
