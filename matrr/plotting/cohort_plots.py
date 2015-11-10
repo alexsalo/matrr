@@ -16,6 +16,58 @@ import matplotlib.patches as mpatches
 
 import matplotlib.patches as mpatches
 
+
+def cohort_dopamine_study_boxplots_accumben(cohort):
+    return _cohort_dopamine_study_boxplots_by_tissue_type(cohort, tissue_type='Nucleus accumbens (Core)')
+def cohort_dopamine_study_boxplots_caudate(cohort):
+    return _cohort_dopamine_study_boxplots_by_tissue_type(cohort, tissue_type='caudate')
+def _cohort_dopamine_study_boxplots_by_tissue_type(cohort, tissue_type='Nucleus accumbens (Core)'):
+    try:
+        tst = TissueType.objects.get(tst_tissue_name__iexact=tissue_type)
+    except:
+        raise Exception('No such tissue type: %s' % tissue_type)
+        return False, False
+
+    if DopamineStudy.objects.filter(monkey__cohort=cohort).count():
+        return _plot_dopamine_study_boxplots(cohort, tissue_type)
+    else:
+        return False, False
+
+def _plot_dopamine_study_boxplots(cohort, tissue_type):
+    """
+    :param tissue_type:
+    :return:
+    Usage: plot_dopamine_study_boxplots('Nucleus accumbens (Core)')
+    """
+    # 1. Get data
+    tst = TissueType.objects.get(tst_tissue_name__iexact=tissue_type)
+    dopes = DopamineStudy.objects.filter(tissue_type=tst).filter(monkey__cohort=cohort)
+
+    dopes_drink = dopes.filter(monkey__mky_drinking=True)
+    dopes_control = dopes.filter(monkey__mky_drinking=False)
+    print dopes_drink
+    print dopes_control
+
+    baseline_300nm_effect = [dope.baseline_effect_300nm() for dope in dopes_drink]
+    baseline_1um_effect = [dope.baseline_effect_1um() for dope in dopes_drink]
+
+    baseline_300nm_effect_control = [dope.baseline_effect_300nm() for dope in dopes_control]
+    baseline_1um_effect_control = [dope.baseline_effect_1um() for dope in dopes_control]
+
+    # 2. Plot
+    data = [baseline_300nm_effect, baseline_300nm_effect_control,
+            baseline_1um_effect, baseline_1um_effect_control]
+    tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
+    ax1 = tool_figure.add_subplot(111)
+    labels = ['300nm_drink', '300nm_control', '1um_drink', '1um_control']
+    ax1.boxplot(data, labels=labels)
+    ax1.set_title('Baseline effect on dopamine elicitation by U-50488 stimulation\n'
+              'at concentrations 300 nM and 1 uM; comparison drinking vs control animals.\n'
+              'Tissue Type: %s' % tissue_type, fontsize=13)
+    tool_figure.tight_layout()
+    return tool_figure, 'build HTML fragment'
+
+
 def cohort_bone_densities(cohort):
     """
     This method will create a cohort graph for bone densities
@@ -983,4 +1035,6 @@ COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_2
                      'cohort_etoh_max_bout_cumsum_horibar_4gkg': (cohort_etoh_max_bout_cumsum_horibar_4gkg, "Cohort Cumulative Daily Max Bout, Day count over 4 g per kg"),
                      'cohort_etoh_gkg_quadbar': (cohort_etoh_gkg_quadbar, "Cohort Daily Ethanol Intake Counts"),
                      "cohort_bone_densities": (cohort_bone_densities, 'Bone Area and Content Trends by DC '),
+                     "cohort_dopamine_study_boxplots_accumben": (cohort_dopamine_study_boxplots_accumben, 'Dopamine release on opioid stimulation. Acumbencore'),
+                     "cohort_dopamine_study_boxplots_caudate": (cohort_dopamine_study_boxplots_caudate, 'Dopamine release on opioid stimulation. Caudate'),
 })

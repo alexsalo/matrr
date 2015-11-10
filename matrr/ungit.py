@@ -1911,13 +1911,17 @@ r10monkeys = Monkey.objects.filter(cohort=r10)
 
 ## Load DopamineStudy
 ## Analyze data
-tst_accumben = TissueType.objects.get(tst_tissue_name__iexact='Nucleus accumbens (Core)')
-baseline_effect_accumben = [dope.baseline_effect_300nm() for dope in DopamineStudy.objects.filter(tissue_type=tst_accumben)]
-print baseline_effect_accumben
-#plt.plot(baseline_effect_accumben)
+#def _cohort_dopamine_study(cohort, tissue_type)
 
-tst_caudate = TissueType.objects.get(tst_tissue_name__iexact='caudate')
-baseline_effect_caudate = [dope.baseline_effect_300nm() for dope in DopamineStudy.objects.filter(tissue_type=tst_caudate)]
-print baseline_effect_caudate
+from plotting import cohort_plots
+#cohort_plots._plot_dopamine_study_boxplots(c9, 'Nucleus accumbens (Core)')
+#plot_dopamine_study_boxplots('caudate')
+
+# gen plots on matrr
+from plotting import plot_tools
+plot_tools.create_dopamine_study_plots()
+
+for img in CohortImage.objects.filter(method__contains="dopamine"):
+    print img
 
 #plt.show()
