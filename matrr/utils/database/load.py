@@ -2207,16 +2207,15 @@ def load_bone_density(filename, dto_pk, tst_tissue_name='Bone (Rt tibia)'):
                 print ''
 
 
-def load_vaccineStudy_data(file_name):
+def load_vaccine_study_data(file_name):
     """
     Loads data from csv provided by Ilhem's lab people
     :param file_name: delimeted by ';'
                       script strips mostright \n symbol
 
-    Added by Alex Salo on 27 oct 2015
     # Usage:
     # vaccineStudyFileName = '/home/alex/MATRR/suhas/52.alcohol_vaccinestudy_males.csv'
-    # load_vaccineStudy_data(vaccineStudyFileName)
+    # load_vaccine_study_data(vaccineStudyFileName)
     """
     with open(file_name, 'rU') as f:
         # 1. Parse header to get monkeys
@@ -2242,3 +2241,43 @@ def load_vaccineStudy_data(file_name):
             except:
                 print line
     print 'Success'
+
+
+def load_dopamine_study_date(file_name, tissue_type):
+    """
+    Loads data from normalized csv provided by Cody Sciliano
+    :param file_name: delimeted by ';'
+
+    Usage:
+        dopamineFileName = '/home/alex/MATRR/scicilia/cyno9_accumbenscore_clean.csv'
+        load_dopamine_study_date(dopamineFileName, 'Nucleus accumbens (Core)')
+    """
+    try:
+        tst_type = TissueType.objects.get(tst_tissue_name__iexact=tissue_type)
+        print "Tissue type found: %s" % tst_type
+    except:
+        raise Exception("'%s' is not an acceptable tissue type. Query tissue types table" % tissue_type)
+
+    with open(file_name, 'rU') as f:
+        read_data = f.readlines()
+        i = 0
+        line = read_data[i].split(';')
+        while len(line) > 1:
+            mky_real_id=line[0]
+            mky = Monkey.objects.get(mky_real_id=mky_real_id)
+            i += 2; line = read_data[i].split(';'); baseline = line[1]
+            i += 1; line = read_data[i].split(';'); nm300    = line[1]
+            i += 1; line = read_data[i].split(';'); um1      = line[1]
+
+            dop, created = DopamineStudy.objects.get_or_create(monkey=mky,
+                    tissue_type=tst_type, dop_baseline_peak_height=baseline,
+                    dop_300nm_peak_height=nm300, dop_1um_peak_height=um1,
+                    dop_agonist='U-50488')
+            if created:
+                print "Dop for %s was created: %s" % (mky_real_id, dop)
+
+            i += 2
+            try:
+                line = read_data[i].split(';')
+            except: # no more data
+                break

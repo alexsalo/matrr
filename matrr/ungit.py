@@ -1909,4 +1909,15 @@ r10monkeys = Monkey.objects.filter(cohort=r10)
 # # rud.save()
 # print Request.objects.get(req_request_id=175).rud_set.order_by('-rud_date')[0].rud_file
 
-# plt.show()
+## Load DopamineStudy
+## Analyze data
+tst_accumben = TissueType.objects.get(tst_tissue_name__iexact='Nucleus accumbens (Core)')
+baseline_effect_accumben = [dope.baseline_effect_300nm() for dope in DopamineStudy.objects.filter(tissue_type=tst_accumben)]
+print baseline_effect_accumben
+#plt.plot(baseline_effect_accumben)
+
+tst_caudate = TissueType.objects.get(tst_tissue_name__iexact='caudate')
+baseline_effect_caudate = [dope.baseline_effect_300nm() for dope in DopamineStudy.objects.filter(tissue_type=tst_caudate)]
+print baseline_effect_caudate
+
+#plt.show()
