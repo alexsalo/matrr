@@ -610,20 +610,26 @@ def create_dopamine_study_plots(cohorts=True, monkeys=False):
                 CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
 
 
-def create_bec_correlation_plots(cohorts=False, monkeys=True):
+def create_bec_correlation_plots(cohorts=True, monkeys=True):
     from matrr.models import CohortImage, Cohort, MonkeyBEC
+    from matrr.plotting import cohort_plots
+    cohortplot = 'cohort_bec_correlation'
+
     for cohort in MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct():
         cohort = Cohort.objects.get(pk=cohort)
         print 'Creating BEC correlation plots for cohort: %s' % cohort
 
+        if cohorts:
+            gc.collect()
+            CohortImage.objects.get_or_create(cohort=cohort, method=cohortplot,
+                                              title=cohort_plots.COHORT_PLOTS[cohortplot][1], canonical=True)
+
         if monkeys:
-            plots = ['monkey_bec_correlation', ]
+            plot = 'monkey_bec_correlation'
             from matrr.models import CohortImage, Cohort, MonkeyImage
             from matrr.plotting import monkey_plots
 
-            for graph in plots:
-                for monkey in cohort.monkey_set.all():
-                    gc.collect()
-                    MonkeyImage.objects.get_or_create(monkey=monkey, method=graph,
-                                                      title=monkey_plots.MONKEY_BEC_TOOLS_PLOTS[graph][1],
-                                                      canonical=True)
+            for monkey in cohort.monkey_set.all():
+                gc.collect()
+                MonkeyImage.objects.get_or_create(monkey=monkey, method=plot,
+                                                  title=monkey_plots.MONKEY_BEC_TOOLS_PLOTS[plot][1], canonical=True)

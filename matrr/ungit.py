@@ -1509,7 +1509,6 @@ from matrr.plotting.cohort_plots import COHORT_PLOTS
 #         print 'fail: ', cohort
 #         pass
 
-c2 = Cohort.objects.get(coh_cohort_name='INIA Cyno 2')
 r5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
 r6a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
 r6b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
@@ -1929,10 +1928,10 @@ from plotting import cohort_plots
 ## Analyze BECs
 
 # # 1. Filter work data set
-# mky = r6a.monkey_set.all()[1]
+# mky = c2.monkey_set.all()[4]
 # print mky
 # becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
-# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_g_kg__isnull=True)
 #
 # # 2. Get bec dates and corresponding day before and day after dates lists
 # bec_dates = becs.values_list('bec_collect_date', flat=True)
@@ -2026,9 +2025,18 @@ def mky_bec_corr(mky):
     bec_df['etoh_at_bec_sample_time'] = list(becs_retained.values_list('bec_gkg_etoh', flat=True))
     bec_df['etoh_next_day'] = list(mtds_next_retained.values_list('mtd_etoh_g_kg', flat=True))
     bec_df['bec'] = list(becs_retained.values_list('bec_mg_pct', flat=True))
-    # print bec_df
+    return bec_df
 
-    # 8. Scatter plot correlations
+def cohort_bec_correlation(cohort):
+    # 1. Collect BECs correlation DFs for each monkey
+    becs = MonkeyBEC.objects.filter(monkey__in=cohort.monkey_set.all())
+    monkeys = Monkey.objects.filter(mky_id__in=becs.values_list('monkey__mky_id', flat=True).distinct())
+    bec_df = mky_bec_corr(monkeys[0])
+    for mky in monkeys[1:]:
+        bec_df = bec_df.append(mky_bec_corr(mky))
+    print "Total BECs: %s" % len(bec_df)
+
+    # 2. Scatter plot correlations
     fig, axs = plt.subplots(1, 3, figsize=(20, 10), facecolor='w', edgecolor='k')
     bec_df.plot(kind='scatter', x='etoh_previos_day', y='bec', ax=axs[0])
     bec_df.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', ax=axs[1])
@@ -2054,9 +2062,12 @@ def mky_bec_corr(mky):
 # print mky
 # mky_bec_corr(mky)
 
+# cohort_bec_correlation(r6a)
+
+
 # gen plots on matrr
 from plotting import plot_tools
-plot_tools.create_bec_correlation_plots()
+plot_tools.create_bec_correlation_plots(True, True)
 
 
 #plt.show()

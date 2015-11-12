@@ -25,7 +25,7 @@ def monkey_bec_correlation(monkey):
 def _monkey_bec_correlation(mky):
     # 1. Filter work data set
     becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
-    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
+    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_g_kg__isnull=True)
 
     # 2. Get bec dates and corresponding day before and day after dates lists
     bec_dates = becs.values_list('bec_collect_date', flat=True)
