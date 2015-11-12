@@ -14,6 +14,75 @@ from matrr.models import *
 from matrr.plotting import specific_callables, plot_tools
 from matrr.plotting import *
 
+
+def monkey_bec_correlation(monkey):
+    if MonkeyBEC.objects.filter(monkey=monkey).count() < 10: # arbitrary call
+        return False, False
+    else:
+        return _monkey_bec_correlation(monkey)
+
+
+def _monkey_bec_correlation(mky):
+    # 1. Filter work data set
+    becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
+    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
+
+    # 2. Get bec dates and corresponding day before and day after dates lists
+    bec_dates = becs.values_list('bec_collect_date', flat=True)
+    bec_dates_prev = [date + timedelta(days=-1) for date in bec_dates]
+    bec_dates_next = [date + timedelta(days=+1) for date in bec_dates]
+
+    # 3. Get corresponding mtds
+    mtds_prev = mtds.filter(drinking_experiment__dex_date__in=bec_dates_prev)
+    mtds_next = mtds.filter(drinking_experiment__dex_date__in=bec_dates_next)
+
+    # 4. Find intersection: we need data for prev day, bec day and next day
+    mtds_prev_dates = [date + timedelta(days=+1) for date in mtds_prev.values_list('drinking_experiment__dex_date', flat=True)]
+    mtds_next_dates = [date + timedelta(days=-1) for date in mtds_next.values_list('drinking_experiment__dex_date', flat=True)]
+    mtds_intersection_dates = set(mtds_prev_dates).intersection(mtds_next_dates)
+
+    # 5. Retain becs and mtds within days of intersection
+    becs_retained = becs.filter(bec_collect_date__in=mtds_intersection_dates).order_by('bec_collect_date')
+    mtds_prev_retained = mtds_prev.filter(drinking_experiment__dex_date__in=[date + timedelta(days=-1) for date in mtds_intersection_dates]).order_by('drinking_experiment__dex_date')
+    mtds_next_retained = mtds_next.filter(drinking_experiment__dex_date__in=[date + timedelta(days=+1) for date in mtds_intersection_dates]).order_by('drinking_experiment__dex_date')
+
+    # 6. Assert we have the same number of data daysa
+    print 'monkey: %s \nbecs retained: %s' % (mky, becs_retained.count())
+    print 'etoh on prev day retained: %s' % mtds_prev_retained.count()
+    print 'etoh on next day retained: %s \n' % mtds_next_retained.count()
+    assert becs_retained.count() == mtds_prev_retained.count() == mtds_next_retained.count()
+
+    # 7. Compile data frame
+    bec_df = pd.DataFrame(list(mtds_prev_retained.values_list('mtd_etoh_g_kg')), columns=['etoh_previos_day'])
+    bec_df['etoh_at_bec_sample_time'] = list(becs_retained.values_list('bec_gkg_etoh', flat=True))
+    bec_df['etoh_next_day'] = list(mtds_next_retained.values_list('mtd_etoh_g_kg', flat=True))
+    bec_df['bec'] = list(becs_retained.values_list('bec_mg_pct', flat=True))
+    # print bec_df
+
+    # 8. Scatter plot correlations
+    fig, axs = pyplot.subplots(1, 3, figsize=(15, 8), facecolor='w', edgecolor='k')
+    bec_df.plot(kind='scatter', x='etoh_previos_day', y='bec', ax=axs[0])
+    bec_df.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', ax=axs[1])
+    bec_df.plot(kind='scatter', x='etoh_next_day', y='bec', ax=axs[2])
+    pyplot.tight_layout()
+
+    # 9. Plot fitted lines and correlation values
+    def plot_regression_line_and_corr_text(ax, x, y):
+        fit = numpy.polyfit(x, y, deg=1)
+        ax.plot(x, fit[0] * x + fit[1], color='red')
+
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        text = 'Correlation: %s' % numpy.round(x.corr(y), 4)
+        ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=14,
+                verticalalignment='top', bbox=props)
+
+    plot_regression_line_and_corr_text(axs[0], bec_df.etoh_previos_day, bec_df.bec)
+    plot_regression_line_and_corr_text(axs[1], bec_df.etoh_at_bec_sample_time, bec_df.bec)
+    plot_regression_line_and_corr_text(axs[2], bec_df.etoh_next_day, bec_df.bec)
+
+    return fig, True
+
+
 def monkey_necropsy_avg_22hr_g_per_kg(monkey):
     try:
         monkey.necropsy_summary
@@ -1818,6 +1887,7 @@ MONKEY_ETOH_TOOLS_PLOTS = {'monkey_etoh_bouts_vol': (monkey_etoh_bouts_vol, 'Eth
 MONKEY_BEC_TOOLS_PLOTS = { 'monkey_bec_bubble': (monkey_bec_bubble, 'BEC Plot'),
                            'monkey_bec_consumption': (monkey_bec_consumption, "BEC Consumption "),
                            'monkey_bec_monthly_centroids': (monkey_bec_monthly_centroids, "BEC Monthly Centroid Distance"),
+                           'monkey_bec_correlation': (monkey_bec_correlation, 'Monkey BEC correlation with EtOH'),
                            }
 # Dictionary of protein monkey plots VIPs can customize
 MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': (monkey_protein_stdev, "Protein Value (standard deviation)"),

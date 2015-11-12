@@ -597,7 +597,6 @@ def create_bone_densities_plots(cohorts=True, monkeys=True):
                 CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
 
 
-
 def create_dopamine_study_plots(cohorts=True, monkeys=False):
     if cohorts:
         plots = ['cohort_dopamine_study_boxplots_accumben', 'cohort_dopamine_study_boxplots_caudate']
@@ -609,3 +608,22 @@ def create_dopamine_study_plots(cohorts=True, monkeys=False):
                 print 'Creating dope plots for cohort: %s, tissue: %s' % (cohort, graph.split('_')[-1])
                 gc.collect()
                 CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
+
+
+def create_bec_correlation_plots(cohorts=False, monkeys=True):
+    from matrr.models import CohortImage, Cohort, MonkeyBEC
+    for cohort in MonkeyBEC.objects.all().values_list('monkey__cohort', flat=True).distinct():
+        cohort = Cohort.objects.get(pk=cohort)
+        print 'Creating BEC correlation plots for cohort: %s' % cohort
+
+        if monkeys:
+            plots = ['monkey_bec_correlation', ]
+            from matrr.models import CohortImage, Cohort, MonkeyImage
+            from matrr.plotting import monkey_plots
+
+            for graph in plots:
+                for monkey in cohort.monkey_set.all():
+                    gc.collect()
+                    MonkeyImage.objects.get_or_create(monkey=monkey, method=graph,
+                                                      title=monkey_plots.MONKEY_BEC_TOOLS_PLOTS[graph][1],
+                                                      canonical=True)
