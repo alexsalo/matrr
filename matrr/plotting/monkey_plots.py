@@ -53,6 +53,8 @@ def _monkey_bec_correlation(mky):
     assert becs_retained.count() == mtds_prev_retained.count() == mtds_next_retained.count()
 
     # 7. Compile data frame
+    if mtds_prev_retained.count() == 0:
+        return False, False
     bec_df = pd.DataFrame(list(mtds_prev_retained.values_list('mtd_etoh_g_kg')), columns=['etoh_previos_day'])
     bec_df['etoh_at_bec_sample_time'] = list(becs_retained.values_list('bec_gkg_etoh', flat=True))
     bec_df['etoh_next_day'] = list(mtds_next_retained.values_list('mtd_etoh_g_kg', flat=True))

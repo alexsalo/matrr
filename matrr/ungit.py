@@ -6,7 +6,7 @@ from matrr.models import Monkey
 import dateutil
 from matrr.plotting import monkey_plots as mkplot
 import matplotlib
-matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr'
+matplotlib.rcParams['savefig.directory'] = '~/win-share/matrr_sync/'
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,6 +45,14 @@ coh_colors = {
     19 : 'c'
 }
 
+
+def normalize_float_cols(_df):
+    def normalize(__df):
+        return (__df - __df.mean()) / (__df.std())
+    float_columns = [column for column in _df.columns if _df[column].dtype == 'float64']
+    _df[float_columns] = normalize(_df[float_columns])
+    return _df
+
 from matrr.plotting import plot_tools
 from matplotlib import pyplot, cm, gridspec, colors
 from numpy import polyfit, polyval
@@ -63,6 +71,48 @@ def print_full(x):
     pd.set_option('display.max_rows', len(x))
     print(x)
     pd.reset_option('display.max_rows')
+
+
+# from pylab import *
+# def print_available_backends():
+#     import time
+#
+#     import matplotlib.backends
+#     import matplotlib.pyplot as p
+#     import os.path
+#
+#
+#     def is_backend_module(fname):
+#         """Identifies if a filename is a matplotlib backend module"""
+#         return fname.startswith('backend_') and fname.endswith('.py')
+#
+#     def backend_fname_formatter(fname):
+#         """Removes the extension of the given filename, then takes away the leading 'backend_'."""
+#         return os.path.splitext(fname)[0][8:]
+#
+#     # get the directory where the backends live
+#     backends_dir = os.path.dirname(matplotlib.backends.__file__)
+#
+#     # filter all files in that directory to identify all files which provide a backend
+#     backend_fnames = filter(is_backend_module, os.listdir(backends_dir))
+#
+#     backends = [backend_fname_formatter(fname) for fname in backend_fnames]
+#
+#     print "supported backends: \t" + str(backends)
+#
+#     # validate backends
+#     backends_valid = []
+#     for b in backends:
+#         try:
+#             p.switch_backend(b)
+#             backends_valid += [b]
+#         except:
+#             continue
+#
+#     print "valid backends: \t" + str(backends_valid)
+#
+# print_available_backends()
+
 
 #print Monkey.objects.all().count()
 #print Monkey.objects.filter(mky_study_complete = True).count()
@@ -1993,7 +2043,7 @@ from plotting import cohort_plots
 def mky_bec_corr(mky):
     # 1. Filter work data set
     becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
-    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky)
+    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_g_kg__isnull=True)
 
     # 2. Get bec dates and corresponding day before and day after dates lists
     bec_dates = becs.values_list('bec_collect_date', flat=True)
@@ -2021,42 +2071,133 @@ def mky_bec_corr(mky):
     assert becs_retained.count() == mtds_prev_retained.count() == mtds_next_retained.count()
 
     # 7. Compile data frame
+    if mtds_prev_retained.count() == 0:
+        return pd.DataFrame() # empty to be ignored
+
     bec_df = pd.DataFrame(list(mtds_prev_retained.values_list('mtd_etoh_g_kg')), columns=['etoh_previos_day'])
     bec_df['etoh_at_bec_sample_time'] = list(becs_retained.values_list('bec_gkg_etoh', flat=True))
     bec_df['etoh_next_day'] = list(mtds_next_retained.values_list('mtd_etoh_g_kg', flat=True))
     bec_df['bec'] = list(becs_retained.values_list('bec_mg_pct', flat=True))
+    bec_df['dc'] = list(mtds_next_retained.values_list('monkey__mky_drinking_category', flat=True))
     return bec_df
 
-def cohort_bec_correlation(cohort):
-    # 1. Collect BECs correlation DFs for each monkey
-    becs = MonkeyBEC.objects.filter(monkey__in=cohort.monkey_set.all())
-    monkeys = Monkey.objects.filter(mky_id__in=becs.values_list('monkey__mky_id', flat=True).distinct())
-    bec_df = mky_bec_corr(monkeys[0])
-    for mky in monkeys[1:]:
-        bec_df = bec_df.append(mky_bec_corr(mky))
-    print "Total BECs: %s" % len(bec_df)
 
-    # 2. Scatter plot correlations
-    fig, axs = plt.subplots(1, 3, figsize=(20, 10), facecolor='w', edgecolor='k')
+# 9. Plot fitted lines and correlation values
+def plot_regression_line_and_corr_text(ax, x, y):
+    fit = np.polyfit(x, y, deg=1)
+    ax.plot(x, fit[0] * x + fit[1], color='red')
+
+    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    text = 'Correlation: %s' % np.round(x.corr(y), 4)
+    ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=14,
+            verticalalignment='top', bbox=props)
+
+
+def plot_bec_correlation(bec_df):
+    fig, axs = plt.subplots(1, 3, figsize=(15, 8), facecolor='w', edgecolor='k')
     bec_df.plot(kind='scatter', x='etoh_previos_day', y='bec', ax=axs[0])
     bec_df.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', ax=axs[1])
     bec_df.plot(kind='scatter', x='etoh_next_day', y='bec', ax=axs[2])
     plt.tight_layout()
 
-    # 9. Plot fitted lines and correlation values
-    def plot_regression_line_and_corr_text(ax, x, y):
-        fit = np.polyfit(x, y, deg=1)
-        ax.plot(x, fit[0] * x + fit[1], color='red')
-
-        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-        text = 'Correlation: %s' % np.round(x.corr(y), 4)
-        ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=14,
-                verticalalignment='top', bbox=props)
-
     plot_regression_line_and_corr_text(axs[0], bec_df.etoh_previos_day, bec_df.bec)
     plot_regression_line_and_corr_text(axs[1], bec_df.etoh_at_bec_sample_time, bec_df.bec)
     plot_regression_line_and_corr_text(axs[2], bec_df.etoh_next_day, bec_df.bec)
 
+
+def collect_cohort_monkeys_bec(cohort):
+    monkeys = Monkey.objects.filter(mky_id__in=MonkeyBEC.objects.all().values_list('monkey__mky_id', flat=True).distinct())
+    monkeys = Monkey.objects.filter(mky_id__in=cohort.monkey_set.filter(mky_id__in=monkeys))
+    bec_df = mky_bec_corr(monkeys[0])
+    for mky in monkeys[1:]:
+        print mky
+        new_df = mky_bec_corr(mky)
+        if len(new_df) > 0:
+            bec_df = bec_df.append(new_df)
+    print "Total BECs: %s" % len(bec_df)
+    return bec_df
+
+def collect_all_monkeys_bec():
+    monkeys = Monkey.objects.filter(mky_id__in=MonkeyBEC.objects.all().values_list('monkey__mky_id', flat=True).distinct())
+    bec_df = mky_bec_corr(monkeys[0])
+    for mky in monkeys[1:]:
+        print mky
+        new_df = mky_bec_corr(mky)
+        if len(new_df) > 0:
+            bec_df = bec_df.append(new_df)
+    print "Total BECs: %s" % len(bec_df)
+    return bec_df
+
+
+def plot_bec_correlation_by_dc(bec_df, font_size=12):
+    fig, axs = plt.subplots(4, 3, figsize=(20, 10), facecolor='w', edgecolor='k')
+    axs = axs.ravel()
+    for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
+        df_dc = bec_df[bec_df.dc == dc]
+
+        df_dc.plot(kind='scatter', x='etoh_previos_day', y='bec', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 0])
+        df_dc.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 1])
+        df_dc.plot(kind='scatter', x='etoh_next_day', y='bec', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 2])
+
+        plot_regression_line_and_corr_text(axs[i*3 + 0], df_dc.etoh_previos_day, df_dc.bec)
+        plot_regression_line_and_corr_text(axs[i*3 + 1], df_dc.etoh_at_bec_sample_time, df_dc.bec)
+        plot_regression_line_and_corr_text(axs[i*3 + 2], df_dc.etoh_next_day, df_dc.bec)
+
+    # fine tune plot look'n'feel
+    plt.tight_layout()
+
+    fig.subplots_adjust(hspace=0)
+    fig.subplots_adjust(wspace=0)
+    plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
+    plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
+
+    plt.setp([axs[i].get_xticklabels() for i in [9, 10, 11]], visible=True)
+    plt.setp([axs[i].get_yticklabels() for i in [0, 3, 6, 9]], visible=True)
+
+    [ax.set_ylabel('') for ax in axs]
+    axs[0].set_ylabel('LD', fontsize=font_size)
+    axs[3].set_ylabel('BD', fontsize=font_size)
+    axs[6].set_ylabel('HD', fontsize=font_size)
+    axs[9].set_ylabel('VHD', fontsize=font_size)
+
+    fig.text(0.5, 0.94, 'BEC correlation: EtOH the day before, day of and day after', ha='center', fontsize=font_size+4)
+    fig.text(0.005, 0.5, 'BEC', va='center', rotation='vertical', fontsize=font_size+4)
+    fig.subplots_adjust(top=0.93)
+
+
+GEN_BEC_DF = False
+if GEN_BEC_DF:
+    df_bec_all = collect_all_monkeys_bec()
+    df_bec_all.save('bec_df_all.plk')
+else:
+    df_bec_all = pd.read_pickle('bec_df_all.plk')
+
+# plot_bec_correlation_by_dc(df_bec_all)
+
+
+# fill the corr table
+def compile_bec_correlation_table(bec_df):
+    cors = list()
+    for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
+        f = bec_df[bec_df.dc == dc]
+        row = [np.round(f.etoh_previos_day.corr(f.bec), 4),
+               np.round(f.etoh_at_bec_sample_time.corr(f.bec), 4),
+               np.round(f.etoh_next_day.corr(f.bec), 4)]
+        cors.append(row)
+    return cors
+
+# bec_all_correlations = compile_bec_correlation_table(df_bec_all)
+# for row in bec_all_correlations:
+#     print "%.2f "*len(row) % tuple(row)
+
+
+# def test_plot_bec_correlation(bec_df):
+#     bec_df.plot(kind='scatter', x='etoh_previos_day', y='bec', subplots=True, layout=(1, 3))
+#     bec_df.plot(kind='scatter', x='etoh_at_bec_sample_time', subplots=True, layout=(1, 3))
+#     bec_df.plot(kind='scatter', x='etoh_next_day', y='bec', subplots=True, layout=(1, 3))
+#     plt.tight_layout()
+# df_coh = pd.read_pickle('bec_coh_df.plk')
+# test_plot_bec_correlation(df_coh)
 
 # mky = r6a.monkey_set.all()[1]
 # print mky
@@ -2065,9 +2206,122 @@ def cohort_bec_correlation(cohort):
 # cohort_bec_correlation(r6a)
 
 
+## ANDREW CURVES
+#def plot_andrews_curves():
+    GEN_COH_DF = False
+    if GEN_COH_DF:
+        df_coh = collect_cohort_monkeys_bec(r6b)
+        df_coh.save('bec_coh_df.plk')
+    else:
+        df_coh = pd.read_pickle('bec_coh_df.plk')
+
+    from pandas.tools.plotting import andrews_curves, parallel_coordinates
+    plt.figure(figsize=(12, 8), facecolor='w', edgecolor='k')
+    andrews_curves(df_coh, 'dc')
+    plt.tight_layout()
+
+    # df_coh = normalize_float_cols(df_coh)
+    df_coh = df_coh.drop('bec', axis=1)
+    plt.figure(figsize=(12, 8), facecolor='w', edgecolor='k')
+    parallel_coordinates(df_coh, 'dc')
+    plt.tight_layout()
+# plot_andrews_curves()
+
 # gen plots on matrr
-from plotting import plot_tools
-plot_tools.create_bec_correlation_plots(True, True)
+#from plotting import plot_tools
+#plot_tools.create_bec_correlation_plots(True, True)
 
 
-#plt.show()
+### 13 November 2015
+# load necropsy summary # then reload when with BEC
+from utils.database import load
+#load.load_necropsy_summary('/home/alex/MATRR/coh10_full/Coh10_std_Dataset_partialNoBEC_20151014.txt')
+#print pd.DataFrame(list(NecropsySummary.objects.filter(monkey=r10monkeys[1]).values_list()))
+
+# load.load_necropsy_summary('/home/alex/MATRR/coh13_full/Coh13_std_Dataset_partialNoBEC_20151014.txt')
+# print pd.DataFrame(list(NecropsySummary.objects.filter(monkey=c13.monkey_set.all()[1]).values_list()))
+
+# # repopulate BEC
+# for bec in MonkeyBEC.objects.filter(monkey__in=r10monkeys):
+#     bec.populate_fields()
+
+# recalculate DC in coh10:
+# for m in r10monkeys:nano
+#     m.populate_drinking_category()
+#     print m
+
+# # Populate fields in MTDS
+# for m in r10monkeys:
+#     print m
+#     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m)
+#     for mtd in mtds:
+#         mtd.populate_fields()
+
+from utils.database import dump
+#dump.dump_standard_cohort_data(r10.coh_cohort_id)
+
+
+### Get 12 mo DC for Cohort 10:
+# def arbitrary_drinking_category(cohort, months=12):
+#     from matrr.utils.gadgets import identify_drinking_category
+#     start_date = CohortEvent.objects.filter(cohort=cohort).filter(event=37)[0].cev_date
+#     end_date = CohortEvent.objects.filter(cohort=cohort).filter(event=42)[0].cev_date
+#     print "Start: %s - End: %s" % (start_date, end_date)
+#     for mky in cohort.monkey_set.all():
+#         oa_mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=mky).\
+#             filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date).\
+#             order_by('drinking_experiment__dex_date')
+#         oa_becs = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey=mky).\
+#             filter(bec_collect_date__gte=start_date).filter(bec_collect_date__lte=end_date).\
+#             order_by('bec_collect_date')
+#         if oa_mtds.count() and oa_becs.count():
+#             mky_drinking_category = identify_drinking_category(oa_mtds, oa_becs)
+#         else:
+#             mky_drinking_category = 'NA'
+#
+#         mtds_dates = list(oa_mtds.values_list('drinking_experiment__dex_date', flat=True))
+#         becs_dates = list(oa_becs.values_list('bec_collect_date', flat=True))
+#         print "Assert dates MTDS: Start: %s - End: %s; Assert dates BECs: Start: %s - End: %s;\n12 month drinking category: %s, Monkey: %s" % \
+#               (mtds_dates[0], mtds_dates[-1], becs_dates[0], becs_dates[-1], mky_drinking_category, mky)
+#
+# arbitrary_drinking_category(r10)
+# for bec in MonkeyBEC.objects.filter(monkey__in=r10monkeys):
+#     bec.populate_fields()
+
+#print MonkeyBEC.objects.OA().filter(monkey__in=r10monkeys).count()
+#print MonkeyBEC.objects.filter(monkey__in=c13.monkey_set.all()).count()
+
+
+### Prepare data requests
+# from_date = dingus.get_datetime_from_steve('03/30/2015')
+# to_date = dingus.get_datetime_from_steve('07/12/2015')
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys).\
+#     filter(drinking_experiment__dex_date__gte=from_date).\
+#     filter(drinking_experiment__dex_date__lte=to_date)
+# #Date	Monk #	Etoh Intake	Veh intake	Etoh %	Etoh g/kg	Tot Pellet
+# # Etoh Bout	Etoh Drink/bout	Veh Bout	Veh Drink/bout	Weight	Etoh Conc.
+# # Etoh Mean Drink Length	Etoh Median IDI	Etoh Mean Drink Vol	Etoh Mean
+# # Bout Length	Etoh Median IBI	Etoh Mean Bout Vol	Etoh St.1	Etoh St.2	Etoh St.3	Veh St.2	Veh St.3
+# # 	Pellets St.1	Pellets St.3	Length St.1	Length St.2	Length St.3	Vol. 1st Bout	% Etoh in First Bout
+# #  Drinks 1st Bout	Mean Drink Vol 1st Bout	FI w/o Drinking St.1	% Of FI with Drinking St.1
+# # Latency to 1st Drink	Exp. Etoh%	St. 1 IOC Avg	Date	Monk #	Max Bout #	Max Bout Start	Max Bout End
+# # Max Bout Length	Max Bout Volume	Max Bout Volume as % of Total Etoh
+#
+# model_fields = [
+#     'monkey__mky_id', 'drinking_experiment__dex_date',
+#     'mtd_etoh_intake', 'mtd_veh_intake', 'mtd_total_pellets', 'mtd_weight'
+# ]
+
+# df = pd.DataFrame(list(mtds.values_list()))
+# print df.omit
+# print plt.get_backend()
+# print matplotlib.rcsetup.all_backends
+
+# plt.plot([1,2,3])
+
+
+### 18 November 2015
+### Shippint Manifest
+
+
+plt.show()
