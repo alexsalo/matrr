@@ -2321,7 +2321,46 @@ from utils.database import dump
 
 
 ### 18 November 2015
-### Shippint Manifest
+### Shippint Manifest done
+
+### 20 November 2015
+### Average Drinking
+monkeys = r7b.monkey_set.all()
+# summaries = []
+# raw_labels = []
+# for mky in monkeys.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
+#     try:
+#         summaries.append(mky.necropsy_summary)
+#     except NecropsySummary.DoesNotExist:
+#             continue
+#     raw_labels.append(str(mky.pk))
+# print "First", [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries]
+# print "Second", [summary.ncm_22hr_2nd_6mos_avg_g_per_kg for summary in summaries]
+# print "12 Month", [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries]
+# print raw_labels
+
+# ### NEW AVG ETOH PLOTS
+# matplotlib.rcParams.update({'font.size': 16})
+# ns = NecropsySummary.objects.filter(monkey__in=monkeys)
+# df = pd.DataFrame(list(ns.values_list('monkey__mky_id', 'ncm_22hr_6mo_avg_g_per_kg', 'ncm_22hr_12mo_avg_g_per_kg')),
+#                        columns=['Monkey ID', 'First 6 Months Average', '12 Months Average'])
+# df.set_index('Monkey ID', inplace=True)
+# df = df[df['First 6 Months Average'] != 0]
+# print df
+#
+# fig, ax = plt.subplots(figsize=DEFAULT_FIG_SIZE)
+# df.plot(kind='barh', ax=ax)
+# for p in ax.patches:
+#     ax.annotate(str(p.get_width()), (p.get_width() * 1.005, p.get_y() * 1.005))
+# # for p in ax.patches:
+# #     ax.annotate(np.round(p.get_height(),decimals=2), (p.get_x()+p.get_width()/2., p.get_height()), ha='center', va='center', xytext=(0, 10), textcoords='offset points')
+# fig.tight_layout()
+# # from plotting import cohort_plots
+# # cohort_plots.cohort_necropsy_avg_22hr_g_per_kg(r7b)
+
+
+
+
 
 
 plt.show()

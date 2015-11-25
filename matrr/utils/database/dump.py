@@ -217,7 +217,9 @@ def dump_MATRR_stats():
 
 def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
     cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel').order_by('pk')
-    data_types = ["Necropsy", "Drinking Summary", "Bouts", "Drinks",
+    data_types = [
+                  "N (number of animals)",
+                  "Necropsy", "Drinking Summary", "Bouts", "Drinks",
                   #"Raw Drinking data",
                   "Exceptions", "BEC",
                   "Metabolite", "Protein",
@@ -233,7 +235,9 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                   'ElectroPhys',
                   "    Frequency (hz)", "    In-Event Interval","    Amplitude","    Capacitance","    Resistance","    Rise (ms)","    Decay (ms)", "    Area","    Baseline","    Noise", "    10-90 Rise (ms)","    10-90 Slope","    Half Width","    50 Rise (ms)","    Rel Time",
                   ]
-    data_classes = [NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink,
+    data_classes = [
+                    Monkey,
+                    NecropsySummary, MonkeyToDrinkingExperiment, ExperimentBout, ExperimentDrink,
                     #ExperimentEvent,
                     MonkeyException, MonkeyBEC,
                     MonkeyMetabolite, MonkeyProtein,
@@ -249,7 +253,9 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                     MonkeyEphys,
                     MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,
                     ]
-    cohort_fields = ['monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
+    cohort_fields = [
+                     'cohort',
+                     'monkey__cohort', 'monkey__cohort', 'mtd__monkey__cohort', 'ebt__mtd__monkey__cohort',
                      #'monkey__cohort',
                      'monkey__cohort', 'monkey__cohort',
                      'monkey__cohort', 'monkey__cohort',
@@ -266,6 +272,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                      'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
                      ]
     exclude_none_fields = [
+                    '',
                     '','','','',
                     #'',
                     '','',

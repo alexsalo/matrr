@@ -262,7 +262,7 @@ def _cohort_summary_general(specific_callable, x_label, graph_title, legend_labe
     if all(coh_data_2):
         cohort_bar2 = ax1.barh(idx+width, coh_data_2, width, color=cohort_colors[1])
         autolabel(cohort_bar2, 'white')
-        ax1.legend( (cohort_bar2[0], cohort_bar1[0]), legend_labels, loc=2)
+        ax1.legend( (cohort_bar1[0], cohort_bar2[0]), legend_labels, loc=2)
     else:
         ax1.legend( (cohort_bar1[0], ), legend_labels, loc=2)
 
