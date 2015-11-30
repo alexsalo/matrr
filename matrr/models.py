@@ -1695,6 +1695,10 @@ class NecropsySummary(models.Model):
     ncm_22hr_2nd_6mos_avg_g_per_kg = models.FloatField("22hr 6mo average Ethanol Intake 2nd (g-etoh per kg-weight)", blank=True, null=True)
     ncm_22hr_12mo_avg_g_per_kg = models.FloatField("22hr 12mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
 
+    # Added on 30 November 2015. For now only used in cohort Rhesus 10
+    #ncm_
+# BEC averages for the drinking periods between withdrawals.
+# One is after the 1st withdrawal period, the 2nd is after the 2nd withdrawal period.
 
     class Meta:
         db_table = 'ncm_necropsy_summary'

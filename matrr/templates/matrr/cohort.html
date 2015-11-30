@@ -282,6 +282,49 @@
 
 
 
+    <div>
+		<table class='table-drink-cats menu-links common_center'>
+            <thead>
+                <tr>
+                    <th>Monkey</th>
+                    <th colspan="3">Total EtOH, gkg</th>
+                    <th colspan="3">Average EtOH, gkg</th>
+                </tr>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Induction</th>
+                    <th>Open Access</th>
+                    <th>Lifetime</th>
+                    <th>First 6 months</th>
+                    <th>Second 6 months</th>
+                    <th>Twelve months</th>
+                </tr>
+            </thead>
+            <tbody class='drink-cat-rows'>
+                {% for ncm in necropsy_summary %}
+                    {%  if ncm.monkey.mky_drinking %}
+                        <tr>
+                            <td>{{ncm.monkey.mky_id }}</td>
+                            <td>{{ncm.ncm_sum_g_per_kg_induction}}</td>
+                            <td>{{ncm.ncm_sum_g_per_kg_22hr}}</td>
+                            <td>{{ncm.ncm_sum_g_per_kg_lifetime}}</td>
+                            <td>{{ncm.ncm_22hr_6mo_avg_g_per_kg}}</td>
+                            <td>{{ncm.ncm_22hr_2nd_6mos_avg_g_per_kg}}</td>
+                            <td>{{ncm.ncm_22hr_12mo_avg_g_per_kg}}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+		</table>
+        <a class='blockLinkButton' href="{% url 'export-cohort-data' cohort.coh_cohort_id %}">
+            Export csv with even more details</a><br/>
+        <br>
+	</div>
+
+
+
+
 
 
 

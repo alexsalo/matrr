@@ -2358,9 +2358,63 @@ monkeys = r7b.monkey_set.all()
 # # from plotting import cohort_plots
 # # cohort_plots.cohort_necropsy_avg_22hr_g_per_kg(r7b)
 
+"""
+29 November 2015
+"""
+# # 1. Load time line
+# timeline_10_and_13 = '/home/alex/MATRR/53timeline_stacked_bar_chart_20151026_matrr_clean.csv'
+# from matrr.utils.database import load
+# load.load_cohort_timelines(timeline_10_and_13, delete_replaced_cvts=True)
 
 
+"""
+30 November 2015
+"""
+# 1. Load BEC: cohort 10
+# 1.1
+from matrr.utils.database import load
+# MonkeyBEC.objects.filter(monkey__in=r10monkeys).delete()
+# load.load_bec_data('/home/alex/MATRR/coh10_full/update/coh10_BEC_Matrr_20151119.txt', overwrite=True, header=True)
+# print MonkeyBEC.objects.filter(monkey__in=r10monkeys).count()
+# load.load_bec_data('/home/alex/MATRR/coh13_full/update/INIA13_BEC_Matrr_20151117.txt', overwrite=True, header=True)
 
+# 1.2. Repopulate BEC
+# for bec in MonkeyBEC.objects.filter(monkey__in=c13.monkey_set.all()):
+#    bec.populate_fields()
+# for bec in MonkeyBEC.objects.filter(monkey__in=r10monkeys):
+#    bec.populate_fields()
+
+# 2. Load necropsy summary Dataset
+# 2.1 Check what is in there
+# ncm_colnames = NecropsySummary._meta.get_all_field_names()
+# ncm_colnames.remove(u'monkey_id')
+# print ncm_colnames
+# print pd.DataFrame(list(NecropsySummary.objects.filter(monkey=r6a.monkey_set.all()[1]).values_list(*ncm_colnames)),
+#                    columns=ncm_colnames)
+
+# 2.2
+# NecropsySummary.objects.filter(monkey__in=r10monkeys).delete()
+# load.load_necropsy_summary('/home/alex/MATRR/coh10_full/update/Coh10_std_Dataset_20151119.txt')
+# NecropsySummary.objects.filter(monkey__in=c13.monkey_set.all()).delete()
+# load.load_necropsy_summary('/home/alex/MATRR/coh13_full/update/Coh13_std_Dataset_20151117.txt', six_month_cohort=True)
+
+# 3. Recalculate DC:
+# for m in r10monkeys:
+#     m.mky_study_complete = True
+#     m.populate_drinking_category()
+#     print m
+#
+# for m in c13.monkey_set.all():
+#     m.mky_study_complete = True
+#     m.populate_drinking_category()
+#     print m
+
+# 4. Populate fields in MTDS
+# for m in r10monkeys:
+#     print m
+#     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m)
+#     for mtd in mtds:
+#         mtd.populate_fields()
 
 
 plt.show()

@@ -1835,7 +1835,7 @@ def load_bec_data(file_name, overwrite=False, header=True):
                     value = data_fields[i]
                 except IndexError:
                     if print_warning:
-                        print "There was an index error, probably means this file doesn't have a bec_daily_vol_etoh column."
+                        print line_number, "There was an index error, probably means this file doesn't have a bec_daily_vol_etoh column."
                         print_warning = False
                     continue
                 if value != '':
