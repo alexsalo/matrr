@@ -1939,7 +1939,7 @@ def load_monkey_exceptions(file_name, overwrite=False, header=True, delimiter="\
         '',
         '',
         'mex_etoh_intake',
-        'mex_2pct',
+        #'mex_2pct',
     ]
     for line_number, row in enumerate(csv_infile):
         try:
@@ -1984,6 +1984,8 @@ def load_monkey_exceptions(file_name, overwrite=False, header=True, delimiter="\
             if name and value:
                 if str(value).lower() == 'x': # boolean flags
                     value = True
+                else:
+                    value = False
                 setattr(mex, name, value)
 
         try:

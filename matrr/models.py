@@ -1351,7 +1351,7 @@ class ExperimentBout(models.Model):
             previous_events = ExperimentEvent.objects.filter(monkey=self.mtd.monkey,
                                                              eev_session_time__lt=self.ebt_start_time)
             previous_pellets = previous_events.filter(eev_event_type=ExperimentEventType.Pellet)
-            pellet_max = previous_pellets.aggregate(models.models.Max('eev_session_time'))['eev_session_time__max']
+            pellet_max = previous_pellets.aggregate(models.Max('eev_session_time'))['eev_session_time__max']
             pellet_time = self.ebt_start_time - pellet_max if pellet_max else 0
             self.ebt_pellet_elapsed_time_since_last = pellet_time
             if save:

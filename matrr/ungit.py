@@ -2370,19 +2370,32 @@ monkeys = r7b.monkey_set.all()
 """
 30 November 2015
 """
-# 1. Load BEC: cohort 10
-# 1.1
-from matrr.utils.database import load
+# 0. Load Cohort 13 Exception Days
+# 0.1 Delete existing
+# MonkeyException.objects.filter(monkey__in=r10monkeys).delete()
+# MonkeyException.objects.filter(monkey__in=c13.monkey_set.all()).delete()
+#
+# 0.2 Load new
+# load.load_monkey_exceptions('/home/alex/MATRR/coh10_full/Coh10_exception_days.txt',
+#                             overwrite=True, header=True, delimiter="\t")
+# load.load_monkey_exceptions('/home/alex/MATRR/coh13_full/update/Coh13_ExceptionDaysMatrrRev20151113_jon_format.csv',
+#                            overwrite=True, header=True, delimiter=",")
+#
+# 0.3 Check how many totally excluded
+# print MonkeyException.objects.filter(monkey__in=r10monkeys).count()
+# print MonkeyException.objects.filter(monkey__in=r10monkeys).filter(mex_excluded=True).count()
+# print MonkeyException.objects.filter(monkey__in=c13.monkey_set.all()).count()
+# print MonkeyException.objects.filter(monkey__in=c13.monkey_set.all()).filter(mex_excluded=True).count()
+#
+# 0.4 Purge exception dates for MEX if mex.mex_excluded==True
+# for mex in MonkeyException.objects.filter(monkey__in=r10monkeys).filter(mex_excluded=True):
+#     mex.flag_own_data(flag_mtd=True, flag_bec=True, flag_eev=True, flag_mhm=True, flag_mpn=True)
+
+# 1. Load BEC: cohort 10 and 13
 # MonkeyBEC.objects.filter(monkey__in=r10monkeys).delete()
 # load.load_bec_data('/home/alex/MATRR/coh10_full/update/coh10_BEC_Matrr_20151119.txt', overwrite=True, header=True)
 # print MonkeyBEC.objects.filter(monkey__in=r10monkeys).count()
 # load.load_bec_data('/home/alex/MATRR/coh13_full/update/INIA13_BEC_Matrr_20151117.txt', overwrite=True, header=True)
-
-# 1.2. Repopulate BEC
-# for bec in MonkeyBEC.objects.filter(monkey__in=c13.monkey_set.all()):
-#    bec.populate_fields()
-# for bec in MonkeyBEC.objects.filter(monkey__in=r10monkeys):
-#    bec.populate_fields()
 
 # 2. Load necropsy summary Dataset
 # 2.1 Check what is in there
@@ -2398,23 +2411,31 @@ from matrr.utils.database import load
 # NecropsySummary.objects.filter(monkey__in=c13.monkey_set.all()).delete()
 # load.load_necropsy_summary('/home/alex/MATRR/coh13_full/update/Coh13_std_Dataset_20151117.txt', six_month_cohort=True)
 
-# 3. Recalculate DC:
-# for m in r10monkeys:
-#     m.mky_study_complete = True
-#     m.populate_drinking_category()
-#     print m
-#
+# 3. Populate fields (example with cohort10):
+# 3.1 Bouts and MTDS
 # for m in c13.monkey_set.all():
-#     m.mky_study_complete = True
-#     m.populate_drinking_category()
-#     print m
-
-# 4. Populate fields in MTDS
-# for m in r10monkeys:
 #     print m
 #     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m)
 #     for mtd in mtds:
+#         for bout in ExperimentBout.objects.filter(mtd=mtd):
+#             bout.populate_fields()
 #         mtd.populate_fields()
+
+# 3.2. Populate BEC
+# for bec in MonkeyBEC.objects.filter(monkey__in=r10monkeys):
+#    bec.populate_fields()
+
+# 3.3 Experiment Events
+# for eev in ExperimentEvent.objects.filter(monkey__in=r10monkeys):
+#     eev.populate_fields()
+
+# 3.4 Recalculate DC:
+# for m in r10monkeys:
+#     m.mky_study_complete = True
+#     m.populate_drinking_category()
+#     m.populate_age_intox()
+#     print m
+
 
 
 plt.show()
