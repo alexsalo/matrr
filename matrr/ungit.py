@@ -2325,7 +2325,7 @@ from utils.database import dump
 
 ### 20 November 2015
 ### Average Drinking
-monkeys = r7b.monkey_set.all()
+r7bmonkeys = r7b.monkey_set.all()
 # summaries = []
 # raw_labels = []
 # for mky in monkeys.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
@@ -2340,14 +2340,15 @@ monkeys = r7b.monkey_set.all()
 # print raw_labels
 
 # ### NEW AVG ETOH PLOTS
-# matplotlib.rcParams.update({'font.size': 16})
-# ns = NecropsySummary.objects.filter(monkey__in=monkeys)
-# df = pd.DataFrame(list(ns.values_list('monkey__mky_id', 'ncm_22hr_6mo_avg_g_per_kg', 'ncm_22hr_12mo_avg_g_per_kg')),
-#                        columns=['Monkey ID', 'First 6 Months Average', '12 Months Average'])
+matplotlib.rcParams.update({'font.size': 16})
+ns = NecropsySummary.objects.filter(monkey__in=r7bmonkeys)
+df = pd.DataFrame(list(ns.values_list('monkey__mky_id', 'ncm_22hr_6mo_avg_g_per_kg', 'ncm_22hr_2nd_6mos_avg_g_per_kg',
+                                      'ncm_22hr_12mo_avg_g_per_kg')),
+                       columns=['Monkey ID', 'First 6 Months Average', 'Second 6 Months Average', '12 Months Average'])
+df = df[df['First 6 Months Average'] != 0]
 # df.set_index('Monkey ID', inplace=True)
-# df = df[df['First 6 Months Average'] != 0]
 # print df
-#
+
 # fig, ax = plt.subplots(figsize=DEFAULT_FIG_SIZE)
 # df.plot(kind='barh', ax=ax)
 # for p in ax.patches:
@@ -2357,6 +2358,17 @@ monkeys = r7b.monkey_set.all()
 # fig.tight_layout()
 # # from plotting import cohort_plots
 # # cohort_plots.cohort_necropsy_avg_22hr_g_per_kg(r7b)
+
+# Now with the seaborn
+# import seaborn as sns
+# df_long = pd.melt(df, id_vars=['Monkey ID'],
+#                   value_vars=['First 6 Months Average', 'Second 6 Months Average', '12 Months Average'])
+# print df_long
+# ax = sns.barplot(data=df_long, x='Monkey ID', y='value', hue='variable')
+# for p in ax.patches:
+#     ax.annotate(str(p.get_height()), (p.get_x() * 1.005, p.get_height() * 1.005))
+# #plt  relate.tight_layout()
+# print ExperimentDrink.objects.filter(ebt__in=ExperimentBout.objects.filter(mtd__in) cohort=r10).count()
 
 """
 29 November 2015

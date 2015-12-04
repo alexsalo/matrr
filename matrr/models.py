@@ -1341,7 +1341,10 @@ class ExperimentBout(models.Model):
 
     def _populate_pct_vol_total_etoh(self, recalculate=False, save=True):
         if recalculate or not self.ebt_pct_vol_total_etoh:
-            _pct = self.ebt_volume / self.mtd.mtd_etoh_intake
+            try:
+                _pct = self.ebt_volume / self.mtd.mtd_etoh_intake
+            except:
+                _pct = -1
             self.ebt_pct_vol_total_etoh = _pct if _pct > 0 else None
             if save:
                 self.save()
