@@ -2670,16 +2670,38 @@ def monkey_weight_plot(monkey):
     matplotlib.rcParams.update({'font.size': 14})
     ax = df.plot(x='Date', y='weight', figsize=(16, 10))
     weight_plot_makeup(ax)
+
+    # make event annotations
+    cevs = CohortEvent.objects.filter(cohort=monkey.cohort)       # retrieve from DB as python objects
+    evts = pd.DataFrame(list(cevs.values_list('event__evt_name', 'cev_date')),
+                        columns=['event', 'date'])      # get values
+    evts_begin = evts[~evts.event.str.contains('.*(End|Before|Necropsy)')]         # filter by regex and negate
+    [plt.axvline(x, color='r', linestyle='--') for x in evts_begin.date]  # plot ablines
+    ymin, ymax = ax.get_ylim()                                            # get ylim of axis
+    [ax.text(x[1].date, ymin + 0.1, x[1].event,                           # plot event at date while iteration tuples
+             verticalalignment='bottom', rotation='vertical') for x in evts_begin.iterrows()]
 #monkey_weight_plot(Monkey.objects.get(mky_id=10211))
+
 
 
 from matrr.plotting import plot_tools, monkey_plots, cohort_plots
 # monkey_plots.monkey_weight_plot(r6a.monkey_set.all()[1])
+# monkey_plots.monkey_weight_plot(r10.monkey_set.all()[1])
 # cohort_plots.cohort_weights_plot(r6a)
 #plot_tools.create_weights_change_plots(cohorts=True, monkeys=True)
 # CohortImage.objects.filter(method__contains='weight').delete()
 # MonkeyImage.objects.filter(method__contains='weight').delete()
 # print CohortImage.objects.filter(method__contains='weight').count()
 # print MonkeyImage.objects.filter(method__contains='weight').count()
+
+
+"""
+18 Dec 2015
+"""
+# # Rita: I was wondering if you could tell me the percent days over 3g/kg/day ethanol intake for subject 10051?
+# etoh10051 = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=Monkey.objects.get(mky_id=10051)).\
+#     values_list('mtd_etoh_g_kg', flat=True)
+# etoh10051over3kgk = [x for x in etoh10051 if x >= 3]
+# print 1.0 * len(etoh10051over3kgk) / len(etoh10051)
 
 plt.show()
