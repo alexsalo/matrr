@@ -672,6 +672,17 @@ class Monkey(models.Model):
                 self.mky_species = choice[0]
                 self.save()
 
+    def etoh_over_x_g_kg(self, gkg_threshold):
+        etoh = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self).\
+            values_list('mtd_etoh_g_kg', flat=True)
+        etohover3kgk = [x for x in etoh if x >= gkg_threshold]
+        if not len(etoh):
+            raise Exception('No MTDS with etoh_g_kg data available')
+        if len(etohover3kgk):
+            return 1.0 * len(etohover3kgk) / len(etoh)
+        else:
+            return 0
+
     def etoh_during_ind(self, mins):
         try:
             duration = mins * 60

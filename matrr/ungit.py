@@ -2698,10 +2698,29 @@ from matrr.plotting import plot_tools, monkey_plots, cohort_plots
 """
 18 Dec 2015
 """
-# # Rita: I was wondering if you could tell me the percent days over 3g/kg/day ethanol intake for subject 10051?
-# etoh10051 = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=Monkey.objects.get(mky_id=10051)).\
-#     values_list('mtd_etoh_g_kg', flat=True)
-# etoh10051over3kgk = [x for x in etoh10051 if x >= 3]
-# print 1.0 * len(etoh10051over3kgk) / len(etoh10051)
+# Rita: I was wondering if you could tell me the percent days over 3g/kg/day ethanol intake for subject 10051?
+# def over_3_g_kg(monkey):
+#     etoh = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey).\
+#         values_list('mtd_etoh_g_kg', flat=True)
+#     print len(etoh)
+#     etohover3kgk = [x for x in etoh if x >= 3]
+#     if len(etohover3kgk):
+#         return 1.0 * len(etohover3kgk) / len(etoh)
+#     else:
+#         return 0
+# for m in Monkey.objects.filter(mky_id__in=[10051, 10050, 10083]):
+#     print m, over_3_g_kg(m)
+print Monkey.objects.get(mky_id=10051).etoh_over_x_g_kg(3)
+
+# print MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=Monkey.objects.get(mky_id=10050)).count()
+# print NecropsySummary.objects.get(monkey=Monkey.objects.get(mky_id=10083)).ncm_etoh_g_lifetime
+# print MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
+#     filter(monkey__in=Cohort.objects.get(coh_cohort_name="INIA Rhesus 4").
+#            monkey_set.all()).values_list('monkey').distinct()
+# print MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
+#     filter(monkey__in=r7b.
+#            monkey_set.all()).values_list('monkey').distinct()
+# print MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
+#     filter(monkey=Monkey.objects.get(mky_id=10083)).values_list('mtd_etoh_g_kg', flat=True)
 
 plt.show()
