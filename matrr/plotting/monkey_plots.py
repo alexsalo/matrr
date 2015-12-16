@@ -44,8 +44,11 @@ def monkey_weight_plot(monkey):
         evts_begin = evts[~evts.event.str.contains('.*(End|Before|Necropsy|Pre)')]         # filter by regex and negate
         [ax.axvline(x, color='r', linestyle='--') for x in evts_begin.date]  # plot ablines
         ymin, ymax = ax.get_ylim()                                            # get ylim of axis
-        [ax.text(x[1].date, ymin + 0.1, x[1].event,                           # plot event at date while iteration tuples
-                 verticalalignment='bottom', rotation='vertical') for x in evts_begin.iterrows()]
+        [ax.text(x[1].date, ymin + 0.05, x[1].event,                          # plot event at date while iteration tuples
+             verticalalignment='bottom', horizontalalignment='right',
+             rotation='vertical') for x in evts_begin.iterrows()]
+        xmin, xmax = ax.get_xlim()
+        ax.set_xlim(xmin - 20, xmax)                                          # adjust left xlim to fit text annotaiton
 
         return fig, True
     else:
