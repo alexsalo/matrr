@@ -2663,21 +2663,23 @@ def monkey_weight_plot(monkey):
         ax.set_title('Animal Weight Change')
         plt.tight_layout()
 
-    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)\
+    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)\
         .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
     df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_weight')),
                       columns=['Date', 'weight'])
     matplotlib.rcParams.update({'font.size': 14})
     ax = df.plot(x='Date', y='weight', figsize=(16, 10))
     weight_plot_makeup(ax)
-#monkey_weight_plot(r10monkeys[1])
+#monkey_weight_plot(Monkey.objects.get(mky_id=10211))
 
 
 from matrr.plotting import plot_tools, monkey_plots, cohort_plots
 # monkey_plots.monkey_weight_plot(r6a.monkey_set.all()[1])
 # cohort_plots.cohort_weights_plot(r6a)
 #plot_tools.create_weights_change_plots(cohorts=True, monkeys=True)
-print CohortImage.objects.filter(method__contains='weight').count()
-print MonkeyImage.objects.filter(method__contains='weight').count()
+# CohortImage.objects.filter(method__contains='weight').delete()
+# MonkeyImage.objects.filter(method__contains='weight').delete()
+# print CohortImage.objects.filter(method__contains='weight').count()
+# print MonkeyImage.objects.filter(method__contains='weight').count()
 
-#plt.show()
+plt.show()

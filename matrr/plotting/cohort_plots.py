@@ -28,7 +28,7 @@ def cohort_weights_plot(cohort):
         ax.set_title('Animals Weights Change')
         plt.tight_layout()
 
-    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=cohort.monkey_set.all())\
+    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=cohort.monkey_set.all())\
         .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
     df = pd.DataFrame(list(mtds.values_list('monkey__mky_id', 'drinking_experiment__dex_date', 'mtd_weight')),
                       columns=['mky_id', 'Date', 'weight'])
