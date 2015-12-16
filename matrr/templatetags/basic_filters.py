@@ -74,3 +74,4 @@ def big_num_human_format(value):
         value /= 1000.0
     # add more suffixes if you need them
     return '%.0f%s' % (value, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+

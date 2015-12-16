@@ -2323,41 +2323,62 @@ from utils.database import dump
 ### 18 November 2015
 ### Shippint Manifest done
 
-### 20 November 2015
-### Average Drinking
-r7bmonkeys = r7b.monkey_set.all()
-# summaries = []
-# raw_labels = []
-# for mky in monkeys.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
-#     try:
-#         summaries.append(mky.necropsy_summary)
-#     except NecropsySummary.DoesNotExist:
-#             continue
-#     raw_labels.append(str(mky.pk))
-# print "First", [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries]
-# print "Second", [summary.ncm_22hr_2nd_6mos_avg_g_per_kg for summary in summaries]
-# print "12 Month", [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries]
-# print raw_labels
-
-# ### NEW AVG ETOH PLOTS
-matplotlib.rcParams.update({'font.size': 16})
-ns = NecropsySummary.objects.filter(monkey__in=r7bmonkeys)
-df = pd.DataFrame(list(ns.values_list('monkey__mky_id', 'ncm_22hr_6mo_avg_g_per_kg', 'ncm_22hr_2nd_6mos_avg_g_per_kg',
-                                      'ncm_22hr_12mo_avg_g_per_kg')),
-                       columns=['Monkey ID', 'First 6 Months Average', 'Second 6 Months Average', '12 Months Average'])
-df = df[df['First 6 Months Average'] != 0]
+# ### 20 November 2015
+# ### Average Drinking
+# r7bmonkeys = r7b.monkey_set.all()
+# # summaries = []
+# # raw_labels = []
+# # for mky in monkeys.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
+# #     try:
+# #         summaries.append(mky.necropsy_summary)
+# #     except NecropsySummary.DoesNotExist:
+# #             continue
+# #     raw_labels.append(str(mky.pk))
+# # print "First", [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries]
+# # print "Second", [summary.ncm_22hr_2nd_6mos_avg_g_per_kg for summary in summaries]
+# # print "12 Month", [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries]
+# # print raw_labels
+#
+# # ### NEW AVG ETOH PLOTS
+# matplotlib.rcParams.update({'font.size': 16})
+#
+# ns = NecropsySummary.objects.filter(monkey__in=r7bmonkeys).order_by('monkey__mky_id')
+# df = pd.DataFrame(list(ns.values_list('monkey__mky_id', 'ncm_22hr_6mo_avg_g_per_kg', 'ncm_22hr_2nd_6mos_avg_g_per_kg',
+#                                       'ncm_22hr_12mo_avg_g_per_kg')),
+#                        columns=['Monkey ID', 'First 6 Months Average', 'Second 6 Months Average', '12 Months Average'])
+# df = df[df['First 6 Months Average'] != 0]
 # df.set_index('Monkey ID', inplace=True)
 # print df
-
-# fig, ax = plt.subplots(figsize=DEFAULT_FIG_SIZE)
+#
+# fig, axs = plt.subplots(1,2, figsize=(16, 16))
+# ax = axs[0]
 # df.plot(kind='barh', ax=ax)
-# for p in ax.patches:
-#     ax.annotate(str(p.get_width()), (p.get_width() * 1.005, p.get_y() * 1.005))
+# def barh_make_labels(axis):
+#     handles, labels = axis.get_legend_handles_labels()
+#     axis.legend(reversed(handles), reversed(labels), loc='upper left')  # reverse to keep order consistent
+#     for p in ax.patches:
+#         axis.annotate(str(p.get_width()), (p.get_width() * 1.005, p.get_y() * 1.005))
+# barh_make_labels(ax)
 # # for p in ax.patches:
 # #     ax.annotate(np.round(p.get_height(),decimals=2), (p.get_x()+p.get_width()/2., p.get_height()), ha='center', va='center', xytext=(0, 10), textcoords='offset points')
-# fig.tight_layout()
+# ax.set_title('According to Stored Necropsy Summary')
 # # from plotting import cohort_plots
 # # cohort_plots.cohort_necropsy_avg_22hr_g_per_kg(r7b)
+#
+# ench_nc = pd.DataFrame(list(r7bmonkeys[0].avg_etoh_gkg_by_period()), columns=[r7bmonkeys[0].mky_id])
+# for m in r7bmonkeys[1:]:
+#     ench_nc[m.mky_id] = m.avg_etoh_gkg_by_period()
+# ench_nc = ench_nc.transpose()
+# ench_nc.columns = ['First 6 Months Average', 'Second 6 Months Average', '12 Months Average']
+# ench_nc = ench_nc[ench_nc['First 6 Months Average'] != 0]
+# ench_nc.index.name = 'Monkey ID'
+# print ench_nc
+# ax = axs[1]
+# ench_nc.plot(kind='barh', ax=ax)
+# barh_make_labels(ax)
+# ax.set_title('According to Calculated Echanced Necropsy Summary')
+# fig.tight_layout()
+
 
 # Now with the seaborn
 # import seaborn as sns
@@ -2434,10 +2455,14 @@ df = df[df['First 6 Months Average'] != 0]
 #         mtd.populate_fields()
 
 # 3.2. Populate BEC
+# for bec in MonkeyBEC.objects.filter(monkey__in=c13.monkey_set.all()):
+#    bec.populate_fields()
 # for bec in MonkeyBEC.objects.filter(monkey__in=r10monkeys):
 #    bec.populate_fields()
 
 # 3.3 Experiment Events
+# for eev in ExperimentEvent.objects.filter(monkey__in=c13.monkey_set.all()):
+#     eev.populate_fields()
 # for eev in ExperimentEvent.objects.filter(monkey__in=r10monkeys):
 #     eev.populate_fields()
 
@@ -2449,5 +2474,210 @@ df = df[df['First 6 Months Average'] != 0]
 #     print m
 
 
+"""
+New AVG plots
+"""
+# ### 20 November 2015
+# ### Average Drinking
+# r7bmonkeys = r7b.monkey_set.all()
+# # summaries = []
+# # raw_labels = []
+# # for mky in monkeys.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
+# #     try:
+# #         summaries.append(mky.necropsy_summary)
+# #     except NecropsySummary.DoesNotExist:
+# #             continue
+# #     raw_labels.append(str(mky.pk))
+# # print "First", [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries]
+# # print "Second", [summary.ncm_22hr_2nd_6mos_avg_g_per_kg for summary in summaries]
+# # print "12 Month", [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries]
+# # print raw_labels
+#
+# # ### NEW AVG ETOH PLOTS
+# matplotlib.rcParams.update({'font.size': 16})
+#
+# ns = NecropsySummary.objects.filter(monkey__in=r7bmonkeys).order_by('monkey__mky_id')
+# df = pd.DataFrame(list(ns.values_list('monkey__mky_id', 'ncm_22hr_6mo_avg_g_per_kg', 'ncm_22hr_2nd_6mos_avg_g_per_kg',
+#                                       'ncm_22hr_12mo_avg_g_per_kg')),
+#                        columns=['Monkey ID', 'First 6 Months Average', 'Second 6 Months Average', '12 Months Average'])
+# df = df[df['First 6 Months Average'] != 0]
+# df.set_index('Monkey ID', inplace=True)
+# print df
+#
+# fig, axs = plt.subplots(1,2, figsize=(16, 16))
+# ax = axs[0]
+# df.plot(kind='barh', ax=ax)
+# def barh_make_labels(axis):
+#     handles, labels = axis.get_legend_handles_labels()
+#     axis.legend(reversed(handles), reversed(labels), loc='upper left')  # reverse to keep order consistent
+#     for p in ax.patches:
+#         axis.annotate(str(p.get_width()), (p.get_width() * 1.005, p.get_y() * 1.005))
+# barh_make_labels(ax)
+# # for p in ax.patches:
+# #     ax.annotate(np.round(p.get_height(),decimals=2), (p.get_x()+p.get_width()/2., p.get_height()), ha='center', va='center', xytext=(0, 10), textcoords='offset points')
+# ax.set_title('According to Stored Necropsy Summary')
+# # from plotting import cohort_plots
+# # cohort_plots.cohort_necropsy_avg_22hr_g_per_kg(r7b)
+#
+# ench_nc = pd.DataFrame(list(r7bmonkeys[0].avg_etoh_gkg_by_period()), columns=[r7bmonkeys[0].mky_id])
+# for m in r7bmonkeys[1:]:
+#     ench_nc[m.mky_id] = m.avg_etoh_gkg_by_period()
+# ench_nc = ench_nc.transpose()
+# ench_nc.columns = ['First 6 Months Average', 'Second 6 Months Average', '12 Months Average']
+# ench_nc = ench_nc[ench_nc['First 6 Months Average'] != 0]
+# ench_nc.index.name = 'Monkey ID'
+# print ench_nc
+# ax = axs[1]
+# ench_nc.plot(kind='barh', ax=ax)
+# barh_make_labels(ax)
+# ax.set_title('According to Calculated Echanced Necropsy Summary')
+# fig.tight_layout()
 
-plt.show()
+
+# for m in c13.monkey_set.all():
+#     print m
+#     m.mky_study_complete = True
+#     m.populate_drinking_category()
+#     m.populate_age_at_intox()
+#     m.populate_weights_at_necropsy()
+
+# #print r10monkeys.values_list('mky_weight')
+# def populate_weights_at_necropsy(m):
+#     becs = MonkeyBEC.objects.filter(monkey=m).order_by('bec_collect_date')
+#     print list(becs.values_list('bec_weight', flat=True))[-3:]
+#     print np.mean(list(becs.values_list('bec_weight', flat=True))[-3:])
+#     m.mky_weight = np.mean(list(becs.values_list('bec_weight', flat=True))[-3:])
+#     #df = pd.DataFrame(list(becs.values_list('bec_collect_date', 'bec_weight')), columns=['date', 'weight'])
+#     #plt.plot(df['date'], df['weight'])
+# populate_weights_at_necropsy(r10monkeys[0])
+#
+# for m in Cohort.objects.get(coh_cohort_name="INIA Rhesus 10").monkey_set.all():
+#     print m
+#     m.populate_weights_at_necropsy()
+
+
+"""
+15 Dec 2015
+"""
+# from matrr.plotting import cohort_plots
+# cohort_plots.cohort_necropsy_avg_22hr_g_per_kg(r10)
+#
+#
+# def plotp(cohort):
+#     ns = NecropsySummary.objects.filter(monkey__in=cohort.monkey_set.all())
+#     df = pd.DataFrame(list(ns.values_list('monkey__mky_id', 'ncm_22hr_6mo_avg_g_per_kg', 'ncm_22hr_2nd_6mos_avg_g_per_kg',
+#                                           'ncm_22hr_12mo_avg_g_per_kg')),
+#                            columns=['Monkey ID', 'First 6 Months Average', 'Second 6 Months Average', '12 Months Average'])
+#     df = df[df['First 6 Months Average'] != 0] # remove empty
+#     df.set_index('Monkey ID', inplace=True)
+#     df = df.sort(['First 6 Months Average', 'Second 6 Months Average', '12 Months Average'],
+#                  ascending=[1, 1, 1])
+#
+#     ax = df.plot(kind='barh', figsize=DEFAULT_FIG_SIZE)
+#     def barh_make_labels(axis):
+#         handles, labels = axis.get_legend_handles_labels()
+#         axis.legend(reversed(handles), reversed(labels), loc='upper left')  # reverse to keep order consistent
+#         for p in ax.patches:
+#             axis.annotate(str(p.get_width()), (p.get_width() * 1.005, p.get_y() * 1.005))
+#     barh_make_labels(ax)
+#     ax.set_title('According to Stored Necropsy Summary')
+#     plt.tight_layout()
+#
+# plotp(r10)
+
+
+"""
+16 Dec 2015
+"""
+# # Cody 6b
+# mtds6b = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=r6b.monkey_set.all())\
+#     .order_by('drinking_experiment__dex_date')
+# bec6b = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey__in=r6b.monkey_set.all())
+#
+# # 1. Weight gain, total water intake, total fluid intake
+# mtfds6bdf = pd.DataFrame(list(mtds6b.values_list('monkey__mky_id', 'mtd_weight', 'mtd_veh_intake', 'mtd_etoh_intake')),
+#                          columns=['mky_id', 'mky_weight', 'mky_veh_intake_(ml)', 'mky_etoh_intake_(ml)'])
+# mtfds6bdf['mky_fluid_intake_(ml)'] = mtfds6bdf['mky_veh_intake_(ml)'] + mtfds6bdf['mky_etoh_intake_(ml)']
+# sum_intake = mtfds6bdf.groupby(['mky_id'])['mky_etoh_intake_(ml)', 'mky_veh_intake_(ml)', 'mky_fluid_intake_(ml)'].sum()
+# print sum_intake
+# sum_intake.to_csv('/home/alex/win-share/matrr_sync/cody_6b/sum_intake.csv')
+#
+# weight_gain = mtfds6bdf.groupby(['mky_id'])['mky_weight'].last() -\
+#               mtfds6bdf.groupby(['mky_id'])['mky_weight'].first()
+# print weight_gain
+# weight_gain.to_csv('/home/alex/win-share/matrr_sync/cody_6b/weight_gain.csv')
+#
+# # 3. Avg BEC of drinkers
+# df6b = pd.DataFrame(list(bec6b.values_list('monkey__mky_id', 'bec_weight', 'bec_mg_pct')),
+#                     columns=['mky_id', 'mky_weight', 'mky_bec_mg_pct'])
+# bec_mean = df6b.groupby(['mky_id'])['mky_bec_mg_pct', 'mky_weight'].mean()
+# print bec_mean
+# bec_mean.to_csv('/home/alex/win-share/matrr_sync/cody_6b/bec_mean.csv')
+#
+# # 2. Mean and Median values for largest bout size and duration
+# mtfds6bdf = pd.DataFrame(list(mtds6b.values_list('monkey__mky_id', 'mtd_max_bout_vol', 'mtd_max_bout_length')),
+#                          columns=['mky_id', 'mky_max_bout_vol_(ml)', 'mky_max_bout_length_(s)'])
+# maxbout_mean = mtfds6bdf.groupby(['mky_id'])['mky_max_bout_vol_(ml)', 'mky_max_bout_length_(s)'].mean()
+# maxbout_median = mtfds6bdf.groupby(['mky_id'])['mky_max_bout_vol_(ml)', 'mky_max_bout_length_(s)'].median()
+#
+# print maxbout_mean
+# maxbout_mean.to_csv('/home/alex/win-share/matrr_sync/cody_6b/maxbout_mean.csv')
+#
+# print maxbout_median
+# maxbout_median.to_csv('/home/alex/win-share/matrr_sync/cody_6b/maxbout_median.csv')
+
+"""
+17 Dec 2015
+"""
+def cohort_weights_plot(cohort):
+    """
+    Create mky weights plots
+    """
+    def weight_plot_makeup(ax):
+        handles, labels = ax.get_legend_handles_labels()
+        labels = [label.split(', ')[1][:-1] for label in labels]
+        ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
+        ax.set_ylabel('Monkey Weight')
+        ax.set_title('Animals Weights Change')
+        plt.tight_layout()
+
+    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=cohort.monkey_set.all())\
+        .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
+    df = pd.DataFrame(list(mtds.values_list('monkey__mky_id', 'drinking_experiment__dex_date', 'mtd_weight')),
+                      columns=['mky_id', 'Date', 'weight'])
+    df_pivot = df.pivot_table(index='Date', columns='mky_id')
+    matplotlib.rcParams.update({'font.size': 14})
+    ax = df_pivot.plot(figsize=(16, 10))
+    weight_plot_makeup(ax)
+#cohort_weights_plot(r6b)
+
+def monkey_weight_plot(monkey):
+    """
+    Create mky weight plot
+    """
+    def weight_plot_makeup(ax):
+        handles, labels = ax.get_legend_handles_labels()
+        labels = [monkey.mky_id]
+        ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
+        ax.set_ylabel('Monkey Weight')
+        ax.set_title('Animal Weight Change')
+        plt.tight_layout()
+
+    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)\
+        .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
+    df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_weight')),
+                      columns=['Date', 'weight'])
+    matplotlib.rcParams.update({'font.size': 14})
+    ax = df.plot(x='Date', y='weight', figsize=(16, 10))
+    weight_plot_makeup(ax)
+#monkey_weight_plot(r10monkeys[1])
+
+
+from matrr.plotting import plot_tools, monkey_plots, cohort_plots
+# monkey_plots.monkey_weight_plot(r6a.monkey_set.all()[1])
+# cohort_plots.cohort_weights_plot(r6a)
+#plot_tools.create_weights_change_plots(cohorts=True, monkeys=True)
+print CohortImage.objects.filter(method__contains='weight').count()
+print MonkeyImage.objects.filter(method__contains='weight').count()
+
+#plt.show()

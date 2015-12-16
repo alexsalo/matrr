@@ -756,6 +756,15 @@ class Monkey(models.Model):
                 self.mky_drinking_category = identify_drinking_category(oa_mtds, oa_becs)
         self.save()
 
+    def populate_weights_at_necropsy(self):
+        mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)\
+            .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
+        weights = list(mtds.values_list('mtd_weight', flat=True))
+        if len(weights) > 0:
+            self.mky_weight = round(numpy.mean(weights[-3:]), 2)
+            self.save()
+
+
     def DrinkingDaysTotal(self):
         return MonkeyToDrinkingExperiment.objects.OA().filter(monkey=self).count()
 
@@ -1341,6 +1350,7 @@ class ExperimentBout(models.Model):
 
     def _populate_pct_vol_total_etoh(self, recalculate=False, save=True):
         if recalculate or not self.ebt_pct_vol_total_etoh:
+            print self.ebt_volume, self.mtd.mtd_etoh_intake
             if self.mtd.mtd_etoh_intake != 0:
                 _pct = self.ebt_volume / self.mtd.mtd_etoh_intake
                 self.ebt_pct_vol_total_etoh = _pct if _pct > 0 else None

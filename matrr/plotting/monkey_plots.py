@@ -14,6 +14,29 @@ from matrr.models import *
 from matrr.plotting import specific_callables, plot_tools
 from matrr.plotting import *
 
+def monkey_weight_plot(monkey):
+    """
+    Create mky weight plot
+    """
+    def weight_plot_makeup(ax):
+        handles, labels = ax.get_legend_handles_labels()
+        labels = [monkey.mky_id]
+        ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
+        ax.set_ylabel('Monkey Weight')
+        ax.set_title('Animal Weight Change')
+        pyplot.tight_layout()
+
+    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=monkey)\
+        .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
+    df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_weight')),
+                      columns=['Date', 'weight'])
+    matplotlib.rcParams.update({'font.size': 14})
+    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE_ALEX, dpi=DEFAULT_DPI)
+    ax = fig.add_subplot(111)
+    df.plot(x='Date', y='weight', ax=ax)
+    weight_plot_makeup(ax)
+    return fig, True
+
 
 def monkey_bec_correlation(monkey):
     if MonkeyBEC.objects.filter(monkey=monkey).count() < 10: # arbitrary call
@@ -1919,5 +1942,7 @@ MONKEY_PLOTS.update({"monkey_necropsy_avg_22hr_g_per_kg": (monkey_necropsy_avg_2
                      'mtd_histogram_general': (monkey_mtd_histogram_general, 'Monkey Histogram'),
                      'bec_histogram_general': (monkey_bec_histogram_general, 'Monkey Histogram'),
                      'monkey_etoh_induction_cumsum': (monkey_etoh_induction_cumsum, 'Monkey Induction Daily Ethanol Intake'),
+                     'monkey_weight_plot': (monkey_weight_plot, 'Monkey Weight Change'),
+
                      })
 

@@ -11,10 +11,34 @@ from scipy.linalg import LinAlgError
 from scipy.cluster import vq
 from matrr.models import *
 from matrr.utils.gadgets import Treemap
-from matrr.plotting import specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE, RHESUS_COLORS
+from matrr.plotting import * #specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE, RHESUS_COLORS
 import matplotlib.patches as mpatches
 
 import matplotlib.patches as mpatches
+
+def cohort_weights_plot(cohort):
+    """
+    Create mky weights plots
+    """
+    def weight_plot_makeup(ax):
+        handles, labels = ax.get_legend_handles_labels()
+        labels = [label.split(', ')[1][:-1] for label in labels]
+        ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
+        ax.set_ylabel('Monkey Weight')
+        ax.set_title('Animals Weights Change')
+        plt.tight_layout()
+
+    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=cohort.monkey_set.all())\
+        .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
+    df = pd.DataFrame(list(mtds.values_list('monkey__mky_id', 'drinking_experiment__dex_date', 'mtd_weight')),
+                      columns=['mky_id', 'Date', 'weight'])
+    df_pivot = df.pivot_table(index='Date', columns='mky_id')
+    matplotlib.rcParams.update({'font.size': 14})
+    fig = plt.figure(figsize=DEFAULT_FIG_SIZE_ALEX, dpi=DEFAULT_DPI)
+    ax = fig.add_subplot(111)
+    df_pivot.plot(ax=ax)
+    weight_plot_makeup(ax)
+    return fig, True
 
 def cohort_bec_correlation(cohort):
     if MonkeyBEC.objects.filter(monkey__in=cohort.monkey_set.all()).count() < 10:  # arbitrary call
@@ -270,16 +294,95 @@ def _cohort_summary_general(specific_callable, x_label, graph_title, legend_labe
     ax1.set_yticklabels(cohort_labels)
     return fig, 'map'
 
+# def cohort_necropsy_avg_22hr_g_per_kg(cohort):
+#     """
+#     This method will create a cohort graph (horizontal bar graph) showing each monkey's average open access etoh intake
+#     in g/kg.
+#     """
+#     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
+#         graph_title = 'Average Daily EtOH Intake (22hr open access)'
+#         x_label = "Average Daily Ethanol Intake (g/kg)"
+#         legend_labels = ('6 Month Average', '12 Month Average')
+#         return _cohort_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
+#     else:
+#         return False, False
+#
+# def cohort_necropsy_etoh_4pct(cohort):
+#     """
+#     This method will create a cohort graph (horizontal bar graph) showing each monkey's open access and lifetime ethanol
+#      intake, in ml.
+#     """
+#     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
+#         graph_title = "Total EtOH Intake (mL)"
+#         x_label = "Ethanol intake (4% w/v)"
+#         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
+#         return _cohort_summary_general(specific_callables.necropsy_summary_etoh_4pct, x_label, graph_title, legend_labels, cohort)
+#     else:
+#         return False, False
+#
+# def cohort_necropsy_sum_g_per_kg(cohort):
+#     """
+#     This method will create a cohort graph (horizontal bar graph) showing each monkey's total etoh intake during lifetime
+#     and open access, in g/kg.
+#     """
+#     if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
+#         graph_title = 'Total EtOH Intake (g/kg)'
+#         x_label = "Ethanol Intake (g/kg)"
+#         legend_labels = ('Total Intake (Lifetime)', 'Total Intake (22hr)')
+#         return _cohort_summary_general(specific_callables.necropsy_summary_sum_g_per_kg, x_label, graph_title, legend_labels, cohort)
+#     else:
+#         return False, False
+#
+# def cohort_summary_avg_bec_mgpct(cohort):
+#     """
+#     This method will create a cohort graph (horizontal bar graph) showing each monkey's average open access bec values
+#     """
+#     if MonkeyBEC.objects.filter(monkey__cohort=cohort).count():
+#         graph_title = 'Average Blood Ethanol Concentration (22hr open access)'
+#         x_label = "Average BEC (mg percent)"
+#         legend_labels = ('12 Month Average', '6 Month Average')
+#         return _cohort_summary_general(specific_callables.summary_avg_bec_mgpct, x_label, graph_title, legend_labels, cohort)
+#     else:
+#         return False, False
+
+
+def barh_make_labels(axis):
+    """
+        Create legend and annotate axis with values.
+        Used for the next several summary plots
+    """
+    handles, labels = axis.get_legend_handles_labels()
+    axis.legend(reversed(handles), reversed(labels), loc='upper left')  # reverse to keep order consistent
+    for p in axis.patches:
+        axis.annotate(str(p.get_width()), (p.get_width() * 1.005, p.get_y() * 1.005))
+
+
 def cohort_necropsy_avg_22hr_g_per_kg(cohort):
     """
     This method will create a cohort graph (horizontal bar graph) showing each monkey's average open access etoh intake
     in g/kg.
     """
-    if NecropsySummary.objects.filter(monkey__cohort=cohort).count():
+    ns = NecropsySummary.objects.filter(monkey__in=cohort.monkey_set.all())
+    if ns.count():
         graph_title = 'Average Daily EtOH Intake (22hr open access)'
         x_label = "Average Daily Ethanol Intake (g/kg)"
-        legend_labels = ('6 Month Average', '12 Month Average')
-        return _cohort_summary_general(specific_callables.necropsy_summary_avg_22hr_g_per_kg, x_label, graph_title, legend_labels, cohort)
+        colnames = ['Monkey ID', 'First 6 Months Average', 'Second 6 Months Average', '12 Month Average']
+
+        df = pd.DataFrame(list(ns.values_list('monkey__mky_id', 'ncm_22hr_6mo_avg_g_per_kg',
+                                              'ncm_22hr_2nd_6mos_avg_g_per_kg', 'ncm_22hr_12mo_avg_g_per_kg')),
+                          columns=colnames)
+
+        df = df[df['First 6 Months Average'] != 0]  # remove empty
+        df.set_index('Monkey ID', inplace=True)
+        df = df.sort(colnames[1:], ascending=[1, 1, 1])
+
+        ax = df.plot(kind='barh', figsize=DEFAULT_FIG_SIZE)
+        barh_make_labels(ax)
+        ax.set_title(graph_title)
+        ax.set_xlabel(x_label)
+        plt.tight_layout()
+
+        return ax, 'map'
     else:
         return False, False
 
@@ -1110,4 +1213,5 @@ COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_2
                      "cohort_bone_densities": (cohort_bone_densities, 'Bone Area and Content Trends by DC '),
                      "cohort_dopamine_study_boxplots_accumben": (cohort_dopamine_study_boxplots_accumben, 'Dopamine release on opioid stimulation. Acumbencore'),
                      "cohort_dopamine_study_boxplots_caudate": (cohort_dopamine_study_boxplots_caudate, 'Dopamine release on opioid stimulation. Caudate'),
-})
+                     "cohort_weights_plot": (cohort_weights_plot, 'Weight Change Over OA in Cohort'),
+                    })
