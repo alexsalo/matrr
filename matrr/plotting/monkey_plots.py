@@ -41,7 +41,7 @@ def monkey_weight_plot(monkey):
         cevs = CohortEvent.objects.filter(cohort=monkey.cohort)       # retrieve from DB as python objects
         evts = pd.DataFrame(list(cevs.values_list('event__evt_name', 'cev_date')),
                             columns=['event', 'date'])      # get values
-        evts_begin = evts[~evts.event.str.contains('.*(End|Before|Necropsy)')]         # filter by regex and negate
+        evts_begin = evts[~evts.event.str.contains('.*(End|Before|Necropsy|Pre)')]         # filter by regex and negate
         [ax.axvline(x, color='r', linestyle='--') for x in evts_begin.date]  # plot ablines
         ymin, ymax = ax.get_ylim()                                            # get ylim of axis
         [ax.text(x[1].date, ymin + 0.1, x[1].event,                           # plot event at date while iteration tuples
