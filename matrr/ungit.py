@@ -2657,7 +2657,10 @@ def monkey_weight_plot(monkey):
     """
     def weight_plot_makeup(ax):
         handles, labels = ax.get_legend_handles_labels()
-        labels = [str(monkey.mky_id) + ' ' + monkey.mky_drinking_category]
+        if monkey.mky_drinking_category is None:
+            labels = [str(monkey.mky_id) + ' Control']
+        else:
+            labels = [str(monkey.mky_id) + ' ' + monkey.mky_drinking_category]
         ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
         ax.set_ylabel('Monkey Weight')
         ax.set_title('Animal Weight Change')
