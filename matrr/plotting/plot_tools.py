@@ -398,7 +398,6 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
                 gc.collect()
 
     if cohorts:
-        print "Creating cohort mtd plots for %s." % str(cohort)
         plots = [
             'cohort_necropsy_etoh_4pct',
             'cohort_necropsy_sum_g_per_kg',
@@ -409,7 +408,7 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
         from matrr.plotting import cohort_plots
         for cohort in NecropsySummary.objects.all().values_list('monkey__cohort', flat=True).distinct():
             cohort = Cohort.objects.get(pk=cohort)
-            print cohort
+            print "Creating cohort mtd plots for %s." % str(cohort)
             for graph in plots:
                 gc.collect()
                 CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)

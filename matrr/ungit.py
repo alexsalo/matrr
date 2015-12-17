@@ -2734,27 +2734,42 @@ def monkey_weight_plot(monkey):
 """
 19 Dec 2015
 """
-# We are currently preparing a manuscript from cohort 13 and need to correlate our measures with BECs and drinking data.
-# We need BEC and drinking data for the entire lifetime of this cohort.
-def get_cohort_mtds_bec_short_summary(cohort):
-    """
-    :return: dataframe: |mky, date, etoh_g_kg| and |mky, date, bec_pct| sorted by date, mky_id
-    """
-    # EtOH
-    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=cohort.monkey_set.all()).\
-        order_by('drinking_experiment__dex_date', 'monkey__mky_id')
-    gkg_df = pd.DataFrame(list(mtds.values_list('monkey__mky_id', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg')),
-                          columns=['mky_id', 'date', 'etoh_g_kg'])
+# # We are currently preparing a manuscript from cohort 13 and need to correlate our measures with BECs and drinking data.
+# # We need BEC and drinking data for the entire lifetime of this cohort.
+# def get_cohort_mtds_bec_short_summary(cohort):
+#     """
+#     :return: dataframe: |mky, date, etoh_g_kg| and |mky, date, bec_pct| sorted by date, mky_id
+#     """
+#     # EtOH
+#     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=cohort.monkey_set.all()).\
+#         order_by('drinking_experiment__dex_date', 'monkey__mky_id')
+#     gkg_df = pd.DataFrame(list(mtds.values_list('monkey__mky_id', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg')),
+#                           columns=['mky_id', 'date', 'etoh_g_kg'])
+#
+#     # BEC
+#     becs = MonkeyBEC.objects.filter(monkey__in=cohort.monkey_set.all()).order_by('bec_collect_date')
+#     bec_df = pd.DataFrame(list(becs.values_list('monkey__mky_id', 'bec_collect_date', 'bec_mg_pct')),
+#                           columns=['mky_id', 'date', 'bec_mg_pct'])
+#
+#     return gkg_df, bec_df
+#
+# gkg_df, bec_df = get_cohort_mtds_bec_short_summary(c13)
+# gkg_df.to_csv('/home/alex/win-share/matrr_sync/mulholl/586/cyno13_etoh_g_kg.csv')
+# bec_df.to_csv('/home/alex/win-share/matrr_sync/mulholl/586/cyno13_bec_mg_pct.csv')
 
-    # BEC
-    becs = MonkeyBEC.objects.filter(monkey__in=cohort.monkey_set.all()).order_by('bec_collect_date')
-    bec_df = pd.DataFrame(list(becs.values_list('monkey__mky_id', 'bec_collect_date', 'bec_mg_pct')),
-                          columns=['mky_id', 'date', 'bec_mg_pct'])
+"""
+20 Dec 2015
+Back to cohort avg barh plots
+"""
+from matrr.plotting import cohort_plots
+# cohort_plots.cohort_necropsy_barh_avg_22hr_gkg(r6b)
+# cohort_plots.cohort_necropsy_barh_sum_etoh_ml(r6b)
+# cohort_plots.cohort_necropsy_barh_sum_etoh_gkg(r6b)
+# plt.show()
 
-    return gkg_df, bec_df
+from matrr.plotting import plot_tools
+CohortImage.objects.filter(method__contains="necropsy").delete()
+print CohortImage.objects.filter(method__contains="necropsy").count()
+plot_tools.create_necropsy_plots(cohorts=True, monkeys=False)
 
-gkg_df, bec_df = get_cohort_mtds_bec_short_summary(c13)
-gkg_df.to_csv('/home/alex/win-share/matrr_sync/mulholl/586/cyno13_etoh_g_kg.csv')
-bec_df.to_csv('/home/alex/win-share/matrr_sync/mulholl/586/cyno13_bec_mg_pct.csv')
 
-plt.show()

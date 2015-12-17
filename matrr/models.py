@@ -1723,24 +1723,24 @@ class NecropsySummary(models.Model):
     monkey = models.OneToOneField(Monkey, null=False, db_column='ebt_id', related_name='necropsy_summary')
     ncm_age_onset_etoh = models.CharField("Age at Ethanol Onset", max_length=100, blank=True, null=True)
     ncm_etoh_onset = models.DateTimeField("Date of Ethanol Onset", blank=True, null=True)
-    ncm_6_mo_start = models.DateField('6 Month Start', blank=True, null=True)
-    ncm_6_mo_end = models.DateField('6 Month End', blank=True, null=True)
-    ncm_12_mo_end = models.DateField('12 Month End', blank=True, null=True)
+
     ncm_etoh_4pct_induction = models.FloatField("Induction Ethanol Intake", blank=True, null=True)
     ncm_etoh_4pct_22hr = models.FloatField("22hr Free Access Ethanol Intake", blank=True, null=True)
     ncm_etoh_4pct_lifetime = models.FloatField("Lifetime Ethanol Intake (in 4% ml)", blank=True, null=True)
+
     ncm_etoh_g_lifetime = models.FloatField("Lifetime Etanol Intake (in grams)", blank=True, null=True)
+
     ncm_sum_g_per_kg_induction = models.FloatField("Induction Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
     ncm_sum_g_per_kg_22hr = models.FloatField("22hr Free Access Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
     ncm_sum_g_per_kg_lifetime = models.FloatField("Lifetime Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+
+    ncm_6_mo_start = models.DateField('6 Month Start', blank=True, null=True)
+    ncm_6_mo_end = models.DateField('6 Month End', blank=True, null=True)
+    ncm_12_mo_end = models.DateField('12 Month End', blank=True, null=True)
+
     ncm_22hr_6mo_avg_g_per_kg = models.FloatField("22hr 6mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
     ncm_22hr_2nd_6mos_avg_g_per_kg = models.FloatField("22hr 6mo average Ethanol Intake 2nd (g-etoh per kg-weight)", blank=True, null=True)
     ncm_22hr_12mo_avg_g_per_kg = models.FloatField("22hr 12mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
-
-    # Added on 30 November 2015. For now only used in cohort Rhesus 10
-    #ncm_
-# BEC averages for the drinking periods between withdrawals.
-# One is after the 1st withdrawal period, the 2nd is after the 2nd withdrawal period.
 
     class Meta:
         db_table = 'ncm_necropsy_summary'

@@ -8,6 +8,7 @@ matplotlib.rcParams['figure.subplot.bottom'] 	= 0.12	# the bottom of the subplot
 matplotlib.rcParams['figure.subplot.top'] 	= 0.96	# the top of the subplots of the figure
 matplotlib.rcParams['figure.subplot.wspace'] 	= 0.05	# the amount of width reserved for blank space between subplots
 matplotlib.rcParams['figure.subplot.hspace'] 	= 0.05	# the amount of height reserved for white space between subplots
+matplotlib.rcParams['font.size']                = 14 # Default font size
 ############### end
 
 DEFAULT_CIRCLE_MAX = 280
