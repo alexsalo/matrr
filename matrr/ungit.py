@@ -2656,6 +2656,7 @@ def monkey_weight_plot(monkey):
     Create mky weight plot
     """
     def weight_plot_makeup(ax):
+        matplotlib.rcParams.update({'font.size': 14})
         handles, labels = ax.get_legend_handles_labels()
         if monkey.mky_drinking_category is None:
             labels = [str(monkey.mky_id) + ' Control']
@@ -2670,7 +2671,6 @@ def monkey_weight_plot(monkey):
         .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
     df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_weight')),
                       columns=['Date', 'weight'])
-    matplotlib.rcParams.update({'font.size': 14})
     ax = df.plot(x='Date', y='weight', figsize=(16, 10), color=dc_colors[monkey.mky_drinking_category])
     weight_plot_makeup(ax)
 
@@ -2687,11 +2687,11 @@ def monkey_weight_plot(monkey):
              rotation='vertical') for x in evts_begin.iterrows()]
     xmin, xmax = ax.get_xlim()
     ax.set_xlim(xmin - 20, xmax)                                          # adjust left xlim to fit text annotaiton
-# monkey_weight_plot(Monkey.objects.get(mky_id=10215))
+#monkey_weight_plot(Monkey.objects.get(mky_id=10215))
 
 
 
-from matrr.plotting import plot_tools, monkey_plots, cohort_plots
+# from matrr.plotting import plot_tools, monkey_plots, cohort_plots
 # monkey_plots.monkey_weight_plot(r6a.monkey_set.all()[1])
 # monkey_plots.monkey_weight_plot(r10.monkey_set.all()[1])
 # cohort_plots.cohort_weights_plot(r6a)
@@ -2729,5 +2729,32 @@ from matrr.plotting import plot_tools, monkey_plots, cohort_plots
 # #            monkey_set.all()).values_list('monkey').distinct()
 # print MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
 #     filter(monkey=Monkey.objects.get(mky_id=10053)).values_list('mtd_etoh_g_kg', flat=True)
+
+
+"""
+19 Dec 2015
+"""
+# We are currently preparing a manuscript from cohort 13 and need to correlate our measures with BECs and drinking data.
+# We need BEC and drinking data for the entire lifetime of this cohort.
+def get_cohort_mtds_bec_short_summary(cohort):
+    """
+    :return: dataframe: |mky, date, etoh_g_kg| and |mky, date, bec_pct| sorted by date, mky_id
+    """
+    # EtOH
+    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=cohort.monkey_set.all()).\
+        order_by('drinking_experiment__dex_date', 'monkey__mky_id')
+    gkg_df = pd.DataFrame(list(mtds.values_list('monkey__mky_id', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg')),
+                          columns=['mky_id', 'date', 'etoh_g_kg'])
+
+    # BEC
+    becs = MonkeyBEC.objects.filter(monkey__in=cohort.monkey_set.all()).order_by('bec_collect_date')
+    bec_df = pd.DataFrame(list(becs.values_list('monkey__mky_id', 'bec_collect_date', 'bec_mg_pct')),
+                          columns=['mky_id', 'date', 'bec_mg_pct'])
+
+    return gkg_df, bec_df
+
+gkg_df, bec_df = get_cohort_mtds_bec_short_summary(c13)
+gkg_df.to_csv('/home/alex/win-share/matrr_sync/mulholl/586/cyno13_etoh_g_kg.csv')
+bec_df.to_csv('/home/alex/win-share/matrr_sync/mulholl/586/cyno13_bec_mg_pct.csv')
 
 plt.show()

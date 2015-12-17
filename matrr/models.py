@@ -546,6 +546,24 @@ class Cohort(models.Model):
             return True
         return False
 
+    def get_cohort_mtds_short_summary(self):
+        """
+        :return: dataframe: |mky, date, etoh_g_kg| sorted by date, mky_id
+        """
+        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=self.monkey_set.all()).\
+            order_by('drinking_experiment__dex_date', 'monkey__mky_id')
+        gkg_df = pd.DataFrame(list(mtds.values_list('monkey__mky_id', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg')),
+                              columns=['mky_id', 'date', 'etoh_g_kg'])
+        return gkg_df
+
+    def get_cohort_bec_short_summary(self):
+        """
+        :return: dataframe: |mky, date, bec_pct| sorted by date, mky_id
+        """
+        becs = MonkeyBEC.objects.filter(monkey__in=self.monkey_set.all()).order_by('bec_collect_date')
+        bec_df = pd.DataFrame(list(becs.values_list('monkey__mky_id', 'bec_collect_date', 'bec_mg_pct')),
+                              columns=['mky_id', 'date', 'bec_mg_pct'])
+        return bec_df
 
     class Meta:
         db_table = 'coh_cohorts'
