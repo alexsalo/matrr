@@ -2657,7 +2657,7 @@ def monkey_weight_plot(monkey):
     """
     def weight_plot_makeup(ax):
         handles, labels = ax.get_legend_handles_labels()
-        labels = [monkey.mky_id]
+        labels = [str(monkey.mky_id) + ' ' + monkey.mky_drinking_category]
         ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
         ax.set_ylabel('Monkey Weight')
         ax.set_title('Animal Weight Change')
@@ -2668,14 +2668,15 @@ def monkey_weight_plot(monkey):
     df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_weight')),
                       columns=['Date', 'weight'])
     matplotlib.rcParams.update({'font.size': 14})
-    ax = df.plot(x='Date', y='weight', figsize=(16, 10))
+    ax = df.plot(x='Date', y='weight', figsize=(16, 10), color=dc_colors[monkey.mky_drinking_category])
     weight_plot_makeup(ax)
 
     # make event annotations
     cevs = CohortEvent.objects.filter(cohort=monkey.cohort)       # retrieve from DB as python objects
     evts = pd.DataFrame(list(cevs.values_list('event__evt_name', 'cev_date')),
                         columns=['event', 'date'])      # get values
-    evts_begin = evts[~evts.event.str.contains('.*(End|Before|Necropsy|Pre)')]         # filter by regex and negate
+    # filter by regex and negate
+    evts_begin = evts[~evts.event.str.contains('.*(Before|Necropsy|Pre|Endocrine|(H2O)|(Ethanol.*End.*))')]
     [plt.axvline(x, color='r', linestyle='--') for x in evts_begin.date]  # plot ablines
     ymin, ymax = ax.get_ylim()                                            # get ylim of axis
     [ax.text(x[1].date, ymin + 0.05, x[1].event,                          # plot event at date while iteration tuples
@@ -2683,7 +2684,7 @@ def monkey_weight_plot(monkey):
              rotation='vertical') for x in evts_begin.iterrows()]
     xmin, xmax = ax.get_xlim()
     ax.set_xlim(xmin - 20, xmax)                                          # adjust left xlim to fit text annotaiton
-#monkey_weight_plot(Monkey.objects.get(mky_id=10211))
+# monkey_weight_plot(Monkey.objects.get(mky_id=10215))
 
 
 

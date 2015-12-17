@@ -20,7 +20,7 @@ def monkey_weight_plot(monkey):
     """
     def weight_plot_makeup(ax):
         handles, labels = ax.get_legend_handles_labels()
-        labels = [monkey.mky_id]
+        labels = [str(monkey.mky_id) + ' ' + monkey.mky_drinking_category]
         ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
         ax.set_ylabel('Monkey Weight')
         ax.set_title('Animal Weight Change')
@@ -34,14 +34,15 @@ def monkey_weight_plot(monkey):
         matplotlib.rcParams.update({'font.size': 14})
         fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE_ALEX, dpi=DEFAULT_DPI)
         ax = fig.add_subplot(111)
-        df.plot(x='Date', y='weight', ax=ax)
+        df.plot(x='Date', y='weight', ax=ax, color=DRINKING_CATEGORIES_COLORS[monkey.mky_drinking_category])
         weight_plot_makeup(ax)
 
         # make event annotations
         cevs = CohortEvent.objects.filter(cohort=monkey.cohort)       # retrieve from DB as python objects
         evts = pd.DataFrame(list(cevs.values_list('event__evt_name', 'cev_date')),
                             columns=['event', 'date'])      # get values
-        evts_begin = evts[~evts.event.str.contains('.*(End|Before|Necropsy|Pre)')]         # filter by regex and negate
+        # filter by regex and negate
+        evts_begin = evts[~evts.event.str.contains('.*(Before|Necropsy|Pre|Endocrine|(H2O)|(Ethanol.*End.*))')]
         [ax.axvline(x, color='r', linestyle='--') for x in evts_begin.date]  # plot ablines
         ymin, ymax = ax.get_ylim()                                            # get ylim of axis
         [ax.text(x[1].date, ymin + 0.05, x[1].event,                          # plot event at date while iteration tuples
