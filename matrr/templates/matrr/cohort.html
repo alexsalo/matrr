@@ -289,6 +289,7 @@
                     <th>Monkey</th>
                     <th colspan="3">Total EtOH, gkg</th>
                     <th colspan="3">Average EtOH, gkg</th>
+                    <th colspan="1">Average BEC, mg pct</th>
                 </tr>
 
                 <tr>
@@ -299,6 +300,8 @@
                     <th>First 6 months</th>
                     <th>Second 6 months</th>
                     <th>Twelve months</th>
+
+                    <th>Twelve months</th>
                 </tr>
             </thead>
             <tbody class='drink-cat-rows'>
@@ -306,12 +309,16 @@
                     {%  if ncm.monkey.mky_drinking %}
                         <tr>
                             <td>{{ncm.monkey.mky_id}}</td>
+
                             <td>{{ncm.ncm_etoh_sum_gkg_induction|floatformat:2}}</td>
                             <td>{{ncm.ncm_etoh_sum_gkg_22hr|floatformat:2}}</td>
                             <td>{{ncm.ncm_etoh_sum_gkg_lifetime|floatformat:2}}</td>
+
                             <td>{{ncm.ncm_22hr_1st_6mo_avg_gkg|floatformat:2}}</td>
                             <td>{{ncm.ncm_22hr_2nd_6mo_avg_gkg|floatformat:2}}</td>
                             <td>{{ncm.ncm_22hr_12mo_avg_gkg|floatformat:2}}</td>
+
+                            <td>{{ncm.ncm_22hr_12mo_avg_bec|floatformat:2}}</td>
                         </tr>
                     {% endif %}
                 {% endfor %}

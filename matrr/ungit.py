@@ -2888,10 +2888,10 @@ from matrr.utils.database import populate
 for cohort in Cohort.objects.all():
       populate.populate_necropsy_summary(cohort)
 
-CohortImage.objects.filter(method__contains="necropsy").delete()
-#CohortImage.objects.filter(method__iexact="cohort_summary_avg_bec_mgpct").delete()
-from plotting import plot_tools
-plot_tools.create_necropsy_plots(cohorts=True, monkeys=False)
+# CohortImage.objects.filter(method__contains="necropsy").delete()
+# #CohortImage.objects.filter(method__iexact="cohort_summary_avg_bec_mgpct").delete()
+# from plotting import plot_tools
+# plot_tools.create_necropsy_plots(cohorts=True, monkeys=False)
 
 #print MonkeyToDrinkingExperiment.objects.filter(monkey__in=r6a.monkey_set.all()).aggregate(Sum('mtd_etoh_intake'))
 #print np.sum(MonkeyToDrinkingExperiment.objects.filter(monkey__in=r6a.monkey_set.all()).values_list('mtd_etoh_intake', flat=True))
