@@ -381,6 +381,23 @@ def fetch_plot_choices(subject, user, cohort, tool):
     return plot_choices
 
 def create_necropsy_plots(cohorts=True, monkeys=True):
+    if cohorts:
+        plots = [
+            'cohort_necropsy_sum_etoh_ml',
+            'cohort_necropsy_sum_etoh_gkg',
+            'cohort_necropsy_avg_etoh_22hr_gkg',
+            'cohort_necropsy_avg_bec_mg_pct',
+            ]
+
+        from matrr.models import CohortImage, Cohort
+        from matrr.plotting import cohort_plots
+        for cohort in NecropsySummary.objects.all().values_list('monkey__cohort', flat=True).distinct():
+            cohort = Cohort.objects.get(pk=cohort)
+            print "Creating cohort mtd plots for %s." % str(cohort)
+            for graph in plots:
+                gc.collect()
+                CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
+
     if monkeys:
         print "Creating mtd monkey plots."
         plots = [
@@ -393,25 +410,10 @@ def create_necropsy_plots(cohorts=True, monkeys=True):
         from matrr.plotting import monkey_plots
         for monkey in NecropsySummary.objects.all().values_list('monkey', flat=True).distinct():
             monkey = Monkey.objects.get(pk=monkey)
+            print "    %s" % str(monkey)
             for graph in plots:
                 MonkeyImage.objects.get_or_create(monkey=monkey, method=graph, title=monkey_plots.MONKEY_PLOTS[graph][1], canonical=True)
                 gc.collect()
-
-    if cohorts:
-        plots = [
-            'cohort_necropsy_etoh_4pct',
-            'cohort_necropsy_sum_g_per_kg',
-            'cohort_necropsy_avg_22hr_g_per_kg',
-            ]
-
-        from matrr.models import CohortImage, Cohort
-        from matrr.plotting import cohort_plots
-        for cohort in NecropsySummary.objects.all().values_list('monkey__cohort', flat=True).distinct():
-            cohort = Cohort.objects.get(pk=cohort)
-            print "Creating cohort mtd plots for %s." % str(cohort)
-            for graph in plots:
-                gc.collect()
-                CohortImage.objects.get_or_create(cohort=cohort, method=graph, title=cohort_plots.COHORT_PLOTS[graph][1], canonical=True)
 
 def create_bec_summary_plots(cohorts=True, monkeys=True):
     from matrr.models import MonkeyImage, CohortImage, Cohort, MonkeyBEC

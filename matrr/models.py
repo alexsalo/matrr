@@ -1101,6 +1101,11 @@ class MTDManager(models.Manager):
     def OA(self):
         return self.get_queryset().filter(drinking_experiment__dex_type='Open Access')
 
+    def after_date(self, date):
+        return self.get_queryset().filter(drinking_experiment__dex_date__gte=date)
+
+    def before_date(self, date):
+        return self.get_queryset().filter(drinking_experiment__dex_date__lte=date)
 
 class MonkeyToDrinkingExperiment(models.Model):
     objects = MTDManager()
@@ -1713,34 +1718,47 @@ class MonkeyException(models.Model):
         if not (self.mex_file_corrected or self.mex_excluded or self.mex_lifetime or self.mex_2pct):
             raise ValidationError('Exception records must have an exception')
 
-
     class Meta:
         db_table = 'mex_monkey_exception'
 
 
 class NecropsySummary(models.Model):
     ncm_id = models.AutoField(primary_key=True)
+
     monkey = models.OneToOneField(Monkey, null=False, db_column='ebt_id', related_name='necropsy_summary')
-    ncm_age_onset_etoh = models.CharField("Age at Ethanol Onset", max_length=100, blank=True, null=True)
-    ncm_etoh_onset = models.DateTimeField("Date of Ethanol Onset", blank=True, null=True)
+    ncm_etoh_onset     = models.DateTimeField("Date of Ethanol Onset", blank=True, null=True)
+    ncm_onset_etoh_age = models.CharField("Age at Ethanol Onset", max_length=100, blank=True, null=True)
 
-    ncm_etoh_4pct_induction = models.FloatField("Induction Ethanol Intake", blank=True, null=True)
-    ncm_etoh_4pct_22hr = models.FloatField("22hr Free Access Ethanol Intake", blank=True, null=True)
-    ncm_etoh_4pct_lifetime = models.FloatField("Lifetime Ethanol Intake (in 4% ml)", blank=True, null=True)
+    ncm_etoh_sum_ml_4pct_induction = models.FloatField("Induction Ethanol Intake", blank=True, null=True)
+    ncm_etoh_sum_ml_4pct_22hr = models.FloatField("22hr Free Access Ethanol Intake", blank=True, null=True)
+    ncm_etoh_sum_ml_4pct_lifetime = models.FloatField("Lifetime Ethanol Intake (in 4% ml)", blank=True, null=True)
 
-    ncm_etoh_g_lifetime = models.FloatField("Lifetime Etanol Intake (in grams)", blank=True, null=True)
+    ncm_etoh_sum_gkg_induction = models.FloatField("Induction Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+    ncm_etoh_sum_gkg_22hr = models.FloatField("22hr Free Access Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+    ncm_etoh_sum_gkg_lifetime = models.FloatField("Lifetime Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
 
-    ncm_sum_g_per_kg_induction = models.FloatField("Induction Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
-    ncm_sum_g_per_kg_22hr = models.FloatField("22hr Free Access Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
-    ncm_sum_g_per_kg_lifetime = models.FloatField("Lifetime Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+    ncm_etoh_ind_start = models.DateField('EtOH Induction Start', blank=True, null=True)
+    ncm_etoh_ind_end   = models.DateField('EtOH InductionEnd', blank=True, null=True)
 
-    ncm_6_mo_start = models.DateField('6 Month Start', blank=True, null=True)
-    ncm_6_mo_end = models.DateField('6 Month End', blank=True, null=True)
-    ncm_12_mo_end = models.DateField('12 Month End', blank=True, null=True)
+    ncm_1st_6_mo_start = models.DateField('Open Access First 6 Month Start', blank=True, null=True)
+    ncm_1st_6_mo_end   = models.DateField('Open Access First 6 Month End', blank=True, null=True)
 
-    ncm_22hr_6mo_avg_g_per_kg = models.FloatField("22hr 6mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
-    ncm_22hr_2nd_6mos_avg_g_per_kg = models.FloatField("22hr 6mo average Ethanol Intake 2nd (g-etoh per kg-weight)", blank=True, null=True)
-    ncm_22hr_12mo_avg_g_per_kg = models.FloatField("22hr 12mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+    ncm_2nd_6_mo_start = models.DateField('Open Access Second 6 Month Start', blank=True, null=True)
+    ncm_2nd_6_mo_end   = models.DateField('Open Access Second 6 Month End', blank=True, null=True)
+
+    ncm_22hr_1st_6mo_avg_gkg = models.FloatField("22hr 1st 6mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+    ncm_22hr_2nd_6mo_avg_gkg = models.FloatField("22hr 2nd 6mo average Ethanol Intake  (g-etoh per kg-weight)", blank=True, null=True)
+    ncm_22hr_12mo_avg_gkg    = models.FloatField("22hr 12mo average Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+
+    ncm_22hr_1st_6mo_avg_bec = models.FloatField("22hr 1st 6mo average blood ethanol concentration, pct", blank=True, null=True)
+    ncm_22hr_2nd_6mo_avg_bec = models.FloatField("22hr 2nd 6mo average blood ethanol concentration, pct", blank=True, null=True)
+    ncm_22hr_12mo_avg_bec    = models.FloatField("22hr 12mo average blood ethanol concentration, pct", blank=True, null=True)
+
+    # Useless field - redundant to ncm_etoh_4pct_lifetime
+    # ncm_etoh_g_lifetime = models.FloatField("Lifetime Ethanol Intake (in grams)", blank=True, null=True)
+
+    def __unicode__(self):
+        return str(self.monkey.mky_id) + ' ' + str(self.monkey.mky_name) + ' ' + str(self.ncm_etoh_ind_start)
 
     class Meta:
         db_table = 'ncm_necropsy_summary'
@@ -3797,6 +3815,8 @@ class BECManager(models.Manager):
     def OA(self):
         return self.get_queryset().filter(mtd__drinking_experiment__dex_type='Open Access')
 
+    def exclude_exceptions(self):
+        return self.get_queryset().filter(mex_excluded=False)
 
 class MonkeyBEC(models.Model):
     objects = BECManager()

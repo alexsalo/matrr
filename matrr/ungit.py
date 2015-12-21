@@ -2761,15 +2761,151 @@ def monkey_weight_plot(monkey):
 20 Dec 2015
 Back to cohort avg barh plots
 """
-from matrr.plotting import cohort_plots
-# cohort_plots.cohort_necropsy_barh_avg_22hr_gkg(r6b)
-# cohort_plots.cohort_necropsy_barh_sum_etoh_ml(r6b)
-# cohort_plots.cohort_necropsy_barh_sum_etoh_gkg(r6b)
+# from matrr.plotting import cohort_plots
+# cohort_plots.cohort_necropsy_avg_etoh_22hr_gkg(r6b)
 # plt.show()
 
-from matrr.plotting import plot_tools
+# from matrr.plotting import plot_tools
+# CohortImage.objects.filter(method__contains="necropsy").delete()
+# print CohortImage.objects.filter(method__contains="necropsy").count()
+# plot_tools.create_necropsy_plots(cohorts=True, monkeys=False)
+
+
+"""
+21 Dec 2015
+Necropsy Summary Refresher
+"""
+
+# events_df = pd.DataFrame(list(CohortEvent.objects.filter(cohort=r6b).values_list('cev_date', 'event__evt_name')),
+#                   columns = ['cev_date', 'event'])
+# print events_df
+#
+# def compare_nc(cohort):
+#     print '\n'
+#     print cohort
+#     try:
+#         nc_6m_s = NecropsySummary.objects.filter(monkey__in=cohort.monkey_set.all()).filter(ncm_6_mo_start__isnull=False).\
+#             values_list('ncm_6_mo_end', flat=True).distinct()[0]
+#     except:
+#         print "no nc date available"
+#
+#     try:
+#         ce_6m_s = CohortEvent.objects.filter(cohort=cohort).\
+#             filter(event__evt_name__iexact="Second 6 Month Open Access Begin").values_list('cev_date', flat=True)[0]
+#         print nc_6m_s, ce_6m_s, nc_6m_s == ce_6m_s
+#     except:
+#         print "no CEV date available"
+
+# for cohort in Cohort.objects.all():
+#     compare_nc(cohort)
+
+# m = Monkey.objects.get(mky_id=10043)
+# print m.mky_study_complete
+# m.mky_study_complete=False
+# m.save()
+# print m.mky_study_complete
+
+
+# def populate_fields(cohort):
+#     mtds_cohort = MonkeyToDrinkingExperiment.objects.filter(monkey__in=cohort.monkey_set.all())
+#     if not mtds_cohort.count():
+#         return
+#
+#     print "\nCreating Necropsy Summaries for Cohort %s" % cohort
+#
+#     # cohort's events
+#     try:
+#         evts = CohortEvent.objects.filter(cohort=cohort)
+#
+#         etoh_ind_start     =evts.filter(event__evt_name__iexact='Ethanol Induction Begin').values_list('cev_date', flat=True)[0]
+#         etoh_ind_end       =evts.filter(event__evt_name__iexact='Ethanol Induction End').values_list('cev_date', flat=True)[0]
+#
+#         etoh_1st_6_mo_start=evts.filter(event__evt_name__iexact='First 6 Month Open Access Begin').values_list('cev_date', flat=True)[0]
+#         etoh_1st_6_mo_end  =evts.filter(event__evt_name__iexact='First 6 Month Open Access End').values_list('cev_date', flat=True)[0]
+#
+#         etoh_2nd_6_mo_start=evts.filter(event__evt_name__iexact='Second 6 Month Open Access Begin').values_list('cev_date', flat=True)[0]
+#         etoh_2nd_6_mo_end  =evts.filter(event__evt_name__iexact='Second 6 Month Open Access End').values_list('cev_date', flat=True)[0]
+#     except:
+#         print "    This cohort does't have proper cohort's events"
+#         return
+#
+#     for monkey in cohort.monkey_set.filter(mky_drinking=True).filter(mky_study_complete=True):
+#         mtds = mtds_cohort.filter(monkey=monkey).filter(mtd_etoh_intake__isnull=False)
+#         if mtds.count():
+#             mtds_ind = mtds.filter(drinking_experiment__dex_type='Induction')
+#             mtds_oa = mtds.filter(drinking_experiment__dex_type='Open Access')
+#
+#             ncm, created = NecropsySummary.objects.get_or_create(monkey=monkey)
+#
+#             ncm.ncm_etoh_onset = etoh_ind_start
+#             ncm.ncm_onset_etoh_age = monkey.mky_birthdate - etoh_ind_start
+#
+#             ncm.ncm_etoh_sum_ml_4pct_induction = np.sum(mtds_ind.values_list('mtd_etoh_intake', flat=True))
+#             ncm.ncm_etoh_sum_ml_4pct_22hr      = np.sum(mtds_oa.values_list('mtd_etoh_intake', flat=True))
+#             ncm.ncm_etoh_sum_ml_4pct_lifetime  = ncm.ncm_etoh_sum_ml_4pct_induction + ncm.ncm_etoh_sum_ml_4pct_22hr
+#
+#             mtds_ind = mtds_ind.filter(mtd_etoh_g_kg__isnull=False)
+#             mtds_oa  = mtds_oa.filter(mtd_etoh_g_kg__isnull=False)
+#             ncm.ncm_etoh_sum_gkg_induction = np.sum(mtds_ind.values_list('mtd_etoh_g_kg', flat=True))
+#             ncm.ncm_etoh_sum_gkg_22hr      = np.sum(mtds_oa.values_list('mtd_etoh_g_kg', flat=True))
+#             ncm.ncm_etoh_sum_gkg_lifetime  = ncm.ncm_etoh_sum_gkg_induction + ncm.ncm_etoh_sum_gkg_22hr
+#
+#             # cohort's events
+#             ncm.ncm_etoh_ind_start = etoh_ind_start
+#             ncm.ncm_etoh_ind_end   = etoh_ind_end
+#
+#             ncm.ncm_1st_6_mo_start = etoh_1st_6_mo_start
+#             ncm.ncm_1st_6_mo_end   = etoh_1st_6_mo_end
+#
+#             ncm.ncm_2nd_6_mo_start = etoh_2nd_6_mo_start
+#             ncm.ncm_2nd_6_mo_end   = etoh_2nd_6_mo_end
+#
+#             # averages for first, second 6 months, and 12 months.
+#             mtds_avg = mtds_oa.exclude_exceptions()
+#             ncm.ncm_22hr_1st_6mo_avg_gkg = np.mean(mtds_avg.
+#                                                    filter(drinking_experiment__dex_date__gte=etoh_1st_6_mo_start).
+#                                                    filter(drinking_experiment__dex_date__lte=etoh_1st_6_mo_end).
+#                                                    values_list('mtd_etoh_g_kg', flat=True))
+#             ncm.ncm_22hr_2nd_6mo_avg_gkg = np.mean(mtds_avg.
+#                                                    filter(drinking_experiment__dex_date__gte=etoh_2nd_6_mo_start).
+#                                                    filter(drinking_experiment__dex_date__lte=etoh_2nd_6_mo_end).
+#                                                    values_list('mtd_etoh_g_kg', flat=True))
+#             ncm.ncm_22hr_12mo_avg_gkg    = np.mean([ncm.ncm_22hr_1st_6mo_avg_gkg, ncm.ncm_22hr_2nd_6mo_avg_gkg])
+#
+#             ncm.save()
+#             print "    %s" % str(monkey)
+
+#populate_fields(r6b)
+#print NecropsySummary.objects.all().count()
+#print NecropsySummary.objects.all().values_list()
+
+# delete all data from NC
+print NecropsySummary.objects.all().count()
+NecropsySummary.objects.all().delete()
+print NecropsySummary.objects.all().count()
+
+from matrr.utils.database import populate
+for cohort in Cohort.objects.all():
+      populate.populate_necropsy_summary(cohort)
+
 CohortImage.objects.filter(method__contains="necropsy").delete()
-print CohortImage.objects.filter(method__contains="necropsy").count()
+#CohortImage.objects.filter(method__iexact="cohort_summary_avg_bec_mgpct").delete()
+from plotting import plot_tools
 plot_tools.create_necropsy_plots(cohorts=True, monkeys=False)
 
+#print MonkeyToDrinkingExperiment.objects.filter(monkey__in=r6a.monkey_set.all()).aggregate(Sum('mtd_etoh_intake'))
+#print np.sum(MonkeyToDrinkingExperiment.objects.filter(monkey__in=r6a.monkey_set.all()).values_list('mtd_etoh_intake', flat=True))
+# print np.sum(MonkeyToDrinkingExperiment.objects.after_date('2012-05-17').filter(monkey=r6b.monkey_set.all()[1]).
+#              values_list('mtd_etoh_intake', flat=True))
+# print np.sum(MonkeyToDrinkingExperiment.objects.filter(drinking_experiment__dex_date__gte='2012-05-17').filter(monkey=r6b.monkey_set.all()[1]).
+#              values_list('mtd_etoh_intake', flat=True))
 
+from matrr.plotting import cohort_plots
+#cohort_plots.cohort_necropsy_avg_etoh_22hr_gkg(Cohort.objects.get(coh_cohort_id=4))
+
+# for cohort in NecropsySummary.objects.all().values_list('monkey__cohort', flat=True).distinct():
+#     cohort = Cohort.objects.get(pk=cohort)
+#     print cohort
+#     cohort_plots.cohort_necropsy_avg_etoh_22hr_gkg(cohort)
+
+#plt.show()

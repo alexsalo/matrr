@@ -47,8 +47,8 @@ def necropsy_summary_avg_with_days_22hr_g_per_kg(queryset):
         except NecropsySummary.DoesNotExist:
             continue
         raw_labels.append(str(mky.pk))
-    return [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries], \
-           [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries], days_2, days, raw_labels
+    return [summary.ncm_22hr_1st_6mo_avg_gkg for summary in summaries], \
+           [summary.ncm_22hr_12mo_avg_gkg for summary in summaries], days_2, days, raw_labels
 
 def necropsy_summary_avg_22hr_g_per_kg(queryset):
     """
@@ -62,13 +62,13 @@ def necropsy_summary_avg_22hr_g_per_kg(queryset):
     """
     summaries = []
     raw_labels = []
-    for mky in queryset.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
+    for mky in queryset.order_by("necropsy_summary__ncm_22hr_12mo_avg_gkg", "necropsy_summary__ncm_22hr_1st_6mo_avg_gkg"):
         try:
             summaries.append(mky.necropsy_summary)
         except NecropsySummary.DoesNotExist:
             continue
         raw_labels.append(str(mky.pk))
-    return [summary.ncm_22hr_6mo_avg_g_per_kg for summary in summaries], [summary.ncm_22hr_12mo_avg_g_per_kg for summary in summaries], raw_labels
+    return [summary.ncm_22hr_1st_6mo_avg_gkg for summary in summaries], [summary.ncm_22hr_12mo_avg_gkg for summary in summaries], raw_labels
 
 def necropsy_summary_with_days_etoh_4pct(queryset):
     """
@@ -84,7 +84,7 @@ def necropsy_summary_with_days_etoh_4pct(queryset):
     raw_labels = []
     days = []
     days_2 = []
-    for mky in queryset.order_by("necropsy_summary__ncm_etoh_4pct_lifetime", "necropsy_summary__ncm_etoh_4pct_22hr"):
+    for mky in queryset.order_by("necropsy_summary__ncm_etoh_sum_ml_4pct_lifetime", "necropsy_summary__ncm_etoh_sum_ml_4pct_22hr"):
         try:
             summaries.append(mky.necropsy_summary)
             days_2.append(MonkeyToDrinkingExperiment.objects.OA().first_six_months_oa().exclude_exceptions().
@@ -93,7 +93,7 @@ def necropsy_summary_with_days_etoh_4pct(queryset):
         except NecropsySummary.DoesNotExist:
             continue
         raw_labels.append(str(mky.pk))
-    return [summary.ncm_etoh_4pct_22hr for summary in summaries], [summary.ncm_etoh_4pct_lifetime for summary in summaries],\
+    return [summary.ncm_etoh_sum_ml_4pct_22hr for summary in summaries], [summary.ncm_etoh_sum_ml_4pct_lifetime for summary in summaries],\
            days_2, days, raw_labels
 
 def necropsy_summary_etoh_4pct(queryset):
@@ -108,20 +108,20 @@ def necropsy_summary_etoh_4pct(queryset):
     """
     summaries = []
     raw_labels = []
-    for mky in queryset.order_by("necropsy_summary__ncm_etoh_4pct_lifetime", "necropsy_summary__ncm_etoh_4pct_22hr"):
+    for mky in queryset.order_by("necropsy_summary__ncm_etoh_sum_ml_4pct_lifetime", "necropsy_summary__ncm_etoh_sum_ml_4pct_22hr"):
         try:
             summaries.append(mky.necropsy_summary)
         except NecropsySummary.DoesNotExist:
             continue
         raw_labels.append(str(mky.pk))
-    return [summary.ncm_etoh_4pct_22hr for summary in summaries], [summary.ncm_etoh_4pct_lifetime for summary in summaries], raw_labels
+    return [summary.ncm_etoh_sum_ml_4pct_22hr for summary in summaries], [summary.ncm_etoh_sum_ml_4pct_lifetime for summary in summaries], raw_labels
 
 def necropsy_summary_with_days_sum_g_per_kg(queryset):
     summaries = []
     raw_labels = []
     days = []
     days_2 = []
-    for mky in queryset.order_by("necropsy_summary__ncm_sum_g_per_kg_22hr", "necropsy_summary__ncm_sum_g_per_kg_lifetime"):
+    for mky in queryset.order_by("necropsy_summary__ncm_etoh_sum_gkg_22hr", "necropsy_summary__ncm_etoh_sum_gkg_lifetime"):
         try:
             summaries.append(mky.necropsy_summary)
             days_2.append(MonkeyToDrinkingExperiment.objects.OA().first_six_months_oa().exclude_exceptions().filter(monkey=mky).count())
@@ -129,7 +129,7 @@ def necropsy_summary_with_days_sum_g_per_kg(queryset):
         except NecropsySummary.DoesNotExist:
             continue
         raw_labels.append(str(mky.pk))
-    return [summary.ncm_sum_g_per_kg_22hr for summary in summaries], [summary.ncm_sum_g_per_kg_lifetime for summary in summaries],\
+    return [summary.ncm_etoh_sum_gkg_22hr for summary in summaries], [summary.ncm_etoh_sum_gkg_lifetime for summary in summaries],\
         days_2, days, raw_labels
 
 def necropsy_summary_sum_g_per_kg(queryset):
@@ -144,13 +144,13 @@ def necropsy_summary_sum_g_per_kg(queryset):
     """
     summaries = []
     raw_labels = []
-    for mky in queryset.order_by("necropsy_summary__ncm_sum_g_per_kg_22hr", "necropsy_summary__ncm_sum_g_per_kg_lifetime"):
+    for mky in queryset.order_by("necropsy_summary__ncm_etoh_sum_gkg_22hr", "necropsy_summary__ncm_etoh_sum_gkg_lifetime"):
         try:
             summaries.append(mky.necropsy_summary)
         except NecropsySummary.DoesNotExist:
             continue
         raw_labels.append(str(mky.pk))
-    return [summary.ncm_sum_g_per_kg_22hr for summary in summaries], [summary.ncm_sum_g_per_kg_lifetime for summary in summaries], raw_labels
+    return [summary.ncm_etoh_sum_gkg_22hr for summary in summaries], [summary.ncm_etoh_sum_gkg_lifetime for summary in summaries], raw_labels
 
 def summary_avg_bec_mgpct(queryset):
     """

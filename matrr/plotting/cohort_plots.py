@@ -223,78 +223,6 @@ def _cohort_bone_densities(cohort):
     ax1.legend(handles=[ld_patch, bd_patch, hd_patch, vhd_patch, control_patch], loc=4)
     return tool_figure, 'build HTML fragment'
 
-def _cohort_summary_general(specific_callable, x_label, graph_title, legend_labels, cohort):
-    """
-    This generalized method will create the necropsy summary graph using the parameters passed it.  These parameters
-    are used to collect the graph's data and customize the labels/appearance to match that data.
-
-    Args:
-    specific_callable: a callable method expected to return a tuple of 3 lists, coh_data_1, coh_data_2, cohort_labels
-                       coh_data_N values are used as Y values for horizontal bar graphs in the plot.  The cohort_labels
-                       are assumed to be ordered the same as the coh_data_N values.
-    x_label: label of the x axis.  As this is a horizontal bar graph, the x axis represents the dependent variable, the
-             data value of interest.  The Y axis is treated as the independent variable (monkey name/label)
-    graph_title:  Title of the graph
-    legend_labels: specific_callable will return 2 datasets.  legend_labels will be the label (in the legend) for these
-                   datasets.
-    cohort: the subject cohort for which this graph is being made.
-    """
-    ##  Verify argument is actually a cohort
-    if not isinstance(cohort, Cohort):
-        try:
-            cohort = Cohort.objects.get(pk=cohort)
-        except Cohort.DoesNotExist:
-            print("That's not a valid cohort.  Using monkey's cohort")
-            return False, False
-
-    fig = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
-    ax1 = fig.add_subplot(111)
-    ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=.5)
-    ax1.set_axisbelow(True)
-    font_dict = {'size': 16}
-    ax1.set_title(graph_title, fontdict=font_dict)
-    ax1.set_ylabel("Monkey ID", fontdict=font_dict)
-    ax1.set_xlabel(x_label, fontdict=font_dict)
-
-    cohort_colors =  ['navy', 'slateblue']
-
-    coh_data_1, coh_data_2, cohort_labels = specific_callable(Monkey.objects.Drinkers().filter(cohort=cohort))
-
-    if not coh_data_1:
-        logging.warning("Cohort pk=%d doesn't have any necropsy summary data for this callable" % cohort.pk)
-        return False, False
-
-    def autolabel(rects, text_color=None):
-        import locale
-        locale.setlocale(locale.LC_ALL, '')
-        for rect in rects:
-            width = rect.get_width()
-            xloc = width * .98
-            clr = text_color if text_color else "black"
-            align = 'right'
-            yloc = rect.get_y()+rect.get_height()/2.0
-
-            text_width = locale.format("%.1f", width, grouping=True)
-            if width > 0:
-                ax1.text(xloc, yloc, text_width, horizontalalignment=align, verticalalignment='center', color=clr, weight='bold')
-
-    idx = numpy.arange(len(coh_data_1))
-    width = 0.4
-
-    cohort_bar1 = ax1.barh(idx, coh_data_1, width, color=cohort_colors[0])
-    autolabel(cohort_bar1, 'white')
-    if all(coh_data_2):
-        cohort_bar2 = ax1.barh(idx+width, coh_data_2, width, color=cohort_colors[1])
-        autolabel(cohort_bar2, 'white')
-        ax1.legend( (cohort_bar1[0], cohort_bar2[0]), legend_labels, loc=2)
-    else:
-        ax1.legend( (cohort_bar1[0], ), legend_labels, loc=2)
-
-    ax1.set_yticks(idx+width)
-    ax1.set_yticklabels(cohort_labels)
-    return fig, 'map'
-
-
 
 def necropsy_get_data(cohort, db_columns, colnames, sortby):
     """
@@ -306,7 +234,7 @@ def necropsy_get_data(cohort, db_columns, colnames, sortby):
         colnames = ['Monkey ID', 'DC'] + colnames
 
         df = pd.DataFrame(list(ns.values_list(*db_columns)), columns=colnames)
-        df['Monkey ID'] = df['Monkey ID'].map(str) + '\n' + df['DC']
+        df['Monkey ID'] = df['Monkey ID'].map(str) + '\n' + df['DC'].map(str)
         df = df[df[colnames[2]] != 0]  # remove empty
         df.set_index('Monkey ID', inplace=True)
         df = df.sort(sortby)
@@ -319,10 +247,13 @@ def _cohort_necropsy_barh_plot_base(df, graph_title, x_label):
     Create legend and annotate axis with values.
     """
     matplotlib.rcParams.update({'font.size': 14})
-    if len(df):
+    if len(df) > 1: # arbitrary call to avoid problem with partial cohorts
         fig = plt.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
         ax = fig.add_subplot(111)
         df.plot(kind='barh', ax=ax)
+
+        xlim = ax.get_xlim()
+        ax.set_xlim(xlim[0], xlim[1] * 1.015)  # to fit annotation
 
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(reversed(handles), reversed(labels), loc='upper left')  # reverse to keep order consistent
@@ -336,19 +267,19 @@ def _cohort_necropsy_barh_plot_base(df, graph_title, x_label):
         return False, False
 
 
-def cohort_necropsy_avg_22hr_g_per_kg(cohort):
+def cohort_necropsy_avg_etoh_22hr_gkg(cohort):
     df = necropsy_get_data(cohort, sortby=['First 6 Months Average', 'Second 6 Months Average', '12 Month Average'],
-                           db_columns=['ncm_22hr_6mo_avg_g_per_kg', 'ncm_22hr_2nd_6mos_avg_g_per_kg',
-                                       'ncm_22hr_12mo_avg_g_per_kg'],
+                           db_columns=['ncm_22hr_1st_6mo_avg_gkg', 'ncm_22hr_2nd_6mo_avg_gkg',
+                                       'ncm_22hr_12mo_avg_gkg'],
                            colnames=['First 6 Months Average', 'Second 6 Months Average', '12 Month Average'])
     return _cohort_necropsy_barh_plot_base(df,
-                                          graph_title="Total EtOH Intake (mL)",
+                                          graph_title="Average Daily EtOH Intake (g/kg)",
                                           x_label='Average Daily Ethanol Intake (g/kg)')
 
 
-def cohort_necropsy_etoh_4pct(cohort):
+def cohort_necropsy_sum_etoh_ml(cohort):
     df = necropsy_get_data(cohort, sortby='Lifetime EtOH Intake (ml)',
-                           db_columns=['ncm_etoh_4pct_induction', 'ncm_etoh_4pct_22hr', 'ncm_etoh_4pct_lifetime'],
+                           db_columns=['ncm_etoh_sum_ml_4pct_induction', 'ncm_etoh_sum_ml_4pct_22hr', 'ncm_etoh_sum_ml_4pct_lifetime'],
                            colnames=['Induction EtOH Intake (ml)', 'Open Access EtOH Intake (ml)',
                                      'Lifetime EtOH Intake (ml)'])
     return _cohort_necropsy_barh_plot_base(df,
@@ -356,10 +287,10 @@ def cohort_necropsy_etoh_4pct(cohort):
                                           x_label="Ethanol intake (4% w/v)")
 
 
-def cohort_necropsy_sum_g_per_kg(cohort):
+def cohort_necropsy_sum_etoh_gkg(cohort):
     df = necropsy_get_data(cohort, sortby='Lifetime EtOH Intake (g/kg)',
-                           db_columns=['ncm_sum_g_per_kg_induction', 'ncm_sum_g_per_kg_22hr',
-                                       'ncm_sum_g_per_kg_lifetime'],
+                           db_columns=['ncm_etoh_sum_gkg_induction', 'ncm_etoh_sum_gkg_22hr',
+                                       'ncm_etoh_sum_gkg_lifetime'],
                            colnames=['Induction EtOH Intake (g/kg)', 'Open Access EtOH Intake (g/kg)',
                                      'Lifetime EtOH Intake (g/kg)'])
     return _cohort_necropsy_barh_plot_base(df,
@@ -367,17 +298,18 @@ def cohort_necropsy_sum_g_per_kg(cohort):
                                           x_label="Ethanol intake (4% w/v, g/kg)")
 
 
-def cohort_summary_avg_bec_mgpct(cohort):
+def cohort_necropsy_avg_bec_mg_pct(cohort):
     """
-    This method will create a cohort graph (horizontal bar graph) showing each monkey's average open access bec values
+    barh showing each monkey's average open access bec values
     """
-    if MonkeyBEC.objects.filter(monkey__cohort=cohort).count():
-        graph_title = 'Average Blood Ethanol Concentration (22hr open access)'
-        x_label = "Average BEC (mg percent)"
-        legend_labels = ('12 Month Average', '6 Month Average')
-        return _cohort_summary_general(specific_callables.summary_avg_bec_mgpct, x_label, graph_title, legend_labels, cohort)
-    else:
-        return False, False
+    df = necropsy_get_data(cohort, sortby=['First 6 Months Average', 'Second 6 Months Average', '12 Month Average'],
+                           db_columns=['ncm_22hr_1st_6mo_avg_bec', 'ncm_22hr_2nd_6mo_avg_bec',
+                                       'ncm_22hr_12mo_avg_bec'],
+                           colnames=['First 6 Months Average', 'Second 6 Months Average', '12 Month Average'])
+    return _cohort_necropsy_barh_plot_base(df,
+                                          graph_title="Average Blood Ethanol Concentration (Open Access)",
+                                          x_label='Average BEC (mg percent)')
+
 
 def _cohort_tools_boxplot(data, title, x_label, y_label, scale_x=(), scale_y=()):
     tool_figure = pyplot.figure(figsize=DEFAULT_FIG_SIZE, dpi=DEFAULT_DPI)
@@ -1156,10 +1088,10 @@ COHORT_TOOLS_PLOTS.update(COHORT_HORMONE_TOOLS_PLOTS)
 # Dictionary of all cohort plots
 COHORT_PLOTS = {}
 COHORT_PLOTS.update(COHORT_TOOLS_PLOTS)
-COHORT_PLOTS.update({"cohort_necropsy_avg_22hr_g_per_kg": (cohort_necropsy_avg_22hr_g_per_kg, 'Average Ethanol Intake, 22hr'),
-                     "cohort_necropsy_etoh_4pct": (cohort_necropsy_etoh_4pct, "Total Ethanol Intake, ml"),
-                     "cohort_necropsy_sum_g_per_kg": (cohort_necropsy_sum_g_per_kg, "Total Ethanol Intake, g per kg"),
-                     "cohort_summary_avg_bec_mgpct": (cohort_summary_avg_bec_mgpct, "Average BEC, 22hr"),
+COHORT_PLOTS.update({"cohort_necropsy_avg_etoh_22hr_gkg": (cohort_necropsy_avg_etoh_22hr_gkg, 'Average Ethanol Intake, 22hr'),
+                     "cohort_necropsy_sum_etoh_ml": (cohort_necropsy_sum_etoh_ml, "Total Ethanol Intake, ml"),
+                     "cohort_necropsy_sum_etoh_gkg": (cohort_necropsy_sum_etoh_gkg, "Total Ethanol Intake, g per kg"),
+                     "cohort_necropsy_avg_bec_mg_pct": (cohort_necropsy_avg_bec_mg_pct, "Average BEC, 22hr"),
                      'cohort_etoh_induction_cumsum': (cohort_etoh_induction_cumsum, 'Cohort Induction Daily Ethanol Intake'),
                      'cohort_etoh_max_bout_cumsum_horibar_ltgkg': (cohort_etoh_max_bout_cumsum_horibar_ltgkg, "Cohort Cumulative Daily Max Bout, Lifetime EtOH Intake"),
                      'cohort_etoh_max_bout_cumsum_horibar_3gkg': (cohort_etoh_max_bout_cumsum_horibar_3gkg, "Cohort Cumulative Daily Max Bout, Day count over 3 g per kg"),

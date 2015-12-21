@@ -305,13 +305,13 @@
                 {% for ncm in necropsy_summary %}
                     {%  if ncm.monkey.mky_drinking %}
                         <tr>
-                            <td>{{ncm.monkey.mky_id|floatformat:2}}</td>
-                            <td>{{ncm.ncm_sum_g_per_kg_induction|floatformat:2}}</td>
-                            <td>{{ncm.ncm_sum_g_per_kg_22hr|floatformat:2}}</td>
-                            <td>{{ncm.ncm_sum_g_per_kg_lifetime|floatformat:2}}</td>
-                            <td>{{ncm.ncm_22hr_6mo_avg_g_per_kg|floatformat:2}}</td>
-                            <td>{{ncm.ncm_22hr_2nd_6mos_avg_g_per_kg|floatformat:2}}</td>
-                            <td>{{ncm.ncm_22hr_12mo_avg_g_per_kg|floatformat:2}}</td>
+                            <td>{{ncm.monkey.mky_id}}</td>
+                            <td>{{ncm.ncm_etoh_sum_gkg_induction|floatformat:2}}</td>
+                            <td>{{ncm.ncm_etoh_sum_gkg_22hr|floatformat:2}}</td>
+                            <td>{{ncm.ncm_etoh_sum_gkg_lifetime|floatformat:2}}</td>
+                            <td>{{ncm.ncm_22hr_1st_6mo_avg_gkg|floatformat:2}}</td>
+                            <td>{{ncm.ncm_22hr_2nd_6mo_avg_gkg|floatformat:2}}</td>
+                            <td>{{ncm.ncm_22hr_12mo_avg_gkg|floatformat:2}}</td>
                         </tr>
                     {% endif %}
                 {% endfor %}
