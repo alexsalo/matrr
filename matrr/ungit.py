@@ -2879,17 +2879,17 @@ Necropsy Summary Refresher
 #print NecropsySummary.objects.all().count()
 #print NecropsySummary.objects.all().values_list()
 
-# delete all data from NC
-print NecropsySummary.objects.all().count()
-NecropsySummary.objects.all().delete()
-print NecropsySummary.objects.all().count()
+# # delete all data from NC
+# print NecropsySummary.objects.all().count()
+# NecropsySummary.objects.all().delete()
+# print NecropsySummary.objects.all().count()
 
 from matrr.utils.database import populate
-for cohort in Cohort.objects.all():
-      populate.populate_necropsy_summary(cohort)
+# for cohort in Cohort.objects.all():
+#       populate.populate_necropsy_summary(cohort)
 
-# CohortImage.objects.filter(method__contains="necropsy").delete()
-# #CohortImage.objects.filter(method__iexact="cohort_summary_avg_bec_mgpct").delete()
+#CohortImage.objects.filter(method__contains="necropsy").delete()
+#CohortImage.objects.filter(method__iexact="cohort_summary_avg_bec_mgpct").delete()
 # from plotting import plot_tools
 # plot_tools.create_necropsy_plots(cohorts=True, monkeys=False)
 

@@ -38,7 +38,7 @@ def necropsy_summary_avg_with_days_22hr_g_per_kg(queryset):
     days = []
     days_2 = []
 
-    for mky in queryset.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
+    for mky in queryset.order_by("necropsy_summary__ncm_22hr_12mo_avg_gkg", "necropsy_summary__ncm_22hr_1st_6mo_avg_gkg"):
         try:
             summaries.append(mky.necropsy_summary)
             days_2.append(MonkeyToDrinkingExperiment.objects.OA().first_six_months_oa().exclude_exceptions().

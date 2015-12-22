@@ -8,6 +8,7 @@ def populate_necropsy_summary(cohort):
         return
 
     print "\nCreating Necropsy Summaries for Cohort %s" % cohort
+    onlyOne6Mo = False
 
     # cohort's events
     try:
@@ -18,12 +19,16 @@ def populate_necropsy_summary(cohort):
 
         etoh_1st_6_mo_start=evts.filter(event__evt_name__iexact='First 6 Month Open Access Begin').values_list('cev_date', flat=True)[0]
         etoh_1st_6_mo_end  =evts.filter(event__evt_name__iexact='First 6 Month Open Access End').values_list('cev_date', flat=True)[0]
-
-        etoh_2nd_6_mo_start=evts.filter(event__evt_name__iexact='Second 6 Month Open Access Begin').values_list('cev_date', flat=True)[0]
-        etoh_2nd_6_mo_end  =evts.filter(event__evt_name__iexact='Second 6 Month Open Access End').values_list('cev_date', flat=True)[0]
     except:
         print "    This cohort does't have proper cohort's events"
         return
+
+    try:
+        etoh_2nd_6_mo_start=evts.filter(event__evt_name__iexact='Second 6 Month Open Access Begin').values_list('cev_date', flat=True)[0]
+        etoh_2nd_6_mo_end  =evts.filter(event__evt_name__iexact='Second 6 Month Open Access End').values_list('cev_date', flat=True)[0]
+    except:
+        print "    This cohort doesn't have a second 6mo OA..ok"
+        onlyOne6Mo = True
 
     for monkey in cohort.monkey_set.filter(mky_drinking=True).filter(mky_study_complete=True):
         mtds = mtds_cohort.filter(monkey=monkey).filter(mtd_etoh_intake__isnull=False)
@@ -53,8 +58,9 @@ def populate_necropsy_summary(cohort):
             ncm.ncm_1st_6_mo_start = etoh_1st_6_mo_start
             ncm.ncm_1st_6_mo_end   = etoh_1st_6_mo_end
 
-            ncm.ncm_2nd_6_mo_start = etoh_2nd_6_mo_start
-            ncm.ncm_2nd_6_mo_end   = etoh_2nd_6_mo_end
+            if not onlyOne6Mo:
+                ncm.ncm_2nd_6_mo_start = etoh_2nd_6_mo_start
+                ncm.ncm_2nd_6_mo_end   = etoh_2nd_6_mo_end
 
             # averages for first, second 6 months, and 12 months.
             mtds_avg = mtds_oa.exclude_exceptions()
@@ -62,21 +68,24 @@ def populate_necropsy_summary(cohort):
                                                    filter(drinking_experiment__dex_date__gte=etoh_1st_6_mo_start).
                                                    filter(drinking_experiment__dex_date__lte=etoh_1st_6_mo_end).
                                                    values_list('mtd_etoh_g_kg', flat=True))
-            ncm.ncm_22hr_2nd_6mo_avg_gkg = np.mean(mtds_avg.
-                                                   filter(drinking_experiment__dex_date__gte=etoh_2nd_6_mo_start).
-                                                   filter(drinking_experiment__dex_date__lte=etoh_2nd_6_mo_end).
-                                                   values_list('mtd_etoh_g_kg', flat=True))
-            ncm.ncm_22hr_12mo_avg_gkg    = np.mean([ncm.ncm_22hr_1st_6mo_avg_gkg, ncm.ncm_22hr_2nd_6mo_avg_gkg])
+            if not onlyOne6Mo:
+                ncm.ncm_22hr_2nd_6mo_avg_gkg = np.mean(mtds_avg.
+                                                       filter(drinking_experiment__dex_date__gte=etoh_2nd_6_mo_start).
+                                                       filter(drinking_experiment__dex_date__lte=etoh_2nd_6_mo_end).
+                                                       values_list('mtd_etoh_g_kg', flat=True))
+                ncm.ncm_22hr_12mo_avg_gkg    = np.mean([ncm.ncm_22hr_1st_6mo_avg_gkg, ncm.ncm_22hr_2nd_6mo_avg_gkg])
+
 
             # BEC
             becs = MonkeyBEC.objects.exclude_exceptions().filter(monkey=monkey).filter(bec_mg_pct__isnull=False)
             ncm.ncm_22hr_1st_6mo_avg_bec = np.mean(becs.filter(bec_collect_date__gte=etoh_1st_6_mo_start).
                                                    filter(bec_collect_date__lte=etoh_1st_6_mo_end).
                                                    values_list('bec_mg_pct', flat=True))
-            ncm.ncm_22hr_2nd_6mo_avg_bec = np.mean(becs.filter(bec_collect_date__gte=etoh_2nd_6_mo_start).
-                                                   filter(bec_collect_date__lte=etoh_2nd_6_mo_end).
-                                                   values_list('bec_mg_pct', flat=True))
-            ncm.ncm_22hr_12mo_avg_bec    = np.mean([ncm.ncm_22hr_1st_6mo_avg_bec, ncm.ncm_22hr_2nd_6mo_avg_bec])
+            if not onlyOne6Mo:
+                ncm.ncm_22hr_2nd_6mo_avg_bec = np.mean(becs.filter(bec_collect_date__gte=etoh_2nd_6_mo_start).
+                                                       filter(bec_collect_date__lte=etoh_2nd_6_mo_end).
+                                                       values_list('bec_mg_pct', flat=True))
+                ncm.ncm_22hr_12mo_avg_bec    = np.mean([ncm.ncm_22hr_1st_6mo_avg_bec, ncm.ncm_22hr_2nd_6mo_avg_bec])
 
             ncm.save()
             print "    %s" % str(monkey)
