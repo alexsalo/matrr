@@ -324,8 +324,8 @@ def _mtd_histogram(monkey, column_name, axis, from_date=None, to_date=None, dex_
             except Monkey.DoesNotExist:
                 print "That's not a valid monkey."
                 return
-    high_monkey = Monkey.objects.get(mky_high_drinker=True)
-    low_monkey = Monkey.objects.get(mky_low_drinker=True)
+    high_monkey = Monkey.objects.get(mky_high_drinker=True, mky_species=monkey.mky_species)
+    low_monkey = Monkey.objects.get(mky_low_drinker=True, mky_species=monkey.mky_species)
 
     cohort_dex = MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=monkey.cohort)
     high_dex = MonkeyToDrinkingExperiment.objects.filter(monkey=high_monkey)
@@ -567,6 +567,7 @@ def create_mtd_tools_canonicals(cohort, create_monkey_plots=True):
             for dex_type in dex_types:
                 params = str({'dex_type': dex_type})
                 for method in plots:
+                    print '  ', method, monkey
                     MonkeyImage.objects.get_or_create(monkey=monkey, method=method, parameters=params, title=MONKEY_PLOTS[method][1], canonical=True)
                     gc.collect()
 

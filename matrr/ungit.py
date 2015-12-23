@@ -2935,11 +2935,22 @@ generate coh13 plots
 #cohort_plots.cohort_etoh_bihourly_treemap(c13)
 #cohort_plots.cohort_etoh_max_bout_cumsum_horibar_ltgkg(c13)
 #plot_tools.create_max_bout_cumsum_horibar_canonicals(c13)
+#plot_tools.create_mtd_tools_canonicals(c13, True)
+#plot_tools.create_bec_histograms()
 #monkey_plots.monkey_etoh_bouts_vol(c13.monkey_set.all()[1])
 #monkey_plots.monkey_etoh_bouts_drinks(c13.monkey_set.all()[1])
+#monkey_plots.monkey_bec_histogram_general(r10.monkey_set.all()[1], 'bec_mg_pct')
+#monkey_plots.monkey_bec_consumption(c13.monkey_set.all()[1])
+
+# m = Monkey.objects.get(mky_id=10231)
+# m.mky_low_drinker = True
+# m.save()
+# print Monkey.objects.filter(mky_low_drinker=True)
 
 
-print CohortMetaData.objects.filter(cohort=c13).values_list('cbc_mtd_etoh_bout_max')
+#CohortImage.objects.filter(cohort=c13).filter(method__contains="max_bout_cumsum").delete()
+
+#print CohortMetaData.objects.filter(cohort=c13).values_list('cbc_mtd_etoh_bout_max')
 # CohortMetaData.objects.get(cohort=r10).populate_fields()
 # print CohortMetaData.objects.filter(cohort=r10).values_list()
 
