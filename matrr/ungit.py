@@ -2941,6 +2941,7 @@ generate coh13 plots
 #monkey_plots.monkey_etoh_bouts_drinks(c13.monkey_set.all()[1])
 #monkey_plots.monkey_bec_histogram_general(r10.monkey_set.all()[1], 'bec_mg_pct')
 #monkey_plots.monkey_bec_consumption(c13.monkey_set.all()[1])
+#monkey_plots.monkey_summary_avg_bec_mgpct(c13.monkey_set.all()[1])
 
 # m = Monkey.objects.get(mky_id=10231)
 # m.mky_low_drinker = True

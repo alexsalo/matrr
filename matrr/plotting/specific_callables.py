@@ -162,23 +162,31 @@ def summary_avg_bec_mgpct(queryset):
     return:
     tuple, ( list of 6 month averages, list of 12 month averages, list of monkey pk labels )
     """
-    twelve_mo_avg = list()
-    six_months_avg = list()
-    labels = list()
-    for mky in queryset.order_by("necropsy_summary__ncm_22hr_12mo_avg_g_per_kg", "necropsy_summary__ncm_22hr_6mo_avg_g_per_kg"):
-        _oa_becs = MonkeyBEC.objects.OA().filter(monkey=mky)
-        _6mo_becs = _oa_becs.first_six_months_oa()
+    # twelve_mo_avg = list()
+    # six_months_avg = list()
+    # labels = list()
+    # for mky in queryset.order_by("necropsy_summary__ncm_22hr_12mo_avg_gkg", "necropsy_summary__ncm_22hr_1st_6mo_avg_gkg"):
+    #     _oa_becs = MonkeyBEC.objects.OA().filter(monkey=mky)
+    #     _6mo_becs = _oa_becs.first_six_months_oa()
+    #
+    #     _12mo_avg_mgpct = _oa_becs.aggregate(avg=Avg('bec_mg_pct'))['avg']
+    #     _6mo_avg_mgpct = _6mo_becs.aggregate(avg=Avg('bec_mg_pct'))['avg']
+    #
+    #     if not (_12mo_avg_mgpct or _6mo_avg_mgpct):
+    #         continue
+    #     twelve_mo_avg.append(_12mo_avg_mgpct)
+    #     six_months_avg.append(_6mo_avg_mgpct)
+    #     labels.append(str(mky.pk))
+    #
+    # # sort the three matched lists by the 12 month average
+    # twelve_mo_avg, six_months_avg, labels = zip(*sorted(zip(twelve_mo_avg, six_months_avg, labels)))
+    # # python is badass, amirite? Nope! This is ugly! Use dataframes instead
 
-        _12mo_avg_mgpct = _oa_becs.aggregate(avg=Avg('bec_mg_pct'))['avg']
-        _6mo_avg_mgpct = _6mo_becs.aggregate(avg=Avg('bec_mg_pct'))['avg']
-
-        if not (_12mo_avg_mgpct or _6mo_avg_mgpct):
-            continue
-        twelve_mo_avg.append(_12mo_avg_mgpct)
-        six_months_avg.append(_6mo_avg_mgpct)
-        labels.append(str(mky.pk))
-
-    # sort the three matched lists by the 12 month average
-    twelve_mo_avg, six_months_avg, labels = zip(*sorted(zip(twelve_mo_avg, six_months_avg, labels)))
-    # python is badass, amirite?
-    return list(six_months_avg), list(twelve_mo_avg), list(labels)
+    nc = NecropsySummary.objects.filter(monkey__in=queryset)
+    import pandas as pd
+    df = pd.DataFrame(list(nc.values_list('monkey__mky_id', 'ncm_22hr_1st_6mo_avg_gkg', 'ncm_22hr_12mo_avg_gkg')),
+                      columns=['mky_id', 'ncm_22hr_1st_6mo_avg_gkg', 'ncm_22hr_12mo_avg_gkg'])
+    df.sort(['ncm_22hr_1st_6mo_avg_gkg', 'ncm_22hr_12mo_avg_gkg'], inplace=True)
+    if df.ncm_22hr_12mo_avg_gkg[0] is None:
+        df.ncm_22hr_12mo_avg_gkg = df.ncm_22hr_1st_6mo_avg_gkg
+    return list(df.ncm_22hr_1st_6mo_avg_gkg), list(df.ncm_22hr_12mo_avg_gkg), list(df.mky_id)
