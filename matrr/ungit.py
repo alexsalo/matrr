@@ -1559,6 +1559,7 @@ from matrr.plotting.cohort_plots import COHORT_PLOTS
 #         print 'fail: ', cohort
 #         pass
 
+r4 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 4')
 r5 = Cohort.objects.get(coh_cohort_name='INIA Rhesus 5')
 r6a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6a')
 r6b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 6b')
@@ -1628,6 +1629,7 @@ c9 = Cohort.objects.get(coh_cohort_name='INIA Cyno 9')
 #                                             'mtd__drinking_experiment__dex_type')), columns=['cohort', 'mky_id', 'mtd_date', 'dextype'])
 # df = df[df.dextype=='Open Access']
 # df.sort(['cohort', 'mky_id', 'mtd_date'], inplace=True)
+# print df
 # df.to_csv('/home/alex/Dropbox/Baylor/Matrr/csv_dumps/457a7b_hormone_dates.csv', index=False)
 #
 # #print MonkeyHormone.objects.filter(monkey=Monkey.objects.filter(mky_id=10054))
@@ -2629,65 +2631,65 @@ New AVG plots
 """
 17 Dec 2015
 """
-def cohort_weights_plot(cohort):
-    """
-    Create mky weights plots
-    """
-    def weight_plot_makeup(ax):
-        handles, labels = ax.get_legend_handles_labels()
-        labels = [label.split(', ')[1][:-1] for label in labels]
-        ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
-        ax.set_ylabel('Monkey Weight')
-        ax.set_title('Animals Weights Change')
-        plt.tight_layout()
-
-    mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=cohort.monkey_set.all())\
-        .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
-    df = pd.DataFrame(list(mtds.values_list('monkey__mky_id', 'drinking_experiment__dex_date', 'mtd_weight')),
-                      columns=['mky_id', 'Date', 'weight'])
-    df_pivot = df.pivot_table(index='Date', columns='mky_id')
-    matplotlib.rcParams.update({'font.size': 14})
-    ax = df_pivot.plot(figsize=(16, 10))
-    weight_plot_makeup(ax)
-#cohort_weights_plot(r6b)
-
-def monkey_weight_plot(monkey):
-    """
-    Create mky weight plot
-    """
-    def weight_plot_makeup(ax):
-        matplotlib.rcParams.update({'font.size': 14})
-        handles, labels = ax.get_legend_handles_labels()
-        if monkey.mky_drinking_category is None:
-            labels = [str(monkey.mky_id) + ' Control']
-        else:
-            labels = [str(monkey.mky_id) + ' ' + monkey.mky_drinking_category]
-        ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
-        ax.set_ylabel('Monkey Weight')
-        ax.set_title('Animal Weight Change')
-        plt.tight_layout()
-
-    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)\
-        .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
-    df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_weight')),
-                      columns=['Date', 'weight'])
-    ax = df.plot(x='Date', y='weight', figsize=(16, 10), color=dc_colors[monkey.mky_drinking_category])
-    weight_plot_makeup(ax)
-
-    # make event annotations
-    cevs = CohortEvent.objects.filter(cohort=monkey.cohort)       # retrieve from DB as python objects
-    evts = pd.DataFrame(list(cevs.values_list('event__evt_name', 'cev_date')),
-                        columns=['event', 'date'])      # get values
-    # filter by regex and negate
-    evts_begin = evts[~evts.event.str.contains('.*(Before|Necropsy|Pre|Endocrine|(H2O)|(Ethanol.*End.*))')]
-    [plt.axvline(x, color='r', linestyle='--') for x in evts_begin.date]  # plot ablines
-    ymin, ymax = ax.get_ylim()                                            # get ylim of axis
-    [ax.text(x[1].date, ymin + 0.05, x[1].event,                          # plot event at date while iteration tuples
-             verticalalignment='bottom', horizontalalignment='right',
-             rotation='vertical') for x in evts_begin.iterrows()]
-    xmin, xmax = ax.get_xlim()
-    ax.set_xlim(xmin - 20, xmax)                                          # adjust left xlim to fit text annotaiton
-#monkey_weight_plot(Monkey.objects.get(mky_id=10215))
+# def cohort_weights_plot(cohort):
+#     """
+#     Create mky weights plots
+#     """
+#     def weight_plot_makeup(ax):
+#         handles, labels = ax.get_legend_handles_labels()
+#         labels = [label.split(', ')[1][:-1] for label in labels]
+#         ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
+#         ax.set_ylabel('Monkey Weight')
+#         ax.set_title('Animals Weights Change')
+#         plt.tight_layout()
+#
+#     mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=cohort.monkey_set.all())\
+#         .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
+#     df = pd.DataFrame(list(mtds.values_list('monkey__mky_id', 'drinking_experiment__dex_date', 'mtd_weight')),
+#                       columns=['mky_id', 'Date', 'weight'])
+#     df_pivot = df.pivot_table(index='Date', columns='mky_id')
+#     matplotlib.rcParams.update({'font.size': 14})
+#     ax = df_pivot.plot(figsize=(16, 10))
+#     weight_plot_makeup(ax)
+# #cohort_weights_plot(r6b)
+#
+# def monkey_weight_plot(monkey):
+#     """
+#     Create mky weight plot
+#     """
+#     def weight_plot_makeup(ax):
+#         matplotlib.rcParams.update({'font.size': 14})
+#         handles, labels = ax.get_legend_handles_labels()
+#         if monkey.mky_drinking_category is None:
+#             labels = [str(monkey.mky_id) + ' Control']
+#         else:
+#             labels = [str(monkey.mky_id) + ' ' + monkey.mky_drinking_category]
+#         ax.legend(handles, labels, loc='upper left')  # reverse to keep order consistent
+#         ax.set_ylabel('Monkey Weight')
+#         ax.set_title('Animal Weight Change')
+#         plt.tight_layout()
+#
+#     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey)\
+#         .filter(mtd_weight__isnull=False).order_by('drinking_experiment__dex_date')
+#     df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'mtd_weight')),
+#                       columns=['Date', 'weight'])
+#     ax = df.plot(x='Date', y='weight', figsize=(16, 10), color=dc_colors[monkey.mky_drinking_category])
+#     weight_plot_makeup(ax)
+#
+#     # make event annotations
+#     cevs = CohortEvent.objects.filter(cohort=monkey.cohort)       # retrieve from DB as python objects
+#     evts = pd.DataFrame(list(cevs.values_list('event__evt_name', 'cev_date')),
+#                         columns=['event', 'date'])      # get values
+#     # filter by regex and negate
+#     evts_begin = evts[~evts.event.str.contains('.*(Before|Necropsy|Pre|Endocrine|(H2O)|(Ethanol.*End.*))')]
+#     [plt.axvline(x, color='r', linestyle='--') for x in evts_begin.date]  # plot ablines
+#     ymin, ymax = ax.get_ylim()                                            # get ylim of axis
+#     [ax.text(x[1].date, ymin + 0.05, x[1].event,                          # plot event at date while iteration tuples
+#              verticalalignment='bottom', horizontalalignment='right',
+#              rotation='vertical') for x in evts_begin.iterrows()]
+#     xmin, xmax = ax.get_xlim()
+#     ax.set_xlim(xmin - 20, xmax)                                          # adjust left xlim to fit text annotaiton
+# #monkey_weight_plot(Monkey.objects.get(mky_id=10215))
 
 
 
@@ -2908,4 +2910,37 @@ from matrr.plotting import cohort_plots
 #     print cohort
 #     cohort_plots.cohort_necropsy_avg_etoh_22hr_gkg(cohort)
 
-#plt.show()
+
+"""
+22 DEC 2015
+Find FT schedule distribution
+"""
+# df = pd.DataFrame(list(ExperimentEvent.objects.all().filter(eev_experiment_state=1).values_list("eev_fixed_time", flat=True)),
+#                   columns=['ft'])
+# df.ft.hist()
+
+"""
+Vansessa Hormones
+"""
+# hormones = MonkeyHormone.objects.filter(monkey__in=r4.monkey_set.all())
+# df = pd.DataFrame(list(hormones.values_list('monkey__mky_id',  'mtd__drinking_experiment__dex_date','mtd__drinking_experiment__dex_type',
+#                                             'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas')),
+#                   columns=['mky_id', 'mtd_date', 'dextype', 'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas'])
+# print df
+
+
+"""
+generate coh13 plots
+"""
+#cohort_plots.cohort_etoh_bihourly_treemap(c13)
+#cohort_plots.cohort_etoh_max_bout_cumsum_horibar_ltgkg(c13)
+#plot_tools.create_max_bout_cumsum_horibar_canonicals(c13)
+#monkey_plots.monkey_etoh_bouts_vol(c13.monkey_set.all()[1])
+#monkey_plots.monkey_etoh_bouts_drinks(c13.monkey_set.all()[1])
+
+
+print CohortMetaData.objects.filter(cohort=c13).values_list('cbc_mtd_etoh_bout_max')
+# CohortMetaData.objects.get(cohort=r10).populate_fields()
+# print CohortMetaData.objects.filter(cohort=r10).values_list()
+
+plt.show()
