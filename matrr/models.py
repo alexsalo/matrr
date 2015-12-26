@@ -1522,6 +1522,39 @@ class EEVManager(models.Manager):
 
 
 class ExperimentEvent(models.Model):
+    """
+    By Fixed Time, I believe you're referring to the induction portion of the experiments.
+
+    This would be relevant in state 1 of induction, when the animal is drinking their induced side fluid.
+    The pellets fall singly on a fixed time.
+
+    The fixed time would be the 5th column of the induction data, and it is usually 300 (seconds) or 5 minutes.
+
+    The 6th column of the induction data is the experimental state, so though the fixed time shows in all the records,
+    it is only relevant when that 6th column is also a 1.
+
+    On your other question, etoh_onset is the portion of induction when the animals are induced to drink a .5
+    gram/kilogram dose of alcohol.
+
+    If I took all induction raw files that I get, they would be in 4 groups:
+
+    Water induction (drinking an amount of water on the induced side equal to a 1.5 dose of the ethanol solution)
+    .5 alcohol induction (drinking on the induced side to a .5 dose of ethanol solution) -- fluid is 1/3 of the
+    previous water induction adjusted with weight changes
+    1.0 alcohol induction (drinking on the induced side to a 1.0 dose of ethanol solution) -- fluid 2/3 of the previous
+    water induction adjusted with weight changes
+    1.5 alcohol induction (drinking on the induced side to a 1.5 dose of ethanol solution) -- fluid is the same
+    as previous water induction adjusted with weight changes
+
+    One caveat is that if you put all these records together, the 1.5 equivalent of water (1st part) and
+    the 1.5 alcohol (4th part) would look identical, and the only way to tell them apart would be to know
+    the dates, and all the 1.5 equivalent water would pre-date the .5 alcohol induction.
+
+    Thus the start of induction is NOT the ethanol onset.  Ethanol onset is the start of the .5 alcohol induction.
+
+    However, in your data I try to not send the "water on both side" 1st part data, so the onset may be the first
+    induction records you have.
+    """
     objects = EEVManager()
     eev_id = models.AutoField(primary_key=True)
     monkey = models.ForeignKey(Monkey, related_name='event_set', db_column='mky_id', editable=False)
@@ -4364,9 +4397,17 @@ class CRHChallenge(models.Model):
     DHEAS micrograms/ml
     Aldosterone pg/ml (for about half of the aldosterone assays, ETSL reported pg/ml as ng/ml; I didn't notice and
         didn't change the values, so the values are fine, but all aldosterone they tell me is pg/ml)
-    DOC pg/ml Testosterone ng/ml
+    DOC pg/ml
+    Testosterone ng/ml
     Estradiol - I don't know, I see they report ng/ml and pg/ml sometimes, the range of the assay is 5-4300 pg/ml (which
         would be 0.005-4.3 ng/ml), so if they values of estradiol are high, it is probably pg/ml.
+
+    Notes:
+        QNS - quantity not sufficient
+        mg - milli gramm 10-3
+        ug - micro gramm 10-6
+        ng - nano gramm  10-9
+        pg - pico gramm  10-12
     """
     UNITS = {'crc_acth': 'pg/dl', 'crc_cort': 'ug/dl', 'crc_e': 'pg/ml', 'crc_doc': 'pg/ml', 'crc_ald': 'pg/ml',
              'crc_dheas': 'ug/ml'}

@@ -11,6 +11,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 import pylab
 from datetime import datetime as dt
 import string
@@ -2922,12 +2923,13 @@ Find FT schedule distribution
 """
 Vansessa Hormones
 """
-# hormones = MonkeyHormone.objects.filter(monkey__in=r4.monkey_set.all())
-# df = pd.DataFrame(list(hormones.values_list('monkey__mky_id',  'mtd__drinking_experiment__dex_date','mtd__drinking_experiment__dex_type',
-#                                             'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas')),
-#                   columns=['mky_id', 'mtd_date', 'dextype', 'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas'])
+# crc = CRHChallenge.objects.all()
+# df = pd.DataFrame(list(crc.values_list('monkey__mky_id',  'crc_date','crc_time', 'crc_ep',
+#                                             'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas')),
+#                   columns=['mky_id',  'crc_date','crc_time', 'crc_ep',
+#                                             'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas'])
 # print df
-
+#print CRHChallenge.objects.all().values_list('crc_time', flat=True).distinct()
 
 """
 generate coh13 plots
@@ -2954,5 +2956,18 @@ generate coh13 plots
 #print CohortMetaData.objects.filter(cohort=c13).values_list('cbc_mtd_etoh_bout_max')
 # CohortMetaData.objects.get(cohort=r10).populate_fields()
 # print CohortMetaData.objects.filter(cohort=r10).values_list()
+
+
+# from matrr.utils import build_cohorts_timeline
+# print build_cohorts_timeline.create_cohorts_timeline()
+
+
+# fix random date mistake
+# cev = CohortEvent.objects.filter(cohort=r4).get(event__evt_name="Individual Housing Endocrine Profile Begin")
+# print cev
+# cev.cev_date = '2008-01-07'
+# cev.save()
+# print cev
+
 
 plt.show()

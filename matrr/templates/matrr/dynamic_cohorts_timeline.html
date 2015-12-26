@@ -1,0 +1,23 @@
+<div style="max-width:100%; height:100%; width: 1000px; height:700px">
+	<img style='display: block; margin:auto; width:1000px; height:700px; max-width: 100%; max-height: 100%' src='/static/images/ohsu_cohort_timelines.png' usemap="#timelines">
+</div>
+
+<map name="timelines" id="timelines">
+    {% for xy, coh_name, coh_id in zipped_timeline_coords %}
+        <area shape="rect"
+        coords="{{xy}}"
+        href="https://gleek.ecs.baylor.edu/cohort/{{ coh_id }}/"
+        title="{{ coh_name }}" alt="{{ coh_name }} "/>
+    {% endfor %}
+<!--
+<area shape="rect"
+	coords="0,55,500,85"
+	href="https://gleek.ecs.baylor.edu/cohort/2/"
+	title="INIA Cyno 1" alt="INIA Cyno 1"/>
+
+<area shape="rect"
+	coords="0,120,784,150"
+	href="https://gleek.ecs.baylor.edu/cohort/3/"
+	title="INIA Cyno 2" alt="INIA Cyno 2"/>
+-->
+</map>

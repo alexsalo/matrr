@@ -233,6 +233,25 @@ def search(request):
                               context_instance=RequestContext(request))
 
 
+def dynamic_cohorts_timeline(request):
+    from matrr.utils import build_cohorts_timeline
+    #cohorts_coord_dict, cohort_names, cohort_ids = build_cohorts_timeline.create_cohorts_timeline()
+
+    try:
+        if settings.DEBUG:
+            json_file = open('/home/alex/pycharm/ve1/matrr/matrr/utils/DATA/json/current_cohorts_zipped_timeline.json', 'r')
+        else:
+            json_file = open('matrr/utils/DATA/json/current_cohorts_zipped_timeline.json', 'r')
+
+        zipped_timeline_coords = json.loads(json_file.read())
+    except IOError:
+        messages.error(request, "MATRR could not find the information needed for this page.  If this problem persists please notify a MATRR admin.")
+        zipped_timeline_coords = {}
+
+    return render_to_response('matrr/dynamic_cohorts_timeline.html',
+                              zipped_timeline_coords,
+                              context_instance=RequestContext(request))
+
 def advanced_search(request):
     monkey_auth = request.user.has_perm('matrr.monkey_view_confidential')
     select_form = AdvancedSearchSelectForm(prefix='select')
