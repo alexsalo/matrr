@@ -27,7 +27,7 @@ urlpatterns += patterns('',
     url(r'^contact_us/$', basic.contact_us, name='contact-us'),
     url(r'^search/$', basic.search, name='search'),
     url(r'^advanced_search/$', basic.advanced_search, name='advanced-search'),
-    url(r'^dynamic_cohorts_timeline/$', basic.dynamic_cohorts_timeline, name='advanced-search'),
+    url(r'^dynamic_cohorts_timeline/$', basic.dynamic_cohorts_timeline, name='dynamic-cohorts-timeline'),
     url(r'^publications/$', basic.publications, name='publications'),
     url(r'^mta/list/$', basic.mta_list, name='mta-list'), # not public facing, but it doesn't really belong anywhere else
 

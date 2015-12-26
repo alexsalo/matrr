@@ -2958,8 +2958,8 @@ generate coh13 plots
 # print CohortMetaData.objects.filter(cohort=r10).values_list()
 
 
-# from matrr.utils import build_cohorts_timeline
-# print build_cohorts_timeline.create_cohorts_timeline()
+from matrr.utils import build_cohorts_timeline
+print build_cohorts_timeline.create_cohorts_timeline()
 
 
 # fix random date mistake

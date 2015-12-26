@@ -115,6 +115,13 @@ def create_cohort_timeline_plot(df):
     plt.tight_layout()
     fig.subplots_adjust(right=0.65)
 
+    # Save figure
+    if settings.DEBUG:
+        path = '/home/alex/MATRR/generated_cohorts_timeline.png'
+    else:  # ugly adhoc to put it directly to static folder
+        path = settings.path + '/static/images/generated_cohorts_timeline.png'
+    plt.savefig(path, format='png')
+
     # Return a dict with barhs coordinates
     i = 0
     bar_coords = list()
