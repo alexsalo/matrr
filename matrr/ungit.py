@@ -2,7 +2,6 @@ import sys, os
 sys.path.append('~/pycharm/ve1/matrr')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from matrr.models import *
-from matrr.models import Monkey
 import dateutil
 from matrr.plotting import monkey_plots as mkplot
 import matplotlib
@@ -1283,6 +1282,7 @@ c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
 #
 # plt.show()
 
+
 # CohortImage.objects.all().delete()
 # plots = ['cohort_bone_densities',            ]
 # from matrr.models import CohortImage, Cohort
@@ -2041,176 +2041,372 @@ from plotting import cohort_plots
 # plot_regression_line_and_corr_text(axs[2], bec_df.etoh_next_day, bec_df.bec)
 
 
-### 12 November 2015
-# BECs for all animals
-def mky_bec_corr(mky):
-    # 1. Filter work data set
-    becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
-    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_g_kg__isnull=True)
-
-    # 2. Get bec dates and corresponding day before and day after dates lists
-    bec_dates = becs.values_list('bec_collect_date', flat=True)
-    bec_dates_prev = [date + timedelta(days=-1) for date in bec_dates]
-    bec_dates_next = [date + timedelta(days=+1) for date in bec_dates]
-
-    # 3. Get corresponding mtds
-    mtds_prev = mtds.filter(drinking_experiment__dex_date__in=bec_dates_prev)
-    mtds_next = mtds.filter(drinking_experiment__dex_date__in=bec_dates_next)
-
-    # 4. Find intersection: we need data for prev day, bec day and next day
-    mtds_prev_dates = [date + timedelta(days=+1) for date in mtds_prev.values_list('drinking_experiment__dex_date', flat=True)]
-    mtds_next_dates = [date + timedelta(days=-1) for date in mtds_next.values_list('drinking_experiment__dex_date', flat=True)]
-    mtds_intersection_dates = set(mtds_prev_dates).intersection(mtds_next_dates)
-
-    # 5. Retain becs and mtds within days of intersection
-    becs_retained = becs.filter(bec_collect_date__in=mtds_intersection_dates).order_by('bec_collect_date')
-    mtds_prev_retained = mtds_prev.filter(drinking_experiment__dex_date__in=[date + timedelta(days=-1) for date in mtds_intersection_dates]).order_by('drinking_experiment__dex_date')
-    mtds_next_retained = mtds_next.filter(drinking_experiment__dex_date__in=[date + timedelta(days=+1) for date in mtds_intersection_dates]).order_by('drinking_experiment__dex_date')
-
-    # 6. Assert we have the same number of data daysa
-    print 'becs retained: %s' % becs_retained.count()
-    print 'etoh on prev day retained: %s' % mtds_prev_retained.count()
-    print 'etoh on next day retained: %s' % mtds_next_retained.count()
-    assert becs_retained.count() == mtds_prev_retained.count() == mtds_next_retained.count()
-
-    # 7. Compile data frame
-    if mtds_prev_retained.count() == 0:
-        return pd.DataFrame() # empty to be ignored
-
-    bec_df = pd.DataFrame(list(mtds_prev_retained.values_list('mtd_etoh_g_kg')), columns=['etoh_previos_day'])
-    bec_df['etoh_at_bec_sample_time'] = list(becs_retained.values_list('bec_gkg_etoh', flat=True))
-    bec_df['etoh_next_day'] = list(mtds_next_retained.values_list('mtd_etoh_g_kg', flat=True))
-    bec_df['bec'] = list(becs_retained.values_list('bec_mg_pct', flat=True))
-    bec_df['dc'] = list(mtds_next_retained.values_list('monkey__mky_drinking_category', flat=True))
-    return bec_df
-
-
-# 9. Plot fitted lines and correlation values
-def plot_regression_line_and_corr_text(ax, x, y):
-    fit = np.polyfit(x, y, deg=1)
-    ax.plot(x, fit[0] * x + fit[1], color='red')
-
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-    text = 'Correlation: %s' % np.round(x.corr(y), 4)
-    ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=14,
-            verticalalignment='top', bbox=props)
-
-
-def plot_bec_correlation(bec_df):
-    fig, axs = plt.subplots(1, 3, figsize=(15, 8), facecolor='w', edgecolor='k')
-    bec_df.plot(kind='scatter', x='etoh_previos_day', y='bec', ax=axs[0])
-    bec_df.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', ax=axs[1])
-    bec_df.plot(kind='scatter', x='etoh_next_day', y='bec', ax=axs[2])
-    plt.tight_layout()
-
-    plot_regression_line_and_corr_text(axs[0], bec_df.etoh_previos_day, bec_df.bec)
-    plot_regression_line_and_corr_text(axs[1], bec_df.etoh_at_bec_sample_time, bec_df.bec)
-    plot_regression_line_and_corr_text(axs[2], bec_df.etoh_next_day, bec_df.bec)
-
-
-def collect_cohort_monkeys_bec(cohort):
-    monkeys = Monkey.objects.filter(mky_id__in=MonkeyBEC.objects.all().values_list('monkey__mky_id', flat=True).distinct())
-    monkeys = Monkey.objects.filter(mky_id__in=cohort.monkey_set.filter(mky_id__in=monkeys))
-    bec_df = mky_bec_corr(monkeys[0])
-    for mky in monkeys[1:]:
-        print mky
-        new_df = mky_bec_corr(mky)
-        if len(new_df) > 0:
-            bec_df = bec_df.append(new_df)
-    print "Total BECs: %s" % len(bec_df)
-    return bec_df
-
-def collect_all_monkeys_bec():
-    monkeys = Monkey.objects.filter(mky_id__in=MonkeyBEC.objects.all().values_list('monkey__mky_id', flat=True).distinct())
-    bec_df = mky_bec_corr(monkeys[0])
-    for mky in monkeys[1:]:
-        print mky
-        new_df = mky_bec_corr(mky)
-        if len(new_df) > 0:
-            bec_df = bec_df.append(new_df)
-    print "Total BECs: %s" % len(bec_df)
-    return bec_df
-
-
-def plot_bec_correlation_by_dc(bec_df, font_size=12):
-    fig, axs = plt.subplots(4, 3, figsize=(20, 10), facecolor='w', edgecolor='k')
-    axs = axs.ravel()
-    for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
-        df_dc = bec_df[bec_df.dc == dc]
-
-        df_dc.plot(kind='scatter', x='etoh_previos_day', y='bec', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 0])
-        df_dc.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 1])
-        df_dc.plot(kind='scatter', x='etoh_next_day', y='bec', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 2])
-
-        plot_regression_line_and_corr_text(axs[i*3 + 0], df_dc.etoh_previos_day, df_dc.bec)
-        plot_regression_line_and_corr_text(axs[i*3 + 1], df_dc.etoh_at_bec_sample_time, df_dc.bec)
-        plot_regression_line_and_corr_text(axs[i*3 + 2], df_dc.etoh_next_day, df_dc.bec)
-
-    # fine tune plot look'n'feel
-    plt.tight_layout()
-
-    fig.subplots_adjust(hspace=0)
-    fig.subplots_adjust(wspace=0)
-    plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
-    plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
-
-    plt.setp([axs[i].get_xticklabels() for i in [9, 10, 11]], visible=True)
-    plt.setp([axs[i].get_yticklabels() for i in [0, 3, 6, 9]], visible=True)
-
-    [ax.set_ylabel('') for ax in axs]
-    axs[0].set_ylabel('LD', fontsize=font_size)
-    axs[3].set_ylabel('BD', fontsize=font_size)
-    axs[6].set_ylabel('HD', fontsize=font_size)
-    axs[9].set_ylabel('VHD', fontsize=font_size)
-
-    fig.text(0.5, 0.94, 'BEC correlation: EtOH the day before, day of and day after', ha='center', fontsize=font_size+4)
-    fig.text(0.005, 0.5, 'BEC', va='center', rotation='vertical', fontsize=font_size+4)
-    fig.subplots_adjust(top=0.93)
-
-
-GEN_BEC_DF = False
-if GEN_BEC_DF:
-    df_bec_all = collect_all_monkeys_bec()
-    df_bec_all.save('bec_df_all.plk')
-else:
-    df_bec_all = pd.read_pickle('bec_df_all.plk')
-
-# plot_bec_correlation_by_dc(df_bec_all)
-
-
-# fill the corr table
-def compile_bec_correlation_table(bec_df):
-    cors = list()
-    for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
-        f = bec_df[bec_df.dc == dc]
-        row = [np.round(f.etoh_previos_day.corr(f.bec), 4),
-               np.round(f.etoh_at_bec_sample_time.corr(f.bec), 4),
-               np.round(f.etoh_next_day.corr(f.bec), 4)]
-        cors.append(row)
-    return cors
-
-# bec_all_correlations = compile_bec_correlation_table(df_bec_all)
-# for row in bec_all_correlations:
-#     print "%.2f "*len(row) % tuple(row)
-
-
-# def test_plot_bec_correlation(bec_df):
-#     bec_df.plot(kind='scatter', x='etoh_previos_day', y='bec', subplots=True, layout=(1, 3))
-#     bec_df.plot(kind='scatter', x='etoh_at_bec_sample_time', subplots=True, layout=(1, 3))
-#     bec_df.plot(kind='scatter', x='etoh_next_day', y='bec', subplots=True, layout=(1, 3))
+"""
+12 November 2015
+BECs for all animals
+"""
+# def _split_bec_df_into_three(bec_df, split_by):
+#     if split_by == 'bec_mgpct':
+#         bec_df_less80mgpct = bec_df[bec_df.bec < 80]
+#         bec_df_over80mgpct = bec_df[bec_df.bec >= 80]
+#         return bec_df, bec_df_less80mgpct, bec_df_over80mgpct
+#
+#     if split_by == 'bec_over2stdev':
+#         mean_bec = np.mean(bec_df.bec)
+#         std_bec = np.std(bec_df.bec)
+#         y_lo = mean_bec - 2*std_bec
+#         y_hi = mean_bec + 2*std_bec
+#         bec_df_less2std = bec_df[(bec_df.bec > y_lo) & (bec_df.bec < y_hi)]
+#         bec_df_over2std = bec_df[(bec_df.bec < y_lo) | (bec_df.bec > y_hi)]
+#         return bec_df, bec_df_less2std, bec_df_over2std
+#
+# # Using daylight etoh consumption rather than 22hr access
+# def mky_bec_corr_daylight(mky, split_by='bec_mgpct'):
+#     # 1. Find becs and create dataframe
+#     becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
+#     bec_df = pd.DataFrame(columns=['etoh_previos_day', 'etoh_at_bec_sample_time', 'etoh_next_day', 'bec', 'dc'])
+#
+#     # 2. Collect values
+#     for bec in becs:
+#         today = bec.bec_collect_date
+#         yeday = today + timedelta(days=-1)
+#         tomor = today + timedelta(days=1)
+#
+#         # If we have values for prev, to and next days - append to df_bec
+#         try:
+#             etoh_prev, etoh_at, etoh_next = mky.DL_total_etoh(yeday), mky.DL_total_etoh(today), mky.DL_total_etoh(tomor)
+#             bec_df.loc[len(bec_df)] = [etoh_prev, etoh_at, etoh_next, bec.bec_mg_pct, mky.mky_drinking_category]
+#         except:
+#             continue
+#     return _split_bec_df_into_three(bec_df, split_by)
+#
+#
+# def mky_bec_corr_22hr(mky, split_by='bec_mgpct'):
+#     # 1. Filter work data set
+#     becs = MonkeyBEC.objects.OA().filter(monkey=mky).order_by('bec_collect_date')
+#     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mky).exclude(mtd_etoh_g_kg__isnull=True)
+#
+#     # 2. Get bec dates and corresponding day before and day after dates lists
+#     bec_dates = becs.values_list('bec_collect_date', flat=True)
+#     bec_dates_prev = [date + timedelta(days=-1) for date in bec_dates]
+#     bec_dates_next = [date + timedelta(days=+1) for date in bec_dates]
+#
+#     # 3. Get corresponding mtds
+#     mtds_prev = mtds.filter(drinking_experiment__dex_date__in=bec_dates_prev)
+#     mtds_next = mtds.filter(drinking_experiment__dex_date__in=bec_dates_next)
+#
+#     # 4. Find intersection: we need data for prev day, bec day and next day
+#     mtds_prev_dates = [date + timedelta(days=+1) for date in mtds_prev.values_list('drinking_experiment__dex_date', flat=True)]
+#     mtds_next_dates = [date + timedelta(days=-1) for date in mtds_next.values_list('drinking_experiment__dex_date', flat=True)]
+#     mtds_intersection_dates = set(mtds_prev_dates).intersection(mtds_next_dates)
+#
+#     # 5. Retain becs and mtds within days of intersection
+#     becs_retained = becs.filter(bec_collect_date__in=mtds_intersection_dates).order_by('bec_collect_date')
+#     mtds_prev_retained = mtds_prev.filter(drinking_experiment__dex_date__in=[date + timedelta(days=-1) for date in mtds_intersection_dates]).order_by('drinking_experiment__dex_date')
+#     mtds_next_retained = mtds_next.filter(drinking_experiment__dex_date__in=[date + timedelta(days=+1) for date in mtds_intersection_dates]).order_by('drinking_experiment__dex_date')
+#
+#     # 6. Assert we have the same number of data daysa
+#     print 'becs retained: %s' % becs_retained.count()
+#     print 'etoh on prev day retained: %s' % mtds_prev_retained.count()
+#     print 'etoh on next day retained: %s' % mtds_next_retained.count()
+#     assert becs_retained.count() == mtds_prev_retained.count() == mtds_next_retained.count()
+#
+#     # 7. Compile data frame
+#     if mtds_prev_retained.count() == 0:
+#         return pd.DataFrame() # empty to be ignored
+#
+#     bec_df = pd.DataFrame(list(mtds_prev_retained.values_list('mtd_etoh_g_kg')), columns=['etoh_previos_day'])
+#     bec_df['etoh_at_bec_sample_time'] = list(becs_retained.values_list('bec_gkg_etoh', flat=True))
+#     bec_df['etoh_next_day'] = list(mtds_next_retained.values_list('mtd_etoh_g_kg', flat=True))
+#     bec_df['bec'] = list(becs_retained.values_list('bec_mg_pct', flat=True))
+#     bec_df['dc'] = list(mtds_next_retained.values_list('monkey__mky_drinking_category', flat=True))
+#
+#     return _split_bec_df_into_three(bec_df, split_by)
+#
+#
+# def plot_regression_line_and_corr_text(ax, x, y, linecol='red', text_y_adj=0):
+#     fit = np.polyfit(x, y, deg=1)
+#     ax.plot(x, fit[0] * x + fit[1], color=linecol)
+#
+#     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+#     text = 'Correlation: %s' % np.round(x.corr(y), 4)
+#     ax.text(0.05, 0.95 + text_y_adj, text, transform=ax.transAxes, fontsize=14,
+#             verticalalignment='top', bbox=props)
+#
+#
+# def plot_bec_correlation(bec_df):
+#     fig, axs = plt.subplots(1, 3, figsize=(15, 8), facecolor='w', edgecolor='k')
+#     bec_df.plot(kind='scatter', x='etoh_previos_day', y='bec', ax=axs[0])
+#     bec_df.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', ax=axs[1])
+#     bec_df.plot(kind='scatter', x='etoh_next_day', y='bec', ax=axs[2])
 #     plt.tight_layout()
-# df_coh = pd.read_pickle('bec_coh_df.plk')
-# test_plot_bec_correlation(df_coh)
+#
+#     plot_regression_line_and_corr_text(axs[0], bec_df.etoh_previos_day, bec_df.bec)
+#     plot_regression_line_and_corr_text(axs[1], bec_df.etoh_at_bec_sample_time, bec_df.bec)
+#     plot_regression_line_and_corr_text(axs[2], bec_df.etoh_next_day, bec_df.bec)
+#
+#
+# def collect_monkeys_bec(schedule, split_by, cohort='ALL'):
+#     if schedule == '22hr':
+#         collect_method = mky_bec_corr_22hr
+#     elif schedule == 'daylight':
+#         collect_method = mky_bec_corr_daylight
+#     else:
+#         raise Exception('You must specify schedule: 22hr or daylight')
+#
+#     if cohort == 'ALL':
+#         monkeys = Monkey.objects.filter(mky_id__in=MonkeyBEC.objects.all().
+#                                         values_list('monkey__mky_id', flat=True).distinct())
+#     else:
+#         monkeys = Monkey.objects.filter(mky_id__in=MonkeyBEC.objects.all().
+#                                         values_list('monkey__mky_id', flat=True).distinct())
+#         monkeys = Monkey.objects.filter(mky_id__in=cohort.monkey_set.filter(mky_id__in=monkeys))
+#
+#     bec_df_all, bec_df_group_1, bec_df_group_2 = collect_method(monkeys[0], split_by)
+#     for mky in monkeys[1:]:
+#         print mky
+#         try:
+#             new_df, new_df_group_1, new_df_group_2 = collect_method(mky, split_by)
+#             bec_df_all = bec_df_all.append(new_df)
+#             bec_df_group_1 = bec_df_group_1.append(new_df_group_1)
+#             bec_df_group_2 = bec_df_group_2.append(new_df_group_2)
+#         except Exception as e:
+#             print e
+#             continue
+#
+#     print "Total BECs: %s" % len(bec_df_all)
+#     return bec_df_all, bec_df_group_1, bec_df_group_2
+#
+#
+# def plot_bec_correlation_by_dc(bec_df, font_size=12):
+#     fig, axs = plt.subplots(4, 3, figsize=(20, 10), facecolor='w', edgecolor='k')
+#     axs = axs.ravel()
+#     for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
+#         df_dc = bec_df[bec_df.dc == dc]
+#
+#         df_dc.plot(kind='scatter', x='etoh_previos_day', y='bec', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 0])
+#         df_dc.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 1])
+#         df_dc.plot(kind='scatter', x='etoh_next_day', y='bec', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 2])
+#
+#         plot_regression_line_and_corr_text(axs[i*3 + 0], df_dc.etoh_previos_day, df_dc.bec)
+#         plot_regression_line_and_corr_text(axs[i*3 + 1], df_dc.etoh_at_bec_sample_time, df_dc.bec)
+#         plot_regression_line_and_corr_text(axs[i*3 + 2], df_dc.etoh_next_day, df_dc.bec)
+#
+#     # fine tune plot look'n'feel
+#     plt.tight_layout()
+#
+#     fig.subplots_adjust(hspace=0)
+#     fig.subplots_adjust(wspace=0)
+#     plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
+#     plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
+#
+#     plt.setp([axs[i].get_xticklabels() for i in [9, 10, 11]], visible=True)
+#     plt.setp([axs[i].get_yticklabels() for i in [0, 3, 6, 9]], visible=True)
+#
+#     [ax.set_ylabel('') for ax in axs]
+#     axs[0].set_ylabel('LD', fontsize=font_size)
+#     axs[3].set_ylabel('BD', fontsize=font_size)
+#     axs[6].set_ylabel('HD', fontsize=font_size)
+#     axs[9].set_ylabel('VHD', fontsize=font_size)
+#
+#     fig.text(0.5, 0.94, 'BEC correlation: EtOH the day before, day of and day after', ha='center', fontsize=font_size+4)
+#     fig.text(0.005, 0.5, 'BEC', va='center', rotation='vertical', fontsize=font_size+4)
+#     fig.subplots_adjust(top=0.93)
+#     return fig
+#
+#
+# def plot_bec_correlation_by_dc_24panels(schedule, bec_df_group_1, bec_df_group_2, group1_label, group2_label, font_size=12):
+#     fig, axs = plt.subplots(4, 6, figsize=(20, 10), facecolor='w', edgecolor='k')
+#     axs = axs.ravel()
+#     for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
+#         df_dc_group_1 = bec_df_group_1[bec_df_group_1.dc == dc]
+#         df_dc_group_2 = bec_df_group_2[bec_df_group_2.dc == dc]
+#
+#         df_dc_group_1.plot(kind='scatter', x='etoh_previos_day', y='bec', c='g', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*6 + 0])
+#         df_dc_group_2.plot(kind='scatter', x='etoh_previos_day', y='bec', c='y', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*6 + 1])
+#
+#         df_dc_group_1.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', c='g', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*6 + 2])
+#         df_dc_group_2.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', c='y', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*6 + 3])
+#
+#         df_dc_group_1.plot(kind='scatter', x='etoh_next_day', y='bec', c='g', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*6 + 4])
+#         df_dc_group_2.plot(kind='scatter', x='etoh_next_day', y='bec', c='y', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*6 + 5])
+#
+#         plot_regression_line_and_corr_text(axs[i*6 + 0], df_dc_group_1.etoh_previos_day, df_dc_group_1.bec)
+#         plot_regression_line_and_corr_text(axs[i*6 + 1], df_dc_group_2.etoh_previos_day, df_dc_group_2.bec)
+#
+#         plot_regression_line_and_corr_text(axs[i*6 + 2], df_dc_group_1.etoh_at_bec_sample_time, df_dc_group_1.bec)
+#         plot_regression_line_and_corr_text(axs[i*6 + 3], df_dc_group_2.etoh_at_bec_sample_time, df_dc_group_2.bec)
+#
+#         plot_regression_line_and_corr_text(axs[i*6 + 4], df_dc_group_1.etoh_next_day, df_dc_group_1.bec)
+#         plot_regression_line_and_corr_text(axs[i*6 + 5], df_dc_group_2.etoh_next_day, df_dc_group_2.bec)
+#
+#     # fine tune plot look'n'feel
+#     plt.tight_layout()
+#
+#     fig.subplots_adjust(hspace=0)
+#     fig.subplots_adjust(wspace=0)
+#     plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
+#     plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
+#
+#     plt.setp([axs[i].get_xticklabels() for i in [18, 19, 20, 21, 22, 23]], visible=True)
+#     plt.setp([axs[i].get_yticklabels() for i in [0, 6, 12, 18]], visible=True)
+#
+#     [ax.set_ylabel('') for ax in axs]
+#     axs[0].set_ylabel('LD', fontsize=font_size)
+#     axs[6].set_ylabel('BD', fontsize=font_size)
+#     axs[12].set_ylabel('HD', fontsize=font_size)
+#     axs[18].set_ylabel('VHD', fontsize=font_size)
+#
+#     axs[0].set_title(group1_label)
+#     axs[1].set_title(group2_label)
+#
+#     title = 'BEC correlation: EtOH the day before, day of and day after; ' + schedule + ' schedule'
+#     fig.text(0.5, 0.94, title, ha='center', fontsize=font_size+4)
+#     fig.text(0.005, 0.5, 'BEC', va='center', rotation='vertical', fontsize=font_size+4)
+#     fig.subplots_adjust(top=0.90)
+#     return fig
+#
+#
+# def plot_bec_correlation_by_dc_12combinedpanels(schedule, bec_df_group_1, bec_df_group_2, group1_label, group2_label, font_size=12):
+#     fig, axs = plt.subplots(4, 3, figsize=(20, 10), facecolor='w', edgecolor='k')
+#     axs = axs.ravel()
+#     for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
+#         df_dc_group_1 = bec_df_group_1[bec_df_group_1.dc == dc]
+#         df_dc_group_2 = bec_df_group_2[bec_df_group_2.dc == dc]
+#
+#         df_dc_group_1.plot(kind='scatter', x='etoh_previos_day', y='bec', c='g', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 0])
+#         df_dc_group_2.plot(kind='scatter', x='etoh_previos_day', y='bec', c='orange', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 0])
+#
+#         df_dc_group_1.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', c='g', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 1])
+#         df_dc_group_2.plot(kind='scatter', x='etoh_at_bec_sample_time', y='bec', c='orange', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 1])
+#
+#         df_dc_group_1.plot(kind='scatter', x='etoh_next_day', y='bec', c='g', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 2])
+#         df_dc_group_2.plot(kind='scatter', x='etoh_next_day', y='bec', c='orange', xlim=(0, 8), ylim=(-10, 400), ax=axs[i*3 + 2])
+#
+#         plot_regression_line_and_corr_text(axs[i*3 + 0], df_dc_group_1.etoh_previos_day, df_dc_group_1.bec, linecol='blue')
+#         plot_regression_line_and_corr_text(axs[i*3 + 0], df_dc_group_2.etoh_previos_day, df_dc_group_2.bec, text_y_adj=-0.15)
+#
+#         plot_regression_line_and_corr_text(axs[i*3 + 1], df_dc_group_1.etoh_at_bec_sample_time, df_dc_group_1.bec, linecol='blue')
+#         plot_regression_line_and_corr_text(axs[i*3 + 1], df_dc_group_2.etoh_at_bec_sample_time, df_dc_group_2.bec, text_y_adj=-0.15)
+#
+#         plot_regression_line_and_corr_text(axs[i*3 + 2], df_dc_group_1.etoh_next_day, df_dc_group_1.bec, linecol='blue')
+#         plot_regression_line_and_corr_text(axs[i*3 + 2], df_dc_group_2.etoh_next_day, df_dc_group_2.bec, text_y_adj=-0.15)
+#
+#     # fine tune plot look'n'feel
+#     plt.tight_layout()
+#
+#     fig.subplots_adjust(hspace=0)
+#     fig.subplots_adjust(wspace=0)
+#     plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
+#     plt.setp([a.get_yticklabels() for a in fig.axes], visible=False)
+#
+#     plt.setp([axs[i].get_xticklabels() for i in [9, 10, 11]], visible=True)
+#     plt.setp([axs[i].get_yticklabels() for i in [0, 3, 6, 9]], visible=True)
+#
+#     [ax.set_ylabel('') for ax in axs]
+#     axs[0].set_ylabel('LD', fontsize=font_size)
+#     axs[3].set_ylabel('BD', fontsize=font_size)
+#     axs[6].set_ylabel('HD', fontsize=font_size)
+#     axs[9].set_ylabel('VHD', fontsize=font_size)
+#
+#     import matplotlib.patches as mpatches
+#     patch_group1 = mpatches.Patch(color='g', label=group1_label)
+#     patch_group2 = mpatches.Patch(color='orange', label=group2_label)
+#     axs[4].legend(handles=[patch_group1, patch_group2], loc=1)
+#
+#     title = 'BEC correlation: EtOH the day before, day of and day after; ' + schedule + ' schedule'
+#     fig.text(0.5, 0.94, title, ha='center', fontsize=font_size+4)
+#     fig.text(0.005, 0.5, 'BEC', va='center', rotation='vertical', fontsize=font_size+4)
+#     fig.subplots_adjust(top=0.92)
+#     return fig
+#
+#
+# def get_bec_df_for_all_animals(schedule, split_by='bec_mgpct', regenerate=False):
+#     def generate():
+#         bec_df_all, bec_df_group_1, bec_df_group_2 = collect_monkeys_bec(schedule, split_by, cohort='ALL')
+#         bec_df_all.save('bec_df_all_' + schedule + '_' + split_by + '.plk')
+#         bec_df_group_1.save('bec_df_group_1_' + schedule + '_' + split_by + '.plk')
+#         bec_df_group_2.save('bec_df_group_2_' + schedule + '_' + split_by + '.plk')
+#
+#     if regenerate:
+#         generate()
+#
+#     try:
+#         bec_df_all = pd.read_pickle('bec_df_all_' + schedule + '_' + split_by + '.plk')
+#         bec_df_group_1 = pd.read_pickle('bec_df_group_1_' + schedule + '_' + split_by + '.plk')
+#         bec_df_group_2 = pd.read_pickle('bec_df_group_2_' + schedule + '_' + split_by + '.plk')
+#     except IOError as e:
+#         print 'Generating some files...'
+#         generate()
+#
+#     return bec_df_all, bec_df_group_1, bec_df_group_2
+#
+#
+# def build_bec_panel(schedule, split_by, regenerate, group1_label, group2_label, plot_func, save):
+#     bec_df_all, bec_df_group_1, bec_df_group_2 = get_bec_df_for_all_animals(schedule, split_by, regenerate)
+#     fig = plot_func(schedule, bec_df_group_1, bec_df_group_2, group1_label, group2_label)
+#
+#     if save:
+#         path = '/home/alex/win-share/matrr_sync/bec_study/'
+#         plot_func_name = str(plot_func).split('_')[-1].split(' ')[-3]
+#         fig.savefig(path + schedule + '/' + schedule + '_' + split_by + '_' + plot_func_name)
+#
+#
+# def build_all_bec_panels(regenerate_data=False):
+#     for split_by, group1_label, group2_label in zip(['bec_mgpct', 'bec_over2stdev'],
+#                                                     ['< 80 mg pct', 'Within 2 Std. Dev.'],
+#                                                     ['>= 80 mg pct', 'Outside of 2 Std. Dev.']):
+#         for plot_func in [plot_bec_correlation_by_dc_24panels, plot_bec_correlation_by_dc_12combinedpanels]:
+#             for schedule in ['22hr', 'daylight']:
+#                 build_bec_panel(schedule=schedule, split_by=split_by, regenerate=regenerate_data,
+#                                 group1_label=group1_label, group2_label=group1_label,
+#                                 plot_func=plot_func, save=True)
+# #build_all_bec_panels(regenerate_data=False)
+#
+#
+# # fill the corr table
+# def compile_bec_correlation_table(schedule, split_by, label_group1, label_group2):
+#     bec_df_all, bec_df_group_1, bec_df_group_2 = get_bec_df_for_all_animals(schedule, split_by, regenerate=False)
+#
+#     colnames = ['before_' + label_group1, 'before_' + label_group2, 'before_all',
+#                 'day_of_' + label_group1, 'day_of_' + label_group2, 'day_of_all',
+#                 'next_' + label_group1, 'next_' + label_group2, 'next_all']
+#     corrs_df = pd.DataFrame(index=colnames)
+#
+#     drinking_categories = ['LD', 'BD', 'HD', 'VHD']
+#     for i, dc in enumerate(drinking_categories):
+#         bec_dc_all = bec_df_all[bec_df_all.dc == dc]
+#         bec_dc_group_1 = bec_df_group_1[bec_df_group_1.dc == dc]
+#         bec_dc_group_2 = bec_df_group_2[bec_df_group_2.dc == dc]
+#
+#         corrs_df[dc] = [
+#             np.round(bec_dc_group_1.etoh_previos_day.corr(bec_dc_group_1.bec), 4),
+#             np.round(bec_dc_group_2.etoh_previos_day.corr(bec_dc_group_2.bec), 4),
+#             np.round(bec_dc_all.etoh_previos_day.corr(bec_dc_all.bec), 4),
+#
+#             np.round(bec_dc_group_1.etoh_at_bec_sample_time.corr(bec_dc_group_1.bec), 4),
+#             np.round(bec_dc_group_2.etoh_at_bec_sample_time.corr(bec_dc_group_2.bec), 4),
+#             np.round(bec_dc_all.etoh_at_bec_sample_time.corr(bec_dc_all.bec), 4),
+#
+#             np.round(bec_dc_group_1.etoh_next_day.corr(bec_dc_group_1.bec), 4),
+#             np.round(bec_dc_group_2.etoh_next_day.corr(bec_dc_group_2.bec), 4),
+#             np.round(bec_dc_all.etoh_next_day.corr(bec_dc_all.bec), 4),
+#         ]
+#     print '\n' + schedule
+#     print corrs_df
+#
+#
+# def compile_all_bec_corr_tables():
+#     for schedule in ['22hr', 'daylight']:
+#         for split_by, less, over in zip(['bec_mgpct', 'bec_over2stdev'],
+#                                         ['<80', '<2std'], ['>=80', '>std']):
+#             compile_bec_correlation_table(schedule, split_by, less, over)
+# compile_all_bec_corr_tables()
 
-# mky = r6a.monkey_set.all()[1]
-# print mky
-# mky_bec_corr(mky)
-
-# cohort_bec_correlation(r6a)
 
 
 ## ANDREW CURVES
-#def plot_andrews_curves():
+def plot_andrews_curves():
     GEN_COH_DF = False
     if GEN_COH_DF:
         df_coh = collect_cohort_monkeys_bec(r6b)
@@ -2958,8 +3154,8 @@ generate coh13 plots
 # print CohortMetaData.objects.filter(cohort=r10).values_list()
 
 
-from matrr.utils import build_cohorts_timeline
-print build_cohorts_timeline.create_cohorts_timeline()
+# from matrr.utils import build_cohorts_timeline
+# print build_cohorts_timeline.create_cohorts_timeline()
 
 
 # fix random date mistake
@@ -2968,6 +3164,14 @@ print build_cohorts_timeline.create_cohorts_timeline()
 # cev.cev_date = '2008-01-07'
 # cev.save()
 # print cev
+
+"""
+26 Dec 2015
+Fix Article Plots Etc
+"""
+
+
+
 
 
 plt.show()

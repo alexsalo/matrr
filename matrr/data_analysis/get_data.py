@@ -6,8 +6,8 @@ features_names_perstage = [
         'mtd_latency_1st_drink', #Time from session start to first etOH consumption
         'mtd_etoh_bout', #Total etOH bouts (less than 300 seconds between consumption of etOH)
         'mtd_etoh_drink_bout', #Average number of drinks (less than 5 seconds between consumption of etOH) per etOH bout
-        'mtd_veh_bout', #Total H20 bouts (less than 300 seconds between consumption of H20)
-        'mtd_veh_drink_bout', #Average number of drinks (less than 5 seconds between consumption of H20) per H20 bout
+        #'mtd_veh_bout', #Total H20 bouts (less than 300 seconds between consumption of H20)
+        #'mtd_veh_drink_bout', #Average number of drinks (less than 5 seconds between consumption of H20) per H20 bout
         'mtd_etoh_mean_drink_length', #Mean length for ethanol drinks (less than 5 seconds between consumption of etOH is a continuous drink
         'mtd_etoh_median_idi', #Median time between drinks (always at least 5 seconds because 5 seconds between consumption defines a new drink
         'mtd_etoh_mean_drink_vol', #Mean volume of etOH drinks
@@ -23,18 +23,25 @@ cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus
             "INIA Rhesus 6b", "INIA Rhesus 7a"]
 
 GENERATE_DATA = False
-FOLD_INTO_TWO_DC = False
-SUBDIVIDE = False
+FOLD_INTO_TWO_DC = True
+SUBDIVIDE = True
+
+FIG_SIZE = (16, 10)
+DPI = 100
+matplotlib.rcParams.update({'font.size': 16})
 
 RF = RandomForestClassifier(n_estimators=100)
 BAGGING = BaggingClassifier(RF, n_estimators=10, bootstrap=True, n_jobs=2)
 SVM_CLF = svm.SVC(kernel='linear', C=1, class_weight=dc_weights)
 
 if not GENERATE_DATA:
-    data = pd.read_pickle('may_data_all.plk')
+    data = pd.read_pickle('dec_data_all.plk')
     data.sex = (data.sex == 'M').astype(int)
 
 else:
+    data = generate_data()
+
+def generate_data():
     features_monkey = ["mky_id", 'cohort__coh_cohort_id', "mky_gender", "mky_age_at_intox", "mky_drinking_category", 'mky_days_at_necropsy']
     features_monkey_names = ["mky_id", 'coh', "sex", "intox", "DC", 'necropsy']
     FIRST_N_MINUTES = 10
@@ -75,8 +82,11 @@ else:
             mky_medians.at[m.mky_id, feature+'_2'] = feature_value_2
 
     data = data.join(mky_medians)
+    data = data.fillna(0)
     print_full(data)
-    data.save('may_data_all.plk')
+    data.save('dec_data_all.plk')
+    data.sex = (data.sex == 'M').astype(int)
+    return data
 
 if FOLD_INTO_TWO_DC:
     if SUBDIVIDE:
@@ -95,36 +105,23 @@ M_EXAMPLES = len(data_features.index)
 print 'M = ' + str(M_EXAMPLES)
 
 # Feature Selection Plot
-def featureSelectionPlot(X, y):
+def featureSelectionPlot(X, y, YLABEL, YNAIVE):
     import RF_feat_sel
-    RF_feat_sel.feature_selection(X, y)
+    RF_feat_sel.feature_selection(X, y, YLABEL, YNAIVE, RUNS=10, FIG_SIZE=FIG_SIZE, DPI=DPI)
 
 # Select Top Features
-def selectFeatures(X):
-    Xnew = X[['mtd_etoh_mean_drink_vol_1', 'mtd_latency_1st_drink_1', 'mtd_etoh_mean_bout_length_1', 'intox']]
-    Xnew = X[['mtd_max_bout_length', 'mtd_etoh_drink_bout', 'necropsy', 'mtd_max_bout_1',
-              'mtd_etoh_bout', 'mtd_pct_etoh_in_1st_bout_1', 'mtd_etoh_bout_2', 'mtd_max_bout_2',
-              'mtd_seconds_to_stageone' ]]
+def selectFeatures4Classes(X):
+    return X[['mtd_etoh_bout_2', 'intox', 'mtd_max_bout_length', 'mtd_etoh_mean_bout_length']]
 
-    Xnew = X[['mtd_max_bout_length', 'sex', 'mtd_etoh_drink_bout', 'mtd_max_bout_1', 'mtd_veh_bout_1',
-              'intox', 'necropsy', 'mtd_latency_1st_drink_2', 'mtd_etoh_mean_drink_length_1']]
-
-    Xnew = X[['mtd_max_bout_length', 'intox', 'mtd_etoh_drink_bout', 'mtd_etoh_bout', 'mtd_pct_etoh_in_1st_bout_1',
-              'mtd_etoh_bout_2', 'mtd_pct_max_bout_vol_total_etoh_1']]
-    Xnew = X[['mtd_etoh_bout_2', 'necropsy', 'mtd_latency_1st_drink_1']]
-    #Xnew = X[['mtd_etoh_bout_2', 'necropsy', 'etoh_during_ind_1']]
-    Xnew = X[['mtd_max_bout_length','mtd_veh_bout_1','mtd_max_bout_1','mtd_pct_max_bout_vol_total_etoh_2','intox','mtd_etoh_mean_bout_length']]
-
-    return Xnew
+def selectFeaturesHeavyNonHeavy(X):
+    return X[['mtd_etoh_bout_2', 'necropsy', 'mtd_etoh_mean_drink_vol_1', 'mtd_etoh_mean_drink_length_1']]
 
 def selectFeaturesLDBD(X):
-    Xnew = X[['mtd_veh_drink_bout_1', 'mtd_latency_1st_drink', 'mtd_etoh_mean_drink_length_2', 'mtd_etoh_mean_drink_vol_1',
-              'mtd_pct_max_bout_vol_total_etoh', 'mtd_etoh_bout_1']]
+    Xnew = X[['mtd_etoh_mean_drink_length_2', 'mtd_latency_1st_drink']]
     return Xnew
 
 def selectFeaturesHDVHD(X):
-    Xnew = X[['mtd_pct_etoh_in_1st_bout', 'mtd_veh_bout_2', 'sex', 'mtd_drinks_1st_bout_1',
-              'mtd_etoh_drink_bout_1', 'mtd_latency_1st_drink_1', 'mtd_pct_etoh_in_1st_bout_1']]
+    Xnew = X[['mtd_etoh_mean_drink_length', 'mtd_etoh_mean_drink_vol', 'mtd_etoh_mean_bout_length', 'mtd_max_bout_length']]
     return Xnew
 
 ## Test all features
@@ -228,23 +225,24 @@ def KFoldMonkeys(X, y, clf, folds, NORMALIZE=False):
 
 def runTwoThenTwo():
     print '\n-------LD-BD-----------------'
-    X = selectFeaturesLDBD(data_LDBD)
-    print X.columns
+    # X = selectFeaturesLDBD(data_LDBD)
+    # print X.columns
+    # cv_classfier(X,y,RF,10, 'top features')
     y = data_LDBD.DC
-    cv_classfier(X,y,RF,10, 'top features')
 
     # X_feat_sel = data_LDBD.drop(['DC', 'coh'], axis = 1)
-    # featureSelectionPlot(X_feat_sel, y)
+    # featureSelectionPlot(X_feat_sel, y, "LD vs BD", 0.615)
 
     print '\n-------HD-VHD-----------------'
-    X = selectFeaturesHDVHD(data_HDVHD)
-    print X.columns
+    # X = selectFeaturesHDVHD(data_HDVHD)
+    # print X.columns
+    # cv_classfier(X,y,RF,10, 'top features')
     y = data_HDVHD.DC
-    cv_classfier(X,y,RF,10, 'top features')
-    # X_feat_sel = data_HDVHD.drop(['DC', 'coh'], axis = 1)
-    # featureSelectionPlot(X_feat_sel, y)
 
-def gradients(func_data, selectFeaturesFunc, foldername):
+    # X_feat_sel = data_HDVHD.drop(['DC', 'coh'], axis = 1)
+    # featureSelectionPlot(X_feat_sel, y, "HD vs VHD", 0.625)
+
+def gradients(func_data, selectFeaturesFunc, foldername, target='VHD'):
     X = selectFeaturesFunc(func_data)
     print X.columns
     y = func_data.DC
@@ -256,31 +254,34 @@ def gradients(func_data, selectFeaturesFunc, foldername):
     n_features = len(X.columns)
     for i in xrange(n_features):
         for j in xrange(i-1):
-            lbl = 'VHD'
+            lbl = target
             #get the figure
             fig = plt.figure(figsize=(14,8))
             ax = fig.add_subplot(111)
             plt.clf()
 
             features = [i, j, (i, j)]
+            print 'features: ', features
             plot_partial_dependence(clf, X, features, label=lbl, feature_names=X.columns, ax=ax)
             #title and save
             plotname = lbl + ' ' + str(X.columns[i])+' ' + str(X.columns[j]) + ' ' + 'partial dependency.png'
             plt.title(plotname)
-            path = '/home/alex/Dropbox/Baylor/Matrr/figures/part-deps/' + foldername
+            path = '/home/alex/win-share/matrr_sync/gradients/' + foldername
             plt.savefig(os.path.join(path, plotname), dpi=100, format='png')
 
 def massiveRFTest(X, y):
-    X = selectFeatures(X)
+    #X = selectFeatures(X)
     scores = []
     for i in xrange(20):
         scores.extend(cross_validation.cross_val_score(RF, X, y, cv=10))
     print 'Avg score for 20 runs is: %s, sd = %s ' % (np.mean(scores), np.std(scores))
+#massiveRFTest(selectFeaturesHDVHD(data), data.DC)
+
 
 def printByCohortDCdistr():
     ml_cohorts = Cohort.objects.filter(coh_cohort_name__in = cohort_names)
     for c in ml_cohorts:
-        monkeys = Monkey.objects.filter(cohort = c).exclude(mky_drinking_category = None)
+        monkeys = Monkey.objects.filter(cohort=c).exclude(mky_drinking_category = None)
         print '/n--------------------'
         print c
         df = pd.DataFrame(list(monkeys.values_list('mky_drinking_category', flat=True)), columns = ['dc'])
@@ -303,21 +304,22 @@ def findSignif():
     print '\n Significant vars: ' + str(signif_cnt)
 
 ### RUN SCRIPTS
-findSignif()
+#findSignif()
 
 #base_rate_accuracy = data_targets.value_counts()/len(data_targets.index)
 #print base_rate_accuracy
 #printByCohortDCdistr()
 
-# featureSelectionPlot(data_features, data_targets)
+#featureSelectionPlot(data_features, data_targets, "LD vs BD vs HD vs VHD", 0.32)
+#featureSelectionPlot(data_features, data_targets, "LD + BD vs HD + VHD", 0.52)
 
 # best_accuracy = testSVMparams(data_features, data_targets, selectFeatures = False)
 
 #testClassifiers(data_features, data_targets)
 #
-#testByCoghort(data_features, data_targets, RF, False)
-#testByCoghort(data_LDBD.drop(['DC'], axis = 1), data_LDBD.DC, RF, selectFeaturesLDBD, False, exclude_cohs_ids=[7])
-#testByCoghort(data_HDVHD.drop(['DC'], axis = 1), data_HDVHD.DC, RF, selectFeaturesHDVHD, False, exclude_cohs_ids=[9, 5])
+# testByCoghort(data_features, data_targets, RF, selectFeaturesHeavyNonHeavy, False)
+# testByCoghort(data_LDBD.drop(['DC'], axis = 1), data_LDBD.DC, RF, selectFeaturesLDBD, False, exclude_cohs_ids=[7])
+# testByCoghort(data_HDVHD.drop(['DC'], axis = 1), data_HDVHD.DC, RF, selectFeaturesHDVHD, False, exclude_cohs_ids=[9, 5])
 # testByCoghort(data_features, data_targets, SVM_CLF, True)
 #
 # KFoldMonkeys(data_features, data_targets, RF, cross_validation.LeaveOneOut(M_EXAMPLES))
@@ -332,10 +334,12 @@ findSignif()
 #plt.plot(data.mtd_pct_max_bout_vol_total_etoh_2, 'ro')
 #data.mtd_max_bout_length[np.abs(data.mtd_max_bout_length-data.mtd_max_bout_length.mean()) < 2 * data.mtd_max_bout_length.std()].hist()
 #data.mtd_max_bout_length.hist()
-pylab.show()
+#pylab.show()
 
-#gradients(data, selectFeatures, 'heavy')
+#gradients(data, selectFeaturesHeavyNonHeavy, 'heavy_nonheavy')
+#gradients(data_LDBD, selectFeaturesLDBD, 'ld_bd', target='LD')
 #gradients(data_HDVHD, selectFeaturesHDVHD, 'hd_vhd')
+
 # massiveRFTest(data_features, data_targets)
 # print data
 # pct_data = data[['mtd_pct_etoh_in_1st_bout_1', 'mtd_pct_etoh_in_1st_bout_2']]
@@ -403,5 +407,48 @@ def plot_meds(features):
 #pct_data = data[['mtd_etoh_bout_1', 'mtd_etoh_bout_2', 'DC']]
 #plot_meds(pct_data)
 
+"""
+27 Dec 2015
+Generate Two PDPs
+"""
 
-#pylab.show()
+
+def create_pdp_hd_vhd():
+    x = data_HDVHD[['mtd_etoh_mean_drink_length', 'mtd_etoh_mean_drink_vol', 'mtd_etoh_mean_bout_length', 'mtd_max_bout_length']]
+    x.columns = ['Mean length for EtOH drinks', 'sfdfgsd', 'dfd', 'Max bout length']
+    target = 'VHD'
+
+    y = data_HDVHD.DC
+    clf = GradientBoostingClassifier(n_estimators=100, max_depth=4,
+                                     learning_rate=0.1, random_state=1)
+    clf.fit(x, y)
+
+    matplotlib.rcParams.update({'font.size': 16})
+    fig = plt.figure(figsize=(14, 7))
+    ax = fig.add_subplot(111)
+    plot_partial_dependence(clf, x, [3, 0, (3, 0)], label=target, feature_names=x.columns, ax=ax)
+    plt.suptitle('Partial Dependence on Becoming VHD')
+    plt.tight_layout()
+    pylab.show()
+#create_pdp_hd_vhd()
+
+
+def create_pdp_heavy_nonheavy():
+    x = data[['mtd_etoh_bout_2', 'necropsy', 'intox', 'mtd_etoh_median_idi']]
+    x.columns = ['Total number of bouts', 'Age', 'Age of First Intoxication', 'Median EtOH interbout interval']
+    target = 'VHD'
+
+    y = data.DC
+    clf = GradientBoostingClassifier(n_estimators=100, max_depth=4,
+                                     learning_rate=0.1, random_state=1)
+    clf.fit(x, y)
+
+    matplotlib.rcParams.update({'font.size': 16})
+    fig = plt.figure(figsize=(14, 7))
+    ax = fig.add_subplot(111)
+    plot_partial_dependence(clf, x, [2, 0, (2, 0)], label=target, feature_names=x.columns, ax=ax)
+    plt.suptitle('Partial Dependence on Becoming VHD')
+    plt.tight_layout()
+    pylab.show()
+    fig.subplots_adjust(top=0.93)
+create_pdp_heavy_nonheavy()

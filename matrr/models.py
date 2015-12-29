@@ -868,6 +868,37 @@ class Monkey(models.Model):
 
         return first, first_days, second, second_days, first + second, first_days + second_days
 
+    def DL_total_etoh(self, date):
+        """
+        Returns etoh_gkg consumed by monkey at date
+            using DayLight (DL) schedule, defined as:
+            LightsOn_prev_day : LightsOff_curr_day, day = date
+        Yesterday = yeday
+        """
+        def get_etoh_ratio(vol, weight):
+            return vol * 0.04 / weight
+
+        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self)
+        mtd_yeday = mtds.get(drinking_experiment__dex_date=date + timedelta(days=-1))
+        mtd_today = mtds.get(drinking_experiment__dex_date=date)
+
+        bouts_yeday = ExperimentBout.objects.OA().filter(mtd=mtd_yeday,  # Note: START TIME!
+                                                         ebt_start_time__gte=LIGHTS_ON, ebt_start_time__lte=SESSION_END)
+        bouts_today = ExperimentBout.objects.OA().filter(mtd=mtd_today,
+                                                         ebt_start_time__gte=SESSION_START, ebt_start_time__lte=LIGHTS_OUT)
+
+        yeday_vol = numpy.sum(bouts_yeday.values_list('ebt_volume', flat=True))
+        today_vol = numpy.sum(bouts_today.values_list('ebt_volume', flat=True))
+        DL_gkg = get_etoh_ratio(yeday_vol + today_vol, mtd_today.mtd_weight)
+
+        # check this procedure does what it supposed to
+        # vol = np.sum(ExperimentBout.objects.OA().filter(mtd=mtd_today,
+        #          ebt_start_time__gte=SESSION_START, ebt_start_time__lte=SESSION_END).\
+        #          values_list('ebt_volume', flat=True))
+        # print vol, get_etoh_ratio(vol, mtd_today.mtd_weight), mtd_today.mtd_etoh_g_kg
+
+        return DL_gkg
+
     class Meta:
         db_table = 'mky_monkeys'
         ordering = ['mky_id']
@@ -1252,7 +1283,7 @@ class MonkeyToDrinkingExperiment(models.Model):
         return str(self.drinking_experiment) + ' Monkey: ' + str(self.monkey) + " etoh_g_kg: " + str(self.mtd_etoh_g_kg) + " Pellets: " + str(self.mtd_total_pellets)
 
     def get_etoh_ratio(self):
-        return self.mtd_etoh_intake * 0.4 / self.mtd_weight
+        return self.mtd_etoh_intake * 0.04 / self.mtd_weight
 
     def _populate_max_bout_hours(self, save=True):
         hour_const = 0

@@ -1,23 +1,22 @@
 __author__ = 'alex'
 from header import *
 
-feat_chosen = pd.read_pickle('feat_chosen.plk')
-feat_chosen = feat_chosen.drop('cohort__coh_cohort_id', axis = 1)
-feat_chosen.mky_gender = (feat_chosen.mky_gender == 'M').astype(int)
-
-x = feat_chosen.drop('mky_drinking_category', axis = 1)
-y = feat_chosen['mky_drinking_category']
-x = x.drop('mky_gender', axis=1)
-print x.columns
-
-# y[y=='BD']='LD'
-# y[y=='HD']='VHD'
+# feat_chosen = pd.read_pickle('feat_chosen.plk')
+# feat_chosen = feat_chosen.drop('cohort__coh_cohort_id', axis = 1)
+# feat_chosen.mky_gender = (feat_chosen.mky_gender == 'M').astype(int)
+#
+# x = feat_chosen.drop('mky_drinking_category', axis = 1)
+# y = feat_chosen['mky_drinking_category']
+# x = x.drop('mky_gender', axis=1)
+# print x.columns
+#
+# # y[y=='BD']='LD'
+# # y[y=='HD']='VHD'
 
 clf = RandomForestClassifier()
 ###FEATURE SELECTION
-def feature_selection(x, y):
+def feature_selection(x, y, YLABEL, YNAIVE, RUNS=10, FIG_SIZE=(12,16), DPI=100):
     top5_features = []
-    RUNS=10
     N_FEATURES = len(x.columns)
     test_best_scores = np.empty([RUNS, N_FEATURES])
     for i in xrange(RUNS):
@@ -56,19 +55,27 @@ def feature_selection(x, y):
     tbs_means = np.mean(test_best_scores, axis=0)
     tbs_sds = np.std(test_best_scores, axis=0)
     print tbs_means
-    plt.plot(xrange(1,N_FEATURES + 1), tbs_means)
-    plt.xlabel('Number of features')
-    plt.ylabel('Accuracy')
+
+    # Plots
+    fig = plt.figure(figsize=FIG_SIZE, dpi=DPI)
+    ax = fig.add_subplot(111)
+    ax.plot(xrange(1,N_FEATURES + 1), tbs_means, linewidth=2, label="Average accuracy")
+    ax.set_xlabel('Number of features')
+    ax.set_ylabel('Accuracy: ' + YLABEL)
     plt.grid()
-    plt.xlim(1,N_FEATURES)
+    ax.set_ylim(0, 1)
+    ax.set_xlim(1,N_FEATURES)
 
     lower_bound = substract_lists(tbs_means, tbs_sds, 'sum')
     upper_bound = substract_lists(tbs_means, tbs_sds, 'diff')
     plt.fill_between(xrange(1,N_FEATURES + 1), lower_bound, upper_bound, facecolor='yellow', alpha=0.5,
-                    label='+- sigma range')
-    #dummy plot to creaate legend since fill_between is not supported
-    plt.plot([], [], color='yellow', linewidth=10, label='+- sigma range')
-    plt.legend(loc='upper right')
+                    label='Std. Deviation')
+    ax.axhline(YNAIVE, color='k', ls='--', lw=2, label="Naive (Base) accuracy")
 
-    pylab.show()
+    #dummy plot to creaate legend since fill_between is not supported
+    ax.plot([], [], color='yellow', linewidth=10, label='Std. Deviation')
+    ax.legend(loc='upper right')
+    plt.tight_layout()
+
+    #pylab.show()
 
