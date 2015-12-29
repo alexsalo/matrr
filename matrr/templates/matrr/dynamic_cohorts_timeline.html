@@ -6,7 +6,7 @@
     {% for xy, coh_name, coh_id in zipped_timeline_coords %}
         <area shape="rect"
         coords="{{xy}}"
-        href="https://gleek.ecs.baylor.edu/cohort/{{ coh_id }}/"
+        href="{% url 'cohort-details' coh_id %}"
         title="{{ coh_name }}" alt="{{ coh_name }} "/>
     {% endfor %}
 <!--

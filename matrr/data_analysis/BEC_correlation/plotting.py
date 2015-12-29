@@ -166,7 +166,8 @@ def build_bec_panel(schedule, split_by, regenerate, group1_label, group2_label, 
     fig = plot_func(schedule, bec_df_group_1, bec_df_group_2, group1_label, group2_label)
 
     if save:
-        path = '/home/alex/win-share/matrr_sync/bec_study/'
+        # path = '/home/alex/win-share/matrr_sync/bec_study/'
+        path = '/home/alex/Dropbox/Baylor/Matrr/bec_study/'
         plot_func_name = str(plot_func).split('_')[-1].split(' ')[-3]
         fig.savefig(path + schedule + '/' + schedule + '_' + split_by + '_' + plot_func_name)
 def build_all_bec_panels(regenerate_data=False):
@@ -178,10 +179,10 @@ def build_all_bec_panels(regenerate_data=False):
                 build_bec_panel(schedule=schedule, split_by=split_by, regenerate=regenerate_data,
                                 group1_label=group1_label, group2_label=group1_label,
                                 plot_func=plot_func, save=True)
-#build_all_bec_panels(regenerate_data=False)
+# build_all_bec_panels(regenerate_data=False)
 
 
-# build_bec_panel(schedule='22hr', split_by='bec_mgpct', regenerate=False,
-#                 group1_label='group1_label', group2_label='group2_label',
-#                 plot_func=plot_bec_correlation_by_dc_12combinedpanels, save=False)
-# plt.show()
+build_bec_panel(schedule='22hr', split_by='bec_mgpct', regenerate=False,
+                group1_label='group1_label', group2_label='group2_label',
+                plot_func=plot_bec_correlation_by_dc_12combinedpanels, save=False)
+plt.show()

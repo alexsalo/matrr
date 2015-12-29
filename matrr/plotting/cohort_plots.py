@@ -14,7 +14,61 @@ from matrr.utils.gadgets import Treemap
 from matrr.plotting import * #specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE, RHESUS_COLORS
 import matplotlib.patches as mpatches
 
-import matplotlib.patches as mpatches
+
+def cohort_oa_cumsum_drinking_pattern(cohort):
+    def get_mky_oa_drinks_cumsum(mky):
+        def get_etoh_ratio(weight):
+                return 0.04 / weight
+        def get_mtd_drinks(mtd):
+            try:
+                bouts = ExperimentBout.objects.filter(mtd=mtd)
+                edrs = ExperimentDrink.objects.filter(ebt__in=bouts).order_by('edr_start_time')
+                drinks = pd.DataFrame(list(edrs.values_list('edr_start_time', 'edr_volume')),
+                                      columns=['start_time', 'volume'])
+                drinks.set_index('start_time', inplace=True)
+                gkg_ratio = get_etoh_ratio(mtd.mtd_weight)
+                drinks['gkg'] = drinks.volume * gkg_ratio
+                return drinks
+            except Exception as e:
+                print e
+                pass
+
+        mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=mky).order_by('drinking_experiment__dex_date')
+        drinks_cumsum = get_mtd_drinks(mtds[0])
+        mtds_used = 1
+        for mtd in mtds:
+            drinks_cumsum = drinks_cumsum.append(get_mtd_drinks(mtd))
+            mtds_used += 1
+
+        drinks_cumsum.sort_index(inplace=True)
+        return drinks_cumsum, mtds_used
+
+    fig = plt.figure(figsize=HISTOGRAM_FIG_SIZE)
+    ax = fig.add_subplot(111)
+    matplotlib.rc('font', family='monospace')
+
+    # ls = {'LD': 0, 'BD': 0, 'HD': 0, 'VHD': 0}  # linesyle counter
+    # linestyle=LINESTYLES[ls[mky.mky_drinking_category]]
+    # ls[mky.mky_drinking_category] += 1
+
+    for mky in cohort.monkey_set.filter(mky_drinking=True).order_by('mky_drinking_category'):
+        mky_drink_cumsum, mtds_used = get_mky_oa_drinks_cumsum(mky)
+
+        # Normalize values
+        mky_drink_cumsum.gkg = mky_drink_cumsum.gkg / mtds_used
+        mky_drink_cumsum.index = mky_drink_cumsum.index / (60*60*1.0)
+
+        mky_drink_cumsum.gkg.cumsum().plot(color=DRINKING_CATEGORIES_COLORS[mky.mky_drinking_category], ax=ax,
+                                           label="%3s" % mky.mky_drinking_category + ' ' + str(mky.mky_id))
+
+    plt.xticks(np.arange(SESSION_START/ONE_HOUR, (SESSION_END/ONE_HOUR + 1), 1))
+    plt.axvspan(LIGHTS_OUT/ONE_HOUR, LIGHTS_ON/ONE_HOUR, color='black', alpha=.2, zorder=-100)
+    plt.legend(loc=2)
+    plt.xlabel('Time (session hour)')
+    plt.ylabel('Average cumulative EtOH (gkg)')
+    plt.title("Cumulative Drinking Pattern for Cohort %s\n 22hr Session Schedule" % cohort)
+    plt.tight_layout()
+    return fig, True
 
 def cohort_weights_plot(cohort):
     """
@@ -1101,4 +1155,5 @@ COHORT_PLOTS.update({"cohort_necropsy_avg_etoh_22hr_gkg": (cohort_necropsy_avg_e
                      "cohort_dopamine_study_boxplots_accumben": (cohort_dopamine_study_boxplots_accumben, 'Dopamine release on opioid stimulation. Acumbencore'),
                      "cohort_dopamine_study_boxplots_caudate": (cohort_dopamine_study_boxplots_caudate, 'Dopamine release on opioid stimulation. Caudate'),
                      "cohort_weights_plot": (cohort_weights_plot, 'Weight Change Over OA in Cohort'),
+                     "cohort_oa_cumsum_drinking_pattern": (cohort_oa_cumsum_drinking_pattern, 'Drinking Pattern (cumulative average) in Cohort'),
                     })
