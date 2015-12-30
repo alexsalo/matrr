@@ -665,13 +665,14 @@ def create_weights_change_plots(cohorts=True, monkeys=True):
 def create_drinking_pattern_plots(cohorts=True):
     from matrr.models import CohortImage, Cohort, MonkeyToDrinkingExperiment
     from matrr.plotting import cohort_plots
-    cohortplot = 'cohort_oa_cumsum_drinking_pattern'
+    dp_plots = ['cohort_oa_cumsum_drinking_pattern_lights_off', 'cohort_oa_cumsum_drinking_pattern_session']
 
     for cohort in MonkeyToDrinkingExperiment.objects.all().filter(mtd_weight__isnull=False)\
             .values_list('monkey__cohort', flat=True).distinct():
         cohort = Cohort.objects.get(pk=cohort)
-        print 'Creating drinking pattern plots for cohort: %s' % cohort
         if cohorts:
-            gc.collect()
-            CohortImage.objects.get_or_create(cohort=cohort, method=cohortplot,
-                                              title=cohort_plots.COHORT_PLOTS[cohortplot][1], canonical=True)
+            for cohortplot in dp_plots:
+                print 'Creating %s for %s' % (cohortplot, cohort)
+                gc.collect()
+                CohortImage.objects.get_or_create(cohort=cohort, method=cohortplot,
+                                                  title=cohort_plots.COHORT_PLOTS[cohortplot][1], canonical=True)
