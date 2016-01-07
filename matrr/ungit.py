@@ -3374,9 +3374,9 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_
 # print CohortImage.objects.filter(method__contains='drinking_pattern').count()
 # CohortImage.objects.filter(method__contains='drinking_pattern').delete()
 # print CohortImage.objects.filter(method__contains='drinking_pattern').count()
-
+#
 # #print cohort_plots.cohort_oa_cumsum_drinking_pattern_lights_off(c13)
-#plot_tools.create_drinking_pattern_plots()
+# plot_tools.create_drinking_pattern_plots()
 #
 # for img in CohortImage.objects.all():
 #     try:

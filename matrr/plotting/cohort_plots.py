@@ -54,7 +54,8 @@ def _cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_tren
     fig = plt.figure(figsize=HISTOGRAM_FIG_SIZE)
     ax = fig.add_subplot(111)
 
-    for mky in cohort.monkey_set.filter(mky_drinking=True).order_by('mky_drinking_category'):
+    monkeys = cohort.monkey_set.filter(mky_drinking=True).order_by('mky_drinking_category')
+    for mky in monkeys:
         mky_drink_cumsum, mtds_used = get_mky_oa_drinks_cumsum(mky, end_time)
 
         # Normalize (average) values, remove trend and plot
