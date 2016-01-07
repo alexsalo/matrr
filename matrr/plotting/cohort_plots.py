@@ -78,9 +78,12 @@ def _cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_tren
     pellets.hist(bins=10*60, ax=ax_pellet, alpha=.4)
 
     # Tune plot
+    # Tune plot
     plt.xticks(np.arange(SESSION_START/ONE_HOUR, (end_time/ONE_HOUR + 1), 1))
     if end_time == SESSION_END:
         plt.axvspan(LIGHTS_OUT/ONE_HOUR, LIGHTS_ON/ONE_HOUR, color='black', alpha=.2, zorder=-100)
+    else:
+        ax.set_xlim(0, end_time / (60*60*1.0))
     plt.legend(loc=remove_trend_legend_loc[remove_trend])
     plt.xlabel('Time (session hour)')
     ax.set_ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')

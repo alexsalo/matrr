@@ -3350,6 +3350,8 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_
     plt.xticks(np.arange(SESSION_START/ONE_HOUR, (end_time/ONE_HOUR + 1), 1))
     if end_time == SESSION_END:
         plt.axvspan(LIGHTS_OUT/ONE_HOUR, LIGHTS_ON/ONE_HOUR, color='black', alpha=.2, zorder=-100)
+    else:
+        ax.set_xlim(0, end_time / (60*60*1.0))
     plt.legend(loc=remove_trend_legend_loc[remove_trend])
     plt.xlabel('Time (session hour)')
     ax.set_ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')
@@ -3359,7 +3361,7 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_
     plt.tight_layout()
 
 # matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/drinking_pattern_study/'
-#plot_cohort_oa_cumsum_drinking_pattern(c13, LIGHTS_OUT, False)
+#plot_cohort_oa_cumsum_drinking_pattern(c13, LIGHTS_OUT, True)
 # pellets_eevs = ExperimentEvent.objects.filter(monkey=c13.monkey_set.all()[1]).\
 #     filter(eev_event_type=ExperimentEventType.Pellet).order_by('eev_session_time')
 # pellets = pd.DataFrame(list(pellets_eevs.values_list('eev_session_time', flat=True)))
@@ -3376,7 +3378,7 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_
 # print CohortImage.objects.filter(method__contains='drinking_pattern').count()
 #
 # #print cohort_plots.cohort_oa_cumsum_drinking_pattern_lights_off(c13)
-# plot_tools.create_drinking_pattern_plots()
+# #plot_tools.create_drinking_pattern_plots()
 #
 # for img in CohortImage.objects.all():
 #     try:
