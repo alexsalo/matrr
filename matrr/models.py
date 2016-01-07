@@ -866,7 +866,7 @@ class Monkey(models.Model):
         except:
             pass
 
-        return first, first_days, second, second_days, first + second, first_days + second_days
+        return first, first_days, second, second_days, (first + second)/2.0, first_days + second_days
 
     def DL_total_etoh(self, date):
         """

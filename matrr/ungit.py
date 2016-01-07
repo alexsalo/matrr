@@ -2796,26 +2796,37 @@ New AVG plots
 # mtds6b = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey__in=r6b.monkey_set.all())\
 #     .order_by('drinking_experiment__dex_date')
 # bec6b = MonkeyBEC.objects.OA().exclude_exceptions().filter(monkey__in=r6b.monkey_set.all())
-#
+
+
 # # 1. Weight gain, total water intake, total fluid intake
 # mtfds6bdf = pd.DataFrame(list(mtds6b.values_list('monkey__mky_id', 'mtd_weight', 'mtd_veh_intake', 'mtd_etoh_intake')),
 #                          columns=['mky_id', 'mky_weight', 'mky_veh_intake_(ml)', 'mky_etoh_intake_(ml)'])
 # mtfds6bdf['mky_fluid_intake_(ml)'] = mtfds6bdf['mky_veh_intake_(ml)'] + mtfds6bdf['mky_etoh_intake_(ml)']
 # sum_intake = mtfds6bdf.groupby(['mky_id'])['mky_etoh_intake_(ml)', 'mky_veh_intake_(ml)', 'mky_fluid_intake_(ml)'].sum()
-# print sum_intake
-# sum_intake.to_csv('/home/alex/win-share/matrr_sync/cody_6b/sum_intake.csv')
+# avg_intake = mtfds6bdf.groupby(['mky_id'])['mky_etoh_intake_(ml)', 'mky_veh_intake_(ml)', 'mky_fluid_intake_(ml)'].mean()
+# #print sum_intake
+# #sum_intake.to_csv('/home/alex/win-share/matrr_sync/cody_6b/sum_intake.csv')
+# avg_intake.to_csv('/home/alex/win-share/matrr_sync/cody_6b/avg_intake.csv')
 #
 # weight_gain = mtfds6bdf.groupby(['mky_id'])['mky_weight'].last() -\
 #               mtfds6bdf.groupby(['mky_id'])['mky_weight'].first()
 # print weight_gain
 # weight_gain.to_csv('/home/alex/win-share/matrr_sync/cody_6b/weight_gain.csv')
 #
-# # 3. Avg BEC of drinkers
+# 3. Avg BEC of drinkers
+#bec6b = bec6b.filter(monkey=Monkey.objects.get(mky_id=10072))
 # df6b = pd.DataFrame(list(bec6b.values_list('monkey__mky_id', 'bec_weight', 'bec_mg_pct')),
 #                     columns=['mky_id', 'mky_weight', 'mky_bec_mg_pct'])
-# bec_mean = df6b.groupby(['mky_id'])['mky_bec_mg_pct', 'mky_weight'].mean()
-# print bec_mean
-# bec_mean.to_csv('/home/alex/win-share/matrr_sync/cody_6b/bec_mean.csv')
+# #bec_mean = df6b.groupby(['mky_id'])['mky_bec_mg_pct', 'mky_weight'].mean()
+# #plt.plot(df6b.mky_bec_mg_pct, 'o')
+# #plt.show()
+# bec_range = df6b.groupby(['mky_id'])['mky_bec_mg_pct'].describe()
+# bec_range = bec_range.unstack(level=0)
+# #bec_range = bec_range.pivot(index=0)
+# #print bec_range
+# #print bec_mean
+# #bec_mean.to_csv('/home/alex/win-share/matrr_sync/cody_6b/bec_mean.csv')
+# bec_range.to_csv('/home/alex/win-share/matrr_sync/cody_6b/bec_range.csv')
 #
 # # 2. Mean and Median values for largest bout size and duration
 # mtfds6bdf = pd.DataFrame(list(mtds6b.values_list('monkey__mky_id', 'mtd_max_bout_vol', 'mtd_max_bout_length')),
@@ -2933,6 +2944,11 @@ New AVG plots
 # print MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
 #     filter(monkey=Monkey.objects.get(mky_id=10053)).values_list('mtd_etoh_g_kg', flat=True)
 
+# for m in Monkey.objects.filter(mky_id__in=[10050, 10048, 10067, 10064, 10053]):
+#     try:
+#         print "mky_id: %s pct_day_over_3_gkg: %.4f" %(m.mky_id, m.etoh_over_x_g_kg(gkg_threshold=3))
+#     except:
+#         continue
 
 """
 19 Dec 2015
@@ -3299,7 +3315,7 @@ def get_mky_oa_drinks_cumsum(mky, end_time=SESSION_END):
     return drinks_cumsum, mtds_used
 
 
-def plot_cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_trend=True):
+def plot_cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_trend=False):
     end_time_title = {LIGHTS_OUT: 'Lights Out', SESSION_END: '22hr'}
     remove_trend_title = {True: '(De-trended) ', False: ''}
     remove_trend_legend_loc = {True: 4, False: 2}
@@ -3307,7 +3323,8 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_
     fig = plt.figure(figsize=(14, 10))
     ax = fig.add_subplot(111)
 
-    for mky in cohort.monkey_set.filter(mky_drinking=True).order_by('mky_drinking_category'):
+    monkeys = cohort.monkey_set.filter(mky_drinking=True).order_by('mky_drinking_category')
+    for mky in monkeys:
         mky_drink_cumsum, mtds_used = get_mky_oa_drinks_cumsum(mky, end_time)
 
         # Normalize (average) values, remove trend and plot
@@ -3322,22 +3339,59 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_
         mky_drink_cumsum.gkg.plot(color=DRINKING_CATEGORIES_COLORS[mky.mky_drinking_category], ax=ax,
                                   label="%3s" % mky.mky_drinking_category + ' ' + str(mky.mky_id))
 
+    # Plot pellets for entire cohort
+    pellets_eevs = ExperimentEvent.objects.filter(monkey__in=monkeys).filter(eev_event_type=ExperimentEventType.Pellet)
+    pellets = pd.DataFrame(list(pellets_eevs.values_list('eev_session_time', flat=True)))
+    pellets = pellets / (60*60*1.0)
+    ax_pellet = ax.twinx()
+    pellets.hist(bins=10*60, ax=ax_pellet, alpha=.4)
+
     # Tune plot
     plt.xticks(np.arange(SESSION_START/ONE_HOUR, (end_time/ONE_HOUR + 1), 1))
     if end_time == SESSION_END:
         plt.axvspan(LIGHTS_OUT/ONE_HOUR, LIGHTS_ON/ONE_HOUR, color='black', alpha=.2, zorder=-100)
-    plt.legend(loc=remove_trend_legend_loc(remove_trend))
+    plt.legend(loc=remove_trend_legend_loc[remove_trend])
     plt.xlabel('Time (session hour)')
-    plt.ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')
+    ax.set_ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')
+    ax_pellet.set_ylabel('Pellet Consumption Distribution (Cohort)')
+    ax_pellet.get_yaxis().set_ticks([])
     plt.title("Cumulative Drinking Pattern for Cohort %s\n%s Session Schedule" % (cohort, end_time_title[end_time]))
     plt.tight_layout()
+
+# matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/drinking_pattern_study/'
+#plot_cohort_oa_cumsum_drinking_pattern(c13, LIGHTS_OUT, False)
+# pellets_eevs = ExperimentEvent.objects.filter(monkey=c13.monkey_set.all()[1]).\
+#     filter(eev_event_type=ExperimentEventType.Pellet).order_by('eev_session_time')
+# pellets = pd.DataFrame(list(pellets_eevs.values_list('eev_session_time', flat=True)))
+# pellets = pellets / (60*60*1.0)
+# pellets.hist(bins=10*60)
+
+#print np.unique(pellets, return_counts=True)
+
+
 
 # matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/drinking_pattern_study/'
 # print CohortImage.objects.filter(method__contains='drinking_pattern').count()
 # CohortImage.objects.filter(method__contains='drinking_pattern').delete()
 # print CohortImage.objects.filter(method__contains='drinking_pattern').count()
 
-#print cohort_plots.cohort_oa_cumsum_drinking_pattern_lights_off(c13)
-plot_tools.create_drinking_pattern_plots()
+# #print cohort_plots.cohort_oa_cumsum_drinking_pattern_lights_off(c13)
+#plot_tools.create_drinking_pattern_plots()
+#
+# for img in CohortImage.objects.all():
+#     try:
+#         print img
+#         img.save(force_render=True)
+#     except Exception as e:
+#         print e
+#         pass
+#
+# for img in MonkeyImage.objects.all():
+#     try:
+#         print img
+#         img.save(force_render=True)
+#     except Exception as e:
+#         print e
+#         pass
 
-#plt.show()
+plt.show()
