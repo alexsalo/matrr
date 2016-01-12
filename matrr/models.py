@@ -179,6 +179,25 @@ EphysType = Enumeration([
     ('Ex', 'Excitatory', 'Excitatory'),
     ('In', 'Inhibitory', 'Inhibitory'),
 ])
+PharmalogicalChallengeChoice = [
+    ('Saline', 'Saline'),
+    ('CRH', 'CRH'),
+    ('ACTH', 'ACTH'),
+    ('Naloxone_375', 'Naloxone_375'),
+    ('Dexamethasone', 'Dexamethasone'),
+    ('Ethanol', 'Ethanol'),
+]
+MonkeyHormoneChoice = [
+    ("doc", "Deoxycorticosterone"),
+    ("ald", "Aldosterone"),
+    ("vas", "Vasopressin"),
+    ("acth", "ACTH"),
+    ("gh", "GH"),
+    ("estra", "17beta-estradiol"),
+    ("cort", "Cortisol"),
+    ("dheas", "DHEAS"),
+    ("test", "Testosterone"),
+]
 
 # These are the method names which ONLY VIP members can _see_
 VIP_IMAGES_LIST = (
@@ -4433,12 +4452,6 @@ class CRHChallenge(models.Model):
     Estradiol - I don't know, I see they report ng/ml and pg/ml sometimes, the range of the assay is 5-4300 pg/ml (which
         would be 0.005-4.3 ng/ml), so if they values of estradiol are high, it is probably pg/ml.
 
-    Notes:
-        QNS - quantity not sufficient
-        mg - milli gramm 10-3
-        ug - micro gramm 10-6
-        ng - nano gramm  10-9
-        pg - pico gramm  10-12
     """
     UNITS = {'crc_acth': 'pg/dl', 'crc_cort': 'ug/dl', 'crc_e': 'pg/ml', 'crc_doc': 'pg/ml', 'crc_ald': 'pg/ml',
              'crc_dheas': 'ug/ml'}
@@ -4523,6 +4536,68 @@ class BoneDensity(models.Model):
                 save = True
         if save:
             self.save()
+
+
+class MonkeyHormoneChallenge(models.Model):
+    """
+    1: EP = endocrine profile. The numerical assignments are set 1-4 (1 = pre-ethanol baseline, 2 = post-induction, 3 = 6 months self-administration and 4 = 12 months self-administration). I like to keep this as numerical because its easier to play with the data, but I can change it to be a discriptive column or we can add a key. Because cohort 10 (the recent rhesus males) had repeated withdrawals, they had 4 additional endocrine challenges (for a total of 8), but I can include a discription of the phases for you guys when I upload that data.
+    2: Timepoint is the minutes from the pharmacological challenge (saline, CRH, naloxone, ethanol, ACTH and dexamethasone). Negative minutes would then be "pre" and positive minutes are "post". For the dexamethasone challenge we typically refer to these as "pre/post" since there are only two sample collections and they are both at 8am, but in the dataset I code them as 0 (pre) and 1 (post). Again, I can write it in or we can add a key.
+    3. The <1 or similar means that the level of hormone in that plasma sample was below the level of detection for the assay. I wouldn't replace it as zero, I think it may be better to remove it or leave it blank. I don't typically see this in the endocrine datasets, but for progesterone I've seen it regularly.
+    4. Sample ID is how we identify the sample when its given to the endocrine core. It is a long alpha-numeric string that has animal ID, sometimes date, endocrine challenge, EP and timepoint. When the data comes back from the core I split all that information out into individual columns. I kept the original sample ID there on the combined datasets as a quality assurance check, but for the MATRR it might be more appropriate to remove it.
+    5. I think for now Kathy was hoping you could let people know for a given cohort, which endocrine challenges were performed, at what experimental phase (EP1-4) and which hormones were assayed. If they are interested they can request the datasheet (maybe trimmed down to only the data they requested?) and a versioned spreadsheet would be made available to them.
+
+    Let me know if you still have more questions.
+
+    Vanessa
+    """
+    UNITS = {'mhc_doc': 'pg/ml', 'mhc_ald': 'pg/ml', 'mhc_vas': 'pg/ml', 'mhc_acth': 'pg/ml', 'mhc_gh': 'pg/ml', 'mhc_estra': 'pg/ml',
+             'mhc_cort': 'ug/dl', 'mhc_dheas': 'ug/ml',
+             'mhc_test': 'ng/ml',
+             }
+    """
+    QNS - quantity not sufficient
+        mg - milli gramm 10-3
+        ug - micro gramm 10-6
+        ng - nano gramm  10-9
+        pg - pico gramm  10-12
+    """
+
+    mhc_id = models.AutoField(primary_key=True)
+
+    monkey = models.ForeignKey(Monkey, null=False, related_name='mhc_records', db_column='mky_id', editable=False)
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='monkey_hormone_challenge_records', db_column='dto_id', editable=False)
+
+    mhc_challenge = models.CharField('Pharmacological Challenge', max_length=15, null=True, blank=True,
+                                     help_text='saline, CRH, naloxone, ethanol, ACTH and dexamethasone',
+                                     choices=PharmalogicalChallengeChoice)
+    mhc_source = models.CharField('Unique Source String', max_length=100, null=True, blank=True)
+    # example: 20111298-301 Grant-Shaw DOC-Aldo-Vasop INIA5_E2-4 INIA4_E1-4 Report
+
+    mhc_date = models.DateField('Date', blank=True, null=True, help_text='The date this experiment was conducted.')
+    mhc_time = models.PositiveIntegerField('Time', blank=True, null=True, help_text='Minutes after challenge the sample was collected. 0 = baseline')
+    mhc_ep = models.PositiveIntegerField('Endocrine Profile Number', blank=True, null=True, help_text='')
+
+    mhc_doc = models.FloatField("Deoxycorticosterone", editable=False, null=True, blank=False)
+    mhc_ald = models.FloatField("Aldosterone", editable=False, null=True, blank=False)
+    mhc_vas = models.FloatField("Vasopressin", editable=False, null=True, blank=False)
+    mhc_acth = models.FloatField("ACTH", editable=False, null=True, blank=False)
+    mhc_gh = models.FloatField("GH", editable=False, null=True, blank=False)
+    mhc_estra = models.FloatField("17beta-estradiol", editable=False, null=True, blank=False)  # formerly mhc_e
+
+    mhc_cort = models.FloatField("Cortisol", editable=False, null=True, blank=False)
+    mhc_dheas = models.FloatField("DHEA-S", editable=False, null=True, blank=False)
+
+    mhc_test = models.FloatField("Testosterone", editable=False, null=True, blank=False)
+
+
+    def __unicode__(self):
+        return "%s - %s Hormone Challenge" % (self.monkey, self.mhc_challenge)
+
+    class Meta:
+        db_table = 'mhc_monkey_hormone_challenge'
+        permissions = (
+            ('view_mhc_data', 'Can view monkey hormone challenge data'),
+        )
 
 
 

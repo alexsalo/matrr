@@ -2180,6 +2180,7 @@ def load_crh_challenge_data(file_name, dto_pk, header=True):
             crc.save()
     print "Data load complete."
 
+
 def load_bone_density(filename, dto_pk, tst_tissue_name='Bone (Rt tibia)'):
     """
     columns = [ N, Study #, Species, MATRR Cohort #, Gender, TRT, Group #, MATRR #, Monkey #, Area (cm_), BMC (g), BMD (g/cm_), Comment ]
@@ -2207,6 +2208,148 @@ def load_bone_density(filename, dto_pk, tst_tissue_name='Bone (Rt tibia)'):
                 print e
                 print row
                 print ''
+
+
+def load_monkey_hormone_challenge_data(file_name, delim=',', username=None):
+    """
+    Script analyzes the header and figures out which columns are present. For them it goes row by row,
+        retrieves the mhc, updates its fields and saves. Script handles QNS and <600 values, treating them as None,
+        which should be distinguished from 0.
+
+    header: Animal ID	Date	Cohort 	Challenge	Timepoint	EP	DOC (pg/ml)	Aldosterone (ng/ml)	Vasopressin (pg/ml)	ACTH (pg/ml)	Cortisol (ug/ml)	GH (pg/ml)	Testosterone (ng/ml)	DHEA-S (ug/ml)	Sample ID	Sample ID	Source
+    row: 20336	01/11/08	4	Dexamethasone	post	1	0.08	124.48	180						4E1PD	PD	20111298-301 Grant-Shaw DOC-Aldo-Vasop INIA5_E2-4 INIA4_E1-4 Report
+
+    Note Well: Data may contain duplicates rows (those biologists) and script handles that - it looks up entries
+        by mky_id, date, time, challenge and updates fields if those values are not unique.
+    """
+    timepoints_dict = {'pre': 0, 'post': 1}  # see comments in the model
+    QNS_dict = {'QNS': None, '<1': None, '<600': None, '<0.048': None}  # treat as QNS
+
+    if username is not None:
+        dto = DataOwnership.objects.get(account__user__username=username)
+    else:
+        dto = None
+
+    possible_fields = [ 'mhc_challenge',
+                        'mhc_source',
+                        'mhc_date',
+                        'mhc_time',
+                        'mhc_ep',
+                        'mhc_doc',
+                        'mhc_ald',
+                        'mhc_vas',
+                        'mhc_acth',
+                        'mhc_gh',
+                        'mhc_estra',
+                        'mhc_cort',
+                        'mhc_dheas',
+                        'mhc_test',
+                        ]
+
+    with open(file_name, 'r') as f:
+        # 1. Read all data
+        read_data = f.read()
+        if '\r' in read_data:
+            read_data = read_data.split('\r')
+        elif '\n' in read_data:
+            read_data = read_data.split('\n')
+        else:
+            raise Exception("WTF Line endings are in this file?")
+
+        # 2. Find out which fields are present in the file
+        present_fields = dict()  # field : column number
+        header = read_data[0].split(delim)
+        for i, head in enumerate(header):
+            for field in possible_fields:
+                if field.split('_')[1] in head.lower():
+                    present_fields[field] = i
+        present_fields['monkey'] = header.index('Animal ID')  # Find where is animal reference
+        print "The following columns are recognized in the file: %s" % present_fields
+
+        # variable fields:
+        data_fields = dict(present_fields)
+        for k in ['monkey', 'mhc_date', 'mhc_time', 'mhc_ep', 'mhc_challenge']:  # remove - already used
+            data_fields.pop(k, None)
+
+        # 3. Parse the data rows
+        for row_number, row in enumerate(read_data[1:]):  # skip header
+            row_data = row.split(delim)
+
+            # core mhc info:
+            try:
+                monkey = dingus.get_monkey_by_number(row_data[present_fields['monkey']])
+                challenge = row_data[present_fields['mhc_challenge']]
+                date = dingus.get_datetime_from_steve(row_data[present_fields['mhc_date']])
+                time = row_data[present_fields['mhc_time']]
+                if time.lower() in timepoints_dict:
+                    time = timepoints_dict[time]
+                ep = row_data[present_fields['mhc_ep']]
+
+                mhc, created = MonkeyHormoneChallenge.objects.get_or_create(monkey=monkey, mhc_date=date, dto=dto,
+                                                                            mhc_time=time, mhc_ep=ep,
+                                                                            mhc_challenge=challenge)
+            except Exception as e:
+                print dingus.ERROR_OUTPUT % (row_number, e, row)
+                logging.error(dingus.ERROR_OUTPUT % (row_number, e, row))
+                continue
+
+            # make sure <1 doesnt parses and doesnt get saved
+            for field in data_fields:
+                value = row_data[data_fields[field]]
+                if value != '':
+                    if value in QNS_dict:
+                        value = None
+                    setattr(mhc, field, value)
+
+            # clean and finish up
+            try:
+                mhc.full_clean()
+            except Exception as e:
+                print dingus.ERROR_OUTPUT % (row_number, e, row)
+                logging.error(dingus.ERROR_OUTPUT % (row_number, e, row))
+                continue
+            mhc.save()
+
+            # Progress bar
+            if row_number % 100 == 0:
+                print "%s out of %s rows is loaded" % (row_number, len(read_data))
+    #
+    print "Data load complete."
+
+
+    #     for line_number, line in enumerate(read_data[offset:]):
+    #         row_data = line.split("\t")
+    #         if not any(row_data):
+    #             continue
+    #         crc_date = dingus.get_datetime_from_steve(row_data[0])
+    #         monkey = dingus.get_monkey_by_number(row_data[1])
+    #         crc_time = 0 if row_data[2].lower() == 'base' else int(row_data[2])
+    #         crc_ep = int(row_data[10])
+    #         crc_exists = CRHChallenge.objects.filter(monkey=monkey, crc_date=crc_date,
+    #                                                  crc_time=crc_time, crc_ep=crc_ep)
+    #         if crc_exists.count():
+    #             raise Exception("STOP! This record already exists but it should be unique.")
+    #         else:
+    #             crc = CRHChallenge(monkey=monkey, crc_date=crc_date, dto=dto, crc_time=crc_time, crc_ep=crc_ep)
+    #
+    #         data_fields = row_data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+    #         model_fields = fields[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
+    #         for i, field in enumerate(model_fields):
+    #             if data_fields[i] != '' and model_fields != '':
+    #                 if data_fields[i].lower() == 'qns' or data_fields[i] == '<5':
+    #                     data_field = None
+    #                 else:
+    #                     data_field = data_fields[i]
+    #                 setattr(crc, field, data_field)
+    #
+    #         try:
+    #             crc.full_clean()
+    #         except Exception as e:
+    #             print dingus.ERROR_OUTPUT % (line_number, e, line)
+    #             logging.error(dingus.ERROR_OUTPUT % (line_number, e, line))
+    #             continue
+    #         crc.save()
+    # print "Data load complete."
 
 
 def load_vaccine_study_data(file_name):

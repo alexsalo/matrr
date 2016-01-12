@@ -75,3 +75,6 @@ def big_num_human_format(value):
     # add more suffixes if you need them
     return '%.0f%s' % (value, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
 
+@register.filter
+def keyvalue(dict, key):
+    return dict[key]

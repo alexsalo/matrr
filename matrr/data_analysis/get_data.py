@@ -23,7 +23,7 @@ cohort_names = ["INIA Rhesus 10", "INIA Rhesus 4", "INIA Rhesus 5", "INIA Rhesus
             "INIA Rhesus 6b", "INIA Rhesus 7a"]
 
 GENERATE_DATA = False
-FOLD_INTO_TWO_DC = True
+FOLD_INTO_TWO_DC = False
 SUBDIVIDE = True
 
 FIG_SIZE = (16, 10)
@@ -413,10 +413,9 @@ Generate Two PDPs
 """
 
 
-def create_pdp_hd_vhd():
+def create_pdp_hd_vhd(target='VHD'):
     x = data_HDVHD[['mtd_etoh_mean_drink_length', 'mtd_etoh_mean_drink_vol', 'mtd_etoh_mean_bout_length', 'mtd_max_bout_length']]
     x.columns = ['Mean length for EtOH drinks', 'sfdfgsd', 'dfd', 'Max bout length']
-    target = 'VHD'
 
     y = data_HDVHD.DC
     clf = GradientBoostingClassifier(n_estimators=100, max_depth=4,
@@ -427,18 +426,22 @@ def create_pdp_hd_vhd():
     fig = plt.figure(figsize=(14, 7))
     ax = fig.add_subplot(111)
     plot_partial_dependence(clf, x, [3, 0, (3, 0)], label=target, feature_names=x.columns, ax=ax)
-    plt.suptitle('Partial Dependence on Becoming VHD')
+    plt.suptitle('Partial Dependence on Becoming ' + target)
     plt.tight_layout()
-    pylab.show()
-#create_pdp_hd_vhd()
+    fig.subplots_adjust(top=0.93)
 
+def create_pdp_heavy_nonheavy(target):
+    data.ix[(data.DC=='BD'), 'DC']='LD'  # Fold into 3 categories
 
-def create_pdp_heavy_nonheavy():
-    x = data[['mtd_etoh_bout_2', 'necropsy', 'intox', 'mtd_etoh_median_idi']]
-    x.columns = ['Total number of bouts', 'Age', 'Age of First Intoxication', 'Median EtOH interbout interval']
-    target = 'VHD'
+    # x = data[['mtd_etoh_bout_2', 'necropsy', 'intox', 'mtd_etoh_median_idi', 'mtd_etoh_mean_drink_length']]
+    # x.columns = ['Total number of bouts', 'Age', 'Age of First Intoxication', 'Median EtOH interbout interval', 'Mean length for EtOH drinks']
+
+    x = data[['mtd_max_bout_length', 'necropsy', 'intox', 'mtd_etoh_median_idi', 'mtd_etoh_mean_drink_length']]
+    x.columns = ['Max bout length', 'Age', 'Age of First Intoxication', 'Median EtOH interbout interval', 'Mean length for EtOH drinks']
+
 
     y = data.DC
+    print y
     clf = GradientBoostingClassifier(n_estimators=100, max_depth=4,
                                      learning_rate=0.1, random_state=1)
     clf.fit(x, y)
@@ -446,9 +449,10 @@ def create_pdp_heavy_nonheavy():
     matplotlib.rcParams.update({'font.size': 16})
     fig = plt.figure(figsize=(14, 7))
     ax = fig.add_subplot(111)
-    plot_partial_dependence(clf, x, [2, 0, (2, 0)], label=target, feature_names=x.columns, ax=ax)
-    plt.suptitle('Partial Dependence on Becoming VHD')
+    plot_partial_dependence(clf, x, [0, 4, (0, 4)], label=target, feature_names=x.columns, ax=ax)
+    plt.suptitle('Partial Dependence on Becoming ' + target)
     plt.tight_layout()
-    pylab.show()
     fig.subplots_adjust(top=0.93)
-create_pdp_heavy_nonheavy()
+create_pdp_heavy_nonheavy('VHD')
+create_pdp_heavy_nonheavy('LD')
+pylab.show()

@@ -1,7 +1,7 @@
 __author__ = 'alex'
 from common import *
 
-
+# within each monkey's data
 def _split_bec_df_into_three(bec_df, split_by):
     if split_by == 'bec_mgpct':
         bec_df_less80mgpct = bec_df[bec_df.bec < 80]
@@ -16,6 +16,7 @@ def _split_bec_df_into_three(bec_df, split_by):
         bec_df_less2std = bec_df[(bec_df.bec > y_lo) & (bec_df.bec < y_hi)]
         bec_df_over2std = bec_df[(bec_df.bec < y_lo) | (bec_df.bec > y_hi)]
         return bec_df, bec_df_less2std, bec_df_over2std
+
 # Using daylight etoh consumption rather than 22hr access
 def mky_bec_corr_daylight(mky, split_by='bec_mgpct'):
     # 1. Find becs and create dataframe

@@ -261,7 +261,7 @@ def print_full(x):
 # bec_vervet2_induction_file = '/home/alex/Dropbox/Baylor/Matrr/vervet_data/vervet1_BEC_induction.csv'
 # load_unusual_formats.load_bec_data_vervet(bec_vervet2_induction_file, True, True)
 
-from django.db.models import Sum, Avg
+from django.db.models import Sum, Avg, Count
 from dateutil.relativedelta import relativedelta
 
 #m = Monkey.objects.get(mky_id = 10022)
@@ -3145,8 +3145,61 @@ Vansessa Hormones
 #                   columns=['mky_id',  'crc_date','crc_time', 'crc_ep',
 #                                             'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas'])
 # print df
-#print CRHChallenge.objects.all().values_list('crc_time', flat=True).distinct()
+# print CRHChallenge.objects.all().values_list('crc_time', flat=True).distinct()
+# print CRHChallenge.objects.all().values_list('monkey__cohort', flat=True).distinct()
 
+# # Monkey Hormone Challenge
+mhcs = MonkeyHormoneChallenge.objects.all()
+# print mhcs
+# for crc in CRHChallenge.objects.all():
+#     mhc, created = MonkeyHormoneChallenge.objects.get_or_create(
+#         monkey=crc.monkey,
+#         mhc_date=crc.crc_date,
+#         mhc_time=crc.crc_time,
+#         mhc_ep=crc.crc_ep,
+#         mhc_acth=crc.crc_acth,
+#         mhc_cort=crc.crc_cort,
+#         mhc_estra=crc.crc_e,
+#         mhc_doc=crc.crc_doc,
+#         mhc_ald=crc.crc_ald,
+#         mhc_dheas=crc.crc_dheas
+#     )
+#     if created:
+#         print mhc
+
+df = pd.DataFrame(list(mhcs.values_list('monkey__mky_id',
+                                        'mhc_challenge', 'mhc_date','mhc_time','mhc_ep','mhc_doc','mhc_ald','mhc_vas',
+                                        'mhc_acth','mhc_gh','mhc_estra','mhc_cort','mhc_dheas','mhc_test','mhc_source')),
+                  columns=['mky_id',
+                           'mhc_challenge', 'mhc_date','mhc_time','mhc_ep','mhc_doc','mhc_ald','mhc_vas',
+                                        'mhc_acth','mhc_gh','mhc_estra','mhc_cort','mhc_dheas','mhc_test','mhc_source'])
+print df
+print MonkeyHormoneChallenge.objects.all().values_list('mhc_time', flat=True).distinct()
+print MonkeyHormoneChallenge.objects.all().values_list('monkey__cohort', flat=True).distinct()
+print MonkeyHormoneChallenge.objects.all().values_list('mhc_challenge', flat=True).distinct()
+print MonkeyHormoneChallenge.objects.all().count()
+for ep in [1, 2, 3, 4]:
+    for hormone in ['mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test']:
+        print "EP: %s - %s: %s" % (ep, MonkeyHormoneChallenge._meta.get_field_by_name(hormone)[0].verbose_name, \
+            MonkeyHormoneChallenge.objects.filter(**{hormone + '__isnull': False}).values_list('mhc_challenge', flat=True).distinct())
+
+
+# for mhc in MonkeyHormoneChallenge.objects.all():
+#     mhc.mhc_challenge = 'CRH'
+#     mhc.full_clean()
+#     mhc.save()
+#     print mhc
+
+
+# #print DataOwnership.objects.get(account__user__username='alexsalo')
+# print ["foo", "bar", "baz"].index("bar")
+# #print ["foo", "bar", "baz"].index("lol")
+# if 'ba' in 'abas':
+#     print 'ba'
+
+# from matrr.utils.database import load
+# load.load_monkey_hormone_challenge_data('/home/alex/win-share/matrr_sync/vanessa_endocrine/clean/coh4_hormone_challenge_clean.csv',
+#                                         delim=',', username='vwakeling')
 """
 generate coh13 plots
 """
@@ -3395,5 +3448,35 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_
 #     except Exception as e:
 #         print e
 #         pass
+
+
+"""
+Check LD VHD BECs anomalies
+"""
+# # # high values at LD
+# ld_becs = MonkeyBEC.objects.OA().filter(monkey__in=Monkey.objects.filter(mky_drinking_category='LD'))
+# # print "Total LD monkeys with BEC data: %s" % ld_becs.values('monkey__mky_id').distinct().count()
+# # print pd.DataFrame(list(ld_becs.filter(bec_mg_pct__gte=100).values('monkey__mky_id').
+# #                         annotate(over_100_bec=Count('bec_mg_pct')).order_by('-over_100_bec')))
+# # print pd.DataFrame(list(ld_becs.filter(bec_mg_pct__gte=200).values('monkey__mky_id').
+# #                         annotate(over_200_bec=Count('bec_mg_pct')).order_by('-over_200_bec')))
+#
+# # zeros at VHD
+# vhd_becs = MonkeyBEC.objects.OA().filter(monkey__in=Monkey.objects.filter(mky_drinking_category='VHD'))
+# print "Total VHD monkeys with BEC data: %s" % vhd_becs.values('monkey__mky_id').distinct().count()
+# print pd.DataFrame(list(vhd_becs.filter(bec_mg_pct=0).values('monkey__mky_id').
+#                         annotate(zero_bec=Count('bec_mg_pct')).order_by('-zero_bec')))
+#
+# matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/bec_study/'
+# # # Hist
+# # plt.hist(ld_becs.values_list('bec_mg_pct', flat=True), bins=30)
+# # plt.xlabel('LD: eBEC mg pct')
+#
+# # Heat Histogram
+# vhd_df = pd.DataFrame(list(vhd_becs.values_list('bec_gkg_etoh', 'bec_mg_pct')), columns=['etoh', 'bec'])
+# ld_df = pd.DataFrame(list(ld_becs.values_list('bec_gkg_etoh', 'bec_mg_pct')), columns=['etoh', 'bec'])
+#
+# result = ld_df.plot(kind='hexbin', x='etoh', y='bec', gridsize=25)#, cmap=plt.cm.Greens)
+
 
 plt.show()
