@@ -3139,7 +3139,7 @@ Find FT schedule distribution
 """
 Vansessa Hormones
 """
-# crc = CRHChallenge.objects.all()
+#crc = CRHChallenge.objects.all()
 # df = pd.DataFrame(list(crc.values_list('monkey__mky_id',  'crc_date','crc_time', 'crc_ep',
 #                                             'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas')),
 #                   columns=['mky_id',  'crc_date','crc_time', 'crc_ep',
@@ -3148,9 +3148,8 @@ Vansessa Hormones
 # print CRHChallenge.objects.all().values_list('crc_time', flat=True).distinct()
 # print CRHChallenge.objects.all().values_list('monkey__cohort', flat=True).distinct()
 
-# # Monkey Hormone Challenge
-mhcs = MonkeyHormoneChallenge.objects.all()
-# print mhcs
+# Monkey Hormone Challenge
+
 # for crc in CRHChallenge.objects.all():
 #     mhc, created = MonkeyHormoneChallenge.objects.get_or_create(
 #         monkey=crc.monkey,
@@ -3170,8 +3169,10 @@ mhcs = MonkeyHormoneChallenge.objects.all()
 # for mhc in MonkeyHormoneChallenge.objects.filter(mhc_challenge__isnull=True):
 #     mhc.mhc_challenge = 'CRH'
 #     mhc.save()
-
-
+#
+#
+# mhcs = MonkeyHormoneChallenge.objects.all()
+# print mhcs
 # df = pd.DataFrame(list(mhcs.values_list('monkey__mky_id',
 #                                         'mhc_challenge', 'mhc_date','mhc_time','mhc_ep','mhc_doc','mhc_ald','mhc_vas',
 #                                         'mhc_acth','mhc_gh','mhc_estra','mhc_cort','mhc_dheas','mhc_test','mhc_source')),
@@ -3483,5 +3484,22 @@ Check LD VHD BECs anomalies
 #
 # result = ld_df.plot(kind='hexbin', x='etoh', y='bec', gridsize=25)#, cmap=plt.cm.Greens)
 
+"""
+Electrophys load
+"""
+# for mep in MonkeyEphys.objects.filter(mep_ephys_type__isnull=True):
+#     mep.mep_ephys_type = 'NA'
+#     mep.save()
+#print pd.DataFrame(list(MonkeyEphys.objects.filter(mep_frequency__isnull=False).values_list(*MonkeyEphys.columns[0])), columns=MonkeyEphys.columns[1])
+
+
+# from matrr.utils.database.load import load_gin_electrophys
+# load_gin_electrophys('/home/alex/win-share/matrr_sync/gin_electro/electrophys_cohorts_gin_epsc.csv',
+#                      delim=',', username='mcginnim', ephys_type='Ex')
+# load_gin_electrophys('/home/alex/win-share/matrr_sync/gin_electro/electrophys_cohorts_gin_ipsc.csv',
+#                      delim=',', username='mcginnim', ephys_type='In')
+
+# from utils.database import dump
+# dump.dump_MATRR_current_data_grid()
 
 plt.show()

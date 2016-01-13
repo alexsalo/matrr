@@ -2116,6 +2116,50 @@ def load_cohort4_electrophys(file_path, ephys_type):
             mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
     print 'Success'
 
+def load_gin_electrophys(file_path, ephys_type, delim=',', username=None):
+    try:
+        dto = DataOwnership.objects.get(account__user__username=username)
+    except Exception as e:
+        dto = None
+        print e
+        pass
+    tissue_type = 'NA'
+
+    input_data = csv.reader(open(file_path, 'rU'), delimiter=delim)
+    for row_number, row in enumerate(input_data):
+        if 'Putamen' in row[0]:
+            tissue_type = 'Putamen'
+        elif 'Caudate' in row[0]:
+            tissue_type = 'Caudate'
+        else:
+            try:
+                monkey = dingus.get_monkey_by_number(row[0].split(' ')[0])
+            except:
+                continue
+
+            try:
+                ephy = dict()
+                if dto is not None:
+                    ephy['dto'] = dto
+                ephy['monkey'] = monkey
+                ephy['mep_ephys_type'] = ephys_type
+                ephy['mep_tissue_type'] = TissueType.objects.get(tst_tissue_name=tissue_type)
+
+                ephy['mep_frequency'] = row[1]
+                ephy['mep_iei'] = row[2]
+                ephy['mep_amp'] = row[3]
+                ephy['mep_rise'] = row[4]
+                ephy['mep_decay'] = row[5]
+                ephy['mep_area'] = row[6]
+
+                mep, is_new = MonkeyEphys.objects.get_or_create(**ephy)
+                if is_new:
+                    print 'Created %s' % mep
+            except Exception as e:
+                print dingus.ERROR_OUTPUT % (row_number, e, row)
+                pass
+
+
 def load_crh_challenge_data(file_name, dto_pk, header=True):
     """
     header  = Date	Monk	Time	ACTH	Cortisol	E	DOC	ALD	DHEAS	Group	EP
@@ -2225,10 +2269,11 @@ def load_monkey_hormone_challenge_data(file_name, delim=',', username=None):
     timepoints_dict = {'pre': 0, 'post': 1}  # see comments in the model
     QNS_dict = {'QNS': None, '<1': None, '<600': None, '<0.048': None}  # treat as QNS
 
-    if username is not None:
+    try:
         dto = DataOwnership.objects.get(account__user__username=username)
-    else:
-        dto = None
+    except Exception as e:
+        print e
+        pass
 
     possible_fields = [ 'mhc_challenge',
                         'mhc_source',
@@ -2313,43 +2358,7 @@ def load_monkey_hormone_challenge_data(file_name, delim=',', username=None):
             # Progress bar
             if row_number % 100 == 0:
                 print "%s out of %s rows is loaded" % (row_number, len(read_data))
-    #
     print "Data load complete."
-
-
-    #     for line_number, line in enumerate(read_data[offset:]):
-    #         row_data = line.split("\t")
-    #         if not any(row_data):
-    #             continue
-    #         crc_date = dingus.get_datetime_from_steve(row_data[0])
-    #         monkey = dingus.get_monkey_by_number(row_data[1])
-    #         crc_time = 0 if row_data[2].lower() == 'base' else int(row_data[2])
-    #         crc_ep = int(row_data[10])
-    #         crc_exists = CRHChallenge.objects.filter(monkey=monkey, crc_date=crc_date,
-    #                                                  crc_time=crc_time, crc_ep=crc_ep)
-    #         if crc_exists.count():
-    #             raise Exception("STOP! This record already exists but it should be unique.")
-    #         else:
-    #             crc = CRHChallenge(monkey=monkey, crc_date=crc_date, dto=dto, crc_time=crc_time, crc_ep=crc_ep)
-    #
-    #         data_fields = row_data[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
-    #         model_fields = fields[FIELDS_INDEX[0]:FIELDS_INDEX[1]]
-    #         for i, field in enumerate(model_fields):
-    #             if data_fields[i] != '' and model_fields != '':
-    #                 if data_fields[i].lower() == 'qns' or data_fields[i] == '<5':
-    #                     data_field = None
-    #                 else:
-    #                     data_field = data_fields[i]
-    #                 setattr(crc, field, data_field)
-    #
-    #         try:
-    #             crc.full_clean()
-    #         except Exception as e:
-    #             print dingus.ERROR_OUTPUT % (line_number, e, line)
-    #             logging.error(dingus.ERROR_OUTPUT % (line_number, e, line))
-    #             continue
-    #         crc.save()
-    # print "Data load complete."
 
 
 def load_vaccine_study_data(file_name):

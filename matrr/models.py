@@ -178,6 +178,7 @@ ResearchProgress = Enumeration([
 EphysType = Enumeration([
     ('Ex', 'Excitatory', 'Excitatory'),
     ('In', 'Inhibitory', 'Inhibitory'),
+    ('NA', 'Unknown or NA', 'Unknown or NA'),
 ])
 PharmalogicalChallengeChoice = [
     ('Saline', 'Saline'),
@@ -4288,58 +4289,42 @@ class MonkeyBrainBlock(models.Model):
 
 class MonkeyEphys(models.Model):
     """
-    Monkey ElectroPhys data, from Gin
-
-    https://gleek.ecs.baylor.edu/wiki/index.php/MonkeyEphys
-
-    Short list of entities:
-        "Frequency (hz)"
-        "Amplitude (pico-amps)"
-        "Membrane Resistance"
-        "Membrane Capacitance"
-        "Inter-Event Interval (ms)"
-        "Rise (ms)"
-        "Decay (ms)"
-        "Area (??)"
-        "Baseline (??)"
-        "Noise (??)"
-        "10-90 Rise (ms)"
-        "10-90 Slope (??)"
-        "Half Width (??)"
-        "50 Rise (ms)"
-        "Rel Time (??)"
+    Monkey ElectroPhysiology data, from Gin
     """
+    # Primary Key
     mep_id = models.AutoField(primary_key=True)
-    monkey = models.ForeignKey(Monkey, null=False, related_name='mep_records', db_column='mky_id', editable=False)
-    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mep_records', db_column='dto_id', editable=False)
-    mep_bal = models.FloatField("Blood Alcohol Level", editable=False, null=True, blank=True, help_text="Average blood alcohol level of the last 6 months.")
-    mep_lifetime_gkg = models.FloatField("Lifetime Intake (g/kg)", editable=False, null=True, blank=True)
-    mep_lifetime_vol = models.FloatField("Lifetime Intake (mL)", editable=False, null=True, blank=True)
+    monkey = models.ForeignKey(Monkey, related_name='mep_records', db_column='mky_id', editable=False, blank=False, null=False)
+    mep_ephys_type = models.CharField('Ephys Type', max_length=2, choices=EphysType, blank=False, null=False, help_text='The Ephys Type of the data')
+    mep_tissue_type = models.ForeignKey(TissueType, db_column='mep_tissue_type_id', related_name='ephys_records', blank=False, null=False)
 
-    mep_freq = models.FloatField("Frequency (hz)", editable=False, null=False, blank=False)
-    mep_amp = models.FloatField("Amplitude (pico-amps)", editable=False, null=False, blank=False)
+    # Ephys values
+    mep_frequency = models.FloatField("Frequency (hz)", null=True, blank=True)
+    mep_iei = models.FloatField("Inter-Event Interval (ms)", null=True, blank=True)
+    mep_amp = models.FloatField("Amplitude (pico-amps)", null=True, blank=True)
+    mep_rise = models.FloatField("Rise (ms)", null=True, blank=True)
+    mep_decay = models.FloatField("Decay (ms)", null=True, blank=True)
+    mep_area = models.FloatField("Area", null=True, blank=True)
 
-    # New EPhys gave new variables, for Cyno 3
-    desc = 'These are electrophysiological measurements of the intrinsic membrane properties of the neurons ' \
-           'recorded from, and they often confer meaning about the neuronal phenotype in the BNST, which has ' \
-           'a heterogeneous cell population.'
-    mep_res = models.FloatField("Membrane Resistance", editable=False, null=True, blank=True, help_text=desc)
-    mep_cap = models.FloatField("Membrane Capacitance", editable=False, null=True, blank=True, help_text=desc)
+    # Secondary Ephys values
+    mep_baseline = models.FloatField("Baseline", null=True, blank=True)
+    mep_noise = models.FloatField("Noise", null=True, blank=True)
+    mep_10_90_rise = models.FloatField("10-90 Rise (ms)", null=True, blank=True, help_text="Time it takes to get from 10% to 90% of the rise.")
+    mep_10_90_slope = models.FloatField("10-90 Slope", null=True, blank=True, help_text="Slope fo the 10-90 rise")
+    mep_half_width = models.FloatField("Half Width", null=True, blank=True)
+    mep_50_rise = models.FloatField("50 Rise (ms)", null=True, blank=True, help_text="Time it takes to get to 50% of the rise (definition unconfirmed).")
+    mep_rel_time = models.FloatField("Rel Time", null=True, blank=True, help_text="Definition unknown.")
 
-    # So far we habe those for Cyno 2
-    mep_iei = models.FloatField("Inter-Event Interval (ms)", editable=False, null=True, blank=True)
-    mep_rise = models.FloatField("Rise (ms)", editable=False, null=True, blank=True)
-    mep_decay = models.FloatField("Decay (ms)", editable=False, null=True, blank=True)
-    mep_area = models.FloatField("Area (??)", editable=False, null=True, blank=True)
-    mep_baseline = models.FloatField("Baseline (??)", editable=False, null=True, blank=True)
-    mep_noise = models.FloatField("Noise (??)", editable=False, null=True, blank=True)
-    mep_10_90_rise = models.FloatField("10-90 Rise (ms)", editable=False, null=True, blank=True, help_text="Time it takes to get from 10% to 90% of the rise.")
-    mep_10_90_slope = models.FloatField("10-90 Slope (??)", editable=False, null=True, blank=True, help_text="Slope fo the 10-90 rise")
-    mep_half_width = models.FloatField("Half Width (??)", editable=False, null=True, blank=True)
-    mep_50_rise = models.FloatField("50 Rise (ms)", editable=False, null=True, blank=True, help_text="Time it takes to get to 50% of the rise (definition unconfirmed).")
-    mep_rel_time = models.FloatField("Rel Time (??)", editable=False, null=True, blank=True, help_text="Definition unknown.")
+    # Membrane Properties
+    desc = 'These are electrophysiological measurements of the intrinsic membrane properties of the neurons recorded from, and they often confer meaning about the neuronal phenotype in the BNST, which has a heterogeneous cell population.'
+    mep_res = models.FloatField("Membrane Resistance", null=True, blank=True, help_text=desc)
+    mep_cap = models.FloatField("Membrane Capacitance", null=True, blank=True, help_text=desc)
 
-    mep_ephys_type = models.CharField('Ephys Type', max_length=2, choices=EphysType, blank=False, null=True, help_text='The Ephys Type of the data')
+    # Ownership
+    dto = models.ForeignKey("DataOwnership", null=True, blank=True, related_name='mep_records', db_column='dto_id')
+
+    # Columns to display
+    columns = (['monkey__mky_id', 'mep_ephys_type', 'mep_tissue_type__tst_tissue_name', 'mep_frequency', 'mep_iei', 'mep_amp', 'mep_rise', 'mep_decay', 'mep_area'],
+               ['mky_id', 'ephys_type', 'tissue_name', 'frequency', 'iei', 'amp', 'rise', 'decay', 'area'])
 
     def __unicode__(self):
         return "%s - Electrophys" % str(self.monkey)
@@ -4502,7 +4487,7 @@ class BoneDensity(models.Model):
 
 
     def __unicode__(self):
-        return "%s - CRH Challenge" % str(self.monkey)
+        return "%s - Bone Density" % str(self.monkey)
 
     def get_all_fields(self):       # this function will return bone density data for a given monkey...
                                     # bdy_area is 'Bone Area', bdy_bmc is 'Bone Mineral Content' and bdy_bmd
@@ -4598,6 +4583,7 @@ class MonkeyHormoneChallenge(models.Model):
         permissions = (
             ('view_mhc_data', 'Can view monkey hormone challenge data'),
         )
+
 
 
 
