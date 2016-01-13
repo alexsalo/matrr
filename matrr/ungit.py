@@ -3167,6 +3167,11 @@ mhcs = MonkeyHormoneChallenge.objects.all()
 #     if created:
 #         print mhc
 
+# for mhc in MonkeyHormoneChallenge.objects.filter(mhc_challenge__isnull=True):
+#     mhc.mhc_challenge = 'CRH'
+#     mhc.save()
+
+
 # df = pd.DataFrame(list(mhcs.values_list('monkey__mky_id',
 #                                         'mhc_challenge', 'mhc_date','mhc_time','mhc_ep','mhc_doc','mhc_ald','mhc_vas',
 #                                         'mhc_acth','mhc_gh','mhc_estra','mhc_cort','mhc_dheas','mhc_test','mhc_source')),
@@ -3183,8 +3188,7 @@ mhcs = MonkeyHormoneChallenge.objects.all()
 #         print "EP: %s - %s: %s" % (ep, MonkeyHormoneChallenge._meta.get_field_by_name(hormone)[0].verbose_name, \
 #             MonkeyHormoneChallenge.objects.filter(**{hormone + '__isnull': False}).values_list('mhc_challenge', flat=True).distinct())
 
-from matrr.utils.database import dump
-dump.dump_MATRR_current_data_grid()
+
 # for mhc in MonkeyHormoneChallenge.objects.all():
 #     mhc.mhc_challenge = 'CRH'
 #     mhc.full_clean()
