@@ -230,8 +230,16 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                   '    Area', '    Bone Mineral Content', '    Bone Mineral Density',
                   'Vaccine Study',
                   'Dopamine Study',
-                  'CRH Challenge',
-                  '    ACTH', '    Cortisol', '    17beta-estradiol', '    Deoxycorticosterone', '    Aldosterone', '    DHEA-S',
+                  'Hormone Challenge',
+                        "    Deoxycorticosterone",
+                        "    Aldosterone",
+                        "    Vasopressin",
+                        "    ACTH",
+                        "    GH",
+                        "    17beta-estradiol",
+                        "    Cortisol",
+                        "    DHEA-S",
+                        "    Testosterone",
                   'ElectroPhys',
                   "    Frequency (hz)", "    In-Event Interval","    Amplitude","    Capacitance","    Resistance","    Rise (ms)","    Decay (ms)", "    Area","    Baseline","    Noise", "    10-90 Rise (ms)","    10-90 Slope","    Half Width","    50 Rise (ms)","    Rel Time",
                   ]
@@ -248,8 +256,9 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                     BoneDensity,BoneDensity,BoneDensity,
                     VaccineStudy,
                     DopamineStudy,
-                    CRHChallenge,
-                    CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,CRHChallenge,
+                    MonkeyHormoneChallenge,
+                        MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,
+                        MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,
                     MonkeyEphys,
                     MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,MonkeyEphys,
                     ]
@@ -267,7 +276,8 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                      'monkey__cohort', # VaccineStudy
                      'monkey__cohort', # DopamineStudy
                      'monkey__cohort',
-                     'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
+                        'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
+                        'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
                      'monkey__cohort',
                      'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
                      ]
@@ -285,7 +295,8 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                     '', # any vaccine study data
                     '', # any dopamine study data
                     '',
-                    'crc_acth', 'crc_cort', 'crc_e', 'crc_doc', 'crc_ald', 'crc_dheas',
+                        "mhc_doc", "mhc_ald", "mhc_vas", "mhc_acth", "mhc_gh",
+                        "mhc_estra", "mhc_cort", "mhc_dheas", "mhc_test",
                     '',
                     'mep_freq','mep_iei','mep_amp','mep_cap','mep_res','mep_rise','mep_decay','mep_area','mep_baseline','mep_noise','mep_10_90_rise','mep_10_90_slope','mep_half_width','mep_50_rise','mep_rel_time',
 

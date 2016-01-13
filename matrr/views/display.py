@@ -352,26 +352,22 @@ def data_repository_grid(request):
 @user_passes_test(lambda u: u.has_perm('matrr.data_repository_grid'), login_url='/denied/')
 def monkey_hormone_challenge_data_grid(request):
     from matrr.models import Cohort, MonkeyHormoneChallenge, PharmalogicalChallengeChoice, MonkeyHormoneChoice
-    #cohorts = MonkeyHormoneChallenge.objects.all().values_list('monkey__cohort__coh_cohort_id', flat=True)
-    hormone_names = []
-    all_mhc = {}
-    for ep in [1, 2, 3, 4]:
-        ep_hormone = {}
-        for hormone in ['mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test']:
-            hormone_verbose = MonkeyHormoneChallenge._meta.get_field_by_name(hormone)[0].verbose_name
-            if ep == 1:
-                hormone_names.append(hormone_verbose)
-            challenges = MonkeyHormoneChallenge.objects.filter(**{hormone + '__isnull': False}).\
-                                                        values_list('mhc_challenge', flat=True).distinct()
-            ep_hormone[hormone_verbose] = challenges
-        all_mhc[ep] = ep_hormone
-    print all_mhc
-    print PharmalogicalChallengeChoice
-    print hormone_names
-    for c in MonkeyHormoneChoice:
-        print c[1]
+    cohorts = MonkeyHormoneChallenge.objects.all().values_list('monkey__cohort__coh_cohort_id', 'monkey__cohort__coh_cohort_name').distinct()
+
+    cohorts_mhc = []
+    for cohort in cohorts:
+        coh_mhc = {}
+        for ep in [1, 2, 3, 4]:
+            ep_hormone = {}
+            for hormone in ['mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test']:
+                hormone_verbose = MonkeyHormoneChallenge._meta.get_field_by_name(hormone)[0].verbose_name
+                challenges = MonkeyHormoneChallenge.objects.filter(monkey__cohort__coh_cohort_id=cohort[0])\
+                    .filter(**{hormone + '__isnull': False}).values_list('mhc_challenge', flat=True).distinct()
+                ep_hormone[hormone_verbose] = challenges
+            coh_mhc[ep] = ep_hormone
+        cohorts_mhc.append((cohort, coh_mhc))
     return render_to_response('matrr/data_grid_monkey_hormone_challenge.html',
-                              {'all_mhc': all_mhc,
+                              {'cohorts_mhc': cohorts_mhc,
                                'challenges': PharmalogicalChallengeChoice,
                                'hormones': [c[1] for c in MonkeyHormoneChoice],
                                'n_rows_challenge': len(PharmalogicalChallengeChoice) + 1},

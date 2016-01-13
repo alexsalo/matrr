@@ -3167,23 +3167,24 @@ mhcs = MonkeyHormoneChallenge.objects.all()
 #     if created:
 #         print mhc
 
-df = pd.DataFrame(list(mhcs.values_list('monkey__mky_id',
-                                        'mhc_challenge', 'mhc_date','mhc_time','mhc_ep','mhc_doc','mhc_ald','mhc_vas',
-                                        'mhc_acth','mhc_gh','mhc_estra','mhc_cort','mhc_dheas','mhc_test','mhc_source')),
-                  columns=['mky_id',
-                           'mhc_challenge', 'mhc_date','mhc_time','mhc_ep','mhc_doc','mhc_ald','mhc_vas',
-                                        'mhc_acth','mhc_gh','mhc_estra','mhc_cort','mhc_dheas','mhc_test','mhc_source'])
-print df
-print MonkeyHormoneChallenge.objects.all().values_list('mhc_time', flat=True).distinct()
-print MonkeyHormoneChallenge.objects.all().values_list('monkey__cohort', flat=True).distinct()
-print MonkeyHormoneChallenge.objects.all().values_list('mhc_challenge', flat=True).distinct()
-print MonkeyHormoneChallenge.objects.all().count()
-for ep in [1, 2, 3, 4]:
-    for hormone in ['mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test']:
-        print "EP: %s - %s: %s" % (ep, MonkeyHormoneChallenge._meta.get_field_by_name(hormone)[0].verbose_name, \
-            MonkeyHormoneChallenge.objects.filter(**{hormone + '__isnull': False}).values_list('mhc_challenge', flat=True).distinct())
+# df = pd.DataFrame(list(mhcs.values_list('monkey__mky_id',
+#                                         'mhc_challenge', 'mhc_date','mhc_time','mhc_ep','mhc_doc','mhc_ald','mhc_vas',
+#                                         'mhc_acth','mhc_gh','mhc_estra','mhc_cort','mhc_dheas','mhc_test','mhc_source')),
+#                   columns=['mky_id',
+#                            'mhc_challenge', 'mhc_date','mhc_time','mhc_ep','mhc_doc','mhc_ald','mhc_vas',
+#                                         'mhc_acth','mhc_gh','mhc_estra','mhc_cort','mhc_dheas','mhc_test','mhc_source'])
+# print df
+# print MonkeyHormoneChallenge.objects.all().values_list('mhc_time', flat=True).distinct()
+# print MonkeyHormoneChallenge.objects.all().values_list('monkey__cohort', flat=True).distinct()
+# print MonkeyHormoneChallenge.objects.all().values_list('mhc_challenge', flat=True).distinct()
+# print MonkeyHormoneChallenge.objects.all().count()
+# for ep in [1, 2, 3, 4]:
+#     for hormone in ['mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test']:
+#         print "EP: %s - %s: %s" % (ep, MonkeyHormoneChallenge._meta.get_field_by_name(hormone)[0].verbose_name, \
+#             MonkeyHormoneChallenge.objects.filter(**{hormone + '__isnull': False}).values_list('mhc_challenge', flat=True).distinct())
 
-
+from matrr.utils.database import dump
+dump.dump_MATRR_current_data_grid()
 # for mhc in MonkeyHormoneChallenge.objects.all():
 #     mhc.mhc_challenge = 'CRH'
 #     mhc.full_clean()
