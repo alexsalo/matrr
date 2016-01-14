@@ -63,7 +63,10 @@ def raw_data_upload(request):
             dto.account = request.user.account
             dto.dto_type = form.cleaned_data['dto_type']
             dto.save()
-            dto.dto_data_notes = request.FILES['dto_data_notes']
+            try:
+                dto.dto_data_notes = request.FILES['dto_data_notes']
+            except Exception as e:
+                pass  # No data notes attached
             dto.dto_data_file = request.FILES['dto_data_file']
             dto.cohorts.add(*form.cleaned_data['cohorts'])
             dto.save()
