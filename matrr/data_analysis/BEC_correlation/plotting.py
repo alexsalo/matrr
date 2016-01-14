@@ -1,5 +1,6 @@
 __author__ = 'alex'
 from common import *
+from statsmodels.formula.api import ols
 from data_generation import get_bec_df_for_all_animals
 
 def _plot_regression_line_and_corr_text(ax, x, y, linecol='red', text_y_adj=0):
@@ -10,6 +11,23 @@ def _plot_regression_line_and_corr_text(ax, x, y, linecol='red', text_y_adj=0):
     text = 'Correlation: %s' % np.round(x.corr(y), 4)
     ax.text(0.05, 0.95 + text_y_adj, text, transform=ax.transAxes, fontsize=14,
             verticalalignment='top', bbox=props)
+
+
+def _plot_ancova_regression_pvalue(ax, df_group1, df_group_2, which_etoh):
+    df = df_group1.copy(deep=True)
+    df['over'] = False
+    df = df.append(df_group_2)
+    df.fillna(True, inplace=True)
+
+    fit = ols('bec ~ ' + which_etoh + ' * C(over)', df).fit()
+    pvalue = fit.pvalues[which_etoh + ':C(over)[T.True]']
+
+    props = dict(boxstyle='round', facecolor='mintcream', alpha=0.3)
+    ax.text(0.70, 0.95, 'H0: Equal slopes\nP-value: %.4f' % pvalue, transform=ax.transAxes, fontsize=14,
+            verticalalignment='top', bbox=props)
+
+
+
 def plot_bec_correlation(bec_df):
     fig, axs = plt.subplots(1, 3, figsize=(15, 8), facecolor='w', edgecolor='k')
     bec_df.plot(kind='scatter', x='etoh_previos_day', y='bec', ax=axs[0])
@@ -136,12 +154,15 @@ def plot_bec_correlation_by_dc_12combinedpanels(schedule, bec_df_all, bec_df_gro
 
         _plot_regression_line_and_corr_text(axs[i*3 + 0], df_dc_group_1.etoh_previos_day, df_dc_group_1.bec, linecol='blue')
         _plot_regression_line_and_corr_text(axs[i*3 + 0], df_dc_group_2.etoh_previos_day, df_dc_group_2.bec, text_y_adj=-0.15)
+        _plot_ancova_regression_pvalue(axs[i*3 + 0], df_dc_group_1, df_dc_group_2, 'etoh_previos_day')
 
         _plot_regression_line_and_corr_text(axs[i*3 + 1], df_dc_group_1.etoh_at_bec_sample_time, df_dc_group_1.bec, linecol='blue')
         _plot_regression_line_and_corr_text(axs[i*3 + 1], df_dc_group_2.etoh_at_bec_sample_time, df_dc_group_2.bec, text_y_adj=-0.15)
+        _plot_ancova_regression_pvalue(axs[i*3 + 1], df_dc_group_1, df_dc_group_2, 'etoh_at_bec_sample_time')
 
         _plot_regression_line_and_corr_text(axs[i*3 + 2], df_dc_group_1.etoh_next_day, df_dc_group_1.bec, linecol='blue')
         _plot_regression_line_and_corr_text(axs[i*3 + 2], df_dc_group_2.etoh_next_day, df_dc_group_2.bec, text_y_adj=-0.15)
+        _plot_ancova_regression_pvalue(axs[i*3 + 2], df_dc_group_1, df_dc_group_2, 'etoh_next_day')
 
     # fine tune plot look'n'feel
     plt.tight_layout()
@@ -160,15 +181,15 @@ def plot_bec_correlation_by_dc_12combinedpanels(schedule, bec_df_all, bec_df_gro
     axs[6].set_ylabel('HD', fontsize=font_size)
     axs[9].set_ylabel('VHD', fontsize=font_size)
 
-    import matplotlib.patches as mpatches
-    patch_group1 = mpatches.Patch(color='g', label=group1_label)
-    patch_group2 = mpatches.Patch(color='orange', label=group2_label)
-    axs[4].legend(handles=[patch_group1, patch_group2], loc=1)
+    # Dummy scatter for legend
+    dot_group1 = plt.scatter([1], [1], color='g', marker='o', label=group1_label, s=80)
+    dot_group2 = plt.scatter([1], [1], color='orange', marker='o', label=group2_label, s=80)
+    axs[0].legend(handles=[dot_group1, dot_group2], bbox_to_anchor=[0, 1], loc='lower left', scatterpoints=1)
 
     title = 'BEC correlation: EtOH the day before, day of and day after; ' + schedule + ' schedule'
     fig.text(0.5, 0.94, title, ha='center', fontsize=font_size+4)
     fig.text(0.005, 0.5, 'BEC', va='center', rotation='vertical', fontsize=font_size+4)
-    fig.subplots_adjust(top=0.92)
+    fig.subplots_adjust(top=0.90)
 
     fig.text(0.19, 0.01, 'EtOH Day Before', ha='center', fontsize=font_size)
     fig.text(0.5, 0.01, 'EtOH Day of BEC Sample', ha='center', fontsize=font_size)
@@ -222,8 +243,9 @@ def plot_bec_correlation_by_dc_24panels_hexbins(schedule, bec_df_all, bec_df_gro
     axs[12].set_ylabel('HD', fontsize=font_size)
     axs[18].set_ylabel('VHD', fontsize=font_size)
 
-    axs[0].set_title(group1_label)
-    axs[1].set_title(group2_label)
+    [axs[2 * i].set_title(group1_label) for i in range(0, 3)]
+    [axs[2 * i + 1].set_title(group2_label) for i in range(0, 3)]
+
 
     title = 'BEC correlation: EtOH the day before, day of and day after; ' + schedule + ' schedule'
     fig.text(0.5, 0.94, title, ha='center', fontsize=font_size+4)
@@ -259,17 +281,43 @@ def build_all_bec_panels(regenerate_data=False):
 #build_all_bec_panels(regenerate_data=False)
 
 
-build_bec_panel(schedule='22hr', split_by='bec_over2stdev', regenerate=False,
-                group1_label='Within 2 Std. Dev.', group2_label='Outside of 2 Std. Dev.',
-                plot_func=plot_bec_correlation_by_dc_24panels_hexbins, save=False)
+# build_bec_panel(schedule='22hr', split_by='bec_over2stdev', regenerate=False,
+#                 group1_label='Within 2 Std. Dev.', group2_label='Outside of 2 Std. Dev.',
+#                 plot_func=plot_bec_correlation_by_dc_12combinedpanels, save=False)
 
-# bec_df_all, bec_df_group_1, bec_df_group_2 = get_bec_df_for_all_animals(schedule='22hr', split_by='bec_mgpct', regenerate=False)
-# bec_df_all['group1'] = bec_df_all.bec > 80
-# bec_df_all['group2'] = bec_df_all.bec <= 80
-# print bec_df_all
-# formula = 'bec ~ etoh_at_bec_sample_time'
+"""
+ANCOVA Regressions
+"""
 # from statsmodels.formula.api import ols
-# lm = ols(formula, bec_df_all).fit()
-# print lm.summary()
+# bec_df_all, bec_df_group_1, bec_df_group_2 = get_bec_df_for_all_animals(schedule='22hr', split_by='bec_over2stdev', regenerate=False)
+#
+#
+# def ols_group_dc(df, dc):
+#     return ols('bec ~ etoh_next_day', df[df.dc == dc]).fit().summary()
+# # print ols_group_dc(bec_df_group_1, 'BD')
+# # print ols_group_dc(bec_df_group_2, 'BD')
+#
+# DC = 'HD'
+#
+# bec_df_group_1['over'] = False
+# bec_df_group_1 = bec_df_group_1.append(bec_df_group_2)
+# bec_df_group_1.fillna(True, inplace=True)
+# print ols('bec ~ etoh_next_day * C(over)', bec_df_group_1[bec_df_group_1.dc == DC]).fit().summary()
+#.pvalues['etoh_next_day:C(over)[T.True]']
+#
+#
+# def get_group_dc(df, dc, over):
+#     df = df[df.dc == dc]
+#     return df[df.over == over]
+#
+# within = get_group_dc(bec_df_group_1, DC, over=True)
+# ax = within.plot(kind='scatter', x='etoh_next_day', y='bec', label='within', c='g')
+# _plot_regression_line_and_corr_text(ax, within.etoh_next_day, within.bec, linecol='g')
+#
+# over = get_group_dc(bec_df_group_1, DC, over=False)
+# over.plot(kind='scatter', x='etoh_next_day', y='bec', label='over', c='orange', ax=ax)
+# _plot_regression_line_and_corr_text(ax, over.etoh_next_day, over.bec, linecol='orange')
+
+
 
 plt.show()
