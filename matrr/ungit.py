@@ -3490,8 +3490,8 @@ Electrophys load
 # for mep in MonkeyEphys.objects.filter(mep_ephys_type__isnull=True):
 #     mep.mep_ephys_type = 'NA'
 #     mep.save()
-#print pd.DataFrame(list(MonkeyEphys.objects.filter(mep_frequency__isnull=False).values_list(*MonkeyEphys.columns[0])), columns=MonkeyEphys.columns[1])
-
+# print pd.DataFrame(list(MonkeyEphys.objects.filter(mep_frequency__isnull=False).values_list(*MonkeyEphys.columns[0])), columns=MonkeyEphys.columns[1])
+#MonkeyEphys.content_print()
 
 # from matrr.utils.database.load import load_gin_electrophys
 # load_gin_electrophys('/home/alex/win-share/matrr_sync/gin_electro/electrophys_cohorts_gin_epsc.csv',
@@ -3501,5 +3501,16 @@ Electrophys load
 
 # from utils.database import dump
 # dump.dump_MATRR_current_data_grid()
+
+"""
+Proteomic Mulholland
+"""
+# from matrr.utils.database.load import load_monkey_proteomic_mulholland
+# load_monkey_proteomic_mulholland('/home/alex/win-share/matrr_sync/mulholland_proteomic/121015_SCW_II_145_ALL_121013_NoRecal_unnorm_used_PSMs_clean.csv',
+#                                  delim=';')
+
+# MonkeyProteomic.content_print()
+
+#print DopamineStudy.objects.all().values_list('tissue_type').distinct()
 
 plt.show()

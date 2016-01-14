@@ -4335,6 +4335,11 @@ class MonkeyEphys(models.Model):
             ('view_mep_data', 'Can view ephys data'),
         )
 
+    @staticmethod
+    def content_print():
+        print pd.DataFrame(list(MonkeyEphys.objects.all().values_list(*MonkeyEphys.columns[0])),
+                           columns=MonkeyEphys.columns[1])
+
 
 class DataIntegrationTracking(models.Model):
     dit_id = models.AutoField(primary_key=True)
@@ -4867,3 +4872,43 @@ class DopamineStudy(models.Model):
         return self.dop_300nm_peak_height / self.dop_baseline_peak_height
     def baseline_effect_1um(self):
         return self.dop_1um_peak_height / self.dop_baseline_peak_height
+
+
+class ProteomicProtein(models.Model):
+    ppr_id = models.AutoField(primary_key=True)
+    ppr_name = models.CharField('Protein Name', null=False, blank=False, max_length=400)
+    pro_uniprot = models.CharField('Uniprot Accession Number', null=False, blank=False, max_length=20)
+
+    def __unicode__(self):
+        return 'ProteomicProtein: ' + self.pro_uniprot + ': ' + self.ppr_name
+
+
+class MonkeyProteomic(models.Model):
+    """
+    First sent by Mulholland, 14 Jan 2016
+    ---------------
+    Notes: Data were first log2 transformed followed by mean centering (central tendency adjustment) using Inferno software
+    """
+    mpc_id = models.AutoField('ID', primary_key=True)
+    monkey = models.ForeignKey(Monkey, null=False, related_name='proteomic_records', db_column='mky_id', editable=False)
+
+    proteomic_protein = models.ForeignKey(ProteomicProtein, null=False, related_name='monkey_set', db_column='pro_id', editable=False)
+    mpc_peptide = models.CharField('Peptide Sequence', null=False, blank=False, max_length=50, help_text='Peptide Sequence of the Protein')
+    mpc_expression = models.FloatField('Peptide Sequence Expression', blank=False, null=False, help_text='log2 transformed followed by mean centering (central tendency adjustment) using Inferno software')
+
+    # Columns to display
+    columns = (['monkey__mky_id', 'mpc_peptide', 'proteomic_protein__pro_uniprot', 'proteomic_protein__ppr_name'],
+               ['mky_id', 'peptide', 'uniprot', 'protein'])
+
+    def __unicode__(self):
+        if self.monkey.mky_drinking:
+            dc = str(self.monkey.mky_drinking_category)
+        else:
+            dc = 'control'
+        return 'Proteomic for ' + str(self.monkey.mky_id) + '(' + dc + ') ' + self.mpc_peptide
+
+    @staticmethod
+    def content_print():
+        print pd.DataFrame(list(MonkeyProteomic.objects.all().values_list(*MonkeyProteomic.columns[0])),
+                           columns=MonkeyProteomic.columns[1])
+

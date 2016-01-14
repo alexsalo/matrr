@@ -230,6 +230,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                   '    Area', '    Bone Mineral Content', '    Bone Mineral Density',
                   'Vaccine Study',
                   'Dopamine Study',
+                  'Proteomics',
                   'Hormone Challenge',
                         "    Deoxycorticosterone",
                         "    Aldosterone",
@@ -258,6 +259,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                     BoneDensity,BoneDensity,BoneDensity,
                     VaccineStudy,
                     DopamineStudy,
+                    MonkeyProteomic,
                     MonkeyHormoneChallenge,
                         MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,
                         MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,MonkeyHormoneChallenge,
@@ -279,6 +281,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                      'monkey__cohort','monkey__cohort','monkey__cohort', # 3 bone density values
                      'monkey__cohort', # VaccineStudy
                      'monkey__cohort', # DopamineStudy
+                     'monkey__cohort', # Proteomics
                      'monkey__cohort',
                         'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
                         'monkey__cohort','monkey__cohort','monkey__cohort','monkey__cohort',
@@ -298,8 +301,9 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
                     'mhm_cort', 'mhm_acth', 'mhm_t', 'mhm_doc', 'mhm_ald', 'mhm_dheas',
                     '',
                     'bdy_area','bdy_bmc','bdy_bmd', # bone density vals
-                    '', # any vaccine study data
-                    '', # any dopamine study data
+                    '',  # any vaccine study data
+                    '',  # any dopamine study data
+                    '',  # any proteomics data
                     '',
                         "mhc_doc", "mhc_ald", "mhc_vas", "mhc_acth", "mhc_gh",
                         "mhc_estra", "mhc_cort", "mhc_dheas", "mhc_test",

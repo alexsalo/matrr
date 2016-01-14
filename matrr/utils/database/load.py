@@ -2160,6 +2160,40 @@ def load_gin_electrophys(file_path, ephys_type, delim=',', username=None):
                 pass
 
 
+def load_monkey_proteomic_mulholland(file_path, delim=';'):
+    """
+    header:
+    10197	10198	10202	10204	10201	10207	10206	10200	# 0-7 [0:8]
+    Peptide Sequence	                                            # 8   [8]
+    Protein Name	                                                # 9   [9]
+    Uniprot Accession Number                                        # 10  [10]
+    """
+    from matrr.models import ProteomicProtein, MonkeyProteomic
+    input_data = csv.reader(open(file_path, 'rU'), delimiter=delim)
+    header = input_data.next()
+    monkeys = []
+    for mky_id in header[0:8]:
+        monkeys.append(dingus.get_monkey_by_number(mky_id))
+
+    for row_number, row in enumerate(input_data):
+        try:
+            peptide = row[8]
+            protein, created = ProteomicProtein.objects.get_or_create(ppr_name=row[9], pro_uniprot=row[10])
+
+            for i, mky in enumerate(monkeys):
+                MonkeyProteomic.objects.get_or_create(monkey=mky, proteomic_protein=protein, mpc_peptide=peptide,
+                                                      mpc_expression=row[i])
+
+        except Exception as e:
+            print dingus.ERROR_OUTPUT % (row_number, e, row)
+            pass
+
+        if row_number % 100 == 0:
+            print "%s rows is loaded" % row_number
+
+
+
+
 def load_crh_challenge_data(file_name, dto_pk, header=True):
     """
     header  = Date	Monk	Time	ACTH	Cortisol	E	DOC	ALD	DHEAS	Group	EP
