@@ -8,14 +8,30 @@ def _split_bec_df_into_three(bec_df, split_by):
         bec_df_over80mgpct = bec_df[bec_df.bec >= 80]
         return bec_df, bec_df_less80mgpct, bec_df_over80mgpct
 
-    if split_by == 'bec_over2stdev':
+    if split_by == 'bec_over2stdev':  # within vs outside
         mean_bec = np.mean(bec_df.bec)
         std_bec = np.std(bec_df.bec)
         y_lo = mean_bec - 2*std_bec
         y_hi = mean_bec + 2*std_bec
-        bec_df_less2std = bec_df[(bec_df.bec > y_lo) & (bec_df.bec < y_hi)]
+        bec_df_within2std = bec_df[(bec_df.bec > y_lo) & (bec_df.bec < y_hi)]
         bec_df_over2std = bec_df[(bec_df.bec < y_lo) | (bec_df.bec > y_hi)]
-        return bec_df, bec_df_less2std, bec_df_over2std
+        return bec_df, bec_df_within2std, bec_df_over2std
+
+    if split_by == 'bec_more2stdev':
+        mean_bec = np.mean(bec_df.bec)
+        std_bec = np.std(bec_df.bec)
+        y_hi = mean_bec + 2*std_bec
+        bec_df_normal = bec_df[bec_df.bec <= y_hi]
+        bec_df_condition = bec_df[bec_df.bec > y_hi]
+        return bec_df, bec_df_normal, bec_df_condition
+
+    if split_by == 'bec_less2stdev':
+        mean_bec = np.mean(bec_df.bec)
+        std_bec = np.std(bec_df.bec)
+        y_lo = mean_bec - 2*std_bec
+        bec_df_normal = bec_df[bec_df.bec >= y_lo]
+        bec_df_condition = bec_df[bec_df.bec < y_lo]
+        return bec_df, bec_df_normal, bec_df_condition
 
 # Using daylight etoh consumption rather than 22hr access
 def mky_bec_corr_daylight(mky, split_by='bec_mgpct'):
@@ -118,15 +134,18 @@ def get_bec_df_for_all_animals(schedule, split_by='bec_mgpct', regenerate=False)
         bec_df_group_1.save('bec_df_group_1_' + schedule + '_' + split_by + '.plk')
         bec_df_group_2.save('bec_df_group_2_' + schedule + '_' + split_by + '.plk')
 
-    if regenerate:
-        generate()
-
-    try:
+    def read():
         bec_df_all = pd.read_pickle('bec_df_all_' + schedule + '_' + split_by + '.plk')
         bec_df_group_1 = pd.read_pickle('bec_df_group_1_' + schedule + '_' + split_by + '.plk')
         bec_df_group_2 = pd.read_pickle('bec_df_group_2_' + schedule + '_' + split_by + '.plk')
-    except IOError as e:
-        print 'Generating some files...'
-        generate()
+        return bec_df_all, bec_df_group_1, bec_df_group_2
 
-    return bec_df_all, bec_df_group_1, bec_df_group_2
+    if regenerate:
+        generate()
+    else:
+        try:
+            return read()
+        except IOError as e:
+            print 'Generating some files...'
+            generate()
+            return read()

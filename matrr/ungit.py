@@ -3513,4 +3513,101 @@ Proteomic Mulholland
 
 #print DopamineStudy.objects.all().values_list('tissue_type').distinct()
 
+
+"""
+Ball Digit Recognition
+"""
+# from PIL import Image
+# # img = Image.open('/home/alex/win-share/lottery_balls_digits/0test.png').convert("RGB")
+# # pixels = img.load()
+# #
+# # for iw in range(0, img.size[0]):
+# #     for ih in range(0, img.size[1]):
+# #         print iw, ih, p
+#
+# # print img.size
+# WHITE = (255, 255, 255)
+# BLACK = (0, 0, 0)
+# def get_filtered(file, col):
+#     othercol = [0, 1, 2]
+#     othercol.remove(col)
+#
+#     im = Image.open(file).convert("RGB")
+#     list_of_pixels = list(im.getdata())
+#     target_p = []
+#     for i, p in enumerate(list_of_pixels):
+#         if not (p[col] > 150 and p[othercol[0]] < 100 and p[othercol[1]] < 100):
+#             list_of_pixels[i] = BLACK
+#         else:
+#             list_of_pixels[i] = WHITE
+#
+#     img2 = Image.new(im.mode, im.size)
+#     img2.putdata(list_of_pixels)
+#     return img2
+#
+# img = get_filtered('/home/alex/win-share/lottery_balls_digits/0test.png', col=0)
+# #img.show()
+#
+# # find islands
+# pixels = img.getdata()
+# w = pixels.size[0]
+# h = pixels.size[1]
+# print w, h
+# # -1 - black
+# # 0 - not visited,
+# # 1:n - groups
+# mark = np.zeros((w, h))
+#
+#
+# def visit(i, j, group, size, points):
+#     if 0 <= i < w and 0 <= j < h:
+#         if mark[i, j] == 0:
+#             if pixels.getpixel((i, j)) == WHITE:
+#                 # mark with group and explore neighbors
+#                 mark[i, j] = group
+#                 size += 1
+#                 points.append((i, j))
+#
+#                 size, points = visit(i + 1, j, group, size, points)
+#                 size, points = visit(i - 1, j, group, size, points)
+#                 size, points = visit(i, j + 1, group, size, points)
+#                 size, points = visit(i, j - 1, group, size, points)
+#             else:
+#                 mark[i, j] = -1  # mark black
+#     return size, points
+#
+# sys.setrecursionlimit(10000)
+# group = 1
+# sizes = []
+# group_points = []
+# for i in range(0, w):
+#     for j in range(0, h):
+#         if mark[i, j] == 0:
+#             size, points = visit(i, j, group, 0, [])
+#             if size > 1000:
+#                 sizes.append(size)
+#                 group += 1
+#                 group_points.append(points)
+#
+# #print group
+# #print max(sizes), [sz for sz in sizes if sz > 1000]
+#
+# print sizes
+# def get_number_img():
+#     #for points in group_points:
+#     points = group_points[0]
+#     xs = [p[0] for p in points]
+#     ys = [p[1] for p in points]
+#     print '(%s, %s) - (%s, %s)' % (min(xs), min(ys), max(xs), max(ys))
+#
+#     im = img.crop(box=(min(xs), min(ys), max(xs), max(ys)))
+#     return im
+#
+# im = get_number_img()
+# im.show()
+
+
+
+
+
 plt.show()

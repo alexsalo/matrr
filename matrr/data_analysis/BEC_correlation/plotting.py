@@ -3,12 +3,12 @@ from common import *
 from statsmodels.formula.api import ols
 from data_generation import get_bec_df_for_all_animals
 
-def _plot_regression_line_and_corr_text(ax, x, y, linecol='red', text_y_adj=0):
+def _plot_regression_line_and_corr_text(ax, x, y, linecol='red', group_label='', text_y_adj=0):
     fit = np.polyfit(x, y, deg=1)
     ax.plot(x, fit[0] * x + fit[1], color=linecol)
 
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-    text = 'Correlation: %s' % np.round(x.corr(y), 4)
+    text = group_label + ' Corr: %s' % np.round(x.corr(y), 4)
     ax.text(0.05, 0.95 + text_y_adj, text, transform=ax.transAxes, fontsize=14,
             verticalalignment='top', bbox=props)
 
@@ -269,9 +269,11 @@ def build_bec_panel(schedule, split_by, regenerate, group1_label, group2_label, 
         plot_func_name = str(plot_func).split('_')[-1].split(' ')[-3]
         fig.savefig(path + schedule + '/' + schedule + '_' + split_by + '_' + plot_func_name)
 def build_all_bec_panels(regenerate_data=False):
-    for split_by, group1_label, group2_label in zip(['bec_mgpct', 'bec_over2stdev'],
-                                                    ['< 80 mg pct', 'Within 2 Std. Dev.'],
-                                                    ['>= 80 mg pct', 'Outside of 2 Std. Dev.']):
+    for split_by, group1_label, group2_label in \
+            zip(['bec_mgpct', 'bec_over2stdev', 'bec_less2stdev', 'bec_more2stdev'],  # split_by
+                ['< 80 mg pct', 'Within 2 Std. Dev.', 'Typical', 'Typical'],    # Normal
+                ['>= 80 mg pct', 'Outside of 2 Std. Dev.', '< 2 SD', '> 2 SD']  # Condition
+                ):
         for plot_func in [plot_bec_correlation_by_dc_24panels, plot_bec_correlation_by_dc_12combinedpanels,
                           plot_bec_correlation_by_dc_24panels_hexbins]:
             for schedule in ['22hr', 'daylight']:
@@ -284,6 +286,7 @@ def build_all_bec_panels(regenerate_data=False):
 # build_bec_panel(schedule='22hr', split_by='bec_over2stdev', regenerate=False,
 #                 group1_label='Within 2 Std. Dev.', group2_label='Outside of 2 Std. Dev.',
 #                 plot_func=plot_bec_correlation_by_dc_12combinedpanels, save=False)
+# plt.show()
 
 """
 ANCOVA Regressions
@@ -297,27 +300,36 @@ ANCOVA Regressions
 # # print ols_group_dc(bec_df_group_1, 'BD')
 # # print ols_group_dc(bec_df_group_2, 'BD')
 #
-# DC = 'HD'
+# DC = 'BD'
 #
 # bec_df_group_1['over'] = False
 # bec_df_group_1 = bec_df_group_1.append(bec_df_group_2)
 # bec_df_group_1.fillna(True, inplace=True)
+# print bec_df_group_1
 # print ols('bec ~ etoh_next_day * C(over)', bec_df_group_1[bec_df_group_1.dc == DC]).fit().summary()
-#.pvalues['etoh_next_day:C(over)[T.True]']
+# ##.pvalues['etoh_next_day:C(over)[T.True]']
 #
 #
 # def get_group_dc(df, dc, over):
 #     df = df[df.dc == dc]
 #     return df[df.over == over]
 #
+# import matplotlib
+# matplotlib.rcParams['savefig.directory'] = '~/github/alexsalo.github.io/images/matrr/'
+# fig = plt.figure(figsize=(10, 6))
+# ax = fig.add_subplot(111)
+#
 # within = get_group_dc(bec_df_group_1, DC, over=True)
-# ax = within.plot(kind='scatter', x='etoh_next_day', y='bec', label='within', c='g')
-# _plot_regression_line_and_corr_text(ax, within.etoh_next_day, within.bec, linecol='g')
+# within.plot(kind='scatter', x='etoh_next_day', y='bec', label='Within', c='g', ax=ax)
+# _plot_regression_line_and_corr_text(ax, within.etoh_next_day, within.bec, linecol='g', group_label='Within,')
 #
 # over = get_group_dc(bec_df_group_1, DC, over=False)
-# over.plot(kind='scatter', x='etoh_next_day', y='bec', label='over', c='orange', ax=ax)
-# _plot_regression_line_and_corr_text(ax, over.etoh_next_day, over.bec, linecol='orange')
-
-
-
-plt.show()
+# over.plot(kind='scatter', x='etoh_next_day', y='bec', label='Over', c='orange', ax=ax)
+# _plot_regression_line_and_corr_text(ax, over.etoh_next_day, over.bec, linecol='orange', group_label='Over,', text_y_adj=-0.06)
+#
+# ax.set_title('Regression BEC ~ EtOH for group: HD')
+# plt.xlabel('EtOH')
+# plt.ylabel('BEC')
+# plt.xlim(0, 6)
+# plt.ylim(-10, 300)
+# plt.tight_layout()
