@@ -585,6 +585,24 @@ class Cohort(models.Model):
                               columns=['mky_id', 'date', 'bec_mg_pct'])
         return bec_df
 
+    def get_etoh_mtds(self, months, first_or_last):
+        """
+        Example: get first 9 month of OA mtds: cohort.get_etoh_mtds(9, 'first')
+        """
+        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=self.monkey_set.filter(mky_drinking=True))
+        if first_or_last == 'first':
+            oa_start = CohortEvent.objects.filter(cohort=self).\
+                get(event__evt_name='First 6 Month Open Access Begin').cev_date
+            end = oa_start + relativedelta(months=+months)
+            return mtds.filter(drinking_experiment__dex_date__gte=oa_start,
+                               drinking_experiment__dex_date__lte=end)
+        if first_or_last == 'last':
+            oa_end = CohortEvent.objects.filter(cohort=self).\
+                get(event__evt_name='Second 6 Month Open Access End').cev_date
+            start = oa_end + relativedelta(months=-months)
+            return mtds.filter(drinking_experiment__dex_date__gte=start,
+                               drinking_experiment__dex_date__lte=oa_end)
+
     class Meta:
         db_table = 'coh_cohorts'
         permissions = (

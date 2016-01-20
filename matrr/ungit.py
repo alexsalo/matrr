@@ -3606,7 +3606,7 @@ Ball Digit Recognition
 # im = get_number_img()
 # im.show()
 
-
+#print EventType.objects.all().values_list('evt_name', flat=True).distinct()
 
 
 
