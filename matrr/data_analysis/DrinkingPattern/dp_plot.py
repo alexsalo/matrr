@@ -167,7 +167,7 @@ def get_mky_oa_drinks_cumsum(mky):
 def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_trend=False):
     DURATION = SESSION_END if schedule == '22hr' else 10 * ONE_HOUR
     remove_trend_title = {True: '(De-trended) ', False: ''}
-    remove_trend_legend_loc = {True: 4, False: 2}
+    remove_trend_legend_loc = {True: 1, False: 2}
     matplotlib.rc('font', family='monospace')
     fig = plt.figure(figsize=(14, 10))
     ax = fig.add_subplot(111)
@@ -227,7 +227,8 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove
     else:
         ax.set_xlim(0, 10 * ONE_HOUR / (60*60*1.0))
 
-    plt.xlabel('Time (session hour)')
+    ax.set_xlabel('Time (session hour)')
+    ax_pellet.set_xlabel('Time (session hour)')
     ax.set_ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')
     cohort_short_names = [x.coh_cohort_name.encode('utf-8') for x in cohorts] # .split(' ')[2]
     plt.title("Cumulative Drinking Pattern for Cohort %s\n%s Session Schedule" % (cohort_short_names, schedule))
@@ -238,9 +239,10 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove
     plt.tight_layout()
 
 matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/drinking_pattern_study/'
-#plot_cohort_oa_cumsum_drinking_pattern([r7a], schedule='Day Light', remove_trend=False)
+plot_cohort_oa_cumsum_drinking_pattern(RHESUS_FEMALES, schedule='Day Light', remove_trend=True)
+#plot_cohort_oa_cumsum_drinking_pattern(RHESUS_MALES, schedule='Day Light', remove_trend=True)
 
-#plt.show()
+plt.show()
 
 
 
@@ -248,13 +250,12 @@ matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/drinking_patt
 """
 Create Images for Matrr
 """
-print CohortImage.objects.filter(method__contains='drinking_pattern').count()
-CohortImage.objects.filter(method__contains='drinking_pattern').delete()
-print CohortImage.objects.filter(method__contains='drinking_pattern').count()
+# print CohortImage.objects.filter(method__contains='drinking_pattern').count()
+# CohortImage.objects.filter(method__contains='drinking_pattern').delete()
+# print CohortImage.objects.filter(method__contains='drinking_pattern').count()
 
-
-from matrr.plotting import plot_tools
-plot_tools.create_drinking_pattern_plots()
+# from matrr.plotting import plot_tools
+# plot_tools.create_drinking_pattern_plots()
 
 # for img in CohortImage.objects.filter(method__contains="drinking_pattern"):
 #     try:
