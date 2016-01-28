@@ -114,7 +114,8 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_tre
     else:
         ax.set_xlim(0, 10 * ONE_HOUR / (60*60*1.0))
 
-    plt.xlabel('Time (session hour)')
+    ax.set_xlabel('Time (session hour)')
+    ax_pellet.set_xlabel('Time (session hour)')
     ax.set_ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')
     cohort_short_names = [x.coh_cohort_name.encode('utf-8') for x in cohorts] # .split(' ')[2]
     plt.title("Cumulative Drinking Pattern for Cohort %s\n%s Session Schedule" % (cohort_short_names, schedule))
