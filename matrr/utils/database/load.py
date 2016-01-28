@@ -2301,10 +2301,10 @@ def load_monkey_hormone_challenge_data(file_name, delim=',', username=None):
         by mky_id, date, time, challenge and updates fields if those values are not unique.
     """
     timepoints_dict = {'pre': 0, 'post': 1}  # see comments in the model
-    QNS_dict = {'QNS': None, '<1': None, '<600': None, '<0.048': None}  # treat as QNS
+    QNS_dict = {'QNS': None, '<1': None, '<600': None, '<0.048': None, 'Empty Tube': None}  # treat as QNS
 
     try:
-        dto = DataOwnership.objects.get(account__user__username=username)
+        dto = DataOwnership.objects.filter(account__user__username=username)[0]
     except Exception as e:
         print e
         pass
@@ -2377,6 +2377,8 @@ def load_monkey_hormone_challenge_data(file_name, delim=',', username=None):
                 value = row_data[data_fields[field]]
                 if value != '':
                     if value in QNS_dict:
+                        value = None
+                    elif value[0] == '<':
                         value = None
                     setattr(mhc, field, value)
 

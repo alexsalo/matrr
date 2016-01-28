@@ -535,6 +535,7 @@ class Cohort(models.Model):
     events = models.ManyToManyField(EventType, through='CohortEvent', related_name='cohort_set')
     coh_species = models.CharField('Species', max_length=30,
                                    help_text='Please enter the species of the monkeys in this cohort.')
+    coh_target_start_time = models.TimeField('Target Start Time', null=True, blank=True)
 
     def __unicode__(self):
         return self.coh_cohort_name
@@ -4558,9 +4559,9 @@ class MonkeyHormoneChallenge(models.Model):
 
     Vanessa
     """
-    UNITS = {'mhc_doc': 'pg/ml', 'mhc_ald': 'pg/ml', 'mhc_vas': 'pg/ml', 'mhc_acth': 'pg/ml', 'mhc_gh': 'pg/ml', 'mhc_estra': 'pg/ml',
+    UNITS = {'mhc_doc': 'pg/ml', 'mhc_vas': 'pg/ml', 'mhc_acth': 'pg/ml', 'mhc_gh': 'pg/ml', 'mhc_estra': 'pg/ml',
              'mhc_cort': 'ug/dl', 'mhc_dheas': 'ug/ml',
-             'mhc_test': 'ng/ml',
+             'mhc_test': 'ng/ml', 'mhc_ald': 'ng/ml',
              }
     """
     QNS - quantity not sufficient
@@ -4582,7 +4583,7 @@ class MonkeyHormoneChallenge(models.Model):
     # example: 20111298-301 Grant-Shaw DOC-Aldo-Vasop INIA5_E2-4 INIA4_E1-4 Report
 
     mhc_date = models.DateField('Date', blank=True, null=True, help_text='The date this experiment was conducted.')
-    mhc_time = models.PositiveIntegerField('Time', blank=True, null=True, help_text='Minutes after challenge the sample was collected. 0 = baseline')
+    mhc_time = models.IntegerField('Time', blank=True, null=True, help_text='Minutes after challenge the sample was collected. 0 = baseline')
     mhc_ep = models.PositiveIntegerField('Endocrine Profile Number', blank=True, null=True, help_text='')
 
     mhc_doc = models.FloatField("Deoxycorticosterone", editable=False, null=True, blank=False)
@@ -4597,6 +4598,11 @@ class MonkeyHormoneChallenge(models.Model):
 
     mhc_test = models.FloatField("Testosterone", editable=False, null=True, blank=False)
 
+    # Columns to display
+    columns = (['monkey__mky_id', 'mhc_challenge', 'mhc_date', 'mhc_time', 'mhc_ep',
+                'mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test', 'mhc_source'],
+               ['mky_id', 'challenge', 'date', 'time', 'EP',
+                'doc', 'ald', 'vas', 'acth', 'gh', 'estra', 'cort', 'dheas', 'test', 'source'])
 
     def __unicode__(self):
         return "%s - %s Hormone Challenge" % (self.monkey, self.mhc_challenge)
@@ -4607,6 +4613,10 @@ class MonkeyHormoneChallenge(models.Model):
             ('view_mhc_data', 'Can view monkey hormone challenge data'),
         )
 
+    @staticmethod
+    def content_print():
+        print pd.DataFrame(list(MonkeyHormoneChallenge.objects.all().values_list(*MonkeyHormoneChallenge.columns[0])),
+                           columns=MonkeyHormoneChallenge.columns[1])
 
 
 

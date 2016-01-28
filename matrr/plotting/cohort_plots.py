@@ -14,19 +14,16 @@ from matrr.utils.gadgets import Treemap
 from matrr.plotting import * #specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE, RHESUS_COLORS
 import matplotlib.patches as mpatches
 
-def cohort_oa_cumsum_drinking_pattern_session(cohort):
-    return _cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_trend=False)
-def cohort_oa_cumsum_drinking_pattern_lights_off(cohort):
-    return _cohort_oa_cumsum_drinking_pattern(cohort, end_time=LIGHTS_OUT, remove_trend=True)
-def _cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_trend=False):
-    def get_mky_oa_drinks_cumsum(mky, end_time=SESSION_END):
+def cohort_oa_cumsum_drinking_pattern_22hr(cohort):
+    return _cohort_oa_cumsum_drinking_pattern(cohorts=[cohort], schedule='22hr', remove_trend=False)
+def cohort_oa_cumsum_drinking_pattern_daylight(cohort):
+    return _cohort_oa_cumsum_drinking_pattern(cohorts=[cohort], schedule='Day Light', remove_trend=True)
+def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_trend=False):
+    def get_mky_oa_drinks_cumsum(mky):
         def get_mtd_drinks(mtd):
             try:
                 bouts = ExperimentBout.objects.filter(mtd=mtd)
                 edrs = ExperimentDrink.objects.filter(ebt__in=bouts).order_by('edr_start_time')
-
-                if end_time != SESSION_END:
-                    edrs = edrs.filter(edr_start_time__lte=end_time)
 
                 drinks = pd.DataFrame(list(edrs.values_list('edr_start_time', 'edr_volume')),
                                       columns=['start_time', 'volume'])
@@ -39,24 +36,39 @@ def _cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_tren
                 pass
 
         mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey=mky).order_by('drinking_experiment__dex_date')
+
         drinks_cumsum = get_mtd_drinks(mtds[0])
+        imtd = 1
+        while drinks_cumsum is None:  # make sure we got the data
+            drinks_cumsum = get_mtd_drinks(mtds[imtd])
+            imtd += 1
+        print imtd, mky
+
         mtds_used = 1
-        for mtd in mtds:
+        for mtd in mtds[imtd:]:
             drinks_cumsum = drinks_cumsum.append(get_mtd_drinks(mtd))
             mtds_used += 1
+
         drinks_cumsum.sort_index(inplace=True)
         return drinks_cumsum, mtds_used
 
-    end_time_title = {LIGHTS_OUT: 'Lights Out', SESSION_END: '22hr'}
+    DURATION = SESSION_END if schedule == '22hr' else 10 * ONE_HOUR
     remove_trend_title = {True: '(De-trended) ', False: ''}
     remove_trend_legend_loc = {True: 4, False: 2}
     matplotlib.rc('font', family='monospace')
-    fig = plt.figure(figsize=HISTOGRAM_FIG_SIZE)
+    fig = plt.figure(figsize=(14, 10))
     ax = fig.add_subplot(111)
 
-    monkeys = cohort.monkey_set.filter(mky_drinking=True).order_by('mky_drinking_category')
+    monkeys = Monkey.objects.filter(cohort__in=cohorts).filter(mky_drinking=True).order_by('mky_drinking_category')
+
     for mky in monkeys:
-        mky_drink_cumsum, mtds_used = get_mky_oa_drinks_cumsum(mky, end_time)
+        mky_drink_cumsum, mtds_used = get_mky_oa_drinks_cumsum(mky)
+
+        if schedule == 'Day Light':
+            mky_drink_cumsum['new_index'] = list(mky_drink_cumsum.index)
+            mky_drink_cumsum.new_index[mky_drink_cumsum.new_index > 18 * ONE_HOUR] -= TWENTYTWO_HOUR
+            mky_drink_cumsum.new_index += 4 * ONE_HOUR
+            mky_drink_cumsum = mky_drink_cumsum.set_index('new_index').sort_index()
 
         # Normalize (average) values, remove trend and plot
         mky_drink_cumsum.gkg = mky_drink_cumsum.gkg.cumsum() / mtds_used
@@ -70,26 +82,46 @@ def _cohort_oa_cumsum_drinking_pattern(cohort, end_time=SESSION_END, remove_tren
         mky_drink_cumsum.gkg.plot(color=DRINKING_CATEGORIES_COLORS[mky.mky_drinking_category], ax=ax,
                                   label="%3s" % mky.mky_drinking_category + ' ' + str(mky.mky_id))
 
+    plt.legend(loc=remove_trend_legend_loc[remove_trend])
+    if len(cohorts) > 1:  # Compress the legend - we have monkeys from multiple cohorts
+        handles, labels = ax.get_legend_handles_labels()
+        used_cols = []
+        unique_handles = []
+        unique_labels = []
+        for i, handle in enumerate(handles):
+            if handle.get_c() not in used_cols:
+                used_cols.append(handle.get_c())
+                unique_handles.append(handle)
+                unique_labels.append(labels[i].split(' 1')[0])
+
+        ax.legend(unique_handles, unique_labels, loc=remove_trend_legend_loc[remove_trend])
+
     # Plot pellets for entire cohort
     pellets_eevs = ExperimentEvent.objects.filter(monkey__in=monkeys).filter(eev_event_type=ExperimentEventType.Pellet)
     pellets = pd.DataFrame(list(pellets_eevs.values_list('eev_session_time', flat=True)))
     pellets = pellets / (60*60*1.0)
+    if schedule == 'Day Light':
+        pellets += 4
     ax_pellet = ax.twinx()
     pellets.hist(bins=10*60, ax=ax_pellet, alpha=.4)
-
-    # Tune plot
-    # Tune plot
-    plt.xticks(np.arange(SESSION_START/ONE_HOUR, (end_time/ONE_HOUR + 1), 1))
-    if end_time == SESSION_END:
-        plt.axvspan(LIGHTS_OUT/ONE_HOUR, LIGHTS_ON/ONE_HOUR, color='black', alpha=.2, zorder=-100)
-    else:
-        ax.set_xlim(0, end_time / (60*60*1.0))
-    plt.legend(loc=remove_trend_legend_loc[remove_trend])
-    plt.xlabel('Time (session hour)')
-    ax.set_ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')
     ax_pellet.set_ylabel('Pellet Consumption Distribution (Cohort)')
     ax_pellet.get_yaxis().set_ticks([])
-    plt.title("Cumulative Drinking Pattern for Cohort %s\n%s Session Schedule" % (cohort, end_time_title[end_time]))
+
+    # Tune plot
+    plt.xticks(np.arange(SESSION_START / ONE_HOUR, (DURATION / ONE_HOUR + 1), 1))
+    if schedule == '22hr':
+        plt.axvspan(LIGHTS_OUT/ONE_HOUR, LIGHTS_ON/ONE_HOUR, color='black', alpha=.2, zorder=-100)
+    else:
+        ax.set_xlim(0, 10 * ONE_HOUR / (60*60*1.0))
+
+    plt.xlabel('Time (session hour)')
+    ax.set_ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')
+    cohort_short_names = [x.coh_cohort_name.encode('utf-8') for x in cohorts] # .split(' ')[2]
+    plt.title("Cumulative Drinking Pattern for Cohort %s\n%s Session Schedule" % (cohort_short_names, schedule))
+    if len(cohorts) == 1:  # annotate target start time if only one cohort
+        target_start_time = cohorts[0].coh_target_start_time
+        if target_start_time is not None:
+            fig.text(0.065, 0.02, 'Target start time: %s' % target_start_time.strftime("%H:%M %p"), ha='left')
     plt.tight_layout()
     return fig, True
 
@@ -1179,7 +1211,7 @@ COHORT_PLOTS.update({"cohort_necropsy_avg_etoh_22hr_gkg": (cohort_necropsy_avg_e
                      "cohort_dopamine_study_boxplots_accumben": (cohort_dopamine_study_boxplots_accumben, 'Dopamine release on opioid stimulation. Acumbencore'),
                      "cohort_dopamine_study_boxplots_caudate": (cohort_dopamine_study_boxplots_caudate, 'Dopamine release on opioid stimulation. Caudate'),
                      "cohort_weights_plot": (cohort_weights_plot, 'Weight Change Over OA in Cohort'),
-                     "cohort_oa_cumsum_drinking_pattern_session": (cohort_oa_cumsum_drinking_pattern_session, 'Session Drinking Pattern'),
-                     "cohort_oa_cumsum_drinking_pattern_lights_off": (cohort_oa_cumsum_drinking_pattern_lights_off, 'Lights Off Drinking Pattern'),
+                     "cohort_oa_cumsum_drinking_pattern_22hr": (cohort_oa_cumsum_drinking_pattern_22hr, '22hr Drinking Pattern'),
+                     "cohort_oa_cumsum_drinking_pattern_daylight": (cohort_oa_cumsum_drinking_pattern_daylight, 'Day Light Drinking Pattern'),
                      })
 
