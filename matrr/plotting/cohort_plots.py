@@ -54,7 +54,7 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_tre
 
     DURATION = SESSION_END if schedule == '22hr' else 10 * ONE_HOUR
     remove_trend_title = {True: '(De-trended) ', False: ''}
-    remove_trend_legend_loc = {True: 4, False: 2}
+    remove_trend_legend_loc = {True: 1, False: 2}
     matplotlib.rc('font', family='monospace')
     fig = plt.figure(figsize=(14, 10))
     ax = fig.add_subplot(111)

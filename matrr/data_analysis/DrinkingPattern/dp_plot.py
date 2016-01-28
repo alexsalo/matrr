@@ -245,24 +245,6 @@ matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/drinking_patt
 
 
 
-# pellets_eevs = ExperimentEvent.objects.filter(monkey=c13.monkey_set.all()[1]).\
-#     filter(eev_event_type=ExperimentEventType.Pellet).order_by('eev_session_time')
-# pellets = pd.DataFrame(list(pellets_eevs.values_list('eev_session_time', flat=True)))
-# pellets = pellets / (60*60*1.0)
-# pellets.hist(bins=10*60)
-
-#print np.unique(pellets, return_counts=True)
-
-
-
-
-
-
-
-
-
-
-
 """
 Create Images for Matrr
 """
