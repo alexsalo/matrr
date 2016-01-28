@@ -69,6 +69,7 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_tre
             mky_drink_cumsum.new_index[mky_drink_cumsum.new_index > 18 * ONE_HOUR] -= TWENTYTWO_HOUR
             mky_drink_cumsum.new_index += 4 * ONE_HOUR
             mky_drink_cumsum = mky_drink_cumsum.set_index('new_index').sort_index()
+            mky_drink_cumsum = mky_drink_cumsum[mky_drink_cumsum.index < 10*ONE_HOUR]  # Drop unseen
 
         # Normalize (average) values, remove trend and plot
         mky_drink_cumsum.gkg = mky_drink_cumsum.gkg.cumsum() / mtds_used
