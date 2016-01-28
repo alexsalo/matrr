@@ -156,7 +156,7 @@ def get_mky_oa_drinks_cumsum(mky):
     print imtd, mky
 
     mtds_used = 1
-    for mtd in mtds[imtd : imtd + 15]:
+    for mtd in mtds[imtd: ]: #imtd + 15]:
         drinks_cumsum = drinks_cumsum.append(get_mtd_drinks(mtd))
         mtds_used += 1
 
@@ -167,7 +167,7 @@ def get_mky_oa_drinks_cumsum(mky):
 def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_trend=False):
     DURATION = SESSION_END if schedule == '22hr' else 10 * ONE_HOUR
     remove_trend_title = {True: '(De-trended) ', False: ''}
-    remove_trend_legend_loc = {True: 1, False: 2}
+    remove_trend_legend_loc = {True: 3, False: 2}
     matplotlib.rc('font', family='monospace')
     fig = plt.figure(figsize=(14, 10))
     ax = fig.add_subplot(111)
@@ -182,6 +182,7 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove
             mky_drink_cumsum.new_index[mky_drink_cumsum.new_index > 18 * ONE_HOUR] -= TWENTYTWO_HOUR
             mky_drink_cumsum.new_index += 4 * ONE_HOUR
             mky_drink_cumsum = mky_drink_cumsum.set_index('new_index').sort_index()
+            mky_drink_cumsum = mky_drink_cumsum[mky_drink_cumsum.index < 10*ONE_HOUR]  # Drop unseen
 
         # Normalize (average) values, remove trend and plot
         mky_drink_cumsum.gkg = mky_drink_cumsum.gkg.cumsum() / mtds_used
@@ -219,6 +220,7 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove
     pellets.hist(bins=10*60, ax=ax_pellet, alpha=.4)
     ax_pellet.set_ylabel('Pellet Consumption Distribution (Cohort)')
     ax_pellet.get_yaxis().set_ticks([])
+    ax_pellet.set_xlabel('Time (session hour)')
 
     # Tune plot
     plt.xticks(np.arange(SESSION_START / ONE_HOUR, (DURATION / ONE_HOUR + 1), 1))
@@ -228,7 +230,6 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove
         ax.set_xlim(0, 10 * ONE_HOUR / (60*60*1.0))
 
     ax.set_xlabel('Time (session hour)')
-    ax_pellet.set_xlabel('Time (session hour)')
     ax.set_ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')
     cohort_short_names = [x.coh_cohort_name.encode('utf-8') for x in cohorts] # .split(' ')[2]
     plt.title("Cumulative Drinking Pattern for Cohort %s\n%s Session Schedule" % (cohort_short_names, schedule))
@@ -239,10 +240,10 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove
     plt.tight_layout()
 
 matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/drinking_pattern_study/'
-plot_cohort_oa_cumsum_drinking_pattern(RHESUS_FEMALES, schedule='Day Light', remove_trend=True)
-#plot_cohort_oa_cumsum_drinking_pattern(RHESUS_MALES, schedule='Day Light', remove_trend=True)
-
-plt.show()
+# plot_cohort_oa_cumsum_drinking_pattern(RHESUS_FEMALES, schedule='Day Light', remove_trend=False)
+# plot_cohort_oa_cumsum_drinking_pattern(RHESUS_MALES, schedule='Day Light', remove_trend=False)
+#
+# plt.show()
 
 
 
