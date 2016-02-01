@@ -3215,8 +3215,25 @@ from matrr.utils.database import load
 #                                         delim=',', username='vwakeling')
 # MonkeyHormoneChallenge.content_print()
 
-# pd.DataFrame(list(MonkeyHormoneChallenge.objects.filter(mhc_challenge='CRH').values_list('mhc_doc', flat=True))).hist()
-# plt.show()
+# load.load_monkey_hormone_challenge_data('/home/alex/win-share/matrr_sync/vanessa_endocrine/clean/coh6a_hormone_challenge_clean.csv',
+#                                         delim=',', username='vwakeling')
+# MonkeyHormoneChallenge.content_print()
+#
+# print MonkeyHormoneChallenge.objects.filter(monkey__cohort__coh_cohort_name="INIA Rhesus 6a").count()
+# print MonkeyHormoneChallenge.objects.all().values_list('mhc_challenge', flat=True).distinct()
+# print MonkeyHormoneChallenge.objects.all().values_list('mhc_time', flat=True).distinct()
+#
+# # mky_id as date lol
+# # id = '7/18/1971'
+# # date = dt.strptime(id, "%m/%d/%Y")
+# # print date.date()
+# # import datetime
+# # print datetime.date(1899, 12, 30)
+# # diff = date.date() - datetime.date(1899, 12, 30)
+# # print diff.days
+#
+# # pd.DataFrame(list(MonkeyHormoneChallenge.objects.all().values_list('mhc_ald', flat=True))).hist()
+# # plt.show()
 
 """
 generate coh13 plots
@@ -3421,8 +3438,8 @@ Ball Digit Recognition
 28 Jan 2016
 Add cohort target start time
 """
-from datetime import time
-print time(11, 0)
+# from datetime import time
+# print time(11, 0)
 # r5.coh_target_start_time = time(11, 0, 0, 0)  # 11 am
 # r6a.coh_target_start_time = time(12, 0, 0, 0)  # 12 pm
 # r6b.coh_target_start_time = time(12, 0, 0, 0)  # 12 pm
@@ -3431,6 +3448,43 @@ print time(11, 0)
 # for coh in [r5, r6a, r6b, r7a, r7b]:
 #     coh.save()
 #     print coh, coh.coh_target_start_time
+
+
+"""
+Test how BEC drawing affects etoh
+"""
+# # monkeys = Monkey.objects.filter(mky_id__in=MonkeyBEC.objects.all().values_list('monkey', flat=True).distinct())
+# # print monkeys
+# # mtds = MonkeyToDrinkingExperiment.objects.OA().filter(monkey__in=monkeys)
+# # print mtds.count()
+# # df = pd.DataFrame(list(mtds.values_list('drinking_experiment__dex_date', 'monkey__mky_id', 'mtd_etoh_g_kg')),
+# #                   columns=['date', 'mky_id', 'etoh'])
+# # df['bec_sample'] = False
+# #
+# # becs = MonkeyBEC.objects.all().values_list('monkey__mky_id', 'bec_collect_date')
+# #
+# # i = 0
+# # for mky, date in becs:
+# #     df.bec_sample[(df.date == datetime.date(date)) & (df.mky_id == mky)] = True
+# #     i += 1
+# #     if i % 500 == 0:
+# #         print '%s out of %s loaded' % (i, becs.count())
+# #
+# # df.save('all_etoh_bec_drawn.plk')
+#
+# df = pd.read_pickle('all_etoh_bec_drawn.plk')
+# df = df[~df.etoh.isnull()]
+# print df.head(5)
+# print len(df), len(df[df.bec_sample == True])
+# print 'bec: %s, other: %s, all: %s' % (df[df.bec_sample == True].etoh.mean(), df[df.bec_sample == False].etoh.mean(), df.etoh.mean())
+# from scipy import stats
+#
+# paired_sample = stats.ttest_1samp(df.etoh[df.bec_sample == True], df.etoh.mean())
+# print "The t-statistic is %.3f and the p-value is %.3f." % paired_sample
+#
+#
+# df.etoh[df.bec_sample == True].plot()
+# df.etoh[df.bec_sample == False].plot()
 
 
 

@@ -9,7 +9,9 @@ django.setup()
 
 import numpy as np
 import pandas as pd
+import matplotlib
 from matplotlib import pyplot as plt
+matplotlib.rcParams['savefig.directory'] = '/home/alex/Dropbox/Baylor/Matrr/baker_salo/'
 from datetime import timedelta
 
 from matrr.models import MonkeyBEC, MonkeyToDrinkingExperiment, Monkey

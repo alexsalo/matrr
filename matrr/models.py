@@ -4561,7 +4561,7 @@ class MonkeyHormoneChallenge(models.Model):
     """
     UNITS = {'mhc_doc': 'pg/ml', 'mhc_vas': 'pg/ml', 'mhc_acth': 'pg/ml', 'mhc_gh': 'pg/ml', 'mhc_estra': 'pg/ml',
              'mhc_cort': 'ug/dl', 'mhc_dheas': 'ug/ml',
-             'mhc_test': 'ng/ml', 'mhc_ald': 'ng/ml',
+             'mhc_test': 'ng/ml', 'mhc_ald': 'ng/ml', 'mhc_crh': 'ng/ml',
              }
     """
     QNS - quantity not sufficient
@@ -4587,7 +4587,6 @@ class MonkeyHormoneChallenge(models.Model):
     mhc_ep = models.PositiveIntegerField('Endocrine Profile Number', blank=True, null=True, help_text='')
 
     mhc_doc = models.FloatField("Deoxycorticosterone", editable=False, null=True, blank=False)
-    mhc_ald = models.FloatField("Aldosterone", editable=False, null=True, blank=False)
     mhc_vas = models.FloatField("Vasopressin", editable=False, null=True, blank=False)
     mhc_acth = models.FloatField("ACTH", editable=False, null=True, blank=False)
     mhc_gh = models.FloatField("GH", editable=False, null=True, blank=False)
@@ -4597,12 +4596,15 @@ class MonkeyHormoneChallenge(models.Model):
     mhc_dheas = models.FloatField("DHEA-S", editable=False, null=True, blank=False)
 
     mhc_test = models.FloatField("Testosterone", editable=False, null=True, blank=False)
+    mhc_ald = models.FloatField("Aldosterone", editable=False, null=True, blank=False)
+    mhc_crh = models.FloatField("CRH", editable=False, null=True, blank=False)
 
     # Columns to display
     columns = (['monkey__mky_id', 'mhc_challenge', 'mhc_date', 'mhc_time', 'mhc_ep',
-                'mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test', 'mhc_source'],
+                'mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test',
+                'mhc_crh', 'mhc_source'],
                ['mky_id', 'challenge', 'date', 'time', 'EP',
-                'doc', 'ald', 'vas', 'acth', 'gh', 'estra', 'cort', 'dheas', 'test', 'source'])
+                'doc', 'ald', 'vas', 'acth', 'gh', 'estra', 'cort', 'dheas', 'test', 'crh', 'source'])
 
     def __unicode__(self):
         return "%s - %s Hormone Challenge" % (self.monkey, self.mhc_challenge)

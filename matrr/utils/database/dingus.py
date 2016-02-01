@@ -7,14 +7,24 @@ from matrr import models
 ERROR_OUTPUT = "%d %s # %s"
 
 
+def get_mky_id_from_vanessa_date(date_id):
+    date = dt.strptime(date_id, "%m/%d/%Y")
+    diff = date.date() - datetime.date(1899, 12, 30)
+    return diff.days
+
+
 def get_monkey_by_number(mystery_number):
     try:
         monkey = models.Monkey.objects.get(pk=mystery_number)
-    except models.Monkey.DoesNotExist:
+    except Exception as e:
         try:
             monkey = models.Monkey.objects.get(mky_real_id=mystery_number)
-        except models.Monkey.DoesNotExist:
-            raise Exception("No such monkey:  %s" % str(mystery_number))
+        except Exception as e:
+            try:
+                id = get_mky_id_from_vanessa_date(mystery_number)
+                monkey = models.Monkey.objects.get(mky_real_id=id)
+            except models.Monkey.DoesNotExist:
+                raise Exception("No such monkey:  %s" % str(mystery_number))
     return monkey
 
 def days_since_jan_1_1900_to_datetime(d):
@@ -42,6 +52,7 @@ def queryset_iterator(queryset, chunksize=5000):
             pk = row.pk
             yield row
         gc.collect()
+
 
 def get_datetime_from_steve(steve_date):
     # fixed to match new API by Alex Salo 10/21/2015

@@ -2323,6 +2323,7 @@ def load_monkey_hormone_challenge_data(file_name, delim=',', username=None):
                         'mhc_cort',
                         'mhc_dheas',
                         'mhc_test',
+                        'mhc_crh',
                         ]
 
     with open(file_name, 'r') as f:
@@ -2381,6 +2382,8 @@ def load_monkey_hormone_challenge_data(file_name, delim=',', username=None):
                     elif value[0] == '<':
                         value = None
                     setattr(mhc, field, value)
+                else:
+                    value = None
 
             # clean and finish up
             try:

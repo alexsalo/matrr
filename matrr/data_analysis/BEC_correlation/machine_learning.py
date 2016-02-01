@@ -1,6 +1,8 @@
 from common import *
 from data_generation import get_bec_df_for_all_animals
 
+from sklearn.ensemble import RandomForestRegressor
+
 def compile_all_dfs():
     all_more2stdev, g1_more2stdev, g2_more2stdev = get_bec_df_for_all_animals('22hr', 'bec_more2stdev', regenerate=False)
     g1_more2stdev['more2stdev'] = False
@@ -10,23 +12,25 @@ def compile_all_dfs():
     g1_more2stdev['more80pct'] = False
     g1_more2stdev.more80pct[g1_more2stdev.bec > 80] = True
 
-    return g1_more2stdev
+    # Drinking Category
+    df = g1_more2stdev
+    df = pd.concat([df, pd.get_dummies(df.dc)], axis=1)
 
+    return df
 
 df = compile_all_dfs()
 print df.columns
+def regress_on(xattr='etoh_at_bec_sample_time'):
+    clf = RandomForestRegressor()
+    #x = df[['more2stdev', 'more80pct', 'LD', 'BD', 'HD', 'VHD', xattr]]
+    #x = df[['more2stdev', 'LD', 'BD', 'HD', 'VHD']]
+    x = df[['more2stdev']]
+    y = df['etoh_next_day']
+    clf.fit(x, y)
+    print 'Feature importances: %s' % ['%s: %.3f' % (f, fi) for f, fi in zip(x, clf.feature_importances_)]
+    print 'R^2 (coefficient of determination): %.3f' % clf.score(x, y)
 
-from sklearn import cross_validation
-from sklearn.ensemble import RandomForestRegressor
-
-clf = RandomForestRegressor()
-#x = df[['bec', 'more2stdev', 'more80pct']]
-x = df[['bec', 'more2stdev']]
-y = df['etoh_next_day']
-clf.fit(x, y)
-
-
-scores = cross_validation.cross_val_score(clf, x, y, cv=4)
-print scores
-print "Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std())
+regress_on('bec')
+regress_on('etoh_at_bec_sample_time')
+regress_on('etoh_previos_day')
 

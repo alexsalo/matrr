@@ -239,11 +239,11 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove
             fig.text(0.065, 0.02, 'Target start time: %s' % target_start_time.strftime("%H:%M %p"), ha='left')
     plt.tight_layout()
 
-matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/drinking_pattern_study/'
+matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/baker_salo/drinking_pattern/'
 # plot_cohort_oa_cumsum_drinking_pattern(RHESUS_FEMALES, schedule='Day Light', remove_trend=False)
 # plot_cohort_oa_cumsum_drinking_pattern(RHESUS_MALES, schedule='Day Light', remove_trend=False)
 #
-# plt.show()
+#plt.show()
 
 
 
