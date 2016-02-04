@@ -164,7 +164,7 @@ def fm_dp(remove_trend=False):
 
     plot_cohort_oa_cumsum_drinking_pattern(RHESUS_FEMALES, schedule='Day Light', remove_trend=remove_trend, ylim=ylim)
     plot_cohort_oa_cumsum_drinking_pattern(RHESUS_MALES, schedule='Day Light', remove_trend=remove_trend, ylim=ylim)
-fm_dp(remove_trend=True)
+#fm_dp(remove_trend=True)
 
 #plot_cohort_oa_cumsum_drinking_pattern([c13], schedule='Day Light', remove_trend=True)
 plt.show()

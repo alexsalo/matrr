@@ -103,9 +103,6 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_tre
 
         ax.legend(unique_handles, unique_labels, loc=remove_trend_legend_loc[remove_trend])
 
-    if ylim is not None:
-        ax.set_ylim(ylim)
-
     # Plot pellets for entire cohort
     pellets_eevs = ExperimentEvent.objects.filter(monkey__in=monkeys).filter(eev_event_type=ExperimentEventType.Pellet)
     pellets = pd.DataFrame(list(pellets_eevs.values_list('eev_session_time', flat=True)))
