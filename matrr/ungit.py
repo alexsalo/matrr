@@ -3486,6 +3486,6 @@ Test how BEC drawing affects etoh
 # df.etoh[df.bec_sample == True].plot()
 # df.etoh[df.bec_sample == False].plot()
 
-
+#print pd.DataFrame([['F']*3, ['LD']*3, [1,2,3]], columns=['sex', 'dc', 'hang'])
 
 plt.show()

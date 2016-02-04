@@ -12,6 +12,7 @@ import pandas as pd
 import matplotlib
 from matplotlib import pyplot as plt
 matplotlib.rcParams['savefig.directory'] = '/home/alex/Dropbox/Baylor/Matrr/baker_salo/'
+#matplotlib.rcParams['figure.dpi'] = 200
 from datetime import timedelta
 
 from matrr.models import MonkeyBEC, MonkeyToDrinkingExperiment, Monkey
