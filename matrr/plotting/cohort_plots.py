@@ -106,9 +106,9 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_tre
     # Plot pellets for entire cohort
     pellets_eevs = ExperimentEvent.objects.filter(monkey__in=monkeys).filter(eev_event_type=ExperimentEventType.Pellet)
     pellets = pd.DataFrame(list(pellets_eevs.values_list('eev_session_time', flat=True)))
-    pellets = pellets / (60*60*1.0)
     if schedule == 'Day Light':
-        pellets += 4
+        pellets += PREV_DAY_LIGHT
+    pellets /= ONE_HOUR * 1.0
     ax_pellet = ax.twinx()
     pellets.hist(bins=10*60, ax=ax_pellet, alpha=.4)
     ax_pellet.set_ylabel('Pellet Consumption Distribution (Cohort)')
