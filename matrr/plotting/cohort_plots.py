@@ -17,10 +17,10 @@ import matplotlib.patches as mpatches
 def cohort_oa_cumsum_drinking_pattern_22hr(cohort):
     return _cohort_oa_cumsum_drinking_pattern(cohorts=[cohort], schedule='22hr', remove_trend=False)
 def cohort_oa_cumsum_drinking_pattern_daylight(cohort):
-    return _cohort_oa_cumsum_drinking_pattern(cohorts=[cohort], schedule='Day Light', remove_trend=True)
-def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_trend=False):
+    return _cohort_oa_cumsum_drinking_pattern(cohorts=[cohort], schedule='Light Phase', remove_trend=True)
+def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Light Phase', remove_trend=False):
     # Redefining constants by Kathy's request (which kind of make sense by the look ofthe plot)
-    LIGHTS_OUT = 7 * ONE_HOUR
+    LIGHTS_OUT = 9 * ONE_HOUR
     LIGHTS_ON = 20 * ONE_HOUR
     PREV_DAY_LIGHT = 22 * ONE_HOUR - LIGHTS_ON
     DAYLIGHT = PREV_DAY_LIGHT + LIGHTS_OUT
@@ -70,7 +70,7 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_tre
     for mky in monkeys:
         mky_drink_cumsum, mtds_used = get_mky_oa_drinks_cumsum(mky)
 
-        if schedule == 'Day Light':
+        if schedule == 'Light Phase':
             mky_drink_cumsum['new_index'] = list(mky_drink_cumsum.index)
             mky_drink_cumsum.new_index[mky_drink_cumsum.new_index > LIGHTS_ON] -= TWENTYTWO_HOUR
             mky_drink_cumsum.new_index += PREV_DAY_LIGHT
@@ -88,7 +88,8 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_tre
         #ax.plot(mky_drink_cumsum.index, fit[0] * mky_drink_cumsum.index + fit[1], color='k')
         mky_drink_cumsum.gkg.plot(color=DRINKING_CATEGORIES_COLORS[mky.mky_drinking_category], ax=ax,
                                   label="%3s" % mky.mky_drinking_category + ' ' + str(mky.mky_id))
-
+    if schedule == 'Light Phase':
+        ax.axvline(PREV_DAY_LIGHT/ONE_HOUR, color='g', linestyle='--', lw=5, alpha=0.4, label='Session Start')
     plt.legend(loc=remove_trend_legend_loc[remove_trend])
     if len(cohorts) > 1:  # Compress the legend - we have monkeys from multiple cohorts
         handles, labels = ax.get_legend_handles_labels()
@@ -106,7 +107,7 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_tre
     # Plot pellets for entire cohort
     pellets_eevs = ExperimentEvent.objects.filter(monkey__in=monkeys).filter(eev_event_type=ExperimentEventType.Pellet)
     pellets = pd.DataFrame(list(pellets_eevs.values_list('eev_session_time', flat=True)))
-    if schedule == 'Day Light':
+    if schedule == 'Light Phase':
         pellets += PREV_DAY_LIGHT
     pellets /= ONE_HOUR * 1.0
     ax_pellet = ax.twinx()
@@ -125,7 +126,7 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Day Light', remove_tre
     ax.set_xlabel('Time (session hour)')
     ax.set_ylabel('Average ' + remove_trend_title[remove_trend] + 'cumulative EtOH (gkg)')
     cohort_short_names = [x.coh_cohort_name.encode('utf-8') for x in cohorts] # .split(' ')[2]
-    plt.title("Cumulative Drinking Pattern for Cohort %s\n%s Session Schedule" % (cohort_short_names, schedule))
+    plt.title("Cumulative Drinking Pattern for Cohort %s\n%s Period" % (cohort_short_names, schedule))
     if len(cohorts) == 1:  # annotate target start time if only one cohort
         target_start_time = cohorts[0].coh_target_start_time
         if target_start_time is not None:
