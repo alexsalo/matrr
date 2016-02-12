@@ -192,6 +192,9 @@ urlpatterns += patterns('',
 #    url(r'^tools/graph-as-pdf/$', tools.create_pdf_fragment, name='pdf-fragment'),
     url(r'^tools/graph-as-pdf/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', tools.create_pdf_fragment_v2, name='pdf-fragment'),
     url(r'^tools/graph-as-svg/(?P<klass>[^/]*)/(?P<imageID>\d+)/$', tools.create_svg_fragment, name='svg-fragment'),
+
+    # Sandbox Image View
+    url(r'^tools/sandbox/(?P<append>\S+)/(?P<file>.+)/$', tools.create_sandbox_fragment, name='tools-sandbox-fragment'),
 )
 urlpatterns += patterns('',
     ## data views

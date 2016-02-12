@@ -382,5 +382,3 @@ def monkey_hormone_challenge_data_grid(request):
 def drinking_category_definition(request):
     context = {}
     return render_to_response('matrr/drinking_category_definition.html', context, context_instance=RequestContext(request))
-
-

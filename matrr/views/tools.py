@@ -909,6 +909,7 @@ def create_pdf_fragment_v2(request, klass, imageID):
         return resp
     raise Http404()
 
+
 def create_svg_fragment(request, klass, imageID):
     import matrr.models as mmodels
     im = get_object_or_404(getattr(mmodels, klass), pk=imageID)
@@ -921,3 +922,20 @@ def create_svg_fragment(request, klass, imageID):
     resp['Content-Disposition'] = 'attachment; filename=%s' % (im.get_filename() + '.svg')
     return resp
 
+
+
+def create_sandbox_fragment(request, append, file):
+    print append, file
+    image_data = open(os.path.join(settings.STATIC_ROOT, 'images', append, file), "rb").read()
+    resp = HttpResponse(image_data, content_type="image/svg+xml")
+    resp['Content-Disposition'] = 'attachment; filename=%s' % (file + '.png')
+    return resp
+    # import matrr.models as mmodels
+    # im = get_object_or_404(getattr(mmodels, klass), pk=imageID)
+    # if not isinstance(im, MATRRImage):
+    #     raise Http404()
+    # if not im.verify_user_access_to_file(request.user):
+    #     raise Http404()
+    # image_data = open(os.path.join(settings.MEDIA_ROOT, im.svg_image.name), "rb").read()
+    # resp = HttpResponse(image_data, content_type="image/svg+xml")
+    # resp['Content-Disposition'] = 'attachment; filename=%s' % (im.get_filename() + '.svg')

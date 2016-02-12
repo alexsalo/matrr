@@ -39,14 +39,36 @@
 	<br>
     <a href="?append=Cohort2EphysNecropsyScatterplotData">INIA Cyno 2 Ephys vs Necropsy plots</a>
 	<br>
-   <a href="?append=PARC">Portland Alcohol Research Center</a>
+    <a href="?append=PARC">Portland Alcohol Research Center</a>
         <br>
-     <div class="headline"></div>
+    <div class="headline"></div>
 	<div class=clearfix></div>
     {% for file in files %}
-        <a rel="plot_gallery" href="{{ STATIC_URL }}/images/{{ append }}/{{ file }}" target="_blank">
-            <img src="{{ STATIC_URL }}/images/{{ append }}/{{ file }}" width="320px">
-        </a>
+        {% if append == 'habitual_drinking' or append == 'hangover_drinking'%}
+            <div style="float:left;">
+                <div style="clear:left;">
+                    <a href="{% url 'tools-sandbox-fragment' append file %}" target="_blank"> Download </a>
+                </div>
+
+                <div style="float:left;">
+                    <a rel="plot_gallery" href="{{ STATIC_URL }}/images/{{ append }}/{{ file }}" target="_blank">
+                        <img src="{{ STATIC_URL }}/images/{{ append }}/{{ file }}" width="320px" >
+                            {#            usemap="#sandbox{{ file }}">#}
+                    </a>
+                </div>
+{#        <map name="sandbox{{ file }}">#}
+{#            <area shape="rect"#}
+{#            coords="0, 0, 320, 100"#}
+{#            href="{% url 'tools-sandbox-fragment' append file %}">#}
+{#        </map>#}
+            </div>
+
+        {% else %}
+            <a rel="plot_gallery" href="{{ STATIC_URL }}/images/{{ append }}/{{ file }}" target="_blank">
+                <img src="{{ STATIC_URL }}/images/{{ append }}/{{ file }}" width="320px">
+            </a>
+        {% endif %}
+
 		{% if forloop.counter|divisibleby:2 %}
     		<div class='clearfix'></div>
 		{% endif %}

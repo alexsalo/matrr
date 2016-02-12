@@ -10,11 +10,11 @@ r7b = Cohort.objects.get(coh_cohort_name="INIA Rhesus 7b")
 RHESUS_FEMALES = [r6a, r6b]
 RHESUS_MALES = [r5, r7a, r7b]
 
-TRESHOLD = 2
+TRESHOLD = 1.8
 USED_STD = []
 POPULATION = RHESUS_FEMALES + RHESUS_MALES
-RETAIN_WASTED = False
-REGENERATE = False
+RETAIN_WASTED = True
+REGENERATE = True
 
 
 def mky_hi_low(mky, treshold):
@@ -35,26 +35,26 @@ def collect_hi_low_dfs(monkeys, treshold):
     df = mky_hi_low(monkeys[0], treshold)
     for mky in monkeys[1:]:
         df = df.append(mky_hi_low(mky, treshold))
-    if POPULATION == RHESUS_FEMALES:
-        df['Drinking Category'] = df['Drinking Category'].astype('category').cat.set_categories(['LD', 'HD', 'VHD'])
-    else:
-        df['Drinking Category'] = df['Drinking Category'].astype('category').cat.set_categories(['LD', 'BD', 'HD', 'VHD'])
+    # if POPULATION == RHESUS_FEMALES:
+    #     df['Drinking Category'] = df['Drinking Category'].astype('category').cat.set_categories(['LD', 'HD', 'VHD'])
+    # else:
+    #     df['Drinking Category'] = df['Drinking Category'].astype('category').cat.set_categories(['LD', 'BD', 'HD', 'VHD'])
     return df
 
 
 monkeys = Monkey.objects.filter(cohort__in=POPULATION).filter(mky_drinking_category__isnull=False)
 if REGENERATE:
     df = collect_hi_low_dfs(monkeys, TRESHOLD)
-    df.save('fm_all_hanogver_drinking.plk')
+    df.save('fm_all_hanogver_drinking_%s.plk' % TRESHOLD)
 else:
-    df = pd.read_pickle('fm_all_hanogver_drinking.plk')
+    df = pd.read_pickle('fm_all_hanogver_drinking_%s.plk' % TRESHOLD)
 
 if RETAIN_WASTED:
     df = df[df.wasted]
     long_df = pd.melt(df, id_vars=['Drinking Category'], value_vars=['EtOH Today', 'EtOH Next Day'],
                   value_name='EtOH (normed per animal)', var_name='Day')
 
-pct_used = len(df[df.wasted]) * 1.0 / len(df)
+pct_used = np.mean(USED_STD)
 print 'avg pct used: %s, std: %.4f' % (pct_used, np.std(USED_STD))
 print df[['wasted', 'Drinking Category']].groupby('Drinking Category').count()
 dcN = list(df[['wasted', 'Drinking Category']].groupby('Drinking Category').count()['wasted'])
@@ -106,6 +106,26 @@ def pairplots():
 #pairplots()
 
 
+def pairplots_combined():
+    df.ix[(df['Drinking Category'] != 'LD') & (df['Sex'] == 'M'), 'Drinking Category'] = 'HD_M'
+    df.ix[(df['Drinking Category'] != 'LD') & (df['Sex'] == 'F'), 'Drinking Category'] = 'HD_F'
+    df.ix[(df['Drinking Category'] == 'LD') & (df['Sex'] == 'F'), 'Drinking Category'] = 'LD_F'
+    df.ix[(df['Drinking Category'] == 'LD') & (df['Sex'] == 'M'), 'Drinking Category'] = 'LD_M'
+    dcN = [len(df[df['Drinking Category'] == x]) for x in ['HD_M','HD_F','LD_F','LD_M']]
+    #print df
+    pairplt = sns.pairplot(df, x_vars='EtOH Today', y_vars=['EtOH Next Day'],
+                 hue='Drinking Category', size=18, aspect=.8, kind="reg", palette="husl")
+    ax = pairplt.axes[0, 0]
+    ax.set_ylim(-2.5, 3.5)
+    plt.title('Pairplot for hangover drinking\nTreshold: %s (avg pct used %.2f $\pm$ %.2f)' %
+              (TRESHOLD, pct_used, np.std(USED_STD)), fontsize=14)
+    handles, labels = ax.get_legend_handles_labels()
+    labels = ['%3s (N=%s)' %(label, N) for label, N in zip(labels, dcN)]
+    ax.legend(handles, labels)
+    plt.subplots_adjust(top=0.95, bottom=0.05)
+pairplots_combined()
+
+
 def pairplot_wasted():
     pairplt = sns.pairplot(df, x_vars='EtOH Today', y_vars=['EtOH Next Day'], hue='Sex', size=18, kind="reg")
     ax = pairplt.axes[0, 0]
@@ -150,7 +170,7 @@ def hangover_effect(df):
             results = results.append(hang_df)
     print res
     return results
-hangover = hangover_effect(df)
+#hangover = hangover_effect(df)
 
 
 def brush_up(plotname, ax, violin=False):
@@ -169,17 +189,17 @@ def brush_up(plotname, ax, violin=False):
     plt.subplots_adjust(top=0.90)
 
 
-hviolin = sns.factorplot(x="Relative EtOH reduction after intoxication", y="Drinking Category", hue="Sex",
-                         data=hangover, orient="h", size=6, aspect=3.5, palette="Set3",
-                         kind="violin", split=True, cut=0, bw=.2)
-brush_up('Split-violin plot', hviolin.axes[0, 0], violin=True)
-hviolin.axes[0, 0].axvline(0, color='r', linestyle='--', lw=3, alpha=0.4)
-
-
-
-lineplot = sns.factorplot(x="Drinking Category", y="Relative EtOH reduction after intoxication", hue="Sex",
-                          data=hangover, size=6, aspect=3.5)
-brush_up('Factor-Line plot', lineplot.axes[0, 0])
+# hviolin = sns.factorplot(x="Relative EtOH reduction after intoxication", y="Drinking Category", hue="Sex",
+#                          data=hangover, orient="h", size=6, aspect=3.5, palette="Set3",
+#                          kind="violin", split=True, cut=0, bw=.2)
+# brush_up('Split-violin plot', hviolin.axes[0, 0], violin=True)
+# hviolin.axes[0, 0].axvline(0, color='r', linestyle='--', lw=3, alpha=0.4)
+#
+#
+#
+# lineplot = sns.factorplot(x="Drinking Category", y="Relative EtOH reduction after intoxication", hue="Sex",
+#                           data=hangover, size=6, aspect=3.5)
+# brush_up('Factor-Line plot', lineplot.axes[0, 0])
 
 
 plt.show()
