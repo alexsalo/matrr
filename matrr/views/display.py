@@ -349,33 +349,13 @@ def data_repository_grid(request):
         context = json.loads(json_file.read())
     return render_to_response('matrr/data_repository_grid.html', context, context_instance=RequestContext(request))
 
+
 @user_passes_test(lambda u: u.has_perm('matrr.data_repository_grid'), login_url='/denied/')
 def monkey_hormone_challenge_data_grid(request):
-    from matrr.models import Cohort, MonkeyHormoneChallenge, PharmalogicalChallengeChoice, MonkeyHormoneChoice
-    cohorts = MonkeyHormoneChallenge.objects.all().values_list('monkey__cohort__coh_cohort_id', 'monkey__cohort__coh_cohort_name').distinct()
-
-    cohorts_mhc = []
-    for cohort in cohorts:
-        coh_mhc = {}
-        for ep in [1, 2, 3, 4, 5, 6, 7, 8]:
-            ep_hormone = {}
-            cohort_has_this_ep = False
-            for hormone in ['mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test']:
-                hormone_verbose = MonkeyHormoneChallenge._meta.get_field_by_name(hormone)[0].verbose_name
-                challenges = MonkeyHormoneChallenge.objects.filter(monkey__cohort__coh_cohort_id=cohort[0])\
-                    .filter(**{hormone + '__isnull': False}).filter(mhc_ep=ep).\
-                    values_list('mhc_challenge', flat=True).distinct()
-                ep_hormone[hormone_verbose] = challenges
-                if len(challenges) > 0:
-                    cohort_has_this_ep = True
-            if cohort_has_this_ep:
-                coh_mhc[ep] = ep_hormone
-        cohorts_mhc.append((cohort, coh_mhc))
+    from matrr.utils.database import dump
+    data = dump.dump_MATRR_current_hormone_challenge_grid()
     return render_to_response('matrr/data_grid_monkey_hormone_challenge.html',
-                              {'cohorts_mhc': cohorts_mhc,
-                               'challenges': PharmalogicalChallengeChoice,
-                               'hormones': [c[1] for c in MonkeyHormoneChoice],
-                               'n_rows_challenge': len(PharmalogicalChallengeChoice) + 1},
+                              data,
                               context_instance=RequestContext(request))
 
 @login_required

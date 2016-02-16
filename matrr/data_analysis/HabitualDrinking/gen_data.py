@@ -32,9 +32,9 @@ MKY_ATTR = [
 MTDS_ATRR = [
         ('mtd_etoh_bout', 'Total EtOH bouts'),
         ('mtd_etoh_drink_bout', 'Average number of drinks per bout'),
-        ('mtd_etoh_mean_drink_length', 'Average length of EtOH drinks'),
+        ('mtd_etoh_mean_drink_length', 'Average length of EtOH drinks (s)'),
         ('mtd_etoh_median_idi', 'Median time between drinks'),
-        ('mtd_etoh_mean_bout_length', 'Average length of EtOH bouts'),
+        ('mtd_etoh_mean_bout_length', 'Average length of EtOH bouts (s)'),
         ('mtd_etoh_media_ibi', 'Median time between bouts'),
         ('mtd_max_bout_length', 'Max Bout Length'),
     ]
@@ -69,7 +69,7 @@ def get_duration_df(duration):
 
     df = get_population_df(FEMALES, duration)
     df = df.append(get_population_df(MALES, duration))
-    df['Average Drink-to-Bout Length Ratio'] = df['Average length of EtOH drinks'] / df['Average length of EtOH bouts']
+    df['Average Drink-to-Bout Length Ratio'] = df['Average length of EtOH drinks (s)'] / df['Average length of EtOH bouts (s)']
     return df
 
 # ====================PLOTTING===================================
@@ -236,7 +236,7 @@ def create_comb_factor_plots(major, minor, ttest):
 import seaborn as sns
 sns.set(style="white")
 
-def pretty_pairplot(sex, period, save=False):
+def pretty_pairplot(sex, period, save=False, xlim=None, ylim=None):
     def corrfunc(x, y, **kws):
         r, _ = stats.pearsonr(x, y)
         ax = plt.gca()
@@ -249,7 +249,7 @@ def pretty_pairplot(sex, period, save=False):
     df = df[df.Period == period]
 
     #df = df.iloc[:100]
-    df = df[['Average length of EtOH bouts', 'Average length of EtOH drinks']]
+    df = df[['Average length of EtOH bouts (s)', 'Average length of EtOH drinks (s)']]
     df.dropna(axis=0, inplace=True)
 
     # remove outliers
@@ -261,8 +261,20 @@ def pretty_pairplot(sex, period, save=False):
     g.map_lower(sns.kdeplot, cmap="Blues_d")
     g.map_lower(corrfunc)
 
-    g.fig.suptitle('Sex: %s, Period: %s' % (sex, period), fontsize=14)
-    plt.subplots_adjust(top=0.95)
+    g.fig.suptitle('Habitual Drinking: average lengths (in seconds) of EtOH Drink-Bouts.\n'
+                   'Sex: %s, Period: %s' % (sex, period), fontsize=14)
+    plt.subplots_adjust(top=0.94)
+
+    if xlim is not None:
+        g.axes[0, 0].set_ylim(ylim)
+
+        g.axes[1, 0].set_xlim(ylim)
+        g.axes[1, 0].set_ylim(xlim)
+
+        g.axes[0, 1].set_xlim(xlim)
+        g.axes[0, 1].set_ylim(ylim)
+
+        g.axes[1, 1].set_ylim(xlim)
 
     if save:
         path = '/home/alex/Dropbox/Baylor/Matrr/baker_salo/habitual_drinking/pretty_pairplots/'
@@ -273,11 +285,11 @@ def pretty_pairplot(sex, period, save=False):
 def generate_habit_drink_pairplots():
     for period in ['oa_f9mo', 'oa_l3mo']:
         for sex in ['F', 'M']:
-            pretty_pairplot(sex=sex, period=DURATION[period], save=True)
+            pretty_pairplot(sex=sex, period=DURATION[period], save=True, xlim=(0, 50), ylim=(0, 400))
 
 #generate_habit_drink_pairplots()
 
-# pretty_pairplot(sex='F', period=DURATION['oa_f9mo'])
+#pretty_pairplot(sex='M', period=DURATION['oa_l3mo'], xlim=(0, 50), ylim=(0, 400))
 # pretty_pairplot(sex='M', period=DURATION['oa_f9mo'])
 
 

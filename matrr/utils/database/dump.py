@@ -333,7 +333,11 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
         data_rows.append(_row)
 
     if dump_csv:
-        outcsv = open('matrr/utils/DATA/current_data_grid.csv', 'w')
+        if settings.DEBUG:
+            #print os.path.join(settings.path, 'utils/DATA/current_data_grid.csv')
+            outcsv = open(os.path.join(settings.path, 'utils/DATA/current_data_grid.csv'), 'w')
+        else:
+            outcsv = open('matrr/utils/DATA/current_data_grid.csv', 'w')
         writer = csv.writer(outcsv)
         writer.writerow(headers)
         writer.writerows(data_rows)
@@ -344,6 +348,60 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
         json_string = json.dumps(context)
         outjson.write(json_string)
         outjson.close()
+
+
+def dump_MATRR_current_hormone_challenge_grid(save_csv=False):
+    """
+    :param save_csv: put true if you want csv saved into /DATA
+    :return: json (dict) for html template monkey_hormone_challenge_grid
+    """
+    cohorts = MonkeyHormoneChallenge.objects.all().values_list('monkey__cohort__coh_cohort_id',
+                                                               'monkey__cohort__coh_cohort_name').distinct()
+    cohorts_mhc = []
+    for cohort in cohorts:
+        coh_mhc = {}
+        for ep in [1, 2, 3, 4, 5, 6, 7, 8]:
+            ep_hormone = {}
+            cohort_has_this_ep = False
+            for hormone in ['mhc_doc', 'mhc_ald', 'mhc_vas', 'mhc_acth', 'mhc_gh', 'mhc_estra', 'mhc_cort', 'mhc_dheas', 'mhc_test']:
+                hormone_verbose = MonkeyHormoneChallenge._meta.get_field_by_name(hormone)[0].verbose_name
+                challenges = MonkeyHormoneChallenge.objects.filter(monkey__cohort__coh_cohort_id=cohort[0])\
+                    .filter(**{hormone + '__isnull': False}).filter(mhc_ep=ep).\
+                    values_list('mhc_challenge', flat=True).distinct()
+                ep_hormone[hormone_verbose] = challenges
+                if len(challenges) > 0:
+                    cohort_has_this_ep = True
+            if cohort_has_this_ep:
+                coh_mhc[ep] = ep_hormone
+        cohorts_mhc.append((cohort, coh_mhc))
+
+    challenges = [c[1] for c in PharmalogicalChallengeChoice]
+    hormones = [c[1] for c in MonkeyHormoneChoice]
+    n_rows_challenge = len(PharmalogicalChallengeChoice) + 1
+
+    if save_csv:
+        if settings.DEBUG:
+            outcsv = open(os.path.join(settings.path, 'utils/DATA/current_hormone_challenge_data_grid.csv'), 'w')
+        else:
+            outcsv = open('matrr/utils/DATA/current_hormone_challenge_data_grid.csv', 'w')
+        writer = csv.writer(outcsv)
+        header = ['Cohort', 'EP', 'Challenge'] + hormones
+        writer.writerow(header)
+
+        for cohort, mhc in cohorts_mhc:
+            for ep in mhc:
+                for challenge in challenges:
+                    row = [cohort[1], ep, challenge]
+                    for hormone in hormones:
+                        row.append(True if challenge in mhc[ep][hormone] else False)
+                    writer.writerow(row)
+        outcsv.close()
+
+    return {'cohorts_mhc': cohorts_mhc,
+           'challenges': challenges,
+           'hormones': hormones,
+           'n_rows_challenge': len(challenges) + 1}
+
 
 def find_outlier_datapoints(cohort, stdev_min):
     search_models = [MonkeyToDrinkingExperiment, MonkeyBEC, ]# ExperimentEvent, ExperimentBout, ExperimentDrink]

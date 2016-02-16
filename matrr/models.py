@@ -4593,7 +4593,7 @@ class MonkeyHormoneChallenge(models.Model):
     mhc_estra = models.FloatField("17beta-estradiol", editable=False, null=True, blank=False)  # formerly mhc_e
 
     mhc_cort = models.FloatField("Cortisol", editable=False, null=True, blank=False)
-    mhc_dheas = models.FloatField("DHEA-S", editable=False, null=True, blank=False)
+    mhc_dheas = models.FloatField("DHEAS", editable=False, null=True, blank=False)
 
     mhc_test = models.FloatField("Testosterone", editable=False, null=True, blank=False)
     mhc_ald = models.FloatField("Aldosterone", editable=False, null=True, blank=False)

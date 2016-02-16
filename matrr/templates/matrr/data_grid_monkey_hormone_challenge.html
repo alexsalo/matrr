@@ -38,10 +38,10 @@
                 <td rowspan="{{ n_rows_challenge }}">{{ ep }}</td>
                 {% for challenge in challenges %}
                     <tr>
-                        <td>{{ challenge.1 }}</td>
+                        <td>{{ challenge }}</td>
                         {% for hormone in hormones %}
                             <td style="text-align: center; background-color:
-                                {% if challenge.1 in coh_mhc|keyvalue:ep|keyvalue:hormone %}
+                                {% if challenge in coh_mhc|keyvalue:ep|keyvalue:hormone %}
                                     lightseagreen
                                 {% else %}
                                     lightcoral

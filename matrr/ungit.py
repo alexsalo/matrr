@@ -3488,4 +3488,11 @@ Test how BEC drawing affects etoh
 
 #print pd.DataFrame([['F']*3, ['LD']*3, [1,2,3]], columns=['sex', 'dc', 'hang'])
 
+"""
+16 Feb 16
+"""
+#from matrr.utils.database import dump
+#dump.dump_MATRR_current_data_grid(dump_json=False, dump_csv=True)
+#print dump.dump_MATRR_current_hormone_challenge_grid(save_csv=True)
+
 plt.show()
