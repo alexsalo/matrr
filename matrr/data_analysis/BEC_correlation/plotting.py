@@ -283,10 +283,10 @@ def build_all_bec_panels(regenerate_data=False):
 #build_all_bec_panels(regenerate_data=False)
 
 
-# build_bec_panel(schedule='22hr', split_by='bec_over2stdev', regenerate=False,
-#                 group1_label='Within 2 Std. Dev.', group2_label='Outside of 2 Std. Dev.',
-#                 plot_func=plot_bec_correlation_by_dc_12combinedpanels, save=False)
-# plt.show()
+build_bec_panel(schedule='daylight', split_by='bec_more2stdev', regenerate=False,
+                group1_label='< 2 SD', group2_label='> 2 SD',
+                plot_func=plot_bec_correlation_by_dc_24panels_hexbins, save=False)
+plt.show()
 
 """
 ANCOVA Regressions

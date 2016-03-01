@@ -54,7 +54,8 @@ def plot_mense_etoh_progesterone(monkey, Y1MAX=16.5):
 
     return fig
 
-def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, FONT_SIZE=20, TICK_LABEL_SIZE=16, PROGESTERON_LW=1.2, TITLE='', TRUNCATE=False):
+def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, FONT_SIZE=20, TICK_LABEL_SIZE=16,
+                                                 PROGESTERON_LW=1.2, TITLE='', TRUNCATE=False, pre_post_luni=False):
     #get data for monkey
     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).order_by('drinking_experiment__dex_date')
     if TRUNCATE:
@@ -72,34 +73,41 @@ def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, 
     #plot etoh and trend etoh
     xpred, ypred = lwr.wls(xrange(len(df.mense)), df.etoh, False, tau=0.45)
     ax1.plot(df.date, df.etoh, dc_colors_o[monkey.mky_drinking_category], label = 'EtOH intake')
-    ax1.plot(df.date, ypred, '-', color = '#006400', lw=6, label = 'EtOH intake (trend*)')
+    ax1.plot(df.date, ypred, '-', color = '#006400', lw=4, label='EtOH intake trend*\n'
+                                                    '(via locally weighted lin. reg.)')
 
     #plot proesterone
     ax2 = ax1.twinx()
     ax2.set_ylim([-0.1, Y2MAX])
     df_prog = df[np.isfinite(df['progesterone'])] #to remove nans
     print_full(df)
-    ax2.plot(df_prog.date, df_prog.progesterone, 'b-o', lw=PROGESTERON_LW, label = 'Progesterone')
+    ax2.plot(df_prog.date, df_prog.progesterone, 'b-o', lw=PROGESTERON_LW, alpha=0.6, label = 'Progesterone')
     #ax2.plot(df_prog.date, df_prog.progesterone, 'k-o', color = 0.7, label = 'Progesterone')
 
-    # ###plot avg pre-post lunal phases
-    # df = df.set_index('date')
-    #
-    # #get peaks
-    # dates = list(df.index[df.mense].values)
-    # peaks_progesterone = []
-    # for i in range(1,len(dates),1):
-    #     df_period = df[dates[i-1]:dates[i]]
-    #     peak_pos = df_period.progesterone.argmax()
-    #     if not pd.isnull(peak_pos):
-    #         peaks_progesterone.append(peak_pos)
-    #
-    # #get all periods and corresponding etohs
-    # periods_for_avg = sorted(dates + peaks_progesterone)
-    # etohs = [df[periods_for_avg[i-1]:periods_for_avg[i]].etoh.mean() for i, date in enumerate(periods_for_avg)][1:]
-    #
-    # #plot horizontal lines
-    # [ax1.plot((periods_for_avg[i], periods_for_avg[i+1]), (etoh, etoh), color=pre_post_luni_phase[i%2],marker = '|', alpha=0.8, linewidth=2) for i, etoh in enumerate(etohs)]
+    ###plot avg pre-post lunal phases
+    if pre_post_luni:
+        df = df.set_index('date')
+
+        #get peaks
+        dates = list(df.index[df.mense].values)
+        peaks_progesterone = []
+        for i in range(1,len(dates),1):
+            df_period = df[dates[i-1]:dates[i]]
+            peak_pos = df_period.progesterone.argmax()
+            if not pd.isnull(peak_pos):
+                peaks_progesterone.append(peak_pos)
+
+        #get all periods and corresponding etohs
+        periods_for_avg = sorted(dates + peaks_progesterone)
+        etohs = [df[periods_for_avg[i-1]:periods_for_avg[i]].etoh.mean() for i, date in enumerate(periods_for_avg)][1:]
+
+        #plot horizontal lines
+        [ax1.plot((periods_for_avg[i], periods_for_avg[i+1]), (etoh, etoh),
+                  color=pre_post_luni_phase[i%2],marker = '|', alpha=0.8, linewidth=3) for i, etoh in enumerate(etohs)]
+
+        # dummy plot for legend
+        ax1.plot([], 'c-', lw=3, alpha=0.8, label='Pre-luni phase')
+        ax1.plot([], 'm-', lw=3, alpha=0.8, label='Post-luni phase')
 
     #titles and legends
     ax2.set_ylabel('Progesterone, ng/mL', fontsize=FONT_SIZE)
@@ -121,7 +129,7 @@ def plot_mense_etoh_progesterone_scaled_two_axis(monkey, Y1MAX=7.5, Y2MAX=16.5, 
     # labels = [item.get_text() for item in ax1.get_xticklabels()]
     # labels_int = [i + 1 for i, month in enumerate(labels)]
     # ax1.set_xticklabels(labels_int)
-    plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
+    #plt.setp([a.get_xticklabels() for a in fig.axes], visible=False)
 
     return fig
 
@@ -138,9 +146,13 @@ def save_plots_by_monkey(monkeys, plot_method, plotfolder_name):
 #save_plots_by_monkey(mense_monkeys, plot_mense_etoh_progesterone_scaled_two_axis, 'mense_etoh_progesterone_scaled_two_axis_f_monkeys_conf')
 
 m = Monkey.objects.get(mky_id=10077)
-plot_mense_etoh_progesterone_scaled_two_axis(m, Y1MAX = 6, Y2MAX=12, FONT_SIZE=26, TICK_LABEL_SIZE = 22, PROGESTERON_LW=2.2,
+# plot_mense_etoh_progesterone_scaled_two_axis(m, Y1MAX = 6, Y2MAX=12, FONT_SIZE=26, TICK_LABEL_SIZE = 22, PROGESTERON_LW=2.2,
+#                 TITLE='Longitudial ethanol intakes and menstrual cycle progesterone and menses, animal id: 10072',
+#                 TRUNCATE=True)
+
+plot_mense_etoh_progesterone_scaled_two_axis(m, Y1MAX = 4, Y2MAX=10, FONT_SIZE=14, TICK_LABEL_SIZE = 14, PROGESTERON_LW=2.5,
                 TITLE='Longitudial ethanol intakes and menstrual cycle progesterone and menses, animal id: 10072',
-                TRUNCATE=True)
+                TRUNCATE=False, pre_post_luni=True)
 
 
 pylab.show()

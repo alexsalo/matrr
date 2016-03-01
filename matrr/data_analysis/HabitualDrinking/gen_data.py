@@ -229,7 +229,7 @@ def create_comb_factor_plots(major, minor, ttest):
         comb_factor_plot(attr, major=major, minor=minor, ttest=ttest, save=True)
 #create_comb_factor_plots(major='Period', minor='Sex', ttest=False)
 #create_comb_factor_plots(major='Sex', minor='Period', ttest=True)
-#comb_factor_plot(('mtd_max_bout_length', 'Max Bout Length'), major='Sex', minor='Period', ttest=True, save=False)
+#comb_factor_plot(('drink_to_bout_ratio', 'Average Drink-to-Bout Length Ratio'), major='Sex', minor='Period', ttest=True, save=False)
 
 
 #================FANCY CORR PLOT=================================
@@ -278,7 +278,9 @@ def pretty_pairplot(sex, period, save=False, xlim=None, ylim=None):
 
     if save:
         path = '/home/alex/Dropbox/Baylor/Matrr/baker_salo/habitual_drinking/pretty_pairplots/'
+        #path = '/home/alex/Dropbox/Baylor/Matrr/baker_salo/thesis_figures/'
         g.savefig(path + '_' + sex + '_' + period, dpi=200)
+        #g.savefig(path + 'habitual_' + sex + '_' + period + '.pdf', format='pdf', dpi=200)
     else:
         plt.show()
 

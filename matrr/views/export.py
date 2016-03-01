@@ -35,11 +35,11 @@ def export_cohort_data(request, **kwargs):
         '2dn_6mo_days',
         'total_days',
 
-        '1st_6mo_avg_BEC_ml',
+        '1st_6mo_avg_BEC_pct',
         'Ds',
-        '2nd_6mo_avg_BEC_ml',
+        '2nd_6mo_avg_BEC_pct',
         'Ds',
-        'total_avg_BEC_ml',
+        'total_avg_BEC_pct',
         'Ds'
     ])
 

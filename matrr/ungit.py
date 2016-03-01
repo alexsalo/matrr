@@ -3495,4 +3495,13 @@ Test how BEC drawing affects etoh
 #dump.dump_MATRR_current_data_grid(dump_json=False, dump_csv=True)
 #print dump.dump_MATRR_current_hormone_challenge_grid(save_csv=True)
 
+"""
+1 March 16
+"""
+# for bec in MonkeyBEC.objects.filter(monkey__cohort__coh_cohort_id=15):
+#     bec.populate_fields(repopulate=True)
+print pd.DataFrame(list(MonkeyBEC.objects.filter(monkey__cohort__coh_cohort_id=15).values_list()))
+
+print pd.DataFrame(list(NecropsySummary.objects.filter(monkey__cohort__coh_cohort_id=15).values_list()))
+dump.StandardCohortDataSet(cohort_pk=15)
 plt.show()

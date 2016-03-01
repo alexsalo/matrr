@@ -29,6 +29,7 @@ r6b = Cohort.objects.get(coh_cohort_name="INIA Rhesus 6b")
 r5 = Cohort.objects.get(coh_cohort_name="INIA Rhesus 5")
 r7a = Cohort.objects.get(coh_cohort_name="INIA Rhesus 7a")
 r7b = Cohort.objects.get(coh_cohort_name="INIA Rhesus 7b")
+r10 = Cohort.objects.get(coh_cohort_name="INIA Rhesus 10")
 
 RHESUS_FEMALES = [r6a, r6b]
 RHESUS_MALES = [r5, r7a, r7b]
@@ -158,6 +159,7 @@ def plot_cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Light Phase', remo
         if target_start_time is not None:
             fig.text(0.065, 0.02, 'Target start time: %s' % target_start_time.strftime("%H:%M %p"), ha='left')
     plt.tight_layout()
+    return fig
 
 matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/baker_salo/drinking_pattern/'
 
@@ -168,7 +170,10 @@ def fm_dp(remove_trend=False):
     plot_cohort_oa_cumsum_drinking_pattern(RHESUS_MALES, schedule='Light Phase', remove_trend=remove_trend, ylim=ylim)
 #fm_dp(remove_trend=False)
 
-#plot_cohort_oa_cumsum_drinking_pattern([c13], schedule='Light Phase', remove_trend=False)
+#fig = plot_cohort_oa_cumsum_drinking_pattern([r10], schedule='22hr', remove_trend=False)
+#fig = plot_cohort_oa_cumsum_drinking_pattern([r6b], schedule='Light Phase', remove_trend=True)
+path = '/home/alex/Dropbox/Baylor/Matrr/baker_salo/thesis_figures/'
+#fig.savefig(path + 'dp_r10_m_22hr.pdf', format='pdf', dpi=200)
 plt.show()
 
 
