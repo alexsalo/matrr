@@ -1574,6 +1574,8 @@ r7b = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7b')
 r7a = Cohort.objects.get(coh_cohort_name='INIA Rhesus 7a')
 c13 = Cohort.objects.get(coh_cohort_name='INIA Cyno 13')
 c9 = Cohort.objects.get(coh_cohort_name='INIA Cyno 9')
+v1 = Cohort.objects.get(coh_cohort_id=14)
+v2 = Cohort.objects.get(coh_cohort_id=15)
 
 #CohortImage.objects.filter(cohort=r10).filter(method__contains='bihourly').delete()
 #plot_tools.create_bec_summary_plots(True, False)
@@ -3498,10 +3500,63 @@ Test how BEC drawing affects etoh
 """
 1 March 16
 """
-# for bec in MonkeyBEC.objects.filter(monkey__cohort__coh_cohort_id=15):
+# for bec in MonkeyBEC.objects.filter(monkey__cohort=v1):
 #     bec.populate_fields(repopulate=True)
-print pd.DataFrame(list(MonkeyBEC.objects.filter(monkey__cohort__coh_cohort_id=15).values_list()))
+# print pd.DataFrame(list(MonkeyBEC.objects.filter(monkey__cohort__coh_cohort_id=15).values_list()))
+#
+# print pd.DataFrame(list(NecropsySummary.objects.filter(monkey__cohort__coh_cohort_id=15).values_list()))
 
-print pd.DataFrame(list(NecropsySummary.objects.filter(monkey__cohort__coh_cohort_id=15).values_list()))
-dump.StandardCohortDataSet(cohort_pk=15)
+# print pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=v1)
+#                         .values_list('mtd_etoh_g_kg')))
+
+#print pd.DataFrame(list(MonkeyBEC.objects.filter(monkey__cohort__coh_cohort_id=15).values_list()))
+#print ExperimentBout.objects.filter(mtd__in=MonkeyToDrinkingExperiment.objects.filter(monkey__cohort__coh_cohort_id=15)).count()
+
+#MonkeyBEC.content_print(v1)
+
+# for mky in Monkey.objects.filter(cohort=v2):
+#      mky.populate_drinking_category()
+
+# print pd.DataFrame(list(CohortEvent.objects.filter(cohort=c).values_list('event__evt_id', 'event__evt_name', 'cev_date')))
+# print v1.monkey_set.all()[0].sum_etoh_gkg_by_period()
+
+#print pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.filter(monkey__mky_id=10072).order_by('drinking_experiment__dex_date').values_list('mtd_mense_started', 'mtd_progesterone', 'drinking_experiment__dex_date')), columns=['mense', 'progesterone', 'date'])
+
+#MonkeyBEC.content_print(r6a)
+# m = Monkey.objects.get(mky_id=10072)
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=m).order_by('drinking_experiment__dex_date')
+# df = pd.DataFrame(list(mtds.values_list('mtd_etoh_g_kg', 'drinking_experiment__dex_date')),
+#                   columns=['etoh', 'date'])
+# plt.plot(df.date, df.etoh, 'ro')
+
+# df = pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=r6b).filter(monkey__mky_drinking=True).values_list('monkey__mky_id', 'mtd_etoh_g_kg')),
+#                   columns=['mky', 'etoh'])
+# print df.groupby('mky').sum().sort('etoh')
+
+#m10072=Monkey.objects.get(mky_id=10072)
+# bouts = ExperimentBout.objects.filter(mtd__monkey=m10072).order_by('mtd__drinking_experiment__dex_date')
+# ml = ExperimentDrink.objects.filter(ebt__in=bouts).values_list('edr_volume', 'edr_volume')
+# weight = MonkeyToDrinkingExperiment.objects.filter(monkey=m10072).order_by('drinking_experiment__dex_date').values_list('mtd_weight', flat=True)
+# print sum([etoh*0.04/w for etoh,w in zip(ml, weight)])
+
+# df= pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.OA().filter(monkey__cohort=r6b).filter(monkey__mky_drinking=True)
+#                       .values_list('mtd_etoh_g_kg', flat=True)))
+# print df.sum()
+#print r6b.monkey_set.all().values_list('mky_real_id', 'mky_drinking')
+#print pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.order_by('drinking_experiment__dex_date').values_list('mtd_weight', flat=True)))
+
+
+# 21 March 2016 Rita
+#print pd.DataFrame(list(NecropsySummary.objects.filter(monkey__cohort=r10).values_list('monkey__mky_id', 'ncm_22hr_12mo_avg_gkg')))
+
+# start = CohortEvent.objects.filter(cohort=r10).get(event__evt_name__iexact='Before With. 3 EP Start')
+# finish = CohortEvent.objects.filter(cohort=r10).get(event__evt_name__iexact='Before With. 3 EP End')
+# print start, finish
+# for id in [10214, 10215, 10209, 10208, 10211, 10212, 10210, 10213]:
+#     m = Monkey.objects.get(mky_id=id)
+#     mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=m).\
+#         filter(drinking_experiment__dex_date__gte=start.cev_date).\
+#         filter(drinking_experiment__dex_date__lte=finish.cev_date)
+#     print m.mky_id, '\t', np.round(np.mean(mtds.values_list('mtd_etoh_g_kg', flat=True)), 2), '\t', mtds.count()
+
 plt.show()

@@ -854,7 +854,8 @@ class Monkey(models.Model):
             mtds_period = mtds.filter(drinking_experiment__dex_date__gte=start_date).filter(drinking_experiment__dex_date__lte=end_date)
             second = round(mtds_period.aggregate(aggregation_method(feature_name)).values()[0], 2)
             second_days = mtds_period.values('drinking_experiment__dex_date').distinct().count()
-        except:
+        except Exception as e:
+            print e
             pass
         if aggregation_method == Sum:
             total = first + second
@@ -1834,10 +1835,13 @@ class NecropsySummary(models.Model):
 
     ncm_etoh_sum_ml_4pct_induction = models.FloatField("Induction Ethanol Intake", blank=True, null=True)
     ncm_etoh_sum_ml_4pct_22hr = models.FloatField("22hr Free Access Ethanol Intake", blank=True, null=True)
+    # since matrr MTDS is a subset of the full date, it's not the lifetime really, it's cumulative etoh intake
     ncm_etoh_sum_ml_4pct_lifetime = models.FloatField("Lifetime Ethanol Intake (in 4% ml)", blank=True, null=True)
 
     ncm_etoh_sum_gkg_induction = models.FloatField("Induction Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
     ncm_etoh_sum_gkg_22hr = models.FloatField("22hr Free Access Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
+    # since matrr MTDS is a subset of the full date, it's not the lifetime really, it's cumulative etoh intake
+    # but we keep this legacy lifetime name
     ncm_etoh_sum_gkg_lifetime = models.FloatField("Lifetime Ethanol Intake (g-etoh per kg-weight)", blank=True, null=True)
 
     ncm_etoh_ind_start = models.DateField('EtOH Induction Start', blank=True, null=True)
@@ -3956,7 +3960,10 @@ class MonkeyBEC(models.Model):
                 save = True
         if not self.bec_pct_intake or repopulate:
             if self.bec_daily_gkg_etoh and self.bec_daily_gkg_etoh:
-                self.bec_pct_intake = float(self.bec_gkg_etoh) / self.bec_daily_gkg_etoh
+                if self.bec_gkg_etoh is None:
+                    self.mex_excluded = True
+                else:
+                    self.bec_pct_intake = float(self.bec_gkg_etoh) / self.bec_daily_gkg_etoh
             else:
                 self.bec_pct_intake = 0
             save = True
@@ -3969,6 +3976,16 @@ class MonkeyBEC(models.Model):
         permissions = (
         [('view_bec_data', 'Can view BEC data'),
         ])
+
+        # Columns to display
+    columns = (['monkey', 'dto', 'mtd', 'bec_collect_date', 'bec_run_date', 'bec_exper', 'bec_exper_day', 'bec_session_start', 'bec_sample', 'bec_weight', 'bec_vol_etoh', 'bec_gkg_etoh', 'bec_daily_gkg_etoh', 'bec_mg_pct', 'bec_daily_vol_etoh', 'bec_pct_intake', 'mex_excluded'],
+               ['monkey', 'dto', 'mtd', 'collect_date', 'run_date', 'exper', 'exper_day', 'session_start', 'sample', 'weight', 'vol_etoh', 'gkg_etoh', 'daily_gkg_etoh', 'mg_pct', 'daily_vol_etoh', 'pct_intake', 'mex_excluded'])
+
+
+    @staticmethod
+    def content_print(cohort):
+        print pd.DataFrame(list(MonkeyBEC.objects.filter(monkey__cohort=cohort).order_by('bec_collect_date').values_list(*MonkeyBEC.columns[0])),
+                           columns=MonkeyBEC.columns[1])
 
 
 class CohortMetaData(models.Model):

@@ -149,7 +149,7 @@ def plot_bec_correlation_by_dc_12combinedpanels(schedule, bec_df_all, bec_df_gro
 
         df_dc_group_1.plot(kind='scatter', x='etoh_next_day', y='bec', c='g', xlim=xlim, ylim=ylim, ax=axs[i*3 + 2])
         df_dc_group_2.plot(kind='scatter', x='etoh_next_day', y='bec', c='orange', xlim=xlim, ylim=ylim, ax=axs[i*3 + 2])
-        df_dc_all.bec.hist(color='b', alpha=0.2, bins=20, normed=True, orientation='horizontal', ax=axs_hist[i*3 + 2])
+        df_dc_all.bec.hist(color='b', alpha=alp, bins=20, normed=True, orientation='horizontal', ax=axs_hist[i*3 + 2])
 
 
         _plot_regression_line_and_corr_text(axs[i*3 + 0], df_dc_group_1.etoh_previos_day, df_dc_group_1.bec, linecol='blue')
@@ -181,9 +181,9 @@ def plot_bec_correlation_by_dc_12combinedpanels(schedule, bec_df_all, bec_df_gro
     axs[6].set_ylabel('HD', fontsize=font_size)
     axs[9].set_ylabel('VHD', fontsize=font_size)
 
-    # Dummy scatter for legend
-    dot_group1 = plt.scatter([1], [1], color='g', marker='o', label=group1_label, s=80)
-    dot_group2 = plt.scatter([1], [1], color='orange', marker='o', label=group2_label, s=80)
+    # # Dummy scatter for legend
+    dot_group1 = plt.Line2D((0,1),(0,0), color='g', marker='o', linestyle='', label=group1_label, markersize=8)
+    dot_group2 = plt.Line2D((0,1),(0,0), color='orange', marker='o', linestyle='', label=group2_label, markersize=8)
     axs[0].legend(handles=[dot_group1, dot_group2], bbox_to_anchor=[0, 1], loc='lower left', scatterpoints=1)
 
     title = 'BEC correlation: EtOH the day before, day of and day after; ' + schedule + ' schedule'
@@ -283,9 +283,9 @@ def build_all_bec_panels(regenerate_data=False):
 #build_all_bec_panels(regenerate_data=False)
 
 
-build_bec_panel(schedule='daylight', split_by='bec_more2stdev', regenerate=False,
-                group1_label='< 2 SD', group2_label='> 2 SD',
-                plot_func=plot_bec_correlation_by_dc_24panels_hexbins, save=False)
+build_bec_panel(schedule='22hr', split_by='bec_mgpct', regenerate=False,
+                group1_label='< 80 mg pct', group2_label='>= 80 mg pct',
+                plot_func=plot_bec_correlation_by_dc_12combinedpanels, save=False)
 plt.show()
 
 """
