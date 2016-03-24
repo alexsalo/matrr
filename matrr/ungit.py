@@ -3797,6 +3797,6 @@ BEC ETOH CUM PLOT TOOLS
 
 #print MonkeyImage.objects.filter(method__contains='bec_vs_total_etoh').values_list('monkey__cohort').distinct()
 # from matrr.plotting import monkey_plots
-# monkey_plots.monkey_total_bec_vs_total_etoh_cumsum_lineplot(Monkey.objects.get(mky_id=10072))
+monkey_plots.monkey_total_bec_vs_total_etoh_cumsum_lineplot(Monkey.objects.get(mky_id=10072))
 
 plt.show()

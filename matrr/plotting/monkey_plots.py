@@ -19,7 +19,7 @@ from matrr.plotting import *
 def monkey_total_bec_vs_total_etoh_cumsum_lineplot(monkey):
     from mpl_toolkits.axes_grid1 import host_subplot
     import mpl_toolkits.axisartist as AA
-    matplotlib.rcParams['figure.figsize'] = DEFAULT_FIG_SIZE_ALEX
+    #matplotlib.rcParams['figure.figsize'] = DEFAULT_FIG_SIZE_ALEX
     plt.clf()
 
     mid = monkey.mky_id
@@ -74,8 +74,9 @@ def monkey_total_bec_vs_total_etoh_cumsum_lineplot(monkey):
     twin_scaled.set_ylabel("Cumulative BEC")
 
     plt.title('Cumulative EtOH vs cumulative BEC for animal: %s' % mid)
-    plt.tight_layout()
     fig = plt.gcf()  # hack to get current figure
+    fig.set_size_inches(DEFAULT_FIG_SIZE_ALEX, forward=True)
+    plt.tight_layout()
     return fig, True
 
 
