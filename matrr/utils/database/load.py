@@ -1809,7 +1809,12 @@ def load_bec_data(file_name, overwrite=False, header=True):
                 continue
 
             bec_collect_date = dingus.get_datetime_from_steve(data[1])
-            bec_run_date = dingus.get_datetime_from_steve(data[2])
+            try:
+                bec_run_date = dingus.get_datetime_from_steve(data[2])
+            except Exception as e:
+                bec_run_date = None
+                pass
+
             if not bec_collect_date:
                 print dingus.ERROR_OUTPUT % (line_number, "Wrong date format", line)
                 continue
@@ -2179,10 +2184,16 @@ def load_monkey_proteomic_mulholland(file_path, delim=';'):
         try:
             peptide = row[8]
             protein, created = ProteomicProtein.objects.get_or_create(ppr_name=row[9], pro_uniprot=row[10])
+            if created:
+                print 'PROTEIN CREATED: %s' % protein
 
             for i, mky in enumerate(monkeys):
-                MonkeyProteomic.objects.get_or_create(monkey=mky, proteomic_protein=protein, mpc_peptide=peptide,
-                                                      mpc_expression=row[i])
+                try:
+                    MonkeyProteomic.objects.get_or_create(monkey=mky, proteomic_protein=protein, mpc_peptide=peptide,
+                                                          mpc_expression=row[i])
+                except Exception as e:
+                    print dingus.ERROR_OUTPUT % (row_number, e, row)
+                    pass
 
         except Exception as e:
             print dingus.ERROR_OUTPUT % (row_number, e, row)

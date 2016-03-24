@@ -675,3 +675,28 @@ def create_drinking_pattern_plots(cohorts=True):
                 gc.collect()
                 CohortImage.objects.get_or_create(cohort=cohort, method=cohortplot,
                                                   title=cohort_plots.COHORT_PLOTS[cohortplot][1], canonical=True)
+
+def create_cumulative_bec_vs_etoh_plots(cohorts=True, monkeys=True):
+    from matrr.models import CohortImage, Cohort, MonkeyBEC
+    from matrr.plotting import cohort_plots
+    cohortplot = 'cohort_total_bec_vs_total_etoh_scatterplot'
+
+    for cohort in MonkeyBEC.objects.filter(bec_mg_pct__gt=0).values_list('monkey__cohort', flat=True).distinct():
+        cohort = Cohort.objects.get(pk=cohort)
+        print 'Creating %s: %s' % (cohortplot, cohort)
+
+        if cohorts:
+            gc.collect()
+            CohortImage.objects.get_or_create(cohort=cohort, method=cohortplot,
+                                              title=cohort_plots.COHORT_PLOTS[cohortplot][1], canonical=True)
+
+        if monkeys:
+            plot = 'monkey_total_bec_vs_total_etoh_cumsum_lineplot'
+            from matrr.models import CohortImage, Cohort, MonkeyImage
+            from matrr.plotting import monkey_plots
+
+            for monkey in cohort.monkey_set.all():
+                print '    Creating %s for %s' % (plot, monkey)
+                gc.collect()
+                MonkeyImage.objects.get_or_create(monkey=monkey, method=plot,
+                                                  title=monkey_plots.MONKEY_BEC_TOOLS_PLOTS[plot][1], canonical=True)

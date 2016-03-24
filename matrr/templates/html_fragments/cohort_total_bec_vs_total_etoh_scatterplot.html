@@ -1,0 +1,12 @@
+
+<div style='width: {{ bigWidth|add:"60" }}px; margin:auto; padding: 20px'>
+	<center>{{ image.title }}</center>
+</div>
+<div>
+	<center>
+		<img src="{{ image.image.url }}" ismap usemap="#{{ image.cohort.pk }}"><br>
+	</center>
+</div>
+<div style='width: {{ bigWidth }}px; margin:auto;'>
+    <b>Cumulative BEC vs cumulative EtOH in cohort {{ image.cohort.coh_cohort_name }}.</b>
+</div>

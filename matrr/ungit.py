@@ -36,7 +36,7 @@ dc_colors_o = {
     'BD' : 'bo',
     'HD' : 'yo',
     'VHD' : 'ro',
-    None : 'ko'
+    None : 'ko',
 }
 
 coh_colors = {
@@ -3509,8 +3509,24 @@ Test how BEC drawing affects etoh
 # print pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=v1)
 #                         .values_list('mtd_etoh_g_kg')))
 
-#print pd.DataFrame(list(MonkeyBEC.objects.filter(monkey__cohort__coh_cohort_id=15).values_list()))
+# print pd.DataFrame(list(MonkeyBEC.objects.filter(monkey__cohort__coh_cohort_id=15).values_list()),
+#                    columns=[str(x).split('.')[2] for x in MonkeyBEC._meta.fields])
 #print ExperimentBout.objects.filter(mtd__in=MonkeyToDrinkingExperiment.objects.filter(monkey__cohort__coh_cohort_id=15)).count()
+
+
+# Load V2 Induction BEC
+# from matrr.utils.database import load
+# load.load_bec_data('/home/alex/win-share/matrr_sync/vervet_1_2/vervet2_bec_ind_loadable.csv',
+#                    overwrite=False, header=True)
+
+# for bec in MonkeyBEC.objects.filter(monkey__cohort=v1):
+#     bec.bec_sample = bec.bec_session_start
+#     bec.save()
+# print_full(pd.DataFrame(list(MonkeyBEC.objects.filter(monkey__cohort=v2).order_by('bec_collect_date', 'monkey__mky_id').
+#                              values_list('bec_collect_date', 'bec_session_start', 'bec_sample')),
+#                    columns=['date', 'bec_session_start', 'bec_sample']))
+
+
 
 #MonkeyBEC.content_print(v1)
 
@@ -3546,11 +3562,13 @@ Test how BEC drawing affects etoh
 #print pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.order_by('drinking_experiment__dex_date').values_list('mtd_weight', flat=True)))
 
 
-# 21 March 2016 Rita
-#print pd.DataFrame(list(NecropsySummary.objects.filter(monkey__cohort=r10).values_list('monkey__mky_id', 'ncm_22hr_12mo_avg_gkg')))
-
-# start = CohortEvent.objects.filter(cohort=r10).get(event__evt_name__iexact='Before With. 3 EP Start')
-# finish = CohortEvent.objects.filter(cohort=r10).get(event__evt_name__iexact='Before With. 3 EP End')
+"""
+21 March 2016 Rita
+"""
+# #print pd.DataFrame(list(NecropsySummary.objects.filter(monkey__cohort=r10).values_list('monkey__mky_id', 'ncm_22hr_12mo_avg_gkg')))
+#
+# start = CohortEvent.objects.filter(cohort=r10).get(event__evt_name__iexact='Before With. 2 Start')
+# finish = CohortEvent.objects.filter(cohort=r10).get(event__evt_name__iexact='Before With. 2 End')
 # print start, finish
 # for id in [10214, 10215, 10209, 10208, 10211, 10212, 10210, 10213]:
 #     m = Monkey.objects.get(mky_id=id)
@@ -3558,5 +3576,227 @@ Test how BEC drawing affects etoh
 #         filter(drinking_experiment__dex_date__gte=start.cev_date).\
 #         filter(drinking_experiment__dex_date__lte=finish.cev_date)
 #     print m.mky_id, '\t', np.round(np.mean(mtds.values_list('mtd_etoh_g_kg', flat=True)), 2), '\t', mtds.count()
+
+"""
+22 March 2016
+Cumalitive EtOH ~ Cumulative BEC
+"""
+# GENERATE = False
+#
+# if GENERATE:
+#     cum_etoh_bec = pd.DataFrame(columns=['mid', 'cum_etoh', 'cum_bec', 'dc'])
+#     for mid in MonkeyBEC.objects.filter(bec_mg_pct__gt=0).values_list('monkey', flat=True).distinct():
+#         bec = sum(MonkeyBEC.objects.filter(monkey=mid).values_list('bec_mg_pct', flat=True))
+#         if bec > 200:
+#             dc = Monkey.objects.get(mky_id=mid).mky_drinking_category
+#             etoh = MonkeyToDrinkingExperiment.objects.filter(monkey=mid).aggregate(Sum('mtd_etoh_g_kg'))['mtd_etoh_g_kg__sum']
+#             #print np.round(etoh, 2), np.round(bec, 2)
+#             cum_etoh_bec.loc[len(cum_etoh_bec) + 1] = [mid, np.round(etoh, 2), np.round(bec, 2), dc]
+#     cum_etoh_bec.save('cum_etoh_bec.pkl')
+# else:
+#     cum_etoh_bec = pd.read_pickle('cum_etoh_bec.pkl')
+#
+# # get to set default values for animals with no DC
+# cum_etoh_bec['color'] = [dc_colors.get(dc, 'k') for dc in cum_etoh_bec.dc]
+# #print_full(cum_etoh_bec)
+# cum_etoh_bec.set_index('mid', inplace=True)
+# print cum_etoh_bec[cum_etoh_bec.cum_bec > 10000]
+#
+# def _plot_regression_line_and_corr_text(ax, x, y, linecol='red', group_label=''):
+#     fit = np.polyfit(x, y, deg=1)
+#     ax.plot(x, fit[0] * x + fit[1], color=linecol)
+#
+#     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+#     text = group_label + ' Corr: %s' % np.round(x.corr(y), 4)
+#     ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=14,
+#             verticalalignment='top', bbox=props)
+#
+# fig, axs = plt.subplots(2, 1, figsize=DEFAULT_FIG_SIZE, facecolor='w', edgecolor='k')
+#
+# cum_etoh_bec.plot(kind='scatter', x='cum_etoh', y='cum_bec', c=cum_etoh_bec.color, ax=axs[0])
+# axs[0].set_ylim(-250, axs[0].get_ylim()[1])
+# axs[0].set_xlim(1, 3000)
+# axs[0].set_xlabel('Cumalative EtOH')
+# axs[0].set_ylabel('Cumalative BEC')
+# _plot_regression_line_and_corr_text(axs[0], cum_etoh_bec.cum_etoh, cum_etoh_bec.cum_bec)
+#
+# # remove heteroscedasticity
+# cum_etoh_bec[['cum_etoh', 'cum_bec']] = np.log(cum_etoh_bec[['cum_etoh', 'cum_bec']])
+# cum_etoh_bec.plot(kind='scatter', x='cum_etoh', y='cum_bec', c=cum_etoh_bec.color, ax=axs[1])
+# axs[1].set_xlabel('Log(Cumalative EtOH)')
+# axs[1].set_ylabel('Log(Cumalative BEC)')
+# _plot_regression_line_and_corr_text(axs[1], cum_etoh_bec.cum_etoh, cum_etoh_bec.cum_bec)
+#
+# plt.setp(axs[0].get_xticklabels(), visible=True)
+# plt.tight_layout()
+
+### CumSum plots
+# matplotlib.rcParams['savefig.directory'] = '~/Dropbox/Baylor/Matrr/baker_salo/drinking_pattern/'
+# mid = 10048
+# bec = MonkeyBEC.objects.filter(monkey=mid).order_by('bec_collect_date')
+# df_bec = pd.DataFrame(list(bec.values_list('bec_mg_pct', 'bec_collect_date')),
+#                       columns=['bec', 'date'])
+# df_bec.set_index('date', inplace=True)
+#
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mid).order_by('drinking_experiment__dex_date')
+# df_etoh = pd.DataFrame(list(mtds.values_list('mtd_etoh_g_kg', 'drinking_experiment__dex_date')),
+#                   columns=['etoh', 'date'])
+# df_etoh.set_index('date', inplace=True)
+# # df_etoh.etoh = df_etoh.etoh.cumsum()
+# # df_etoh.plot(x='date', y='etoh')
+#
+# merged = df_etoh.join(df_bec)
+# merged = merged.fillna(0)
+# merged = merged.cumsum()
+# #merged['date'] = merged.index
+# #print_full(merged)
+# print merged
+# fig, ax = plt.subplots(figsize=DEFAULT_FIG_SIZE)
+# twin = ax.twinx()
+#
+# merged.etoh.plot(ax=ax, style='r-', label='Cumulative EtOH')
+# merged.bec.plot(ax=twin, style='b-', label='Cumulative BEC')
+# y0lim = ax.get_ylim()
+# # 6 is the slope of the regression line obtained above
+# #twin.set_ylim(6 * y0lim[0], 6 * y0lim[1])
+# #merged.plot(x='date', y='bec', c='b', label='Cumulative BEC', ax=twin)
+# ax.legend(loc=2)
+# twin.legend(loc=4)
+# plt.title('Cumulative EtOH vs cumulative BEC for animal: %s' % mid)
+# plt.tight_layout()
+
+
+
+"""
+23 March 2016
+Load Mulholland Proteomics #2
+"""
+# from matrr.utils.database.load import load_monkey_proteomic_mulholland
+# load_monkey_proteomic_mulholland('/home/alex/win-share/matrr_sync/mulholland_proteomic/121015_SCW_II_145_ALL_121013_NoRecal_unnorm_used_PSMs_clean.csv',
+#                                  delim=';')
+# load_monkey_proteomic_mulholland('/home/alex/win-share/matrr_sync/mulholland_proteomic/MATRR_PD21_Area_13L_Cohort9_clean.csv',
+#                                 delim=';')
+
+#MonkeyProteomic.content_print()
+# print_full(pd.DataFrame(list(MonkeyProteomic.objects.filter(mpc_peptide='AIAELGIYPAVDPLDSTSR').\
+#     filter(monkey__mky_id=10197).\
+#     filter(proteomic_protein__ppr_name='ATP synthase subunit beta, mitochondrial OS=Homo sapiens GN=ATP5B PE=1 SV=3')\
+#     .values_list('mpc_expression', flat=True))))
+
+"""
+24 March 2016
+BEC ETOH CUM PLOT TOOLS
+"""
+
+# def cohort_total_bec_vs_total_etoh_scatterplot(cohort):
+#     DOT_SIZE = 70
+#     def _plot_regression_line_and_corr_text(ax, x, y, linecol='red', group_label=''):
+#         fit = np.polyfit(x, y, deg=1)
+#         ax.plot(x, fit[0] * x + fit[1], color=linecol)
+#
+#         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+#         text = group_label + ' Corr: %s' % np.round(x.corr(y), 4)
+#         ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=14,
+#                 verticalalignment='top', bbox=props)
+#
+#     # 1. Accumulate total sum of bec, etoh for each animal in the cohort
+#     cum_etoh_bec = pd.DataFrame(columns=['mid', 'cum_etoh', 'cum_bec', 'dc'])
+#     for mid in MonkeyBEC.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct():
+#         bec = sum(MonkeyBEC.objects.filter(monkey=mid).values_list('bec_mg_pct', flat=True))
+#         etoh = MonkeyToDrinkingExperiment.objects.filter(monkey=mid).\
+#             aggregate(Sum('mtd_etoh_g_kg'))['mtd_etoh_g_kg__sum']
+#         dc = Monkey.objects.get(mky_id=mid).mky_drinking_category
+#         cum_etoh_bec.loc[len(cum_etoh_bec) + 1] = [mid, np.round(etoh, 2), np.round(bec, 2), dc]
+#
+#     # get to set default values for animals with no DC
+#     cum_etoh_bec['color'] = [dc_colors.get(dc, 'k') for dc in cum_etoh_bec.dc]
+#     cum_etoh_bec.set_index('mid', inplace=True)
+#     fig, axs = plt.subplots(2, 1, figsize=DEFAULT_FIG_SIZE, facecolor='w', edgecolor='k')
+#
+#     cum_etoh_bec.plot(kind='scatter', x='cum_etoh', y='cum_bec', c=cum_etoh_bec.color, s=DOT_SIZE, ax=axs[0])
+#     axs[0].set_xlabel('Cumalative EtOH')
+#     axs[0].set_ylabel('Cumalative BEC')
+#     _plot_regression_line_and_corr_text(axs[0], cum_etoh_bec.cum_etoh, cum_etoh_bec.cum_bec)
+#     for label, x, y in zip(cum_etoh_bec.index, cum_etoh_bec.cum_etoh, cum_etoh_bec.cum_bec):
+#         axs[0].annotate(int(label), (x, y))
+#
+#
+#     # remove heteroscedasticity
+#     cum_etoh_bec[['cum_etoh', 'cum_bec']] = np.log(cum_etoh_bec[['cum_etoh', 'cum_bec']])
+#     cum_etoh_bec.plot(kind='scatter', x='cum_etoh', y='cum_bec', c=cum_etoh_bec.color, s=DOT_SIZE, ax=axs[1])
+#     axs[1].set_xlabel('Log(Cumalative EtOH)')
+#     axs[1].set_ylabel('Log(Cumalative BEC)')
+#     _plot_regression_line_and_corr_text(axs[1], cum_etoh_bec.cum_etoh, cum_etoh_bec.cum_bec)
+#
+#     plt.setp(axs[0].get_xticklabels(), visible=True)
+#     plt.tight_layout()
+#     plt.suptitle('Cumulative BEC vs cumulative EtOH in cohort %s' % cohort)
+#     fig.subplots_adjust(top=0.95)
+#monkey_total_bec_vs_total_etoh_scatterplot(r5)
+
+
+# def monkey_total_bec_vs_total_etoh_cumsum_lineplot(monkey):
+#     from mpl_toolkits.axes_grid1 import host_subplot
+#     import mpl_toolkits.axisartist as AA
+#
+#     mid = monkey.mky_id
+#     bec = MonkeyBEC.objects.filter(monkey=mid).order_by('bec_collect_date')
+#     df_bec = pd.DataFrame(list(bec.values_list('bec_mg_pct', 'bec_collect_date')),
+#                           columns=['bec', 'date'])
+#     df_bec.set_index('date', inplace=True)
+#
+#     mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mid).order_by('drinking_experiment__dex_date')
+#     df_etoh = pd.DataFrame(list(mtds.values_list('mtd_etoh_g_kg', 'drinking_experiment__dex_date')),
+#                       columns=['etoh', 'date'])
+#     df_etoh.set_index('date', inplace=True)
+#
+#     merged = df_etoh.join(df_bec)
+#     merged = merged.fillna(0)
+#     merged = merged.cumsum()
+#     fig = plt.figure(1, figsize=DEFAULT_FIG_SIZE)
+#     ax = host_subplot(111, axes_class=AA.Axes)
+#     twin = ax.twinx()
+#     twin_scaled = ax.twinx()
+#
+#     # This leads two duplicate ylabel and ylabel ticks for some reason
+#     # merged.etoh.plot(ax=ax, style='r-', label='Cumulative EtOH')
+#     # merged.bec.plot(ax=twin, style='b-', label='Cumulative BEC (axis scaled 1:6 of EtOH)')
+#     # merged.bec.plot(ax=twin_scaled, style='g--', label='Cumulative BEC (not scaled by EtOH')
+#
+#     merged['date'] = merged.index
+#     ax.plot(merged.date, merged.etoh, 'r-', label='Cumulative EtOH')
+#     plt.grid()
+#     twin.plot(merged.date, merged.bec, 'b-', label='Cumulative BEC (axis scaled 1:6 of EtOH)')
+#     twin_scaled.plot(merged.date, merged.bec, 'g--', label='Cumulative BEC (not scaled by EtOH')
+#
+#     # Two lines for BEC: scaled and with fixed ration to EtOH Scale
+#     y0lim = ax.get_ylim()
+#     # 6 is the slope of the regression line obtained above
+#     twin.set_ylim(6 * y0lim[0], 6 * y0lim[1])
+#
+#     offset = 80
+#     new_fixed_axis = twin_scaled.get_grid_helper().new_fixed_axis
+#     twin_scaled.axis["right"] = new_fixed_axis(loc="right",
+#                                                axes=twin_scaled,
+#                                                offset=(offset, 0))
+#     twin_scaled.axis["right"].toggle(all=True)
+#
+#     ax.legend(loc=2)
+#     ax.set_xlabel("Date")
+#     ax.set_ylabel("Cumulative EtOH")
+#     twin.set_ylabel("Cumulative BEC (scaled by EtOH)")
+#     twin_scaled.set_ylabel("Cumulative BEC")
+#
+#     plt.title('Cumulative EtOH vs cumulative BEC for animal: %s' % mid)
+#     plt.tight_layout()
+# monkey_total_bec_vs_total_etoh_cumsum_lineplot(Monkey.objects.get(mky_id=10072))
+
+# MonkeyImage.objects.filter(method__contains='bec_vs_total_etoh').delete()
+# from plotting import plot_tools
+# plot_tools.create_cumulative_bec_vs_etoh_plots(True, True)
+
+#print MonkeyImage.objects.filter(method__contains='bec_vs_total_etoh').values_list('monkey__cohort').distinct()
+# from matrr.plotting import monkey_plots
+# monkey_plots.monkey_total_bec_vs_total_etoh_cumsum_lineplot(Monkey.objects.get(mky_id=10072))
 
 plt.show()

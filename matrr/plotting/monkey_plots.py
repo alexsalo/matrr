@@ -1,6 +1,7 @@
 __author__ = 'farro'
 from matplotlib import pyplot, cm, gridspec, colors
 import numpy
+import numpy as np
 import gc
 from numpy import polyfit, polyval
 from scipy.cluster import vq
@@ -9,10 +10,74 @@ from django.db.models import Min, Max, Avg, Q
 from matplotlib.cm import get_cmap
 from matplotlib.ticker import NullLocator, MaxNLocator
 import matplotlib
-
+import matplotlib.pyplot as plt
 from matrr.models import *
 from matrr.plotting import specific_callables, plot_tools
 from matrr.plotting import *
+
+
+def monkey_total_bec_vs_total_etoh_cumsum_lineplot(monkey):
+    from mpl_toolkits.axes_grid1 import host_subplot
+    import mpl_toolkits.axisartist as AA
+    matplotlib.rcParams['figure.figsize'] = DEFAULT_FIG_SIZE_ALEX
+    plt.clf()
+
+    mid = monkey.mky_id
+    bec = MonkeyBEC.objects.filter(monkey=mid).order_by('bec_collect_date')
+    if bec.count() < 10:
+        return False, False
+
+    df_bec = pd.DataFrame(list(bec.values_list('bec_mg_pct', 'bec_collect_date')),
+                          columns=['bec', 'date'])
+    df_bec.set_index('date', inplace=True)
+
+    mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=mid).order_by('drinking_experiment__dex_date')
+    df_etoh = pd.DataFrame(list(mtds.values_list('mtd_etoh_g_kg', 'drinking_experiment__dex_date')),
+                      columns=['etoh', 'date'])
+    df_etoh.set_index('date', inplace=True)
+
+    merged = df_etoh.join(df_bec)
+    merged = merged.fillna(0)
+    merged = merged.cumsum()
+    ax = host_subplot(111, axes_class=AA.Axes)
+    twin = ax.twinx()
+    twin_scaled = ax.twinx()
+
+    # This leads two duplicate ylabel and ylabel ticks for some reason
+    # merged.etoh.plot(ax=ax, style='r-', label='Cumulative EtOH')
+    # merged.bec.plot(ax=twin, style='b-', label='Cumulative BEC (axis scaled 1:6 of EtOH)')
+    # merged.bec.plot(ax=twin_scaled, style='g--', label='Cumulative BEC (not scaled by EtOH')
+
+    merged['date'] = merged.index
+    ax.plot(merged.date, merged.etoh, 'r-', label='Cumulative EtOH')
+    twin.plot(merged.date, merged.bec, 'b-', label='Cumulative BEC (axis scaled 1:6 of EtOH)')
+    twin_scaled.plot(merged.date, merged.bec, 'g--', label='Cumulative BEC (not scaled by EtOH')
+    twin_scaled.grid()
+    plt.xticks(visible=True)
+
+    # Two lines for BEC: scaled and with fixed ration to EtOH Scale
+    y0lim = ax.get_ylim()
+    # 6 is the slope of the regression line obtained above
+    twin.set_ylim(6 * y0lim[0], 6 * y0lim[1])
+
+    offset = 80
+    new_fixed_axis = twin_scaled.get_grid_helper().new_fixed_axis
+    twin_scaled.axis["right"] = new_fixed_axis(loc="right",
+                                               axes=twin_scaled,
+                                               offset=(offset, 0))
+    twin_scaled.axis["right"].toggle(all=True)
+
+    ax.legend(loc=2)
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Cumulative EtOH")
+    twin.set_ylabel("Cumulative BEC (scaled by EtOH)")
+    twin_scaled.set_ylabel("Cumulative BEC")
+
+    plt.title('Cumulative EtOH vs cumulative BEC for animal: %s' % mid)
+    plt.tight_layout()
+    fig = plt.gcf()  # hack to get current figure
+    return fig, True
+
 
 def monkey_weight_plot(monkey):
     """
@@ -1972,11 +2037,14 @@ MONKEY_ETOH_TOOLS_PLOTS = {'monkey_etoh_bouts_vol': (monkey_etoh_bouts_vol, 'Eth
                            'monkey_etoh_bouts_drinks': (monkey_etoh_bouts_drinks, 'Drinking Pattern'),
                            }
 # BEC-related plots
-MONKEY_BEC_TOOLS_PLOTS = { 'monkey_bec_bubble': (monkey_bec_bubble, 'BEC Plot'),
-                           'monkey_bec_consumption': (monkey_bec_consumption, "BEC Consumption "),
-                           'monkey_bec_monthly_centroids': (monkey_bec_monthly_centroids, "BEC Monthly Centroid Distance"),
-                           'monkey_bec_correlation': (monkey_bec_correlation, 'Monkey BEC correlation with EtOH'),
-                           }
+MONKEY_BEC_TOOLS_PLOTS = {
+    'monkey_bec_bubble': (monkey_bec_bubble, 'BEC Plot'),
+    'monkey_bec_consumption': (monkey_bec_consumption, "BEC Consumption "),
+    'monkey_bec_monthly_centroids': (monkey_bec_monthly_centroids, "BEC Monthly Centroid Distance"),
+    'monkey_bec_correlation': (monkey_bec_correlation, 'Monkey BEC correlation with EtOH'),
+    'monkey_total_bec_vs_total_etoh_cumsum_lineplot': (monkey_total_bec_vs_total_etoh_cumsum_lineplot, 'Monkey cumsum BEC vs EtOH lineplot'),
+}
+
 # Dictionary of protein monkey plots VIPs can customize
 MONKEY_PROTEIN_TOOLS_PLOTS = {'monkey_protein_stdev': (monkey_protein_stdev, "Protein Value (standard deviation)"),
                               'monkey_protein_pctdev': (monkey_protein_pctdev, "Protein Value (percent deviation)"),

@@ -14,6 +14,55 @@ from matrr.utils.gadgets import Treemap
 from matrr.plotting import * #specific_callables, plot_tools, DEFAULT_FIG_SIZE, DEFAULT_DPI, HISTOGRAM_FIG_SIZE, RHESUS_COLORS
 import matplotlib.patches as mpatches
 
+
+def cohort_total_bec_vs_total_etoh_scatterplot(cohort):
+    DOT_SIZE = 70
+    def _plot_regression_line_and_corr_text(ax, x, y, linecol='red', group_label=''):
+        fit = np.polyfit(x, y, deg=1)
+        ax.plot(x, fit[0] * x + fit[1], color=linecol)
+
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        text = group_label + ' Corr: %s' % np.round(x.corr(y), 4)
+        ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=14,
+                verticalalignment='top', bbox=props)
+
+    # 1. Accumulate total sum of bec, etoh for each animal in the cohort
+    cum_etoh_bec = pd.DataFrame(columns=['mid', 'cum_etoh', 'cum_bec', 'dc'])
+    for mid in MonkeyBEC.objects.filter(monkey__cohort=cohort).values_list('monkey', flat=True).distinct():
+        bec = sum(MonkeyBEC.objects.filter(monkey=mid).values_list('bec_mg_pct', flat=True))
+        etoh = MonkeyToDrinkingExperiment.objects.filter(monkey=mid).\
+            aggregate(Sum('mtd_etoh_g_kg'))['mtd_etoh_g_kg__sum']
+        dc = Monkey.objects.get(mky_id=mid).mky_drinking_category
+        cum_etoh_bec.loc[len(cum_etoh_bec) + 1] = [mid, np.round(etoh, 2), np.round(bec, 2), dc]
+
+    # get to set default values for animals with no DC
+    cum_etoh_bec['color'] = [DRINKING_CATEGORIES_COLORS.get(dc, 'k') for dc in cum_etoh_bec.dc]
+    cum_etoh_bec.set_index('mid', inplace=True)
+    fig, axs = plt.subplots(2, 1, figsize=DEFAULT_FIG_SIZE, facecolor='w', edgecolor='k')
+
+    cum_etoh_bec.plot(kind='scatter', x='cum_etoh', y='cum_bec', c=cum_etoh_bec.color, s=DOT_SIZE, ax=axs[0])
+    axs[0].set_xlabel('Cumalative EtOH')
+    axs[0].set_ylabel('Cumalative BEC')
+    _plot_regression_line_and_corr_text(axs[0], cum_etoh_bec.cum_etoh, cum_etoh_bec.cum_bec)
+    for label, x, y in zip(cum_etoh_bec.index, cum_etoh_bec.cum_etoh, cum_etoh_bec.cum_bec):
+        axs[0].annotate(int(label), (x, y))
+
+
+    # remove heteroscedasticity
+    cum_etoh_bec[['cum_etoh', 'cum_bec']] = np.log(cum_etoh_bec[['cum_etoh', 'cum_bec']])
+    cum_etoh_bec.plot(kind='scatter', x='cum_etoh', y='cum_bec', c=cum_etoh_bec.color, s=DOT_SIZE, ax=axs[1])
+    axs[1].set_xlabel('Log(Cumalative EtOH)')
+    axs[1].set_ylabel('Log(Cumalative BEC)')
+    _plot_regression_line_and_corr_text(axs[1], cum_etoh_bec.cum_etoh, cum_etoh_bec.cum_bec)
+
+    plt.setp(axs[0].get_xticklabels(), visible=True)
+    plt.tight_layout()
+    plt.suptitle('Cumulative BEC vs cumulative EtOH in cohort %s' % cohort)
+    fig.subplots_adjust(top=0.95)
+
+    return fig, True
+
+
 def cohort_oa_cumsum_drinking_pattern_22hr(cohort):
     return _cohort_oa_cumsum_drinking_pattern(cohorts=[cohort], schedule='22hr', remove_trend=False)
 def cohort_oa_cumsum_drinking_pattern_daylight(cohort):
@@ -1191,6 +1240,7 @@ COHORT_ETOH_TOOLS_PLOTS = {"cohort_etoh_bihourly_treemap": (cohort_etoh_bihourly
 # BEC plots
 COHORT_BEC_TOOLS_PLOTS = {'cohort_bec_firstbout_monkeycluster': (cohort_bec_firstbout_monkeycluster, 'Monkey BEC vs First Bout'),
                           'cohort_bec_correlation': (cohort_bec_correlation, "Cohort's total EtOH - BEC correlation"),
+                          'cohort_total_bec_vs_total_etoh_scatterplot': (cohort_total_bec_vs_total_etoh_scatterplot, 'Cohort cumulative BEC vs cumulative EtOH'),
                           }
 # Dictionary of protein cohort plots VIPs can customize
 COHORT_PROTEIN_TOOLS_PLOTS = {"cohort_protein_boxplot": (cohort_protein_boxplot, "Cohort Protein Boxplot")}

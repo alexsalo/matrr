@@ -3936,6 +3936,7 @@ class MonkeyBEC(models.Model):
     bec_exper = models.CharField('Experiment Type', max_length=20, null=True, blank=True)
     bec_exper_day = models.IntegerField('Experiment Day', editable=False, null=True, blank=False)
     bec_session_start = models.TimeField("Session Start", editable=False, null=True, blank=False)
+    # bec_sample and bec_session start were messed up sometimes so watch out for those
     bec_sample = models.TimeField("Time of Sample", editable=False, null=True, blank=False)
     bec_weight = models.FloatField("Monkey Weight (week)", null=True, blank=True)
     bec_vol_etoh = models.FloatField("Etoh at sample time, ml", null=True, blank=True)
@@ -4944,8 +4945,8 @@ class MonkeyProteomic(models.Model):
     mpc_expression = models.FloatField('Peptide Sequence Expression', blank=False, null=False, help_text='log2 transformed followed by mean centering (central tendency adjustment) using Inferno software')
 
     # Columns to display
-    columns = (['monkey__mky_id', 'mpc_peptide', 'proteomic_protein__pro_uniprot', 'proteomic_protein__ppr_name'],
-               ['mky_id', 'peptide', 'uniprot', 'protein'])
+    columns = (['monkey__mky_id', 'mpc_peptide', 'proteomic_protein__pro_uniprot', 'proteomic_protein__ppr_name', 'mpc_expression'],
+               ['mky_id', 'peptide', 'uniprot', 'protein', 'expression'])
 
     def __unicode__(self):
         if self.monkey.mky_drinking:
