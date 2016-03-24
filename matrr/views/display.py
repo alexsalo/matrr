@@ -64,10 +64,10 @@ def __set_images(cohort, user):
 
 
 def __cohorts_view(request, cohorts, template_name):
-    cohorts_all = Cohort.objects.nicotine_filter(request.user).order_by('coh_cohort_name')
+    cohorts_all = Cohort.objects.nicotine_filter(request.user).order_by('coh_cohort_name').\
+        values_list('coh_cohort_id', 'coh_cohort_name')
+    cohorts_all = [(id, name[5:]) for id, name in cohorts_all]  # get rid of INIA and CYNO in names
     cohorts = [__set_images(cohort, request.user) for cohort in cohorts]
-    # coh_ids = [c.coh_cohort_id for c in cohorts]
-    # coh_names = [c.coh_cohort_name for c in cohorts]
 
     ## Paginator stuff
     if len(cohorts) > 0:
@@ -97,6 +97,9 @@ def cohort_details(request, **kwargs):
         return redirect(reverse('cohorts'))
     order_by = request.GET.get('order_by', 'pk')
     monkeys = cohort.monkey_set.all().order_by(order_by)
+    cohorts_all = Cohort.objects.nicotine_filter(request.user).order_by('coh_cohort_name').\
+        values_list('coh_cohort_id', 'coh_cohort_name')
+    cohorts_all = [(id, name[5:]) for id, name in cohorts_all]  # get rid of INIA and CYNO in names
 
     from matrr.models import NecropsySummary
     necropsy_summary = NecropsySummary.objects.filter(monkey__in=monkeys)
@@ -105,7 +108,8 @@ def cohort_details(request, **kwargs):
     return render_to_response('matrr/cohort.html',
                               {'cohort': cohort, 'images': images, 'coh_data': coh_data,
                                'necropsy_summary': necropsy_summary,
-                               'plot_gallery': True, 'has_categories': has_categories, 'monkeys': monkeys},
+                               'plot_gallery': True, 'has_categories': has_categories,
+                               'monkeys': monkeys, 'cohorts_all': cohorts_all},
                               context_instance=RequestContext(request))
 
 

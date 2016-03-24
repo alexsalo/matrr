@@ -12,6 +12,13 @@
 
 
 {% block content %}
+    <div class='center-content' style='margin: 5px 0px 0px 5px;'>
+        {% for cohort_id, cohort_name in cohorts_all %}
+            <a href="{% url 'cohort-details' cohort_id %}">{{ cohort_name }} | </a>
+        {% endfor %}
+    </div>
+
+
 	<div id='large-headline'>
 		{% if cohort.coh_upcoming %}Upcoming{% else %}Available{% endif %} Cohort: {{ cohort.coh_cohort_name }}
 	</div>

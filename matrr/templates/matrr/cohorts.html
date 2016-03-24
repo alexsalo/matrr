@@ -16,8 +16,8 @@ All Cohorts
 	<div id="headline">{% block content_title %}All Cohorts{% endblock %}</div>
 
     <div class='center-content'>
-            {% for cohort in cohorts_all %}
-                <a href="{% url 'cohort-details' cohort.coh_cohort_id %}">{{ cohort.shortName }} | </a>
+            {% for cohort_id, cohort_name in cohorts_all %}
+                <a href="{% url 'cohort-details' cohort_id %}">{{ cohort_name }} | </a>
             {% endfor %}
     </div>
 
