@@ -151,7 +151,7 @@ m = Monkey.objects.get(mky_id=10077)
 #                 TRUNCATE=True)
 
 plot_mense_etoh_progesterone_scaled_two_axis(m, Y1MAX = 4, Y2MAX=10, FONT_SIZE=14, TICK_LABEL_SIZE = 14, PROGESTERON_LW=2.5,
-                TITLE='Longitudial ethanol intakes and menstrual cycle progesterone and menses, animal id: 10072',
+                TITLE='Longitudinal ethanol intakes and menstrual cycle progesterone and menses, animal id: 10072',
                 TRUNCATE=True, pre_post_luni=True)
 
 

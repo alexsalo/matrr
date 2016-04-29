@@ -2352,7 +2352,7 @@ def load_monkey_hormone_challenge_data(file_name, delim=',', username=None):
         header = read_data[0].split(delim)
         for i, head in enumerate(header):
             for field in possible_fields:
-                if field.split('_')[1] in head.lower():
+                if field.split('_')[1] in head.lower().replace('-', ''):  # DHEA-S -> dheas
                     present_fields[field] = i
         present_fields['monkey'] = header.index('Animal ID')  # Find where is animal reference
         print "The following columns are recognized in the file: %s" % present_fields
@@ -2370,6 +2370,8 @@ def load_monkey_hormone_challenge_data(file_name, delim=',', username=None):
             try:
                 monkey = dingus.get_monkey_by_number(row_data[present_fields['monkey']])
                 challenge = row_data[present_fields['mhc_challenge']]
+                if challenge == 'DEX':
+                    challenge = 'Dexamethasone'
                 date = dingus.get_datetime_from_steve(row_data[present_fields['mhc_date']])
                 time = row_data[present_fields['mhc_time']]
                 if time.lower() in timepoints_dict:

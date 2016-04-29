@@ -3219,6 +3219,19 @@ from matrr.utils.database import load
 
 # load.load_monkey_hormone_challenge_data('/home/alex/win-share/matrr_sync/vanessa_endocrine/clean/coh6a_hormone_challenge_clean.csv',
 #                                         delim=',', username='vwakeling')
+
+# from matrr.utils.database import load
+# load.load_monkey_hormone_challenge_data('/home/alex/win-share/matrr_sync/vanessa_endocrine/clean/coh9_hormone_challenge_clean.csv',
+#                                         delim=',', username='vwakeling')
+# load.load_monkey_hormone_challenge_data('/home/alex/win-share/matrr_sync/vanessa_endocrine/clean/coh4_hormone_challenge_clean.csv',
+#                                         delim=',', username='vwakeling')
+# load.load_monkey_hormone_challenge_data('/home/alex/win-share/matrr_sync/vanessa_endocrine/clean/coh5_hormone_challenge_clean.csv',
+#                                         delim=',', username='vwakeling')
+# load.load_monkey_hormone_challenge_data('/home/alex/win-share/matrr_sync/vanessa_endocrine/clean/coh6b_hormone_challenge_clean.csv',
+#                                         delim=',', username='vwakeling')
+# load.load_monkey_hormone_challenge_data('/home/alex/win-share/matrr_sync/vanessa_endocrine/clean/coh6a_hormone_challenge_clean.csv',
+#                                         delim=',', username='vwakeling')
+
 # MonkeyHormoneChallenge.content_print()
 #
 # print MonkeyHormoneChallenge.objects.filter(monkey__cohort__coh_cohort_name="INIA Rhesus 6a").count()
@@ -3799,4 +3812,107 @@ BEC ETOH CUM PLOT TOOLS
 # from matrr.plotting import monkey_plots
 #monkey_plots.monkey_total_bec_vs_total_etoh_cumsum_lineplot(Monkey.objects.get(mky_id=10072))
 
+
+"""
+26 March 2016
+WLS
+"""
+# def wls(x, y, tau=0.3):
+#     """
+#     :param x: feature matrix
+#     :param y: target vector
+#     :param tau: smoothing factor - Gaussian bump's width
+#     :return: plot of matplotlib
+#     """
+#     x = np.mat(x).T
+#     y = np.mat(y).T
+#     m = x.shape[0] #number of examples
+#
+#     dummy = np.mat(np.ones((m,), dtype=np.int))
+#     X = np.hstack((dummy.T, x)) #design matrix
+#
+#     #try predicting on new possible examples
+#     xpred = np.linspace(x.min(), x.max(), 200)
+#     ypred = np.zeros(200)
+#
+#     for i in xrange(len(xpred)):
+#         xval = xpred[i]
+#
+#         W = np.eye(m) #weights for current ith example
+#         theta = np.zeros(m) #thetas for that
+#
+#         #fill weights via Gaussian sigmoid
+#         for j in xrange(m):
+#             W[j][j] = np.exp(-np.linalg.norm(x[j] - xval)**2 / 2*tau**2)
+#
+#         #calc theta
+#         theta = np.linalg.inv(X.T * W * X) * (X.T * (W*y))
+#
+#         #make prediction
+#         ypred[i] = np.mat([1, xval]) * theta
+#
+#     plt.plot(x, y, 'ro', xpred, ypred, 'b-')
+#     pylab.show()
+#     return plt
+#
+# mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=10072).order_by('drinking_experiment__dex_date')
+# df = pd.DataFrame(list(mtds.values_list('mtd_mense_started', 'drinking_experiment__dex_date', 'mtd_etoh_g_kg')), columns=['mense','date', 'etoh'])
+#
+# print wls(xrange(len(df.mense)), df.etoh, tau=0.45)
+
+# print Account.objects.users_with_perm('process_shipments_email').values_list('email', flat=True)
+# print Group.objects.filter(name='ShippingProcessors').values_list('permissions__name')
+# print Group.objects.filter(name='ShippingProcessors').values_list('user__email')
+
+# from sklearn.datasets import load_boston
+# # # np.savetxt('/home/alex/Dropbox/knowledge_box/lwlr/house-features.txt', load_boston().data, '%.4f')
+# # # np.savetxt('/home/alex/Dropbox/knowledge_box/lwlr/house-prices.txt', load_boston().target, '%.4f')
+# # data = load_boston()
+# # x = data.data
+# # y = np.mat([data.target])
+# # print x.shape, y.shape
+# # print y.T
+# # comb = np.concatenate((x, y.T), axis=1)
+# # np.savetxt('/home/alex/Dropbox/knowledge_box/lwlr/houses.txt', comb, '%.4f')
+# print load_boston()['DESCR']
+
+"""
+13 April 2016
+PCA stuff
+"""
+
+"""
+29 April 2016
+Fix water induction in 6a
+"""
+# print pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.Ind().filter(monkey__mky_id=10078).
+#                         order_by('drinking_experiment__dex_date').
+#                         values_list('mtd_etoh_g_kg', 'mtd_etoh_conc','mtd_veh_intake')))
+
+#print pd.DataFrame(list(ExperimentEvent.objects.filter(monkey__mky_id=10078).filter(eev_dosevalues_list()))
+
+
+# Remove Water Induction MTDS
+# MonkeyToDrinkingExperiment.objects.Ind().\
+#                         filter(monkey__cohort__coh_cohort_name='INIA Rhesus 6a').\
+#                         order_by('drinking_experiment__dex_date').\
+#                         filter(drinking_experiment__dex_date__lte='2010-07-27').delete()
+
+
+# print_full(pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.Ind().
+#                         filter(monkey__cohort__coh_cohort_name='INIA Rhesus 6a').
+#                         order_by('drinking_experiment__dex_date').
+#                         values_list('drinking_experiment__dex_date', 'mtd_etoh_g_kg')),
+#                         columns=['date', 'gkg']))
+
 plt.show()
+
+
+
+
+
+
+
+
+
+

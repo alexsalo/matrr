@@ -230,6 +230,14 @@ def plot_min_etoh_showcases(FONT_SIZE=20):
     axs[9].set_ylabel('LD', fontsize=FONT_SIZE)
 
     fig.suptitle('EtOH consumption during first 10 minutes as percent (%) of daily allotment', fontsize=FONT_SIZE)
+    plt.text(0.05, 0.5, 'EtOH in first 10 min (% of daily allotment)',
+        horizontalalignment='right',
+        verticalalignment='center',
+        rotation='vertical',
+        transform=fig.transFigure, fontsize=FONT_SIZE)
+    plt.text(0.5, 0.05, 'Day of Induction',
+        horizontalalignment='center',
+        transform=fig.transFigure, fontsize=FONT_SIZE)
     fig.subplots_adjust(top=0.93)
 #plot_min_etoh_showcases()
 
@@ -320,13 +328,14 @@ def etoh_during_ind_for_monkeys(mins):
 
 # for c in df.coh_id.unique():
 #     print c, df[df.coh_id == c].dc.value_counts()
-mm = get_monkeys()
-fig, axs = plt.subplots(2, 2, figsize=(30, 20), facecolor='w', edgecolor='k')
-for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
-    m = mm.filter(mky_drinking_category=dc)
-    mtd = MonkeyToDrinkingExperiment.objects.filter(monkey__in=m).filter(mtd_etoh_g_kg__gte=1.4)
-    df = pd.DataFrame(list(mtd.values_list('mtd_max_bout')), columns=['max_bout'])
-    df.max_bout.hist(ax=axs[i % 2, (i >> 1) % 2])
-    axs[i % 2, (i >> 1) % 2].set_title(dc)
+
+# mm = get_monkeys()
+# fig, axs = plt.subplots(2, 2, figsize=(30, 20), facecolor='w', edgecolor='k')
+# for i, dc in enumerate(['LD', 'BD', 'HD', 'VHD']):
+#     m = mm.filter(mky_drinking_category=dc)
+#     mtd = MonkeyToDrinkingExperiment.objects.filter(monkey__in=m).filter(mtd_etoh_g_kg__gte=1.4)
+#     df = pd.DataFrame(list(mtd.values_list('mtd_max_bout')), columns=['max_bout'])
+#     df.max_bout.hist(ax=axs[i % 2, (i >> 1) % 2])
+#     axs[i % 2, (i >> 1) % 2].set_title(dc)
 
 pylab.show()

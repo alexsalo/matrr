@@ -71,6 +71,12 @@ class Enumeration(object):
     def __getattr__(self, name):
         return self.enum_dict[name]
 
+    def get_verbose(self, v):
+        for tup in self.enum_list:
+            if tup[0] == v:
+                return tup[1]
+        return False
+
     def __iter__(self):
         return self.enum_list.__iter__()
 
@@ -188,17 +194,19 @@ PharmalogicalChallengeChoice = [
     ('Dexamethasone', 'Dexamethasone'),
     ('Ethanol', 'Ethanol'),
 ]
-MonkeyHormoneChoice = [
-    ("doc", "Deoxycorticosterone"),
-    ("ald", "Aldosterone"),
-    ("vas", "Vasopressin"),
-    ("acth", "ACTH"),
-    ("gh", "GH"),
-    ("estra", "17beta-estradiol"),
-    ("cort", "Cortisol"),
-    ("dheas", "DHEAS"),
-    ("test", "Testosterone"),
-]
+MonkeyHormoneChoice = Enumeration([
+    ("doc", "Deoxycorticosterone", "Deoxycorticosterone"),
+    ("ald", "Aldosterone", "Aldosterone"),
+    ("vas", "Vasopressin", "Vasopressin"),
+    ("acth", "ACTH", "ACTH"),
+    ("gh", "GH", "GH"),
+    ("estra", "17beta-estradiol", "17beta-estradiol"),
+    ("cort", "Cortisol", "Cortisol"),
+    ("dheas", "DHEAS", "DHEAS"),
+    ("test", "Testosterone", "Testosterone"),
+    ("crh", "CRH", "CRH"),
+])
+
 
 # These are the method names which ONLY VIP members can _see_
 VIP_IMAGES_LIST = (
@@ -4577,9 +4585,9 @@ class MonkeyHormoneChallenge(models.Model):
 
     Vanessa
     """
-    UNITS = {'mhc_doc': 'pg/ml', 'mhc_vas': 'pg/ml', 'mhc_acth': 'pg/ml', 'mhc_gh': 'pg/ml', 'mhc_estra': 'pg/ml',
+    UNITS = {'mhc_doc': 'pg/ml', 'mhc_vas': 'pg/ml', 'mhc_acth': 'pg/ml', 'mhc_gh': 'pg/ml', 'mhc_estra': 'pg/ml', 'mhc_ald': 'pg/ml',
              'mhc_cort': 'ug/dl', 'mhc_dheas': 'ug/ml',
-             'mhc_test': 'ng/ml', 'mhc_ald': 'ng/ml', 'mhc_crh': 'ng/ml',
+             'mhc_test': 'ng/ml', 'mhc_crh': 'ng/ml',
              }
     """
     QNS - quantity not sufficient

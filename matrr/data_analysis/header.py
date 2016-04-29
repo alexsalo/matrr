@@ -104,7 +104,7 @@ def remove_outliers(nparray, m=1.5):
 def plotMense(df, ax=plt):
     [ax.axvspan(date, date + timedelta(days=4), color='r', alpha=0.3) for date in list(df.date[df.mense])]
 def normalize(df):
-    return (df- df.mean()) / (df.std())
+    return (df - df.mean()) / (df.std())
 def print_full(x):
     pd.set_option('display.max_rows', len(x))
     print(x)

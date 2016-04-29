@@ -283,8 +283,8 @@ def build_all_bec_panels(regenerate_data=False):
 #build_all_bec_panels(regenerate_data=False)
 
 
-build_bec_panel(schedule='22hr', split_by='bec_mgpct', regenerate=False,
-                group1_label='< 80 mg pct', group2_label='>= 80 mg pct',
+build_bec_panel(schedule='22hr', split_by='bec_more2stdev', regenerate=False,
+                group1_label='Typical', group2_label='> 2 SD',
                 plot_func=plot_bec_correlation_by_dc_12combinedpanels, save=False)
 plt.show()
 
