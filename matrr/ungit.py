@@ -3905,6 +3905,87 @@ Fix water induction in 6a
 #                         values_list('drinking_experiment__dex_date', 'mtd_etoh_g_kg')),
 #                         columns=['date', 'gkg']))
 
+"""
+2 May, 2016
+Age of Induction
+"""
+# COHORT_NAMES = map(lambda x: 'INIA Rhesus ' + x, ['10', '4', '5', '6a', '6b', '7a', '7b'])
+# ml_cohorts = Cohort.objects.all()#filter(coh_cohort_name__in=COHORT_NAMES)
+# ml_monkeys = Monkey.objects.filter(cohort__in=ml_cohorts).exclude(mky_drinking_category=None)
+# monkey_dates = pd.DataFrame(list(ml_monkeys.values_list('mky_id', 'cohort__coh_cohort_id', 'mky_birthdate')),
+#                             columns=['mid', 'cohort', 'birthdate'])
+# print monkey_dates
+#
+# cohort_events = pd.DataFrame(list(CohortEvent.objects.filter(cohort__in=ml_cohorts).
+#                                   filter(event__evt_name__contains='Ethanol Induction Begin').
+#                                   values_list('cohort__coh_cohort_id', 'cev_date')),
+#                              columns=['cohort', 'etoh_induction_begin'])
+# print cohort_events
+#
+# merged = monkey_dates.merge(cohort_events, on='cohort', how='left').set_index('mid')
+# merged['days_at_induction'] = merged.etoh_induction_begin - merged.birthdate
+# merged['days_at_induction'] = (merged['days_at_induction'] / np.timedelta64(1, 'D')).astype(int)
+#
+# print_full(merged)
+#
+# #merged['days_at_induction'].plot(kind='box')
+#
+# for mky in ml_monkeys:
+#     mky.mky_days_at_etoh_induction = merged.ix[mky.mky_id].days_at_induction
+#     mky.save()
+
+# test
+# print pd.DataFrame(list(Monkey.objects.all().exclude(mky_drinking_category=None).
+#                         values_list('mky_id', 'cohort__coh_cohort_id', 'mky_birthdate', 'mky_days_at_etoh_induction')),
+#                    columns=['mid', 'cohort', 'birthdate', 'etoh_induction'])
+
+
+COHORT_NAMES = map(lambda x: 'INIA Rhesus ' + x, ['4', '5', '6a', '6b', '7a', '7b', '10'])
+# for cohort in COHORT_NAMES:
+#     #print cohort
+#     ml_monkeys = Monkey.objects.filter(cohort__coh_cohort_name=cohort).exclude(mky_drinking_category=None)
+#     monkey_dates = pd.DataFrame(list(ml_monkeys.values_list('mky_id', 'cohort__coh_cohort_id', 'mky_birthdate')),
+#                                 columns=['mid', 'cohort', 'birthdate'])
+#     #print monkey_dates
+#
+#     cohort_events = pd.DataFrame(list(CohortEvent.objects.filter(cohort__coh_cohort_name=cohort).
+#                                       filter(event__evt_name__iexact='Ethanol Induction Begin').
+#                                       values_list('cohort__coh_cohort_id', 'cev_date')),
+#                                  columns=['cohort', 'etoh_induction_begin'])
+#     #print cohort_events
+#
+#     merged = monkey_dates.merge(cohort_events, on='cohort', how='left').set_index('mid')
+#     merged['days_at_induction'] = merged.etoh_induction_begin - merged.birthdate
+#     merged['days_at_induction'] = (merged['days_at_induction'] / np.timedelta64(1, 'D')).astype(int)
+#
+#     #print_full(merged)
+#     #print merged['days_at_induction'].mean()
+#     print np.round((merged['days_at_induction'].mean() - 60) / 365, 2)
+
+# for cohort in COHORT_NAMES:
+#     beg15gkg = CohortEvent.objects.filter(cohort__coh_cohort_name=cohort).\
+#                                    get(event__evt_name__contains='Ethanol Induction Begin').cev_date
+#     beg15gkg += timedelta(days=61)
+#
+#     sec6mooa = CohortEvent.objects.filter(cohort__coh_cohort_name=cohort).\
+#                                    get(event__evt_name__iexact='Second 6 Month Open Access End').cev_date
+#     sec6mooa -= timedelta(days=15)
+#
+#     #print cohort, beg15gkg, sec6mooa
+#     ml_monkeys = Monkey.objects.filter(cohort__coh_cohort_name=cohort).exclude(mky_drinking_category=None)
+#
+#     # begmtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=ml_monkeys)\
+#     #                                             .filter(drinking_experiment__dex_date=beg15gkg)\
+#     #                                             .values_list('mtd_weight', flat=True)
+#     # #print begmtds
+#     # print np.round(np.mean(begmtds), 2)
+#
+#     soamtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=ml_monkeys)\
+#                                                 .filter(drinking_experiment__dex_date=sec6mooa)\
+#                                                 .values_list('mtd_weight', flat=True)
+#     #print soamtds
+#     print np.round(np.mean(soamtds), 2)
+
 plt.show()
 
 

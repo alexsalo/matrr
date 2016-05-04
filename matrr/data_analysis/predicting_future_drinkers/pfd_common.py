@@ -13,3 +13,11 @@ def normalize_float_columns(df):
     float_columns = [column for column in df.columns if df[column].dtype == 'float64']
     df[float_columns] = normalize(df[float_columns])
     return df
+
+
+def print_full(x):
+    pd.set_option('display.max_columns', len(x.columns))
+    pd.set_option('display.max_rows', len(x))
+    print(x)
+    pd.reset_option('display.max_rows')
+    pd.reset_option('display.max_columns')
