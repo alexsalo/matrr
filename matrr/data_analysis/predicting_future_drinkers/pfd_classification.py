@@ -1,7 +1,7 @@
 from pfd_get_data import *
 from pfd_plots import *
 from sklearn.ensemble import RandomForestClassifier, BaggingClassifier
-from sklearn import cross_validation
+from sklearn import cross_validation, metrics
 
 RF = RandomForestClassifier(n_estimators=100)
 BAGGING = BaggingClassifier(RF, n_estimators=10, bootstrap=True, n_jobs=2)
@@ -127,4 +127,53 @@ def test_selected_feature(step, runs=20):
 
 # print 0.74*(0.52*0.91 + 0.48 * 0.90)
 
+
+# Test By Cohort (Holdouts)
+def accuracy_by_cohort(step, exclude_cohs_ids=[]):
+    def report_results(clf, expected, predicted):
+        print("\nClassification report for classifier %s:\n%s\n" %
+              (clf, metrics.classification_report(expected, predicted)))
+        print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
+        print("\nAccuracy score:\n%s" % metrics.accuracy_score(expected, predicted))
+    print '\n--------------By Cohort-------------'
+    df = WHICH_DF[step]
+    coh_ids = np.unique(df['Cohort'])
+    gb = df.groupby('Cohort')
+    x, y = select_features_for(step)
+
+    global_expected = []
+    global_predicted = []
+    for coh_id in coh_ids:
+        print coh_id
+        if coh_id not in exclude_cohs_ids:
+            expected = []
+            predicted = []
+
+            print Cohort.objects.get(coh_cohort_id=coh_id)
+            index = gb.get_group(coh_id).index
+
+            # Train on all but one cohort
+            RF.fit(x[~x.index.isin(index)], y[~x.index.isin(index)])
+
+            # Predict on holdout cohort
+            y_pred = RF.predict(x[x.index.isin(index)])
+
+            # Print what you got
+            y_test = y[x.index.isin(index)]
+
+            expected += list(y_test); global_expected += list(y_test);
+            predicted += list(y_pred); global_predicted += list(y_pred);
+
+            y_pred = pd.DataFrame(list(y_pred), columns=['predicted'], index=y_test.index)
+            print pd.concat([y_test, y_pred], axis=1, join='inner')
+            report_results(RF, expected, predicted)
+            print '-----------------------------------\n'
+    report_results(RF, global_expected, global_predicted)
+
+# accuracy_by_cohort('Heavy vs. Not Heavy')
+# accuracy_by_cohort('LD vs. BD') # exclude_cohs_ids=[7])
+# accuracy_by_cohort('HD vs. VHD', exclude_cohs_ids=[9, 5])
+
+print 0.78*(0.5*0.91 + 0.5 * 0.89)
+print 0.5 * (16.0/25)
 plt.show()

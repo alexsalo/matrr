@@ -84,18 +84,18 @@ def plot_deltas_boxplots_for_feature(df, feature, ax):
     ax.grid()
     ax.set_title(BEHAVIOR_ATTRIBUTES[feature])
 
-    # T-test
-    dcs = f_df['Drinking Category'].unique()
-    import scipy
-    for x_pos, d in zip([0.18, 0.5, 0.82], [DELTA1, DELTA2, DELTAT]):
-        a = f_df[f_df['Drinking Category'] == dcs[0]][d]
-        b = f_df[f_df['Drinking Category'] == dcs[1]][d]
-        if HEAVY in dcs:
-            z, p = scipy.stats.mannwhitneyu(a, b)
-        else:
-            z, p = scipy.stats.ttest_ind(a, b, equal_var=False)
-        ax.text(x_pos, 0.02, 'p=%.3f' % p, transform=ax.transAxes,
-                horizontalalignment='center', fontsize=16)
+    # # T-test
+    # dcs = f_df['Drinking Category'].unique()
+    # import scipy
+    # for x_pos, d in zip([0.18, 0.5, 0.82], [DELTA1, DELTA2, DELTAT]):
+    #     a = f_df[f_df['Drinking Category'] == dcs[0]][d]
+    #     b = f_df[f_df['Drinking Category'] == dcs[1]][d]
+    #     if HEAVY in dcs:
+    #         z, p = scipy.stats.mannwhitneyu(a, b)
+    #     else:
+    #         z, p = scipy.stats.ttest_ind(a, b, equal_var=False)
+    #     ax.text(x_pos, 0.02, 'p=%.3f' % p, transform=ax.transAxes,
+    #             horizontalalignment='center', fontsize=16)
 
 
 def plot_deltas_boxplots_multiple_features(step, save_path=None):
@@ -140,24 +140,26 @@ def create_pdp(df, target, deltas):
     fig.subplots_adjust(top=0.93)
 
 
-def create_pdp_grid(df, target, deltas, save_path):
+def create_pdp_grid(step, target, save_path=None):
     matplotlib.rcParams.update({'font.size': 12})
-    n = len(deltas)
-    x, y = df[deltas], df['Drinking Category']
-    if 'Age at EtOH induction (days)' in x.columns:
-        x['Age at EtOH induction (days)'] /= 365
-    clf = GradientBoostingClassifier(n_estimators=100, max_depth=4,
-                                     learning_rate=0.1, random_state=1)
-    clf.fit(x, y)
-
+    df = WHICH_DF[step]
+    x, y = df[WHICH_FEATURES[step]], df['Drinking Category']
+    x = x.drop('Sex', axis=1)
+    n = len(x.columns)
+    if 'Age of EtOH\ninduction (days)' in x.columns:
+        x['Age of EtOH\ninduction (days)'] /= 365
     columns = []
-    for i, f in enumerate(deltas):
+    for i, f in enumerate(x.columns):
         f = f.replace('days', 'years')
         if '_d' in f:
             columns.append(BEHAVIOR_ATTRIBUTES[f[:-3]] + ' ' + D_DELTA[f[-3:]])
         else:
             columns.append(f)
     x.columns = columns
+
+    clf = GradientBoostingClassifier(n_estimators=100, max_depth=4,
+                                     learning_rate=0.1, random_state=1)
+    clf.fit(x, y)
 
     layout = []
     for i in xrange(n):
@@ -172,6 +174,7 @@ def create_pdp_grid(df, target, deltas, save_path):
 
     plt.suptitle('Partial dependence grid: likelihood of becoming ' + target)
     [axs[i].set_ylabel('') for i in range(n*n) if i not in range(0, n*n, n)]   # no ylabel except left column
+    axs[0].set_ylabel(columns[0])
     [axs[i].set_xlabel('') for i in range(n*n - n)]                            # no xlabel except last row
     [axs[i].text(0.5, 0.91, 'Partial dependence', transform=axs[i].transAxes,
                  horizontalalignment='center') for i in range(0, n*n, n + 1)]  # diagonal label
@@ -179,8 +182,9 @@ def create_pdp_grid(df, target, deltas, save_path):
     fig.subplots_adjust(top=0.955, hspace=0.1, wspace=0.14)
 
     if save_path is not None:
-        fig.savefig(save_path + '_'.join(deltas).lower().replace(' ', '_') + '.png', dpi=PNG_DPI, format='png')
-        fig.savefig(save_path + '_'.join(deltas).lower().replace(' ', '_') + '.pdf', dpi=PDF_DPI, format='pdf')
+        fname = '_'.join(x.columns).lower().replace(' ', '_').replace('\\', '').replace('$', '')
+        fig.savefig(save_path + fname + '.png', dpi=PNG_DPI, format='png')
+        fig.savefig(save_path + fname + '.pdf', dpi=PDF_DPI, format='pdf')
 
 
 # plot_deltas_for_feature(data_low_heavy, 'etoh_bout')
@@ -188,9 +192,11 @@ def create_pdp_grid(df, target, deltas, save_path):
 # generate_plot_deltas_for_feature(data_low_heavy,'/home/alex/Dropbox/matrr_predicting_drinkers/dev_images/deltas_col/')
 
 
+# create_pdp_grid('Heavy vs. Not Heavy', target=HEAVY, save_path=WD+'dev_images/pdp_grids/light_heavy/')
 # create_pdp_grid(data_ld_bd, target='LD', deltas=FEATURES_LD_BD, save_path=WD+'dev_images/pdp_grids/ld_bd/')
 # create_pdp_grid(data_hd_vhd, target='VHD', deltas=FEATURES_HD_VHD, save_path=WD+'dev_images/pdp_grids/hd_vhd/')
 # print_full(data_hd_vhd)
+
 
 #heavyf = [f for f in FEATURES_LIGHT_HEAVY if f not in ['Sex']]  # , 'max_bout_d2', 'Age at intoxication (days)']]
 # heavy_p1 = heavyf[:3]

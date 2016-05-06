@@ -63,7 +63,7 @@ def generate_data():
     return result
 
 
-def get_features(regenerate):
+def get_features(regenerate=False):
     if regenerate:
         df = generate_data()
     else:
