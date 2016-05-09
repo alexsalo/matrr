@@ -112,7 +112,7 @@ class ShipmentAdmin(admin.ModelAdmin):
     req_request_cohort.short_description = 'Cohort'
 
     def req_request_user(self, obj):
-        return obj.req_rfequest.user.username
+        return obj.req_request.user.username
     req_request_user.short_description = 'Requesting User'
 
     def req_request_pk(self, obj):
