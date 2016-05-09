@@ -467,7 +467,7 @@ calbtn = u'''<img src="%simages/calendar.gif" alt="calendar" id="%s_btn" style="
 
 class DateTimeWidget(forms.widgets.TextInput):
     def __init__(self, attrs=None):
-        default_attrs = {'min_date': '20000101', 'max_date': '20120101'}
+        default_attrs = {'min_date': '20000101', 'max_date': '20200101'}
         if attrs:
             default_attrs.update(attrs)
         #super(forms.widgets.TextInput, self).__init__(default_attrs) # This worked.  Seems an arbitrary change
