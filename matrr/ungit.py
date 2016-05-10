@@ -3940,7 +3940,7 @@ Age of Induction
 #                    columns=['mid', 'cohort', 'birthdate', 'etoh_induction'])
 
 
-COHORT_NAMES = map(lambda x: 'INIA Rhesus ' + x, ['4', '5', '6a', '6b', '7a', '7b', '10'])
+#COHORT_NAMES = map(lambda x: 'INIA Rhesus ' + x, ['4', '5', '6a', '6b', '7a', '7b', '10'])
 # for cohort in COHORT_NAMES:
 #     #print cohort
 #     ml_monkeys = Monkey.objects.filter(cohort__coh_cohort_name=cohort).exclude(mky_drinking_category=None)
@@ -3986,9 +3986,41 @@ COHORT_NAMES = map(lambda x: 'INIA Rhesus ' + x, ['4', '5', '6a', '6b', '7a', '7
 #     #print soamtds
 #     print np.round(np.mean(soamtds), 2)
 
+
+"""
+9 May 2016
+"""
+# print Account.objects.users_with_perm('process_shipments_email').values_list('email', flat=True)
+# print Group.objects.filter(name='ShippingProcessors').values_list('permissions__name')
+# print Group.objects.filter(name='ShippingProcessors').values_list('user__email')
+
+# print Permission.objects.filter(name__contains='rna').values_list()
+# print Group.objects.filter(permissions=307)
+# print Group.objects.filter(name='RNA Control').values_list('user__email')
+# print Group.objects.filter(name='RNA Control').values_list('permissions__name')
+# print Group.objects.filter(permissions=Permission.objects.filter(name__contains='rna'))
+
+# # Tissue Request Summary
+# pd.set_option('display.max_columns', 20)
+# pd.set_option('display.width', 160)
+# reqs = pd.DataFrame(list(TissueRequest.objects.filter(req_request__req_request_date__gte='2015-06-01').
+#                          order_by('req_request__req_request_date').
+#                          values_list('req_request__req_request_date', 'req_request__cohort__coh_cohort_name',
+#                                      'req_request__req_request_id', 'monkeys',
+#                                      'tissue_type__tst_tissue_name', 'req_request__req_status')),
+#                     columns=['Date Requested', 'Cohort Name', 'Tissue Request ID', 'Animal ID', 'Tissue', 'Status'])
+# reqs['Status'] = [RequestStatus.get_verbose(s) for s in reqs['Status']]
+# reqs['Is Shipped'] = [s == 'Shipped' for s in reqs['Status']]
+# reqs['Date Requested'] = map(lambda x: x.strftime('%Y-%m-%d'), reqs['Date Requested'])
+# print_full(reqs)
+# reqs.to_csv('/home/alex/win-share/matrr_sync/tissue_requests_dump_2016_05_10.csv')
+
+# from matrr.utils.database import dump
+# dump.dump_MATRR_current_data_grid(dump_json=False, dump_csv=True)
+
 plt.show()
 
-
+#, 'Monkey ID'
 
 
 

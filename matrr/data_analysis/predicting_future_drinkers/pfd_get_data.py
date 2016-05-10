@@ -2,7 +2,7 @@ from pfd_common import *
 
 FIRST_N_MINUTES = 10
 TEMP_FEATURES = 'temp_features.plk'
-SEX = {'F': 0, 'M': 1}
+SEX, UNSEX = {'F': 0, 'M': 1}, {0: 'Female', 1: 'Male'}
 HEAVY = 'Heavy'
 LIGHT = 'Non-heavy'
 MTD = 'mtd_'

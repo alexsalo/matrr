@@ -2,7 +2,7 @@ import matplotlib
 import math
 import pandas as pd
 from matplotlib import pyplot as plt
-from pfd_get_data import get_fold_subdivide_features, print_full, BEHAVIOR_ATTRIBUTES, ANIMAL_ATTRIBUTES, LIGHT, HEAVY
+from pfd_get_data import get_fold_subdivide_features, UNSEX, BEHAVIOR_ATTRIBUTES, ANIMAL_ATTRIBUTES, LIGHT, HEAVY
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble.partial_dependence import plot_partial_dependence
 
@@ -63,10 +63,83 @@ def plot_deltas_for_feature(df, feature):
     return fig
 
 
-def generate_plot_deltas_for_feature(df, save_path):
+def plot_deltas_for_feature_ld_vhd(df, feature):
+    fig, axs = plt.subplots(1, 2, facecolor='w', edgecolor='k', figsize=FIG_SIZE)
+    axs = axs.ravel()
+
+    which_axis = {'LD': 0, 'VHD': 1}
+    which_color = {'LD': 'g-o', 'VHD': 'r-o'}
+    all_values = df[[feature + '_d1', feature + '_d2']]
+    ylim = (min(all_values.min()) - 0.1, max(all_values.max()) + 0.1)
+
+    for mky_id, mky_row in df.iterrows():
+        dc = mky_row['Drinking Category']
+        v1, v2 = mky_row[feature + '_d1'], mky_row[feature + '_d2']
+        axs[which_axis[dc]].plot([1, 2], [v1, v2], which_color[dc], lw=2)
+
+    for ax in axs:
+        ax.set_xlim(0.9, 2.1)
+        ax.set_ylim(ylim)
+        ax.set_xticklabels(['', DELTA1, '', '', '', '', DELTA2])
+        ax.set_xlabel('Time (Relative Delta)')
+        ax.set_ylabel('Log(' + DELTA + ')')
+
+    [axs[which_axis[x]].set_title(x) for x in which_axis.keys()]
+    plt.suptitle('%s: relative deltas change during induction' % BEHAVIOR_ATTRIBUTES[feature])
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.92)
+    return fig
+
+from pfd_get_data import get_features
+data = get_features()
+data = data[data['Drinking Category'].isin(['LD', 'VHD'])]
+# data_male = data[data['Sex'] == 1]
+# data_female = data[data['Sex'] == 0]
+# plot_deltas_for_feature_ld_vhd(data_male, 'etoh_bout')
+# plot_deltas_for_feature_ld_vhd(data_female, 'etoh_bout')
+
+
+def violin_deltas(df, feature, save_path=None):
+    import seaborn as sns
+    sns.set(font_scale=1.5)
+    sns.set_style('whitegrid')
+    df = df[['Sex', 'Drinking Category', feature + '_d1', feature + '_d2']]
+    df.columns = ['Sex', 'Drinking Category', DELTA1, DELTA2]
+    # feat_name = BEHAVIOR_ATTRIBUTES[feature]
+    # df.columns
+    df.Sex = [UNSEX[s] for s in df.Sex]
+    df_long = pd.melt(df, id_vars=['Sex', 'Drinking Category'],
+                      value_vars=[DELTA1, DELTA2], var_name='Stage', value_name=DELTA)
+    #plt.figure(figsize=(10, 10))
+    # sns.violinplot(data=df_long, x='Sex', y=DELTA, hue='Stage', palette='Set2', scale='count', bw=.2)
+
+    # sns.violinplot(data=df_long, x='Drinking Category', y=DELTA, hue='Stage', palette='Set2', scale='count', bw=.2)
+    g = sns.FacetGrid(df_long, col='Sex', size=10, aspect=.7)
+    g.map(sns.violinplot, 'Drinking Category', DELTA, 'Stage', bw=.3, palette='Set2').\
+        despine(left=True).add_legend(title='Stage')
+    plt.suptitle('Delta change in %s by gender' % BEHAVIOR_ATTRIBUTES[feature])
+    plt.subplots_adjust(top=0.92)
+
+    if save_path is not None:
+        fname = feature + '_' + '_'.join(df['Drinking Category'].unique())
+        g.savefig(save_path + fname + '.png', dpi=PNG_DPI, format='png')
+        g.savefig(save_path + fname + '.pdf', dpi=PDF_DPI, format='pdf')
+# violin_deltas(data, 'etoh_mean_drink_length', save_path=WD + 'dev_images/deltas_violins_by_gender/')
+# for feature in BEHAVIOR_ATTRIBUTES.keys():
+#     violin_deltas(data, feature, save_path=WD + 'dev_images/deltas_violins_by_gender/ld_vhd/')
+#     violin_deltas(data_low_heavy, feature, save_path=WD + 'dev_images/deltas_violins_by_gender/heavy_light/')
+
+
+def generate_plot_deltas_for_feature(df, func, save_path):
     for feature in BEHAVIOR_ATTRIBUTES.keys():
-        fig = plot_deltas_for_feature(df, feature=feature)
+        fig = func(df, feature=feature)
         fig.savefig(save_path + 'delta_change_' + feature + '.png', dpi=PNG_DPI, format='png')
+
+
+# plot_deltas_for_feature(data_low_heavy, 'etoh_bout')
+# generate_plot_deltas_for_feature(data_low_heavy, plot_deltas_for_feature,
+#          '/home/alex/Dropbox/matrr_predicting_drinkers/dev_images/deltas/')
+# generate_plot_deltas_for_feature(data_low_heavy,'/home/alex/Dropbox/matrr_predicting_drinkers/dev_images/deltas_col/')
 
 
 def plot_deltas_boxplots_for_feature(df, feature, ax):
@@ -187,11 +260,6 @@ def create_pdp_grid(step, target, save_path=None):
         fig.savefig(save_path + fname + '.pdf', dpi=PDF_DPI, format='pdf')
 
 
-# plot_deltas_for_feature(data_low_heavy, 'etoh_bout')
-# generate_plot_deltas_for_feature(data_low_heavy, '/home/alex/Dropbox/matrr_predicting_drinkers/dev_images/deltas/')
-# generate_plot_deltas_for_feature(data_low_heavy,'/home/alex/Dropbox/matrr_predicting_drinkers/dev_images/deltas_col/')
-
-
 # create_pdp_grid('Heavy vs. Not Heavy', target=HEAVY, save_path=WD+'dev_images/pdp_grids/light_heavy/')
 # create_pdp_grid(data_ld_bd, target='LD', deltas=FEATURES_LD_BD, save_path=WD+'dev_images/pdp_grids/ld_bd/')
 # create_pdp_grid(data_hd_vhd, target='VHD', deltas=FEATURES_HD_VHD, save_path=WD+'dev_images/pdp_grids/hd_vhd/')
@@ -229,4 +297,4 @@ def print_selected_features():
             print f
 # print_selected_features()
 
-plt.show()
+#plt.show()

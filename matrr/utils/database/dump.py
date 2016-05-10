@@ -220,7 +220,7 @@ def dump_MATRR_current_data_grid(dump_json=True, dump_csv=False):
     # We restrict cohorts for Kathy's presentation | 5/9/2016 - AS
     cohorts = Cohort.objects.all().exclude(coh_cohort_name__icontains='devel')\
         .exclude(coh_cohort_name__icontains='vervet').exclude(coh_cohort_name__icontains='nicotine')\
-        .exclude(coh_cohort_name__icontains='Rhesus 1').exclude(coh_cohort_name__icontains='Rhesus 2')\
+        .exclude(coh_cohort_name__iexact='INIA Rhesus 1').exclude(coh_cohort_name__iexact='INIA Rhesus 2')\
         .order_by('pk')
 
     data_types = [
