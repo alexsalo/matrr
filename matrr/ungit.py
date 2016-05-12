@@ -4023,11 +4023,11 @@ Age of Induction
 12 May 2016
 Load Vanessa Immunology
 """
-from matrr.utils.database import load
-load.load_monkey_immunology('/home/alex/win-share/matrr_sync/immunology/immunology.csv')
-
-MonkeyImmunology.content_print()
-MonkeyImmunology.content_print_full()
+# from matrr.utils.database import load
+# load.load_monkey_immunology('/home/alex/win-share/matrr_sync/immunology/immunology.csv')
+#
+# MonkeyImmunology.content_print()
+# MonkeyImmunology.content_print_full()
 
 plt.show()
 
