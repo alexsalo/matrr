@@ -194,6 +194,11 @@ PharmalogicalChallengeChoice = [
     ('Dexamethasone', 'Dexamethasone'),
     ('Ethanol', 'Ethanol'),
 ]
+AgeGroupChoice = Enumeration([
+    ('YA', 'Young adult', 'Young adult'),
+    ('MA', 'Middle-aged adult', 'Middle-aged adult'),
+    ('LA', 'Late adolescent', 'Late adolescent'),
+])
 MonkeyHormoneChoice = Enumeration([
     ("doc", "Deoxycorticosterone", "Deoxycorticosterone"),
     ("ald", "Aldosterone", "Aldosterone"),
@@ -4969,3 +4974,72 @@ class MonkeyProteomic(models.Model):
         print pd.DataFrame(list(MonkeyProteomic.objects.all().values_list(*MonkeyProteomic.columns[0])),
                            columns=MonkeyProteomic.columns[1])
 
+
+class MonkeyImmunology(models.Model):
+    """
+    Created for 2016-02-24	vwakeling	Immune signaling molecules: 4,5,6a/b, 7a # AS
+    """
+    # ID fields
+    mim_id = models.AutoField('ID', primary_key=True)
+    mim_date = models.DateField('Date', blank=True, null=True, help_text='The date this experiment was conducted.')
+    monkey = models.ForeignKey(Monkey, null=False, related_name='immunology_records', db_column='mky_id', editable=False)
+    mim_age_group = models.CharField('Age group', max_length=15, null=True, blank=True,
+                                     help_text='YA - Young adult, MA - Middle-aged adult, LA - Late adolescent',
+                                     choices=AgeGroupChoice)
+    mim_challenge = models.CharField('Pharmacological Challenge', max_length=15, null=True, blank=True,
+                                     help_text='saline, CRH, naloxone, ethanol, ACTH and dexamethasone',
+                                     choices=PharmalogicalChallengeChoice)
+    mim_timepoint = models.IntegerField('Timepoint', null=False, help_text='0 - pre challenge, 1 - post')
+    mim_ep = models.PositiveIntegerField('Endocrine Profile Number', blank=True, null=True,
+                                         help_text='1 - Baseline (pre-ethanol), 2 - Post-induction, '
+                                                   '3 - 6-mo self-administration, 4 - 12-mo self-administration')
+    id_fields = ['mim_date', 'monkey', 'mim_age_group', 'mim_challenge', 'mim_timepoint', 'mim_ep']
+
+    # Data fields
+    mim_FGF_basic = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_1b = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_G_CSF = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_10 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_6 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_12 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_RANTES = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_Eotaxin = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_17 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_MIP_1a = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_GM_CSF = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_MIP_1b = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_MCP_1 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_15 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_EGF = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_5 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_HGF = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_VEGF = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IFN_y = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_MDC = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_I_TAC = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_MIFAnalyte_46 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_1RA = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_TNF_a = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_2 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IP_10 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_MIG = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_4 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    mim_IL_8 = models.FloatField("Immunology Response", editable=False, null=True, blank=False)
+    data_fields = ['FGF_basic', 'IL_1b', 'G_CSF', 'IL_10', 'IL_6', 'IL_12', 'RANTES', 'Eotaxin', 'IL_17', 'MIP_1a',
+                   'GM_CSF', 'MIP_1b', 'MCP_1', 'IL_15', 'EGF', 'IL_5', 'HGF', 'VEGF', 'IFN_y', 'MDC', 'I_TAC',
+                   'MIFAnalyte_46', 'IL_1RA', 'TNF_a', 'IL_2', 'IP_10', 'MIG', 'IL_4', 'IL_8']
+
+    def __unicode__(self):
+        return str(self.monkey.mky_id) + ' ' + self.mim_date.strftime('%Y-%m-%d') + ' ' + \
+               str(self.mim_challenge) + ' ' + str(self.mim_ep) + ' ' + str(self.mim_timepoint)
+
+    @staticmethod
+    def content_print():
+        print pd.DataFrame(list(MonkeyImmunology.objects.all().values_list(*MonkeyImmunology.id_fields)),
+                           columns=MonkeyImmunology.id_fields)
+
+    @staticmethod
+    def content_print_full():
+        fields = MonkeyImmunology.id_fields + ['mim_' + f for f in MonkeyImmunology.data_fields]
+        print pd.DataFrame(list(MonkeyImmunology.objects.all().values_list(*fields)),
+                           columns=fields)

@@ -2487,3 +2487,51 @@ def load_dopamine_study_date(file_name, tissue_type):
                 line = read_data[i].split(';')
             except: # no more data
                 break
+
+
+def load_monkey_immunology(file_name):
+    """
+    Loads data from normalized csv provided by 2016-02-24	vwakeling	Immune signaling molecules: 4,5,6a/b, 7a # AS
+    :param file_name: delimeted by ','
+
+    Usage:
+        from matrr.utils.database import load
+        load.load_monkey_immunology('/home/alex/win-share/matrr_sync/immunology/immunology.csv')
+    """
+    delimiter = ','
+    with open(file_name, 'rU') as f:
+        # 1. Figure out the header
+        header = f.readline().strip().split(delimiter)
+
+        # detect positions of ID fields and data fields
+        id_fields, data_fields = {}, {}
+        for i, h in enumerate(header):
+            for field in MonkeyImmunology.id_fields:
+                if h.lower() in field:
+                    id_fields[field] = i
+            for field in MonkeyImmunology.data_fields:
+                if h in field:
+                    data_fields[field] = i
+        print 'The following (%s) id fields detected: %s' % (len(id_fields), id_fields)
+        print 'The following (%s) data fields detected: %s' % (len(data_fields), data_fields)
+
+        # 2. Load the data
+        for i, line in enumerate(f.readlines()):
+            try:
+                line = line.strip().split(delimiter)
+                mim, created = MonkeyImmunology.objects.get_or_create(
+                    monkey=dingus.get_monkey_by_number(line[id_fields['monkey']]),
+                    mim_date=dingus.get_datetime_from_steve(line[id_fields['mim_date']]),
+                    mim_age_group=line[id_fields['mim_age_group']],
+                    mim_challenge=line[id_fields['mim_challenge']],
+                    mim_ep=line[id_fields['mim_ep']],
+                    mim_timepoint=line[id_fields['mim_timepoint']])
+                if created:
+                    print 'mim created: %s' % mim
+
+                for field in data_fields:
+                    setattr(mim, 'mim_' + field, line[data_fields[field]])
+                mim.save()
+            except Exception as e:
+                print i, e
+                pass  # null values float conversion exceptions are ok

@@ -2,7 +2,8 @@ import matplotlib
 import math
 import pandas as pd
 from matplotlib import pyplot as plt
-from pfd_get_data import get_fold_subdivide_features, UNSEX, BEHAVIOR_ATTRIBUTES, ANIMAL_ATTRIBUTES, LIGHT, HEAVY
+from pfd_get_data import get_fold_subdivide_features, get_features, \
+    UNSEX, BEHAVIOR_ATTRIBUTES, ANIMAL_ATTRIBUTES, LIGHT, HEAVY
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble.partial_dependence import plot_partial_dependence
 
@@ -27,9 +28,14 @@ matplotlib.rcParams.update({'font.size': 16})
 matplotlib.rcParams['savefig.directory'] = '/home/alex/Dropbox/matrr_predicting_drinkers/dev_images'
 
 data_low_heavy, data_ld_bd, data_hd_vhd = get_fold_subdivide_features(regenerate=False)
+data = get_features()
+
 WHICH_DF = {'Heavy vs. Not Heavy': data_low_heavy,
             'LD vs. BD': data_ld_bd,
             'HD vs. VHD': data_hd_vhd}
+HIGHLIGHT_IMPORTANT = {DELTA1: (-0.45, 0.45),
+                       DELTA2: (0.55, 1.45),
+                       DELTAT: (1.55, 2.45)}
 
 
 def plot_deltas_for_feature(df, feature):
@@ -63,40 +69,16 @@ def plot_deltas_for_feature(df, feature):
     return fig
 
 
-def plot_deltas_for_feature_ld_vhd(df, feature):
-    fig, axs = plt.subplots(1, 2, facecolor='w', edgecolor='k', figsize=FIG_SIZE)
-    axs = axs.ravel()
+def generate_plot_deltas_for_feature(df, func, save_path):
+    for feature in BEHAVIOR_ATTRIBUTES.keys():
+        fig = func(df, feature=feature)
+        fig.savefig(save_path + 'delta_change_' + feature + '.png', dpi=PNG_DPI, format='png')
 
-    which_axis = {'LD': 0, 'VHD': 1}
-    which_color = {'LD': 'g-o', 'VHD': 'r-o'}
-    all_values = df[[feature + '_d1', feature + '_d2']]
-    ylim = (min(all_values.min()) - 0.1, max(all_values.max()) + 0.1)
 
-    for mky_id, mky_row in df.iterrows():
-        dc = mky_row['Drinking Category']
-        v1, v2 = mky_row[feature + '_d1'], mky_row[feature + '_d2']
-        axs[which_axis[dc]].plot([1, 2], [v1, v2], which_color[dc], lw=2)
-
-    for ax in axs:
-        ax.set_xlim(0.9, 2.1)
-        ax.set_ylim(ylim)
-        ax.set_xticklabels(['', DELTA1, '', '', '', '', DELTA2])
-        ax.set_xlabel('Time (Relative Delta)')
-        ax.set_ylabel('Log(' + DELTA + ')')
-
-    [axs[which_axis[x]].set_title(x) for x in which_axis.keys()]
-    plt.suptitle('%s: relative deltas change during induction' % BEHAVIOR_ATTRIBUTES[feature])
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.92)
-    return fig
-
-from pfd_get_data import get_features
-data = get_features()
-data = data[data['Drinking Category'].isin(['LD', 'VHD'])]
-# data_male = data[data['Sex'] == 1]
-# data_female = data[data['Sex'] == 0]
-# plot_deltas_for_feature_ld_vhd(data_male, 'etoh_bout')
-# plot_deltas_for_feature_ld_vhd(data_female, 'etoh_bout')
+# plot_deltas_for_feature(data_low_heavy, 'etoh_bout')
+# generate_plot_deltas_for_feature(data_low_heavy, plot_deltas_for_feature,
+#          '/home/alex/Dropbox/matrr_predicting_drinkers/dev_images/deltas/')
+# generate_plot_deltas_for_feature(data_low_heavy,'/home/alex/Dropbox/matrr_predicting_drinkers/dev_images/deltas_col/')
 
 
 def violin_deltas(df, feature, save_path=None):
@@ -124,25 +106,43 @@ def violin_deltas(df, feature, save_path=None):
         fname = feature + '_' + '_'.join(df['Drinking Category'].unique())
         g.savefig(save_path + fname + '.png', dpi=PNG_DPI, format='png')
         g.savefig(save_path + fname + '.pdf', dpi=PDF_DPI, format='pdf')
-# violin_deltas(data, 'etoh_mean_drink_length', save_path=WD + 'dev_images/deltas_violins_by_gender/')
+# # For LD vs VHD plot
+# data = data[data['Drinking Category'].isin(['LD', 'VHD'])]
+# violin_deltas(data, 'etoh_mean_drink_length')
+
 # for feature in BEHAVIOR_ATTRIBUTES.keys():
 #     violin_deltas(data, feature, save_path=WD + 'dev_images/deltas_violins_by_gender/ld_vhd/')
 #     violin_deltas(data_low_heavy, feature, save_path=WD + 'dev_images/deltas_violins_by_gender/heavy_light/')
 
 
-def generate_plot_deltas_for_feature(df, func, save_path):
-    for feature in BEHAVIOR_ATTRIBUTES.keys():
-        fig = func(df, feature=feature)
-        fig.savefig(save_path + 'delta_change_' + feature + '.png', dpi=PNG_DPI, format='png')
+def violin_deltas_total_only(df, feature, save_path=None):
+    import seaborn as sns
+    sns.set(font_scale=1.5)
+    sns.set_style('whitegrid')
+    df = df[['Sex', 'Drinking Category', feature + '_dt']]
+    df.columns = ['Sex', 'Drinking Category', DELTAT]
+    df.Sex = [UNSEX[s] for s in df.Sex]
+    fig = plt.figure(figsize=(10, 10))
+    sns.violinplot(data=df, x='Sex', y=DELTAT, hue='Drinking Category', palette='Set2', scale='count', bw=.2)
+    plt.suptitle('Delta change in %s by gender' % BEHAVIOR_ATTRIBUTES[feature])
+    plt.subplots_adjust(top=0.92)
+
+    if save_path is not None:
+        fname = feature + '_' + '_'.join(df['Drinking Category'].unique())
+        fig.savefig(save_path + fname + '.png', dpi=PNG_DPI, format='png')
+        fig.savefig(save_path + fname + '.pdf', dpi=PDF_DPI, format='pdf')
+# # For LD vs VHD plot
+# data = data[data['Drinking Category'].isin(['LD', 'VHD'])]
+# violin_deltas_total_only(data, 'etoh_mean_drink_length')
+
+# data = data[data['Drinking Category'].isin(['LD', 'VHD'])]
+# for feature in BEHAVIOR_ATTRIBUTES.keys():
+#     violin_deltas_total_only(data, feature, save_path=WD + 'dev_images/deltas_violins_by_gender_totals_only/ld_vhd/')
+#     violin_deltas_total_only(data_low_heavy, feature,
+#                              save_path=WD + 'dev_images/deltas_violins_by_gender_totals_only/heavy_light/')
 
 
-# plot_deltas_for_feature(data_low_heavy, 'etoh_bout')
-# generate_plot_deltas_for_feature(data_low_heavy, plot_deltas_for_feature,
-#          '/home/alex/Dropbox/matrr_predicting_drinkers/dev_images/deltas/')
-# generate_plot_deltas_for_feature(data_low_heavy,'/home/alex/Dropbox/matrr_predicting_drinkers/dev_images/deltas_col/')
-
-
-def plot_deltas_boxplots_for_feature(df, feature, ax):
+def plot_deltas_boxplots_for_feature(df, feature, ax, highlight_which=None):
     import seaborn as sns
     sns.set(font_scale=1.2)
     df['MID'] = df.index
@@ -156,6 +156,17 @@ def plot_deltas_boxplots_for_feature(df, feature, ax):
     ax.legend(loc='upper left')
     ax.grid()
     ax.set_title(BEHAVIOR_ATTRIBUTES[feature])
+
+    if highlight_which:
+        x0, x1 = HIGHLIGHT_IMPORTANT[highlight_which]
+        ax.axvspan(x0, x1, color='red', alpha=.15, zorder=-100, transform=ax.transAxes)
+
+    # deal with heavy vs non heavy max bout sequence number annotation
+    if HEAVY in df['Drinking Category'].unique() and feature == 'max_bout':
+        dist = 0.07
+        for x in [0.17, 0.5, 0.83]:
+            ax.text(x - dist, 0.01, HEAVY, transform=ax.transAxes, horizontalalignment='center')
+            ax.text(x + dist, 0.01, LIGHT, transform=ax.transAxes, horizontalalignment='center')
 
     # # T-test
     # dcs = f_df['Drinking Category'].unique()
@@ -171,15 +182,16 @@ def plot_deltas_boxplots_for_feature(df, feature, ax):
     #             horizontalalignment='center', fontsize=16)
 
 
-def plot_deltas_boxplots_multiple_features(step, save_path=None):
+def plot_deltas_boxplots_multiple_features(step, highlight_important=False, save_path=None):
     df, features = WHICH_DF[step], WHICH_FEATURES[step]
 
     # only behavioral features - animal's attributes don't change
+    highlight_which = [D_DELTA[f[-3:]] for f in features if f not in ANIMAL_ATTRIBUTES.values()]
     features = [f[:-3] for f in features if f not in ANIMAL_ATTRIBUTES.values()]
     fig, axs = plt.subplots(int(math.ceil(len(features) / 2.0)), 2, figsize=FIG_SIZE)
     axs = axs.ravel()
     for i, f in enumerate(features):
-        plot_deltas_boxplots_for_feature(df, f, axs[i])
+        plot_deltas_boxplots_for_feature(df, f, axs[i], highlight_which[i])
     plt.suptitle('Behavioral features that classify\n%s' % step)
     plt.tight_layout()
     plt.subplots_adjust(top=0.92)
@@ -192,8 +204,9 @@ def plot_deltas_boxplots_multiple_features(step, save_path=None):
         fig.savefig(save_path + step.lower().replace(' ', '_').replace('.', '') + '.pdf', dpi=PDF_DPI, format='pdf')
 
 
-# plot_deltas_boxplots_multiple_features('Heavy vs. Not Heavy', save_path=WD+'dev_images/deltas_boxplots/')
-# plot_deltas_boxplots_multiple_features('HD vs. VHD', save_path=WD+'dev_images/deltas_boxplots/')
+# plot_deltas_boxplots_multiple_features('Heavy vs. Not Heavy', highlight_important=True,
+#                                        save_path=WD+'dev_images/deltas_boxplots/')
+# plot_deltas_boxplots_multiple_features('HD vs. VHD', True, save_path=WD+'dev_images/deltas_boxplots/')
 # plot_deltas_boxplots_multiple_features('LD vs. BD', save_path=WD+'dev_images/deltas_boxplots/')
 
 # ================= PARTIAL DEPENDENCIES ================
