@@ -401,8 +401,10 @@ def identify_drinking_category(mtd_queryset, bec_queryset):
     assert len(bec_queryset.order_by().values_list('monkey', flat=True).distinct()) == 1, "Nothing about this function " \
                                                                                           "will work with a BEC " \
                                                                                           "queryset with multiple monkeys"
+
     max_date = mtd_queryset.aggregate(Max('drinking_experiment__dex_date'))['drinking_experiment__dex_date__max']
     min_date = mtd_queryset.aggregate(Min('drinking_experiment__dex_date'))['drinking_experiment__dex_date__min']
+
     total_days = float((max_date-min_date).days)
     mtd_values = mtd_queryset.values('mtd_etoh_g_kg')
     days_over_two = mtd_values.filter(mtd_etoh_g_kg__gt=2).count()

@@ -1,7 +1,7 @@
 from pfd_common import *
 
 FIRST_N_MINUTES = 10
-TEMP_FEATURES = 'temp_features.plk'
+TEMP_FEATURES, TEMP_MEDIANS = 'temp_features.plk', 'temp_medians.csv'
 SEX, UNSEX = {'F': 0, 'M': 1}, {0: 'Female', 1: 'Male'}
 HEAVY = 'Heavy'
 LIGHT = 'Non-heavy'
@@ -49,6 +49,13 @@ def generate_data():
     median2 = behavior_df[behavior_df['etoh_g_kg'] == 1].groupby('Animal ID').median().drop('etoh_g_kg', axis=1)
     median3 = behavior_df[behavior_df['etoh_g_kg'] == 1.50].groupby('Animal ID').median().drop('etoh_g_kg', axis=1)
 
+    # Edit columns, combine and save the medians to csv
+    median1.columns = map(lambda x: x + '_m1', median1.columns)
+    median2.columns = map(lambda x: x + '_m2', median2.columns)
+    median3.columns = map(lambda x: x + '_m3', median3.columns)
+    mediansdf = pd.concat([animals_df, median1, median2, median3], axis=1, verify_integrity=True)
+    mediansdf.to_csv(TEMP_MEDIANS)
+
     # Calculate log of deltas and update column names
     delta1 = np.log(median2 / median1)
     delta2 = np.log(median3 / median2)
@@ -61,6 +68,7 @@ def generate_data():
     result = pd.concat([animals_df, delta1, delta2, deltat], axis=1, verify_integrity=True)
     result.save(TEMP_FEATURES)
     return result
+# generate_data()
 
 
 def get_features(regenerate=False):

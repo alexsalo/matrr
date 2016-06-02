@@ -4029,6 +4029,10 @@ Load Vanessa Immunology
 # MonkeyImmunology.content_print()
 # MonkeyImmunology.content_print_full()
 
+print MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=r5).\
+        filter(drinking_experiment__dex_date__gte='2010-04-15').\
+        filter(drinking_experiment__dex_date__lte='2010-05-10').values_list('drinking_experiment__dex_type', flat=True)
+
 plt.show()
 
 
