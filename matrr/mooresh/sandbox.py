@@ -228,3 +228,16 @@ for m in monkeys:
 # print MonkeyToDrinkingExperiment.objects.filter(monkey__in=r10monkeys).count()
 
 #plt.show()
+#Input specific Open Access Begin Date
+def get_first_6mo_oa(cohort):
+    dates = CohortEvent.objects.\
+        filter(cohort=cohort).\
+        filter(event__evt_name__iexact='First 6 Month Open Access Begin').\
+        values_list('cev_date', flat=True)
+    if len(dates) == 1:
+        return dates[0]
+    else:
+        raise Exception('Ooops something wrong')
+
+print get_first_6mo_oa(r10)
+=======

@@ -4030,20 +4030,44 @@ Load Vanessa Immunology
 # MonkeyImmunology.content_print_full()
 
 # print MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=r5).\
+
 #         filter(drinking_experiment__dex_date__gte='2010-04-15').\
 #         filter(drinking_experiment__dex_date__lte='2010-05-10').values_list('drinking_experiment__dex_type', flat=True)
 
-def get_first_6mo_oa(cohort):
-    dates = CohortEvent.objects.\
-        filter(cohort=cohort).\
-        filter(event__evt_name__iexact='First 6 Month Open Access Begin').\
-        values_list('cev_date', flat=True)
-    if len(dates) == 1:
-        return dates[0]
-    else:
-        raise Exception('Ooops something wrong')
+# def get_first_6mo_oa(cohort):
+#     dates = CohortEvent.objects.\
+#         filter(cohort=cohort).\
+#         filter(event__evt_name__iexact='First 6 Month Open Access Begin').\
+#         values_list('cev_date', flat=True)
+#     if len(dates) == 1:
+#         return dates[0]
+#     else:
+#         raise Exception('Ooops something wrong')
+#
+# print get_first_6mo_oa(r10)
 
-print get_first_6mo_oa(r10)
+#        filter(drinking_experiment__dex_date__gte='2010-04-15').\
+#        filter(drinking_experiment__dex_date__lte='2010-05-10').values_list('drinking_experiment__dex_type', flat=True)
+
+
+"""
+6 June 2016
+"""
+
+df = pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.
+                       filter(mex_excluded=True).
+                       order_by('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'drinking_experiment__dex_date').
+                       values_list('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'drinking_experiment__dex_date',
+                                   )),
+                  columns=['cohort', 'mky', 'date'])
+print df
+
+print pd.DataFrame(list(MonkeyException.objects.all().
+                        filter(mex_excluded=True).
+                        order_by('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'mex_date').
+                        values_list('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'mex_date')),
+                   columns=['cohort', 'mky', 'date'])
+
 
 plt.show()
 
