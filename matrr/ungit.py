@@ -4029,9 +4029,29 @@ Load Vanessa Immunology
 # MonkeyImmunology.content_print()
 # MonkeyImmunology.content_print_full()
 
-print MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=r5).\
-        filter(drinking_experiment__dex_date__gte='2010-04-15').\
-        filter(drinking_experiment__dex_date__lte='2010-05-10').values_list('drinking_experiment__dex_type', flat=True)
+# print MonkeyToDrinkingExperiment.objects.filter(monkey__cohort=r5).\
+#        filter(drinking_experiment__dex_date__gte='2010-04-15').\
+#        filter(drinking_experiment__dex_date__lte='2010-05-10').values_list('drinking_experiment__dex_type', flat=True)
+
+
+"""
+6 June 2016
+"""
+
+df = pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.
+                       filter(mex_excluded=True).
+                       order_by('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'drinking_experiment__dex_date').
+                       values_list('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'drinking_experiment__dex_date',
+                                   )),
+                  columns=['cohort', 'mky', 'date'])
+print df
+
+print pd.DataFrame(list(MonkeyException.objects.all().
+                        filter(mex_excluded=True).
+                        order_by('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'mex_date').
+                        values_list('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'mex_date')),
+                   columns=['cohort', 'mky', 'date'])
+
 
 plt.show()
 
