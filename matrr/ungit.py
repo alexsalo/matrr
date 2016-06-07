@@ -4112,9 +4112,19 @@ def analyze_cohort_change_of_variance(cohort):
     print t, pval
 
     # TODO how can we find p value with comparing variances???
+#analyze_cohort_change_of_variance(r5)
 
 
-analyze_cohort_change_of_variance(r5)
+def get_first_30_days_of_oa_etohs(monkey):
+    oa_start = CohortEvent.objects.filter(cohort=monkey.cohort).\
+                                   filter(event__evt_name__iexact='First 6 Month Open Access Begin').\
+                                   values_list('cev_date', flat=True)[0]
+    return MonkeyToDrinkingExperiment.objects.filter(monkey=monkey).\
+               filter(drinking_experiment__dex_date__gte=oa_start).\
+               order_by('drinking_experiment__dex_date').\
+               values_list('mtd_etoh_g_kg', flat=True)[:30]
+
+print len(get_first_30_days_of_oa_etohs(r5.monkey_set.all()[1]))
 
 plt.show()
 
