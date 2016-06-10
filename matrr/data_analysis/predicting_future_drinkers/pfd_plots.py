@@ -142,10 +142,13 @@ def violin_deltas_total_only(df, feature, save_path=None):
 #                              save_path=WD + 'dev_images/deltas_violins_by_gender_totals_only/heavy_light/')
 
 
-def plot_deltas_boxplots_for_feature(df, feature, ax, highlight_which=None):
+def plot_deltas_boxplots_for_feature(df, feature, ax=None, highlight_which=None):
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE, facecolor='w', edgecolor='k')
     import seaborn as sns
     sns.set(font_scale=1.2)
     df['MID'] = df.index
+    print df[df.MID==10074]
     f_df = df[['MID', 'Drinking Category', feature + '_d1', feature + '_d2', feature + '_dt']]
     f_df.columns = ['MID', 'Drinking Category', DELTA1, DELTA2, DELTAT]
     df_long = pd.melt(f_df, id_vars=['MID', 'Drinking Category'],
@@ -180,7 +183,8 @@ def plot_deltas_boxplots_for_feature(df, feature, ax, highlight_which=None):
     #         z, p = scipy.stats.ttest_ind(a, b, equal_var=False)
     #     ax.text(x_pos, 0.02, 'p=%.3f' % p, transform=ax.transAxes,
     #             horizontalalignment='center', fontsize=16)
-
+plot_deltas_boxplots_for_feature(data_ld_bd, 'latency_1st_drink')
+plt.show()
 
 def plot_deltas_boxplots_multiple_features(step, highlight_important=False, save_path=None):
     df, features = WHICH_DF[step], WHICH_FEATURES[step]

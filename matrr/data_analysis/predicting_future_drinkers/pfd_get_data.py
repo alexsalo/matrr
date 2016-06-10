@@ -1,7 +1,7 @@
 from pfd_common import *
 
 FIRST_N_MINUTES = 10
-TEMP_FEATURES, TEMP_MEDIANS = 'temp_features.plk', 'temp_medians.csv'
+TEMP_FEATURES, TEMP_FEATURES_CSV, TEMP_MEDIANS = 'temp_features.plk', 'temp_features.csv', 'temp_medians.csv'
 SEX, UNSEX = {'F': 0, 'M': 1}, {0: 'Female', 1: 'Male'}
 HEAVY = 'Heavy'
 LIGHT = 'Non-heavy'
@@ -49,12 +49,12 @@ def generate_data():
     median2 = behavior_df[behavior_df['etoh_g_kg'] == 1].groupby('Animal ID').median().drop('etoh_g_kg', axis=1)
     median3 = behavior_df[behavior_df['etoh_g_kg'] == 1.50].groupby('Animal ID').median().drop('etoh_g_kg', axis=1)
 
-    # Edit columns, combine and save the medians to csv
-    median1.columns = map(lambda x: x + '_m1', median1.columns)
-    median2.columns = map(lambda x: x + '_m2', median2.columns)
-    median3.columns = map(lambda x: x + '_m3', median3.columns)
-    mediansdf = pd.concat([animals_df, median1, median2, median3], axis=1, verify_integrity=True)
-    mediansdf.to_csv(TEMP_MEDIANS)
+    # # Edit columns, combine and save the medians to csv
+    # median1.columns = map(lambda x: x + '_m1', median1.columns)
+    # median2.columns = map(lambda x: x + '_m2', median2.columns)
+    # median3.columns = map(lambda x: x + '_m3', median3.columns)
+    # mediansdf = pd.concat([animals_df, median1, median2, median3], axis=1, verify_integrity=True)
+    # mediansdf.to_csv(TEMP_MEDIANS)
 
     # Calculate log of deltas and update column names
     delta1 = np.log(median2 / median1)
@@ -67,6 +67,7 @@ def generate_data():
     # Concat all together and save
     result = pd.concat([animals_df, delta1, delta2, deltat], axis=1, verify_integrity=True)
     result.save(TEMP_FEATURES)
+    result.to_csv(TEMP_FEATURES_CSV)
     return result
 # generate_data()
 

@@ -709,6 +709,8 @@ class Monkey(models.Model):
     mky_low_drinker = models.BooleanField("Low-drinking monkey", null=False, blank=False, default=False)
     mky_age_at_intox = models.PositiveIntegerField("Age at first Intoxication (days)", null=True, blank=False, default=None)
     mky_drinking_category = models.CharField('Drinking Category', max_length=3, choices=DrinkingCategory, blank=False, null=True, help_text='The Drinking Category of the Monkey')
+    mky_withdrawal_drinking_category = models.CharField('Withdrawal Drinking Category', max_length=3, choices=DrinkingCategory, blank=False, null=True, help_text='The Withdrawal Drinking Category of the Monkey')
+
 
     def __unicode__(self):
         name = str(self.mky_id)
@@ -837,6 +839,25 @@ class Monkey(models.Model):
             if oa_mtds.count() and oa_becs.count():
                 self.mky_drinking_category = identify_drinking_category(oa_mtds, oa_becs)
         self.save()
+
+
+    # def populate_withdrawal_drinking_category(self):
+    # #print self
+    #     from matrr.utils.gadgets import identify_drinking_category
+    #     if not self.mky_drinking or not self.mky_study_complete or not self.cohort == 19:
+    #         self.mky_withdrawal_drinking_category = None
+    #     else:
+    #         l3mo_mtds = MonkeyToDrinkingExperiment.objects.filter(monkey=self).\
+    #             filter(drinking_experiment__dex_date__gte='2015-03-30').\
+    #             filter(drinking_experiment__dex_date__lte='2015-06-28')
+    #
+    #         l3mo_becs = MonkeyBEC.objects.filter(monkey=self).\
+    #             filter(bec_collect_date__gte='2015-03-30').\
+    #             filter(bec_collect_date__lte='2015-06-28')
+    #
+    #     if l3mo_mtds.count() and l3mo_becs.count():
+    #          self.mky_withdrawal_drinking_category = identify_drinking_category(l3mo_mtds, l3mo_becs)
+    #           self.save()
 
     def populate_weights_at_necropsy(self):
         mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().filter(monkey=self)\

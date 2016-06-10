@@ -4050,10 +4050,68 @@ Load Vanessa Immunology
 #        filter(drinking_experiment__dex_date__lte='2010-05-10').values_list('drinking_experiment__dex_type', flat=True)
 
 
-"""
-6 June 2016
-"""
+# """
+# 6 June 2016
+# """
+#
+# df = pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.
+#                        filter(mex_excluded=True).
+#                        order_by('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'drinking_experiment__dex_date').
+#                        values_list('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'drinking_experiment__dex_date',
+#                                    )),
+#                   columns=['cohort', 'mky', 'date'])
+# print df
+#
+# print pd.DataFrame(list(MonkeyException.objects.all().
+#                         filter(mex_excluded=True).
+#                         order_by('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'mex_date').
+#                         values_list('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'mex_date')),
+#                    columns=['cohort', 'mky', 'date'])
 
+"""
+7 June 2016
+"""
+# I also got an email from Gin this morning about the other study. She wants to look at the change
+# in variance in EtOH consumption between the first 30 days and last thirty days of open access,
+# separated by males and females. Look at all of the cohorts from the manuscript (which I will send shortly).
+# Once you are able to pull that data, please create some sort of graph of the results, including p-values.
+
+
+def analyze_cohort_change_of_variance(cohort):
+    delta_days = 30
+
+    def get_date_of_coh_event(evt_name):
+        return CohortEvent.objects.filter(cohort=cohort).filter(event__evt_name__iexact=evt_name).\
+                                   values_list('cev_date', flat=True)[0]
+    f30d_start = get_date_of_coh_event('First 6 Month Open Access Begin')
+    f30d_end = f30d_start + timedelta(days=delta_days)
+
+    l30d_end = get_date_of_coh_event('Second 6 Month Open Access End')
+    l30d_start = l30d_end - timedelta(days=delta_days)
+
+    print 'First 30 days of the first OA for cohort %s: %s - %s' % (cohort.coh_cohort_name, f30d_start, f30d_end)
+    print 'Last 30 days of the second OA for cohort %s: %s - %s' % (cohort.coh_cohort_name, l30d_start, l30d_end)
+
+    animals = cohort.monkey_set.filter(mky_drinking_category__isnull=False)
+
+    def get_etohs_for_period(start, end):
+        mtds = MonkeyToDrinkingExperiment.objects.filter(monkey__in=animals).\
+            filter(drinking_experiment__dex_date__gte=start).\
+            filter(drinking_experiment__dex_date__lte=end)
+        return mtds.values_list('mtd_etoh_g_kg', flat=True)
+
+    f30d_etohs = get_etohs_for_period(f30d_start, f30d_end)
+    l30d_etohs = get_etohs_for_period(l30d_start, l30d_end)
+
+    # P-value testing for means
+    from scipy.stats import ttest_rel, ttest_ind
+    print len(f30d_etohs), len(l30d_etohs)
+
+    # TODO maybe ttest_rel since dependent samples? How? We have unequal size. 
+    t, pval = ttest_ind(f30d_etohs, l30d_etohs, equal_var=False)
+    print t, pval
+
+<<<<<<< HEAD
 df = pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.
                        filter(mex_excluded=True).
                        order_by('monkey__cohort__coh_cohort_id', 'drinking_experiment__dex_date', 'monkey__mky_id').
@@ -4076,6 +4134,12 @@ df2= pd.DataFrame(list(MonkeyException.objects.all().
 
 print pd.DataFrame(list(Cohort.objects.all().values_list('coh_cohort_id', 'coh_cohort_name')),
                    columns=['id', 'name'])
+=======
+    # TODO how can we find p value with comparing variances???
+
+
+analyze_cohort_change_of_variance(r5)
+>>>>>>> da559777b58518e05a0ba3541348e82498825525
 
 plt.show()
 
