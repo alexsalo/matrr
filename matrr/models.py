@@ -113,6 +113,7 @@ ProteinUnits = (('mg/mL', 'mg/mL'), ('ng/mL', 'ng/mL'), ('ug/mL', 'μg/mL'), ('p
 DexType = Enumeration([
     ('O', 'OA', "Open Access"),
     ('I', 'Ind', "Induction"),
+    ('P', 'Pro', "Profiling"),
 ])
 DexTypes = tuple(i[1] for i in DexType) # uses of this should be replaced with DexType
 DexTypesChoices = tuple((i, i) for i in DexTypes) # This should be removed once DexTypes is refactored to use DexType

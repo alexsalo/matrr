@@ -137,8 +137,8 @@ def populate_drinking_category_oa2(self):
 
 
 #Populate Drinking Category
-c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
-monkeys = Monkey.objects.filter(cohort=c)
+#c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
+#monkeys = Monkey.objects.filter(cohort=c)
 #for m in monkeys:
     #populate_drinking_category_f12(m)
  #   populate_drinking_category_l3(m)
@@ -254,6 +254,12 @@ monkeys = Monkey.objects.filter(cohort=c)
 # print pd.DataFrame(list(Cohort.objects.all().values_list('coh_cohort_id', 'coh_cohort_name')),
 #                    columns=['id', 'name'])
 #********************************************************
+#Calculate change in variance in Etoh consmption between 1st 30 days and last 30 days of open access, separated by males and females
+
+# def analyze_change_of_variance_mvf()
+#
+#     variance = analyze_cohort_change_of_variance(animal)
+#
 # def analyze_cohort_change_of_variance(cohort):
 #     delta_days = 30
 #
@@ -288,3 +294,71 @@ monkeys = Monkey.objects.filter(cohort=c)
 #     t, pval = ttest_ind(f30d_etohs, l30d_etohs, equal_var=False)
 #     print t, pval
 
+# c = Cohort.objects.get(coh_cohort_name = 'INIA Rhesus 10')
+# monkeys = Monkey.objects.filter(cohort=c)
+#c= Cohort.objects.all()
+#for coh in c:
+
+
+#first 30 is [:30]
+def get_date_of_coh_event(evt_name,coh):
+        return CohortEvent.objects.filter(cohort=coh).filter(event__evt_name__iexact=evt_name).\
+                                    values_list('cev_date', flat=True)[0]
+c = r6a
+#female_cohorts = [r6a,r6b]
+#for c in female_cohorts
+female_mky_id = []
+threshold = 0.001
+monkeys = Monkey.objects.filter(cohort=c)
+#fix
+f30date=get_date_of_coh_event('First 6 Month Open Access Begin',c)
+##print f30date
+l30date=get_date_of_coh_event('Second 6 Month Open Access End',c)
+##print l30date
+for m in monkeys:
+     #cohort.monkey_set.filter(mky_drinking_category__isnull=False)
+    if m.mky_drinking==True:
+        female_mky_id.append(m.mky_id)
+print female_mky_id
+
+variance_fem_first = []
+variance_fem_last = []
+for f in female_mky_id:
+    f30mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
+              filter(monkey=Monkey.objects.get(mky_id=f)).\
+              filter(mtd_etoh_g_kg__gte=threshold).\
+              filter(drinking_experiment__dex_date__gte=f30date).order_by('drinking_experiment__dex_date')[:30]
+    f30mtds_etoh= pd.DataFrame(list(f30mtds.values_list('mtd_etoh_g_kg')))
+    var_temp = np.var(f30mtds_etoh)
+    variance_fem_first.append(var_temp)
+    #print pd.DataFrame(list(variance_fem_first))
+    #print pd.DataFrame(list(f30mtds.values_list('mtd_etoh_g_kg')))
+    l30mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
+              filter(monkey=Monkey.objects.get(mky_id=f)).\
+              filter(mtd_etoh_g_kg__gte=threshold).\
+              filter(drinking_experiment__dex_date__lte=l30date).order_by('drinking_experiment__dex_date')
+    l30mtds_etoh= pd.DataFrame(list(l30mtds.values_list('mtd_etoh_g_kg')), columns=['etoh_g_kg'])[-30:]
+    #print l30mtds_etoh
+    var_temp = np.var(l30mtds_etoh)
+    variance_fem_last.append(var_temp)
+    print pd.DataFrame(variance_fem_last)
+    #print pd.DataFrame(list(l30mtds.values_list('mtd_etoh_g_kg'))[-30:])
+from scipy.stats import ttest_rel, ttest_ind
+t, pval = ttest_ind(variance_fem_first, variance_fem_last, equal_var=False)
+print t, pval
+plt.plot(variance_fem_first)
+plt.show()
+
+
+"""
+Profiling
+"""
+# # Filter by required date
+# mtds_to_be_changed = MonkeyToDrinkingExperiment.objects.filter(monkey__mky_id=10208).order_by('drinking_experiment__dex_date')
+# for mtd in mtds_to_be_changed:
+#     print mtds_to_be_changed[0].drinking_experiment.dex_type
+#     mtd = mtds_to_be_changed[0]
+#     mtd.drinking_experiment.dex_type = 'Profiling'
+#     mtd.drinking_experiment.save()
+#     mtd.save()
+#     print mtd.drinking_experiment.dex_type
