@@ -300,54 +300,54 @@ def populate_drinking_category_oa2(self):
 #for coh in c:
 
 
-#first 30 is [:30]
-def get_date_of_coh_event(evt_name,coh):
-        return CohortEvent.objects.filter(cohort=coh).filter(event__evt_name__iexact=evt_name).\
-                                    values_list('cev_date', flat=True)[0]
-c = r6a
-#female_cohorts = [r6a,r6b]
-#for c in female_cohorts
-female_mky_id = []
-threshold = 0.001
-monkeys = Monkey.objects.filter(cohort=c)
-#fix
-f30date=get_date_of_coh_event('First 6 Month Open Access Begin',c)
-##print f30date
-l30date=get_date_of_coh_event('Second 6 Month Open Access End',c)
-##print l30date
-for m in monkeys:
-     #cohort.monkey_set.filter(mky_drinking_category__isnull=False)
-    if m.mky_drinking==True:
-        female_mky_id.append(m.mky_id)
-print female_mky_id
-
-variance_fem_first = []
-variance_fem_last = []
-for f in female_mky_id:
-    f30mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
-              filter(monkey=Monkey.objects.get(mky_id=f)).\
-              filter(mtd_etoh_g_kg__gte=threshold).\
-              filter(drinking_experiment__dex_date__gte=f30date).order_by('drinking_experiment__dex_date')[:30]
-    f30mtds_etoh= pd.DataFrame(list(f30mtds.values_list('mtd_etoh_g_kg')))
-    var_temp = np.var(f30mtds_etoh)
-    variance_fem_first.append(var_temp)
-    #print pd.DataFrame(list(variance_fem_first))
-    #print pd.DataFrame(list(f30mtds.values_list('mtd_etoh_g_kg')))
-    l30mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
-              filter(monkey=Monkey.objects.get(mky_id=f)).\
-              filter(mtd_etoh_g_kg__gte=threshold).\
-              filter(drinking_experiment__dex_date__lte=l30date).order_by('drinking_experiment__dex_date')
-    l30mtds_etoh= pd.DataFrame(list(l30mtds.values_list('mtd_etoh_g_kg')), columns=['etoh_g_kg'])[-30:]
-    #print l30mtds_etoh
-    var_temp = np.var(l30mtds_etoh)
-    variance_fem_last.append(var_temp)
-    print pd.DataFrame(variance_fem_last)
-    #print pd.DataFrame(list(l30mtds.values_list('mtd_etoh_g_kg'))[-30:])
-from scipy.stats import ttest_rel, ttest_ind
-t, pval = ttest_ind(variance_fem_first, variance_fem_last, equal_var=False)
-print t, pval
-plt.plot(variance_fem_first)
-plt.show()
+# #first 30 is [:30]
+# def get_date_of_coh_event(evt_name,coh):
+#         return CohortEvent.objects.filter(cohort=coh).filter(event__evt_name__iexact=evt_name).\
+#                                     values_list('cev_date', flat=True)[0]
+# c = r6a
+# #female_cohorts = [r6a,r6b]
+# #for c in female_cohorts
+# female_mky_id = []
+# threshold = 0.001
+# monkeys = Monkey.objects.filter(cohort=c)
+# #fix
+# f30date=get_date_of_coh_event('First 6 Month Open Access Begin',c)
+# ##print f30date
+# l30date=get_date_of_coh_event('Second 6 Month Open Access End',c)
+# ##print l30date
+# for m in monkeys:
+#      #cohort.monkey_set.filter(mky_drinking_category__isnull=False)
+#     if m.mky_drinking==True:
+#         female_mky_id.append(m.mky_id)
+# print female_mky_id
+#
+# variance_fem_first = []
+# variance_fem_last = []
+# for f in female_mky_id:
+#     f30mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
+#               filter(monkey=Monkey.objects.get(mky_id=f)).\
+#               filter(mtd_etoh_g_kg__gte=threshold).\
+#               filter(drinking_experiment__dex_date__gte=f30date).order_by('drinking_experiment__dex_date')[:30]
+#     f30mtds_etoh= pd.DataFrame(list(f30mtds.values_list('mtd_etoh_g_kg')))
+#     var_temp = np.var(f30mtds_etoh)
+#     variance_fem_first.append(var_temp)
+#     #print pd.DataFrame(list(variance_fem_first))
+#     #print pd.DataFrame(list(f30mtds.values_list('mtd_etoh_g_kg')))
+#     l30mtds = MonkeyToDrinkingExperiment.objects.OA().exclude_exceptions().\
+#               filter(monkey=Monkey.objects.get(mky_id=f)).\
+#               filter(mtd_etoh_g_kg__gte=threshold).\
+#               filter(drinking_experiment__dex_date__lte=l30date).order_by('drinking_experiment__dex_date')
+#     l30mtds_etoh= pd.DataFrame(list(l30mtds.values_list('mtd_etoh_g_kg')), columns=['etoh_g_kg'])[-30:]
+#     #print l30mtds_etoh
+#     var_temp = np.var(l30mtds_etoh)
+#     variance_fem_last.append(var_temp)
+#     print pd.DataFrame(variance_fem_last)
+#     #print pd.DataFrame(list(l30mtds.values_list('mtd_etoh_g_kg'))[-30:])
+# from scipy.stats import ttest_rel, ttest_ind
+# t, pval = ttest_ind(variance_fem_first, variance_fem_last, equal_var=False)
+# print t, pval
+# plt.plot(variance_fem_first)
+# plt.show()
 
 
 """
@@ -362,3 +362,15 @@ Profiling
 #     mtd.drinking_experiment.save()
 #     mtd.save()
 #     print mtd.drinking_experiment.dex_type
+
+"""
+Cohort Plots
+"""
+from matrr.plotting import cohort_plots
+
+images = CohortImage.objects.filter(cohort=r6a).filter(method__contains='cohort_oa_cumsum_drinking_pattern_daylight')
+for image in images:
+    image.save(force_render=True)
+
+#cohort_plots.cohort_oa_cumsum_drinking_pattern_daylight(r6a)
+#plt.show()
