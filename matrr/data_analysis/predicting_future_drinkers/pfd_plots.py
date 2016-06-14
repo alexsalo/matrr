@@ -12,13 +12,19 @@ TALL_FIG_SIZE = (12, 10)
 PDP_FIG_SIZE = (12, 14)
 PDF_DPI, PNG_DPI = 600, 100
 DELTA, DELTA1, DELTA2, DELTAT = '$\Delta$', '$\Delta_1$', '$\Delta_2$', '$\Delta_t$'
-D_DELTA = {'_d1': DELTA1, '_d2': DELTA2, '_dt': DELTAT}
+DELTA_E1, DELTA_E2, DELTA_ET = '$\Delta_{p3e1}$', '$\Delta_{p3e2}$', '$\Delta_{p3et}$'
+D_DELTA = {'_d1': DELTA1, '_d2': DELTA2, '_dt': DELTAT, '_e1': DELTA_E1, '_e2': DELTA_E2, '_et': DELTA_ET}
 WD = '/home/alex/Dropbox/matrr_predicting_drinkers/'
 
-FEATURES_LIGHT_HEAVY = ['Age of EtOH\ninduction (days)', 'Sex', 'etoh_bout_d2', 'max_bout_d2', 'latency_1st_drink_dt']
+# FEATURES_LIGHT_HEAVY = ['Age of EtOH\ninduction (days)', 'Sex', 'etoh_bout_d2', 'max_bout_d2', 'latency_1st_drink_dt']
+#
+# FEATURES_LD_BD = ['etoh_mean_drink_length_d2', 'latency_1st_drink_d2', 'etoh_drink_bout_d2']
+# FEATURES_HD_VHD = ['pct_max_bout_vol_total_etoh_d2', 'max_bout_length_d1', 'etoh_median_idi_dt', 'drinks_1st_bout_d1']
 
-FEATURES_LD_BD = ['etoh_mean_drink_length_d2', 'latency_1st_drink_d2', 'etoh_drink_bout_d2']
-FEATURES_HD_VHD = ['pct_max_bout_vol_total_etoh_d2', 'max_bout_length_d1', 'etoh_median_idi_dt', 'drinks_1st_bout_d1']
+
+FEATURES_LIGHT_HEAVY = ['Age of EtOH\ninduction (days)', 'Sex', 'etoh_median_idi_d2', 'max_bout_e1', 'latency_1st_drink_e2']
+FEATURES_LD_BD = ['etoh_mean_drink_length_d2', 'latency_1st_drink_d2', 'etoh_bout_dt', 'etoh_mean_drink_length_dt']
+FEATURES_HD_VHD = ['etoh_bout_e1', 'etoh_bout_et', 'etoh_drink_bout_et', 'etoh_mean_drink_vol_d1', 'etoh_mean_drink_length_d1']
 
 WHICH_FEATURES = {'Heavy vs. Not Heavy': FEATURES_LIGHT_HEAVY,
                   'LD vs. BD': FEATURES_LD_BD,
@@ -35,7 +41,10 @@ WHICH_DF = {'Heavy vs. Not Heavy': data_low_heavy,
             'HD vs. VHD': data_hd_vhd}
 HIGHLIGHT_IMPORTANT = {DELTA1: (-0.45, 0.45),
                        DELTA2: (0.55, 1.45),
-                       DELTAT: (1.55, 2.45)}
+                       DELTAT: (1.55, 2.45),
+                       DELTA_E1: (2.55, 3.45),
+                       DELTA_E2: (3.55, 4.45),
+                       DELTA_ET: (4.55, 5.45)}
 
 
 def plot_deltas_for_feature(df, feature):
@@ -149,10 +158,10 @@ def plot_deltas_boxplots_for_feature(df, feature, ax=None, highlight_which=None)
     sns.set(font_scale=1.2)
     df['MID'] = df.index
     print df[df.MID==10074]
-    f_df = df[['MID', 'Drinking Category', feature + '_d1', feature + '_d2', feature + '_dt']]
-    f_df.columns = ['MID', 'Drinking Category', DELTA1, DELTA2, DELTAT]
+    f_df = df[['MID', 'Drinking Category', feature + '_d1', feature + '_d2', feature + '_dt', feature + '_e1', feature + '_e2', feature + '_et']]
+    f_df.columns = ['MID', 'Drinking Category', DELTA1, DELTA2, DELTAT, DELTA_E1, DELTA_E2, DELTA_ET]
     df_long = pd.melt(f_df, id_vars=['MID', 'Drinking Category'],
-                      value_vars=[DELTA1, DELTA2, DELTAT], var_name='Stage', value_name=DELTA)
+                      value_vars=[DELTA1, DELTA2, DELTAT, DELTA_E1, DELTA_E2, DELTA_ET], var_name='Stage', value_name=DELTA)
     # Reorder categorical in pandas
     # df_long['Drinking Category'] = df_long['Drinking Category'].astype('category').cat.set_categories([LIGHT, HEAVY])
     sns.boxplot(data=df_long, x='Stage', y=DELTA, hue='Drinking Category', ax=ax)
@@ -164,12 +173,12 @@ def plot_deltas_boxplots_for_feature(df, feature, ax=None, highlight_which=None)
         x0, x1 = HIGHLIGHT_IMPORTANT[highlight_which]
         ax.axvspan(x0, x1, color='red', alpha=.15, zorder=-100, transform=ax.transAxes)
 
-    # deal with heavy vs non heavy max bout sequence number annotation
-    if HEAVY in df['Drinking Category'].unique() and feature == 'max_bout':
-        dist = 0.07
-        for x in [0.17, 0.5, 0.83]:
-            ax.text(x - dist, 0.01, HEAVY, transform=ax.transAxes, horizontalalignment='center')
-            ax.text(x + dist, 0.01, LIGHT, transform=ax.transAxes, horizontalalignment='center')
+    # # deal with heavy vs non heavy max bout sequence number annotation
+    # if HEAVY in df['Drinking Category'].unique() and feature == 'max_bout':
+    #     dist = 0.07
+    #     for x in [0.17, 0.5, 0.83]:
+    #         ax.text(x - dist, 0.01, HEAVY, transform=ax.transAxes, horizontalalignment='center')
+    #         ax.text(x + dist, 0.01, LIGHT, transform=ax.transAxes, horizontalalignment='center')
 
     # # T-test
     # dcs = f_df['Drinking Category'].unique()
@@ -183,15 +192,25 @@ def plot_deltas_boxplots_for_feature(df, feature, ax=None, highlight_which=None)
     #         z, p = scipy.stats.ttest_ind(a, b, equal_var=False)
     #     ax.text(x_pos, 0.02, 'p=%.3f' % p, transform=ax.transAxes,
     #             horizontalalignment='center', fontsize=16)
-plot_deltas_boxplots_for_feature(data_ld_bd, 'latency_1st_drink')
-plt.show()
+#plot_deltas_boxplots_for_feature(data_low_heavy, 'etoh_bout')
+#data_low_heavy.boxplot(column='etoh_bout_d1', by='Drinking Category')
+#plt.show()
+
 
 def plot_deltas_boxplots_multiple_features(step, highlight_important=False, save_path=None):
+    def uniq(input):
+        output = []
+        for x in input:
+            if x not in output:
+                output.append(x)
+        return output
+
     df, features = WHICH_DF[step], WHICH_FEATURES[step]
 
     # only behavioral features - animal's attributes don't change
     highlight_which = [D_DELTA[f[-3:]] for f in features if f not in ANIMAL_ATTRIBUTES.values()]
     features = [f[:-3] for f in features if f not in ANIMAL_ATTRIBUTES.values()]
+    features = uniq(features)  # to remove duplicates
     fig, axs = plt.subplots(int(math.ceil(len(features) / 2.0)), 2, figsize=FIG_SIZE)
     axs = axs.ravel()
     for i, f in enumerate(features):
@@ -203,6 +222,8 @@ def plot_deltas_boxplots_multiple_features(step, highlight_important=False, save
         fig.delaxes(axs[len(features)])
         plt.draw()
 
+    # axs[3].set_ylim((-1.8, 1.1))  # for HD vs VHD
+
     if save_path is not None:
         fig.savefig(save_path + step.lower().replace(' ', '_').replace('.', '') + '.png', dpi=PNG_DPI, format='png')
         fig.savefig(save_path + step.lower().replace(' ', '_').replace('.', '') + '.pdf', dpi=PDF_DPI, format='pdf')
@@ -210,8 +231,11 @@ def plot_deltas_boxplots_multiple_features(step, highlight_important=False, save
 
 # plot_deltas_boxplots_multiple_features('Heavy vs. Not Heavy', highlight_important=True,
 #                                        save_path=WD+'dev_images/deltas_boxplots/')
+
 # plot_deltas_boxplots_multiple_features('HD vs. VHD', True, save_path=WD+'dev_images/deltas_boxplots/')
+
 # plot_deltas_boxplots_multiple_features('LD vs. BD', save_path=WD+'dev_images/deltas_boxplots/')
+# plt.show()
 
 # ================= PARTIAL DEPENDENCIES ================
 def create_pdp(df, target, deltas):
@@ -234,14 +258,21 @@ def create_pdp_grid(step, target, save_path=None):
     matplotlib.rcParams.update({'font.size': 12})
     df = WHICH_DF[step]
     x, y = df[WHICH_FEATURES[step]], df['Drinking Category']
-    x = x.drop('Sex', axis=1)
+
+    print x.columns
+    if 'etoh_bout_e1' in x.columns:
+        x.drop('etoh_bout_e1', axis=1, inplace=True)
+    print x.columns
+
+    if 'Sex' in x.columns:
+        x = x.drop('Sex', axis=1)
     n = len(x.columns)
     if 'Age of EtOH\ninduction (days)' in x.columns:
         x['Age of EtOH\ninduction (days)'] /= 365
     columns = []
     for i, f in enumerate(x.columns):
         f = f.replace('days', 'years')
-        if '_d' in f:
+        if '_d' in f or '_e' in f:
             columns.append(BEHAVIOR_ATTRIBUTES[f[:-3]] + ' ' + D_DELTA[f[-3:]])
         else:
             columns.append(f)
@@ -272,16 +303,16 @@ def create_pdp_grid(step, target, save_path=None):
     fig.subplots_adjust(top=0.955, hspace=0.1, wspace=0.14)
 
     if save_path is not None:
-        fname = '_'.join(x.columns).lower().replace(' ', '_').replace('\\', '').replace('$', '')
+        fname = '_'.join(x.columns).lower().replace(' ', '_').replace('\\', '').replace('$', '').replace('{', '').replace('}', '').replace('\n', '')
         fig.savefig(save_path + fname + '.png', dpi=PNG_DPI, format='png')
         fig.savefig(save_path + fname + '.pdf', dpi=PDF_DPI, format='pdf')
 
 
 # create_pdp_grid('Heavy vs. Not Heavy', target=HEAVY, save_path=WD+'dev_images/pdp_grids/light_heavy/')
-# create_pdp_grid(data_ld_bd, target='LD', deltas=FEATURES_LD_BD, save_path=WD+'dev_images/pdp_grids/ld_bd/')
-# create_pdp_grid(data_hd_vhd, target='VHD', deltas=FEATURES_HD_VHD, save_path=WD+'dev_images/pdp_grids/hd_vhd/')
+# create_pdp_grid('LD vs. BD', target='LD', save_path=WD+'dev_images/pdp_grids/ld_bd/')
+# create_pdp_grid('HD vs. VHD', target='VHD', save_path=WD+'dev_images/pdp_grids/hd_vhd/')
 # print_full(data_hd_vhd)
-
+plt.show()
 
 #heavyf = [f for f in FEATURES_LIGHT_HEAVY if f not in ['Sex']]  # , 'max_bout_d2', 'Age at intoxication (days)']]
 # heavy_p1 = heavyf[:3]

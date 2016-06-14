@@ -4124,7 +4124,66 @@ def get_first_30_days_of_oa_etohs(monkey):
                order_by('drinking_experiment__dex_date').\
                values_list('mtd_etoh_g_kg', flat=True)[:30]
 
-print len(get_first_30_days_of_oa_etohs(r5.monkey_set.all()[1]))
+#print len(get_first_30_days_of_oa_etohs(r5.monkey_set.all()[1]))
+
+"""
+Manuscript 3 stages for P3
+"""
+# FIRST_N_MINUTES = 10
+# TEMP_FEATURES, TEMP_FEATURES_CSV, TEMP_MEDIANS = 'temp_features.plk', 'temp_features.csv', 'temp_medians.csv'
+# SEX, UNSEX = {'F': 0, 'M': 1}, {0: 'Female', 1: 'Male'}
+# HEAVY = 'Heavy'
+# LIGHT = 'Non-heavy'
+# MTD = 'mtd_'
+# BEHAVIOR_ATTRIBUTES = {
+#     'seconds_to_stageone': 'Seconds to finish\nEtOH allotment',
+#     'latency_1st_drink': 'Latency to\nfirst EtOH drink',
+#     'etoh_bout': 'Total EtOH bouts',
+#     'etoh_drink_bout': 'Average number of\nEtOH drinks per bout',
+#     'etoh_mean_drink_length': 'Mean length\nof EtOH drinks',
+#     'etoh_median_idi': 'Median time\nbetween EtOH drinks',
+#     'etoh_mean_drink_vol': 'Mean volume\nof etOH drinks',
+#     'etoh_mean_bout_length': 'Mean length\nof EtOH bouts',
+#     'pct_etoh_in_1st_bout': '% days all EtOH\nconsumed in the first bout',
+#     'drinks_1st_bout': 'Number of EtOH drinks\nin the first EtOH bout',
+#     'max_bout': 'Sequence number\nof the max EtOH bout',
+#     'max_bout_length': 'Length of max EtOH bout',
+#     'pct_max_bout_vol_total_etoh': 'Max EtOH bout volume\nas % of day total'
+# }
+# ANIMAL_ATTRIBUTES = {'mky_id': 'Animal ID',
+#                      'cohort__coh_cohort_id': 'Cohort',
+#                      'mky_gender': 'Sex',
+#                      'mky_drinking_category': 'Drinking Category',
+#                      'mky_days_at_etoh_induction': 'Age of EtOH\ninduction (days)'
+#                      }
+# COHORT_NAMES = map(lambda x: 'INIA Rhesus ' + x, ['10', '4', '5', '6a', '6b', '7a', '7b'])
+#
+# ml_monkeys = Monkey.objects.filter(cohort__in=Cohort.objects.filter(coh_cohort_name__in=COHORT_NAMES))\
+#                            .exclude(mky_drinking_category=None)
+# animals_df = pd.DataFrame(list(ml_monkeys.values_list(*ANIMAL_ATTRIBUTES.keys())),
+#                           columns=ANIMAL_ATTRIBUTES.values()).set_index('Animal ID')
+# animals_df['Sex'] = map(lambda x: SEX[x], animals_df['Sex'])
+# behavior_df = pd.DataFrame(
+#     list(MonkeyToDrinkingExperiment.objects.Ind().exclude_exceptions().
+#          filter(monkey__in=ml_monkeys).
+#          order_by('monkey__mky_id', 'drinking_experiment__dex_date').
+#          values_list(*(['monkey__mky_id', 'mtd_etoh_g_kg'] + map(lambda x: MTD + x, BEHAVIOR_ATTRIBUTES.keys())))),
+#     columns=['Animal ID', 'etoh_g_kg'] + BEHAVIOR_ATTRIBUTES.keys())
+#
+# # Get medians for each of the three stages (doses)
+# behavior_df['p3_epoch'] = ''
+# behavior_df['etoh_g_kg'] = behavior_df['etoh_g_kg'].round(1)
+#
+# p3_epoch_len = len(behavior_df[behavior_df['etoh_g_kg'] == 1.50][behavior_df['Animal ID'] == 10048]) / 3
+# epoch = behavior_df.ix[(behavior_df['Animal ID'] == 10048) & (behavior_df['etoh_g_kg'] == 1.50), 'p3_epoch']
+# epoch[:p3_epoch_len] = 'e1'
+# epoch[p3_epoch_len:2*p3_epoch_len] = 'e2'
+# epoch[2*p3_epoch_len:] = 'e3'
+# behavior_df.ix[(behavior_df['Animal ID'] == 10048) & (behavior_df['etoh_g_kg'] == 1.50), 'p3_epoch'] = epoch
+
+# print pd.DataFrame(list(r10.monkey_set.filter(mky_drinking_category__isnull=False).
+#                         values_list('mky_id', 'mky_drinking_category')),
+#                    columns=['id', 'dc'])
 
 plt.show()
 

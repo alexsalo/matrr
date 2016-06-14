@@ -47,14 +47,18 @@ def select_features(step, clf, runs=10, regenerate=False):
 
     if regenerate:
         np.save('best_scores_' + step.lower().replace('.', '').replace(' ', '_'), test_best_scores)
-# select_features(step='Heavy vs. Not Heavy', clf=RF, runs=20)
-# select_features(step='LD vs. BD', clf=RF, runs=20)
-# select_features(step='HD vs. VHD', clf=RF, runs=20)
+# select_features(step='Heavy vs. Not Heavy', clf=RF, runs=20, regenerate=True)
+# select_features(step='LD vs. BD', clf=RF, runs=20, regenerate=True)
+# select_features(step='HD vs. VHD', clf=RF, runs=20, regenerate=True)
 
 
-def plot_feature_selection(test_best_scores, step, label, ax=None, save_path=None):
+def plot_feature_selection(test_best_scores, step, label, ax=None, trim_at=None, save_path=None):
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=FIG_SIZE, dpi=PNG_DPI)
+
+    if trim_at is not None:
+        test_best_scores = test_best_scores[:, :trim_at]
+
     n = test_best_scores.shape[1]
     tbs_means = np.mean(test_best_scores, axis=0)
     tbs_sds = np.std(test_best_scores, axis=0)
@@ -89,7 +93,7 @@ def plot_feature_selection(test_best_scores, step, label, ax=None, save_path=Non
         fig.savefig(save_path + step.lower().replace(' ', '_').replace('.', '') + '.pdf', dpi=PDF_DPI, format='pdf')
 
 
-def combine_feature_selection_plots(save_path=None):
+def combine_feature_selection_plots(trim_at=None, save_path=None):
     matplotlib.rcParams.update({'font.size': 15})
     fig, axs = plt.subplots(3, 1, figsize=TALL_FIG_SIZE, dpi=PNG_DPI)
     axs = axs.ravel()
@@ -98,7 +102,7 @@ def combine_feature_selection_plots(save_path=None):
                          ['Heavy vs. Not Heavy', 'LD vs. BD', 'HD vs. VHD'],
                          ['A', 'B ', 'C '])
     for ax, score_name, step, label in ax_scores_step:
-        plot_feature_selection(np.load(score_name), step, label, ax)
+        plot_feature_selection(np.load(score_name), step, label, ax, trim_at=trim_at)
     plt.suptitle('Feature selection procedure in two-step classification model')
     plt.xlabel('Number of features')
     axs[0].legend(loc='upper right')
@@ -109,7 +113,8 @@ def combine_feature_selection_plots(save_path=None):
         fig.savefig(save_path + 'feature_selection_combined.png', dpi=PNG_DPI, format='png')
         fig.savefig(save_path + 'feature_selection_combined.pdf', dpi=PDF_DPI, format='pdf')
 
-# combine_feature_selection_plots(save_path=WD+'/dev_images/feature_selection/')
+# combine_feature_selection_plots(trim_at=40, save_path=WD+'/dev_images/feature_selection/')
+# combine_feature_selection_plots(save_path=WD+'/dev_images/feature_selection/epochs_only/')
 
 
 def test_selected_feature(step, runs=20):
@@ -124,6 +129,8 @@ def test_selected_feature(step, runs=20):
 # for s in STEPS.keys():
 #     test_selected_feature(s)
 # test_selected_feature('Heavy vs. Not Heavy')
+# test_selected_feature('LD vs. BD')
+# test_selected_feature('HD vs. VHD')
 
 # print 0.74*(0.52*0.91 + 0.48 * 0.90)
 
@@ -171,9 +178,9 @@ def accuracy_by_cohort(step, exclude_cohs_ids=[]):
     report_results(RF, global_expected, global_predicted)
 
 # accuracy_by_cohort('Heavy vs. Not Heavy')
-# accuracy_by_cohort('LD vs. BD') # exclude_cohs_ids=[7])
+# accuracy_by_cohort('LD vs. BD')#, exclude_cohs_ids=[7])
 # accuracy_by_cohort('HD vs. VHD', exclude_cohs_ids=[9, 5])
 
-print 0.78*(0.5*0.91 + 0.5 * 0.89)
-print 0.5 * (16.0/25)
+# print 0.78*(0.5*0.90 + 0.5 * 0.95)
+# print 0.5 * (16.0/25)
 plt.show()
