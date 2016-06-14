@@ -4111,8 +4111,36 @@ def analyze_cohort_change_of_variance(cohort):
     t, pval = ttest_ind(f30d_etohs, l30d_etohs, equal_var=False)
     print t, pval
 
+
+df = pd.DataFrame(list(MonkeyToDrinkingExperiment.objects.
+                       filter(mex_excluded=True).
+                       order_by('monkey__cohort__coh_cohort_id', 'drinking_experiment__dex_date', 'monkey__mky_id').
+                       values_list('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'drinking_experiment__dex_date',
+                                   )),
+                  columns=['cohort', 'mky', 'date'])
+
+df2= pd.DataFrame(list(MonkeyException.objects.all().
+                        filter(mex_excluded=True).
+                        order_by('monkey__cohort__coh_cohort_id', 'mex_date','monkey__mky_id').
+                        values_list('monkey__cohort__coh_cohort_id', 'monkey__mky_id', 'mex_date')),
+                   columns=['cohort', 'mky', 'date'])
+#print df
+#print df2
+# filter(monkey__cohort=r5).
+
+
+# df.to_csv('/home/ma/mtds_excluded.csv')
+# df2.to_csv('/home/ma/monkey_exceptions_excluded.csv')
+
+print pd.DataFrame(list(Cohort.objects.all().values_list('coh_cohort_id', 'coh_cohort_name')),
+                   columns=['id', 'name'])
+
     # TODO how can we find p value with comparing variances???
 #analyze_cohort_change_of_variance(r5)
+
+
+
+analyze_cohort_change_of_variance(r5)
 
 
 def get_first_30_days_of_oa_etohs(monkey):

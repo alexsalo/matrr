@@ -154,6 +154,11 @@
                         {% if has_categories %}
                             <th><a href="?order_by=mky_drinking_category">Drinking Category <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
                         {% endif %}
+
+                        <!--Sharon new DC-->
+                        {% if cohort.coh_cohort_name == 'INIA Rhesus 10' %}
+                            <th><a href="?order_by=mky_withdrawal_drinking_category">Post Abstinence Drinking Category <img src='{{ STATIC_URL }}images/DecSort.png' width=15px></a></th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody class='drink-cat-rows'>
@@ -186,6 +191,13 @@
                             <td>{% if monkey.mky_study_complete %}Complete{% else %}Incomplete{% endif %}</td>
                             {% if has_categories %}
                                 <td class={{ monkey.mky_drinking_category }}><a href="{% url 'drinking-category-definition' %}">{{ monkey.mky_drinking_category|default:'' }}</a></td>
+                            {% endif %}
+
+                            <!-- Sharon -->
+                            {% if cohort.coh_cohort_name == 'INIA Rhesus 10' %}
+                                {% if has_categories %}
+                                    <td class={{ monkey.mky_withdrawal_drinking_category }}><a href="{% url 'drinking-category-definition' %}">{{ monkey.mky_withdrawal_drinking_category|default:'' }}</a></td>
+                                {% endif %}
                             {% endif %}
                         </tr>
                     {% endfor %}

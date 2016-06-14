@@ -170,6 +170,7 @@ def _cohort_oa_cumsum_drinking_pattern(cohorts, schedule='Light Phase', remove_t
     if schedule == '22hr':
         plt.axvspan(LIGHTS_OUT/ONE_HOUR, LIGHTS_ON/ONE_HOUR, color='black', alpha=.2, zorder=-100)
     else:
+        plt.axvspan(9, 11, color='black', alpha=.2, zorder=-100)
         ax.set_xlim(0, DAYLIGHT / ONE_HOUR)
 
     ax.set_xlabel('Time (session hour)')
